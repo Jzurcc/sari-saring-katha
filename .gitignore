@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# Files larger than 100 MB
 *.blend
 *.glb
 *.obj
