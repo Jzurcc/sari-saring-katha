@@ -1,0 +1,40 @@
+[gd_scene load_steps=7 format=3 uid="uid://fridge123"]
+
+[ext_resource type="Script" path="res://Scripts/Fridge.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://draggableitem123" path="res://Scenes/DraggableItem.tscn" id="2_item"]
+[ext_resource type="Resource" path="res://Resources/Sardines.tres" id="3_sardines"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.5, 3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Body"]
+size = Vector3(1.5, 3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Door"]
+size = Vector3(1.5, 3, 0.1)
+
+[node name="Fridge" type="Area3D"]
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_1")
+
+[node name="BodyMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_Body")
+
+[node name="Contents" type="Node3D" parent="."]
+
+[node name="Item_Coke" parent="Contents" instance=ExtResource("2_item")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 0.3)
+item_data = ExtResource("3_sardines")
+
+[node name="Item_Sprite" parent="Contents" instance=ExtResource("2_item")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0.3)
+item_data = ExtResource("3_sardines")
+
+[node name="DoorPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, 0.55)
+
+[node name="DoorMesh" type="MeshInstance3D" parent="DoorPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, 0)
+mesh = SubResource("BoxMesh_Door")

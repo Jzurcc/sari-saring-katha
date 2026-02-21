@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://sa0kngw6xvip"]
+
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://c2uwa43h2h1mx" path="res://Assets/cut_v.png" id="2_texture"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Cut-V"
+texture = ExtResource("2_texture")
+price = 25

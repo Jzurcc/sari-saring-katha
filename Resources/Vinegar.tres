@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Vinegar"
+price = 15
+type = 0

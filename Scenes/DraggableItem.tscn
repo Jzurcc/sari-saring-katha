@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://bro5t8giw25g5"]
+
+[ext_resource type="Script" uid="uid://b125r4aqte2v6" path="res://Scripts/DraggableItem.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://dq5lstkdwwxct" path="res://icon.svg" id="2_icon"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.5, 0.5, 0.1)
+
+[node name="DraggableItem" type="Area3D" unique_id=1937493191]
+script = ExtResource("1_script")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=533345882]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+pixel_size = 0.005
+billboard = 1
+texture = ExtResource("2_icon")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1075281899]
+shape = SubResource("BoxShape3D_1")
+
+[node name="Label3D" type="Label3D" parent="." unique_id=1883157029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+billboard = 1
+text = "Item Name"
+outline_size = 4

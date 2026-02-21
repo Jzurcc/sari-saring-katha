@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://maingame123"]
+
+[ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/MainGame.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://bjb131wmtsean" path="res://Assets/untitled.dae" id="7_iuea6"]
+[ext_resource type="ArrayMesh" uid="uid://buml56hy286jf" path="res://Assets/fixed blend.obj" id="7_store_mesh"]
+[ext_resource type="PackedScene" uid="uid://dialogueui123" path="res://Scenes/DialogueUI.tscn" id="8_dialogue"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.384314, 0.454902, 0.54902, 1)
+sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="MainGame" type="Node3D" unique_id=572606432]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=314600359]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1176689403]
+transform = Transform3D(-0.028655408, 0.007501795, -0.99956125, 0.19042401, 0.9817002, 0.0019086724, 0.98128366, -0.19028577, -0.029559538, -229.58151, 62.69301, 67.8741)
+light_color = Color(0.7954, 0.5208275, 0, 1)
+shadow_enabled = true
+
+[node name="StoreModel" type="MeshInstance3D" parent="." unique_id=1627385520]
+transform = Transform3D(-1.3113416e-09, -0.030000001, -1.3113417e-09, 0, -1.3113417e-09, 0.030000001, -0.03, 1.3113417e-09, 5.7320566e-17, 2.7883215, 0.17286205, -4.6430116)
+mesh = ExtResource("7_store_mesh")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1125636583]
+transform = Transform3D(0.015934106, 0, 0.99987304, 0, 1, 0, -0.99987304, 0, 0.015934106, -13.085225, 1.141254, 10.960358)
+
+[node name="FrontCamPos" type="Marker3D" parent="." unique_id=2013797448]
+transform = Transform3D(0.015934106, 0, 0.99987304, 0, 1, 0, -0.99987304, 0, 0.015934106, -13.085225, 1.141254, 10.960358)
+
+[node name="BackCamPos" type="Marker3D" parent="." unique_id=170718305]
+transform = Transform3D(-0.015934194, 0, -0.99987304, 0, 1, 0, 0.99987304, 0, -0.015934194, -13.140121, 1.141254, 10.959483)
+
+[node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
+transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -20.493774, -0.28929532, 12.177713)
+
+[node name="CustomerTargetPos" type="Marker3D" parent="." unique_id=614298035]
+transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -15.459391, -0.28929532, 10.797511)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1703619609]
+
+[node name="MoneyLabel" type="Label" parent="CanvasLayer" unique_id=719210032]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 150.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 32
+text = "Peso: 0"
+
+[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=1399593262]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -0.54714775, 4.5433807, 1.7537189)
+
+[node name="DialogueUI" parent="." unique_id=658346231 instance=ExtResource("8_dialogue")]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=352220649]
+transform = Transform3D(-0.00041732803, 0.99822944, -0.05947908, 0.0070037777, 0.059480544, 0.9982049, 0.9999754, 6.111955e-10, -0.0070162, -12.927134, 1.7339802, 10.721509)
+visible = false
+light_color = Color(0.3764706, 0.32156864, 0, 1)
+shadow_enabled = true
+omni_range = 553.571
+omni_attenuation = 1.162
+
+[node name="untitled" parent="." unique_id=450523989 instance=ExtResource("7_iuea6")]
+transform = Transform3D(0.02, 0, 0, 0, 0.02, 0, 0, 0, 0.02, -5.6184363, 0.4211061, 12.108482)
