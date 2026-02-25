@@ -3,36 +3,104 @@ extends Node3D
 @onready var camera: Camera3D = $Camera3D
 @onready var front_cam_pos: Marker3D = $FrontCamPos
 @onready var back_cam_pos: Marker3D = $BackCamPos
-@onready var tray: TransactionTray = $FrontStore/TransactionTray
+@onready var tray: TransactionTray
 @onready var money_label: Label = $CanvasLayer/MoneyLabel
 @onready var customer_spawn_pos: Marker3D = $CustomerSpawnPos
 @onready var customer_target_pos: Marker3D = $CustomerTargetPos
 @onready var dialogue_ui: DialogueUI = $DialogueUI
 
-var is_front_view: bool = true
+var current_view: String = "front"
+var left_transform: Transform3D
+var right_transform: Transform3D
 var money: int = 0
 var current_customer: Customer
 
 const CUSTOMER_SCENE = preload("res://Scenes/Customer.tscn")
+const TRAY_SCENE = preload("res://Scenes/TransactionTray.tscn")
 const ITEMS = [
 	preload("res://Resources/Sardines.tres")
 ]
 
 func _ready() -> void:
-	InputManager.view_switch_requested.connect(switch_view)
+	if camera and (camera.fov < 1.0 or camera.fov > 179.0):
+		camera.fov = 75.0
+
+	var tray_node = get_node_or_null("FrontStore/TransactionTray")
+	if tray_node:
+		tray = tray_node
+	else:
+		tray = TRAY_SCENE.instantiate()
+		var front_store = get_node_or_null("FrontStore")
+		if front_store:
+			front_store.add_child(tray)
+		else:
+			add_child(tray)
+			tray.global_position = front_cam_pos.global_position + Vector3(0, -1, -2) # Guessing a good spot if missing
+			
+	InputManager.view_requested.connect(switch_view)
 	tray.item_placed.connect(_on_item_placed)
 	dialogue_ui.closed.connect(_on_dialogue_closed)
 	
+	# Calculate center pivot to dynamically create left and right transforms
+	var center = (front_cam_pos.global_position + back_cam_pos.global_position) / 2.0
+	
+	# Left transform is front rotated 90 deg (PI/2) around Y at center
+	var basis_left = front_cam_pos.global_transform.basis.rotated(Vector3.UP, PI / 2.0)
+	var pos_left = center + (front_cam_pos.global_position - center).rotated(Vector3.UP, PI / 2.0)
+	left_transform = Transform3D(basis_left, pos_left)
+	
+	# Right transform is front rotated -90 deg (-PI/2) around Y at center
+	var basis_right = front_cam_pos.global_transform.basis.rotated(Vector3.UP, -PI / 2.0)
+	var pos_right = center + (front_cam_pos.global_position - center).rotated(Vector3.UP, -PI / 2.0)
+	right_transform = Transform3D(basis_right, pos_right)
+	
 	spawn_customer()
 
-func switch_view() -> void:
-	is_front_view = !is_front_view
-	var target_transform = front_cam_pos.global_transform if is_front_view else back_cam_pos.global_transform
+func switch_view(action: String) -> void:
+	var target_view: String = current_view
 	
+	match action:
+		"look_front":
+			target_view = "front" 
+		"look_left":
+			match current_view:
+				"front": target_view = "left"
+				"left": target_view = "back"
+				"back": target_view = "right"
+				"right": target_view = "front"
+		"look_right":
+			match current_view:
+				"front": target_view = "right"
+				"right": target_view = "back"
+				"back": target_view = "left"
+				"left": target_view = "front"
+		"look_back":
+			match current_view:
+				"front": target_view = "back"
+				"back": target_view = "front"
+				"left": target_view = "right"
+				"right": target_view = "left"
+				
+	if current_view == target_view: return
+	current_view = target_view
+	
+	var target_transform: Transform3D
+	match target_view:
+		"front": target_transform = front_cam_pos.global_transform
+		"back": target_transform = back_cam_pos.global_transform
+		"left": target_transform = left_transform
+		"right": target_transform = right_transform
+		
 	var tween = create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(camera, "global_position", target_transform.origin, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(camera, "global_rotation", target_transform.basis.get_euler(), 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	
+	# To avoid euler angle wrap-around (spinning the long way), we tween position and quaternion locally.
+	var local_target: Transform3D = camera.get_parent().global_transform.affine_inverse() * target_transform
+	var target_pos: Vector3 = local_target.origin
+	var target_quat: Quaternion = local_target.basis.get_rotation_quaternion()
+	
+	tween.tween_property(camera, "position", target_pos, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(camera, "quaternion", target_quat, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 func spawn_customer() -> void:
 	if current_customer: return
