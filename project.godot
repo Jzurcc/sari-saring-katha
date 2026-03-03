@@ -22,6 +22,12 @@ config/icon="res://icon.svg"
 [autoload]
 
 InputManager="*res://Scripts/InputManager.gd"
+DragManager="*res://Scripts/DragManager.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
 
 [physics]
 

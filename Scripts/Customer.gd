@@ -30,7 +30,7 @@ func _process(delta: float) -> void:
 	if not is_waiting:
 		global_position = global_position.move_toward(target_position, movement_speed * delta)
 		if global_position.distance_to(target_position) < 0.1:
-			 arrived_at_counter()
+			arrived_at_counter()
 
 func arrived_at_counter() -> void:
 	is_waiting = true

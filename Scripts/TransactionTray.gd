@@ -1,12 +1,15 @@
 class_name TransactionTray
 extends Area3D
 
-signal item_placed(item: DraggableItem)
+signal item_placed(item)
 
 func _ready() -> void:
     add_to_group("transaction_tray")
 
 func receive_item(item: DraggableItem) -> void:
+    if item.has_method("show_visuals"):
+        item.show_visuals()
+        
     # Snap item to center of tray (Vector3)
     var tween = create_tween()
     tween.tween_property(item, "global_position", global_position, 0.1)
