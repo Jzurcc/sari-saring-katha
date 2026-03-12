@@ -52,9 +52,9 @@ func _load_all_items() -> void:
 			subdir = base_dir.get_next()
 		base_dir.list_dir_end()
 	
-	# Fallback: if no items found, load the legacy Sardines.tres
+	# Fallback: if no items found, load the legacy Sardines.tres from items/food
 	if ITEMS.is_empty():
-		var sardines = load("res://Resources/Sardines.tres")
+		var sardines = load("res://Resources/items/food/Sardines.tres")
 		if sardines is ItemData:
 			ITEMS.append(sardines)
 	print("Loaded ", ITEMS.size(), " items dynamically")
