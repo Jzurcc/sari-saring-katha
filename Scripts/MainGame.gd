@@ -17,11 +17,52 @@ var current_customer: Customer
 
 const CUSTOMER_SCENE = preload("res://Scenes/Customer.tscn")
 const TRAY_SCENE = preload("res://Scenes/TransactionTray.tscn")
-const ITEMS = [
-	preload("res://Resources/Sardines.tres")
-]
+
+# Dynamically scan Resources/items/ folder for ALL .tres files
+# This allows new items to be added without modifying code
+var ITEMS: Array[ItemData] = []
+
+func _get_items_from_folder(folder_path: String) -> Array[ItemData]:
+	var items: Array[ItemData] = []
+	var dir = DirAccess.open(folder_path)
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		while file_name != "":
+			if not dir.current_is_dir() and file_name.ends_with(".tres"):
+				var full_path = folder_path + "/" + file_name
+				var item = load(full_path)
+				if item is ItemData:
+					items.append(item)
+			file_name = dir.get_next()
+		dir.list_dir_end()
+	return items
+
+func _load_all_items() -> void:
+	# Scan all subdirectories in Resources/items/
+	var base_path = "res://Resources/items"
+	var base_dir = DirAccess.open(base_path)
+	if base_dir:
+		base_dir.list_dir_begin()
+		var subdir = base_dir.get_next()
+		while subdir != "":
+			if base_dir.current_is_dir() and subdir != "." and subdir != "..":
+				var subdir_path = base_path + "/" + subdir
+				ITEMS.append_array(_get_items_from_folder(subdir_path))
+			subdir = base_dir.get_next()
+		base_dir.list_dir_end()
+	
+	# Fallback: if no items found, load the legacy Sardines.tres
+	if ITEMS.is_empty():
+		var sardines = load("res://Resources/Sardines.tres")
+		if sardines is ItemData:
+			ITEMS.append(sardines)
+	print("Loaded ", ITEMS.size(), " items dynamically")
 
 func _ready() -> void:
+	# Load all items dynamically before anything else
+	_load_all_items()
+	
 	if camera and (camera.fov < 1.0 or camera.fov > 179.0):
 		camera.fov = 75.0
 

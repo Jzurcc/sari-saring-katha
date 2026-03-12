@@ -27,10 +27,13 @@ func setup(data: ItemData, target: Vector3) -> void:
 		request_label.text = desire.item_name
 
 func _process(delta: float) -> void:
-	if not is_waiting:
-		global_position = global_position.move_toward(target_position, movement_speed * delta)
-		if global_position.distance_to(target_position) < 0.1:
-			arrived_at_counter()
+	# Early return optimization: skip processing when waiting at counter
+	if is_waiting:
+		return
+	
+	global_position = global_position.move_toward(target_position, movement_speed * delta)
+	if global_position.distance_to(target_position) < 0.1:
+		arrived_at_counter()
 
 func arrived_at_counter() -> void:
 	is_waiting = true
@@ -38,7 +41,9 @@ func arrived_at_counter() -> void:
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
-	if item == desire:
+	# Fixed: Compare using resource_path instead of direct object comparison
+	# Direct == comparison on Resource objects can fail due to uniqueness rules
+	if item != null and desire != null and item.resource_path == desire.resource_path:
 		satisfy()
 		return true
 	else:

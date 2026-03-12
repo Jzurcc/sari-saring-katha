@@ -1,5 +1,7 @@
 extends Node
 
+# Register as singleton for global access (fixes God Antipattern in DraggableItem)
+
 var _is_dragging: bool = false
 var _dragged_item: DraggableItem = null
 var _dragged_texture_rect: TextureRect = null
@@ -8,6 +10,9 @@ var _canvas_layer: CanvasLayer = null
 # For future sway mechanics
 var _last_mouse_pos: Vector2
 var _current_velocity: Vector2
+
+# Optimization: Reuse raycast query parameters instead of creating new ones each time
+var _raycast_query: PhysicsRayQueryParameters3D
 
 func _ready() -> void:
 	_canvas_layer = CanvasLayer.new()
@@ -20,6 +25,11 @@ func _ready() -> void:
 	_dragged_texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_dragged_texture_rect.hide()
 	_canvas_layer.add_child(_dragged_texture_rect)
+	
+	# Initialize reusable raycast query parameters
+	_raycast_query = PhysicsRayQueryParameters3D.new()
+	_raycast_query.collide_with_areas = true
+	_raycast_query.collide_with_bodies = false
 
 func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	if _is_dragging: return
@@ -43,17 +53,20 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		_dragged_item._on_drag_started_by_manager()
 
 func _process(delta: float) -> void:
-	if _is_dragging:
-		var current_mouse_pos = get_viewport().get_mouse_position()
-		if delta > 0:
-			_current_velocity = (current_mouse_pos - _last_mouse_pos) / delta
-		_last_mouse_pos = current_mouse_pos
-		
-		# Center on cursor
-		_dragged_texture_rect.position = current_mouse_pos - (_dragged_texture_rect.size / 2.0)
-		
-		# Note: Future item sway can be applied here using _current_velocity to rotate or offset _dragged_texture_rect
-		# e.g., _dragged_texture_rect.rotation = lerp(...)
+	# Early return optimization: skip processing when nothing is being dragged
+	if not _is_dragging:
+		return
+	
+	var current_mouse_pos = get_viewport().get_mouse_position()
+	if delta > 0:
+		_current_velocity = (current_mouse_pos - _last_mouse_pos) / delta
+	_last_mouse_pos = current_mouse_pos
+	
+	# Center on cursor
+	_dragged_texture_rect.position = current_mouse_pos - (_dragged_texture_rect.size / 2.0)
+	
+	# Note: Future item sway can be applied here using _current_velocity to rotate or offset _dragged_texture_rect
+	# e.g., _dragged_texture_rect.rotation = lerp(...)
 
 func _input(event: InputEvent) -> void:
 	if _is_dragging and event is InputEventMouseButton:
@@ -80,11 +93,11 @@ func end_drag() -> void:
 	var ray_end = ray_origin + ray_dir * ray_length
 	
 	var space_state = camera.get_world_3d().direct_space_state
-	var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
-	query.collide_with_areas = true
-	query.collide_with_bodies = false
+	# Optimization: Reuse the raycast query parameters instead of creating new ones
+	_raycast_query.from = ray_origin
+	_raycast_query.to = ray_end
 	
-	var result = space_state.intersect_ray(query)
+	var result = space_state.intersect_ray(_raycast_query)
 	var valid_drop = false
 	
 	if result:

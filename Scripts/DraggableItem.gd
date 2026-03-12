@@ -29,7 +29,12 @@ func _input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				var drag_manager = get_node_or_null("/root/DragManager")
+				# Use Engine.get_singleton instead of hardcoded node path (God Antipattern fix)
+				# This is more reliable as it doesn't depend on scene tree structure
+				var drag_manager = Engine.get_singleton("DragManager")
+				if drag_manager == null:
+					# Fallback: try to get via node path if singleton isn't registered
+					drag_manager = get_node_or_null("/root/DragManager")
 				if drag_manager:
 					drag_manager.start_drag(self, sprite.texture)
 
