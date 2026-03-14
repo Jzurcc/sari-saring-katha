@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/MainGame.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bjb131wmtsean" path="res://Assets/untitled.dae" id="7_iuea6"]
-[ext_resource type="PackedScene" uid="uid://dialogueui123" path="res://Scenes/DialogueUI.tscn" id="8_dialogue"]
+
 [ext_resource type="PackedScene" path="res://Scenes/ItemSelectionUI.tscn" id="9_itemui"]
 [ext_resource type="PackedScene" path="res://Scenes/ConfirmationPopup.tscn" id="10_confirmpopup"]
 
@@ -73,7 +73,7 @@ offset_right = 250.0
 offset_bottom = 120.0
 theme_override_font_sizes/font_size = 24
 
-[node name="DialogueUI" parent="." unique_id=658346231 instance=ExtResource("8_dialogue")]
+
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=352220649]
 transform = Transform3D(-0.00041732803, 0.99822944, -0.05947908, 0.0070037777, 0.059480544, 0.9982049, 0.9999754, 6.111955e-10, -0.0070162, -12.927134, 1.7339802, 10.721509)

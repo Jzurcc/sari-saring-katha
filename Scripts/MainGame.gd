@@ -10,6 +10,14 @@ enum CameraView { FRONT, BACK, LEFT, RIGHT }
 # --- Constants ---
 const CUSTOMER_SCENE: PackedScene = preload("res://Scenes/Customer.tscn")
 const TRAY_SCENE: PackedScene = preload("res://Scenes/TransactionTray.tscn")
+const DIALOGUE_BALLOON: PackedScene = preload("res://Scenes/UI/dialogue_balloon.tscn")
+
+# Customer portrait texture
+var _portrait_texture: Texture2D = preload("res://Assets/TK.png")
+
+# Game state passed to dialogue so it can read {{item_name}}
+var item_name: String = ""
+var portrait_texture: Texture2D
 
 # --- Exported / configurable ---
 # (none in this scene — all children are scene-defined)
@@ -34,7 +42,7 @@ var _items: Array[ItemData] = []
 @onready var held_item_label: Label = $CanvasLayer/HeldItemLabel
 @onready var customer_spawn_pos: Marker3D = $CustomerSpawnPos
 @onready var customer_target_pos: Marker3D = $CustomerTargetPos
-@onready var dialogue_ui: DialogueUI = $DialogueUI
+# dialogue_ui removed — now using DialogueManager balloon system
 @onready var item_selection_ui: ItemSelectionUI = $"ItemSelectionUI"
 @onready var confirmation_popup: ConfirmationPopup = $"ConfirmationPopup"
 @onready var tray: TransactionTray
@@ -104,7 +112,9 @@ func _ready() -> void:
 	# Connect signals — "call down, signal up" pattern
 	InputManager.view_requested.connect(switch_view)
 	tray.item_placed.connect(_on_item_placed)
-	dialogue_ui.closed.connect(_on_dialogue_closed)
+
+	# Connect to Dialogue Manager's dialogue_ended to drive customer flow
+	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
 	var shelf_node := get_node_or_null("Shelf")
 	if shelf_node and shelf_node.has_signal("pressed"):
@@ -201,15 +211,20 @@ func spawn_customer() -> void:
 		customer.arrived.connect(_on_customer_arrived)
 
 func _on_customer_arrived(customer: Customer) -> void:
-	var dialogue_text := "*Neigh* Pahingi ako %s!" % customer.desire.item_name
-	dialogue_ui.show_dialogue(customer.body_sprite.texture, dialogue_text)
+	# Set game state so the .dialogue file can read {{item_name}}
+	item_name = customer.desire.item_name
+	portrait_texture = customer.body_sprite.texture if customer.body_sprite else _portrait_texture
+	# Load the dialogue resource and show the balloon with the greeting title
+	var dialogue_res = load("res://Dialogue/customer.dialogue")
+	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_greeting", [self])
 
 func _on_customer_satisfied() -> void:
-	var tex: Texture2D = current_customer.body_sprite.texture
-	dialogue_ui.show_dialogue(tex, "Salamat bossing!")
+	portrait_texture = current_customer.body_sprite.texture if current_customer.body_sprite else _portrait_texture
+	var dialogue_res = load("res://Dialogue/customer.dialogue")
+	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_satisfied", [self])
 	_waiting_for_next_customer = true
 
-func _on_dialogue_closed() -> void:
+func _on_dialogue_ended(_resource) -> void:
 	if _waiting_for_next_customer:
 		_waiting_for_next_customer = false
 		current_customer = null
@@ -276,12 +291,14 @@ func _deliver_item_to_customer() -> void:
 	if current_customer.item_icon and held_item.texture:
 		current_customer.item_icon.texture = held_item.texture
 
-	if dialogue_ui:
-		var customer_tex: Texture2D = current_customer.body_sprite.texture if current_customer.body_sprite else null
-		if is_correct:
-			dialogue_ui.show_dialogue(customer_tex, "Salamat bossing! +" + str(price) + " pesos")
-		else:
-			dialogue_ui.show_dialogue(customer_tex, "Hindi ako naghihintay nito... +" + str(price) + " pesos")
+	portrait_texture = current_customer.body_sprite.texture if current_customer.body_sprite else _portrait_texture
+	var msg: String
+	if is_correct:
+		msg = "Salamat bossing! +" + str(price) + " pesos"
+	else:
+		msg = "Hindi ako naghihintay nito... +" + str(price) + " pesos"
+	var quick_res = DialogueManager.create_resource_from_text("Customer: " + msg)
+	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, quick_res, "", [self])
 
 	held_item = null
 	held_item_label.visible = false
@@ -303,9 +320,9 @@ func _deliver_item_to_customer_with_price(price: int) -> void:
 		if texture:
 			current_customer.item_icon.texture = texture
 
-	if dialogue_ui:
-		var customer_tex: Texture2D = current_customer.body_sprite.texture if current_customer.body_sprite else null
-		dialogue_ui.show_dialogue(customer_tex, "Salamat bossing! +" + str(price) + " pesos")
+	portrait_texture = current_customer.body_sprite.texture if current_customer.body_sprite else _portrait_texture
+	var quick_res = DialogueManager.create_resource_from_text("Customer: Salamat bossing! +" + str(price) + " pesos")
+	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, quick_res, "", [self])
 
 	held_item = null
 	held_item_label.visible = false

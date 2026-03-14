@@ -56,7 +56,11 @@ func _process(_delta: float) -> void:
 		_current_velocity = (current_mouse_pos - _last_mouse_pos) / _delta
 	_last_mouse_pos = current_mouse_pos
 
+	# Center on cursor
 	_dragged_texture_rect.position = current_mouse_pos - (_dragged_texture_rect.size / 2.0)
+	
+	# Note: Future item sway can be applied here using _current_velocity to rotate or offset _dragged_texture_rect
+	# e.g., _dragged_texture_rect.rotation = lerp(...)
 
 func _input(event: InputEvent) -> void:
 	if _is_dragging and event is InputEventMouseButton:
