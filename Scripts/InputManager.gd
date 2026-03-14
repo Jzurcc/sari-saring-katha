@@ -1,15 +1,15 @@
 extends Node
 
-signal view_requested(view_name: String)
+## Emitted when the player requests a camera view change.
+signal view_requested(action: String)
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_W:
-				view_requested.emit("look_front")
-			KEY_S:
-				view_requested.emit("look_back")
-			KEY_A:
-				view_requested.emit("look_left")
-			KEY_D:
-				view_requested.emit("look_right")
+	if event.is_pressed() and not event.is_echo():
+		if event.is_action("look_front"):
+			view_requested.emit("look_front")
+		elif event.is_action("look_back"):
+			view_requested.emit("look_back")
+		elif event.is_action("look_left"):
+			view_requested.emit("look_left")
+		elif event.is_action("look_right"):
+			view_requested.emit("look_right")
