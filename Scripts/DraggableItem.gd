@@ -6,7 +6,7 @@ signal drag_ended
 
 @export var item_data: ItemData
 
-var _original_position: Vector3
+var _original_position: Vector3 = Vector3.ZERO
 
 @onready var sprite: Sprite3D = $Sprite3D
 @onready var collider: CollisionShape3D = $CollisionShape3D
@@ -27,16 +27,9 @@ func setup(data: ItemData) -> void:
 
 func _input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				# Use Engine.get_singleton instead of hardcoded node path (God Antipattern fix)
-				# This is more reliable as it doesn't depend on scene tree structure
-				var drag_manager = Engine.get_singleton("DragManager")
-				if drag_manager == null:
-					# Fallback: try to get via node path if singleton isn't registered
-					drag_manager = get_node_or_null("/root/DragManager")
-				if drag_manager:
-					drag_manager.start_drag(self, sprite.texture)
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			# Access DragManager directly — it is an autoload accessible by class name
+			DragManager.start_drag(self, sprite.texture)
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()
@@ -49,9 +42,10 @@ func _on_drag_cancelled_by_manager() -> void:
 
 func show_visuals() -> void:
 	sprite.show()
-	if label: label.show()
+	if label:
+		label.show()
 
 func return_to_start() -> void:
 	show_visuals()
-	var tween = create_tween()
-	tween.tween_property(self , "global_position", _original_position, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var tween := create_tween()
+	tween.tween_property(self, "global_position", _original_position, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
