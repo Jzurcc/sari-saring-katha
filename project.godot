@@ -23,15 +23,16 @@ config/icon="res://icon.svg"
 
 InputManager="*res://Scripts/InputManager.gd"
 DragManager="*res://Scripts/DragManager.gd"
+DialogueManager="*uid://c3rodes2l3gxb"
 
 [display]
 
 window/size/viewport_width=1600
 window/size/viewport_height=900
 
-[physics]
+[editor_plugins]
 
-3d/physics_engine="Jolt Physics"
+enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg")
 
 [input]
 
@@ -60,6 +61,14 @@ open_drawer={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":73,"key_label":0,"unicode":105,"location":0,"echo":false,"script":null)
 ]
 }
+
+[internationalization]
+
+locale/translations_pot_files=PackedStringArray("res://Dialogue/customer.dialogue")
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
 
 [rendering]
 

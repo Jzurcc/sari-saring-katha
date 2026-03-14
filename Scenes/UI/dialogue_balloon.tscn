@@ -1,64 +1,65 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://4jxsex5xw33t"]
 
-[ext_resource type="Script" path="res://Scripts/UI/dialogue_balloon.gd" id="1_balloon"]
+[ext_resource type="Script" uid="uid://chij6rmhcsdko" path="res://Scripts/UI/dialogue_balloon.gd" id="1_balloon"]
 [ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="2_dlabel"]
+[ext_resource type="Texture2D" uid="uid://64hjfoebpyjw" path="res://Assets/Kuya_Kap_Portrait.png" id="3_k6dk8"]
 [ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="3_resmenu"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.08, 0.06, 0.12, 0.92)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.55, 0.4, 0.7, 0.6)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-shadow_color = Color(0.3, 0.15, 0.5, 0.3)
-shadow_size = 8
-
-[sub_resource type="StyleBoxFlat" id="response_normal"]
-bg_color = Color(0.12, 0.1, 0.18, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.5, 0.35, 0.65, 0.5)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="response_hover"]
-bg_color = Color(0.2, 0.14, 0.3, 0.95)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.75, 0.55, 0.95, 0.8)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
-[sub_resource type="StyleBoxFlat" id="response_focus"]
-bg_color = Color(0.22, 0.16, 0.34, 0.95)
+bg_color = Color(0.96, 0.9, 0.78, 0.97)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.85, 0.65, 1.0, 1.0)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+border_color = Color(0.55, 0.35, 0.15, 0.9)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.25, 0.15, 0.05, 0.35)
+shadow_size = 8
 
-[node name="DialogueBalloon" type="CanvasLayer"]
+[sub_resource type="StyleBoxFlat" id="response_normal"]
+bg_color = Color(0.93, 0.86, 0.71, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.35, 0.15, 0.7)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="response_focus"]
+bg_color = Color(0.78, 0.66, 0.46, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.45, 0.25, 0.08, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="response_hover"]
+bg_color = Color(0.82, 0.72, 0.52, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.3, 0.1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="DialogueBalloon" type="CanvasLayer" unique_id=841960524]
 layer = 100
 script = ExtResource("1_balloon")
 
-[node name="Balloon" type="Control" parent="."]
+[node name="Balloon" type="Control" parent="." unique_id=402783741]
 unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 15
@@ -67,80 +68,72 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="DialoguePanel" type="PanelContainer" parent="Balloon"]
+[node name="DialoguePanel" type="PanelContainer" parent="Balloon" unique_id=1880126344]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 40.0
-offset_top = -200.0
-offset_right = -40.0
-offset_bottom = -24.0
+offset_top = -210.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("panel_style")
 
-[node name="MarginContainer" type="MarginContainer" parent="Balloon/DialoguePanel"]
+[node name="MarginContainer" type="MarginContainer" parent="Balloon/DialoguePanel" unique_id=1870510655]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 20
+theme_override_constants/margin_left = 550
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 28
 theme_override_constants/margin_bottom = 16
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Balloon/DialoguePanel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Balloon/DialoguePanel/MarginContainer" unique_id=1234772591]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 8
 
-[node name="Portrait" type="TextureRect" parent="Balloon/DialoguePanel/MarginContainer/HBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 140)
-layout_mode = 2
-size_flags_vertical = 4
-expand_mode = 1
-stretch_mode = 5
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Balloon/DialoguePanel/MarginContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 6
-
-[node name="CharacterLabel" type="RichTextLabel" parent="Balloon/DialoguePanel/MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="CharacterLabel" type="RichTextLabel" parent="Balloon/DialoguePanel/MarginContainer/VBoxContainer" unique_id=1930884424]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 1
+theme_override_colors/default_color = Color(0.42, 0.22, 0.06, 1)
+theme_override_font_sizes/normal_font_size = 22
 bbcode_enabled = true
-text = "Character"
 fit_content = true
 scroll_active = false
-theme_override_colors/default_color = Color(0.85, 0.7, 1.0, 0.9)
-theme_override_font_sizes/normal_font_size = 18
 
-[node name="DialogueLabel" parent="Balloon/DialoguePanel/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource("2_dlabel")]
+[node name="DialogueLabel" parent="Balloon/DialoguePanel/MarginContainer/VBoxContainer" unique_id=64885815 instance=ExtResource("2_dlabel")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-text = "Dialogue..."
-theme_override_colors/default_color = Color(0.95, 0.92, 0.88, 1.0)
-theme_override_font_sizes/normal_font_size = 22
+theme_override_colors/default_color = Color(0.14, 0.09, 0.03, 1)
+theme_override_font_sizes/normal_font_size = 26
 
-[node name="ContinueIndicator" type="Control" parent="Balloon/DialoguePanel"]
+[node name="ContinueIndicator" type="Control" parent="Balloon/DialoguePanel" unique_id=255796022]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -30.0
-offset_top = -30.0
 visible = false
+layout_mode = 2
 
-[node name="Triangle" type="Polygon2D" parent="Balloon/DialoguePanel/ContinueIndicator"]
-color = Color(0.85, 0.7, 1.0, 0.8)
-polygon = PackedVector2Array(0, 0, 10, 8, 20, 0)
+[node name="Triangle" type="Polygon2D" parent="Balloon/DialoguePanel/ContinueIndicator" unique_id=112833996]
+color = Color(0.52, 0.33, 0.12, 0.85)
+polygon = PackedVector2Array(0, 0, 10, 9, 20, 0)
 
-[node name="ResponsesMenu" type="VBoxContainer" parent="Balloon" node_paths=PackedStringArray("response_template")]
+[node name="Portrait" type="TextureRect" parent="Balloon" unique_id=215146145]
+unique_name_in_owner = true
+z_index = 1
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -51.0
+offset_top = -731.0
+offset_right = 794.8336
+offset_bottom = 478.9342
+grow_vertical = 0
+scale = Vector2(0.64237773, 0.64237773)
+texture = ExtResource("3_k6dk8")
+stretch_mode = 5
+
+[node name="ResponsesMenu" type="VBoxContainer" parent="Balloon" unique_id=348337238 node_paths=PackedStringArray("response_template")]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 7
@@ -148,23 +141,24 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -300.0
-offset_top = -250.0
-offset_right = 300.0
-offset_bottom = -210.0
+offset_left = -270.0
+offset_top = -270.0
+offset_right = 270.0
+offset_bottom = -215.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 script = ExtResource("3_resmenu")
 response_template = NodePath("ResponseTemplate")
 
-[node name="ResponseTemplate" type="Button" parent="Balloon/ResponsesMenu"]
+[node name="ResponseTemplate" type="Button" parent="Balloon/ResponsesMenu" unique_id=2093354146]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.88, 0.98, 1.0)
-theme_override_colors/font_hover_color = Color(1.0, 0.95, 1.0, 1.0)
-theme_override_colors/font_focus_color = Color(1.0, 0.95, 1.0, 1.0)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.18, 0.1, 0.03, 1)
+theme_override_colors/font_focus_color = Color(0.1, 0.05, 0.01, 1)
+theme_override_colors/font_hover_color = Color(0.1, 0.05, 0.01, 1)
+theme_override_font_sizes/font_size = 22
 theme_override_styles/normal = SubResource("response_normal")
+theme_override_styles/pressed = SubResource("response_focus")
 theme_override_styles/hover = SubResource("response_hover")
 theme_override_styles/focus = SubResource("response_focus")
 text = "— Response example"

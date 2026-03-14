@@ -1,10 +1,4 @@
 extends CanvasLayer
-## A cozy, visual-novel style dialogue balloon for Dialogue Manager 3.
-
-const DialogueResource = preload("res://addons/dialogue_manager/dialogue_resource.gd")
-const DialogueLine = preload("res://addons/dialogue_manager/dialogue_line.gd")
-const DialogueResponse = preload("res://addons/dialogue_manager/dialogue_response.gd")
-const DMConstants = preload("res://addons/dialogue_manager/constants.gd")
 
 ## The action to use for advancing the dialogue.
 @export var next_action: StringName = &"ui_accept"
@@ -24,21 +18,20 @@ const DMConstants = preload("res://addons/dialogue_manager/constants.gd")
 @onready var continue_indicator: Control = %ContinueIndicator
 
 # --- State ---
-var dialogue_resource: DialogueResource
+var _dialogue_resource = null       
 var temporary_game_states: Array = []
 var is_waiting_for_input: bool = false
 var will_hide_balloon: bool = false
 
 var mutation_cooldown: Timer = Timer.new()
 
-## The current dialogue line.
-var dialogue_line: DialogueLine:
+
+var dialogue_line = null:
 	set(value):
 		if value:
 			dialogue_line = value
 			_apply_dialogue_line()
 		else:
-			# Dialogue finished — close the balloon
 			queue_free()
 	get:
 		return dialogue_line
@@ -46,7 +39,7 @@ var dialogue_line: DialogueLine:
 
 func _ready() -> void:
 	balloon.hide()
-	Engine.get_singleton("DialogueManager").mutated.connect(_on_mutated)
+	DialogueManager.mutated.connect(_on_mutated)
 
 	if responses_menu.next_action.is_empty():
 		responses_menu.next_action = next_action
@@ -65,14 +58,21 @@ func _unhandled_input(_event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## Called by DialogueManager to kick off the conversation.
-func start(with_dialogue_resource: DialogueResource = null, title: String = "", extra_game_states: Array = []) -> void:
+## Called by DialogueManager.show_dialogue_balloon_scene() to start the conversation.
+func start(with_dialogue_resource = null, title: String = "", extra_game_states: Array = []) -> void:
 	temporary_game_states = [self] + extra_game_states
 	is_waiting_for_input = false
-	if is_instance_valid(with_dialogue_resource):
-		dialogue_resource = with_dialogue_resource
-	dialogue_line = await dialogue_resource.get_next_dialogue_line(title, temporary_game_states)
+
+	if with_dialogue_resource != null:
+		_dialogue_resource = with_dialogue_resource
+
+	if _dialogue_resource == null:
+		push_error("DialogueBalloon.start(): no dialogue resource provided!")
+		queue_free()
+		return
+
 	show()
+	dialogue_line = await _dialogue_resource.get_next_dialogue_line(title, temporary_game_states)
 
 
 ## Apply the current dialogue line to all visuals.
@@ -88,18 +88,10 @@ func _apply_dialogue_line() -> void:
 	character_label.text = tr(dialogue_line.character, "dialogue")
 
 	# --- Portrait ---
-	# Check for a portrait tag like #portrait=res://Assets/TK.png
-	if dialogue_line.has_tag("portrait"):
-		var portrait_path: String = dialogue_line.get_tag_value("portrait")
-		var tex: Texture2D = load(portrait_path)
-		if tex:
-			portrait.texture = tex
-			portrait.show()
-	# If no tag, try to get it from the extra game state
-	elif _get_portrait_from_states():
-		portrait.show()
-	else:
-		portrait.hide()
+	# TK_Portrait.png is baked into the scene — always visible.
+	# Override the texture if a game state provides a custom one.
+	_get_portrait_from_states()
+	portrait.show()
 
 	# --- Dialogue text ---
 	dialogue_label.hide()
@@ -109,11 +101,9 @@ func _apply_dialogue_line() -> void:
 	responses_menu.hide()
 	responses_menu.responses = dialogue_line.responses
 
-	# Show the balloon
+	# Show the balloon with a fade-in
 	balloon.show()
 	will_hide_balloon = false
-
-	# Animate in
 	balloon.modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(balloon, "modulate:a", 1.0, 0.15)
@@ -138,18 +128,15 @@ func _apply_dialogue_line() -> void:
 		balloon.grab_focus()
 
 
-## Advance to the next line.
+## Advance to the next dialogue line.
 func _next(next_id: String) -> void:
-	dialogue_line = await dialogue_resource.get_next_dialogue_line(next_id, temporary_game_states)
+	dialogue_line = await _dialogue_resource.get_next_dialogue_line(next_id, temporary_game_states)
 
 
-## Try to find a portrait texture from the extra game states.
+## Try to read portrait_texture from extra game states.
 func _get_portrait_from_states() -> bool:
 	for state in temporary_game_states:
-		if state is Dictionary and state.has("portrait"):
-			portrait.texture = state["portrait"]
-			return true
-		elif state is Node and "portrait_texture" in state:
+		if state is Node and "portrait_texture" in state and state.portrait_texture != null:
 			portrait.texture = state.portrait_texture
 			return true
 	return false
@@ -172,7 +159,6 @@ func _on_mutated(mutation: Dictionary) -> void:
 
 
 func _on_balloon_gui_input(event: InputEvent) -> void:
-	# Skip typing
 	if dialogue_label.is_typing:
 		var mouse_clicked: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.is_pressed()
 		var skip_pressed: bool = event.is_action_pressed(skip_action)
@@ -194,7 +180,7 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 		_next(dialogue_line.next_id)
 
 
-func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
+func _on_responses_menu_response_selected(response) -> void:
 	_next(response.next_id)
 
 

@@ -12,12 +12,8 @@ const CUSTOMER_SCENE: PackedScene = preload("res://Scenes/Customer.tscn")
 const TRAY_SCENE: PackedScene = preload("res://Scenes/TransactionTray.tscn")
 const DIALOGUE_BALLOON: PackedScene = preload("res://Scenes/UI/dialogue_balloon.tscn")
 
-# Customer portrait texture
-var _portrait_texture: Texture2D = preload("res://Assets/TK.png")
-
 # Game state passed to dialogue so it can read {{item_name}}
 var item_name: String = ""
-var portrait_texture: Texture2D
 
 # --- Exported / configurable ---
 # (none in this scene — all children are scene-defined)
@@ -196,8 +192,10 @@ func switch_view(action: String) -> void:
 
 func spawn_customer() -> void:
 	if current_customer:
+		print("[DEBUG] spawn_customer: already have a customer, skipping")
 		return
 
+	print("[DEBUG] spawn_customer: waiting 2s then spawning...")
 	await get_tree().create_timer(2.0).timeout
 
 	var customer: Customer = CUSTOMER_SCENE.instantiate()
@@ -209,17 +207,22 @@ func spawn_customer() -> void:
 	current_customer.satisfied.connect(_on_customer_satisfied)
 	if not customer.is_connected("arrived", _on_customer_arrived):
 		customer.arrived.connect(_on_customer_arrived)
+	print("[DEBUG] spawn_customer: customer spawned, 'arrived' signal connected? ", customer.is_connected("arrived", _on_customer_arrived))
 
 func _on_customer_arrived(customer: Customer) -> void:
+	print("[DEBUG] _on_customer_arrived: customer arrived! desire=", customer.desire)
 	# Set game state so the .dialogue file can read {{item_name}}
-	item_name = customer.desire.item_name
-	portrait_texture = customer.body_sprite.texture if customer.body_sprite else _portrait_texture
+	item_name = customer.desire.item_name if customer.desire else "something"
 	# Load the dialogue resource and show the balloon with the greeting title
 	var dialogue_res = load("res://Dialogue/customer.dialogue")
+	print("[DEBUG] _on_customer_arrived: dialogue_res=", dialogue_res, " item_name=", item_name)
+	if dialogue_res == null:
+		push_error("[DEBUG] FAILED to load customer.dialogue!")
+		return
 	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_greeting", [self])
+	print("[DEBUG] _on_customer_arrived: show_dialogue_balloon_scene called")
 
 func _on_customer_satisfied() -> void:
-	portrait_texture = current_customer.body_sprite.texture if current_customer.body_sprite else _portrait_texture
 	var dialogue_res = load("res://Dialogue/customer.dialogue")
 	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_satisfied", [self])
 	_waiting_for_next_customer = true
@@ -291,14 +294,11 @@ func _deliver_item_to_customer() -> void:
 	if current_customer.item_icon and held_item.texture:
 		current_customer.item_icon.texture = held_item.texture
 
-	portrait_texture = current_customer.body_sprite.texture if current_customer.body_sprite else _portrait_texture
-	var msg: String
+	var dialogue_res = load("res://Dialogue/customer.dialogue")
 	if is_correct:
-		msg = "Salamat bossing! +" + str(price) + " pesos"
+		DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_satisfied", [self])
 	else:
-		msg = "Hindi ako naghihintay nito... +" + str(price) + " pesos"
-	var quick_res = DialogueManager.create_resource_from_text("Customer: " + msg)
-	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, quick_res, "", [self])
+		DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_rejected", [self])
 
 	held_item = null
 	held_item_label.visible = false
@@ -320,9 +320,8 @@ func _deliver_item_to_customer_with_price(price: int) -> void:
 		if texture:
 			current_customer.item_icon.texture = texture
 
-	portrait_texture = current_customer.body_sprite.texture if current_customer.body_sprite else _portrait_texture
-	var quick_res = DialogueManager.create_resource_from_text("Customer: Salamat bossing! +" + str(price) + " pesos")
-	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, quick_res, "", [self])
+	var dialogue_res = load("res://Dialogue/customer.dialogue")
+	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_satisfied", [self])
 
 	held_item = null
 	held_item_label.visible = false

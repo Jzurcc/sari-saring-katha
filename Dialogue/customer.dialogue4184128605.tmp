@@ -1,0 +1,15 @@
+~ customer_greeting
+
+Customer: *Neigh* Pahingi ako {{item_name}}!
+- Woah, you're very tall.
+	Customer: Hehe, oo nga! Pero bigay mo na yung order ko.
+- Nope, I just got here… also, you're very tall.
+	Customer: Hah! Sige, dali na!
+
+~ customer_satisfied
+
+Customer: Salamat bossing!
+
+~ customer_rejected
+
+Customer: Hindi yan yung hinihingi ko eh...
