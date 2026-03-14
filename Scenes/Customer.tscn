@@ -14,7 +14,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Body" type="Sprite3D" parent="." unique_id=1004560236]
-transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 0.45, 0)
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 1.810957, 0)
 pixel_size = 0.005
 billboard = 1
 texture = ExtResource("3_tk")

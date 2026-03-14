@@ -21,12 +21,8 @@ func receive_item(item: DraggableItem) -> void:
 	# Track the new item
 	_current_items.append(item)
 	
-	if item.has_method("show_visuals"):
-		item.show_visuals()
-		
-	# Snap item to center of tray (Vector3)
-	var tween = create_tween()
-	tween.tween_property(item, "global_position", global_position, 0.1)
+	# Don't re-show 3D visuals — item came from 2D drag overlay.
+	# MainGame._on_item_placed will either free or return the item.
 	
 	item_placed.emit(item)
-	print("Item received in 3D Tray. Current count: ", _current_items.size())
+	print("Item received in Tray: ", item.item_data.item_name if item.item_data else "unknown")

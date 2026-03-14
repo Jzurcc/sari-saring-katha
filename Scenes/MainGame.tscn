@@ -1,9 +1,10 @@
 [gd_scene format=4 uid="uid://maingame123"]
 
 [ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/MainGame.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dlaf65ijebg8b" path="res://Scenes/Shelf.tscn" id="5_321ql"]
+[ext_resource type="PackedScene" uid="uid://c4vq703xgyume" path="res://Scenes/TransactionTray.tscn" id="6_d4f28"]
 [ext_resource type="PackedScene" uid="uid://bjb131wmtsean" path="res://Assets/untitled.dae" id="7_iuea6"]
-
-[ext_resource type="PackedScene" path="res://Scenes/ItemSelectionUI.tscn" id="9_itemui"]
+[ext_resource type="PackedScene" uid="uid://cmcwv70h3k4j6" path="res://Scenes/ItemSelectionUI.tscn" id="9_itemui"]
 [ext_resource type="PackedScene" path="res://Scenes/ConfirmationPopup.tscn" id="10_confirmpopup"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
@@ -73,8 +74,6 @@ offset_right = 250.0
 offset_bottom = 120.0
 theme_override_font_sizes/font_size = 24
 
-
-
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=352220649]
 transform = Transform3D(-0.00041732803, 0.99822944, -0.05947908, 0.0070037777, 0.059480544, 0.9982049, 0.9999754, 6.111955e-10, -0.0070162, -12.927134, 1.7339802, 10.721509)
 visible = false
@@ -93,3 +92,12 @@ stream = SubResource("AudioStreamMP3_ktwve")
 [node name="ItemSelectionUI" parent="." unique_id=2087549539 instance=ExtResource("9_itemui")]
 
 [node name="ConfirmationPopup" parent="." unique_id=1345055840 instance=ExtResource("10_confirmpopup")]
+
+[node name="ShelfItemsAnchor" type="Marker3D" parent="." unique_id=485562213]
+transform = Transform3D(-0.99987304, 0, 0.015934063, 0, 1, 0, -0.015934063, 0, -0.99987304, -12.832933, 1.1460749, 11.927461)
+
+[node name="Shelf" parent="." unique_id=848939969 instance=ExtResource("5_321ql")]
+transform = Transform3D(-0.99990374, 0, 0.013874952, 0, 1, 0, -0.013874952, 0, -0.99990374, -12.803959, 0.9331725, 12.209989)
+
+[node name="TransactionTray" parent="." unique_id=995685862 instance=ExtResource("6_d4f28")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.201139, 0.95150137, 10.874619)

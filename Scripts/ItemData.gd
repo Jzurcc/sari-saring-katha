@@ -10,3 +10,5 @@ enum ItemType {
 @export var texture: Texture2D
 @export var price: int = 10
 @export var type: ItemType = ItemType.SHELF
+@export var max_stock: int = 5
+@export var category: String = "food"

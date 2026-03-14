@@ -24,6 +24,7 @@ config/icon="res://icon.svg"
 InputManager="*res://Scripts/InputManager.gd"
 DragManager="*res://Scripts/DragManager.gd"
 DialogueManager="*uid://c3rodes2l3gxb"
+InventoryManager="*res://Scripts/InventoryManager.gd"
 
 [display]
 

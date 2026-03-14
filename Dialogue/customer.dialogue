@@ -12,12 +12,14 @@
 Kuya Kap: Many stories spread around my kind, but as long as our trees breathe and our territories are respected, you won’t need to worry..
 - Haha… well that’s reassuring.
 Kuya Kap: Anyway, let me buy {{item_name}}. I need to relax a bit.
-- Coming right up.
-
+- Coming right up!
+=> END
 ~ customer_satisfied
 
 Kuya Kap: Salamat. I’ll be bystanding here for a while, don’t mind me.
+=> END
 
 ~ customer_rejected
 
 Kuya Kap: Hindi 'yan yung hinihingi ko eh...
+=> END

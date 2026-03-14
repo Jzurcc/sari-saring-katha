@@ -28,7 +28,13 @@ func setup(data: ItemData) -> void:
 func _input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			# Access DragManager directly — it is an autoload accessible by class name
+			# Check stock before allowing drag
+			if item_data and not InventoryManager.is_in_stock(item_data):
+				print("[DraggableItem] Out of stock: ", item_data.item_name)
+				return
+			# Take from inventory when drag starts
+			if item_data:
+				InventoryManager.take_item(item_data)
 			DragManager.start_drag(self, sprite.texture)
 
 func _on_drag_started_by_manager() -> void:
@@ -37,6 +43,9 @@ func _on_drag_started_by_manager() -> void:
 	drag_started.emit()
 
 func _on_drag_cancelled_by_manager() -> void:
+	# Return the item to inventory since the drag was cancelled
+	if item_data:
+		InventoryManager.return_item(item_data)
 	show_visuals()
 	drag_ended.emit()
 
