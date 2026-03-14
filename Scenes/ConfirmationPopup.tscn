@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dadbfkq26imjb" load_steps=2]
+[gd_scene format=3 uid="uid://dadbfkq26imjb"]
 
 [ext_resource type="Script" path="res://Scripts/ConfirmationPopup.gd" id="1"]
 
