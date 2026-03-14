@@ -124,12 +124,12 @@ layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = -51.0
-offset_top = -731.0
-offset_right = 794.8336
-offset_bottom = 478.9342
+offset_left = -101.0
+offset_top = -896.0
+offset_right = 744.8336
+offset_bottom = 313.9342
 grow_vertical = 0
-scale = Vector2(0.64237773, 0.64237773)
+scale = Vector2(0.9223776, 0.9223776)
 texture = ExtResource("3_k6dk8")
 stretch_mode = 5
 

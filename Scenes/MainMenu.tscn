@@ -1,0 +1,173 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://Scripts/MainMenu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://Assets/Background.png" id="2_bg"]
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 0
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 0
+border_width_top = 0
+border_width_right = 0
+border_width_bottom = 3
+border_color = Color(1.0, 0.85, 0.35, 1.0)
+
+[sub_resource type="StyleBoxFlat" id="btn_disabled"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="options_panel"]
+bg_color = Color(0.08, 0.06, 0.04, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.55, 0.35, 0.15, 0.9)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+; ── Root ─────────────────────────────────────────────────────────────────────
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_menu")
+
+; ── Background ───────────────────────────────────────────────────────────────
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+; ── Dark gradient on left so text pops ───────────────────────────────────────
+[node name="LeftVignette" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0, 0.0, 0.0, 0.28)
+
+; ── Button column ─────────────────────────────────────────────────────────────
+[node name="Buttons" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchor_top = 0.45
+anchor_bottom = 0.45
+offset_left = 80.0
+offset_right = 420.0
+offset_top = -10.0
+offset_bottom = 240.0
+theme_override_constants/separation = 6
+
+[node name="NewGame" type="Button" parent="Buttons"]
+layout_mode = 2
+focus_mode = 2
+text = "NEW GAME"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_colors/font_focus_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_colors/font_pressed_color = Color(0.9, 0.7, 0.2, 1.0)
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/disabled = SubResource("btn_disabled")
+alignment = 0
+
+[node name="LoadGame" type="Button" parent="Buttons"]
+layout_mode = 2
+disabled = true
+text = "LOAD GAME"
+theme_override_colors/font_color = Color(0.55, 0.55, 0.55, 0.75)
+theme_override_colors/font_disabled_color = Color(0.48, 0.48, 0.48, 0.65)
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/disabled = SubResource("btn_disabled")
+alignment = 0
+
+[node name="Options" type="Button" parent="Buttons"]
+layout_mode = 2
+text = "OPTIONS"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_colors/font_focus_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_colors/font_pressed_color = Color(0.9, 0.7, 0.2, 1.0)
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+theme_override_styles/pressed = SubResource("btn_normal")
+alignment = 0
+
+[node name="Exit" type="Button" parent="Buttons"]
+layout_mode = 2
+text = "EXIT"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_colors/font_focus_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_colors/font_pressed_color = Color(0.9, 0.7, 0.2, 1.0)
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+theme_override_styles/pressed = SubResource("btn_normal")
+alignment = 0
+
+; ── Options overlay (hidden by default) ──────────────────────────────────────
+[node name="OptionsOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0, 0.0, 0.0, 0.55)
+
+[node name="OptionsPanel" type="PanelContainer" parent="OptionsOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -140.0
+offset_right = 240.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("options_panel")
+
+[node name="VBox" type="VBoxContainer" parent="OptionsOverlay/OptionsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="NoOptionsLabel" type="Label" parent="OptionsOverlay/OptionsPanel/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "No options yet!"
+theme_override_colors/font_color = Color(0.9, 0.85, 0.75, 1.0)
+theme_override_font_sizes/font_size = 32
+
+[node name="CloseButton" type="Button" parent="OptionsOverlay/OptionsPanel/VBox"]
+layout_mode = 2
+text = "Close"
+theme_override_colors/font_color = Color(1.0, 0.85, 0.35, 1.0)
+theme_override_font_sizes/font_size = 24
+
+; ── Signals ───────────────────────────────────────────────────────────────────
+[connection signal="pressed" from="Buttons/NewGame" to="." method="_on_new_game_pressed"]
+[connection signal="pressed" from="Buttons/Options" to="." method="_on_options_pressed"]
+[connection signal="pressed" from="Buttons/Exit" to="." method="_on_exit_pressed"]
+[connection signal="pressed" from="OptionsOverlay/OptionsPanel/VBox/CloseButton" to="." method="_on_options_close_pressed"]

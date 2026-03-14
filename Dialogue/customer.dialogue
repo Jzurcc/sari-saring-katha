@@ -1,23 +1,23 @@
 ~ customer_greeting
 
-T.K.: A new face…? Have I seen you before, young man?
+???: A new face…? Have I seen you before, young man?
 - Woah, you're very tall.
 - Nope, I just got here… also, you're very tall.
 
-T.K.: Haha, this must be the first time you’ve seen a Kapre.
-- I’ve only heard the stories. > I hope they’re not too evil.
-	T.K.: I hope they’re not too evil.
+???: Haha, this must be the first time you’ve seen me. I'm Kuya Kap, the resident bystander Kapre.
+- I’ve only heard the stories about the Kapre.
+	Kuya Kap: I hope they’re not too evil.
 - A what?
-	T.K.: The Kapre, evil spirits who devour lost intruders, ring a bell?… Kiddingg
-T.K.: Many stories spread around my kind, but as long as our trees breathe and our territories are respected, you won’t need to worry..
+	Kuya Kap: The Kapre, evil spirits who devour lost intruders, ring a bell?… Kiddingg
+Kuya Kap: Many stories spread around my kind, but as long as our trees breathe and our territories are respected, you won’t need to worry..
 - Haha… well that’s reassuring.
-T.K.: Anyway, let me buy {{item_name}}. I need to relax a bit.
+Kuya Kap: Anyway, let me buy {{item_name}}. I need to relax a bit.
 - Coming right up.
 
 ~ customer_satisfied
 
-T.K.: Salamat. I’ll be bystanding here for a while, don’t mind me.
+Kuya Kap: Salamat. I’ll be bystanding here for a while, don’t mind me.
 
 ~ customer_rejected
 
-T.K.: Hindi 'yan yung hinihingi ko eh...
+Kuya Kap: Hindi 'yan yung hinihingi ko eh...

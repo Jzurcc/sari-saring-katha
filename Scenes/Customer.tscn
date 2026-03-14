@@ -1,41 +1,38 @@
-[gd_scene load_steps=6 format=3 uid="uid://customer123"]
+[gd_scene format=3 uid="uid://customer123"]
 
-[ext_resource type="Script" path="res://Scripts/Customer.gd" id="1_script"]
-[ext_resource type="Texture2D" uid="uid://defaulticon123" path="res://icon.svg" id="2_icon"]
-[ext_resource type="Texture2D" path="res://Assets/TK.png" id="3_tk"]
+[ext_resource type="Script" uid="uid://in1r823inl7v" path="res://Scripts/Customer.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/Kuya_Kap.png" id="3_tk"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(0.5, 1.5, 0.5)
 
-[node name="Customer" type="Area3D"]
+[node name="Customer" type="Area3D" unique_id=942979049]
 script = ExtResource("1_script")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1252328638]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="Body" type="Sprite3D" parent="."]
+[node name="Body" type="Sprite3D" parent="." unique_id=1004560236]
 transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 0.45, 0)
 pixel_size = 0.005
 billboard = 1
 texture = ExtResource("3_tk")
 
-[node name="Bubble" type="Sprite3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 1.0, 0)
+[node name="Bubble" type="Sprite3D" parent="." unique_id=635029521]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 1, 0)
 pixel_size = 0.005
 billboard = 1
 
-[node name="ItemIcon" type="Sprite3D" parent="Bubble"]
-visible = false
+[node name="ItemIcon" type="Sprite3D" parent="Bubble" unique_id=11754162]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 1, 0, 0.3, 0.1)
+visible = false
 pixel_size = 0.003
 billboard = 2
-modulate = Color(1, 1, 1, 1)
 
-[node name="RequestLabel" type="Label3D" parent="Bubble"]
+[node name="RequestLabel" type="Label3D" parent="Bubble" unique_id=584354300]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0.02)
 pixel_size = 0.05
 billboard = 1
 text = "Item Name"
-font_size = 32
 outline_size = 4
