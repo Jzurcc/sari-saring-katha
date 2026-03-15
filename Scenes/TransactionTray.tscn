@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://uhfkahoco085" path="res://Scripts/TransactionTray.gd" id="1_script"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1, 0.1, 1)
+size = Vector3(1, 0.47663575, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 size = Vector3(1, 0.1, 1)
@@ -12,6 +12,7 @@ size = Vector3(1, 0.1, 1)
 script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=319493410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18831787, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=938977795]

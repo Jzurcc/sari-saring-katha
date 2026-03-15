@@ -285,7 +285,10 @@ func _on_item_placed(item: DraggableItem) -> void:
 			current_customer.item_icon.texture = item.item_data.texture
 			current_customer.item_icon.visible = true
 
-		item.queue_free()
+		# For testing: infinite items. Return to inventory and shelf instead of destroying.
+		if item.item_data:
+			InventoryManager.return_item(item.item_data)
+		item.return_to_start()
 		# customer.check_item → satisfy() → satisfied signal → _on_customer_satisfied
 	else:
 		# Wrong item — return to inventory, show rejected dialogue
