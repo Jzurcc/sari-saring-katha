@@ -13,12 +13,12 @@ var _original_position: Vector3 = Vector3.ZERO
 @onready var label: Label3D = $Label3D
 
 func _ready() -> void:
-	_original_position = global_position
 	if item_data:
 		setup(item_data)
 
 func setup(data: ItemData) -> void:
 	item_data = data
+	_original_position = global_position
 	if item_data:
 		if item_data.texture:
 			sprite.texture = item_data.texture

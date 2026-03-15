@@ -184,18 +184,8 @@ func spawn_customer() -> void:
 	print("[DEBUG] spawn_customer: waiting 2s then spawning...")
 	await get_tree().create_timer(2.0).timeout
 
-	# Pick the desired item — Cigarettes for now, random among available in the future
-	var desired_item: ItemData
-	if _encounter_count == 0:
-		# First encounter: Kuya Kap wants Cigarettes
-		desired_item = load("res://Resources/items/food/Cigarettes.tres")
-	else:
-		# Returning encounters: random item from inventory (for debugging)
-		var all_items := InventoryManager.get_all_items()
-		if all_items.is_empty():
-			desired_item = load("res://Resources/items/food/Cigarettes.tres")
-		else:
-			desired_item = all_items.pick_random()
+	# Always request Cigarettes for all encounters (for testing)
+	var desired_item: ItemData = load("res://Resources/items/food/Cigarettes.tres")
 
 	if not desired_item:
 		push_error("[MainGame] Failed to load item for customer!")
@@ -285,9 +275,10 @@ func _on_item_placed(item: DraggableItem) -> void:
 			current_customer.item_icon.texture = item.item_data.texture
 			current_customer.item_icon.visible = true
 
-		# For testing: infinite items. Return to inventory and shelf instead of destroying.
+		# Infinite items for testing: restock and return to shelf
 		if item.item_data:
 			InventoryManager.return_item(item.item_data)
+		item.show_visuals()  # Re-show the 3D sprite before moving back
 		item.return_to_start()
 		# customer.check_item → satisfy() → satisfied signal → _on_customer_satisfied
 	else:

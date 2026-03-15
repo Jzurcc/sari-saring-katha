@@ -94,7 +94,7 @@ stream = SubResource("AudioStreamMP3_ktwve")
 [node name="ConfirmationPopup" parent="." unique_id=1345055840 instance=ExtResource("10_confirmpopup")]
 
 [node name="ShelfItemsAnchor" type="Marker3D" parent="." unique_id=485562213]
-transform = Transform3D(-0.99987304, 0, 0.015934063, 0, 1, 0, -0.015934063, 0, -0.99987304, -12.832933, 1.1460749, 11.927461)
+transform = Transform3D(-0.99987304, 0, 0.015934063, 0, 1, 0, -0.015934063, 0, -0.99987304, -13.150961, 1.2787584, 11.927461)
 
 [node name="Shelf" parent="." unique_id=848939969 instance=ExtResource("5_321ql")]
 transform = Transform3D(-0.99990374, 0, 0.013874952, 0, 1, 0, -0.013874952, 0, -0.99990374, -12.803959, 0.9331725, 12.209989)
