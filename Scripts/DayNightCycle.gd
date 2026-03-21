@@ -1,4 +1,4 @@
-class_name DayNightCycle
+class_name DayNightManager
 extends Node
 
 

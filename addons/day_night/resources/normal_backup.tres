@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="DayConfig" load_steps=2 format=3 uid="uid://c6tx0gqr3gsuv"]
+
+[ext_resource type="Script" path="res://addons/day_night/resources/scripts/day_config.gd" id="1_8habd"]
+
+[resource]
+script = ExtResource("1_8habd")
+has_night = true
+day_name = "WORKS"
+sunrise_hour = 6
+sunrise_minute = 0
+sunrise_second = 0
+sunrise_millisecond = 0
+sunset_hour = 18
+sunset_minute = 0
+sunset_second = 0
+sunset_millisecond = 0

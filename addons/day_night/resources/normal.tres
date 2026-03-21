@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="DayConfig" load_steps=3 format=3 uid="uid://box57qhyqsg2p"]
+
+[ext_resource type="Script" path="res://addons/day_night/resources/scripts/day_config.gd" id="1_0vd3m"]
+[ext_resource type="Resource" uid="uid://cfwo7kd5x4fxr" path="res://addons/day_night/resources/day_period_normal.tres" id="1_1ppfd"]
+
+[resource]
+script = ExtResource("1_0vd3m")
+day_name = "Normal"
+day_weight = 1
+day_color = Color(0.894118, 0.92549, 0.584314, 1)
+day_time_light_intensity = 5.0
+night_color = Color(0.0823529, 0.0352941, 0.513726, 1)
+night_time_light_intensity = 1.0
+minimum_light_intensity = 0.2
+sunrise_hour = 6
+sunrise_minute = 0
+sunrise_second = 0
+sunrise_millisecond = 0
+sunset_hour = 18
+sunset_minute = 0
+sunset_second = 0
+sunset_millisecond = 0
+day_periods = Array[Resource("res://addons/day_night/resources/scripts/day_period_config.gd")]([ExtResource("1_1ppfd")])

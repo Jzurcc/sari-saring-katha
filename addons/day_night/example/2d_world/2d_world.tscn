@@ -1,0 +1,52 @@
+[gd_scene load_steps=7 format=3 uid="uid://bpmah7wymqbj3"]
+
+[ext_resource type="Script" path="res://addons/day_night/day_night_cycle.gd" id="1_1hw5s"]
+[ext_resource type="Resource" uid="uid://box57qhyqsg2p" path="res://addons/day_night/resources/normal.tres" id="2_p6x3k"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_okbmw"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_fovky"]
+distance = -489.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_t2o2a"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bvl7a"]
+radius = 27.0185
+
+[node name="2dWorld" type="Node2D"]
+
+[node name="DirectionalLight2D" type="DirectionalLight2D" parent="."]
+color = Color(0.494118, 0.490196, 0, 1)
+energy = 0.59
+height = 0.59
+max_distance = 10955.0
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="StaticBody2D"]
+modulate = Color(0.113725, 0.517647, 0, 1)
+position = Vector2(636.313, 517)
+scale = Vector2(1457.37, 53)
+mesh = SubResource("QuadMesh_okbmw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+shape = SubResource("WorldBoundaryShape2D_fovky")
+
+[node name="StaticBody2D2" type="StaticBody2D" parent="."]
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="StaticBody2D2"]
+position = Vector2(571, 372)
+scale = Vector2(56.9266, 53)
+mesh = SubResource("SphereMesh_t2o2a")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D2"]
+position = Vector2(571, 373)
+shape = SubResource("CircleShape2D_bvl7a")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(584, 267)
+
+[node name="DayNightCycle" type="Node" parent="." node_paths=PackedStringArray("sun_2d")]
+script = ExtResource("1_1hw5s")
+default_day_config = ExtResource("2_p6x3k")
+sun_2d = NodePath("../DirectionalLight2D")

@@ -25,6 +25,7 @@ InputManager="*res://Scripts/InputManager.gd"
 DragManager="*res://Scripts/DragManager.gd"
 DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
+GDRx="*uid://53t8o3elg2rt"
 
 [display]
 
@@ -33,7 +34,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/dialogue_manager/plugin.cfg")
+enabled=PackedStringArray("res://addons/day_night/plugin.cfg", "res://addons/dialogue_manager/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/reactivex/plugin.cfg")
 
 [input]
 

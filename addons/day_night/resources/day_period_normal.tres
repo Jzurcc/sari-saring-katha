@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="DayPeriodConfig" load_steps=2 format=3 uid="uid://cfwo7kd5x4fxr"]
+
+[ext_resource type="Script" path="res://addons/day_night/resources/scripts/day_period_config.gd" id="1_76nly"]
+
+[resource]
+script = ExtResource("1_76nly")
+period_name = "GREEN"
+day_time_period_color = Color(0, 1, 0, 1)
+day_time_light_intensity = 2.0
+night_time_period_color = Color(0, 0.278431, 0, 1)
+night_time_light_intensity = 0.8
+minimum_light_intensity = 0.1
+start_hour = 15
+start_minute = 0
+start_second = 0
+start_millisecond = 0
+length_hour = 2
+length_minute = 0
+length_second = 0
+length_millisecond = 0
+weather_conditions = Array[Resource("res://addons/day_night/resources/scripts/weather_config.gd")]([])
