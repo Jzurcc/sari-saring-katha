@@ -57,6 +57,11 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	# Notify the item that dragging has started so it can hide its 3D visuals
 	_dragged_item._on_drag_started_by_manager()
 
+	# Highlight the drop zone
+	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
+	if tray_nodes.size() > 0 and tray_nodes[0].has_method("activate_dropzone"):
+		tray_nodes[0].activate_dropzone()
+
 func _process(_delta: float) -> void:
 	if not _is_dragging:
 		return
@@ -123,6 +128,11 @@ func end_drag() -> void:
 		crosshair.show()
 	elif Input.get_mouse_mode() == Input.MOUSE_MODE_HIDDEN:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	# Deactivate drop zone highlight (will also fire on bad drop)
+	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
+	if tray_nodes.size() > 0 and tray_nodes[0].has_method("deactivate_dropzone"):
+		tray_nodes[0].deactivate_dropzone()
 
 	var camera := get_viewport().get_camera_3d()
 	if not camera:

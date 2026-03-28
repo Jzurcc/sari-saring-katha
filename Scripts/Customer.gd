@@ -88,9 +88,9 @@ func satisfy() -> void:
 	
 	# Trigger Particles precisely at the peak of the jump
 	tween.tween_callback(func():
-		var particles: GPUParticles3D = get_node_or_null("HappyParticles")
-		if particles:
-			particles.emitting = true
+		var particles = get_node_or_null("HappyParticles")
+		if particles and particles.has_method("play"):
+			particles.play()
 	)
 	
 	# Squish back down

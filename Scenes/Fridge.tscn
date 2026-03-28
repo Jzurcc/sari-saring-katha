@@ -38,3 +38,39 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 0, 0.55)
 [node name="DoorMesh" type="MeshInstance3D" parent="DoorPivot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 0, 0)
 mesh = SubResource("BoxMesh_Door")
+
+[node name="InteriorLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+light_color = Color(0.8, 0.9, 1, 1)
+light_energy = 0.0
+omni_range = 3.0
+omni_attenuation = 0.5
+
+[node name="ColdMist" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.4)
+script = ExtResource("9_uniparticles")
+enable_main_module = Vector2i(1, 1)
+duration = 1.0
+start_lifetime_mode = 1
+start_lifetime_random = Vector2(1.0, 2.0)
+start_speed_mode = 1
+start_speed_random = Vector2(0.5, 1.0)
+gravity = Vector3(0, -1, 0)
+start_size_mode = 1
+start_size_random = Vector4(0.5, 0.5, 1.0, 1.0)
+use_world_space = true
+enable_play_behavior = Vector2i(1, 1)
+play_on_start = false
+loop = true
+enable_emission = Vector2i(1, 1)
+max_particles = 100
+rate_over_time = 0.0
+enable_shape = Vector2i(1, 1)
+shape_type = 3
+box_extents = Vector3(0.6, 0.1, 0.1)
+enable_rendering = Vector2i(1, 1)
+tint_color = Color(0.8, 0.9, 1, 0.2)
+billboard_mode = 0
+blend_mode = 0
+rendering_layer = 1
+

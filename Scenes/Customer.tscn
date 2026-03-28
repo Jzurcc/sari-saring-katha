@@ -2,40 +2,11 @@
 
 [ext_resource type="Script" uid="uid://in1r823inl7v" path="res://Scripts/Customer.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/characters/sprites/Kuya_Kap.png" id="3_tk"]
+[ext_resource type="Script" uid="uid://c2ja1eugyxfeq" path="res://addons/UniParticles3D/UniParticles3D.gd" id="9_uniparticles"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(0.5, 1.5, 0.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_star"]
-transparency = 1
-blend_mode = 1
-shading_mode = 0
-vertex_color_use_as_albedo = true
-albedo_color = Color(1, 0.8, 0, 1)
-
-[sub_resource type="QuadMesh" id="QuadMesh_star"]
-material = SubResource("StandardMaterial3D_star")
-size = Vector2(0.3, 0.3)
-
-[sub_resource type="Curve" id="Curve_star1"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
-point_count = 2
-
-[sub_resource type="CurveTexture" id="CurveTexture_star1"]
-curve = SubResource("Curve_star1")
-
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_excitement"]
-direction = Vector3(0, 1, 0)
-spread = 60.0
-initial_velocity_min = 2.0
-initial_velocity_max = 5.0
-gravity = Vector3(0, -9.8, 0)
-scale_min = 0.5
-scale_max = 1.0
-scale_curve = SubResource("CurveTexture_star1")
-color = Color(1, 0.8, 0.2, 1)
-hue_variation_min = -0.1
-hue_variation_max = 0.1
 
 [node name="Customer" type="Area3D" unique_id=942979049]
 script = ExtResource("1_script")
@@ -68,12 +39,32 @@ billboard = 1
 text = "Item Name"
 outline_size = 4
 
-[node name="HappyParticles" type="GPUParticles3D" parent="." unique_id=999888777]
+[node name="HappyParticles" type="Node3D" parent="." unique_id=999888777]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-emitting = false
-amount = 25
-lifetime = 1.0
-one_shot = true
-explosiveness = 0.9
-process_material = SubResource("ParticleProcessMaterial_excitement")
-draw_pass_1 = SubResource("QuadMesh_star")
+script = ExtResource("9_uniparticles")
+enable_main_module = Vector2i(1, 1)
+duration = 1.0
+start_lifetime_mode = 1
+start_lifetime_random = Vector2(0.5, 0.8)
+start_speed_mode = 1
+start_speed_random = Vector2(3.0, 6.0)
+gravity = Vector3(0, -5, 0)
+start_size_mode = 1
+start_size_random = Vector4(0.15, 0.15, 0.25, 0.25)
+use_world_space = true
+enable_play_behavior = Vector2i(1, 1)
+play_on_start = false
+loop = false
+destroy_on_finish = false
+enable_emission = Vector2i(1, 1)
+max_particles = 30
+bursts = [0.0, 0, 30, 30, 0, 1, 1, 0.0, 1.0]
+enable_shape = Vector2i(1, 1)
+shape_type = 1
+radius = 0.2
+random_direction = 1.0
+enable_rendering = Vector2i(1, 1)
+tint_color = Color(1, 0.8, 0.2, 1)
+billboard_mode = 0
+blend_mode = 1
+rendering_layer = 1

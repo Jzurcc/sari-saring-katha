@@ -42,6 +42,7 @@ var _debug_show_collisions: bool = false
 var _current_view: CameraView = CameraView.FRONT
 var _waiting_for_next_customer: bool = false
 var _encounter_count: int = 0  # 0 = first meeting, 1+ = returning
+var _last_hovered: Node = null
 
 # --- Progression ---
 const CUSTOMERS_PER_DAY: int = 5
@@ -219,10 +220,13 @@ func _input(event: InputEvent) -> void:
 			camera.rotation.x = _pitch
 		elif event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-				# If we aren't already dragging something, pick it up and prevent DragManager from receiving this same click to drop it.
+				# If we aren't already dragging something, interact with it.
 				if not DragManager._is_dragging:
 					get_viewport().set_input_as_handled()
-					DragManager.fps_try_interact()
+					if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_interact"):
+						_last_hovered.on_interact()
+					else:
+						DragManager.fps_try_interact()
 
 func _physics_process(delta: float) -> void:
 	# Add the gravity
@@ -230,6 +234,29 @@ func _physics_process(delta: float) -> void:
 		player.velocity += player.get_gravity() * delta
 
 	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		var center := get_viewport().get_visible_rect().size / 2.0
+		var ray_origin := camera.project_ray_origin(center)
+		var ray_dir := camera.project_ray_normal(center)
+
+		var query := PhysicsRayQueryParameters3D.new()
+		query.from = ray_origin
+		query.to = ray_origin + ray_dir * 10.0
+		query.collide_with_areas = true
+		query.collide_with_bodies = false
+
+		var result := get_world_3d().direct_space_state.intersect_ray(query)
+		var current_hovered = null
+		if result:
+			current_hovered = result.get("collider")
+		
+		# Modular interaction hover
+		if current_hovered != _last_hovered:
+			if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
+				_last_hovered.on_hover(false)
+			if current_hovered and current_hovered.has_method("on_hover"):
+				current_hovered.on_hover(true)
+			_last_hovered = current_hovered
+		
 		var input_dir = Input.get_vector("look_left", "look_right", "look_front", "look_back")
 		var forward = -head.global_transform.basis.z
 		var right = head.global_transform.basis.x

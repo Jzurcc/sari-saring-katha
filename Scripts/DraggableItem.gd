@@ -25,17 +25,35 @@ func setup(data: ItemData) -> void:
 		if label:
 			label.hide()
 
+var outline_material: ShaderMaterial = null
+
+func on_hover(is_hovered: bool) -> void:
+	if is_hovered:
+		if not outline_material and sprite.texture:
+			outline_material = ShaderMaterial.new()
+			outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")
+			outline_material.set_shader_parameter("albedo_texture", sprite.texture)
+			outline_material.set_shader_parameter("outline_color", Color.WHITE)
+			outline_material.set_shader_parameter("outline_width", 0.05)
+		sprite.material_override = outline_material
+	else:
+		sprite.material_override = null
+
+func on_interact() -> void:
+	if DragManager._is_dragging: return
+	# Check stock before allowing drag
+	if item_data and not InventoryManager.is_in_stock(item_data):
+		print("[DraggableItem] Out of stock: ", item_data.item_name)
+		return
+	# Take from inventory when drag starts
+	if item_data:
+		InventoryManager.take_item(item_data)
+	DragManager.start_drag(self, sprite.texture)
+
 func _input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			# Check stock before allowing drag
-			if item_data and not InventoryManager.is_in_stock(item_data):
-				print("[DraggableItem] Out of stock: ", item_data.item_name)
-				return
-			# Take from inventory when drag starts
-			if item_data:
-				InventoryManager.take_item(item_data)
-			DragManager.start_drag(self, sprite.texture)
+			on_interact()
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()
