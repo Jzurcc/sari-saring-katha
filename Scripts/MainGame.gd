@@ -91,42 +91,15 @@ func _ready() -> void:
 # --- Lighting setup ---
 
 func _setup_lighting() -> void:
-	# Create DirectionalLight3D (sun)
-	var sun := DirectionalLight3D.new()
-	sun.name = "SunLight"
-	sun.shadow_enabled = true
-	sun.light_energy = 1.0
-	sun.rotation_degrees = Vector3(-45, -30, 0)
-	add_child(sun)
-
-	# Create WorldEnvironment with procedural sky
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.3, 0.45, 0.75)
-	sky_material.sky_horizon_color = Color(0.65, 0.75, 0.85)
-
-	var sky := Sky.new()
-	sky.sky_material = sky_material
-
-	var env := Environment.new()
-	env.background_mode = Environment.BG_SKY
-	env.sky = sky
-	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.glow_enabled = true
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.5
-
-	var world_env := WorldEnvironment.new()
-	world_env.name = "WorldEnvironment"
-	world_env.environment = env
-	add_child(world_env)
-
-	# Create and initialize DayNightCycle
+	# Grab the TimeOfDay node from the Sky3D infrastructure
+	var time_of_day = get_node_or_null("Sky3D/TimeOfDay")
+	
 	_day_night = DayNightManager.new()
 	_day_night.name = "DayNightManager"
 	add_child(_day_night)
-	_day_night.setup(sun, world_env)
+	_day_night.setup(time_of_day)
 	_day_night.day_ended.connect(_on_day_ended)
-	print("[MainGame] Lighting and DayNightCycle initialized")
+	print("[MainGame] DayNightManager initialized with Sky3D")
 
 # --- Camera ---
 

@@ -26,18 +26,21 @@ DragManager="*res://Scripts/DragManager.gd"
 DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
 GDRx="*uid://53t8o3elg2rt"
+Dialogic="*uid://ds2q0uclmolvu"
 
 [dialogic]
 
 directories/dch_directory={
-"KuyaKap": "res://Characters/KuyaKap.dch"
+"KuyaKap": "res://Characters/KuyaKap.dch",
+"Timelines/KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch"
 }
 directories/dtl_directory={
 "customer_greeting": "res://Dialogue/customer_greeting.dtl",
 "customer_rejected": "res://Dialogue/customer_rejected.dtl",
 "customer_returning": "res://Dialogue/customer_returning.dtl",
 "customer_satisfied": "res://Dialogue/customer_satisfied.dtl",
-"day_ended": "res://Dialogue/day_ended.dtl"
+"day_ended": "res://Dialogue/day_ended.dtl",
+"main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
 }
 layout/style_directory={
 "": "res://Assets/Dialogue/DialogueStyle.tres",
@@ -45,6 +48,7 @@ layout/style_directory={
 }
 layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres"]
 layout/default_style="res://Assets/Dialogue/DialogueStyle.tres"
+glossary/default_case_sensitive=true
 
 [display]
 
@@ -53,7 +57,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/day_night/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/reactivex/plugin.cfg")
+enabled=PackedStringArray("res://addons/dialogic/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/reactivex/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
 
 [input]
 
