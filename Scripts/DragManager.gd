@@ -6,8 +6,8 @@ var _dragged_texture_rect: TextureRect = null
 var _canvas_layer: CanvasLayer = null
 
 # For future sway mechanics
-var _last_mouse_pos: Vector2 = Vector2.ZERO
-var _current_velocity: Vector2 = Vector2.ZERO
+var _sway_offset: Vector2 = Vector2.ZERO
+var _drag_velocity: Vector2 = Vector2.ZERO
 
 # Reuse raycast query parameters instead of creating new ones each frame
 var _raycast_query: PhysicsRayQueryParameters3D
@@ -39,10 +39,20 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		_dragged_texture_rect.texture = texture
 		_dragged_texture_rect.custom_minimum_size = Vector2(128, 128)
 		_dragged_texture_rect.size = Vector2(128, 128)
-		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0)
+		_dragged_texture_rect.pivot_offset = _dragged_texture_rect.size / 2.0
+		# Start from slightly below for a nice jump-in animation
+		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 100)
 		_dragged_texture_rect.show()
 
-	_last_mouse_pos = get_viewport().get_mouse_position()
+	_sway_offset = Vector2.ZERO
+	_drag_velocity = Vector2.ZERO
+	_dragged_texture_rect.rotation = 0.0
+
+	var crosshair: Control = get_tree().root.get_node_or_null("MainGame/CanvasLayer/CrosshairContainer")
+	if crosshair and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		crosshair.hide()
+	elif Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
 
 	# Notify the item that dragging has started so it can hide its 3D visuals
 	_dragged_item._on_drag_started_by_manager()
@@ -51,19 +61,43 @@ func _process(_delta: float) -> void:
 	if not _is_dragging:
 		return
 
-	var current_mouse_pos := get_viewport().get_mouse_position()
-	if _delta > 0:
-		_current_velocity = (current_mouse_pos - _last_mouse_pos) / _delta
-	_last_mouse_pos = current_mouse_pos
+	var target_pos: Vector2
+	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		target_pos = get_viewport().get_visible_rect().size / 2.0
+	else:
+		target_pos = get_viewport().get_mouse_position()
 
-	# Center on cursor
-	_dragged_texture_rect.position = current_mouse_pos - (_dragged_texture_rect.size / 2.0)
+	# Decay sway back to zero
+	_sway_offset = _sway_offset.lerp(Vector2.ZERO, 10.0 * _delta)
 	
-	# Note: Future item sway can be applied here using _current_velocity to rotate or offset _dragged_texture_rect
-	# e.g., _dragged_texture_rect.rotation = lerp(...)
+	# Clamp sway to prevent it from going offscreen
+	var max_sway := 80.0
+	_sway_offset.x = clamp(_sway_offset.x, -max_sway, max_sway)
+	_sway_offset.y = clamp(_sway_offset.y, -max_sway, max_sway)
+
+	# Calculate final intended position of the rect
+	var final_pos = target_pos - (_dragged_texture_rect.size / 2.0) + _sway_offset
+	
+	# Smoothly interpolate position using Spring Physics (Natural Ease In/Out)
+	var diff = final_pos - _dragged_texture_rect.position
+	var spring_force = diff * 150.0  # Stiffness
+	var damping = _drag_velocity * 20.0  # Friction
+	_drag_velocity += (spring_force - damping) * _delta
+	_dragged_texture_rect.position += _drag_velocity * _delta
+	
+	# Apply dynamic tilt/rotation based on the horizontal sway
+	var target_rotation = _sway_offset.x * 0.003
+	_dragged_texture_rect.rotation = lerp(_dragged_texture_rect.rotation, target_rotation, 15.0 * _delta)
 
 func _input(event: InputEvent) -> void:
-	if _is_dragging and event is InputEventMouseButton:
+	if not _is_dragging:
+		return
+		
+	if event is InputEventMouseMotion:
+		# Add inertial lag
+		_sway_offset -= event.relative * 0.4
+		
+	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			# Toggle grab when mouse is fully locked (true FPS crosshair mode)
 			# Revert to classic hold-to-drag when cursor is visible
@@ -83,6 +117,12 @@ func end_drag() -> void:
 
 	_is_dragging = false
 	_dragged_texture_rect.hide()
+
+	var crosshair: Control = get_tree().root.get_node_or_null("MainGame/CanvasLayer/CrosshairContainer")
+	if crosshair and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		crosshair.show()
+	elif Input.get_mouse_mode() == Input.MOUSE_MODE_HIDDEN:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	var camera := get_viewport().get_camera_3d()
 	if not camera:

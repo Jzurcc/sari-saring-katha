@@ -23,7 +23,7 @@ func setup(data: ItemData) -> void:
 		if item_data.texture:
 			sprite.texture = item_data.texture
 		if label:
-			label.text = "%s\nP%d" % [item_data.item_name, item_data.price]
+			label.hide()
 
 func _input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
@@ -51,8 +51,8 @@ func _on_drag_cancelled_by_manager() -> void:
 
 func show_visuals() -> void:
 	sprite.show()
-	if label:
-		label.show()
+	# if label:
+	# 	label.show()
 
 func return_to_start() -> void:
 	show_visuals()

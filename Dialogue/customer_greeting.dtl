@@ -1,4 +1,4 @@
-join Timelines/KuyaKap left [animation="Slide In Up" length="0.2"]
+join Timelines/KuyaKap left [length="0.2"]
 Timelines/KuyaKap: A new face…? Have I seen you before, young man?
 - Woah, you're very tall.
 - Nope, I just got here… also, you're very tall.

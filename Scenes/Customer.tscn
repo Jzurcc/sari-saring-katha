@@ -6,6 +6,37 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(0.5, 1.5, 0.5)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_star"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0.8, 0, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_star"]
+material = SubResource("StandardMaterial3D_star")
+size = Vector2(0.3, 0.3)
+
+[sub_resource type="Curve" id="Curve_star1"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_star1"]
+curve = SubResource("Curve_star1")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_excitement"]
+direction = Vector3(0, 1, 0)
+spread = 60.0
+initial_velocity_min = 2.0
+initial_velocity_max = 5.0
+gravity = Vector3(0, -9.8, 0)
+scale_min = 0.5
+scale_max = 1.0
+scale_curve = SubResource("CurveTexture_star1")
+color = Color(1, 0.8, 0.2, 1)
+hue_variation_min = -0.1
+hue_variation_max = 0.1
+
 [node name="Customer" type="Area3D" unique_id=942979049]
 script = ExtResource("1_script")
 
@@ -36,3 +67,13 @@ pixel_size = 0.05
 billboard = 1
 text = "Item Name"
 outline_size = 4
+
+[node name="HappyParticles" type="GPUParticles3D" parent="." unique_id=999888777]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+emitting = false
+amount = 25
+lifetime = 1.0
+one_shot = true
+explosiveness = 0.9
+process_material = SubResource("ParticleProcessMaterial_excitement")
+draw_pass_1 = SubResource("QuadMesh_star")

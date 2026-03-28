@@ -11,6 +11,11 @@ var target_position: Vector3
 var is_waiting: bool = false
 var desire: ItemData
 
+@export var vertical_follow_factor: float = 1.0
+@export var min_sprite_y: float = 1.3
+@export var max_sprite_y: float = 2.4
+var _base_sprite_y: float = 0.0
+
 @onready var bubble: Sprite3D = $Bubble
 @onready var item_icon: Sprite3D = $Bubble/ItemIcon
 @onready var request_label: Label3D = $Bubble/RequestLabel
@@ -19,6 +24,10 @@ var desire: ItemData
 func _ready() -> void:
 	bubble.visible = false
 	input_event.connect(_on_input_event)
+	
+	# Store the initial position of the body sprite for the vertical follow logic
+	if body_sprite:
+		_base_sprite_y = body_sprite.position.y
 
 func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
@@ -34,6 +43,14 @@ func setup(data: ItemData, target: Vector3) -> void:
 		request_label.text = desire.item_name
 
 func _process(delta: float) -> void:
+	# Vertically follow the camera pitch so the sprite doesn't skew downwards/upwards too much
+	var camera := get_viewport().get_camera_3d()
+	if camera and body_sprite:
+		var pitch := camera.global_rotation.x
+		# Applying the user requested logic: move normally as before, but clamped
+		var target_y := _base_sprite_y - (pitch * vertical_follow_factor)
+		body_sprite.position.y = clamp(target_y, min_sprite_y, max_sprite_y)
+
 	# Early return optimization: skip processing when waiting at counter
 	if is_waiting:
 		return
@@ -60,7 +77,37 @@ func check_item(item: ItemData) -> bool:
 func satisfy() -> void:
 	bubble.modulate = Color.GREEN
 	request_label.text = "Thanks!"
-	await get_tree().create_timer(1.0).timeout
+	
+	var tween = create_tween()
+	var original_scale = body_sprite.scale
+	var base_y = body_sprite.position.y
+	
+	# Jump up and stretch
+	tween.tween_property(body_sprite, "scale", original_scale * Vector3(0.8, 1.2, 1.0), 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(body_sprite, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	
+	# Trigger Particles precisely at the peak of the jump
+	tween.tween_callback(func():
+		var particles: GPUParticles3D = get_node_or_null("HappyParticles")
+		if particles:
+			particles.emitting = true
+	)
+	
+	# Squish back down
+	tween.tween_property(body_sprite, "scale", original_scale * Vector3(1.1, 0.9, 1.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(body_sprite, "position:y", base_y, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	
+	# Recover to normal scale
+	tween.tween_property(body_sprite, "scale", original_scale, 0.15).set_trans(Tween.TRANS_SPRING).set_ease(Tween.EASE_OUT)
+	
+	await get_tree().create_timer(2.0).timeout
+	
+	# Smooth fade out before freeing
+	var fade_tween = create_tween()
+	fade_tween.tween_property(body_sprite, "modulate:a", 0.0, 0.4)
+	fade_tween.parallel().tween_property(bubble, "modulate:a", 0.0, 0.4)
+	await fade_tween.finished
+	
 	satisfied.emit()
 	queue_free()
 

@@ -167,7 +167,7 @@ visible = false
 visible = false
 
 [node name="Cube" parent="." index="21" unique_id=1002695322]
-transform = Transform3D(-1.5199124, -1.4780451e-07, 5.808149e-15, 0, -7.390226e-08, -1.5199124, 1.3287496e-07, -1.6906866, 6.643748e-08, 3.873209, -0.3152892, -0.2938664)
+transform = Transform3D(-1.5199124, -1.4780451e-07, 5.808149e-15, 0, -7.390226e-08, -1.5199124, 1.3287496e-07, -1.6906866, 6.643748e-08, 3.873209, 0.0505777, -0.2938664)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Cube" index="0" unique_id=301838124]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.010926992, -4.172325e-07, -1.07499)
@@ -176,7 +176,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.010926992, -4.172325e-07, -
 shape = SubResource("BoxShape3D_k3ae4")
 
 [node name="Cube_001" parent="." index="22" unique_id=458884219]
-transform = Transform3D(-1.5199124, -1.4780451e-07, 5.808149e-15, 0, -7.390226e-08, -1.5199124, 1.3287496e-07, -1.6906866, 6.643748e-08, 3.8458815, -0.32904834, -0.29202008)
+transform = Transform3D(-1.5199124, -1.4780451e-07, 5.808149e-15, 0, -7.390226e-08, -1.5199124, 1.3287496e-07, -1.6906866, 6.643748e-08, 3.8458815, 0.036818564, -0.29202008)
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Cube_001" index="0" unique_id=233780623]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42546728, -0.0053696036, -1.0736817)
@@ -195,6 +195,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05246544, -0.09445667, 13.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="fan/gsrhz_obj_cleaner_materialmerger_gles/Object_2/StaticBody3D" index="0" unique_id=1714153979]
 shape = SubResource("BoxShape3D_32l73")
+
+[node name="Cube_002" parent="." index="25" unique_id=1415006693]
+transform = Transform3D(-2.6576104, 0, 0, 0, -0.6861596, -0.018217511, 0, 0.10477713, -0.11930199, 0, 6.7504725, -4.7425833)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." index="26" unique_id=859320744]
 transform = Transform3D(9.3, 0, 0, 0, -4.065159e-07, 9.3, 0, -9.3, -4.065159e-07, 0, 0.053195834, 0)

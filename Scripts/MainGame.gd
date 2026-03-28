@@ -17,8 +17,21 @@ var current_customer: Customer = null
 
 # --- Free Camera ---
 @export var use_free_camera: bool = true
-var camera_speed: float = 6.0
+var walk_speed: float = 5.0
+var sprint_speed: float = 8.0
+var movement_acceleration: float = 40.0
+var movement_friction: float = 30.0
 var mouse_sensitivity: float = 0.002
+
+# Head Bobbing (Sine/Cosine Waves)
+var bob_frequency: float = 2.0
+var bob_amplitude: float = 0.08
+var t_bob: float = 0.0
+
+# Dynamic Field of View
+var base_fov: float = 75.0
+var fov_change: float = 1.5
+
 var _pitch: float = 0.0
 var _yaw: float = 0.0
 
@@ -37,7 +50,8 @@ var customers_served_today: int = 0
 
 # --- @onready node references ---
 @onready var player: CharacterBody3D = $Player
-@onready var camera: Camera3D = $Player/Camera3D
+@onready var head: Node3D = $Player/Head
+@onready var camera: Camera3D = $Player/Head/Camera3D
 @onready var front_cam_pos: Marker3D = $FrontCamPos
 @onready var back_cam_pos: Marker3D = $BackCamPos
 @onready var left_cam_pos: Marker3D = $LeftCamPos
@@ -77,6 +91,10 @@ func _ready() -> void:
 		$CanvasLayer/CrosshairContainer.show()
 		_pitch = 0.0
 		_yaw = 0.0
+		if head:
+			head.rotation.y = _yaw
+		if camera:
+			camera.rotation.x = _pitch
 	else:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		$CanvasLayer/CrosshairContainer.hide()
@@ -167,9 +185,10 @@ func _input(event: InputEvent) -> void:
 		if use_free_camera:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			$CanvasLayer/CrosshairContainer.show()
-			var eu = camera.global_transform.basis.get_euler()
-			_pitch = eu.x
-			_yaw = eu.y
+			camera.position = Vector3.ZERO
+			head.rotation = Vector3(0, _yaw, 0)
+			camera.rotation = Vector3(_pitch, 0, 0)
+			camera.fov = base_fov
 		else:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 			$CanvasLayer/CrosshairContainer.hide()
@@ -185,9 +204,9 @@ func _input(event: InputEvent) -> void:
 			else:
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 				$CanvasLayer/CrosshairContainer.show()
-				var eu = camera.global_transform.basis.get_euler()
-				_pitch = eu.x
-				_yaw = eu.y
+				camera.position = Vector3.ZERO
+				head.rotation = Vector3(0, _yaw, 0)
+				camera.rotation = Vector3(_pitch, 0, 0)
 		return
 
 	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
@@ -195,10 +214,15 @@ func _input(event: InputEvent) -> void:
 			_yaw -= event.relative.x * mouse_sensitivity
 			_pitch -= event.relative.y * mouse_sensitivity
 			_pitch = clamp(_pitch, -PI/2, PI/2)
-			camera.quaternion = Quaternion.from_euler(Vector3(_pitch, _yaw, 0))
+			
+			head.rotation.y = _yaw
+			camera.rotation.x = _pitch
 		elif event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-				DragManager.fps_try_interact()
+				# If we aren't already dragging something, pick it up and prevent DragManager from receiving this same click to drop it.
+				if not DragManager._is_dragging:
+					get_viewport().set_input_as_handled()
+					DragManager.fps_try_interact()
 
 func _physics_process(delta: float) -> void:
 	# Add the gravity
@@ -207,8 +231,8 @@ func _physics_process(delta: float) -> void:
 
 	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		var input_dir = Input.get_vector("look_left", "look_right", "look_front", "look_back")
-		var forward = -camera.global_transform.basis.z
-		var right = camera.global_transform.basis.x
+		var forward = -head.global_transform.basis.z
+		var right = head.global_transform.basis.x
 		
 		# Flatten the movement vertically
 		forward.y = 0
@@ -217,16 +241,30 @@ func _physics_process(delta: float) -> void:
 		right = right.normalized()
 		
 		var direction = (right * input_dir.x + forward * (-input_dir.y)).normalized()
+		var current_speed = sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed
 		
 		if direction:
-			player.velocity.x = direction.x * camera_speed
-			player.velocity.z = direction.z * camera_speed
+			player.velocity.x = move_toward(player.velocity.x, direction.x * current_speed, movement_acceleration * delta)
+			player.velocity.z = move_toward(player.velocity.z, direction.z * current_speed, movement_acceleration * delta)
 		else:
-			player.velocity.x = move_toward(player.velocity.x, 0, camera_speed)
-			player.velocity.z = move_toward(player.velocity.z, 0, camera_speed)
+			player.velocity.x = move_toward(player.velocity.x, 0, movement_friction * delta)
+			player.velocity.z = move_toward(player.velocity.z, 0, movement_friction * delta)
+			
+		# Head Bobbing (Procedural Animation)
+		t_bob += delta * player.velocity.length() * float(player.is_on_floor())
+		camera.position.y = sin(t_bob * bob_frequency) * bob_amplitude
+		camera.position.x = cos(t_bob * bob_frequency / 2.0) * bob_amplitude
+		
+		# Dynamic FOV (Speed Sense)
+		var clamped_velocity = clamp(player.velocity.length(), 0.5, sprint_speed * 2.0)
+		var target_fov = base_fov + (fov_change * clamped_velocity)
+		camera.fov = lerp(camera.fov, target_fov, 8.0 * delta)
 	else:
-		player.velocity.x = move_toward(player.velocity.x, 0, camera_speed)
-		player.velocity.z = move_toward(player.velocity.z, 0, camera_speed)
+		player.velocity.x = move_toward(player.velocity.x, 0, movement_friction * delta)
+		player.velocity.z = move_toward(player.velocity.z, 0, movement_friction * delta)
+		
+		# We don't need to try and manually lerp it down here; switch_view handles the position
+		pass
 
 	player.move_and_slide()
 
