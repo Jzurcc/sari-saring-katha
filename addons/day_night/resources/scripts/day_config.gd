@@ -1,4 +1,4 @@
-@icon("res://addons/day-config-logo.svg")
+@icon("res://addons/day_night/day-config-logo.svg")
 extends Resource
 class_name DayConfig
 
