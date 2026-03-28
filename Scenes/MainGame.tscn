@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/MainGame.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://dlaf65ijebg8b" path="res://Scenes/Shelf.tscn" id="5_321ql"]
 [ext_resource type="PackedScene" uid="uid://c4vq703xgyume" path="res://Scenes/TransactionTray.tscn" id="6_d4f28"]
-[ext_resource type="PackedScene" uid="uid://bjb131wmtsean" path="res://Assets/untitled.dae" id="7_iuea6"]
+
 [ext_resource type="PackedScene" uid="uid://bv0sohhtcdwb6" path="res://final_store.tscn" id="7_kvfik"]
 [ext_resource type="PackedScene" uid="uid://cmcwv70h3k4j6" path="res://Scenes/ItemSelectionUI.tscn" id="9_itemui"]
 [ext_resource type="PackedScene" path="res://Scenes/ConfirmationPopup.tscn" id="10_confirmpopup"]
@@ -68,7 +68,7 @@ shadow_enabled = true
 omni_range = 553.571
 omni_attenuation = 1.162
 
-[node name="untitled" parent="." unique_id=450523989 instance=ExtResource("7_iuea6")]
+
 transform = Transform3D(0.02, 0, 0, 0, 0.02, 0, 0, 0, 0.02, -5.6184363, 0.4211061, 12.108482)
 visible = false
 

@@ -48,14 +48,28 @@ func _create_close_button() -> void:
 
 func _create_buttons() -> void:
 	grid.columns = 6
-	
-	for i in range(max_items):
+
+	# Scan the icons folder — filenames sorted alphabetically (number prefix keeps order)
+	const ICONS_PATH := "res://Assets/items/icons"
+	var dir := DirAccess.open(ICONS_PATH)
+	var icon_files: Array[String] = []
+	if dir:
+		dir.list_dir_begin()
+		var file := dir.get_next()
+		while file != "":
+			if not dir.current_is_dir() and file.ends_with(".png"):
+				icon_files.append(file)
+			file = dir.get_next()
+		dir.list_dir_end()
+	icon_files.sort()
+
+	for i in range(icon_files.size()):
 		var button = Button.new()
 		button.custom_minimum_size = Vector2(80, 80)
-		
-		var texture_path = "res://Assets/items/%d.png" % (i + 1)
+
+		var texture_path := ICONS_PATH + "/" + icon_files[i]
 		var texture = load(texture_path)
-		
+
 		if texture:
 			var texture_rect = TextureRect.new()
 			texture_rect.texture = texture
@@ -73,7 +87,7 @@ func _create_buttons() -> void:
 		else:
 			# If texture fails to load, show the item number
 			button.text = str(i + 1)
-		
+
 		button.pressed.connect(_on_button_pressed.bind(i))
 		grid.add_child(button)
 

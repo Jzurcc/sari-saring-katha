@@ -27,6 +27,25 @@ DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
 GDRx="*uid://53t8o3elg2rt"
 
+[dialogic]
+
+directories/dch_directory={
+"KuyaKap": "res://Characters/KuyaKap.dch"
+}
+directories/dtl_directory={
+"customer_greeting": "res://Dialogue/customer_greeting.dtl",
+"customer_rejected": "res://Dialogue/customer_rejected.dtl",
+"customer_returning": "res://Dialogue/customer_returning.dtl",
+"customer_satisfied": "res://Dialogue/customer_satisfied.dtl",
+"day_ended": "res://Dialogue/day_ended.dtl"
+}
+layout/style_directory={
+"": "res://Assets/Dialogue/DialogueStyle.tres",
+"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres"
+}
+layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres"]
+layout/default_style="res://Assets/Dialogue/DialogueStyle.tres"
+
 [display]
 
 window/size/viewport_width=1600
@@ -34,7 +53,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/day_night/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/reactivex/plugin.cfg")
+enabled=PackedStringArray("res://addons/day_night/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/reactivex/plugin.cfg")
 
 [input]
 
@@ -61,6 +80,15 @@ look_right={
 open_drawer={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":73,"key_label":0,"unicode":105,"location":0,"echo":false,"script":null)
+]
+}
+dialogic_default_action={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194309,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":1,"canceled":false,"pressed":true,"double_click":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":32,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":88,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+, Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":0,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
 

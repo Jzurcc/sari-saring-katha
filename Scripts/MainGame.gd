@@ -7,7 +7,6 @@ enum CameraView { FRONT, BACK, LEFT, RIGHT }
 # --- Constants ---
 const CUSTOMER_SCENE: PackedScene = preload("res://Scenes/Customer.tscn")
 const TRAY_SCENE: PackedScene = preload("res://Scenes/TransactionTray.tscn")
-const DIALOGUE_BALLOON: PackedScene = preload("res://Scenes/UI/dialogue_balloon.tscn")
 
 # Game state passed to dialogue so it can read {{item_name}}
 var item_name: String = ""
@@ -74,7 +73,7 @@ func _ready() -> void:
 	# Connect signals
 	InputManager.view_requested.connect(switch_view)
 	tray.item_placed.connect(_on_item_placed)
-	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 
 	# Pre-compute the left/right side camera transforms from the front/back markers
 	var center := (front_cam_pos.global_position + back_cam_pos.global_position) / 2.0
@@ -204,27 +203,25 @@ func spawn_customer() -> void:
 
 func _on_customer_arrived(customer: Customer) -> void:
 	item_name = customer.desire.item_name if customer.desire else "something"
-	var dialogue_res = load("res://Dialogue/customer.dialogue")
-	if dialogue_res == null:
-		push_error("[DEBUG] FAILED to load customer.dialogue!")
-		return
+	InventoryManager.current_item_name = item_name
 
 	# First encounter gets the full greeting, returning gets the short version
-	var dialogue_title: String
+	var timeline_path: String
 	if _encounter_count == 0:
-		dialogue_title = "customer_greeting"
+		timeline_path = "res://Dialogue/customer_greeting.dtl"
 	else:
-		dialogue_title = "customer_returning"
+		timeline_path = "res://Dialogue/customer_returning.dtl"
 
-	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, dialogue_title, [self])
-	print("[DEBUG] _on_customer_arrived: showing '%s', item_name='%s'" % [dialogue_title, item_name])
+	if Dialogic.current_timeline == null:
+		Dialogic.start(timeline_path)
+	print("[DEBUG] _on_customer_arrived: starting '%s', item_name='%s'" % [timeline_path, item_name])
 
 func _on_customer_satisfied() -> void:
-	var dialogue_res = load("res://Dialogue/customer.dialogue")
-	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_satisfied", [self])
 	_waiting_for_next_customer = true
+	if Dialogic.current_timeline == null:
+		Dialogic.start("res://Dialogue/customer_satisfied.dtl")
 
-func _on_dialogue_ended(_resource) -> void:
+func _on_dialogue_ended() -> void:
 	if _waiting_for_next_customer:
 		_waiting_for_next_customer = false
 		_encounter_count += 1
@@ -233,8 +230,8 @@ func _on_dialogue_ended(_resource) -> void:
 
 func _on_day_ended(day_number: int) -> void:
 	print("[MainGame] Day %d ended!" % day_number)
-	var dialogue_res = load("res://Dialogue/customer.dialogue")
-	DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "day_ended", [self])
+	if Dialogic.current_timeline == null:
+		Dialogic.start("res://Dialogue/day_ended.dtl")
 
 # --- Money ---
 
@@ -288,8 +285,8 @@ func _on_item_placed(item: DraggableItem) -> void:
 			InventoryManager.return_item(item.item_data)
 		item.return_to_start()
 
-		var dialogue_res = load("res://Dialogue/customer.dialogue")
-		DialogueManager.show_dialogue_balloon_scene(DIALOGUE_BALLOON, dialogue_res, "customer_rejected", [self])
+		if Dialogic.current_timeline == null:
+			Dialogic.start("res://Dialogue/customer_rejected.dtl")
 
 		# After rejection, move to next customer too
 		_waiting_for_next_customer = true

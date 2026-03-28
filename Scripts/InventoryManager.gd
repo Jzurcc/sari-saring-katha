@@ -3,6 +3,10 @@ extends Node
 ## Tracks item stock counts across the game.
 ## Key: ItemData.resource_path → Value: current stock count.
 
+## Exposed for Dialogic timelines — set before calling Dialogic.start().
+## Reference in .dtl files as: {InventoryManager.current_item_name}
+var current_item_name: String = ""
+
 var _stock: Dictionary = {}
 var _items: Array[ItemData] = []
 

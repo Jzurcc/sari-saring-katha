@@ -1,5 +1,5 @@
 [gd_scene format=3 uid="uid://bv0sohhtcdwb6"]
 
-[ext_resource type="PackedScene" uid="uid://b1c3ax36s2si" path="res://Assets/final_store.glb" id="1_tpusf"]
+[ext_resource type="PackedScene" uid="uid://b1c3ax36s2si" path="res://Assets/3D/store/final_store.glb" id="1_tpusf"]
 
 [node name="final_store" unique_id=676478678 instance=ExtResource("1_tpusf")]

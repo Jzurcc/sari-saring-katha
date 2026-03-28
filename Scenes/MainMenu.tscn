@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://Scripts/MainMenu.gd" id="1_menu"]
-[ext_resource type="Texture2D" path="res://Assets/Background.png" id="2_bg"]
+[ext_resource type="Texture2D" path="res://Assets/ui/backgrounds/Background.png" id="2_bg"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 bg_color = Color(0, 0, 0, 0)
