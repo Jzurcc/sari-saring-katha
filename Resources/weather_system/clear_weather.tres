@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="WeatherConfig" format=3]
+
+[ext_resource type="Script" path="res://addons/day_night/resources/scripts/weather_config.gd" id="1_36cym"]
+
+[resource]
+script = ExtResource("1_36cym")
+weather_weight = 10
+weather_chance = 0.8
+day_time_weather_color = Color(1, 0.95, 0.85, 1)
+day_time_light_intensity = 1.0
+night_time_weather_color = Color(0.15, 0.15, 0.3, 1)
+night_time_light_intensity = 0.1
+minimum_light_intensity = 0.05
