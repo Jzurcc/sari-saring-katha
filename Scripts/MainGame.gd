@@ -15,20 +15,33 @@ var item_name: String = ""
 var money: int = 0
 var current_customer: Customer = null
 
+# --- Free Camera ---
+@export var use_free_camera: bool = true
+var camera_speed: float = 6.0
+var mouse_sensitivity: float = 0.002
+var _pitch: float = 0.0
+var _yaw: float = 0.0
+
+# --- Debug ---
+var _debug_show_collisions: bool = false
+
 # --- Private state ---
 var _current_view: CameraView = CameraView.FRONT
-var _left_transform: Transform3D
-var _right_transform: Transform3D
 var _waiting_for_next_customer: bool = false
 var _encounter_count: int = 0  # 0 = first meeting, 1+ = returning
 
-# --- Day/Night cycle ---
-var _day_night: DayNightManager
+# --- Progression ---
+const CUSTOMERS_PER_DAY: int = 5
+var day: int = 1
+var customers_served_today: int = 0
 
 # --- @onready node references ---
-@onready var camera: Camera3D = $Camera3D
+@onready var player: CharacterBody3D = $Player
+@onready var camera: Camera3D = $Player/Camera3D
 @onready var front_cam_pos: Marker3D = $FrontCamPos
 @onready var back_cam_pos: Marker3D = $BackCamPos
+@onready var left_cam_pos: Marker3D = $LeftCamPos
+@onready var right_cam_pos: Marker3D = $RightCamPos
 @onready var money_label: Label = $CanvasLayer/MoneyLabel
 @onready var held_item_label: Label = $CanvasLayer/HeldItemLabel
 @onready var customer_spawn_pos: Marker3D = $CustomerSpawnPos
@@ -55,8 +68,18 @@ func _ready() -> void:
 	if camera and camera.fov != 75:
 		camera.fov = 75.0
 
-	# --- Set up lighting for day/night cycle ---
-	_setup_lighting()
+	# Auto-collision script has been removed as per user request.
+	# Please set up collisions manually in the Godot Editor.
+
+	# Setup Free Camera Mode defaults
+	if use_free_camera:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		$CanvasLayer/CrosshairContainer.show()
+		_pitch = 0.0
+		_yaw = 0.0
+	else:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		$CanvasLayer/CrosshairContainer.hide()
 
 	# Find the TransactionTray anywhere in the scene tree
 	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
@@ -75,35 +98,142 @@ func _ready() -> void:
 	tray.item_placed.connect(_on_item_placed)
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 
-	# Pre-compute the left/right side camera transforms from the front/back markers
-	var center := (front_cam_pos.global_position + back_cam_pos.global_position) / 2.0
-	var basis_left := front_cam_pos.global_transform.basis.rotated(Vector3.UP, PI / 2.0)
-	var pos_left := center + (front_cam_pos.global_position - center).rotated(Vector3.UP, PI / 2.0)
-	_left_transform = Transform3D(basis_left, pos_left)
-
-	var basis_right := front_cam_pos.global_transform.basis.rotated(Vector3.UP, -PI / 2.0)
-	var pos_right := center + (front_cam_pos.global_position - center).rotated(Vector3.UP, -PI / 2.0)
-	_right_transform = Transform3D(basis_right, pos_right)
 
 	held_item_label.visible = false
 	spawn_customer()
 
-# --- Lighting setup ---
+func _process(_delta: float) -> void:
+	if not _debug_show_collisions:
+		return
+	_draw_all_collision_shapes(get_tree().root)
 
-func _setup_lighting() -> void:
-	# Grab the TimeOfDay node from the Sky3D infrastructure
-	var time_of_day = get_node_or_null("Sky3D/TimeOfDay")
-	
-	_day_night = DayNightManager.new()
-	_day_night.name = "DayNightManager"
-	add_child(_day_night)
-	_day_night.setup(time_of_day)
-	_day_night.day_ended.connect(_on_day_ended)
-	print("[MainGame] DayNightManager initialized with Sky3D")
+func _draw_all_collision_shapes(node: Node) -> void:
+	if node is CollisionShape3D:
+		var cs: CollisionShape3D = node
+		if cs.shape == null or not cs.visible:
+			return
+		var xform: Transform3D = cs.global_transform
+		var color := Color(0.0, 1.0, 0.3, 0.8)
+		if cs.get_parent() is CharacterBody3D:
+			color = Color(0.2, 0.6, 1.0, 0.9)  # Blue for player
+		elif cs.get_parent() is Area3D:
+			color = Color(1.0, 1.0, 0.0, 0.8)  # Yellow for areas/items
 
-# --- Camera ---
+		if cs.shape is BoxShape3D:
+			var box: BoxShape3D = cs.shape
+			DebugDraw3D.draw_box(xform.origin, xform.basis.get_rotation_quaternion(), box.size, color)
+		elif cs.shape is CapsuleShape3D:
+			var cap: CapsuleShape3D = cs.shape
+			DebugDraw3D.draw_capsule(xform.origin, xform.basis.get_rotation_quaternion(), cap.radius, cap.height, color)
+		elif cs.shape is SphereShape3D:
+			var sph: SphereShape3D = cs.shape
+			DebugDraw3D.draw_sphere(xform.origin, sph.radius, color)
+		elif cs.shape is ConcavePolygonShape3D:
+			var faces = cs.shape.get_faces()
+			var lines = PackedVector3Array()
+			for i in range(0, faces.size(), 3):
+				var a: Vector3 = xform * faces[i]
+				var b: Vector3 = xform * faces[i+1]
+				var c: Vector3 = xform * faces[i+2]
+				lines.append(a)
+				lines.append(b)
+				lines.append(b)
+				lines.append(c)
+				lines.append(c)
+				lines.append(a)
+			if lines.size() > 0:
+				DebugDraw3D.draw_lines(lines, color)
+		elif cs.shape is WorldBoundaryShape3D:
+			# Just mark the position with a cross for infinite planes
+			DebugDraw3D.draw_position(xform, color)
+		elif cs.shape is ConvexPolygonShape3D:
+			DebugDraw3D.draw_position(xform, color)
+
+	for child in node.get_children():
+		_draw_all_collision_shapes(child)
+
+# --- Camera / Input ---
+
+func _input(event: InputEvent) -> void:
+	# F1 toggles collision shape debug visualization
+	if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.is_echo():
+		_debug_show_collisions = !_debug_show_collisions
+		DebugDraw2D.set_text("Collision Debug", "ON" if _debug_show_collisions else "OFF")
+		return
+
+	# O toggles the view modes
+	if event is InputEventKey and event.keycode == KEY_O and event.pressed and not event.is_echo():
+		use_free_camera = !use_free_camera
+		if use_free_camera:
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+			$CanvasLayer/CrosshairContainer.show()
+			var eu = camera.global_transform.basis.get_euler()
+			_pitch = eu.x
+			_yaw = eu.y
+		else:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			$CanvasLayer/CrosshairContainer.hide()
+			switch_view("look_front")
+		return
+
+	# V toggles mouse freedom while retaining FPS mode
+	if event is InputEventKey and event.keycode == KEY_V and event.pressed and not event.is_echo():
+		if use_free_camera:
+			if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+				$CanvasLayer/CrosshairContainer.hide()
+			else:
+				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+				$CanvasLayer/CrosshairContainer.show()
+				var eu = camera.global_transform.basis.get_euler()
+				_pitch = eu.x
+				_yaw = eu.y
+		return
+
+	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		if event is InputEventMouseMotion:
+			_yaw -= event.relative.x * mouse_sensitivity
+			_pitch -= event.relative.y * mouse_sensitivity
+			_pitch = clamp(_pitch, -PI/2, PI/2)
+			camera.quaternion = Quaternion.from_euler(Vector3(_pitch, _yaw, 0))
+		elif event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				DragManager.fps_try_interact()
+
+func _physics_process(delta: float) -> void:
+	# Add the gravity
+	if not player.is_on_floor():
+		player.velocity += player.get_gravity() * delta
+
+	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		var input_dir = Input.get_vector("look_left", "look_right", "look_front", "look_back")
+		var forward = -camera.global_transform.basis.z
+		var right = camera.global_transform.basis.x
+		
+		# Flatten the movement vertically
+		forward.y = 0
+		right.y = 0
+		forward = forward.normalized()
+		right = right.normalized()
+		
+		var direction = (right * input_dir.x + forward * (-input_dir.y)).normalized()
+		
+		if direction:
+			player.velocity.x = direction.x * camera_speed
+			player.velocity.z = direction.z * camera_speed
+		else:
+			player.velocity.x = move_toward(player.velocity.x, 0, camera_speed)
+			player.velocity.z = move_toward(player.velocity.z, 0, camera_speed)
+	else:
+		player.velocity.x = move_toward(player.velocity.x, 0, camera_speed)
+		player.velocity.z = move_toward(player.velocity.z, 0, camera_speed)
+
+	player.move_and_slide()
 
 func switch_view(action: String) -> void:
+	if use_free_camera:
+		return
+
 	var target_view: CameraView = _current_view
 
 	match action:
@@ -136,8 +266,8 @@ func switch_view(action: String) -> void:
 	match target_view:
 		CameraView.FRONT: target_transform = front_cam_pos.global_transform
 		CameraView.BACK:  target_transform = back_cam_pos.global_transform
-		CameraView.LEFT:  target_transform = _left_transform
-		CameraView.RIGHT: target_transform = _right_transform
+		CameraView.LEFT:  target_transform = left_cam_pos.global_transform
+		CameraView.RIGHT: target_transform = right_cam_pos.global_transform
 
 	# Tween via quaternion to avoid euler angle wrap-around
 	var local_target: Transform3D = (camera.get_parent() as Node3D).global_transform.affine_inverse() * target_transform
@@ -231,9 +361,12 @@ func _on_item_placed(item: DraggableItem) -> void:
 	var is_correct := current_customer.check_item(item.item_data)
 	print("[MainGame] check_item result: ", is_correct)
 
-	# Advance day/night cycle regardless of correct or wrong
-	if _day_night:
-		_day_night.advance_time()
+	# Advance progression
+	customers_served_today += 1
+	if customers_served_today >= CUSTOMERS_PER_DAY:
+		customers_served_today = 0
+		_on_day_ended(day)
+		day += 1
 
 	if is_correct:
 		# Correct item — earn money, customer satisfied dialogue will trigger via signal

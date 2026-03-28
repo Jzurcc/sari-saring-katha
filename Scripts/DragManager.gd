@@ -64,9 +64,18 @@ func _process(_delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if _is_dragging and event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-			get_viewport().set_input_as_handled()
-			end_drag()
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			# Toggle grab when mouse is fully locked (true FPS crosshair mode)
+			# Revert to classic hold-to-drag when cursor is visible
+			var cursor_locked := Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
+			if cursor_locked:
+				if event.pressed:
+					get_viewport().set_input_as_handled()
+					end_drag()
+			else:
+				if not event.pressed:
+					get_viewport().set_input_as_handled()
+					end_drag()
 
 func end_drag() -> void:
 	if not _is_dragging:
@@ -80,9 +89,16 @@ func end_drag() -> void:
 		_cancel_drag()
 		return
 
-	var mouse_pos := get_viewport().get_mouse_position()
-	var ray_origin := camera.project_ray_origin(mouse_pos)
-	var ray_dir := camera.project_ray_normal(mouse_pos)
+	# In FPS mode the mouse is locked, so we always raycast from screen center.
+	# In cursor mode we use the actual mouse position.
+	var screen_pos: Vector2
+	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		screen_pos = get_viewport().get_visible_rect().size / 2.0
+	else:
+		screen_pos = get_viewport().get_mouse_position()
+
+	var ray_origin := camera.project_ray_origin(screen_pos)
+	var ray_dir := camera.project_ray_normal(screen_pos)
 	var ray_end := ray_origin + ray_dir * 50.0
 
 	var space_state := camera.get_world_3d().direct_space_state
@@ -102,6 +118,39 @@ func end_drag() -> void:
 		_cancel_drag()
 	else:
 		_dragged_item = null
+
+## Called by MainGame when the player clicks while in FPS crosshair mode.
+## Fires a ray from the screen centre and picks up the first DraggableItem hit.
+func fps_try_interact() -> void:
+	if _is_dragging:
+		end_drag()
+		return
+
+	var camera := get_viewport().get_camera_3d()
+	if not camera:
+		return
+
+	var center := get_viewport().get_visible_rect().size / 2.0
+	var ray_origin := camera.project_ray_origin(center)
+	var ray_dir := camera.project_ray_normal(center)
+
+	var query := PhysicsRayQueryParameters3D.new()
+	query.from = ray_origin
+	query.to = ray_origin + ray_dir * 10.0
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+
+	var result := camera.get_world_3d().direct_space_state.intersect_ray(query)
+	if result:
+		var collider: Node = result.get("collider")
+		if collider is DraggableItem:
+			var item: DraggableItem = collider
+			if item.item_data and not InventoryManager.is_in_stock(item.item_data):
+				print("[DragManager] Out of stock: ", item.item_data.item_name)
+				return
+			if item.item_data:
+				InventoryManager.take_item(item.item_data)
+			start_drag(item, item.sprite.texture)
 
 func _cancel_drag() -> void:
 	if _dragged_item:

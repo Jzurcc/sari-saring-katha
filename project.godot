@@ -28,6 +28,10 @@ InventoryManager="*res://Scripts/InventoryManager.gd"
 GDRx="*uid://53t8o3elg2rt"
 Dialogic="*uid://ds2q0uclmolvu"
 
+[debug_draw_3d]
+
+settings/addon_root_folder="res://addons/debug_draw_3d"
+
 [dialogic]
 
 directories/dch_directory={
@@ -57,7 +61,7 @@ window/size/viewport_height=900
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/dialogic/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/reactivex/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
+enabled=PackedStringArray("res://addons/dialogic/plugin.cfg", "res://addons/instant-realistic-light/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
 
 [input]
 
