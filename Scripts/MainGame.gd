@@ -24,7 +24,7 @@ var _waiting_for_next_customer: bool = false
 var _encounter_count: int = 0  # 0 = first meeting, 1+ = returning
 
 # --- Day/Night cycle ---
-var _day_night: DayNightCycle
+var _day_night: DayNightManager
 
 # --- @onready node references ---
 @onready var camera: Camera3D = $Camera3D
@@ -122,8 +122,8 @@ func _setup_lighting() -> void:
 	add_child(world_env)
 
 	# Create and initialize DayNightCycle
-	_day_night = DayNightCycle.new()
-	_day_night.name = "DayNightCycle"
+	_day_night = DayNightManager.new()
+	_day_night.name = "DayNightManager"
 	add_child(_day_night)
 	_day_night.setup(sun, world_env)
 	_day_night.day_ended.connect(_on_day_ended)
