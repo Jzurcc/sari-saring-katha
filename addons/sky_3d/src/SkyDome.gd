@@ -224,7 +224,6 @@ var sun_light_enabled: bool = true :
 			_update_sun_coords()
 		else:
 			_sun_light_node.light_energy = 0.0
-			_sun_light_node.shadow_enabled = false
 
 
 ## The day-night state
@@ -324,11 +323,6 @@ func _update_sun_light_energy() -> void:
 	var y: float = _sun_transform.origin.y
 	var sun_light_factor: float = clampf((y + sun_disk_size) / (2.0 * sun_disk_size), 0., 1.);
 	_sun_light_node.light_energy = lerpf(0.0, sun_light_energy, sun_light_factor)
-	
-	if is_equal_approx(_sun_light_node.light_energy, 0.0) and _sun_light_node.shadow_enabled:
-		_sun_light_node.shadow_enabled = false
-	elif _sun_light_node.light_energy > 0.0 and not _sun_light_node.shadow_enabled:
-		_sun_light_node.shadow_enabled = true
 
 
 #####################
@@ -407,7 +401,6 @@ var moon_light_enabled: bool = true:
 			update_moon_coords()
 		else:
 			_moon_light_node.light_energy = 0.0
-			_moon_light_node.shadow_enabled = false
 
 
 ## Updates moon position and lighting calculations
@@ -486,11 +479,6 @@ func _update_moon_light_energy() -> void:
 	
 	var fade: float = (1.0 - _sun_transform.origin.y) * 0.5
 	_moon_light_node.light_energy = l * SUN_MOON_CURVE.sample_baked(fade)
-	
-	if is_equal_approx(_moon_light_node.light_energy, 0.0) and _moon_light_node.shadow_enabled:
-		_moon_light_node.shadow_enabled = false
-	elif _moon_light_node.light_energy > 0.0 and not _moon_light_node.shadow_enabled:
-		_moon_light_node.shadow_enabled = true
 
 
 ## NodePath to the moon DirectionalLight3D node

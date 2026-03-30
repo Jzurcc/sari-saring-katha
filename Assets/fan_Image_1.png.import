@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bke20dsv6gea7"
-path.s3tc="res://.godot/imported/final_store_metal_table_Metallic.png-e1101786e392ee43ed572bf2c581d592.s3tc.ctex"
+uid="uid://bqd1g643544jt"
+path.s3tc="res://.godot/imported/fan_Image_1.png-9f0f1eb82a05b8531117d2622f5eaad6.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "636424d1fb9a02181a4902b0349832b7"
+"md5": "173351a5e6611bd1d0b47e37389a6442"
 }
 
 [deps]
 
-source_file="res://Assets/3D/store/final_store_metal_table_Metallic.png"
-dest_files=["res://.godot/imported/final_store_metal_table_Metallic.png-e1101786e392ee43ed572bf2c581d592.s3tc.ctex"]
+source_file="res://Assets/fan_Image_1.png"
+dest_files=["res://.godot/imported/fan_Image_1.png-9f0f1eb82a05b8531117d2622f5eaad6.s3tc.ctex"]
 
 [params]
 

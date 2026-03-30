@@ -45,6 +45,7 @@ light_color = Color(0.8, 0.9, 1, 1)
 light_energy = 0.0
 omni_range = 3.0
 omni_attenuation = 0.5
+shadow_enabled = true
 
 [node name="ColdMist" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.4)

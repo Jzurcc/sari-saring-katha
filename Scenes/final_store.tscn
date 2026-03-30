@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://bxrjlc7btwxuy"]
+
+[ext_resource type="PackedScene" uid="uid://ck3y2o1o6bbio" path="res://Assets/3D/store/final_store.glb" id="1_gfpct"]
+
+[node name="final_store" unique_id=57552497 instance=ExtResource("1_gfpct")]
