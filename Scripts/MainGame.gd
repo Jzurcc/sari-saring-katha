@@ -292,8 +292,36 @@ func _physics_process(delta: float) -> void:
 		
 		# We don't need to try and manually lerp it down here; switch_view handles the position
 		pass
-
 	player.move_and_slide()
+	
+	# --- Automatic Step Up for Stairs / Small Ledges ---
+	if use_free_camera and player.is_on_floor() and player.get_slide_collision_count() > 0:
+		var input_dir = Input.get_vector("look_left", "look_right", "look_front", "look_back")
+		if input_dir.length_squared() > 0.01:
+			var is_wall = false
+			for i in range(player.get_slide_collision_count()):
+				var collision = player.get_slide_collision(i)
+				if collision.get_angle() > player.floor_max_angle:
+					is_wall = true
+					break
+			
+			if is_wall:
+				var forward = -head.global_transform.basis.z
+				var right = head.global_transform.basis.x
+				forward.y = 0
+				right.y = 0
+				forward = forward.normalized()
+				right = right.normalized()
+				var direction = (right * input_dir.x + forward * (-input_dir.y)).normalized()
+				
+				var step_height := 0.35
+				var test_transform = player.global_transform
+				# 1. Test if we can move straight up without hitting the ceiling
+				if not player.test_move(test_transform, Vector3.UP * step_height):
+					test_transform.origin.y += step_height
+					# 2. Test if we can move forward over the ledge
+					if not player.test_move(test_transform, direction * 0.2):
+						player.global_position.y += step_height
 
 func switch_view(action: String) -> void:
 	if use_free_camera:
