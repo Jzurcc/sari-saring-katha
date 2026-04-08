@@ -7,6 +7,7 @@ extends StaticBody3D
 ## child node. Configure [member row_offsets] to define where each row's
 ## container is placed relative to the shelf's origin.
 
+@warning_ignore("unused_signal")
 signal pressed
 
 ## Offset positions for each shelf row container (local space).

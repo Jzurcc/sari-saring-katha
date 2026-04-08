@@ -2,6 +2,7 @@ class_name Customer
 extends Area3D
 
 signal satisfied
+@warning_ignore("unused_signal")
 signal left
 signal arrived(customer: Customer)
 signal clicked(customer: Customer)
