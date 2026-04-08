@@ -1,7 +1,29 @@
-## TimeOfDayLighting manages cinematic day-night lighting progression.
-## Attached to the Sky3D WorldEnvironment node.
-## Listens to TimeOfDay time_changed signal and smoothly transitions
-## between 6 keyframe states throughout the 24-hour cycle.
+##
+## TimeOfDayLighting: Cinematic Day-Night Lighting System
+##
+## This script manages a sophisticated lighting progression across a 24-hour in-game day.
+## It smoothly transitions between 6 key mood states using interpolated shader parameters,
+## postprocessing effects, and dynamic light energy adjustments.
+##
+## Keyframes:
+## - Sunrise (5-7 AM): Warm orange, soft shadows, low glow
+## - Midday (10 AM-3 PM): Neutral white-blue, sharp shadows, clean look
+## - Golden Hour (4-5 PM): Rich amber, long shadows, high glow
+## - Dusk (6-7 PM): Cool purple-blue, stars visible, maximum bloom
+## - Night (8 PM-4 AM): Cool moonlight, stars, deep shadows
+## - Early Morning (4-5 AM): Pre-dawn cool blue, stars fading
+##
+## Connection Flow:
+## 1. Listens to TimeOfDay.time_changed signal
+## 2. Determines current and next keyframe
+## 3. Calculates interpolation factor (0-1)
+## 4. Updates shader parameters, environment, and lights every frame
+## 5. Smooth 2.5-second tween blends between states
+##
+## Setup:
+## - Attach this script to the Sky3D (WorldEnvironment) node in MainGame.tscn
+## - Ensure TimeOfDay, SunLight, MoonLight, NightLight, and OmniLight nodes exist
+##
 @tool
 extends Node
 
@@ -60,7 +82,10 @@ func _ready() -> void:
 		_on_time_changed(_time_of_day.current_time)
 
 func _initialize_keyframes() -> void:
-	# Keyframes are ordered chronologically
+	# Define 6 mood states with complete shader, environment, and light parameters.
+	# Each state contains a time_range (start, end), shader parameters for atmospheric effects,
+	# environment settings for postprocessing, and light energy values.
+	# The system will smoothly interpolate between adjacent keyframes as in-game time progresses.
 	_keyframes = {
 		"sunrise": {
 			"time_range": Vector2(5.0, 7.0),
@@ -240,6 +265,9 @@ func _initialize_keyframes() -> void:
 	}
 
 func _on_time_changed(time: float) -> void:
+	# Triggered by TimeOfDay.time_changed signal each frame.
+	# Determines which two keyframes to interpolate between based on current time.
+	# If state transition detected, starts a smooth tween blend.
 	# Determine which keyframes we're between
 	var next_state = _get_current_keyframe_pair(time)
 
@@ -248,6 +276,13 @@ func _on_time_changed(time: float) -> void:
 		_start_transition(next_state.from_state, next_state.to_state, next_state.t)
 
 func _get_current_keyframe_pair(time: float) -> Dictionary:
+	# Given the current in-game time (0-24 hours), determines:
+	# - from_state: the current keyframe we're leaving
+	# - to_state: the next keyframe we're entering
+	# - t: interpolation factor (0-1) within the current segment
+	# Handles wrapping around midnight correctly.
+	# Returns a dictionary: {"from_state": str, "to_state": str, "t": float}
+
 	# Determine which two keyframes to interpolate between
 	# Returns {"from_state": str, "to_state": str, "t": float(0-1)}
 
@@ -281,6 +316,9 @@ func _get_current_keyframe_pair(time: float) -> Dictionary:
 	return {"from_state": from_name, "to_state": to_name, "t": t}
 
 func _start_transition(from_state: String, to_state: String, t: float) -> void:
+	# Initiates a smooth 2.5-second tween blend from current state to next state.
+	# Kills any previous tween to prevent overlap.
+	# Updates _current_t from 0 to the target interpolation factor smoothly.
 	# Kill previous tween if running
 	if _transition_tween:
 		_transition_tween.kill()
@@ -297,6 +335,8 @@ func _start_transition(from_state: String, to_state: String, t: float) -> void:
 	_transition_tween.tween_callback(func(): _is_transitioning = false)
 
 func _process(_delta: float) -> void:
+	# Called every frame. Updates all lighting systems based on current interpolation state.
+	# Only runs in-game (not in editor). Requires all systems to be initialized.
 	if Engine.is_editor_hint():
 		return
 
@@ -307,6 +347,10 @@ func _process(_delta: float) -> void:
 	_update_all_systems()
 
 func _update_all_systems() -> void:
+	# Orchestrates updates to all three layers:
+	# 1. Shader parameters (atmospheric effects, sky colors, lighting)
+	# 2. Environment (postprocessing: glow, bloom, saturation, volumetric effects)
+	# 3. Lights (DirectionalLights for sun/moon, OmniLight for store, NightLight for ambient)
 	if _current_from_state.is_empty():
 		return
 
@@ -318,6 +362,9 @@ func _update_all_systems() -> void:
 	_update_lights(from_params, to_params, _current_t)
 
 func _update_shader_parameters(from_params: Dictionary, to_params: Dictionary, t: float) -> void:
+	# Interpolates shader parameters between from_params and to_params using factor t.
+	# Handles multiple parameter types (floats, colors, vectors).
+	# Updates the Sky3D material in real-time.
 	var from_shader = from_params["shader"]
 	var to_shader = to_params["shader"]
 
@@ -329,6 +376,9 @@ func _update_shader_parameters(from_params: Dictionary, to_params: Dictionary, t
 		_sky_material.set_shader_parameter(param, interpolated)
 
 func _update_environment(from_params: Dictionary, to_params: Dictionary, t: float) -> void:
+	# Interpolates postprocessing environment parameters.
+	# Dynamically adjusts glow, bloom, saturation, fog, and ambient light
+	# to enhance mood and visual quality at each time of day.
 	var from_env = from_params["environment"]
 	var to_env = to_params["environment"]
 
@@ -356,6 +406,11 @@ func _update_environment(from_params: Dictionary, to_params: Dictionary, t: floa
 				_environment.volumetric_fog_sky_affect = interpolated
 
 func _update_lights(from_params: Dictionary, to_params: Dictionary, t: float) -> void:
+	# Interpolates light energies for:
+	# - SunLight: dominant during day, fades at dusk/night
+	# - MoonLight: inactive during day, increases at dusk/night
+	# - OmniLight: store interior light, off at day, full at night
+	# - NightLight: ambient blue moonlight, active only at night
 	var from_lights = from_params["lights"]
 	var to_lights = to_params["lights"]
 
@@ -384,6 +439,11 @@ func _update_lights(from_params: Dictionary, to_params: Dictionary, t: float) ->
 		_night_light.light_energy = _interpolate_value(from_night, to_night, t)
 
 func _interpolate_value(from_val, to_val, t: float):
+	# Generic interpolation handler supporting multiple types:
+	# - Color: RGBA lerp
+	# - float/int: numeric lerp
+	# - Vector2/Vector3: component-wise lerp
+	# Falls back to target value for unknown types.
 	if from_val is Color:
 		return from_val.lerp(to_val, t)
 	elif from_val is float or from_val is int:
