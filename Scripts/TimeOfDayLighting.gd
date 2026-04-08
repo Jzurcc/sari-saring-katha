@@ -24,7 +24,6 @@
 ## - Attach this script to the Sky3D (WorldEnvironment) node in MainGame.tscn
 ## - Ensure TimeOfDay, SunLight, MoonLight, NightLight, and OmniLight nodes exist
 ##
-@tool
 extends Node
 
 # Reference to parent Environment for postprocessing updates
@@ -54,8 +53,11 @@ func _ready() -> void:
 	var parent = get_parent()
 	if parent is WorldEnvironment:
 		_environment = parent.environment
-		if _environment:
+		if _environment and _environment.sky:
 			_sky_material = _environment.sky.sky_material
+			if not _sky_material:
+				push_error("[TimeOfDayLighting] Sky material is null. Ensure Sky3D has a valid SkyMaterial assigned.")
+				return
 
 	# Find TimeOfDay sibling
 	_time_of_day = get_parent().get_node_or_null("TimeOfDay")
@@ -365,6 +367,9 @@ func _update_shader_parameters(from_params: Dictionary, to_params: Dictionary, t
 	# Interpolates shader parameters between from_params and to_params using factor t.
 	# Handles multiple parameter types (floats, colors, vectors).
 	# Updates the Sky3D material in real-time.
+	if not _sky_material:
+		return
+
 	var from_shader = from_params["shader"]
 	var to_shader = to_params["shader"]
 
