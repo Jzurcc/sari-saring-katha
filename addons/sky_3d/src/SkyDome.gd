@@ -113,6 +113,8 @@ func _process(delta: float) -> void:
 func process_tick(delta: float) -> void:
 	if not (cirrus_visible or cumulus_visible):
 		return
+	if sky_material == null:
+		return
 	var position_delta: Vector2 = _cloud_velocity * delta
 	if cumulus_visible:
 		_cumulus_position += position_delta

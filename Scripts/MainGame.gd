@@ -63,21 +63,9 @@ var customers_served_today: int = 0
 @onready var customer_target_pos: Marker3D = $CustomerTargetPos
 @onready var tray: TransactionTray
 
-# Legacy UI — disabled but kept for future use
-@onready var item_selection_ui: ItemSelectionUI = $"ItemSelectionUI"
-@onready var confirmation_popup: ConfirmationPopup = $"ConfirmationPopup"
-
 # --- Lifecycle ---
 
 func _ready() -> void:
-	# Disable legacy UI (kept for future use)
-	if item_selection_ui:
-		item_selection_ui.visible = false
-		item_selection_ui.process_mode = Node.PROCESS_MODE_DISABLED
-	if confirmation_popup:
-		confirmation_popup.visible = false
-		confirmation_popup.process_mode = Node.PROCESS_MODE_DISABLED
-
 	# Fix camera FOV once scene is fully loaded
 	await get_tree().process_frame
 	if camera and camera.fov != 75:
@@ -113,7 +101,6 @@ func _ready() -> void:
 		print("[MainGame] No TransactionTray found, created one at ", tray.global_position)
 
 	# Connect signals
-	InputManager.view_requested.connect(switch_view)
 	tray.item_placed.connect(_on_item_placed)
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 

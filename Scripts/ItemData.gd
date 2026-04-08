@@ -12,3 +12,4 @@ enum ItemType {
 @export var type: ItemType = ItemType.SHELF
 @export var max_stock: int = 5
 @export var category: String = "food"
+@export var id: String = ""

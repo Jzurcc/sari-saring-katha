@@ -65,9 +65,7 @@ func arrived_at_counter() -> void:
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
-	# Fixed: Compare using resource_path instead of direct object comparison
-	# Direct == comparison on Resource objects can fail due to uniqueness rules
-	if item != null and desire != null and item.resource_path == desire.resource_path:
+	if item != null and desire != null and item.id == desire.id:
 		satisfy()
 		return true
 	else:

@@ -21,7 +21,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-InputManager="*res://Scripts/InputManager.gd"
+EventBus="*res://Scripts/EventBus.gd"
 DragManager="*res://Scripts/DragManager.gd"
 DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
