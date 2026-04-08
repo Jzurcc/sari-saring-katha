@@ -5,3 +5,6 @@
 *.blend
 *.glb
 *.obj
+
+
+.claude/

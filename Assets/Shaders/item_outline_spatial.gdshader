@@ -7,24 +7,23 @@ uniform float outline_width : hint_range(0.0, 0.1) = 0.02;
 
 void fragment() {
     vec4 tex = texture(albedo_texture, UV);
-    float alpha = tex.a;
-    
-    if (alpha <= 0.01) {
-        float max_a = 0.0;
-        max_a = max(max_a, texture(albedo_texture, UV + vec2(outline_width, 0.0)).a);
-        max_a = max(max_a, texture(albedo_texture, UV + vec2(-outline_width, 0.0)).a);
-        max_a = max(max_a, texture(albedo_texture, UV + vec2(0.0, outline_width)).a);
-        max_a = max(max_a, texture(albedo_texture, UV + vec2(0.0, -outline_width)).a);
-        
-        if (max_a > 0.01) {
-            ALBEDO = outline_color.rgb;
-            ALPHA = outline_color.a * 0.8; // slightly transparent outline
-        } else {
-            discard;
-        }
+
+    // Only draw outline pixels: transparent pixels adjacent to opaque ones.
+    // Opaque pixels are skipped so we don't overdraw the base sprite.
+    if (tex.a > 0.01) {
+        discard;
+    }
+
+    float max_a = 0.0;
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(outline_width, 0.0)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(-outline_width, 0.0)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(0.0, outline_width)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(0.0, -outline_width)).a);
+
+    if (max_a > 0.01) {
+        ALBEDO = outline_color.rgb;
+        ALPHA = outline_color.a * 0.8;
     } else {
-        // Render original texture so we don't need a multi-pass
-        ALBEDO = tex.rgb;
-        ALPHA = tex.a;
+        discard;
     }
 }

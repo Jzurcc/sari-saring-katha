@@ -7,11 +7,19 @@ extends Node
 ## Reference in .dtl files as: {InventoryManager.current_item_name}
 var current_item_name: String = ""
 
+var _initialized: bool = false
+
 var _stock: Dictionary = {}
 var _items: Array[ItemData] = []
 
+func _ready() -> void:
+	initialize()
+
 ## Load all ItemData resources from subfolders and set initial stock.
 func initialize() -> void:
+	if _initialized:
+		return
+	_initialized = true
 	_items.clear()
 	_stock.clear()
 	var base_path := "res://Resources/items"
@@ -26,6 +34,8 @@ func initialize() -> void:
 			_load_folder(base_path + "/" + subdir)
 		subdir = base_dir.get_next()
 	base_dir.list_dir_end()
+	# Sort items alphabetically for deterministic display order across platforms.
+	_items.sort_custom(func(a: ItemData, b: ItemData): return a.item_name.naturalnocasecmp_to(b.item_name) < 0)
 	print("[InventoryManager] Loaded ", _items.size(), " items")
 
 func _load_folder(folder_path: String) -> void:

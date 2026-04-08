@@ -18,12 +18,23 @@ func _ready() -> void:
 
 func setup(data: ItemData) -> void:
 	item_data = data
+	if item_data and item_data.texture:
+		sprite.texture = item_data.texture
+		# Bottom-align: shift the sprite upward so its bottom edge
+		# sits at Y=0 of this node (the container floor).
+		# Sprite3D offset is in pixel coords; negative Y = up in world.
+		sprite.offset.y = -item_data.texture.get_height() / 2.0
+		# Move the collision shape up to match the sprite's visual center.
+		var sprite_scale: float = sprite.transform.basis.get_scale().y
+		var rendered_height: float = item_data.texture.get_height() * sprite.pixel_size * sprite_scale
+		collider.position.y = rendered_height / 2.0
+	if label:
+		label.hide()
+	# Defer position capture so parent transforms are fully applied.
+	_capture_origin.call_deferred()
+
+func _capture_origin() -> void:
 	_original_position = global_position
-	if item_data:
-		if item_data.texture:
-			sprite.texture = item_data.texture
-		if label:
-			label.hide()
 
 var outline_material: ShaderMaterial = null
 
@@ -35,9 +46,9 @@ func on_hover(is_hovered: bool) -> void:
 			outline_material.set_shader_parameter("albedo_texture", sprite.texture)
 			outline_material.set_shader_parameter("outline_color", Color.WHITE)
 			outline_material.set_shader_parameter("outline_width", 0.05)
-		sprite.material_override = outline_material
+		sprite.material_overlay = outline_material
 	else:
-		sprite.material_override = null
+		sprite.material_overlay = null
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return
@@ -69,8 +80,6 @@ func _on_drag_cancelled_by_manager() -> void:
 
 func show_visuals() -> void:
 	sprite.show()
-	# if label:
-	# 	label.show()
 
 func return_to_start() -> void:
 	show_visuals()

@@ -1,62 +1,60 @@
 class_name Shelf
 extends StaticBody3D
 
-## Emitted when a player clicks the shelf (legacy — kept for compatibility).
+## A shelf unit that manages ItemContainer rows.
+##
+## Each row of the physical shelf model is represented by an [ItemContainer]
+## child node. Configure [member row_offsets] to define where each row's
+## container is placed relative to the shelf's origin.
+
 signal pressed
+
+## Offset positions for each shelf row container (local space).
+## Each entry creates one [ItemContainer] at that position.
+## The Y component should match the shelf surface height for that row.
+@export var row_offsets: Array[Vector3] = [Vector3(0.0, 0.35, 0.3)]
+
+## Number of item slots per row.
+@export var items_per_row: int = 3
+
+## Horizontal spacing between items within a row (meters).
+@export var item_spacing: float = 0.55
 
 @onready var area_3d: Area3D = $Area3D
 
-const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.tscn")
+var _containers: Array[ItemContainer] = []
 
-## Grid layout settings for items on the shelf
-@export var columns: int = 3
-@export var row_spacing: float = 0.6
-@export var col_spacing: float = 0.55
-@export var item_offset: Vector3 = Vector3(0, 0.35, 0.3)  ## Offset from shelf center to first item
-
-var _spawned_items: Array[DraggableItem] = []
 
 func _ready() -> void:
-	# Wait for InventoryManager to initialize
+	# Disable the shelf's own Area3D collision so it doesn't intercept
+	# raycasts meant for the DraggableItem children in front of it.
+	if area_3d:
+		area_3d.collision_layer = 0
+		area_3d.collision_mask = 0
+
+	# Wait one frame for InventoryManager autoload to finish initializing.
 	await get_tree().process_frame
-	InventoryManager.initialize()
-	_spawn_items()
+	_create_containers()
 
-func _spawn_items() -> void:
-	# Clear any existing spawned items
-	for item in _spawned_items:
-		if is_instance_valid(item):
-			item.queue_free()
-	_spawned_items.clear()
 
-	var shelf_items: Array[ItemData] = InventoryManager.get_items_by_type(ItemData.ItemType.SHELF)
-	print("[Shelf] Spawning ", shelf_items.size(), " items")
+func _create_containers() -> void:
+	for i in range(row_offsets.size()):
+		var container := ItemContainer.new()
+		container.name = "Row_%d" % i
+		container.slot_count = items_per_row
+		container.slot_spacing = item_spacing
+		container.accepted_type = ItemData.ItemType.SHELF
+		container.position = row_offsets[i]
 
-	for i in range(shelf_items.size()):
-		var item_data: ItemData = shelf_items[i]
-		if not item_data.texture:
-			print("[Shelf] Skipping item '", item_data.item_name, "' — no texture")
-			continue
-		if not InventoryManager.is_in_stock(item_data):
-			continue
+		add_child(container)
+		container.populate()
+		_containers.append(container)
 
-		var draggable: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
-		add_child(draggable)
+	print("[Shelf] Created %d row containers" % _containers.size())
 
-		# Position in a grid relative to the shelf
-		var row: int = i / columns
-		var col: int = i % columns
-		# Center the columns: offset so the middle column is at x=0
-		var x_offset: float = (col - (columns - 1) / 2.0) * col_spacing
-		var y_offset: float = -row * row_spacing
-		draggable.position = item_offset + Vector3(x_offset, y_offset, 0)
 
-		draggable.setup(item_data)
-		_spawned_items.append(draggable)
-		print("[Shelf] Spawned '", item_data.item_name, "' at ", draggable.position)
-
-## Called when an item is returned (drag cancelled) — reshow it.
-func refresh_item_visibility() -> void:
-	for item in _spawned_items:
-		if is_instance_valid(item) and item.item_data:
-			item.visible = InventoryManager.is_in_stock(item.item_data)
+## Refresh visibility of items across all row containers.
+func refresh_all() -> void:
+	for container in _containers:
+		if is_instance_valid(container):
+			container.refresh_visibility()
