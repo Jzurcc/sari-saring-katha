@@ -229,3 +229,13 @@ current_time = 13.95
 
 [node name="EnvironmentModel" parent="." unique_id=1924648742 instance=ExtResource("6_ktwve")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+minutes_per_day = 30.0
+current_time = 11.73
+
+[node name="GameManager" type="Node" parent="."]
+script = ExtResource("gm_scr")
+
+[node name="CustomerSpawner" type="Node" parent="." groups=["customer_spawner"]]
+script = ExtResource("cs_scr")
+spawn_pos = NodePath("../CustomerSpawnPos")
+target_pos = NodePath("../CustomerTargetPos")
