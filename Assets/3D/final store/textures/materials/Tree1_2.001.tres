@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cpme0tqcnat4b"]
+
+[resource]
+resource_name = "Tree1_2.001"
+cull_mode = 2
+albedo_color = Color(0.39554918, 0.28690815, 0.1424832, 1)
+roughness = 0.5

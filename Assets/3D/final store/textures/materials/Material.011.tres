@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cucg8iom3g0mc"]
+
+[ext_resource type="Texture2D" uid="uid://ijuswy45qsf0" path="res://Assets/3D/final store/textures/signage.png" id="1_gqbok"]
+
+[resource]
+resource_name = "Material.011"
+cull_mode = 2
+albedo_texture = ExtResource("1_gqbok")
+roughness = 0.5

@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bthxwywevfu8u"]
+
+[ext_resource type="Texture2D" uid="uid://o2ag7r6m0en8" path="res://Assets/3D/final store/textures/radio.jpg" id="1_deut5"]
+
+[resource]
+resource_name = "Adds"
+cull_mode = 2
+albedo_texture = ExtResource("1_deut5")
+roughness = 0.5

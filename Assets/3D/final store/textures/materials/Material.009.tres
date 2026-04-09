@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c3riiv42wycms"]
+
+[ext_resource type="Texture2D" uid="uid://bgt0166exqr2j" path="res://Assets/3D/final store/textures/wood2.png" id="1_gyy0o"]
+
+[resource]
+resource_name = "Material.009"
+cull_mode = 2
+albedo_texture = ExtResource("1_gyy0o")
+roughness = 0.5

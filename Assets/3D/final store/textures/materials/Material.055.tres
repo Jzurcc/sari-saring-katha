@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dag5yyq7whr3n"]
+
+[ext_resource type="Texture2D" uid="uid://cfmwmuj8glvi" path="res://Assets/3D/final store/textures/load_poster.png" id="1_f5sj5"]
+
+[resource]
+resource_name = "Material.055"
+cull_mode = 2
+albedo_texture = ExtResource("1_f5sj5")
+roughness = 0.5

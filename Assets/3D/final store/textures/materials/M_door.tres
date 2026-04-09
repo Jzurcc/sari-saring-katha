@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://delg7d4147gvn"]
+
+[resource]
+resource_name = "M_door"
+cull_mode = 2
+albedo_color = Color(0.929412, 0.7568628, 0.56078434, 1)
+roughness = 0.693214

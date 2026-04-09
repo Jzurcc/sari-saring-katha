@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dxow8lu263fda"]
+
+[ext_resource type="Texture2D" uid="uid://bgt0166exqr2j" path="res://Assets/3D/final store/textures/wood2.png" id="1_eg33n"]
+
+[resource]
+resource_name = "countertop"
+cull_mode = 2
+albedo_texture = ExtResource("1_eg33n")

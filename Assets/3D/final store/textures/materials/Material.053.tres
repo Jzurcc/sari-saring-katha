@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://ehq86fjsh2g1"]
+
+[ext_resource type="Texture2D" uid="uid://jawc0mp2sfbt" path="res://Assets/3D/final store/textures/tm_advert.png" id="1_ox85l"]
+
+[resource]
+resource_name = "Material.053"
+cull_mode = 2
+albedo_texture = ExtResource("1_ox85l")
+roughness = 0.5

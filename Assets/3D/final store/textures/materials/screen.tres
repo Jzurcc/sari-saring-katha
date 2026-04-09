@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://7tl4vi472bhk"]
+
+[ext_resource type="Texture2D" uid="uid://b1mp2267ni25u" path="res://Assets/3D/final store/textures/nokia.jpg" id="1_4bixl"]
+
+[resource]
+resource_name = "screen"
+cull_mode = 2
+albedo_texture = ExtResource("1_4bixl")
+metallic = 0.4716981
+roughness = 0.0
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_operator = 1
+emission_texture = ExtResource("1_4bixl")

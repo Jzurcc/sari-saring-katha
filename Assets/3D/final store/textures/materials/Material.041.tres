@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dq0oiofcotaga"]
+
+[resource]
+resource_name = "Material.041"
+cull_mode = 2
+albedo_color = Color(0.54665923, 0.54665923, 0.54665923, 1)
+metallic = 0.06564182
+roughness = 0.8363637

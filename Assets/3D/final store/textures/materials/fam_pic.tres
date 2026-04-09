@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://13c8ga5mcu8a"]
+
+[ext_resource type="Texture2D" uid="uid://bsnc4nj35t88f" path="res://Assets/3D/final store/textures/fam_pic.png" id="1_jkd7b"]
+
+[resource]
+resource_name = "fam_pic"
+cull_mode = 2
+albedo_texture = ExtResource("1_jkd7b")
+roughness = 0.5

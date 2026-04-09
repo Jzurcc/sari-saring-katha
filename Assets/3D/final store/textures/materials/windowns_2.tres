@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b56yjxe0qw8m4"]
+
+[resource]
+resource_name = "windowns_2"
+cull_mode = 2
+albedo_color = Color(0.5882354, 0.5882354, 0.5882354, 1)

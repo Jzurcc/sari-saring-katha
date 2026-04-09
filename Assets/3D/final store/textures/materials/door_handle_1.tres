@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dr7xsqrwctunj"]
+
+[resource]
+resource_name = "door_handle_1"
+cull_mode = 2
+albedo_color = Color(0.25627485, 0.25627485, 0.25627485, 1)
+roughness = 0.5

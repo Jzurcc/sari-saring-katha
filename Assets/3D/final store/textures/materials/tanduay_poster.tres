@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://boi41uweyfw7g"]
+
+[ext_resource type="Texture2D" uid="uid://c77bm2robsm2c" path="res://Assets/3D/final store/textures/tanduay_poster.png" id="1_4l3r1"]
+
+[resource]
+resource_name = "tanduay_poster"
+cull_mode = 2
+albedo_texture = ExtResource("1_4l3r1")
+roughness = 0.5

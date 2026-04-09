@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cpnkdjo2i1glo"]
+
+[ext_resource type="Texture2D" uid="uid://dq18qoil2ks3a" path="res://Assets/3D/final store/textures/wooden_door.jpg" id="1_8ods5"]
+
+[resource]
+resource_name = "door"
+cull_mode = 2
+albedo_texture = ExtResource("1_8ods5")
+metallic = 0.52678573
+roughness = 0.9

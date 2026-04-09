@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bfcrxgtr4lmsa"]
+
+[ext_resource type="Texture2D" uid="uid://et5t7di0v5vi" path="res://Assets/3D/final store/textures/wood3.png" id="1_jpamr"]
+
+[resource]
+resource_name = "Material.005"
+cull_mode = 2
+albedo_texture = ExtResource("1_jpamr")
+roughness = 0.5
+texture_filter = 2

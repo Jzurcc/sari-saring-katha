@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://barmxw6w15bkm"]
+
+[resource]
+resource_name = "_16734_notebook_v1default"
+cull_mode = 2
+albedo_color = Color(0.9063433, 0.8741436, 0.89829403, 1)

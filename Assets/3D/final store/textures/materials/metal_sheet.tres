@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://kpysekm2dsr1"]
+
+[resource]
+resource_name = "metal_sheet"
+cull_mode = 2
+roughness = 0.42857143

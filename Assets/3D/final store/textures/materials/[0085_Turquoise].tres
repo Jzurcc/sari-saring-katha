@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bfwocdoynhd5q"]
+
+[resource]
+resource_name = "[0085_Turquoise]"
+cull_mode = 2
+albedo_color = Color(0.27058828, 0.94509816, 0.8784315, 1)

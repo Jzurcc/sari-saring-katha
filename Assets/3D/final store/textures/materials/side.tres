@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dk67doio0twny"]
+
+[ext_resource type="Texture2D" uid="uid://b1mp2267ni25u" path="res://Assets/3D/final store/textures/nokia.jpg" id="1_tlgbr"]
+
+[resource]
+resource_name = "side"
+cull_mode = 2
+albedo_texture = ExtResource("1_tlgbr")
+roughness = 0.40880504

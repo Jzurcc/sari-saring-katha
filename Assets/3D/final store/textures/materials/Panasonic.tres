@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c7qsf76sq02b3"]
+
+[ext_resource type="Texture2D" uid="uid://ct1okcj2pb7gu" path="res://Assets/3D/final store/textures/Panasonic.png" id="1_8um3g"]
+
+[resource]
+resource_name = "Panasonic"
+cull_mode = 2
+albedo_texture = ExtResource("1_8um3g")
+roughness = 0.5

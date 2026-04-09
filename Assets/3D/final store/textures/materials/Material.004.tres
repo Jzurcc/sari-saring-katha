@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://powm3qxy45sl"]
+
+[ext_resource type="Texture2D" uid="uid://cvurmuhxdmobc" path="res://Assets/3D/final store/textures/iron_table_bcolor.png" id="1_uek4e"]
+
+[resource]
+resource_name = "Material.004"
+cull_mode = 2
+albedo_texture = ExtResource("1_uek4e")
+roughness = 0.5

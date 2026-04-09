@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dgw82lnxsodyd"]
+
+[ext_resource type="Texture2D" uid="uid://druibwk56cyfj" path="res://Assets/3D/final store/textures/panday_poster.png" id="1_381e4"]
+
+[resource]
+resource_name = "Material.010"
+cull_mode = 2
+albedo_texture = ExtResource("1_381e4")
+roughness = 0.5

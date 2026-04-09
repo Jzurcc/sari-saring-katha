@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dofwu2mchhfdg"]
+
+[ext_resource type="Texture2D" uid="uid://b3xcw4xgh4pml" path="res://Assets/3D/final store/textures/grad_pic.png" id="1_vyfmt"]
+
+[resource]
+resource_name = "grad_pic"
+cull_mode = 2
+albedo_texture = ExtResource("1_vyfmt")
+roughness = 0.5

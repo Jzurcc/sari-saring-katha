@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://x6a3biktrh1l"]
+
+[ext_resource type="Texture2D" uid="uid://c1vj0f17qleg1" path="res://Assets/3D/final store/textures/floating_shelf_metal.jpg" id="1_ysndc"]
+
+[resource]
+resource_name = "metal"
+cull_mode = 2
+albedo_texture = ExtResource("1_ysndc")

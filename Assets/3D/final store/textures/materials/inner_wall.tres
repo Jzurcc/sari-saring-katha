@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://curlmbvdbjnat"]
+
+[ext_resource type="Texture2D" uid="uid://rmmo57h1r02r" path="res://Assets/3D/final store/textures/wall.png" id="1_rueb1"]
+
+[resource]
+resource_name = "inner_wall"
+cull_mode = 2
+albedo_texture = ExtResource("1_rueb1")
+roughness = 0.5

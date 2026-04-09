@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b1e2lgmm037s4"]
+
+[ext_resource type="Texture2D" uid="uid://duibigwerbec" path="res://Assets/3D/final store/textures/fence.png" id="1_5nw0v"]
+[ext_resource type="Texture2D" uid="uid://cfjq32asoxy7x" path="res://Assets/3D/final store/textures/fence_normal.png" id="2_lpq6s"]
+
+[resource]
+resource_name = "chainlink"
+transparency = 4
+cull_mode = 2
+albedo_color = Color(0.56000245, 0.5091429, 0.5064539, 1)
+albedo_texture = ExtResource("1_5nw0v")
+metallic = 1.0
+normal_enabled = true
+normal_texture = ExtResource("2_lpq6s")

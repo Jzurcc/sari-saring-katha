@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://p65swagexrn5"]
+
+[ext_resource type="Texture2D" uid="uid://tmrb7xpfkydt" path="res://Assets/3D/final store/textures/floor.png" id="1_kinb8"]
+
+[resource]
+resource_name = "Material.001"
+cull_mode = 2
+albedo_texture = ExtResource("1_kinb8")

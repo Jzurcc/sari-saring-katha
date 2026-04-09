@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bo217bijv6pq2"]
+
+[ext_resource type="Texture2D" uid="uid://cal74be73y25n" path="res://Assets/3D/final store/textures/fence_supports_normal.png" id="1_4pu7j"]
+
+[resource]
+resource_name = "fence_supports"
+cull_mode = 2
+albedo_color = Color(0.6080061, 0.6080061, 0.6080061, 1)
+metallic = 1.0
+normal_enabled = true
+normal_texture = ExtResource("1_4pu7j")

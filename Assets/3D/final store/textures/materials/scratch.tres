@@ -1,0 +1,8 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bfv5sqs6rq7xx"]
+
+[ext_resource type="Texture2D" uid="uid://dj55aqtveedo6" path="res://Assets/3D/final store/textures/scratch_chair.png" id="1_3p38b"]
+
+[resource]
+resource_name = "scratch"
+cull_mode = 2
+albedo_texture = ExtResource("1_3p38b")
