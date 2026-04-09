@@ -15,6 +15,13 @@
 [ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="16_fgk2h"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://dlaf65ijebg8b" path="res://Scenes/Shelf.tscn" id="18_yc6xl"]
+[ext_resource type="Script" path="res://Scripts/Components/FPSController.gd" id="fps_scr"]
+[ext_resource type="Script" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
+[ext_resource type="Script" path="res://Scripts/Managers/GameManager.gd" id="gm_scr"]
+[ext_resource type="Script" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
+[ext_resource type="Script" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
+[ext_resource type="Script" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
+[ext_resource type="Script" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -115,6 +122,7 @@ script = ExtResource("1_script")
 
 [node name="Player" type="CharacterBody3D" parent="." unique_id=-1541147005]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.596, 3.4, -0.05)
+script = ExtResource("fps_scr")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1498308492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64331055, 0)
@@ -124,6 +132,7 @@ shape = SubResource("CapsuleShape3D_player")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/Head" unique_id=1125636583]
+script = ExtResource("pi_scr")
 
 [node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
 transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.73266, 1.5059624, 1.1670127)
@@ -140,6 +149,7 @@ offset_right = 150.0
 offset_bottom = 60.0
 theme_override_font_sizes/font_size = 32
 text = "Peso: 0"
+script = ExtResource("ml_scr")
 
 [node name="HeldItemLabel" type="Label" parent="CanvasLayer" unique_id=195192398]
 visible = false
@@ -148,12 +158,14 @@ offset_top = 80.0
 offset_right = 250.0
 offset_bottom = 120.0
 theme_override_font_sizes/font_size = 24
+script = ExtResource("hil_scr")
 
 [node name="CrosshairContainer" type="CenterContainer" parent="CanvasLayer" unique_id=983198302]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
+script = ExtResource("ch_scr")
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer/CrosshairContainer" unique_id=1028394877]
 custom_minimum_size = Vector2(4, 4)
