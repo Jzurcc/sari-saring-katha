@@ -105,6 +105,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.536743e-07)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="table/metal_table/StaticBody3D" index="0" unique_id=781458055]
 shape = SubResource("BoxShape3D_wqspr")
 
+[node name="Street_Lamp" parent="." index="48" unique_id=91497346]
+transform = Transform3D(0.06344764, -0.001387084, -2.05624e-09, -1.8913389e-09, 7.565356e-09, -0.0634628, 0.001387084, 0.06344764, 7.52221e-09, -4.4063263, 0.746318, -8.527231)
+
 [node name="StaticBody3D" type="StaticBody3D" parent="Cube_036" parent_id_path=PackedInt32Array(1024567738) index="0" unique_id=1575084792]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08331859, 0, 0)
 

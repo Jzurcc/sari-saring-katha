@@ -99,6 +99,7 @@ func _apply_gravity(delta: float) -> void:
 ## 3. Static Typing
 
 Godot 4 strongly encourages static typing. It:
+
 - Catches bugs earlier (compile-time vs. runtime)
 - Improves readability
 - Gives the engine more optimization opportunities
@@ -201,7 +202,7 @@ var player = get_node("/root/Main/World/Player")
 
 ### Recommended Game Tree Structure
 
-```
+```gdscript
 Main (Node)           ← main.gd: primary controller
 ├── World (Node2D)    ← game level (swappable for scene transitions)
 │   ├── Player
@@ -250,7 +251,7 @@ func _change_state(new_state: State) -> void:
 
 Best for complex entities where each state has substantial logic. Each state is a separate node/script.
 
-```
+```gdscript
 Player (CharacterBody2D)
 └── StateMachine (Node)
     ├── IdleState (Node)
@@ -405,6 +406,7 @@ Use Godot's built-in **Profiler** (Debugger → Profiler tab) to find actual bot
 ### When GDScript Isn't Enough
 
 For performance-critical inner loops (physics simulations, pathfinding, procedural generation):
+
 1. Try C# first (significant speedup, same API).
 2. Use **GDExtension** (C/C++) for maximum performance.
 3. GDScript can remain as the "glue" layer.
@@ -415,7 +417,7 @@ For performance-critical inner loops (physics simulations, pathfinding, procedur
 
 ### Recommended Structure (Entity-Based)
 
-```
+```none
 res://
 ├── addons/          ← Third-party plugins
 ├── assets/
@@ -451,6 +453,7 @@ res://
 ```
 
 ### Key Rules
+
 - Use `snake_case` for all files and folders.
 - Name the script after its scene's root node.
 - Keep folder depth to ≤ 5 levels.
