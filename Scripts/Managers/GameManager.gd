@@ -8,8 +8,11 @@ var money: int = 0
 var day: int = 1
 
 func _ready() -> void:
+	add_to_group("game_manager")
 	money = starting_money
-	# Delay slight bit to ensure UI sets up
+	# Wait two frames so every node's _ready() — including CustomerSpawner's
+	# signal connections — completes before we broadcast day_started.
+	await get_tree().process_frame
 	await get_tree().process_frame
 	EventBus.money_changed.emit(money)
 	
