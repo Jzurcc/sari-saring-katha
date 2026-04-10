@@ -15,6 +15,8 @@ enum ItemType {
 ## Unique identifier for this item. Matches the .tres filename, lowercase.
 ## Used for transaction matching. Set via patch_item_ids.py or the Inspector.
 @export var id: String = "unset"
+@export_enum("snacks", "sachet", "canned goods", "candy", "cigarette", "beverages", "instant noodles", "frozen goods") var category: String = "snacks"
+@export var id: String = ""
 
 @export_group("Display")
 ## Real-world height of the item on the shelf in meters.

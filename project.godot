@@ -27,10 +27,13 @@ buses/default_bus_layout="uid://b3scee0b03k1u"
 
 EventBus="*res://Scripts/EventBus.gd"
 DragManager="*res://Scripts/DragManager.gd"
+DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
+GDRx="*uid://53t8o3elg2rt"
 Dialogic="*uid://ds2q0uclmolvu"
 SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
+SaveManager="*res://Scripts/SaveManager.gd"
 
 [debug_draw_3d]
 
@@ -40,9 +43,14 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 
 directories/dch_directory={
 "KuyaKap": "res://Characters/KuyaKap.dch",
-"Timelines/KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch"
+"Timelines/KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
+"Timelines/UncleMario": "res://Dialogue/Timelines/UncleMario.dch",
+"UncleMario": "res://Characters/UncleMario.dch"
 }
 directories/dtl_directory={
+"UncleMario_Call": "res://Dialogue/Timelines/UncleMario_Call.dtl",
+"UncleMario_Call_Rest": "res://Dialogue/Timelines/UncleMario_Call_Rest.dtl",
+"UncleMario_Delivery": "res://Dialogue/Timelines/UncleMario_Delivery.dtl",
 "customer_greeting": "res://Dialogue/customer_greeting.dtl",
 "customer_rejected": "res://Dialogue/customer_rejected.dtl",
 "customer_returning": "res://Dialogue/customer_returning.dtl",
@@ -94,6 +102,8 @@ variables={}
 
 window/size/viewport_width=1600
 window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [editor_plugins]
 

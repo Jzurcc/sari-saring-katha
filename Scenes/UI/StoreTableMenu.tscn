@@ -1,0 +1,207 @@
+[gd_scene format=3 uid="uid://2v51dwctd7ik"]
+
+[ext_resource type="Script" uid="uid://dwco3oj1h6w5e" path="res://Scripts/UI/StoreTableMenu.gd" id="1_store_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+content_margin_left = 15.0
+content_margin_top = 15.0
+content_margin_right = 15.0
+content_margin_bottom = 15.0
+bg_color = Color(0.851, 0.722, 0.463, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grid_bg"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.933, 0.878, 0.773, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_detail"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.91, 0.812, 0.627, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_list"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.961, 0.902, 0.8, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="StoreTableMenu" type="Control" unique_id=1370522471]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_store_script")
+card_size = Vector2(170, 170)
+card_icon_size = Vector2(150, 150)
+card_font_size = 24
+detail_name_font_size = 24
+detail_price_font_size = 24
+order_list_font_size = 32
+list_header_font_size = 32
+tab_font_size = 32
+detail_icon_size = Vector2(80, 80)
+
+[node name="Background" type="PanelContainer" parent="." unique_id=811599321]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="MainVBox" type="VBoxContainer" parent="Background" unique_id=684744725]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TabScroll" type="ScrollContainer" parent="Background/MainVBox" unique_id=101]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="TabBar" type="HBoxContainer" parent="Background/MainVBox/TabScroll" unique_id=100]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="ContentSplit" type="HBoxContainer" parent="Background/MainVBox" unique_id=1658522760]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="LeftSide" type="VBoxContainer" parent="Background/MainVBox/ContentSplit" unique_id=1859562581]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 10
+
+[node name="GridPanel" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftSide" unique_id=1341427122]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_grid_bg")
+
+[node name="GridScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/LeftSide/GridPanel" unique_id=1300279596]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ProductGrid" type="HFlowContainer" parent="Background/MainVBox/ContentSplit/LeftSide/GridPanel/GridScroll" unique_id=200]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="DetailPanel" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftSide" unique_id=1014092166]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_detail")
+
+[node name="DetailHBox" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel" unique_id=660430992]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="DetailIcon" type="TextureRect" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox" unique_id=300]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DetailInfo" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox" unique_id=1511726528]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DetailName" type="Label" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox/DetailInfo" unique_id=301]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "Select a product"
+
+[node name="DetailPrice" type="Label" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox/DetailInfo" unique_id=302]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.3, 0.1, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="AddBtn" type="Button" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox" unique_id=303]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Add"
+
+[node name="RightSide" type="PanelContainer" parent="Background/MainVBox/ContentSplit" unique_id=890647522]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_list")
+
+[node name="RightVBox" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/RightSide" unique_id=1001527586]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ListHeader" type="Label" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=400]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "List"
+
+[node name="HSeparator" type="HSeparator" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=841116975]
+layout_mode = 2
+
+[node name="ListScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=421853501]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="OrderList" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox/ListScroll" unique_id=500]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=564614651]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="CancelBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox/ButtonRow" unique_id=600]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Cancel"
+
+[node name="ConfirmBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox/ButtonRow" unique_id=700]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Order"
