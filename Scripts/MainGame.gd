@@ -51,11 +51,13 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					customer.item_icon.texture = item.item_data.texture
 					customer.item_icon.visible = true
 				if Dialogic.current_timeline == null:
+					Dialogic.Styles.load_style("bubble_style_dialogue")
 					Dialogic.start("res://Dialogue/customer_satisfied.dtl")
 				item = null  # prevent return_to_start below from running on a hidden node
 			else:
 				EventBus.transaction_completed.emit(item.item_data, false)
 				if Dialogic.current_timeline == null:
+					Dialogic.Styles.load_style("bubble_style_dialogue")
 					Dialogic.start("res://Dialogue/customer_rejected.dtl")
 			
 	if not handled:
