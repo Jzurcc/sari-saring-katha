@@ -51,12 +51,8 @@ directories/dtl_directory={
 "day_ended": "res://Dialogue/day_ended.dtl",
 "main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
 }
-layout/style_directory={
-"": "res://Resources/bubble_style_dialogue.tres",
-"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
-"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres"
-}
-layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres"]
+layout/style_directory={}
+layout/style_list=[]
 layout/default_style=""
 glossary/default_case_sensitive=true
 extensions_folder="res://addons/dialogic_additions"
