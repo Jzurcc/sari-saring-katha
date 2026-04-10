@@ -96,30 +96,7 @@ func check_item(item: ItemData) -> bool:
 func satisfy() -> void:
 	# Lock against re-entry during the animation chain.
 	_is_resolving = true
-	bubble.modulate = Color.GREEN
 	request_label.text = "Thanks!"
-	
-	var tween = create_tween()
-	var original_scale = body_sprite.scale
-	var base_y = body_sprite.position.y
-	
-	# Jump up and stretch
-	tween.tween_property(body_sprite, "scale", original_scale * Vector3(0.8, 1.2, 1.0), 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(body_sprite, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	
-	# Trigger Particles precisely at the peak of the jump
-	tween.tween_callback(func():
-		var particles = get_node_or_null("HappyParticles")
-		if particles and particles.has_method("play"):
-			particles.play()
-	)
-	
-	# Squish back down
-	tween.tween_property(body_sprite, "scale", original_scale * Vector3(1.1, 0.9, 1.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(body_sprite, "position:y", base_y, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	
-	# Recover to normal scale
-	tween.tween_property(body_sprite, "scale", original_scale, 0.15).set_trans(Tween.TRANS_SPRING).set_ease(Tween.EASE_OUT)
 	
 	await get_tree().create_timer(2.0).timeout
 	

@@ -47,9 +47,6 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				# Consume one unit of stock and hide the physical item — it was sold.
 				InventoryManager.take_item(item.item_data)
 				item.hide()
-				if customer.item_icon and item.item_data.texture:
-					customer.item_icon.texture = item.item_data.texture
-					customer.item_icon.visible = true
 				if Dialogic.current_timeline == null:
 					Dialogic.Styles.load_style("DialogueStyle")
 					await get_tree().process_frame
