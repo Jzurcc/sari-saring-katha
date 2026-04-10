@@ -32,6 +32,7 @@ func _physics_process(_delta: float) -> void:
 	query.to = ray_origin + ray_dir * interaction_range
 	query.collide_with_areas = true
 	query.collide_with_bodies = false
+	query.collision_mask = 1  # Layer 1 only: DraggableItems and tray. Ignores layer-2 drop zones.
 
 	var result := camera.get_world_3d().direct_space_state.intersect_ray(query)
 	var current_hovered = null
@@ -62,12 +63,5 @@ func _input(event: InputEvent) -> void:
 				_pickup_item(_last_hovered)
 
 func _pickup_item(item: DraggableItem) -> void:
-	# Avoid cyclic singleton checks if possible, or trigger EventBus
-	if item.item_data and not InventoryManager.is_in_stock(item.item_data):
-		print("[PlayerInteraction] Out of stock: ", item.item_data.item_name)
-		return
-	if item.item_data:
-		InventoryManager.take_item(item.item_data)
-	
 	# Start dragging with DragManager
 	DragManager.start_drag(item, item.sprite.texture)

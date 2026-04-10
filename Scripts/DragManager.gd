@@ -28,6 +28,7 @@ func _ready() -> void:
 	_raycast_query = PhysicsRayQueryParameters3D.new()
 	_raycast_query.collide_with_areas = true
 	_raycast_query.collide_with_bodies = false
+	_raycast_query.collision_mask = 3  # Layer 1 (tray) + layer 2 (shelf drop zones)
 
 func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	if _is_dragging:
@@ -158,6 +159,12 @@ func end_drag() -> void:
 	_raycast_query.from = ray_origin
 	_raycast_query.to = ray_end
 
+	# Exclude the dragged item itself from the raycast
+	var exclude_rids: Array[RID] = []
+	if _dragged_item:
+		exclude_rids.append(_dragged_item.get_rid())
+	_raycast_query.exclude = exclude_rids
+
 	var result := space_state.intersect_ray(_raycast_query)
 
 
@@ -166,6 +173,12 @@ func end_drag() -> void:
 		if collider.is_in_group("transaction_tray") and collider.has_method("receive_item"):
 			collider.receive_item(_dragged_item)
 			success = true
+		elif collider.is_in_group("shelf_drop_zone"):
+			# The drop zone Area3D's parent is the ShelfSurface
+			var shelf_surface := collider.get_parent()
+			if shelf_surface and shelf_surface.has_method("receive_item"):
+				shelf_surface.receive_item(_dragged_item, result.position)
+				success = true
 
 	EventBus.drag_ended.emit(_dragged_item, success)
 
