@@ -46,89 +46,101 @@ size = Vector3(2.003674, 0.12799856, 2.0025241)
 
 [node name="final_store" unique_id=1959424565 instance=ExtResource("1_r7io6")]
 
-[node name="StaticBody3D" type="StaticBody3D" parent="countertop" parent_id_path=PackedInt32Array(208336688) index="0" unique_id=1894438277]
+[node name="StaticBody3D" type="StaticBody3D" parent="countertop" parent_id_path=PackedInt32Array(1433950704) index="0" unique_id=1894438277]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="countertop/StaticBody3D" index="0" unique_id=824662747]
 shape = SubResource("BoxShape3D_r7io6")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="door_floor1" parent_id_path=PackedInt32Array(1419257803) index="0" unique_id=119750247]
+[node name="StaticBody3D" type="StaticBody3D" parent="door_floor1" parent_id_path=PackedInt32Array(681018779) index="0" unique_id=119750247]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.006450653, 103.4711, -0.00999999)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="door_floor1/StaticBody3D" index="0" unique_id=948861613]
 shape = SubResource("BoxShape3D_1x4fi")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="floating_shelf" parent_id_path=PackedInt32Array(1328084528) index="0" unique_id=1162913696]
+[node name="StaticBody3D" type="StaticBody3D" parent="floating_shelf" parent_id_path=PackedInt32Array(1198650237) index="0" unique_id=1162913696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61691, -0.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="floating_shelf/StaticBody3D" index="0" unique_id=402685697]
 shape = SubResource("BoxShape3D_msria")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="monoblock_chair" parent_id_path=PackedInt32Array(1365831180) index="0" unique_id=1222899987]
+[node name="StaticBody3D" type="StaticBody3D" parent="monoblock_chair" parent_id_path=PackedInt32Array(1190890145) index="0" unique_id=1222899987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.861225, -0.515988, -0.4012205)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="monoblock_chair/StaticBody3D" index="0" unique_id=1693121969]
 shape = SubResource("BoxShape3D_qosqr")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="monoblock_chair_001" parent_id_path=PackedInt32Array(1135948815) index="0" unique_id=1489384504]
+[node name="StaticBody3D" type="StaticBody3D" parent="monoblock_chair_001" parent_id_path=PackedInt32Array(1227621983) index="0" unique_id=1489384504]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0008724928, 0, -0.2772305)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="monoblock_chair_001/StaticBody3D" index="0" unique_id=591480697]
 shape = SubResource("BoxShape3D_xdjfo")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Bench" parent_id_path=PackedInt32Array(996680443) index="0" unique_id=67298161]
+[node name="StaticBody3D" type="StaticBody3D" parent="Bench" parent_id_path=PackedInt32Array(1831162484) index="0" unique_id=67298161]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00048828125, -0.010498047, -67.77262)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Bench/StaticBody3D" index="0" unique_id=1401417732]
 shape = SubResource("BoxShape3D_go6ng")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Stand" parent_id_path=PackedInt32Array(1399023572) index="0" unique_id=179048714]
+[node name="StaticBody3D" type="StaticBody3D" parent="Stand" parent_id_path=PackedInt32Array(1605669506) index="0" unique_id=179048714]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9802322e-08, 0.77081203, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Stand/StaticBody3D" index="0" unique_id=1695242527]
 shape = SubResource("BoxShape3D_byp7r")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube" parent_id_path=PackedInt32Array(688583873) index="0" unique_id=2060396184]
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube" parent_id_path=PackedInt32Array(1668293399) index="0" unique_id=2060396184]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.010926992, -4.172325e-07, -1.07499)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube/StaticBody3D" index="0" unique_id=1930563657]
 shape = SubResource("BoxShape3D_yehbd")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube_001" parent_id_path=PackedInt32Array(1756090086) index="0" unique_id=1989824984]
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube_001" parent_id_path=PackedInt32Array(226076190) index="0" unique_id=1989824984]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42546728, -0.0053696036, -1.0736817)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube_001/StaticBody3D" index="0" unique_id=1059794812]
 shape = SubResource("BoxShape3D_ngomo")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="table/metal_table" parent_id_path=PackedInt32Array(1153335953) index="0" unique_id=1253739066]
+[node name="StaticBody3D" type="StaticBody3D" parent="table/metal_table" parent_id_path=PackedInt32Array(1996355566) index="0" unique_id=1253739066]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.536743e-07)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="table/metal_table/StaticBody3D" index="0" unique_id=781458055]
 shape = SubResource("BoxShape3D_wqspr")
 
-[node name="Street_Lamp" parent="." index="48" unique_id=91497346]
-transform = Transform3D(0.06344764, -0.001387084, -2.05624e-09, -1.8913389e-09, 7.565356e-09, -0.0634628, 0.001387084, 0.06344764, 7.52221e-09, -4.4063263, 0.746318, -8.527231)
+[node name="Street_Lamp" parent="." index="48" unique_id=1150956367]
+transform = Transform3D(0.0037166346, 0.063353874, 7.4416087e-09, -1.8913389e-09, 7.565357e-09, -0.0634628, -0.063353874, 0.0037166346, 2.3311504e-09, 6.72937, 0.6686889, -8.271175)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube_036" parent_id_path=PackedInt32Array(1024567738) index="0" unique_id=1575084792]
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube_036" parent_id_path=PackedInt32Array(344926796) index="0" unique_id=1575084792]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08331859, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube_036/StaticBody3D" index="0" unique_id=674254709]
 shape = SubResource("BoxShape3D_l2v2w")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube_004" parent_id_path=PackedInt32Array(1055743796) index="0" unique_id=476830132]
+[node name="Cube_004" parent="." index="52" unique_id=1014986013]
+transform = Transform3D(8.730635, 0, 0, 0, 0.21537216, 0, 0, 0, 9.447919, 0, 0.47047502, -0.13733292)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube_004" index="0" unique_id=476830132]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube_004/StaticBody3D" index="0" unique_id=1506611517]
 shape = SubResource("BoxShape3D_qup6c")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube_007" parent_id_path=PackedInt32Array(1050747061) index="0" unique_id=1084689063]
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube_007" parent_id_path=PackedInt32Array(694923037) index="0" unique_id=1084689063]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube_007/StaticBody3D" index="0" unique_id=664842265]
 shape = SubResource("ConcavePolygonShape3D_8u31r")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Plane_006" parent_id_path=PackedInt32Array(997533075) index="0" unique_id=93354280]
+[node name="StaticBody3D" type="StaticBody3D" parent="Plane_006" parent_id_path=PackedInt32Array(643345319) index="0" unique_id=93354280]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.029971868, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Plane_006/StaticBody3D" index="0" unique_id=1337386588]
 shape = SubResource("BoxShape3D_6bn8s")
 
-[node name="Cube_018" parent="." index="63" unique_id=1443332382]
+[node name="Cube_018" parent="." index="63" unique_id=1909361215]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4470358, 0, 0)
+
+[node name="Cube_028" parent="." index="255" unique_id=705687843]
+transform = Transform3D(1.1027015, 0, 0, 0, 0.6180212, 0, 0, 0, 0.0074083563, -2.1797552, 1.7884275, -4.7759933)
+
+[node name="Cube_030" parent="." index="257" unique_id=2087570373]
+transform = Transform3D(0.550993, 0, 0, 0, 0.78344834, 0, 0, 0, 0.009391368, 2.083633, 1.6046231, -4.7847815)
+
+[node name="window_1_038" parent="." index="549" unique_id=1355696355]
+transform = Transform3D(0.8704743, 0, 0, 0, 0, -0.8704743, 0, 0.8704743, 0, -16.570957, 8.24451, 13.303642)
