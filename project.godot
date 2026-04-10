@@ -52,9 +52,9 @@ directories/dtl_directory={
 "main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
 }
 layout/style_directory={
-"": "res://Resources/bubble_style_dialogue.tres",
-"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres",
-"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres"
+"": "res://Assets/Dialogue/DialogueStyle.tres",
+"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
+"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres"
 }
 layout/style_list=["res://Resources/bubble_style_dialogue.tres", "res://Assets/Dialogue/DialogueStyle.tres"]
 layout/default_style="res://Resources/bubble_style_dialogue.tres"
