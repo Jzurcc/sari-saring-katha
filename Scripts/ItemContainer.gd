@@ -53,12 +53,12 @@ func populate() -> void:
 		var draggable: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
 		add_child(draggable)
 
-		# Position the item in the slot — Y=0 is the container bottom.
-		draggable.position = _get_slot_position(i, count)
-
-		# setup() must be called AFTER add_child + positioning so that
-		# global_position is correct when the item captures its origin.
-		draggable.setup(item_data)
+		# Pass the slot transform directly into setup() so _original_transform
+		# is set correctly. Setting position before setup() would be overwritten
+		# by the Transform3D.IDENTITY default inside setup().
+		var slot_pos := _get_slot_position(i, count)
+		var slot_transform := Transform3D(Basis(), slot_pos)
+		draggable.setup(item_data, slot_transform)
 		_spawned_items.append(draggable)
 
 	print("[ItemContainer] '%s' populated with %d/%d slots" % [name, _spawned_items.size(), slot_count])
