@@ -16,6 +16,8 @@ var desire: ItemData
 @export var min_sprite_y: float = 1.3
 @export var max_sprite_y: float = 2.4
 var _base_sprite_y: float = 0.0
+var _is_resolving: bool = false
+var _spawn_position: Vector3 = Vector3.ZERO
 
 @onready var bubble: Sprite3D = $Bubble
 @onready var item_icon: Sprite3D = $Bubble/ItemIcon
@@ -36,6 +38,8 @@ func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _norm
 			clicked.emit(self)
 
 func setup(data: ItemData, target: Vector3) -> void:
+	# Capture spawn position now — global_position is already set by CustomerSpawner.
+	_spawn_position = global_position
 	desire = data
 	target_position = target
 	if desire:
@@ -43,13 +47,17 @@ func setup(data: ItemData, target: Vector3) -> void:
 			item_icon.texture = desire.texture
 		request_label.text = desire.item_name
 
+## Called by PlayerInteraction when the player aims at this customer and clicks.
+## Only responds when waiting at the counter and not mid-animation.
+func on_interact() -> void:
+	if is_waiting and not _is_resolving:
+		clicked.emit(self)
+
 func _process(delta: float) -> void:
-	# Vertically follow the camera pitch so the sprite doesn't skew downwards/upwards too much
 	var camera := get_viewport().get_camera_3d()
 	if camera and body_sprite:
-		var pitch := camera.global_rotation.x
-		# Applying the user requested logic: move normally as before, but clamped
-		var target_y := _base_sprite_y - (pitch * vertical_follow_factor)
+		var pitch_deg := rad_to_deg(camera.global_rotation.x)
+		var target_y := _base_sprite_y + (pitch_deg * 0.01 * vertical_follow_factor)
 		body_sprite.position.y = clamp(target_y, min_sprite_y, max_sprite_y)
 
 	# Early return optimization: skip processing when waiting at counter
@@ -66,7 +74,19 @@ func arrived_at_counter() -> void:
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
-	if item != null and desire != null and item.id == desire.id:
+	# Ignore new drops while a satisfaction/rejection animation is playing.
+	if _is_resolving:
+		return false
+	if item == null or desire == null:
+		reject()
+		return false
+
+	# Prefer the explicit id field; fall back to resource_path which is always
+	# unique per .tres file. This prevents blank ids from matching everything.
+	var item_key := item.id if item.id not in ["", "unset"] else item.resource_path
+	var desire_key := desire.id if desire.id not in ["", "unset"] else desire.resource_path
+
+	if item_key == desire_key:
 		satisfy()
 		return true
 	else:
@@ -74,6 +94,8 @@ func check_item(item: ItemData) -> bool:
 		return false
 
 func satisfy() -> void:
+	# Lock against re-entry during the animation chain.
+	_is_resolving = true
 	bubble.modulate = Color.GREEN
 	request_label.text = "Thanks!"
 	
@@ -108,12 +130,38 @@ func satisfy() -> void:
 	await fade_tween.finished
 	
 	satisfied.emit()
+	# Broadcast on the EventBus so CustomerSpawner._on_customer_finished fires.
+	EventBus.customer_satisfied.emit(self)
 	queue_free()
 
 func reject() -> void:
+	_is_resolving = true
 	bubble.modulate = Color.RED
 	var original_text = request_label.text
 	request_label.text = "No!"
 	await get_tree().create_timer(1.0).timeout
 	bubble.modulate = Color.WHITE
 	request_label.text = original_text
+	_is_resolving = false
+	# Notify EventBus so CustomerSpawner can track rejections.
+	EventBus.customer_rejected.emit(self)
+
+## Called by CustomerSpawner after the player chooses "Refuse service".
+## Plays a brief leaving animation then notifies the EventBus.
+func dismiss() -> void:
+	is_waiting = false
+	bubble.visible = false
+	_is_resolving = true
+
+	# Walk back toward the spawn edge
+	var walk_tween = create_tween()
+	walk_tween.tween_property(self, "global_position", _spawn_position, 1.2) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+	# Fade out over the same duration
+	var fade_tween = create_tween()
+	fade_tween.tween_property(body_sprite, "modulate:a", 0.0, 1.2)
+
+	await walk_tween.finished
+	EventBus.customer_dismissed.emit(self)
+	queue_free()
