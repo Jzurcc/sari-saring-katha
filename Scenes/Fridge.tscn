@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dyvv236hllr5q" path="res://Scripts/Fridge.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bro5t8giw25g5" path="res://Scenes/DraggableItem.tscn" id="2_item"]
-[ext_resource type="Resource" path="res://Resources/items/food/Vinegar.tres" id="3_sardines"]
+[ext_resource type="Resource" path="res://Resources/items/bottle/Coke.tres" id="3_sardines"]
 
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]

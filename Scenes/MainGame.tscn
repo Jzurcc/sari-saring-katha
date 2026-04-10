@@ -16,7 +16,6 @@
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
 [ext_resource type="Script" uid="uid://camum248co0qu" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
-[ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="sky3d_scene"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -27,7 +26,7 @@ size = Vector3(3.858551, 0.7244873, 1.0361328)
 
 [sub_resource type="Resource" id="Resource_r5sjn"]
 script = ExtResource("12_r5sjn")
-depth_variance = 0.11
+depth_variance = 0.235
 tilt_variance_deg = 3.455
 item_gap = 0.0
 
@@ -88,6 +87,7 @@ mouse_filter = 2
 color = Color(1, 1, 1, 0.784313)
 
 [node name="GoldenHourFilter" type="ColorRect" parent="CanvasLayer" unique_id=123987123]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -127,7 +127,37 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="ShelfSurface" type="Node3D" parent="Shelf" unique_id=1927767560]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, -0.028594494, -0.20647335)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
+script = ExtResource("11_ktwve")
+shelf_width = 4.005
+accepted_categories = PackedStringArray()
+layout_strategy = SubResource("Resource_r5sjn")
+
+[node name="Shelf2" type="StaticBody3D" parent="." unique_id=1870152215]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 2.0168633, 4.2263174)
+script = ExtResource("10_wyocf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Shelf2" unique_id=462943268]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="ShelfSurface" type="Node3D" parent="Shelf2" unique_id=1019299572]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
+script = ExtResource("11_ktwve")
+shelf_width = 4.005
+accepted_categories = PackedStringArray()
+layout_strategy = SubResource("Resource_r5sjn")
+
+[node name="Shelf3" type="StaticBody3D" parent="." unique_id=1720244853]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 1.0845492, 4.2263174)
+script = ExtResource("10_wyocf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Shelf3" unique_id=480769304]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="ShelfSurface" type="Node3D" parent="Shelf3" unique_id=1503542262]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
@@ -148,6 +178,3 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9080963, 5.8179474, 0.6407471)
 size = Vector3(15.606049, 15.635895, 13.080322)
 data = ExtResource("23_7p2u3")
-
-[node name="Sky3D" parent="." unique_id=801352077 instance=ExtResource("sky3d_scene")]
-wind_direction = 2.35619451204804

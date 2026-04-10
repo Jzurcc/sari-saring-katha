@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/24_cigarette_mayti.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Mayti"
+texture = ExtResource("2_tex")
+price = 150
+display_height_meters = 0.45
+opaque_rect = Rect2i(109, 19, 272, 465)
