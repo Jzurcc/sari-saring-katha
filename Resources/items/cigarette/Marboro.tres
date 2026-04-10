@@ -8,5 +8,7 @@ script = ExtResource("1_item")
 item_name = "Marboro"
 texture = ExtResource("2_tex")
 price = 150
+max_stock = 0
+category = "cigarette"
 display_height_meters = 0.45
 opaque_rect = Rect2i(106, 26, 287, 452)

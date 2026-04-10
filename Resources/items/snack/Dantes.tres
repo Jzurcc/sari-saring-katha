@@ -8,5 +8,7 @@ script = ExtResource("1_item")
 item_name = "Dantes"
 texture = ExtResource("2_tex")
 price = 15
+max_stock = 0
+category = "snack"
 display_height_meters = 0.6
 opaque_rect = Rect2i(77, 3, 343, 486)

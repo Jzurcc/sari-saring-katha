@@ -8,5 +8,7 @@ script = ExtResource("1_item")
 item_name = "Pantit"
 texture = ExtResource("2_tex")
 price = 18
+max_stock = 0
+category = "pack"
 display_height_meters = 0.55
 opaque_rect = Rect2i(19, 59, 461, 378)
