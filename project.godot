@@ -42,6 +42,7 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 directories/dch_directory={
 "KuyaKap": "res://Characters/KuyaKap.dch",
 "Timelines/KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
+"Timelines/UncleMario": "res://Dialogue/Timelines/UncleMario.dch",
 "UncleMario": "res://Characters/UncleMario.dch"
 }
 directories/dtl_directory={
@@ -101,6 +102,8 @@ variables={}
 
 window/size/viewport_width=1600
 window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [editor_plugins]
 
