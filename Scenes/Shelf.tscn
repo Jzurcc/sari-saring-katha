@@ -17,8 +17,3 @@ mesh = SubResource("BoxMesh_1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1055773164]
 shape = SubResource("BoxShape3D_1")
-
-[node name="Area3D" type="Area3D" parent="." unique_id=1399310831]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=166323143]
-shape = SubResource("BoxShape3D_1")
