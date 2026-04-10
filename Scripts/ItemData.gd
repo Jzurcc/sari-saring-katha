@@ -27,25 +27,22 @@ enum ItemType {
 ## Positive = leans right, negative = leans left.
 @export var tilt_offset_deg: float = 0.0
 
-var _cached_aspect: float = -1.0
+@export_group("Layout")
+## The pre-calculated opaque bounding box of the texture (in pixels).
+## Used to perfectly trim transparent padding so items pack flush together.
+@export var opaque_rect: Rect2i = Rect2i()
 
-## Calculates and caches the true aspect ratio (width / height) by extracting
-## the opaque bounding box of the texture, ignoring transparent padding.
-func get_visual_aspect() -> float:
-	if _cached_aspect > 0.0:
-		return _cached_aspect
+func get_used_rect() -> Rect2i:
+	if opaque_rect.has_area():
+		return opaque_rect
 		
 	if not texture:
-		_cached_aspect = 1.0
-		return _cached_aspect
-		
-	var image: Image = texture.get_image()
-	if image:
-		var used_rect := image.get_used_rect()
-		if used_rect.has_area():
-			_cached_aspect = float(used_rect.size.x) / float(used_rect.size.y)
-			return _cached_aspect
+		return Rect2i()
 
-	var h := texture.get_height()
-	_cached_aspect = float(texture.get_width()) / float(h) if h > 0 else 1.0
-	return _cached_aspect
+	return Rect2i(0, 0, texture.get_width(), texture.get_height())
+
+func get_visual_aspect() -> float:
+	var rect = get_used_rect()
+	if rect.has_area() and rect.size.y > 0:
+		return float(rect.size.x) / float(rect.size.y)
+	return 1.0

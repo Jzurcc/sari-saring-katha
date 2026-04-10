@@ -45,15 +45,27 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 		# Reset any scale baked into the scene so pixel_size is the sole control
 		sprite.scale = Vector3.ONE
 
-		# pixel_size converts texture pixels → world metres:
-		# world_height = texture_height_px * pixel_size → solve for pixel_size
-		sprite.pixel_size = h / float(item_data.texture.get_height())
+		# --- Sizing ---
+		var rect = item_data.get_used_rect()
+		var v_h = float(rect.size.y) if rect.has_area() else float(item_data.texture.get_height())
 
-		# --- Bottom-alignment ---
-		# Clear offset and just shift the sprite node directly in 3D space.
-		# By moving it up by half its height, the bottom touches Y=0,
-		# meaning any size changes will cleanly "grow" upward from the shelf!
-		sprite.offset = Vector2.ZERO
+		# pixel_size maps true visible height to real-world meters
+		sprite.pixel_size = h / v_h
+
+		# --- Offset & Alignment ---
+		# Center the actual opaque pixels at the node's origin
+		var tex_center = Vector2(item_data.texture.get_width(), item_data.texture.get_height()) / 2.0
+		var opaque_center = Vector2(rect.position) + Vector2(rect.size) / 2.0
+
+		# In Godot Sprite3D:
+		# positive X offset moves texture right
+		# positive Y offset moves texture UP
+		var offset_x = tex_center.x - opaque_center.x
+		var offset_y = opaque_center.y - tex_center.y 
+		sprite.offset = Vector2(offset_x, offset_y)
+
+		# Now that it's perfectly centered, shift it up to sit on the shelf
+		sprite.position = Vector3.ZERO
 		sprite.position.y = h / 2.0
 
 		# --- Tilt (Z-axis roll on the Sprite3D) ---
@@ -82,7 +94,7 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 		# doesn't accidentally resize the boxes of every other item in the scene!
 		if collider.shape is BoxShape3D:
 			collider.shape = collider.shape.duplicate()
-			collider.shape.size = Vector3(rendered_w, rendered_h, 0.05)
+			collider.shape.size = Vector3(rendered_w, rendered_h, max(0.1, rendered_w))
 		collider.position.y = rendered_h / 2.0
 
 	if label:
@@ -98,6 +110,7 @@ func on_hover(is_hovered: bool) -> void:
 			outline_material.set_shader_parameter("albedo_texture", sprite.texture)
 			outline_material.set_shader_parameter("outline_color", Color.WHITE)
 			outline_material.set_shader_parameter("outline_width", 0.05)
+			outline_material.set_shader_parameter("z_roll_rad", sprite.rotation.z)
 		sprite.material_overlay = outline_material
 	else:
 		sprite.material_overlay = null
