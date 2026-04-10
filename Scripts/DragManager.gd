@@ -30,6 +30,9 @@ func _ready() -> void:
 	_raycast_query.collide_with_bodies = false
 	_raycast_query.collision_mask = 3  # Layer 1 (tray) + layer 2 (shelf drop zones)
 
+	# Release the drag reference if the held node is freed (e.g. scene change).
+	get_tree().node_removed.connect(_on_node_removed)
+
 func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	if _is_dragging:
 		return
@@ -194,3 +197,12 @@ func _cancel_drag() -> void:
 		_dragged_item._on_drag_cancelled_by_manager()
 		_dragged_item.return_to_start()
 		_dragged_item = null
+
+
+## Called when any node is removed from the scene tree.
+## Ensures a dangling item reference doesn’t persist across scene changes.
+func _on_node_removed(node: Node) -> void:
+	if node == _dragged_item:
+		_is_dragging = false
+		_dragged_item = null
+		_dragged_texture_rect.hide()
