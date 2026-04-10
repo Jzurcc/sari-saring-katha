@@ -5,6 +5,8 @@
 [ext_resource type="Script" uid="uid://b3hb1p8sua5uq" path="res://Scripts/Shelf.gd" id="10_wyocf"]
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/ShelfSurface.gd" id="11_ktwve"]
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
+[ext_resource type="Texture2D" uid="uid://477m82fgpway" path="res://Assets/items/icons/4_snack_anoba.png" id="13_k6vqf"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
@@ -22,7 +24,18 @@ radius = 0.4
 height = 3.086621
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+resource_local_to_scene = true
 size = Vector3(3.858551, 0.7244873, 1.0361328)
+
+[sub_resource type="Resource" id="Resource_ev6kq"]
+script = ExtResource("12_yc6xl")
+item_name = "Anoba"
+texture = ExtResource("13_k6vqf")
+price = 15
+max_stock = 1
+category = "snack"
+display_height_meters = 0.6
+opaque_rect = Rect2i(81, 11, 335, 471)
 
 [sub_resource type="Resource" id="Resource_r5sjn"]
 resource_local_to_scene = true
@@ -34,7 +47,7 @@ item_gap = 0.0
 [node name="MainGame" type="Node3D" unique_id=572606432]
 script = ExtResource("1_script")
 
-[node name="Player" type="CharacterBody3D" parent="." unique_id=-1541147005]
+[node name="Player" type="CharacterBody3D" parent="." unique_id=-1541147005 groups=["player"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.596, 3.4, -0.05)
 script = ExtResource("fps_scr")
 
@@ -102,6 +115,9 @@ sky3d_path = NodePath("")
 [node name="TransactionTray" parent="." unique_id=995685862 instance=ExtResource("6_d4f28")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.671936, 3.9905696, 0)
 
+[node name="CollisionShape3D" parent="TransactionTray" index="0" unique_id=319493410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1054274e-14, 0.18831778, 0.18249512)
+
 [node name="FlickeringLight" type="OmniLight3D" parent="." unique_id=132296177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19843912, 5.0687175, 0.016890496)
 light_color = Color(1, 0.85, 0.55, 1)
@@ -130,24 +146,28 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf" unique_id=1927767560]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
+items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
+slot_width = null
 
-[node name="Shelf5" type="StaticBody3D" parent="." unique_id=1988676799]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 3.1208305, 4.2263174)
+[node name="Shelf6" type="StaticBody3D" parent="." unique_id=1848001474]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 4.0140085, 4.2263174)
 script = ExtResource("10_wyocf")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Shelf5" unique_id=2122588073]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Shelf6" unique_id=1840000159]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="ShelfSurface" type="Node3D" parent="Shelf5" unique_id=1519615678]
+[node name="ShelfSurface" type="Node3D" parent="Shelf6" unique_id=685570783]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-shelf_width = 4.005
+items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
+shelf_width = 2.535
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
+slot_width = null
 
 [node name="Shelf4" type="StaticBody3D" parent="." unique_id=89837644]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4.6100545, 4.5451775, 0.29416174)
@@ -160,9 +180,11 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf4" unique_id=1220161792]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
+items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
+slot_width = null
 
 [node name="Shelf2" type="StaticBody3D" parent="." unique_id=1870152215]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 2.0168633, 4.2263174)
@@ -175,9 +197,11 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf2" unique_id=1019299572]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
+items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
+slot_width = null
 
 [node name="Shelf3" type="StaticBody3D" parent="." unique_id=1720244853]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 1.0845492, 4.2263174)
@@ -190,9 +214,11 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf3" unique_id=1503542262]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
+items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
+slot_width = null
 
 [node name="GameManager" type="Node" parent="." unique_id=1750367744]
 script = ExtResource("gm_scr")
@@ -209,3 +235,5 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9080963, 5.8179474, 0.6407471)
 size = Vector3(15.606049, 15.635895, 13.080322)
 data = ExtResource("23_7p2u3")
+
+[editable path="TransactionTray"]
