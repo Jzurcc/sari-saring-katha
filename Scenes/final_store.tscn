@@ -44,6 +44,8 @@ data = PackedVector3Array(-0.65929997, -0.3266, -1, 0.6483, -0.3266, -1.0738, -0
 [sub_resource type="BoxShape3D" id="BoxShape3D_6bn8s"]
 size = Vector3(2.003674, 0.12799856, 2.0025241)
 
+[sub_resource type="BoxMesh" id="BoxMesh_gfpct"]
+
 [node name="final_store" unique_id=1959424565 instance=ExtResource("1_r7io6")]
 
 [node name="Cylinder_001" parent="." index="0" unique_id=279606910]
@@ -188,3 +190,7 @@ transform = Transform3D(-1.1019387, -0.022347717, -3.0576766e-10, -1.0264714e-09
 
 [node name="roof_004" parent="." index="605" unique_id=1222098227]
 transform = Transform3D(-4.5738297, 0, -0.11048501, 0, 2.5313, 0, 0.09275895, 0, -5.44788, -1.4991994, 3.0928164, -29.255768)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." index="614" unique_id=1240598993]
+transform = Transform3D(1, 0, 0, 0, 0.04411435, 0, 0, 0, 1.9101058, 4.1226363, 2.24376, 0.28677338)
+mesh = SubResource("BoxMesh_gfpct")

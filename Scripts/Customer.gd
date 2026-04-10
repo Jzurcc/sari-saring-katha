@@ -45,6 +45,7 @@ func setup(data: ItemData, target: Vector3) -> void:
 	if desire:
 		if desire.texture:
 			item_icon.texture = desire.texture
+			item_icon.visible = true
 		request_label.text = desire.item_name
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
