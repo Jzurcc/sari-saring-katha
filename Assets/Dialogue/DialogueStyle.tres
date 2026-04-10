@@ -32,23 +32,18 @@ scene = ExtResource("5_yda17")
 script = ExtResource("2_pqiig")
 scene = ExtResource("6_edhmf")
 overrides = {
-"bold_font": "\"res://Assets/Fonts/Bantayog/Bantayog-Regular.ttf\"",
-"bold_italics_font": "\"res://Assets/Fonts/Bantayog/Bantayog-Regular.ttf\"",
 "box_color_custom": "Color(1, 0.7176471, 0.5294118, 1)",
 "box_color_use_global": "false",
 "box_size": "Vector2(900, 150)",
-"italics_font": "\"res://Assets/Fonts/Bantayog/Bantayog-Semilight.ttf\"",
 "name_label_box_modulate": "Color(1, 0.7176471, 0.5294118, 1)",
 "name_label_box_offset": "Vector2(0, -15)",
 "name_label_box_use_global_color": "false",
 "name_label_custom_color": "Color(0, 0, 0, 1)",
 "name_label_custom_font_size": "34.0",
-"name_label_font": "\"res://Assets/Fonts/Maragsa╠é-Display.ttf\"",
 "name_label_use_character_color": "false",
 "name_label_use_global_color": "false",
 "name_label_use_global_font": "false",
 "name_label_use_global_font_size": "false",
-"normal_font": "\"res://Assets/Fonts/Maragsa╠é-Display.ttf\"",
 "text_custom_color": "Color(0, 0, 0, 1)",
 "text_size": "24.0",
 "text_use_global_color": "false",
@@ -64,7 +59,6 @@ script = ExtResource("2_pqiig")
 scene = ExtResource("8_24s68")
 overrides = {
 "boxes_offset": "Vector2(0, 150)",
-"font_custom": "\"res://Assets/Fonts/Maragsa╠é-Display.ttf\"",
 "font_size_custom": "24.0",
 "text_color_custom": "Color(0, 0, 0, 1)",
 "text_color_disabled": "Color(0.17500001, 0.17500001, 0.17500001, 1)",

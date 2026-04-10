@@ -99,13 +99,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9802322e-08, 0.77081203, 0)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Stand/StaticBody3D" index="0" unique_id=1695242527]
 shape = SubResource("BoxShape3D_byp7r")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube" parent_id_path=PackedInt32Array(688583873) index="0" unique_id=2060396184]
+[node name="Cube" parent="." index="30" unique_id=688583873]
+transform = Transform3D(-1.5184417, -0.074364185, -5.1411515e-09, -2.8310578e-09, 2.0154557e-07, -1.5199125, 0.066852756, -1.6890506, -1.8113685e-07, 3.9779024, 0.77652776, 0.26996362)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube" index="0" unique_id=2060396184]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.010926992, -4.172325e-07, -1.07499)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube/StaticBody3D" index="0" unique_id=1930563657]
 shape = SubResource("BoxShape3D_yehbd")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Cube_001" parent_id_path=PackedInt32Array(1756090086) index="0" unique_id=1989824984]
+[node name="Cube_001" parent="." index="31" unique_id=1756090086]
+transform = Transform3D(-1.5184417, -0.074364185, -5.1411515e-09, -2.8310578e-09, 2.0154557e-07, -1.5199125, 0.066852756, -1.6890506, -1.8113685e-07, 3.9911199, 0.7627686, 0.27116835)
+visible = false
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Cube_001" index="0" unique_id=1989824984]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42546728, -0.0053696036, -1.0736817)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cube_001/StaticBody3D" index="0" unique_id=1059794812]
@@ -149,7 +156,10 @@ shape = SubResource("ConcavePolygonShape3D_8u31r")
 [node name="Plane_008" parent="." index="58" unique_id=2000147694]
 transform = Transform3D(0, 3.7693276e-08, -0.48896927, -0.63238823, 3.7693276e-08, 1.7371678e-15, 3.7693276e-08, 0.63238823, 2.9144838e-08, 3.4653814, 4.01881, 4.9135823)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="Plane_006" parent_id_path=PackedInt32Array(997533075) index="0" unique_id=93354280]
+[node name="Plane_006" parent="." index="62" unique_id=997533075]
+transform = Transform3D(0.0029322302, 0.77491105, 0, -1.0137544, 0.002241389, 0, 0, 0, 0.77491426, 4.6568255, 3.6640134, -1.888788)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Plane_006" index="0" unique_id=93354280]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.029971868, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Plane_006/StaticBody3D" index="0" unique_id=1337386588]
