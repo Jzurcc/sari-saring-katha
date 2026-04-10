@@ -33,16 +33,12 @@ extends LayoutStrategy
 
 func compute_positions(
 		items: Array[ItemData],
-		shelf_width: float,
-		max_items: int) -> Array[Transform3D]:
+		shelf_width: float) -> Array[Transform3D]:
 
 	var result: Array[Transform3D] = []
 	var cursor_x: float = 0.0
 
 	for item in items:
-		if result.size() >= max_items:
-			break
-
 		var item_w := _get_item_width(item)
 
 		# Stop if this item would overflow the shelf surface
@@ -75,10 +71,27 @@ func compute_positions(
 
 
 ## Compute the real-world width of [param item] in metres.
-## Uses [member ItemData.display_width_override] when set; otherwise
-## derives width from the texture aspect ratio × display height.
 func _get_item_width(item: ItemData) -> float:
 	if item.display_width_override > 0.0:
 		return item.display_width_override
-
 	return item.display_height_meters * item.get_visual_aspect()
+
+
+## Pre-generate one transform per slot across the full shelf width.
+## Slots are evenly spaced by [param slot_width], with the same organic
+## depth and tilt variance applied to each, so items always look natural
+## regardless of whether they were placed at startup or dragged in later.
+func generate_slots(shelf_width: float, slot_width: float) -> Array[Transform3D]:
+	var result: Array[Transform3D] = []
+	var cursor := slot_width * 0.5
+	while cursor + slot_width * 0.5 <= shelf_width:
+		var pos := Vector3(
+			cursor,
+			0.0,
+			randf_range(-depth_variance, depth_variance)
+		)
+		var roll_deg := randf_range(-tilt_variance_deg, tilt_variance_deg)
+		var basis := Basis(Vector3.FORWARD, deg_to_rad(roll_deg))
+		result.append(Transform3D(basis, pos))
+		cursor += slot_width
+	return result
