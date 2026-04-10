@@ -7,8 +7,11 @@
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
 [ext_resource type="Texture2D" uid="uid://477m82fgpway" path="res://Assets/items/icons/4_snack_anoba.png" id="13_k6vqf"]
+[ext_resource type="Resource" path="res://Resources/items/can/Scam.tres" id="14_jn25s"]
+[ext_resource type="Resource" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
+[ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="19_k6vqf"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
@@ -146,11 +149,10 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf" unique_id=1927767560]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), null, null, null, null, null, null, null, null, null])
+items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), null, null, null, null, null, null])
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
-slot_width = null
 
 [node name="Shelf6" type="StaticBody3D" parent="." unique_id=1848001474]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 4.0140085, 4.2263174)
@@ -167,7 +169,6 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 2.535
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
-slot_width = null
 
 [node name="Shelf4" type="StaticBody3D" parent="." unique_id=89837644]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4.6100545, 4.5451775, 0.29416174)
@@ -184,7 +185,6 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
-slot_width = null
 
 [node name="Shelf2" type="StaticBody3D" parent="." unique_id=1870152215]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 2.0168633, 4.2263174)
@@ -201,7 +201,6 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
-slot_width = null
 
 [node name="Shelf3" type="StaticBody3D" parent="." unique_id=1720244853]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 1.0845492, 4.2263174)
@@ -218,7 +217,6 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
-slot_width = null
 
 [node name="GameManager" type="Node" parent="." unique_id=1750367744]
 script = ExtResource("gm_scr")
@@ -235,5 +233,11 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9080963, 5.8179474, 0.6407471)
 size = Vector3(15.606049, 15.635895, 13.080322)
 data = ExtResource("23_7p2u3")
+
+[node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2324809, 0.8288167, -3.5390637)
+
+[node name="Cube_001" parent="FridgeDoorPivot" unique_id=1452766205 instance=ExtResource("19_k6vqf")]
+transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, -0.9317349, 0, -0.43077898)
 
 [editable path="TransactionTray"]
