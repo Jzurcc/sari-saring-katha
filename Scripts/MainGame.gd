@@ -57,8 +57,7 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 	if not handled:
 		print("[MainGame] No customer waiting, dropping item")
 		
-	if item.item_data:
-		InventoryManager.return_item(item.item_data)
+	# Item always physically returns to its shelf slot.
 	item.show_visuals()
 	item.return_to_start()
 
