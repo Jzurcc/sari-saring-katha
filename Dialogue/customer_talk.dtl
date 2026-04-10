@@ -1,0 +1,9 @@
+join Timelines/KuyaKap left [length="0.2"]
+Timelines/KuyaKap: {InventoryManager.current_item_name} pa rin please!
+- Sige, antayin lang.
+	Timelines/KuyaKap: Sige sige, mag-aabang na lang ako.
+	[end_timeline]
+- Pasensya na, hindi kita maseserbisyuhan ngayon.
+	Timelines/KuyaKap: Nako, ganon ba? Sige, aalis na ako.
+	[signal: refuse_service]
+	[end_timeline]
