@@ -1,5 +1,30 @@
 shader_type spatial;
-render_mode depth_prepass_alpha, cull_back, unshaded;
+render_mode depth_draw_never, cull_back, unshaded, shadows_disabled;
+
+uniform float z_roll_rad = 0.0;
+
+void vertex() {
+	// Replicate Sprite3D Spherical Billboarding while keeping original scale intact
+	mat4 mat_world = mat4(
+		vec4(normalize(INV_VIEW_MATRIX[0].xyz) * length(MODEL_MATRIX[0].xyz), 0.0),
+		vec4(normalize(INV_VIEW_MATRIX[1].xyz) * length(MODEL_MATRIX[1].xyz), 0.0),
+		vec4(normalize(INV_VIEW_MATRIX[2].xyz) * length(MODEL_MATRIX[2].xyz), 0.0),
+		MODEL_MATRIX[3]
+	);
+
+	// Apply Z rotation to match the Sprite3D's specific tilt
+	float c = cos(z_roll_rad);
+	float s = sin(z_roll_rad);
+	mat4 rot_z = mat4(
+		vec4(c, s, 0.0, 0.0),
+		vec4(-s, c, 0.0, 0.0),
+		vec4(0.0, 0.0, 1.0, 0.0),
+		vec4(0.0, 0.0, 0.0, 1.0)
+	);
+
+	MODELVIEW_MATRIX = VIEW_MATRIX * (mat_world * rot_z);
+	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
+}
 
 uniform sampler2D albedo_texture : source_color, filter_nearest;
 uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);

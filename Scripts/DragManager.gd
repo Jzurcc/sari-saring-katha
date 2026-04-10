@@ -21,6 +21,7 @@ func _ready() -> void:
 	_dragged_texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dragged_texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_dragged_texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dragged_texture_rect.modulate = Color(0.65, 0.65, 0.7, 1.0) # Fake ambient shading so it matches the 3D physical world better
 	_dragged_texture_rect.hide()
 	_canvas_layer.add_child(_dragged_texture_rect)
 
@@ -37,8 +38,18 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 
 	if texture:
 		_dragged_texture_rect.texture = texture
-		_dragged_texture_rect.custom_minimum_size = Vector2(128, 128)
-		_dragged_texture_rect.size = Vector2(128, 128)
+		
+		# Scale dragged UI to closely match real-world physical proportions (1 meter = ~640 pixels)
+		# Applied a 0.85 multiplier so the item visually recedes from the camera when picked up.
+		var pixels_per_meter: float = 640.0 * 0.85
+		var display_w: float = 128.0
+		var display_h: float = 128.0
+		if item and item.collider and item.collider.shape:
+			display_w = item.collider.shape.size.x * pixels_per_meter
+			display_h = item.collider.shape.size.y * pixels_per_meter
+
+		_dragged_texture_rect.custom_minimum_size = Vector2(display_w, display_h)
+		_dragged_texture_rect.size = Vector2(display_w, display_h)
 		_dragged_texture_rect.pivot_offset = _dragged_texture_rect.size / 2.0
 		# Start from slightly below for a nice jump-in animation
 		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 100)

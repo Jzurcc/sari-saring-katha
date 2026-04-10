@@ -11,10 +11,13 @@ var _last_hovered: Node = null
 
 func _ready():
 	if not camera:
-		camera = get_parent() as Camera3D
+		if get_node(".") is Camera3D:
+			camera = get_node(".") as Camera3D
+		else:
+			camera = get_parent() as Camera3D
 
 func _physics_process(_delta: float) -> void:
-	if not camera or Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
+	if not camera or Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED or DragManager._is_dragging:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
 			_last_hovered = null

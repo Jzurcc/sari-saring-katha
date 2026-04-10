@@ -33,7 +33,7 @@ func _spawn_next_customer() -> void:
 	await get_tree().create_timer(2.0).timeout
 
 	# Use standard placeholder for now
-	var desired_item: ItemData = load("res://Resources/items/food/Cigarettes.tres")
+	var desired_item: ItemData = load("res://Resources/items/cigarette/Marboro.tres")
 
 	if not desired_item or not spawn_pos or not target_pos:
 		push_error("[CustomerSpawner] Missing configuration!")
