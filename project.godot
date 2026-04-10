@@ -52,12 +52,12 @@ directories/dtl_directory={
 "main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
 }
 layout/style_directory={
-"": "res://Assets/Dialogue/DialogueStyle.tres",
-"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
-"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres"
+"": "res://Resources/bubble_style_dialogue.tres",
+"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres",
+"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres"
 }
-layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres", "res://Resources/bubble_style_dialogue.tres"]
-layout/default_style="res://Assets/Dialogue/DialogueStyle.tres"
+layout/style_list=["res://Resources/bubble_style_dialogue.tres", "res://Assets/Dialogue/DialogueStyle.tres"]
+layout/default_style="res://Resources/bubble_style_dialogue.tres"
 glossary/default_case_sensitive=true
 extensions_folder="res://addons/dialogic_additions"
 text/letter_speed=0.01
