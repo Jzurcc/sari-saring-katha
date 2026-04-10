@@ -74,6 +74,7 @@ func check_item(item: ItemData) -> bool:
 		return false
 
 func satisfy() -> void:
+	InventoryManager.decrement_cooldown()
 	bubble.modulate = Color.GREEN
 	request_label.text = "Thanks!"
 	

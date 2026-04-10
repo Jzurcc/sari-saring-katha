@@ -7,6 +7,9 @@ extends Node
 ## Reference in .dtl files as: {InventoryManager.current_item_name}
 var current_item_name: String = ""
 
+## Number of customers that must be served before Uncle Mario can restock again.
+var customers_needed_for_delivery: int = 0
+
 var _initialized: bool = false
 
 var _stock: Dictionary = {}
@@ -34,6 +37,9 @@ func initialize() -> void:
 			_load_folder(base_path + "/" + subdir)
 		subdir = base_dir.get_next()
 	base_dir.list_dir_end()
+	
+	load_state()
+	
 	# Sort items alphabetically for deterministic display order across platforms.
 	_items.sort_custom(func(a: ItemData, b: ItemData): return a.item_name.naturalnocasecmp_to(b.item_name) < 0)
 	print("[InventoryManager] Loaded ", _items.size(), " items")
@@ -79,15 +85,39 @@ func take_item(item: ItemData) -> bool:
 	if count <= 0:
 		return false
 	_stock[item.resource_path] = count - 1
+	save_state()
 	return true
 
 ## Add stock back (e.g. when a drag is cancelled).
 func return_item(item: ItemData) -> void:
 	var count: int = _stock.get(item.resource_path, 0)
 	_stock[item.resource_path] = mini(count + 1, item.max_stock)
+	save_state()
 
 ## Restock an item to a specific count (capped at max_stock).
 func restock_item(item: ItemData, count: int = -1) -> void:
 	if count < 0:
 		count = item.max_stock
 	_stock[item.resource_path] = mini(count, item.max_stock)
+	save_state()
+
+func decrement_cooldown() -> void:
+	if customers_needed_for_delivery > 0:
+		customers_needed_for_delivery -= 1
+		save_state()
+
+func save_state() -> void:
+	var save_data = {
+		"stock": _stock,
+		"customers_needed_for_delivery": customers_needed_for_delivery
+	}
+	SaveManager.save_game(save_data)
+
+func load_state() -> void:
+	var save_data = SaveManager.load_game()
+	if save_data.has("stock"):
+		var saved_stock = save_data["stock"]
+		for key in saved_stock.keys():
+			_stock[key] = saved_stock[key]
+	if save_data.has("customers_needed_for_delivery"):
+		customers_needed_for_delivery = int(save_data["customers_needed_for_delivery"])
