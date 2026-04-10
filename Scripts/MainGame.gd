@@ -44,22 +44,27 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 			
 			if is_correct:
 				EventBus.transaction_completed.emit(item.item_data, true)
+				# Consume one unit of stock and hide the physical item — it was sold.
+				InventoryManager.take_item(item.item_data)
+				item.hide()
 				if customer.item_icon and item.item_data.texture:
 					customer.item_icon.texture = item.item_data.texture
 					customer.item_icon.visible = true
 				if Dialogic.current_timeline == null:
 					Dialogic.start("res://Dialogue/customer_satisfied.dtl")
+				item = null  # prevent return_to_start below from running on a hidden node
 			else:
 				EventBus.transaction_completed.emit(item.item_data, false)
 				if Dialogic.current_timeline == null:
 					Dialogic.start("res://Dialogue/customer_rejected.dtl")
-					
+			
 	if not handled:
 		print("[MainGame] No customer waiting, dropping item")
 		
-	# Item always physically returns to its shelf slot.
-	item.show_visuals()
-	item.return_to_start()
+	# Return item to its shelf slot only if it was not consumed by a sale.
+	if item:
+		item.show_visuals()
+		item.return_to_start()
 
 func _input(event: InputEvent) -> void:
 	# F1 toggles collision shape debug visualization
