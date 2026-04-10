@@ -109,7 +109,7 @@ func on_hover(is_hovered: bool) -> void:
 			outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")
 			outline_material.set_shader_parameter("albedo_texture", sprite.texture)
 			outline_material.set_shader_parameter("outline_color", Color.WHITE)
-			outline_material.set_shader_parameter("outline_width", 0.05)
+			outline_material.set_shader_parameter("outline_width", 8.0)
 			outline_material.set_shader_parameter("z_roll_rad", sprite.rotation.z)
 		sprite.material_overlay = outline_material
 	else:

@@ -28,26 +28,35 @@ void vertex() {
 
 uniform sampler2D albedo_texture : source_color, filter_nearest;
 uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
-uniform float outline_width : hint_range(0.0, 0.1) = 0.02;
+// Width in PIXELS — converted to UV space per-axis via textureSize so
+// left/right and top/bottom are always equal thickness on non-square textures.
+uniform float outline_width : hint_range(0.0, 20.0) = 8.0;
 
 void fragment() {
     vec4 tex = texture(albedo_texture, UV);
 
-    // Only draw outline pixels: transparent pixels adjacent to opaque ones.
-    // Opaque pixels are skipped so we don't overdraw the base sprite.
+    // Only draw on transparent pixels adjacent to the sprite's opaque area.
     if (tex.a > 0.01) {
         discard;
     }
 
+    // Convert pixel-width to per-axis UV step (fixes non-square texture stretch).
+    vec2 px = vec2(outline_width) / vec2(textureSize(albedo_texture, 0));
+
+    // 8-direction sampling: 4 cardinal + 4 diagonal → smooth corners.
     float max_a = 0.0;
-    max_a = max(max_a, texture(albedo_texture, UV + vec2(outline_width, 0.0)).a);
-    max_a = max(max_a, texture(albedo_texture, UV + vec2(-outline_width, 0.0)).a);
-    max_a = max(max_a, texture(albedo_texture, UV + vec2(0.0, outline_width)).a);
-    max_a = max(max_a, texture(albedo_texture, UV + vec2(0.0, -outline_width)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2( px.x,    0.0)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(-px.x,    0.0)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(   0.0,  px.y)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(   0.0, -px.y)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2( px.x,  px.y)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(-px.x,  px.y)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2( px.x, -px.y)).a);
+    max_a = max(max_a, texture(albedo_texture, UV + vec2(-px.x, -px.y)).a);
 
     if (max_a > 0.01) {
         ALBEDO = outline_color.rgb;
-        ALPHA = outline_color.a * 0.8;
+        ALPHA  = outline_color.a * 0.8;
     } else {
         discard;
     }
