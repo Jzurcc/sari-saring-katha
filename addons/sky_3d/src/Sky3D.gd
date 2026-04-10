@@ -30,16 +30,6 @@ var sky: SkyDome
 ## The Sky shader.
 var sky_material: ShaderMaterial
 
-## Enables all rendering and time tracking.
-@export var sky3d_enabled: bool = true :
-	set(value):
-		sky3d_enabled = value
-		if value:
-			show_sky()
-			resume()
-		else:
-			hide_sky()
-			pause()
 
 
 #####################
