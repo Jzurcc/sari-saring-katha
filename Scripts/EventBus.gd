@@ -12,6 +12,8 @@ signal customer_arrived(customer: Customer)
 signal customer_satisfied(customer: Customer)
 @warning_ignore("unused_signal")
 signal customer_rejected(customer: Customer)
+@warning_ignore("unused_signal")
+signal customer_dismissed(customer: Customer)
 
 # --- Transactions ---
 @warning_ignore("unused_signal")

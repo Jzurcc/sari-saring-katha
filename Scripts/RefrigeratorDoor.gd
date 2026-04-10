@@ -60,9 +60,7 @@ func _build_outline_material() -> void:
 	_outline_mat.set_shader_parameter("outline_width", 8.0)
 
 
-# ================================================================================
-#  Called by FridgeDoorInteractor (Area3D child) — matches PlayerInteraction API
-# ================================================================================
+# Called by FridgeDoorInteractor (Area3D child) — matches PlayerInteraction API
 func on_hover(is_hovered: bool) -> void:
 	material_overlay = _outline_mat if is_hovered else null
 
@@ -70,10 +68,7 @@ func on_hover(is_hovered: bool) -> void:
 func on_interact() -> void:
 	toggle_open()
 
-
-# ================================================================================
-#  Open / close
-# ================================================================================
+# Close open
 func toggle_open() -> void:
 	is_open = !is_open
 	var target_rot := Vector3(0, deg_to_rad(OPEN_ANGLE_DEG), 0) if is_open \

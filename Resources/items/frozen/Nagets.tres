@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/items/icons/33_frozen_nagets.png" id="2_tex"]
 
 [resource]
+id = "nagets"
 script = ExtResource("1_item")
 item_name = "Nagets"
 texture = ExtResource("2_tex")

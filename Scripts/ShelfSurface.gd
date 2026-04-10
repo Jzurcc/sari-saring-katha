@@ -202,6 +202,10 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	# Re-parent item to this surface.
 	var old_parent := item.get_parent()
 	if old_parent and old_parent != self:
+		# Clear the item's slot on the source shelf before moving it so the
+		# source doesn't continue tracking a node it no longer owns.
+		if old_parent.has_method("_free_slot_for"):
+			old_parent._free_slot_for(item)
 		old_parent.remove_child(item)
 		add_child(item)
 	if item not in _spawned:
@@ -235,7 +239,8 @@ func _clear() -> void:
 		if is_instance_valid(d):
 			d.queue_free()
 	_spawned.clear()
-	_slot_occupants.fill(null)
+	# Do not resize or fill _slot_occupants here — populate() always rebuilds
+	# the array to the correct slot count immediately after calling _clear().
 
 
 ## Return the index of the slot with the smallest X distance to [param local_x].
@@ -255,7 +260,13 @@ func _find_nearest_empty_slot(local_x: float) -> int:
 
 ## Free this surface's slot when any of its items is picked up.
 func _on_any_drag_started(dragged: DraggableItem) -> void:
-	var idx := _slot_occupants.find(dragged)
+	_free_slot_for(dragged)
+
+
+## Release whichever slot [param item] occupies on this surface.
+## Called internally on drag-start and by neighbour surfaces on cross-shelf drops.
+func _free_slot_for(item: DraggableItem) -> void:
+	var idx := _slot_occupants.find(item)
 	if idx >= 0:
 		_slot_occupants[idx] = null
 

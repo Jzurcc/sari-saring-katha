@@ -10,12 +10,16 @@ class_name CustomerSpawner
 var current_customer: Customer = null
 var customers_served_today: int = 0
 var _encounter_count: int = 0
+var _pending_dismiss: bool = false
 
 func _ready() -> void:
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_finished)
-	EventBus.customer_rejected.connect(_on_customer_finished)
+	EventBus.customer_dismissed.connect(_on_customer_dismissed)
+	# customer_rejected intentionally NOT connected here — a rejection means the
+	# customer is still at the counter waiting for the correct item.
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
+	Dialogic.signal_event.connect(_on_dialogic_signal)
 
 func _on_day_started(_day: int) -> void:
 	customers_served_today = 0
@@ -26,7 +30,9 @@ func _spawn_next_customer() -> void:
 		return
 
 	if customers_served_today >= customers_per_day:
-		EventBus.day_ended.emit(1) # We just pass 1 or read from GameManager later
+		var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+		var day_num := gm.day if gm else 1
+		EventBus.day_ended.emit(day_num)
 		return
 
 	print("[CustomerSpawner] Spawning in 2s...")
@@ -46,6 +52,7 @@ func _spawn_next_customer() -> void:
 	current_customer.setup(desired_item, get_node(target_pos).global_position)
 
 	current_customer.arrived.connect(_on_customer_arrived)
+	current_customer.clicked.connect(_on_customer_clicked)
 	
 	# The Customer script emits satisfied naturally, but we also let DragManager trigger it through check_item
 	EventBus.customer_spawned.emit(current_customer)
@@ -66,18 +73,37 @@ func _on_customer_arrived(customer: Customer) -> void:
 		Dialogic.start(timeline_path)
 
 func _on_customer_finished(_customer: Customer) -> void:
+	# Null the customer reference immediately so _spawn_next_customer() can
+	# proceed even while the satisfaction animation is still playing.
+	current_customer = null
 	customers_served_today += 1
 	_encounter_count += 1
-	current_customer = null
 
+	# _on_dialogue_ended triggers the next spawn once the satisfied/rejected
+	# timeline ends, so no explicit call is needed here.
+
+func _on_customer_dismissed(_customer: Customer) -> void:
+	# Customer left after being refused — move on without counting as sold.
+	current_customer = null
+	_encounter_count += 1
+	_spawn_next_customer()
+
+func _on_customer_clicked(_customer: Customer) -> void:
 	if Dialogic.current_timeline == null:
-		# If satisfied
-		# Actually we depend on the return of DragManager to know if satisfied or reject
-		# Dialogic.start("res://Dialogue/customer_satisfied.dtl")
-		pass
-	
-	# Dialogue ended will catch the end of the satisfied/reject dialogues and spawn next
+		Dialogic.start("res://Dialogue/customer_talk.dtl")
+
+func _on_dialogic_signal(argument: String) -> void:
+	if argument == "refuse_service":
+		_pending_dismiss = true
 
 func _on_dialogue_ended() -> void:
+	if _pending_dismiss and is_instance_valid(current_customer):
+		_pending_dismiss = false
+		current_customer.dismiss()
+		return
+
+	# Only spawn the next customer when no one is currently at the counter.
+	# If current_customer is still set, the last dialogue was a rejection and
+	# the same customer is still waiting — do not spawn a new one.
 	if current_customer == null and customers_served_today < customers_per_day:
 		_spawn_next_customer()

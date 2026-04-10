@@ -17,7 +17,9 @@ func _ready():
 			camera = get_parent() as Camera3D
 
 func _physics_process(_delta: float) -> void:
-	if not camera or Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED or DragManager._is_dragging:
+	# Never highlight items while dialogue is open — clears any stale hover state.
+	if not camera or Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED \
+			or DragManager._is_dragging or Dialogic.current_timeline != null:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
 			_last_hovered = null
@@ -49,11 +51,13 @@ func _physics_process(_delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		return
+	# Block all item interaction while dialogue is open.
+	if Dialogic.current_timeline != null:
+		return
 		
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		# Ask DragManager if it's already dragging.
 		# Note: We emit a global request if we want to pick something up.
-		# Since it's refactored, we just call interact on the hovered object!
 		if is_instance_valid(_last_hovered):
 			if _last_hovered.has_method("on_interact"):
 				get_viewport().set_input_as_handled()

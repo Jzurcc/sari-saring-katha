@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/items/icons/14_can_lucky_9.png" id="2_tex"]
 
 [resource]
+id = "lucky9"
 script = ExtResource("1_item")
 item_name = "Lucky 9"
 texture = ExtResource("2_tex")

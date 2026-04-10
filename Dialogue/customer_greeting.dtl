@@ -14,5 +14,6 @@ Timelines/KuyaKap: Many stories spread around my kind, but as long as our trees 
 
 Timelines/KuyaKap: Anyway, let me buy {InventoryManager.current_item_name}. I need to relax a bit.
 - Coming right up!
+[style name="bubble_style_dialogue"]
 
 [end_timeline]

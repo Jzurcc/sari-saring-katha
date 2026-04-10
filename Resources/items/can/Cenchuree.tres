@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/items/icons/11_can_cenchuree.png" id="2_tex"]
 
 [resource]
+id = "cenchuree"
 script = ExtResource("1_item")
 item_name = "Cenchuree"
 texture = ExtResource("2_tex")
