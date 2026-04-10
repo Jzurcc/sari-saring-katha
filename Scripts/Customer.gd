@@ -19,13 +19,9 @@ var _base_sprite_y: float = 0.0
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 
-@onready var bubble: Sprite3D = $Bubble
-@onready var item_icon: Sprite3D = $Bubble/ItemIcon
-@onready var request_label: Label3D = $Bubble/RequestLabel
 @onready var body_sprite: Sprite3D = $Body
 
 func _ready() -> void:
-	bubble.visible = false
 	input_event.connect(_on_input_event)
 	
 	# Store the initial position of the body sprite for the vertical follow logic
@@ -42,11 +38,6 @@ func setup(data: ItemData, target: Vector3) -> void:
 	_spawn_position = global_position
 	desire = data
 	target_position = target
-	if desire:
-		if desire.texture:
-			item_icon.texture = desire.texture
-			item_icon.visible = true
-		request_label.text = desire.item_name
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
 ## Only responds when waiting at the counter and not mid-animation.
@@ -71,7 +62,6 @@ func _process(delta: float) -> void:
 
 func arrived_at_counter() -> void:
 	is_waiting = true
-	bubble.visible = true
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
@@ -97,14 +87,12 @@ func check_item(item: ItemData) -> bool:
 func satisfy() -> void:
 	# Lock against re-entry during the animation chain.
 	_is_resolving = true
-	request_label.text = "Thanks!"
 	
 	await get_tree().create_timer(2.0).timeout
 	
 	# Smooth fade out before freeing
 	var fade_tween = create_tween()
 	fade_tween.tween_property(body_sprite, "modulate:a", 0.0, 0.4)
-	fade_tween.parallel().tween_property(bubble, "modulate:a", 0.0, 0.4)
 	await fade_tween.finished
 	
 	satisfied.emit()
@@ -114,12 +102,7 @@ func satisfy() -> void:
 
 func reject() -> void:
 	_is_resolving = true
-	bubble.modulate = Color.RED
-	var original_text = request_label.text
-	request_label.text = "No!"
 	await get_tree().create_timer(1.0).timeout
-	bubble.modulate = Color.WHITE
-	request_label.text = original_text
 	_is_resolving = false
 	# Notify EventBus so CustomerSpawner can track rejections.
 	EventBus.customer_rejected.emit(self)
@@ -128,7 +111,6 @@ func reject() -> void:
 ## Plays a brief leaving animation then notifies the EventBus.
 func dismiss() -> void:
 	is_waiting = false
-	bubble.visible = false
 	_is_resolving = true
 
 	# Walk back toward the spawn edge

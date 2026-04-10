@@ -23,23 +23,6 @@ shaded = true
 alpha_cut = 2
 texture = ExtResource("3_tk")
 
-[node name="Bubble" type="Sprite3D" parent="." unique_id=635029521]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 1, 0)
-pixel_size = 0.005
-billboard = 1
-
-[node name="ItemIcon" type="Sprite3D" parent="Bubble" unique_id=11754162]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 1, 0, 0.3, 0.1)
-visible = false
-pixel_size = 0.003
-billboard = 2
-
-[node name="RequestLabel" type="Label3D" parent="Bubble" unique_id=584354300]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -50, 0.02)
-pixel_size = 0.05
-billboard = 1
-text = "Item Name"
-outline_size = 4
 
 [node name="HappyParticles" type="Node3D" parent="." unique_id=999888777]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
