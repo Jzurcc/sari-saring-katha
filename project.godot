@@ -30,6 +30,7 @@ DragManager="*res://Scripts/DragManager.gd"
 InventoryManager="*res://Scripts/InventoryManager.gd"
 Dialogic="*uid://ds2q0uclmolvu"
 SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
+DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
 
 [debug_draw_3d]
 
@@ -46,14 +47,16 @@ directories/dtl_directory={
 "customer_rejected": "res://Dialogue/customer_rejected.dtl",
 "customer_returning": "res://Dialogue/customer_returning.dtl",
 "customer_satisfied": "res://Dialogue/customer_satisfied.dtl",
+"customer_talk": "res://Dialogue/customer_talk.dtl",
 "day_ended": "res://Dialogue/day_ended.dtl",
 "main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
 }
 layout/style_directory={
 "": "res://Assets/Dialogue/DialogueStyle.tres",
-"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres"
+"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
+"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres"
 }
-layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres"]
+layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres", "res://Resources/bubble_style_dialogue.tres"]
 layout/default_style="res://Assets/Dialogue/DialogueStyle.tres"
 glossary/default_case_sensitive=true
 extensions_folder="res://addons/dialogic_additions"
