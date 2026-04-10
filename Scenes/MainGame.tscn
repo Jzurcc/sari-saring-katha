@@ -25,6 +25,7 @@ height = 3.086621
 size = Vector3(3.858551, 0.7244873, 1.0361328)
 
 [sub_resource type="Resource" id="Resource_r5sjn"]
+resource_local_to_scene = true
 script = ExtResource("12_r5sjn")
 depth_variance = 0.235
 tilt_variance_deg = 3.455
@@ -127,6 +128,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="ShelfSurface" type="Node3D" parent="Shelf" unique_id=1927767560]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
+script = ExtResource("11_ktwve")
+shelf_width = 4.005
+accepted_categories = PackedStringArray()
+layout_strategy = SubResource("Resource_r5sjn")
+
+[node name="Shelf5" type="StaticBody3D" parent="." unique_id=1988676799]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7831056, 3.1208305, 4.2263174)
+script = ExtResource("10_wyocf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Shelf5" unique_id=2122588073]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="ShelfSurface" type="Node3D" parent="Shelf5" unique_id=1519615678]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
+script = ExtResource("11_ktwve")
+shelf_width = 4.005
+accepted_categories = PackedStringArray()
+layout_strategy = SubResource("Resource_r5sjn")
+
+[node name="Shelf4" type="StaticBody3D" parent="." unique_id=89837644]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4.6100545, 4.5451775, 0.29416174)
+script = ExtResource("10_wyocf")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Shelf4" unique_id=497935841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29685974, 0.38775635, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="ShelfSurface" type="Node3D" parent="Shelf4" unique_id=1220161792]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
 shelf_width = 4.005
