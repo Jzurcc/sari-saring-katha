@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b8wdl1xo1irfb"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/23_cigarette_marboro.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://s0506jl2h077" path="res://Assets/items/icons/23_cigarette_marboro.png" id="2_tex"]
 
 [resource]
 id = "marboro"
