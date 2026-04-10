@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/items/icons/31_frozen_hotdog.png" id="2_tex"]
 
 [resource]
+id = "hotdog"
 script = ExtResource("1_item")
 item_name = "Hotdog"
 texture = ExtResource("2_tex")

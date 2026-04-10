@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dqu28jtvq53b1" path="res://Assets/items/icons/26_bottle_coke.png" id="2_tex"]
 
 [resource]
+id = "coke"
 script = ExtResource("1_item")
 item_name = "Coke"
 texture = ExtResource("2_tex")

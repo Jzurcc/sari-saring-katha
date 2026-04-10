@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/items/icons/12_can_mema.png" id="2_tex"]
 
 [resource]
+id = "mema"
 script = ExtResource("1_item")
 item_name = "Mema"
 texture = ExtResource("2_tex")

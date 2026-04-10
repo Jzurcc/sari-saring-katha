@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/items/icons/9_sachet_kopimo.png" id="2_tex"]
 
 [resource]
+id = "kopimo"
 script = ExtResource("1_item")
 item_name = "Kopimo"
 texture = ExtResource("2_tex")

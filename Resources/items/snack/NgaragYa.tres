@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cgphmchrybpcw" path="res://Assets/items/icons/6_snack_ngarag_ya.png" id="2_tex"]
 
 [resource]
+id = "ngaragya"
 script = ExtResource("1_item")
 item_name = "Ngarag Ya"
 texture = ExtResource("2_tex")
