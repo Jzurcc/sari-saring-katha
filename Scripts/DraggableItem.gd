@@ -6,7 +6,8 @@ signal drag_ended
 
 @export var item_data: ItemData
 
-var _original_position: Vector3 = Vector3.ZERO
+## Full local transform at spawn time — used to tween item back to its slot.
+var _original_transform: Transform3D = Transform3D.IDENTITY
 
 @onready var sprite: Sprite3D = $Sprite3D
 @onready var collider: CollisionShape3D = $CollisionShape3D
@@ -16,25 +17,76 @@ func _ready() -> void:
 	if item_data:
 		setup(item_data)
 
-func setup(data: ItemData) -> void:
+## Configure this item with [param data] and place it at [param local_transform]
+## in the parent surface's local coordinate space.
+##
+## [param local_transform] is supplied by the parent [ShelfSurface] via its
+## [LayoutStrategy]. Defaults to [constant Transform3D.IDENTITY] so that
+## items configured directly in the Inspector (without a ShelfSurface) stay
+## at the position set in the scene tree.
+func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) -> void:
 	item_data = data
+
+	# Apply the strategy-computed transform (position + tilt rotation)
+	transform = local_transform
+	# Store immediately — no deferred capture needed since transform is applied above
+	_original_transform = local_transform
+
 	if item_data and item_data.texture:
 		sprite.texture = item_data.texture
-		# Bottom-align: shift the sprite upward so its bottom edge
-		# sits at Y=0 of this node (the container floor).
-		# Sprite3D offset is in pixel coords; negative Y = up in world.
-		sprite.offset.y = -item_data.texture.get_height() / 2.0
-		# Move the collision shape up to match the sprite's visual center.
-		var sprite_scale: float = sprite.transform.basis.get_scale().y
-		var rendered_height: float = item_data.texture.get_height() * sprite.pixel_size * sprite_scale
-		collider.position.y = rendered_height / 2.0
+
+		# --- Sizing ---
+		# Guard against invalid display height
+		var h: float = item_data.display_height_meters
+		if h <= 0.0:
+			push_warning("[DraggableItem] '%s': display_height_meters is <= 0, defaulting to 0.2" % item_data.item_name)
+			h = 0.2
+
+		# Reset any scale baked into the scene so pixel_size is the sole control
+		sprite.scale = Vector3.ONE
+
+		# pixel_size converts texture pixels → world metres:
+		# world_height = texture_height_px * pixel_size → solve for pixel_size
+		sprite.pixel_size = h / float(item_data.texture.get_height())
+
+		# --- Bottom-alignment ---
+		# Clear offset and just shift the sprite node directly in 3D space.
+		# By moving it up by half its height, the bottom touches Y=0,
+		# meaning any size changes will cleanly "grow" upward from the shelf!
+		sprite.offset = Vector2.ZERO
+		sprite.position.y = h / 2.0
+
+		# --- Tilt (Z-axis roll on the Sprite3D) ---
+		# Applied on the sprite itself so it's visible even with billboard=ENABLED.
+		# The strategy encodes roll in the transform basis; extract and re-apply
+		# to the sprite so the DraggableItem's own transform stays axis-aligned
+		# (cleaner for physics / drag positioning).
+		var roll_rad := local_transform.basis.get_euler().z
+		sprite.rotation.z = roll_rad
+		# Keep the DraggableItem's position-only transform (no rotation pollution)
+		var pos_only := Transform3D(Basis(), local_transform.origin)
+		transform = pos_only
+		_original_transform = pos_only
+
+		# --- Collision shape resize ---
+		# Resize BoxShape3D to match the rendered sprite dimensions so picking
+		# works correctly regardless of item size.
+		var rendered_h: float = h
+		var aspect: float = item_data.get_visual_aspect()
+		var rendered_w: float = (
+			item_data.display_width_override
+			if item_data.display_width_override > 0.0
+			else rendered_h * aspect
+		)
+		# Duplicate the shape resource so changing this item's collision box
+		# doesn't accidentally resize the boxes of every other item in the scene!
+		if collider.shape is BoxShape3D:
+			collider.shape = collider.shape.duplicate()
+			collider.shape.size = Vector3(rendered_w, rendered_h, 0.05)
+		collider.position.y = rendered_h / 2.0
+
 	if label:
 		label.hide()
-	# Defer position capture so parent transforms are fully applied.
-	_capture_origin.call_deferred()
-
-func _capture_origin() -> void:
-	_original_position = global_position
 
 var outline_material: ShaderMaterial = null
 
@@ -84,4 +136,6 @@ func show_visuals() -> void:
 func return_to_start() -> void:
 	show_visuals()
 	var tween := create_tween()
-	tween.tween_property(self, "global_position", _original_position, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# Restore full local transform (position only — tilt lives on the sprite node)
+	tween.tween_property(self, "transform", _original_transform, 0.25)\
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

@@ -7,3 +7,4 @@ script = ExtResource("1_item")
 item_name = "Candy"
 price = 2
 type = 0
+display_height_meters = 0.07
