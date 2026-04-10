@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Sari-Saring Katha"
-run/main_scene="res://Scenes/MainGame.tscn"
+run/main_scene="uid://maingame123"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -29,6 +29,7 @@ EventBus="*res://Scripts/EventBus.gd"
 DragManager="*res://Scripts/DragManager.gd"
 InventoryManager="*res://Scripts/InventoryManager.gd"
 Dialogic="*uid://ds2q0uclmolvu"
+SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 
 [debug_draw_3d]
 

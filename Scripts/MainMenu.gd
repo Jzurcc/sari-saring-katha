@@ -101,7 +101,7 @@ func _on_new_game_pressed() -> void:
 	tween.chain().tween_callback(_on_pan_finished)
 
 func _on_pan_finished() -> void:
-	get_tree().change_scene_to_file(target_scene)
+	SceneTransition.change_scene(target_scene)
 
 func _on_options_pressed() -> void:
 	$OptionsOverlay.show()
