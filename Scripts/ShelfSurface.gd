@@ -8,25 +8,35 @@ extends Node3D
 ## the LEFT edge of the wooden plank at plank height (Y=0 local = shelf surface).
 ## Items will pack rightward along local +X and vary along local ±Z.
 ##
+## Drag [ItemData] resources into [member items] in the Inspector to assign
+## which specific items appear on this plank. Each entry in [member items]
+## represents one physical copy of that product on the shelf.
+##
 ## Configure [member shelf_width] to match the physical plank width.
 ## Assign a [LayoutStrategy] resource (e.g. [ProceduralPackStrategy]) to
 ## [member layout_strategy] in the Inspector.
 ##
-## To add new container types (candy jars, racks, fridges), create a new
-## [LayoutStrategy] subclass — this node requires no changes.
+## [member accepted_type] and [member accepted_categories] act as guards
+## for drag-and-drop — they do NOT auto-populate the shelf.
 ##
 ## Scene hierarchy example:
 ## [code]
 ## ShelfUnit (StaticBody3D)
 ##  ├─ MeshInstance3D
 ##  ├─ CollisionShape3D
-##  ├─ Area3D               (collision disabled in Shelf.gd)
-##  ├─ ShelfSurface         ← top plank
-##  ├─ ShelfSurface         ← middle plank
-##  └─ ShelfSurface         ← bottom plank
+##  ├─ ShelfSurface         ← top plank   (items = [Anoba, Anoba, Dantes])
+##  ├─ ShelfSurface         ← middle plank (items = [Patos, Patos])
+##  └─ ShelfSurface         ← bottom plank (items = [])
 ## [/code]
 
 const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.tscn")
+
+@export_group("Items")
+
+## The items that appear on this plank. Each entry = one physical copy.
+## Drag [ItemData] .tres resources here directly in the Inspector.
+## Duplicates are allowed — add Anoba three times to show three bags.
+@export var items: Array[ItemData] = []
 
 @export_group("Surface")
 
@@ -37,16 +47,12 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 		if Engine.is_editor_hint():
 			_update_preview()
 
-## Maximum number of items that can appear on this surface, regardless of
-## how many items would physically fit. Acts as a hard cap.
-@export var max_items: int = 10
+@export_group("Drop Guards")
 
-@export_group("Filtering")
-
-## Which ItemData.ItemType this surface accepts.
+## Which ItemData.ItemType this surface accepts when items are dragged onto it.
 @export var accepted_type: ItemData.ItemType = ItemData.ItemType.SHELF
 
-## Optional category filter. Empty array = accept all categories.
+## Optional category filter for drag-and-drop. Empty array = accept all categories.
 @export var accepted_categories: PackedStringArray = []
 
 @export_group("Layout")
@@ -56,12 +62,21 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 ## in the Inspector.
 @export var layout_strategy: LayoutStrategy
 
+## Width of each slot in metres. The strategy divides [member shelf_width]
+## into evenly spaced slots of this size. Items snap to the nearest empty
+## slot when dropped. Should roughly match the widest item you plan to stock.
+@export var slot_width: float = 0.4
+
 # --- Internal ---
 
 var _spawned: Array[DraggableItem] = []
-
+## Pre-generated world-local transforms, one per slot across the shelf.
+var _slot_transforms: Array[Transform3D] = []
+## Which DraggableItem occupies each slot index. null = empty.
+var _slot_occupants: Array = []  # Array[DraggableItem?]
 
 func _ready() -> void:
+	add_to_group("shelf_surface")
 	if Engine.is_editor_hint():
 		_update_preview()
 		return
@@ -71,21 +86,45 @@ func _ready() -> void:
 	if preview:
 		preview.queue_free()
 
+	_create_drop_zone()
+
 	# Validate required config before proceeding
 	if shelf_width <= 0.0:
 		push_error("[ShelfSurface] '%s': shelf_width must be > 0. Got: %f" % [name, shelf_width])
 		return
 	if not layout_strategy:
-		push_error("[ShelfSurface] '%s': No layout_strategy assigned. Assign a ProceduralPackStrategy in the Inspector." % name)
+		push_error("[ShelfSurface] '%s': No layout_strategy assigned." % name)
 		return
 
-	# Wait one frame so InventoryManager autoload finishes initialising.
+	# Free the slot when any item on this surface is picked up.
+	EventBus.drag_started.connect(_on_any_drag_started)
+
 	await get_tree().process_frame
 	populate()
 
 
-## Query InventoryManager, run the layout strategy, and spawn DraggableItem nodes.
-## Safe to call multiple times — clears existing items first.
+## Create a thin Area3D covering the shelf surface so DragManager's
+## area-only raycast can detect drops without body collision.
+func _create_drop_zone() -> void:
+	var area := Area3D.new()
+	area.name = "__DropZone"
+	area.add_to_group("shelf_drop_zone")
+	# Layer 2 = drop zones only. Layer 1 = interactive items (DraggableItem, tray).
+	# This keeps PlayerInteraction's layer-1-only raycast from hitting drop zones.
+	area.collision_layer = 2
+	area.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(shelf_width, 0.4, 0.5)
+	cs.shape = box
+	area.add_child(cs)
+	area.position = Vector3(shelf_width / 2.0, 0.2, 0.0)
+	add_child(area)
+
+
+## Spawn [DraggableItem] nodes for each entry in [member items],
+## filling slots left-to-right from the pre-generated slot list.
+## Safe to call multiple times — clears existing spawns first.
 func populate() -> void:
 	_clear()
 
@@ -93,42 +132,99 @@ func populate() -> void:
 		push_error("[ShelfSurface] '%s': Cannot populate — no layout_strategy." % name)
 		return
 
-	var items := _query_inventory()
-	if items.is_empty():
+	# Regenerate slots every time we populate (random tilt/depth per session).
+	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
+	_slot_occupants.clear()
+	_slot_occupants.resize(_slot_transforms.size())
+	_slot_occupants.fill(null)
+
+	# Build the validated item list.
+	var spawn_list: Array[ItemData] = []
+	for item in items:
+		if not item:
+			continue
+		if not item.texture:
+			push_warning("[ShelfSurface] '%s': Skipping '%s' — no texture." % [name, item.item_name])
+			continue
+		spawn_list.append(item)
+
+	if spawn_list.is_empty():
 		return
 
-	var transforms := layout_strategy.compute_positions(items, shelf_width, max_items)
-
-	var slot_indices := {}
-
-	for i in range(transforms.size()):
-		if i >= items.size():
+	# Assign each item to the next available slot (left-to-right).
+	var slot_idx := 0
+	for item in spawn_list:
+		if slot_idx >= _slot_transforms.size():
+			push_warning("[ShelfSurface] '%s': No more slots for '%s'." % [name, item.item_name])
 			break
-
-		var item = items[i]
-		if not slot_indices.has(item):
-			slot_indices[item] = 0
-		var current_slot: int = slot_indices[item]
-		slot_indices[item] += 1
-
 		var d: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
 		add_child(d)
-		d.setup(items[i], transforms[i])
-		d.set_meta("slot", current_slot)
+		d.setup(item, _slot_transforms[slot_idx])
+		d.set_meta("slot_index", slot_idx)
+		_slot_occupants[slot_idx] = d
 		_spawned.append(d)
+		slot_idx += 1
 
-	print("[ShelfSurface] '%s' placed %d items (width: %.2fm)" % [name, _spawned.size(), shelf_width])
+	print("[ShelfSurface] '%s' placed %d/%d items in %d slots" % [name, _spawned.size(), spawn_list.size(), _slot_transforms.size()])
 
 
-## Show or hide each spawned item based on current inventory stock.
-## Call this after a transaction to update shelf visibility without repopulating.
+## Show or hide each spawned item based on whether its slot is occupied.
+## Call this after any operation that may have changed slot occupancy.
 func refresh_visibility() -> void:
-	for d in _spawned:
-		if is_instance_valid(d) and d.item_data:
-			var stock := InventoryManager.get_stock(d.item_data)
-			var slot: int = d.get_meta("slot", 0)
-			# Hide items whose slot index exceeds current stock.
-			d.visible = (slot < stock)
+	for i in range(_slot_occupants.size()):
+		var d = _slot_occupants[i]
+		if d != null and is_instance_valid(d):
+			d.show_visuals()
+
+
+## Accept a [DraggableItem] dropped from a drag.
+## [param world_hit_pos]: The world-space point where the ray hit the drop zone.
+## The item snaps to the nearest empty slot to that position.
+func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) -> void:
+	if not item or not item.item_data:
+		return
+	if not accepts_drop(item.item_data):
+		push_warning("[ShelfSurface] '%s': Rejected drop of '%s' — type/category mismatch." % [name, item.item_data.item_name])
+		item._on_drag_cancelled_by_manager()
+		item.return_to_start()
+		return
+
+	# Find the nearest empty slot to the player's aim point.
+	var local_x := to_local(world_hit_pos).x if world_hit_pos != Vector3.ZERO else shelf_width * 0.5
+	var target_idx := _find_nearest_empty_slot(local_x)
+
+	if target_idx < 0:
+		push_warning("[ShelfSurface] '%s': No empty slot available for '%s'." % [name, item.item_data.item_name])
+		item._on_drag_cancelled_by_manager()
+		item.return_to_start()
+		return
+
+	# Re-parent item to this surface.
+	var old_parent := item.get_parent()
+	if old_parent and old_parent != self:
+		old_parent.remove_child(item)
+		add_child(item)
+	if item not in _spawned:
+		_spawned.append(item)
+
+	# Occupy the slot.
+	_slot_occupants[target_idx] = item
+	item.set_meta("slot_index", target_idx)
+
+	var target_pos := _slot_transforms[target_idx].origin
+
+	# Update _original_transform to the new slot so return_to_start()
+	# correctly snaps back to this shelf/slot if a later drag is cancelled.
+	item._original_transform = Transform3D(Basis(), target_pos)
+
+	# Snap to slot XY immediately, then ease backward in Z (push-back onto shelf feel).
+	item.show_visuals()
+	item.position = Vector3(target_pos.x, target_pos.y, target_pos.z + 0.18)
+	var tween := item.create_tween()
+	tween.tween_property(item, "position", target_pos, 0.15)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	print("[ShelfSurface] '%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
 
 
 # --- Private ---
@@ -139,30 +235,41 @@ func _clear() -> void:
 		if is_instance_valid(d):
 			d.queue_free()
 	_spawned.clear()
+	_slot_occupants.fill(null)
 
 
-## Query InventoryManager for items that match this surface's type and category
-## filters, skipping items with no texture or zero stock.
-func _query_inventory() -> Array[ItemData]:
-	var result: Array[ItemData] = []
+## Return the index of the slot with the smallest X distance to [param local_x].
+## Returns -1 if all slots are occupied.
+func _find_nearest_empty_slot(local_x: float) -> int:
+	var best_idx := -1
+	var best_dist := INF
+	for i in range(_slot_transforms.size()):
+		if _slot_occupants[i] != null and is_instance_valid(_slot_occupants[i]):
+			continue  # occupied
+		var dist := absf(_slot_transforms[i].origin.x - local_x)
+		if dist < best_dist:
+			best_dist = dist
+			best_idx = i
+	return best_idx
 
-	for item in InventoryManager.get_all_items():
-		# Type filter
-		if item.type != accepted_type:
-			continue
-		# Category filter (empty = accept all)
-		if accepted_categories.size() > 0 and item.category not in accepted_categories:
-			continue
-		# Texture guard — items without textures cannot be displayed
-		if not item.texture:
-			push_warning("[ShelfSurface] '%s': Skipping item '%s' — no texture." % [name, item.item_name])
-			continue
-			
-		# Multiply by max_stock to place duplicates on the shelf
-		for i in range(item.max_stock):
-			result.append(item)
 
-	return result
+## Free this surface's slot when any of its items is picked up.
+func _on_any_drag_started(dragged: DraggableItem) -> void:
+	var idx := _slot_occupants.find(dragged)
+	if idx >= 0:
+		_slot_occupants[idx] = null
+
+
+## Returns true if [param item] is allowed to be dropped onto this surface
+## based on the [member accepted_type] and [member accepted_categories] guards.
+func accepts_drop(item: ItemData) -> bool:
+	if not item:
+		return false
+	if item.type != accepted_type:
+		return false
+	if accepted_categories.size() > 0 and item.category not in accepted_categories:
+		return false
+	return true
 
 
 ## Editor-only visual preview of the shelf width.
@@ -181,9 +288,21 @@ func _update_preview() -> void:
 		
 		var box = BoxMesh.new()
 		box.material = mat
+		box.resource_local_to_scene = true
 		preview.mesh = box
 
-	var preview_box = preview.mesh as BoxMesh
+	var preview_box: BoxMesh
+	if preview.mesh and preview.mesh is BoxMesh:
+		preview_box = preview.mesh as BoxMesh
+		if not preview_box.resource_local_to_scene:
+			preview_box = preview_box.duplicate(true) as BoxMesh
+			preview_box.resource_local_to_scene = true
+			preview.mesh = preview_box
+	else:
+		preview_box = BoxMesh.new()
+		preview_box.resource_local_to_scene = true
+		preview.mesh = preview_box
+		
 	# Create a thin debug block representing the shelf surface area
 	preview_box.size = Vector3(shelf_width, 0.02, 0.2)
 	# Position it so the left edge aligns with ShelfSurface X=0
