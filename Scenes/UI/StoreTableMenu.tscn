@@ -3,50 +3,95 @@
 [ext_resource type="Script" uid="uid://dwco3oj1h6w5e" path="res://Scripts/UI/StoreTableMenu.gd" id="1_store_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-content_margin_left = 15.0
-content_margin_top = 15.0
-content_margin_right = 15.0
-content_margin_bottom = 15.0
-bg_color = Color(0.851, 0.722, 0.463, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+content_margin_left = 20.0
+content_margin_top = 20.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
+bg_color = Color(0.12, 0.11, 0.09, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grid_bg"]
-content_margin_left = 10.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
-bg_color = Color(0.933, 0.878, 0.773, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_x"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_active"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+bg_color = Color(0.85, 0.67, 0.4, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_inactive"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+bg_color = Color(0.44, 0.38, 0.31, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_left_panel"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.67, 0.58, 0.44, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_item_bg"]
+bg_color = Color(0.05, 0.05, 0.05, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.25, 0.25, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_detail"]
 content_margin_left = 10.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
-bg_color = Color(0.91, 0.812, 0.627, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.85, 0.8, 0.67, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_list"]
-content_margin_left = 10.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
-bg_color = Color(0.961, 0.902, 0.8, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_add_btn"]
+bg_color = Color(0.9, 0.77, 0.5, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
-[node name="StoreTableMenu" type="Control" unique_id=1370522471]
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_separator"]
+color = Color(0.8, 0.8, 0.8, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cancel_btn"]
+bg_color = Color(0.82, 0.44, 0.35, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_order_btn"]
+bg_color = Color(0.48, 0.74, 0.44, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="StoreTableMenu" type="Control" unique_id=2065680726]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,152 +101,219 @@ grow_vertical = 2
 script = ExtResource("1_store_script")
 card_size = Vector2(170, 170)
 card_icon_size = Vector2(150, 150)
-card_font_size = 24
-detail_name_font_size = 24
-detail_price_font_size = 24
-order_list_font_size = 32
-list_header_font_size = 32
-tab_font_size = 32
-detail_icon_size = Vector2(80, 80)
+card_font_size = 18
+detail_name_font_size = 22
+detail_price_font_size = 18
+order_list_font_size = 20
+list_header_font_size = 24
+tab_font_size = 22
+detail_icon_size = Vector2(100, 100)
 
-[node name="Background" type="PanelContainer" parent="." unique_id=811599321]
+[node name="Background" type="PanelContainer" parent="." unique_id=1621845176]
 clip_contents = true
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -520.0
+offset_top = -325.0
+offset_right = 487.0
+offset_bottom = 304.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
-[node name="MainVBox" type="VBoxContainer" parent="Background" unique_id=684744725]
+[node name="MainVBox" type="VBoxContainer" parent="Background" unique_id=1583946885]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 15
 
-[node name="TabScroll" type="ScrollContainer" parent="Background/MainVBox" unique_id=101]
+[node name="HeaderHBox" type="HBoxContainer" parent="Background/MainVBox" unique_id=957276164]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="CloseBtn" type="Button" parent="Background/MainVBox/HeaderHBox" unique_id=1481743378]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 45)
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-vertical_scroll_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxEmpty_x")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_x")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_x")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_x")
+text = "X"
 
-[node name="TabBar" type="HBoxContainer" parent="Background/MainVBox/TabScroll" unique_id=100]
+[node name="TabScroll" type="ScrollContainer" parent="Background/MainVBox/HeaderHBox" unique_id=1081153376]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="ContentSplit" type="HBoxContainer" parent="Background/MainVBox" unique_id=1658522760]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 10
-
-[node name="LeftSide" type="VBoxContainer" parent="Background/MainVBox/ContentSplit" unique_id=1859562581]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 2.0
-theme_override_constants/separation = 10
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
 
-[node name="GridPanel" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftSide" unique_id=1341427122]
+[node name="TabBar" type="HBoxContainer" parent="Background/MainVBox/HeaderHBox/TabScroll" unique_id=662869633]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TabSnacks" type="Label" parent="Background/MainVBox/HeaderHBox/TabScroll/TabBar" unique_id=36881090]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_tab_active")
+text = "Snacks"
+
+[node name="TabSachets" type="Label" parent="Background/MainVBox/HeaderHBox/TabScroll/TabBar" unique_id=1421900078]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_tab_inactive")
+text = "Sachets"
+
+[node name="TabCanned" type="Label" parent="Background/MainVBox/HeaderHBox/TabScroll/TabBar" unique_id=1427762772]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_tab_inactive")
+text = "Canned"
+
+[node name="ContentSplit" type="HBoxContainer" parent="Background/MainVBox" unique_id=1214396702]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_grid_bg")
+theme_override_constants/separation = 20
 
-[node name="GridScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/LeftSide/GridPanel" unique_id=1300279596]
+[node name="LeftPanelBackground" type="PanelContainer" parent="Background/MainVBox/ContentSplit" unique_id=813068443]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.9
+theme_override_styles/panel = SubResource("StyleBoxFlat_left_panel")
+
+[node name="LeftSideVBox" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground" unique_id=1524965829]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GridScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox" unique_id=977678552]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="ProductGrid" type="HFlowContainer" parent="Background/MainVBox/ContentSplit/LeftSide/GridPanel/GridScroll" unique_id=200]
+[node name="ProductGrid" type="HFlowContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/GridScroll" unique_id=89257462]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
 
-[node name="DetailPanel" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftSide" unique_id=1014092166]
-custom_minimum_size = Vector2(0, 80)
+[node name="TemplateGridItem" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/GridScroll/ProductGrid" unique_id=532307288]
+custom_minimum_size = Vector2(90, 90)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_item_bg")
+
+[node name="DetailPanel" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox" unique_id=1674692919]
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_detail")
 
-[node name="DetailHBox" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel" unique_id=660430992]
+[node name="DetailHBox" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel" unique_id=324376321]
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="DetailIcon" type="TextureRect" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox" unique_id=300]
+[node name="DetailIconBg" type="PanelContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox" unique_id=2047175941]
+custom_minimum_size = Vector2(65, 65)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_item_bg")
+
+[node name="DetailIcon" type="TextureRect" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox/DetailIconBg" unique_id=967866466]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="DetailInfo" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox" unique_id=1511726528]
+[node name="DetailInfo" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox" unique_id=970942817]
 layout_mode = 2
 size_flags_horizontal = 3
+alignment = 1
 
-[node name="DetailName" type="Label" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox/DetailInfo" unique_id=301]
+[node name="DetailName" type="Label" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox/DetailInfo" unique_id=1579441155]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.15, 0.15, 0.15, 1)
+theme_override_font_sizes/font_size = 22
 text = "Select a product"
 
-[node name="DetailPrice" type="Label" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox/DetailInfo" unique_id=302]
+[node name="DetailPrice" type="Label" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox/DetailInfo" unique_id=1237781112]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.3, 0.1, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.15, 0.15, 0.15, 1)
+theme_override_font_sizes/font_size = 18
 
-[node name="AddBtn" type="Button" parent="Background/MainVBox/ContentSplit/LeftSide/DetailPanel/DetailHBox" unique_id=303]
+[node name="AddBtn" type="Button" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox" unique_id=1091260285]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(70, 0)
+custom_minimum_size = Vector2(90, 42)
 layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_add_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_add_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_add_btn")
 text = "Add"
 
-[node name="RightSide" type="PanelContainer" parent="Background/MainVBox/ContentSplit" unique_id=890647522]
+[node name="RightSideVBox" type="VBoxContainer" parent="Background/MainVBox/ContentSplit" unique_id=293782119]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_list")
+theme_override_constants/separation = 12
 
-[node name="RightVBox" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/RightSide" unique_id=1001527586]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ListHeader" type="Label" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=400]
+[node name="ListHeader" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=2145486268]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
 text = "List"
 
-[node name="HSeparator" type="HSeparator" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=841116975]
+[node name="HSeparator" type="HSeparator" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=92882129]
 layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_separator")
 
-[node name="ListScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=421853501]
+[node name="ListScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=1831127358]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="OrderList" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox/ListScroll" unique_id=500]
+[node name="OrderList" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox/ListScroll" unique_id=1085168772]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 5
+theme_override_constants/separation = 10
 
-[node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox" unique_id=564614651]
+[node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=642272564]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="CancelBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox/ButtonRow" unique_id=600]
+[node name="CancelBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSideVBox/ButtonRow" unique_id=921110448]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 35)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cancel_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_cancel_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cancel_btn")
 text = "Cancel"
 
-[node name="ConfirmBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSide/RightVBox/ButtonRow" unique_id=700]
+[node name="ConfirmBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSideVBox/ButtonRow" unique_id=721009614]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 35)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_order_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_order_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_order_btn")
 text = "Order"

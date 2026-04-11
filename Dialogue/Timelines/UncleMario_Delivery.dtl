@@ -1,6 +1,6 @@
 join Timelines/UncleMario left [length="0.2"]
-Timelines/UncleMario: Here are the items you requested!
-Timelines/UncleMario: I put the items on their respective places...
-Timelines/UncleMario: Close the shop soon so you can rest.
+Timelines/UncleMario: Very well! Here are the items you requested!
+Timelines/UncleMario: I've put the stocks roughly in their shelves... just arrange it yourself if you want.
+Timelines/UncleMario: Alright! I'll go get my rest. See you tomorrow!
 leave Timelines/UncleMario
 [end_timeline]

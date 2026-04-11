@@ -102,6 +102,10 @@ func _ready() -> void:
 	if tab_scroll:
 		tab_scroll.gui_input.connect(_on_tab_scroll_input)
 	
+	var close_btn_node = get_node_or_null("%CloseBtn")
+	if close_btn_node:
+		close_btn_node.pressed.connect(_on_cancel_pressed)
+	
 	hide()
 
 # Drag-to-scroll handler for the tab bar
@@ -110,12 +114,12 @@ func _on_tab_scroll_input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				_tab_drag_active = true
-				_tab_drag_start_x = event.position.x
+				_tab_drag_start_x = event.global_position.x
 				_tab_scroll_start = tab_scroll.scroll_horizontal
 			else:
 				_tab_drag_active = false
 	elif event is InputEventMouseMotion and _tab_drag_active:
-		var delta = event.position.x - _tab_drag_start_x
+		var delta = event.global_position.x - _tab_drag_start_x
 		tab_scroll.scroll_horizontal = int(_tab_scroll_start - delta)
 
 func open_menu() -> void:
@@ -138,14 +142,6 @@ func _build_tabs() -> void:
 	for child in tab_container.get_children():
 		child.queue_free()
 	
-	# Close button (X)
-	var close_btn = Button.new()
-	close_btn.text = "X"
-	close_btn.custom_minimum_size = Vector2(35, 35)
-	_style_button(close_btn, COLOR_CANCEL, Color.WHITE, 17.0)
-	close_btn.pressed.connect(_on_cancel_pressed)
-	tab_container.add_child(close_btn)
-	
 	# Category tabs
 	for cat_key in category_tabs:
 		var items = _get_items_for_category(cat_key)
@@ -154,8 +150,9 @@ func _build_tabs() -> void:
 		
 		var tab_btn = Button.new()
 		tab_btn.text = category_labels.get(cat_key, cat_key.capitalize())
-		tab_btn.custom_minimum_size = Vector2(80, 35)
+		tab_btn.custom_minimum_size = Vector2(80, 40)
 		tab_btn.name = "Tab_" + cat_key.replace(" ", "_")
+		tab_btn.mouse_filter = Control.MOUSE_FILTER_PASS
 		_style_button(tab_btn, COLOR_TAB_NORMAL, Color("333333"), float(tab_font_size))
 		tab_btn.pressed.connect(_select_category.bind(cat_key))
 		tab_container.add_child(tab_btn)
@@ -190,15 +187,20 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	card.custom_minimum_size = card_size
 	
 	var style = StyleBoxFlat.new()
-	style.bg_color = COLOR_CARD_BG
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	style.content_margin_left = 5
-	style.content_margin_right = 5
-	style.content_margin_top = 5
-	style.content_margin_bottom = 5
+	style.bg_color = Color(0, 0, 0, 1) # Black
+	style.border_color = Color(0.15, 0.15, 0.15, 1) # Dark grey
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.corner_radius_top_left = 0
+	style.corner_radius_top_right = 0
+	style.corner_radius_bottom_left = 0
+	style.corner_radius_bottom_right = 0
+	style.content_margin_left = 4
+	style.content_margin_right = 4
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
 	card.add_theme_stylebox_override("panel", style)
 	
 	var vbox = VBoxContainer.new()
@@ -226,16 +228,16 @@ func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -
 		currently_selected_item = item
 		_update_detail_panel(item)
 		
-		# Highlight selected card
+		# Highlight selected card (using border color)
 		for child in product_grid.get_children():
 			if child is PanelContainer:
 				var s = child.get_theme_stylebox("panel") as StyleBoxFlat
 				if s:
-					s.bg_color = COLOR_CARD_BG
+					s.border_color = Color(0.15, 0.15, 0.15, 1)
 		
 		var selected_style = card.get_theme_stylebox("panel") as StyleBoxFlat
 		if selected_style:
-			selected_style.bg_color = COLOR_CARD_SELECTED
+			selected_style.border_color = Color(0.84, 0.64, 0.33, 1) # Yellow highlight
 
 # ========== DETAIL PANEL ==========
 func _update_detail_panel(item: ItemData) -> void:
@@ -305,7 +307,7 @@ func _create_order_row(item: ItemData, count: int) -> HBoxContainer:
 	name_lbl.text = item.item_name
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.add_theme_font_size_override("font_size", order_list_font_size)
-	name_lbl.add_theme_color_override("font_color", Color("333333"))
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
 	row.add_child(name_lbl)
 	
 	# Minus / Trash button
@@ -320,7 +322,7 @@ func _create_order_row(item: ItemData, count: int) -> HBoxContainer:
 	count_lbl.custom_minimum_size = Vector2(24, 0)
 	count_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	count_lbl.add_theme_font_size_override("font_size", order_list_font_size)
-	count_lbl.add_theme_color_override("font_color", Color("333333"))
+	count_lbl.add_theme_color_override("font_color", Color.WHITE)
 	row.add_child(count_lbl)
 	
 	# Plus button
@@ -402,8 +404,11 @@ func _on_confirm_pressed() -> void:
 		# Set cooldown for Uncle Mario (3 to 5 customers)
 		InventoryManager.customers_needed_for_delivery = randi() % 3 + 3
 		InventoryManager.save_state()
-		# Trigger delivery cutscene dialogue (TK portrait placeholder)
-		Dialogic.start("UncleMario_Delivery")
+		# Trigger 3D Delivery Cutscene
+		var delivery_script = load("res://Scripts/Cutscenes/TricycleDelivery.gd")
+		var delivery = delivery_script.new()
+		get_tree().root.add_child(delivery)
+		delivery.start_delivery(selected_items)
 # ========== HELPERS ==========
 func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 	var result: Array[ItemData] = []

@@ -18,7 +18,7 @@
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
 [ext_resource type="Script" uid="uid://dnowjpw0mq2o4" path="res://Scripts/Components/FPSController.gd" id="fps_scr"]
-[ext_resource type="Script" uid="uid://hcvg3mgtgif" path="res://Scripts/UI/GoldenHourFilter.gd" id="ghf_scr"]
+[ext_resource type="Script" path="res://Scripts/UI/GoldenHourFilter.gd" id="ghf_scr"]
 [ext_resource type="Script" uid="uid://dchrvgkvawu1a" path="res://Scripts/Managers/GameManager.gd" id="gm_scr"]
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
 [ext_resource type="Script" uid="uid://camum248co0qu" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
@@ -106,6 +106,7 @@ mouse_filter = 2
 color = Color(1, 1, 1, 0.784313)
 
 [node name="GoldenHourFilter" type="ColorRect" parent="CanvasLayer" unique_id=123987123]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -237,7 +238,7 @@ data = ExtResource("23_7p2u3")
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
 fog_enabled = true
-current_time = 5.85
+current_time = 8.79
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
