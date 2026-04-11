@@ -10,6 +10,7 @@ signal clicked(customer: Customer)
 @export var movement_speed: float = 2.0
 var target_position: Vector3
 var is_waiting: bool = false
+@export var character_id: String = "KuyaKap"
 var desire: ItemData
 
 @export var vertical_follow_factor: float = 1.0
@@ -19,13 +20,9 @@ var _base_sprite_y: float = 0.0
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 
-@onready var bubble: Sprite3D = $Bubble
-@onready var item_icon: Sprite3D = $Bubble/ItemIcon
-@onready var request_label: Label3D = $Bubble/RequestLabel
 @onready var body_sprite: Sprite3D = $Body
 
 func _ready() -> void:
-	bubble.visible = false
 	input_event.connect(_on_input_event)
 	
 	# Store the initial position of the body sprite for the vertical follow logic
@@ -42,10 +39,6 @@ func setup(data: ItemData, target: Vector3) -> void:
 	_spawn_position = global_position
 	desire = data
 	target_position = target
-	if desire:
-		if desire.texture:
-			item_icon.texture = desire.texture
-		request_label.text = desire.item_name
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
 ## Only responds when waiting at the counter and not mid-animation.
@@ -70,7 +63,6 @@ func _process(delta: float) -> void:
 
 func arrived_at_counter() -> void:
 	is_waiting = true
-	bubble.visible = true
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
@@ -96,38 +88,13 @@ func check_item(item: ItemData) -> bool:
 func satisfy() -> void:
 	# Lock against re-entry during the animation chain.
 	_is_resolving = true
-	InventoryManager.decrement_cooldown()
-	bubble.modulate = Color.GREEN
-	request_label.text = "Thanks!"
-	
-	var tween = create_tween()
-	var original_scale = body_sprite.scale
-	var base_y = body_sprite.position.y
-	
-	# Jump up and stretch
-	tween.tween_property(body_sprite, "scale", original_scale * Vector3(0.8, 1.2, 1.0), 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(body_sprite, "position:y", base_y + 0.3, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	
-	# Trigger Particles precisely at the peak of the jump
-	tween.tween_callback(func():
-		var particles = get_node_or_null("HappyParticles")
-		if particles and particles.has_method("play"):
-			particles.play()
-	)
-	
-	# Squish back down
-	tween.tween_property(body_sprite, "scale", original_scale * Vector3(1.1, 0.9, 1.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(body_sprite, "position:y", base_y, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	
-	# Recover to normal scale
-	tween.tween_property(body_sprite, "scale", original_scale, 0.15).set_trans(Tween.TRANS_SPRING).set_ease(Tween.EASE_OUT)
+	InventoryManager.decrement_cooldown() #
 	
 	await get_tree().create_timer(2.0).timeout
 	
 	# Smooth fade out before freeing
 	var fade_tween = create_tween()
 	fade_tween.tween_property(body_sprite, "modulate:a", 0.0, 0.4)
-	fade_tween.parallel().tween_property(bubble, "modulate:a", 0.0, 0.4)
 	await fade_tween.finished
 	
 	satisfied.emit()
@@ -137,12 +104,7 @@ func satisfy() -> void:
 
 func reject() -> void:
 	_is_resolving = true
-	bubble.modulate = Color.RED
-	var original_text = request_label.text
-	request_label.text = "No!"
 	await get_tree().create_timer(1.0).timeout
-	bubble.modulate = Color.WHITE
-	request_label.text = original_text
 	_is_resolving = false
 	# Notify EventBus so CustomerSpawner can track rejections.
 	EventBus.customer_rejected.emit(self)
@@ -151,7 +113,6 @@ func reject() -> void:
 ## Plays a brief leaving animation then notifies the EventBus.
 func dismiss() -> void:
 	is_waiting = false
-	bubble.visible = false
 	_is_resolving = true
 
 	# Walk back toward the spawn edge

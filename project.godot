@@ -27,13 +27,13 @@ buses/default_bus_layout="uid://b3scee0b03k1u"
 
 EventBus="*res://Scripts/EventBus.gd"
 DragManager="*res://Scripts/DragManager.gd"
-DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
-GDRx="*uid://53t8o3elg2rt"
 Dialogic="*uid://ds2q0uclmolvu"
 SaveManager="*res://Scripts/SaveManager.gd"
 SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
+SaveManager="*res://Scripts/SaveManager.gd"
+AudioManager="*res://Scripts/Managers/AudioManager.gd"
 
 [debug_draw_3d]
 
@@ -59,13 +59,9 @@ directories/dtl_directory={
 "day_ended": "res://Dialogue/day_ended.dtl",
 "main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
 }
-layout/style_directory={
-"": "res://Assets/Dialogue/DialogueStyle.tres",
-"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
-"bubble_style_dialogue": "res://Resources/bubble_style_dialogue.tres"
-}
-layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres", "res://Resources/bubble_style_dialogue.tres"]
-layout/default_style="res://Assets/Dialogue/DialogueStyle.tres"
+layout/style_directory={}
+layout/style_list=[]
+layout/default_style=""
 glossary/default_case_sensitive=true
 extensions_folder="res://addons/dialogic_additions"
 text/letter_speed=0.01
@@ -74,11 +70,11 @@ text/text_reveal_skip_delay=0.1
 text/advance_delay=0.1
 text/autoadvance_per_character_delay=0.1
 text/autoadvance_ignored_characters_enabled=true
-animations/join_default_length=0.5
-animations/join_default_wait=true
-animations/leave_default_length=0.5
-animations/leave_default_wait=true
-animations/cross_fade_default_length=0.5
+animations/join_default_length=0.2
+animations/join_default_wait=false
+animations/leave_default_length=0.2
+animations/leave_default_wait=false
+animations/cross_fade_default_length=0.2
 choices/autofocus_first=true
 choices/delay=0.2
 choices/reveal_delay=0

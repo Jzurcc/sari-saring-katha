@@ -52,6 +52,8 @@ size = Vector3(2.003674, 0.12799856, 2.0025241)
 [sub_resource type="BoxShape3D" id="BoxShape3D_NokiaRegion"]
 size = Vector3(0.5, 0.5, 0.5)
 
+[sub_resource type="BoxMesh" id="BoxMesh_gfpct"]
+
 [node name="final_store" unique_id=1959424565 instance=ExtResource("1_r7io6")]
 
 [node name="Cylinder_001" parent="." index="0" unique_id=1617813830]
@@ -206,3 +208,7 @@ target_mesh_path = NodePath("../nokia/bf24c89b95fc492f9ba5e652e15ec051_fbx/RootN
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NokiaInteractable"]
 shape = SubResource("BoxShape3D_NokiaRegion")
 
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." index="614" unique_id=1240598993]
+transform = Transform3D(1, 0, 0, 0, 0.04411435, 0, 0, 0, 1.9101058, 4.1226363, 2.24376, 0.28677338)
+mesh = SubResource("BoxMesh_gfpct")

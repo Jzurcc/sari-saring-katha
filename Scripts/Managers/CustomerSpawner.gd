@@ -70,6 +70,8 @@ func _on_customer_arrived(customer: Customer) -> void:
 		timeline_path = "res://Dialogue/customer_returning.dtl"
 
 	if Dialogic.current_timeline == null:
+		Dialogic.Styles.load_style("DialogueStyle")
+		await get_tree().process_frame
 		Dialogic.start(timeline_path)
 
 func _on_customer_finished(_customer: Customer) -> void:
@@ -90,6 +92,8 @@ func _on_customer_dismissed(_customer: Customer) -> void:
 
 func _on_customer_clicked(_customer: Customer) -> void:
 	if Dialogic.current_timeline == null:
+		Dialogic.Styles.load_style("DialogueStyle")
+		await get_tree().process_frame
 		Dialogic.start("res://Dialogue/customer_talk.dtl")
 
 func _on_dialogic_signal(argument: String) -> void:

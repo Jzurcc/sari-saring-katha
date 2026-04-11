@@ -19,6 +19,9 @@ scene = ExtResource("1_3il8y")
 [sub_resource type="Resource" id="Resource_tx8gu"]
 script = ExtResource("2_pqiig")
 scene = ExtResource("3_4ar6j")
+overrides = {
+"disabled": "true"
+}
 
 [sub_resource type="Resource" id="Resource_388db"]
 script = ExtResource("2_pqiig")
@@ -27,24 +30,26 @@ scene = ExtResource("4_byj6a")
 [sub_resource type="Resource" id="Resource_wrbsi"]
 script = ExtResource("2_pqiig")
 scene = ExtResource("5_yda17")
+overrides = {
+"disabled": "true"
+}
 
 [sub_resource type="Resource" id="Resource_bmwyf"]
 script = ExtResource("2_pqiig")
 scene = ExtResource("6_edhmf")
 overrides = {
-"box_color_custom": "Color(1, 0.7176471, 0.5294118, 1)",
+"autoadvance_progressbar": "false",
 "box_color_use_global": "false",
 "box_size": "Vector2(900, 150)",
-"name_label_box_modulate": "Color(1, 0.7176471, 0.5294118, 1)",
 "name_label_box_offset": "Vector2(0, -15)",
 "name_label_box_use_global_color": "false",
-"name_label_custom_color": "Color(0, 0, 0, 1)",
 "name_label_custom_font_size": "34.0",
 "name_label_use_character_color": "false",
 "name_label_use_global_color": "false",
 "name_label_use_global_font": "false",
 "name_label_use_global_font_size": "false",
-"text_custom_color": "Color(0, 0, 0, 1)",
+"next_indicator_enabled": "false",
+"next_indicator_show_on_questions": "false",
 "text_size": "24.0",
 "text_use_global_color": "false",
 "text_use_global_size": "false"
@@ -91,4 +96,4 @@ layer_info = {
 "16": SubResource("Resource_6difk"),
 "17": SubResource("Resource_8jf1b")
 }
-metadata/_latest_layer = "15"
+metadata/_latest_layer = "13"

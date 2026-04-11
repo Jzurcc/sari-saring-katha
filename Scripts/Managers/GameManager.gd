@@ -31,6 +31,8 @@ func _on_transaction_completed(item: ItemData, was_correct: bool) -> void:
 func _on_day_ended(ended_day_number: int) -> void:
 	print("[GameManager] Day %d ended!" % ended_day_number)
 	if Dialogic.current_timeline == null:
+		Dialogic.Styles.load_style("DialogueStyle")
+		await get_tree().process_frame
 		Dialogic.start("res://Dialogue/day_ended.dtl")
 	# In a full game, wait for Dialogue to end then show Day Summary. Here we just increment
 	day += 1

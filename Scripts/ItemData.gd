@@ -11,7 +11,7 @@ enum ItemType {
 @export var price: int = 10
 @export var type: ItemType = ItemType.SHELF
 @export var max_stock: int = 5
-@export var category: String = "food"
+@export_enum("snacks", "sachet", "canned goods", "candy", "cigarette", "beverages", "instant noodles", "frozen goods") var category: String = "snacks"
 ## Unique identifier for this item. Matches the .tres filename, lowercase.
 ## Used for transaction matching. Set via patch_item_ids.py or the Inspector.
 @export var id: String = "unset"

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cp3v1s0rx880b"
+path="res://.godot/imported/Phone Button Sound Effects.mp3-0d9b85d56e69081c55e8fd9383e92086.mp3str"
+
+[deps]
+
+source_file="res://Audio/Phone Button Sound Effects.mp3"
+dest_files=["res://.godot/imported/Phone Button Sound Effects.mp3-0d9b85d56e69081c55e8fd9383e92086.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

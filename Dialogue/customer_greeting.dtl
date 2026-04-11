@@ -1,19 +1,18 @@
 join Timelines/KuyaKap left [length="0.2"]
-Timelines/KuyaKap: A new face…? Have I seen you before, young man?
+Timelines/KuyaKap: A new face! Have I seen you before, young man?
 - Woah, you're very tall.
-- Nope, I just got here… also, you're very tall.
+- Nope, I just got here... also, you're very tall.
 
 Timelines/KuyaKap: Haha, this must be the first time you've seen me. I'm Kuya Kap, the resident bystander Kapre.
 - I've only heard the stories about the Kapre.
 	Timelines/KuyaKap: I hope they're not too evil.
 - A what?
-	Timelines/KuyaKap: The Kapre, evil spirits who devour lost intruders, ring a bell?… Kiddingg
+	Timelines/KuyaKap: The Kapre, evil spirits who devour lost intruders, ring a bell? Kidding!
 
 Timelines/KuyaKap: Many stories spread around my kind, but as long as our trees breathe and our territories are respected, you won't need to worry..
-- Haha… well that's reassuring.
+- Haha! Well that's reassuring.
 
 Timelines/KuyaKap: Anyway, let me buy {InventoryManager.current_item_name}. I need to relax a bit.
 - Coming right up!
-[style name="bubble_style_dialogue"]
 
 [end_timeline]
