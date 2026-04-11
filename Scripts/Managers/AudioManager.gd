@@ -43,12 +43,12 @@ func _ready() -> void:
 	
 	ambience_base = AudioStreamPlayer.new()
 	ambience_base.bus = "Master"
-	ambience_base.volume_db = base_volume_db
+	ambience_base.volume_db = 2.0
 	add_child(ambience_base)
 	
 	ambience_night = AudioStreamPlayer.new()
 	ambience_night.bus = "Master"
-	ambience_night.volume_db = base_volume_db
+	ambience_night.volume_db = 2.0
 	add_child(ambience_night)
 	
 	afternoon_playlist = [audio_fantastic_idea, audio_not_me]
