@@ -7,8 +7,8 @@
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
 [ext_resource type="Texture2D" uid="uid://477m82fgpway" path="res://Assets/items/icons/4_snack_anoba.png" id="13_k6vqf"]
-[ext_resource type="Resource" path="res://Resources/items/can/Scam.tres" id="14_jn25s"]
-[ext_resource type="Resource" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
+[ext_resource type="Resource" uid="uid://csksk82fco6uv" path="res://Resources/items/can/Scam.tres" id="14_jn25s"]
+[ext_resource type="Resource" uid="uid://cpcgoekabpt4x" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
 [ext_resource type="Resource" path="res://Resources/items/cigarette/Marboro.tres" id="16_glaac"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
@@ -150,7 +150,7 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf" unique_id=1927767560]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), ExtResource("16_glaac"), null, null, null, null, null])
+items = [SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), ExtResource("16_glaac"), null, null, null, null, null]
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
@@ -166,7 +166,7 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf6" unique_id=685570783]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
+items = [null, null, null, null]
 shelf_width = 2.535
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
@@ -182,7 +182,7 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf4" unique_id=1220161792]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
+items = [null, null, null, null, null, null, null, null, null, null]
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
@@ -198,7 +198,7 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf2" unique_id=1019299572]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
+items = [null, null, null, null, null, null, null, null, null, null]
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
@@ -214,7 +214,7 @@ shape = SubResource("BoxShape3D_1")
 [node name="ShelfSurface" type="Node3D" parent="Shelf3" unique_id=1503542262]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 1.7089171, 0.02358985, -0.20647335)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
+items = [null, null, null, null, null, null, null, null, null, null]
 shelf_width = 4.005
 accepted_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")

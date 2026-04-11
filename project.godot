@@ -31,9 +31,9 @@ DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
 GDRx="*uid://53t8o3elg2rt"
 Dialogic="*uid://ds2q0uclmolvu"
+SaveManager="*res://Scripts/SaveManager.gd"
 SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
-SaveManager="*res://Scripts/SaveManager.gd"
 
 [debug_draw_3d]
 
