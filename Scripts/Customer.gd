@@ -10,6 +10,7 @@ signal clicked(customer: Customer)
 @export var movement_speed: float = 2.0
 var target_position: Vector3
 var is_waiting: bool = false
+@export var character_id: String = "KuyaKap"
 var desire: ItemData
 
 @export var vertical_follow_factor: float = 1.0
@@ -87,6 +88,7 @@ func check_item(item: ItemData) -> bool:
 func satisfy() -> void:
 	# Lock against re-entry during the animation chain.
 	_is_resolving = true
+	InventoryManager.decrement_cooldown() #
 	
 	await get_tree().create_timer(2.0).timeout
 	

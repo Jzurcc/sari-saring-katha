@@ -27,13 +27,12 @@ buses/default_bus_layout="uid://b3scee0b03k1u"
 
 EventBus="*res://Scripts/EventBus.gd"
 DragManager="*res://Scripts/DragManager.gd"
-DialogueManager="*uid://c3rodes2l3gxb"
 InventoryManager="*res://Scripts/InventoryManager.gd"
-GDRx="*uid://53t8o3elg2rt"
 Dialogic="*uid://ds2q0uclmolvu"
 SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
 SaveManager="*res://Scripts/SaveManager.gd"
+AudioManager="*res://Scripts/Managers/AudioManager.gd"
 
 [debug_draw_3d]
 
