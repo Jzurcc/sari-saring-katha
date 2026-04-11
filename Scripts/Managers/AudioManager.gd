@@ -5,6 +5,8 @@ var theme_player: AudioStreamPlayer
 var ambience_base: AudioStreamPlayer
 var ambience_night: AudioStreamPlayer
 
+var base_volume_db: float = -6.0 # Roughly 50% linear volume
+
 var audio_boring_day = preload("res://Audio/A Boring Day.mp3")
 var audio_fantastic_idea = preload("res://Audio/Fantastic Idea.mp3")
 var audio_not_me = preload("res://Audio/Not ME.mp3")
@@ -12,7 +14,7 @@ var audio_sleepy = preload("res://Audio/Sleepy.mp3")
 var audio_laughing_horse = preload("res://Audio/Laughing Horse.mp3")
 
 var character_themes: Dictionary = {
-	"KuyaKap": audio_laughing_horse
+	# "KuyaKap": audio_laughing_horse
 }
 
 var audio_calming_morning = preload("res://Audio/Calming Morning Sounds.mp3")
@@ -31,6 +33,7 @@ func _ready() -> void:
 	
 	bgm_player = AudioStreamPlayer.new()
 	bgm_player.bus = "Music"
+	bgm_player.volume_db = base_volume_db
 	add_child(bgm_player)
 	
 	theme_player = AudioStreamPlayer.new()
@@ -40,10 +43,12 @@ func _ready() -> void:
 	
 	ambience_base = AudioStreamPlayer.new()
 	ambience_base.bus = "Master"
+	ambience_base.volume_db = base_volume_db
 	add_child(ambience_base)
 	
 	ambience_night = AudioStreamPlayer.new()
 	ambience_night.bus = "Master"
+	ambience_night.volume_db = base_volume_db
 	add_child(ambience_night)
 	
 	afternoon_playlist = [audio_fantastic_idea, audio_not_me]
@@ -149,14 +154,14 @@ func play_character_theme(theme_stream: AudioStream) -> void:
 	
 	crossfade_tween = create_tween()
 	crossfade_tween.tween_property(bgm_player, "volume_db", -80.0, 1.5).set_ease(Tween.EASE_OUT)
-	crossfade_tween.parallel().tween_property(theme_player, "volume_db", 0.0, 1.5).set_ease(Tween.EASE_IN)
+	crossfade_tween.parallel().tween_property(theme_player, "volume_db", base_volume_db, 1.5).set_ease(Tween.EASE_IN)
 
 func stop_character_theme() -> void:
 	if crossfade_tween and crossfade_tween.is_valid():
 		crossfade_tween.kill()
 		
 	crossfade_tween = create_tween()
-	crossfade_tween.tween_property(bgm_player, "volume_db", 0.0, 2.0).set_ease(Tween.EASE_IN)
+	crossfade_tween.tween_property(bgm_player, "volume_db", base_volume_db, 2.0).set_ease(Tween.EASE_IN)
 	crossfade_tween.parallel().tween_property(theme_player, "volume_db", -80.0, 2.0).set_ease(Tween.EASE_OUT)
 	crossfade_tween.tween_callback(func(): theme_player.stop())
 
