@@ -24,9 +24,9 @@ func _ready():
 			camera = get_parent() as Camera3D
 
 func _physics_process(_delta: float) -> void:
-	# While dialogue is open, dragging, or mouse is free — clear hover and exit.
+	# While dialogue is open or mouse is free — clear hover and exit.
 	if not camera or Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED \
-			or DragManager._is_dragging or Dialogic.current_timeline != null:
+			or Dialogic.current_timeline != null:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
 			_last_hovered = null
@@ -56,17 +56,24 @@ func _physics_process(_delta: float) -> void:
 	var hit_customer := camera.get_world_3d().direct_space_state.intersect_ray(q_customer)
 
 	# Resolve which target is "closer" to the camera.
-	# Items take priority when they are in front of the customer,
-	# but if no item is under the crosshair the customer comes through.
 	var current_hovered: Node = null
-	if hit_item and hit_customer:
-		var d_item     := ray_origin.distance_squared_to(hit_item.position)
-		var d_customer := ray_origin.distance_squared_to(hit_customer.position)
-		current_hovered = hit_item.collider if d_item <= d_customer else hit_customer.collider
-	elif hit_item:
-		current_hovered = hit_item.collider
-	elif hit_customer:
-		current_hovered = hit_customer.collider
+	
+	if DragManager._is_dragging:
+		# When dragging, completely ignore items so we don't highlight shelves/containers.
+		# Only allow hovering over the customer to indicate they can receive the item.
+		if hit_customer:
+			current_hovered = hit_customer.collider
+	else:
+		# Items take priority when they are in front of the customer,
+		# but if no item is under the crosshair the customer comes through.
+		if hit_item and hit_customer:
+			var d_item     := ray_origin.distance_squared_to(hit_item.position)
+			var d_customer := ray_origin.distance_squared_to(hit_customer.position)
+			current_hovered = hit_item.collider if d_item <= d_customer else hit_customer.collider
+		elif hit_item:
+			current_hovered = hit_item.collider
+		elif hit_customer:
+			current_hovered = hit_customer.collider
 
 	# Update hover state only on change to avoid redundant calls every frame.
 	if current_hovered != _last_hovered:

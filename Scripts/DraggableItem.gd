@@ -6,6 +6,9 @@ signal drag_ended
 
 @export var item_data: ItemData
 
+## Whether this item was spawned on the fly directly into dragging.
+var is_transient: bool = false
+
 ## Full local transform at spawn time — used to tween item back to its slot.
 var _original_transform: Transform3D = Transform3D.IDENTITY
 
@@ -13,9 +16,30 @@ var _original_transform: Transform3D = Transform3D.IDENTITY
 @onready var collider: CollisionShape3D = $CollisionShape3D
 @onready var label: Label3D = $Label3D
 
+var outline_material: ShaderMaterial = null
+var is_hovered: bool = false
+var is_mouse_inside: bool = false
+var original_scale: Vector3 = Vector3.ONE
+
+var camera: Camera3D
+
 func _ready() -> void:
+	camera = get_viewport().get_camera_3d()
+	
+	if not Engine.is_editor_hint():
+		# Connect to global drag events so we drop if clicked elsewhere
+		# EventBus.drag_started.connect(_on_global_drag_started)
+		original_scale = scale
+	
 	if item_data:
 		setup(item_data)
+
+func _process(delta: float) -> void:
+	if camera and is_instance_valid(collider):
+		var dir = camera.global_position - collider.global_position
+		if dir.length_squared() > 0.001 and abs(dir.normalized().dot(Vector3.UP)) < 0.99:
+			# look_at points the -Z axis at the target, keeping the collision box aligned with Sprite3D billboard.
+			collider.look_at(camera.global_position, Vector3.UP)
 
 ## Configure this item with [param data] and place it at [param local_transform]
 ## in the parent surface's local coordinate space.
@@ -90,8 +114,6 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 			if item_data.display_width_override > 0.0
 			else rendered_h * aspect
 		)
-		# Duplicate the shape resource so changing this item's collision box
-		# doesn't accidentally resize the boxes of every other item in the scene!
 		if collider.shape is BoxShape3D:
 			collider.shape = collider.shape.duplicate()
 			collider.shape.size = Vector3(rendered_w, rendered_h, max(0.1, rendered_w))
@@ -100,7 +122,7 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 	if label:
 		label.hide()
 
-var outline_material: ShaderMaterial = null
+
 
 func on_hover(is_hovered: bool) -> void:
 	if is_hovered:
@@ -136,6 +158,11 @@ func show_visuals() -> void:
 	sprite.show()
 
 func return_to_start() -> void:
+	if is_transient:
+		InventoryManager.return_item(item_data)
+		queue_free()
+		return
+		
 	show_visuals()
 	var tween := create_tween()
 	# Restore full local transform (position only — tilt lives on the sprite node)

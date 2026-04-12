@@ -60,3 +60,21 @@ func _reset_clock_to_morning() -> void:
 		tod.game_time_enabled = false
 		tod.system_sync = false
 		tod.set_time(5, 0, 0)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:
+		print("[GameManager] DEBUG: Skip to next day triggered via L key")
+		
+		# End any current dialogue to prevent locking
+		if Dialogic.current_timeline != null:
+			Dialogic.end_timeline()
+			
+		# Despawn any active customers safely
+		var customers = get_tree().get_nodes_in_group("customer")
+		for c in customers:
+			# Emit dismissed so UI reacts (if any)
+			EventBus.customer_dismissed.emit(c)
+			c.queue_free()
+			
+		# Trigger the normal end of day sequence
+		_on_day_ended(day)
