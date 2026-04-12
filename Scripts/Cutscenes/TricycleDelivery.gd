@@ -2,107 +2,98 @@ extends Node
 
 var target_items: Dictionary
 var sprite: Sprite3D
-var fade_rect: ColorRect
-var canvas: CanvasLayer
 var _moving: bool = false
 var _time: float = 0.0
 
-const START_POS = Vector3(-15.841, 1.909, 15.828)
-const TARGET_POS = Vector3(-15.841, 1.909, -6.938)
+var sfx_player: AudioStreamPlayer
+
+const START_POS = Vector3(-15.299, 3.206, 11.855)
+const TARGET_POS = Vector3(-15.299, 3.206, -6.055)
+const EXIT_POS = Vector3(-15.299, 3.206, -13.901)
+
+## how long before the tricycle arrives (in seconds)
+const DELIVERY_DELAY_SEC := 2.0
+
+var sfx_arrive: AudioStream = preload("res://Audio/SFX/motorcyle arrives and honks.mp3")
+var sfx_leave: AudioStream = preload("res://Audio/SFX/motorcyle leaves.mp3")
 
 func _ready() -> void:
-	# 1. Setup Fade UI
-	canvas = CanvasLayer.new()
-	canvas.layer = 120 # above all other UI
-	add_child(canvas)
-	
-	fade_rect = ColorRect.new()
-	fade_rect.color = Color(0, 0, 0, 0) # transparent initially
-	fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
-	canvas.add_child(fade_rect)
-	
-	# 2. Setup Sprite3D for tricycle
-	sprite = Sprite3D.new()
-	sprite.pixel_size = 0.02 # Scale down image appropriately for 3D world
-	sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y # always face camera but keep upright
-	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD # enable proper cutout transparency
-	
-	# Load the tricycle asset prioritizing mario_tricycle.png
-	var paths = [
-		"res://Assets/ui/mario_tricycle.png",
-		"res://Assets/ui/Mario_Tricycle.png",
-		"res://Assets/ui/tricycle.png",
-		"res://Assets/ui/Tricycle.png"
-	]
-	for path in paths:
-		if ResourceLoader.exists(path):
-			sprite.texture = load(path)
-			break
-			
-	if not sprite.texture:
-		push_warning("[TricycleDelivery] No tricycle texture found!")
-		
-	sprite.position = START_POS
-	sprite.visible = false
-	
-	# Add the sprite dynamically to the current 3D scene tree
-	get_tree().current_scene.add_child(sprite)
+	# Audio player for motorcycle SFX
+	sfx_player = AudioStreamPlayer.new()
+	add_child(sfx_player)
 
 func start_delivery(items_to_restock: Dictionary) -> void:
 	target_items = items_to_restock
 	
-	# Sequence: Fade Out -> Make Visible -> Fade In -> Animate -> Dialogue
-	var t = create_tween()
-	t.tween_property(fade_rect, "color:a", 1.0, 0.5)
-	await t.finished
+	# Wait before the tricycle shows up
+	print("[TricycleDelivery] Waiting %.0f seconds for delivery..." % DELIVERY_DELAY_SEC)
+	await get_tree().create_timer(DELIVERY_DELAY_SEC).timeout
 	
-	# Wait a tiny bit while screen is black for natural breath
-	await get_tree().create_timer(0.3).timeout
+	# Create the sprite only now — it doesn't exist until delivery is triggered
+	sprite = Sprite3D.new()
+	sprite.pixel_size = 0.01
+	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	sprite.rotation_degrees.y = 90.0
+	sprite.scale = Vector3(1.5, 1.5, 1.5)
 	
+	var tex = load("res://Assets/ui/mario_tricycle.png") if ResourceLoader.exists("res://Assets/ui/mario_tricycle.png") else null
+	if tex:
+		sprite.texture = tex
+	else:
+		push_warning("[TricycleDelivery] No tricycle texture found!")
+	
+	sprite.position = START_POS
 	sprite.visible = true
+	get_tree().current_scene.add_child(sprite)
 	
-	# Fade back in to the world
-	var t2 = create_tween()
-	t2.tween_property(fade_rect, "color:a", 0.0, 0.5)
-	await t2.finished
+	# ── Phase 1: Arrive ──────────────────────────────────────────────
+	# Play the arrive + honk audio
+	sfx_player.stream = sfx_arrive
+	sfx_player.play()
 	
-	# Start driving
+	# Start driving toward the stop position
 	_moving = true
-	var t3 = create_tween()
-	# Move from 15.828 to -6.938 smoothly
-	t3.tween_property(sprite, "position:z", TARGET_POS.z, 3.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	t3.parallel().tween_property(sprite, "position:x", TARGET_POS.x, 3.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await t3.finished
+	var arrive_tween = create_tween()
+	arrive_tween.tween_property(sprite, "position:z", TARGET_POS.z, 3.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	arrive_tween.parallel().tween_property(sprite, "position:x", TARGET_POS.x, 3.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await arrive_tween.finished
 	_moving = false
 	
-	# Ensure it snaps to rest position at end of bumpy ride
-	sprite.position.y = START_POS.y
+	# Snap Y after bouncing
+	sprite.position.y = TARGET_POS.y
 	
-	# Wait brief pause after stopping before talking
-	await get_tree().create_timer(0.5).timeout
+	# Wait for the arrive + honk audio to fully finish before dialogue
+	if sfx_player.playing:
+		await sfx_player.finished
 	
-	# Start dialogue
+	# ── Phase 2: Dialogue ────────────────────────────────────────────
+	# Uncle Mario says he's put the stocks in place
 	if Dialogic.timeline_exists("UncleMario_Delivery"):
-		# In Godot 4 Dialogic, we can await the timeline
-		Dialogic.timeline_ended.connect(_on_dialogue_ended, CONNECT_ONE_SHOT)
+		Dialogic.timeline_ended.connect(_on_delivery_dialogue_ended, CONNECT_ONE_SHOT)
 		Dialogic.start("UncleMario_Delivery")
 	else:
-		_on_dialogue_ended()
+		_on_delivery_dialogue_ended()
 
-func _process(delta: float) -> void:
-	if _moving:
-		_time += delta * 20.0 # Bouncing frequency
-		# Add a subtle sine wave bounce (abs for only upward bouncing, 0.15 height)
-		sprite.position.y = START_POS.y + (abs(sin(_time)) * 0.15)
-
-func _on_dialogue_ended() -> void:
-	# Fade out one last time
-	var t = create_tween()
-	t.tween_property(fade_rect, "color:a", 1.0, 0.5)
-	await t.finished
+func _on_delivery_dialogue_ended() -> void:
+	# ── Phase 3: Leave ───────────────────────────────────────────────
+	# Play leave audio and drive away simultaneously
+	sfx_player.stream = sfx_leave
+	sfx_player.play()
 	
-	# Restock inventory items in the background
+	_moving = true
+	var leave_tween = create_tween()
+	leave_tween.tween_property(sprite, "position:z", EXIT_POS.z, 2.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await leave_tween.finished
+	_moving = false
+	
+	# Wait for leave audio to finish before cleanup
+	if sfx_player.playing:
+		await sfx_player.finished
+	
+	# ── Phase 4: Restock & Cleanup ───────────────────────────────────
 	for item in target_items.keys():
 		var amount_ordered = target_items[item]
 		var current_stock = InventoryManager.get_stock(item)
@@ -112,13 +103,13 @@ func _on_dialogue_ended() -> void:
 	print("[TricycleDelivery] Delivery complete. Restocked shelf containers.")
 	InventoryManager.save_state()
 	
-	# Fade back in to player view
 	sprite.queue_free()
-	var t2 = create_tween()
-	t2.tween_property(fade_rect, "color:a", 0.0, 0.5)
-	await t2.finished
-	
 	queue_free()
+
+func _process(delta: float) -> void:
+	if _moving:
+		_time += delta * 20.0
+		sprite.position.y = TARGET_POS.y + (abs(sin(_time)) * 0.15)
 
 func _refresh_containers(node: Node) -> void:
 	if node.has_method("refresh_visibility"):

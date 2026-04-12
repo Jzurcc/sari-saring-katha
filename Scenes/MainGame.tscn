@@ -15,9 +15,15 @@
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
 [ext_resource type="Resource" uid="uid://b83qhc1lkdq1w" path="res://Resources/items/frozen/Borgir.tres" id="22_him8o"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
-[ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Script" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
+[ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="27_0wdc3"]
+[ext_resource type="Texture2D" uid="uid://bf27xwxax7q4s" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="28_w42fa"]
+[ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="29_upseh"]
+[ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
+[ext_resource type="Script" uid="uid://dmr2hly48pbkb" path="res://Scripts/UI/DayTimeUI.gd" id="dt_scr"]
 [ext_resource type="Script" uid="uid://dnowjpw0mq2o4" path="res://Scripts/Components/FPSController.gd" id="fps_scr"]
 [ext_resource type="Script" uid="uid://dchrvgkvawu1a" path="res://Scripts/Managers/GameManager.gd" id="gm_scr"]
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
@@ -88,6 +94,25 @@ theme_override_font_sizes/font_size = 32
 text = "Peso: 0"
 script = ExtResource("ml_scr")
 
+[node name="DayLabel" type="Label" parent="CanvasLayer" unique_id=720000001]
+offset_left = 20.0
+offset_top = 62.0
+offset_right = 200.0
+offset_bottom = 95.0
+theme_override_font_sizes/font_size = 22
+text = "Day 1"
+script = ExtResource("dt_scr")
+
+[node name="TimeLabel" type="Label" parent="CanvasLayer" unique_id=720000002]
+offset_left = 20.0
+offset_top = 97.0
+offset_right = 200.0
+offset_bottom = 130.0
+theme_override_font_sizes/font_size = 22
+text = "5:00 AM"
+script = ExtResource("dt_scr")
+display_mode = 1
+
 [node name="HeldItemLabel" type="Label" parent="CanvasLayer" unique_id=195192398]
 visible = false
 offset_left = 20.0
@@ -141,6 +166,13 @@ script = ExtResource("cs_scr")
 spawn_pos = NodePath("../CustomerSpawnPos")
 target_pos = NodePath("../CustomerTargetPos")
 
+[node name="CandyContainerManager" type="Node" parent="." unique_id=1750400001 node_paths=PackedStringArray("mix_container", "mentor_container", "pocha_container", "chubs_container")]
+script = ExtResource("ccm_scr")
+mix_container = NodePath("../CandyContainer_Mix")
+mentor_container = NodePath("../CandyContainer_Mentor")
+pocha_container = NodePath("../CandyContainer_Pocha")
+chubs_container = NodePath("../CandyContainer_Chubs")
+
 [node name="3DModels" parent="." unique_id=1959424565 instance=ExtResource("16_ktwve")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
@@ -151,7 +183,7 @@ data = ExtResource("23_7p2u3")
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
 fog_enabled = true
-current_time = 5.0
+current_time = 10.63
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
@@ -166,7 +198,7 @@ script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 2.535
 allowed_categories = PackedStringArray()
-rejected_categories = PackedStringArray("bottle", "frozen", "candy", "sachet")
+rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface2" type="Node3D" parent="." unique_id=1927767560]
@@ -175,7 +207,7 @@ script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), ExtResource("16_glaac"), ExtResource("22_him8o"), null, null, null, null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
-rejected_categories = PackedStringArray("bottle", "frozen", "candy", "sachet")
+rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface3" type="Node3D" parent="." unique_id=1019299572]
@@ -184,7 +216,7 @@ script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
-rejected_categories = PackedStringArray("bottle", "frozen", "candy", "sachet")
+rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface4" type="Node3D" parent="." unique_id=1503542262]
@@ -193,7 +225,7 @@ script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
-rejected_categories = PackedStringArray("bottle", "frozen", "candy", "sachet")
+rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface5" type="Node3D" parent="." unique_id=1220161792]
@@ -202,7 +234,7 @@ script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
-rejected_categories = PackedStringArray("bottle", "frozen", "candy", "sachet")
+rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="FridgeSurface1" type="Node3D" parent="." unique_id=1039361648]
@@ -210,7 +242,7 @@ transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.5
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([ExtResource("22_him8o"), ExtResource("22_him8o"), null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("bottle", "frozen")
+allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_7p2u3")
 
@@ -219,7 +251,7 @@ transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.5
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("bottle", "frozen")
+allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_him8o")
 
@@ -228,8 +260,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0597875, 0)
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("bottle", "frozen")
+allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_fgk2h")
+
+[node name="CandyContainer_Mix" type="Sprite3D" parent="." unique_id=290924167]
+transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.399547, 3.4277682, -2.334823)
+texture = ExtResource("26_yy0n7")
+
+[node name="CandyContainer_Chubs" type="Sprite3D" parent="." unique_id=1977615064]
+transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.224358, 3.4277682, 2.3739066)
+texture = ExtResource("27_0wdc3")
+
+[node name="CandyContainer_Mentor" type="Sprite3D" parent="." unique_id=394685185]
+transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, -4.328629, 3.3153253, -1.7661636)
+texture = ExtResource("28_w42fa")
+
+[node name="CandyContainer_Pocha" type="Sprite3D" parent="." unique_id=82948426]
+transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, -4.4829006, 3.3153253, -1.3061287)
+texture = ExtResource("29_upseh")
 
 [editable path="TransactionTray"]

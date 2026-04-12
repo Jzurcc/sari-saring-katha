@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://rrqi2r0s2qfx"
+path="res://.godot/imported/Laughing Horse.mp3-e3240b1d052e425b9392ffce300e884f.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Laughing Horse.mp3"
+dest_files=["res://.godot/imported/Laughing Horse.mp3-e3240b1d052e425b9392ffce300e884f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

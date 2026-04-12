@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://crqg4dtignlvg"
+path="res://.godot/imported/motorcyle leaves.mp3-6b24be79fabafe81c1488776a1f20af9.mp3str"
+
+[deps]
+
+source_file="res://Audio/SFX/motorcyle leaves.mp3"
+dest_files=["res://.godot/imported/motorcyle leaves.mp3-6b24be79fabafe81c1488776a1f20af9.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

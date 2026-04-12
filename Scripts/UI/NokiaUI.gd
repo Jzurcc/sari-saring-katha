@@ -8,15 +8,26 @@ var target_number: String = "62777444666"
 ## DEV: Tick this in the Inspector to skip Uncle Mario's cooldown for testing.
 @export var bypass_cooldown: bool = false
 
+@export_range(-80.0, 24.0) var button_volume_db: float = 0.0
+
 var screen_label: Label = null
 
+var sfx_btn_1: AudioStream = preload("res://Audio/SFX/phone_btn_1.mp3")
+var sfx_btn_2: AudioStream = preload("res://Audio/SFX/phone_btn_2.mp3")
+var sfx_btn_3: AudioStream = preload("res://Audio/SFX/phone_btn_3.mp3")
+
+var button_audio_player: AudioStreamPlayer
+
 func _ready() -> void:
+	button_audio_player = AudioStreamPlayer.new()
+	add_child(button_audio_player)
+	
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
 
 func _scan_and_connect_nodes(node: Node) -> void:
-	# Skip the StoreTableMenu subtree entirely — its buttons are NOT Nokia keys
-	if node.name == "StoreTableMenu":
+	# Skip the RestockMenu subtree entirely — its buttons are NOT Nokia keys
+	if node.name == "RestockMenu":
 		return
 	
 	# Find the Nokia screen label
@@ -43,7 +54,22 @@ func _scan_and_connect_nodes(node: Node) -> void:
 	for child in node.get_children():
 		_scan_and_connect_nodes(child)
 
+func _play_button_sound(key: String) -> void:
+	if key in ["1", "4", "7", "clear"]:
+		button_audio_player.stream = sfx_btn_1
+	elif key in ["2", "5", "8"]:
+		button_audio_player.stream = sfx_btn_2
+	elif key in ["3", "6", "9", "enter", "call", "ok"]:
+		button_audio_player.stream = sfx_btn_3
+	else:
+		# Default for Star, Hash, 0, or any other button
+		button_audio_player.stream = sfx_btn_2
+	
+	button_audio_player.volume_db = button_volume_db
+	button_audio_player.play()
+
 func _on_key_pressed(digit: String) -> void:
+	_play_button_sound(digit)
 	# Max character limit of 14
 	if current_input.length() < 14:
 		current_input += digit
@@ -51,12 +77,14 @@ func _on_key_pressed(digit: String) -> void:
 			screen_label.text = current_input
 
 func _on_clear_pressed() -> void:
+	_play_button_sound("clear")
 	if current_input.length() > 0:
 		current_input = current_input.left(current_input.length() - 1)
 		if screen_label:
 			screen_label.text = current_input
 
 func _on_enter_pressed() -> void:
+	_play_button_sound("enter")
 	if current_input == target_number:
 		_trigger_store_menu()
 
@@ -83,14 +111,16 @@ func _on_dialogue_ended_rest() -> void:
 func _on_dialogue_ended_call() -> void:
 	# Make the screen visible again so the store menu can appear
 	self.visible = true
+	print("[NokiaUI] Dialogue ended — looking for RestockMenu...")
 	# After Uncle Mario agrees, open the store catalog
-	var store = get_node_or_null("StoreTableMenu")
+	var store = get_node_or_null("RestockMenu")
+	print("[NokiaUI] RestockMenu node: ", store)
 	if store and store.has_method("open_menu"):
 		store.open_menu()
 	elif store_menu and store_menu.has_method("open_menu"):
 		store_menu.open_menu()
 	else:
-		push_warning("[NokiaUI] No StoreTableMenu found to open!")
+		push_warning("[NokiaUI] No RestockMenu found to open!")
 
 func _on_close_pressed() -> void:
 	# Safely return to crosshair control and close screen

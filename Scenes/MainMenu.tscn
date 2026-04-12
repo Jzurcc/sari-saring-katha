@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://c2hb2c0ugd6ki" path="res://Assets/ui/backgrounds/Background.png" id="2_bg"]
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="4_ghw46"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="5_df05h"]
-[ext_resource type="PackedScene" path="res://Scenes/TitleScreen3D.tscn" id="title_screen_scene"]
+[ext_resource type="PackedScene" uid="uid://maingame123" path="res://Scenes/TitleScreen3D.tscn" id="title_screen_scene"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 bg_color = Color(0, 0, 0, 0)

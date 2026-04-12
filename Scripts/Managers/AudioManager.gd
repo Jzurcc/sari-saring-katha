@@ -7,11 +7,11 @@ var ambience_night: AudioStreamPlayer
 
 var base_volume_db: float = -6.0 # Roughly 50% linear volume
 
-var audio_boring_day = preload("res://Audio/A Boring Day.mp3")
-var audio_fantastic_idea = preload("res://Audio/Fantastic Idea.mp3")
-var audio_not_me = preload("res://Audio/Not ME.mp3")
-var audio_sleepy = preload("res://Audio/Sleepy.mp3")
-var audio_laughing_horse = preload("res://Audio/Laughing Horse.mp3")
+var audio_boring_day = preload("res://Audio/Soundtracks/A Boring Day.mp3")
+var audio_fantastic_idea = preload("res://Audio/Soundtracks/Fantastic Idea.mp3")
+var audio_not_me = preload("res://Audio/Soundtracks/Not ME.mp3")
+var audio_sleepy = preload("res://Audio/Soundtracks/Sleepy.mp3")
+var audio_laughing_horse = preload("res://Audio/Soundtracks/Laughing Horse.mp3")
 
 var character_themes: Dictionary = {
 	# "KuyaKap": audio_laughing_horse
@@ -19,8 +19,8 @@ var character_themes: Dictionary = {
 
 var dialogue_blip_player: AudioStreamPlayer
 
-var audio_calming_morning = preload("res://Audio/Calming Morning Sounds.mp3")
-var audio_night_crickets = preload("res://Audio/Sounds of Night Crickets.mp3")
+var audio_calming_morning = preload("res://Audio/SFX/Calming Morning Sounds.mp3")
+var audio_night_crickets = preload("res://Audio/SFX/Sounds of Night Crickets.mp3")
 
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 var current_bgm_phase: BGMPhase = BGMPhase.NONE
@@ -68,7 +68,7 @@ func _ready() -> void:
 	EventBus.customer_satisfied.connect(_on_customer_left)
 	EventBus.customer_dismissed.connect(_on_customer_left)
 	
-	var audio_autumn_wind = preload("res://Audio/an Autumn Wind.mp3")
+	var audio_autumn_wind = preload("res://Audio/Soundtracks/an Autumn Wind.mp3")
 	
 	# Start base ambience immediately
 	ambience_base.stream = audio_calming_morning
