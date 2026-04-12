@@ -48,7 +48,7 @@ func _ready() -> void:
 	
 	ambience_night = AudioStreamPlayer.new()
 	ambience_night.bus = "Master"
-	ambience_night.volume_db = 2.0
+	ambience_night.volume_db = -4.0
 	add_child(ambience_night)
 	
 	afternoon_playlist = [audio_fantastic_idea, audio_not_me]
@@ -62,11 +62,22 @@ func _ready() -> void:
 	EventBus.customer_satisfied.connect(_on_customer_left)
 	EventBus.customer_dismissed.connect(_on_customer_left)
 	
+	var audio_autumn_wind = preload("res://Audio/an Autumn Wind.mp3")
+	
 	# Start base ambience immediately
 	ambience_base.stream = audio_calming_morning
 	ambience_base.play()
+	
+	# Start Title Screen music
+	bgm_player.stream = audio_autumn_wind
+	bgm_player.volume_db = base_volume_db
+	bgm_player.play()
 
 func _process(_delta: float) -> void:
+	# Prevent the dummy TimeOfDay inside the TitleScreen3D from hijacking the music!
+	if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
+		return
+		
 	if not is_instance_valid(time_of_day_node):
 		time_of_day_node = _find_time_of_day(get_tree().root)
 		
@@ -110,19 +121,42 @@ func _update_audio_for_time(time: float) -> void:
 	elif not is_night and ambience_night.playing:
 		ambience_night.stop()
 
+var bgm_transition_tween: Tween
+
 func _change_bgm_phase(phase: BGMPhase) -> void:
 	current_bgm_phase = phase
-	bgm_player.stop()
 	
-	if phase == BGMPhase.MORNING:
-		bgm_player.stream = audio_boring_day
-	elif phase == BGMPhase.AFTERNOON:
-		afternoon_playlist_index = 0
-		bgm_player.stream = afternoon_playlist[afternoon_playlist_index]
-	elif phase == BGMPhase.DUSK:
-		bgm_player.stream = audio_sleepy
+	if bgm_transition_tween and bgm_transition_tween.is_valid():
+		bgm_transition_tween.kill()
 		
-	bgm_player.play()
+	bgm_transition_tween = create_tween()
+	var is_first_play = not bgm_player.playing
+	
+	if not is_first_play:
+		bgm_transition_tween.tween_property(bgm_player, "volume_db", -80.0, 2.0).set_ease(Tween.EASE_OUT)
+		bgm_transition_tween.tween_interval(2.0)
+		bgm_transition_tween.tween_callback(func(): bgm_player.stop())
+		
+	bgm_transition_tween.tween_callback(func():
+		if phase == BGMPhase.MORNING:
+			bgm_player.stream = audio_boring_day
+		elif phase == BGMPhase.AFTERNOON:
+			afternoon_playlist_index = 0
+			bgm_player.stream = afternoon_playlist[afternoon_playlist_index]
+		elif phase == BGMPhase.DUSK:
+			bgm_player.stream = audio_sleepy
+			
+		var target_vol = -80.0 if theme_player.playing else base_volume_db
+		
+		if is_first_play:
+			bgm_player.volume_db = target_vol
+			bgm_player.play()
+		else:
+			bgm_player.volume_db = -80.0
+			bgm_player.play()
+			bgm_transition_tween = create_tween()
+			bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, 2.0).set_ease(Tween.EASE_IN)
+	)
 
 func _on_bgm_finished() -> void:
 	if current_bgm_phase == BGMPhase.AFTERNOON:
