@@ -22,9 +22,17 @@ enum DialoguePhase {
 const PLACEHOLDER_EMPTY_STORY := "res://Dialogue/placeholder_story_missing.dtl"
 
 var current_customer: Customer = null
-var _pending_dismiss: bool = false  # Set by refuse_service signal mid-dialogue; acted on at timeline_ended
-var _is_spawning: bool = false      # Prevents double-spawn during async arrival timer
+var _pending_dismiss: bool = false
+var _is_spawning: bool = false
+var _greeting_interrupted: bool = false # Remembers if Uncle Mario forcibly shut down the greeting.
+
+var is_paused: bool = false:
+	set(value):
+		is_paused = value
+		if not is_paused and current_customer == null and not _is_spawning:
+			_spawn_next_customer()
 var _dialogue_phase: DialoguePhase = DialoguePhase.NONE
+var _current_timeline_path: String = "" # Track the timeline started by this spawner
 
 func _ready() -> void:
 	add_to_group("customer_spawner")
@@ -40,7 +48,7 @@ func _on_day_started(_day: int) -> void:
 	_spawn_next_customer()
 
 func _spawn_next_customer() -> void:
-	if current_customer != null or _is_spawning:
+	if is_paused or current_customer != null or _is_spawning:
 		return
 
 	_is_spawning = true
@@ -169,8 +177,13 @@ func _on_customer_clicked(customer: Customer) -> void:
 		timeline_path = customer.transaction_context.timeline_generic_talk
 		_dialogue_phase = DialoguePhase.GENERIC_TALK
 	else:
-		timeline_path = customer.transaction_context.timeline_talk
-		_dialogue_phase = DialoguePhase.TALK
+		if _greeting_interrupted:
+			timeline_path = customer.transaction_context.timeline_greeting
+			_dialogue_phase = DialoguePhase.GREETING
+			_greeting_interrupted = false  # Consume the flag
+		else:
+			timeline_path = customer.transaction_context.timeline_talk
+			_dialogue_phase = DialoguePhase.TALK
 
 	_start_dialogue(timeline_path, customer)
 
@@ -198,6 +211,7 @@ func _start_dialogue(timeline_path: String, customer: Customer) -> void:
 		return
 
 	Dialogic.Styles.load_style("FollowBubble")
+	_current_timeline_path = timeline_path
 	var layout = Dialogic.start(timeline_path)
 
 	# Anchor the follow-bubble to the customer's SpeechMarker node.
@@ -210,10 +224,35 @@ func _start_dialogue(timeline_path: String, customer: Customer) -> void:
 		layout.register_character(char_res, marker)
 
 func _on_dialogue_ended() -> void:
-	# timeline_ended fires exactly once per timeline (confirmed from Dialogic source).
+	# Ignore if the ended timeline isn't the one we started (e.g., Uncle Mario call ended)
+	# Dialogic.current_timeline is already null here, so we rely on our tracked state.
+	# We also check if any Mario timeline is active to be safe.
+	if Dialogic.current_timeline != null and "UncleMario" in Dialogic.current_timeline.resource_path:
+		if _dialogue_phase == DialoguePhase.GREETING:
+			_greeting_interrupted = true
+		_dialogue_phase = DialoguePhase.NONE
+		_current_timeline_path = ""
+		return
+		
+	# If Dialogic is now free and we have a queued greeting, automatically replay it!
+	if Dialogic.current_timeline == null and _greeting_interrupted:
+		_greeting_interrupted = false
+		if is_instance_valid(current_customer) and current_customer.is_waiting:
+			# Yield 1 frame to ensure Dialogic has completely cleaned up the old timeline
+			await get_tree().process_frame
+			var timeline_path = current_customer.transaction_context.timeline_greeting
+			_dialogue_phase = DialoguePhase.GREETING
+			_start_dialogue(timeline_path, current_customer)
+		return
+		
+	# Check if this end signal actually belongs to the customer we were talking to
+	# Note: If Mario replaced the customer, _current_timeline_path remains set, 
+	# but we want to ignore Mario's end. 
+	
 	# Read and clear the phase atomically.
 	var phase := _dialogue_phase
 	_dialogue_phase = DialoguePhase.NONE
+	_current_timeline_path = ""
 
 	# refuse_service signal fired mid-dialogue (from a choice in TALK or WRONG_ITEM).
 	# Always takes priority — dismiss the customer regardless of which phase just ended.
