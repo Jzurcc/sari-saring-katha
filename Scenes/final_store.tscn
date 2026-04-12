@@ -73,7 +73,7 @@ shape = SubResource("BoxShape3D_1x4fi")
 [node name="metal_sheet" parent="." index="9" unique_id=921604536]
 transform = Transform3D(3.161389, 0, 0, 0, 0.0901853, -0.985536, 0, 0.5244746, 0.16946647, -3.1931646, 6.02852, -4.769981)
 
-[node name="StaticBody3D" type="StaticBody3D" parent="floating_shelf" parent_id_path=PackedInt32Array(1198650237) index="0" unique_id=1162913696]
+[node name="StaticBody3D" type="StaticBody3D" parent="floating_shelf" parent_id_path=PackedInt32Array(1328084528) index="0" unique_id=1162913696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61691, -0.5)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="floating_shelf/StaticBody3D" index="0" unique_id=402685697]
@@ -137,7 +137,7 @@ shape = SubResource("BoxShape3D_wqspr")
 [node name="Cube_002" parent="." index="34" unique_id=1449218038]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3880229, 0)
 
-[node name="Cylinder_003" parent="." index="41" unique_id=460087058]
+[node name="Cylinder_003" parent="." index="41" unique_id=641646260]
 transform = Transform3D(0.004931079, 0.01599785, 1.4695757e-10, 4.98908e-10, -1.4868616e-17, -0.016740568, -0.015997853, 0.0049310788, -4.7677307e-10, -3.9195313, 4.6267858, -3.864512)
 
 [node name="Plane_003" parent="." index="46" unique_id=445937261]
