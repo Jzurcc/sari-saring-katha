@@ -49,7 +49,6 @@ item_gap = 0.0
 script = ExtResource("12_yc6xl")
 item_name = "Anoba"
 texture = ExtResource("13_k6vqf")
-price = 15
 max_stock = 1
 category = "snack"
 display_height_meters = 0.6
