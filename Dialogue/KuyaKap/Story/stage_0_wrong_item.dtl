@@ -1,0 +1,9 @@
+
+KuyaKap: Di 'yan yung item ah. {InventoryManager.current_item_name} 'yung hinihingi ko.
+- Ay sorry Kuya, sandali.
+	KuyaKap: Okay lang, mag-hihintay ako.
+	[end_timeline]
+- Pasensya na Kuya, hindi available.
+	KuyaKap: Aw, okay sige. Bukas na lang.
+	[signal arg="refuse_service"]
+	[end_timeline]
