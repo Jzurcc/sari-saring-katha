@@ -14,14 +14,14 @@ const MARIO_DATA_PATH = "res://Resources/customers/UncleMario.tres"
 const TRICYCLE_TEXTURE = "res://Assets/ui/mario_tricycle.png"
 
 ## Timeline paths — full res:// paths, immune to stale Dialogic directory cache.
-const TL_CALL      := "res://Dialogue/UncleMario/UncleMario_Call.dtl"
-const TL_CALL_REST := "res://Dialogue/UncleMario/UncleMario_Call_Rest.dtl"
-const TL_DELIVERY  := "res://Dialogue/UncleMario/UncleMario_Delivery.dtl"
+const TL_CALL      := "res://Dialogue/unclemario/UncleMario_Call.dtl"
+const TL_CALL_REST := "res://Dialogue/unclemario/UncleMario_Call_Rest.dtl"
+const TL_DELIVERY  := "res://Dialogue/unclemario/UncleMario_Delivery.dtl"
 
 var _mario_data: CustomerData = null
 
 # Delivery Positions (3D)
-const START_POS = Vector3(-15.299, 3.206, 11.855)
+const START_POS = Vector3(-15.299, 3.206, 35.0)
 const TARGET_POS = Vector3(-15.299, 3.206, -6.055)
 const EXIT_POS = Vector3(-15.299, 3.206, -45.0)
 
@@ -94,7 +94,7 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	get_tree().current_scene.add_child(_delivery_sprite)
 	
 	# Start a continuous rocking/bobbing animation
-	var rock_tween = create_tween().set_loops()
+	var rock_tween = create_tween().bind_node(_delivery_sprite).set_loops()
 	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", 3.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", -3.0, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", 0.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -126,6 +126,31 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	for item in items.keys():
 		InventoryManager.add_stock(item, items[item])
 	
+	# 6. Auto-Restock Physical Slots
+	# Randomly pick empty slots on compatible shelves and place items there.
+	print("[MarioManager] Commencing auto-restock sweep...")
+	var all_shelves = get_tree().get_nodes_in_group("shelf_surface")
+	
+	for item in items.keys():
+		var amount_ordered = items[item]
+		# Try to place as many as ordered, but respect physical shelf capacity
+		for i in range(amount_ordered):
+			var valid_options = []
+			for shelf in all_shelves:
+				if shelf.has_method("accepts_drop") and shelf.accepts_drop(item):
+					var empty_slots = shelf.get_empty_slots()
+					for slot_idx in empty_slots:
+						valid_options.append({"shelf": shelf, "slot": slot_idx})
+			
+			if valid_options.is_empty():
+				break # No more room for this specific item type
+				
+			var choice = valid_options.pick_random()
+			choice.shelf.place_item_in_slot(item, choice.slot)
+			
+			# Since we placed it physically, take it out of the digital "back-of-house" stock
+			InventoryManager.take_item(item)
+	
 	_refresh_containers(get_tree().root)
 	InventoryManager.save_state()
 	
@@ -145,7 +170,7 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) -> void:
 	print("[MarioManager] --- Starting Dialogue ---")
 	print("[MarioManager]   Path:   ", timeline_path)
-	print("[MarioManager]   Anchor: ", anchor.name if anchor else "NULL")
+	print("[MarioManager]   Anchor: ", str(anchor.name) if anchor else "NULL")
 	
 	# 1. Verify the file exists
 	if not ResourceLoader.exists(timeline_path):
@@ -160,12 +185,12 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) ->
 		print("[MarioManager]   Previous timeline ended. Proceeding with Mario call.")
 	
 	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
-	Dialogic.Styles.load_style("FollowBubble")
+	Dialogic.Styles.load_style("MarioBubble")
 	
 	# 4. Start the timeline (second arg is label/index, NOT style name)
 	var layout = Dialogic.start(timeline_path)
 	
-	print("[MarioManager]   Layout: ", layout.name if layout else "NULL")
+	print("[MarioManager]   Layout: ", str(layout.name) if layout else "NULL")
 	
 	# 5. Register character so the bubble anchors to the marker
 	if layout and _mario_data and _mario_data.dialogic_character:

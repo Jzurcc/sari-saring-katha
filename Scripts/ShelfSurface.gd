@@ -231,6 +231,35 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	print("[ShelfSurface] '%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
 
 
+## Returns an array of indices for all currently unoccupied slots.
+func get_empty_slots() -> Array[int]:
+	var empty_indices: Array[int] = []
+	for i in range(_slot_transforms.size()):
+		if _slot_occupants[i] == null or not is_instance_valid(_slot_occupants[i]):
+			empty_indices.append(i)
+	return empty_indices
+
+
+## Programmatically spawn an item into a specific slot index.
+## Returns the newly created DraggableItem instance.
+func place_item_in_slot(item: ItemData, slot_idx: int) -> DraggableItem:
+	if slot_idx < 0 or slot_idx >= _slot_transforms.size():
+		return null
+		
+	var d: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
+	add_child(d)
+	d.setup(item, _slot_transforms[slot_idx])
+	d.set_meta("slot_index", slot_idx)
+	_slot_occupants[slot_idx] = d
+	_spawned.append(d)
+	
+	var target_pos := _slot_transforms[slot_idx].origin
+	d.position = target_pos
+	d.show_visuals()
+	
+	return d
+
+
 # --- Private ---
 
 ## Remove all spawned DraggableItem children.

@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dcqjyggeu0f12"]
 
-[ext_resource type="Script" path="res://Scripts/UI/RestockMenu.gd" id="1_store_script"]
+[ext_resource type="Script" uid="uid://dwco3oj1h6w5e" path="res://Scripts/UI/RestockMenu.gd" id="1_store_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 content_margin_left = 20.0
@@ -90,16 +90,6 @@ corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_warning_dialog"]
-bg_color = Color(0.075, 0.075, 0.075, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-shadow_color = Color(0.451, 0.451, 0.451, 0.5)
-shadow_size = 4
-shadow_offset = Vector2(2, 2)
 
 [node name="RestockMenu" type="Control" unique_id=2065680726]
 layout_mode = 3
@@ -345,4 +335,3 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_order_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_order_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_order_btn")
 text = "Order"
-

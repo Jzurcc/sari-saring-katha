@@ -524,7 +524,7 @@ func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 	var current_day = _get_current_day()
 	for item in InventoryManager.get_all_items():
 		if item.category == cat_key:
-			var unlock_day = _get_unlock_day(item.item_name)
+			var unlock_day = _get_unlock_day(item.id)
 			if current_day >= unlock_day:
 				result.append(item)
 	return result

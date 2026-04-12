@@ -134,7 +134,7 @@ func _trigger_store_menu() -> void:
 	_is_calling = true
 	print("[NokiaUI] Triggering direct Mario call via Dialogic...")
 	
-	var timeline_path = "res://Dialogue/UncleMario/UncleMario_Call.dtl"
+	var timeline_path = "res://Dialogue/unclemario/UncleMario_Call.dtl"
 	
 	Dialogic.Styles.load_style("FollowBubble")
 	var layout = Dialogic.start(timeline_path)
