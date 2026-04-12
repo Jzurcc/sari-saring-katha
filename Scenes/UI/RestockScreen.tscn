@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://df7283sja821"]
 
 [ext_resource type="Script" uid="uid://ntvhf48bia4u" path="res://Scripts/UI/NokiaUI.gd" id="1_nokia_script"]
-[ext_resource type="PackedScene" uid="uid://2v51dwctd7ik" path="res://Scenes/UI/StoreTableMenu.tscn" id="2_store_scene"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RestockMenu.tscn" id="2_store_scene"]
 [ext_resource type="Texture2D" uid="uid://113sb1lubs47" path="res://Assets/ui/nokia2d.png" id="3_7cmub"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7cmub"]
@@ -21,6 +21,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_nokia_script")
 bypass_cooldown = true
+button_volume_db = 17.117999999999995
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1944596228]
 layout_mode = 1
@@ -31,7 +32,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.4)
 
-[node name="StoreTableMenu" parent="." unique_id=1840390671 instance=ExtResource("2_store_scene")]
+[node name="RestockMenu" parent="." unique_id=1840390671 instance=ExtResource("2_store_scene")]
 layout_mode = 1
 offset_left = 498.0
 offset_top = 131.0

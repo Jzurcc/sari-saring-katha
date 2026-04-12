@@ -1,10 +1,9 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://be3d7gk2deefm"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/30_frozen_tocino.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://3k85sg5vntcx" path="res://Assets/items/icons/30_frozen_tocino.png" id="2_tex"]
 
 [resource]
-id = "tocino"
 script = ExtResource("1_item")
 item_name = "Tocino"
 texture = ExtResource("2_tex")

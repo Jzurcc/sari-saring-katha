@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://bau8sy6ych0oa" path="res://Assets/items/icons/32_frozen_borgir.png" id="2_tex"]
 
 [resource]
-id = "borgir"
 script = ExtResource("1_item")
 item_name = "Borgir"
 texture = ExtResource("2_tex")

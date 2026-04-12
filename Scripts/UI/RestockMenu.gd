@@ -9,6 +9,9 @@ signal catalog_menu_closed
 ## Size of the product icon inside each card
 @export var card_icon_size := Vector2(80, 80)
 
+@export_group("Audio")
+@export_range(-80.0, 24.0) var sfx_volume_db: float = 0.0
+
 @export_group("Font Sizes")
 ## Font size for product names on cards
 @export var card_font_size: int = 13
@@ -51,21 +54,61 @@ var current_category: String = ""
 var currently_selected_item: ItemData = null
 
 # Category display names and their internal keys (must match category = "..." in .tres files)
+# NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
 var category_tabs: Array[String] = [
-	"snack", "sachet", "can", "candy",
-	"candycontainer", "cigarette", "pack", "frozen", "bottle"
+	"snack", "can", "cigarette", "candy",
+	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
 	"snack": "Snacks",
 	"sachet": "Sachets",
 	"can": "Canned",
 	"candy": "Candy",
-	"candycontainer": "Candy Jars",
 	"cigarette": "Cigarette",
 	"pack": "Noodles",
 	"frozen": "Frozen",
 	"bottle": "Beverages"
 }
+
+# --- Item Display Names ---
+# Maps the .tres file's item_name to the friendly name shown in the Restock Menu.
+var ITEM_DISPLAY_NAMES: Dictionary = {
+	"Anoba": "Anoba",
+	"Patos": "Patos",
+	"NgaragYa": "Ngarag-Ya",
+	"Dantes": "Ding Dong Dantes",
+	"Marites": "Marites Cracklin'",
+	"Utang": "Utang ni Mang Juan",
+	"Chicken": "Dadi Chicken na Chicken",
+	"Pantit": "Pantit Cantot",
+	"Hotdog": "PurifiedFoods Tender Juicy",
+	"Borgir": "COD Ulam Borgir",
+	"Nagets": "PurifiedFoods Nagets",
+	"Tocino": "Pampanga's Good Tocino",
+	"Champyon": "Champyon",
+	"Mayti": "Mayti",
+	"Marboro": "Marboro",
+	"Mentor": "Mentor",
+	"Pocha": "Pocha",
+	"Chubs": "Chubs",
+	"Argentita": "Argentita Corned Beef",
+	"Cenchuree": "Cenchuree Tuna",
+	"Lucky9": "Lucky9 Carne Norte",
+	"Mema": "Mema Sardines",
+	"Scam": "Scam",
+	"Water": "Tubig",
+	"Coke": "Kokaloka",
+	"Gin": "Gin",
+}
+
+# --- Audio Resources ---
+var stream_sfx_4 = preload("res://Audio/SFX/ui_sfx_4.mp3")
+var stream_sfx_3 = preload("res://Audio/SFX/ui_sfx_3.mp3")
+var stream_sfx_7 = preload("res://Audio/SFX/ui_sfx_7.mp3")
+var stream_sfx_9 = preload("res://Audio/SFX/ui_sfx_9.mp3")
+var stream_sfx_12 = preload("res://Audio/SFX/ui_sfx_12.mp3")
+var stream_sfx_15 = preload("res://Audio/SFX/ui_sfx_15.mp3")
+var sfx_player: AudioStreamPlayer
 
 # --- Colors ---
 var COLOR_TAB_BG := Color("D4A85C")         # warm brown tab bar
@@ -80,15 +123,18 @@ var COLOR_CONFIRM := Color("5A8C5A")         # green confirm button
 var COLOR_LIST_BG := Color("F5E6CC")         # light beige list panel
 
 func _ready() -> void:
+	sfx_player = AudioStreamPlayer.new()
+	add_child(sfx_player)
+	
 	# Debug: print which nodes were found
 	if not cancel_btn:
-		push_error("[StoreTableMenu] CancelBtn not found via %CancelBtn")
+		push_error("[RestockMenu] CancelBtn not found via %CancelBtn")
 	if not confirm_btn:
-		push_error("[StoreTableMenu] ConfirmBtn not found via %ConfirmBtn")
+		push_error("[RestockMenu] ConfirmBtn not found via %ConfirmBtn")
 	if not add_btn:
-		push_error("[StoreTableMenu] AddBtn not found via %AddBtn")
+		push_error("[RestockMenu] AddBtn not found via %AddBtn")
 	if not tab_scroll:
-		push_error("[StoreTableMenu] TabScroll not found via %TabScroll")
+		push_error("[RestockMenu] TabScroll not found via %TabScroll")
 	
 	if cancel_btn:
 		cancel_btn.pressed.connect(_on_cancel_pressed)
@@ -123,39 +169,67 @@ func _on_tab_scroll_input(event: InputEvent) -> void:
 		tab_scroll.scroll_horizontal = int(_tab_scroll_start - delta)
 
 func open_menu() -> void:
+	print("[RestockMenu] open_menu() called")
+	show()
 	selected_items.clear()
 	total_price = 0
 	currently_selected_item = null
-	_clear_detail_panel()
+	if detail_icon and detail_name and detail_price and add_btn:
+		_clear_detail_panel()
+	else:
+		push_warning("[RestockMenu] Some detail panel nodes are null — skipping _clear_detail_panel()")
 	_build_tabs()
 	_update_order_list()
 	
 	# Select first category that has items
 	if category_tabs.size() > 0:
 		_select_category(category_tabs[0])
-	
-	show()
 
 # ========== TAB SYSTEM ==========
+var COLOR_TAB_LOCKED := Color("4D4D4D")       # dark grey for locked tabs
+var COLOR_TAB_LOCKED_FONT := Color("878787")  # muted text for locked tabs
+
 func _build_tabs() -> void:
 	# Clear existing tabs
 	for child in tab_container.get_children():
 		child.queue_free()
 	
-	# Category tabs
+	# Category tabs — always show ALL categories, dim the locked ones
 	for cat_key in category_tabs:
 		var items = _get_items_for_category(cat_key)
-		if items.size() == 0:
-			continue  # Skip empty categories
+		var is_locked = items.size() == 0
 		
 		var tab_btn = Button.new()
 		tab_btn.text = category_labels.get(cat_key, cat_key.capitalize())
 		tab_btn.custom_minimum_size = Vector2(80, 40)
 		tab_btn.name = "Tab_" + cat_key.replace(" ", "_")
 		tab_btn.mouse_filter = Control.MOUSE_FILTER_PASS
-		_style_button(tab_btn, COLOR_TAB_NORMAL, Color("333333"), float(tab_font_size))
-		tab_btn.pressed.connect(_select_category.bind(cat_key))
+		
+		if is_locked:
+			_style_button(tab_btn, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
+		else:
+			_style_button(tab_btn, COLOR_TAB_NORMAL, Color("333333"), float(tab_font_size))
+		
+		tab_btn.pressed.connect(_on_tab_pressed.bind(cat_key))
 		tab_container.add_child(tab_btn)
+
+func _on_tab_pressed(cat_key: String) -> void:
+	# Always play the tab SFX
+	_play_sfx(stream_sfx_4)
+	
+	# Block switching if the category has no unlocked items
+	var items = _get_items_for_category(cat_key)
+	if items.size() == 0:
+		return
+	
+	_select_category(cat_key)
+
+func _play_sfx(stream: AudioStream) -> void:
+	if not is_instance_valid(sfx_player):
+		return
+	sfx_player.stream = stream
+	sfx_player.volume_db = sfx_volume_db
+	sfx_player.play()
 
 func _select_category(cat_key: String) -> void:
 	current_category = cat_key
@@ -163,10 +237,17 @@ func _select_category(cat_key: String) -> void:
 	# Update tab visuals
 	for child in tab_container.get_children():
 		if child is Button and child.name.begins_with("Tab_"):
-			var is_active = child.name == "Tab_" + cat_key.replace(" ", "_")
-			var bg_color = COLOR_TAB_ACTIVE if is_active else COLOR_TAB_NORMAL
-			var font_color = Color.WHITE if is_active else Color("333333")
-			_style_button(child, bg_color, font_color, float(tab_font_size))
+			var child_cat = child.name.trim_prefix("Tab_")
+			var child_items = _get_items_for_category(child_cat)
+			var child_locked = child_items.size() == 0
+			var is_active = child_cat == cat_key.replace(" ", "_")
+			
+			if child_locked:
+				_style_button(child, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
+			elif is_active:
+				_style_button(child, COLOR_TAB_ACTIVE, Color.WHITE, float(tab_font_size))
+			else:
+				_style_button(child, COLOR_TAB_NORMAL, Color("333333"), float(tab_font_size))
 	
 	_populate_grid(cat_key)
 
@@ -225,6 +306,7 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 
 func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_play_sfx(stream_sfx_3)
 		currently_selected_item = item
 		_update_detail_panel(item)
 		
@@ -244,7 +326,7 @@ func _update_detail_panel(item: ItemData) -> void:
 	if item.texture:
 		detail_icon.texture = item.texture
 	detail_icon.custom_minimum_size = detail_icon_size
-	detail_name.text = item.item_name
+	detail_name.text = _get_display_name(item)
 	detail_name.add_theme_font_size_override("font_size", detail_name_font_size)
 	detail_price.text = "₱" + str(item.price)
 	detail_price.add_theme_font_size_override("font_size", detail_price_font_size)
@@ -260,6 +342,7 @@ func _on_add_pressed() -> void:
 	if currently_selected_item == null:
 		return
 	
+	_play_sfx(stream_sfx_12)
 	var item = currently_selected_item
 	var current_count = selected_items.get(item, 0)
 	
@@ -352,6 +435,8 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	if count <= 0:
 		return
 	
+	_play_sfx(stream_sfx_15)
+	
 	var new_count = count - 1
 	total_price -= item.price
 	
@@ -373,6 +458,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	if count + 1 > order_cap:
 		return
 	
+	_play_sfx(stream_sfx_12)
 	var new_count = count + 1
 	selected_items[item] = new_count
 	total_price += item.price
@@ -393,11 +479,13 @@ func _close_restock_screen() -> void:
 	hide()
 
 func _on_cancel_pressed() -> void:
+	_play_sfx(stream_sfx_9)
 	catalog_menu_closed.emit()
 	_close_restock_screen()
 
 func _on_confirm_pressed() -> void:
 	if total_price > 0:
+		_play_sfx(stream_sfx_7)
 		catalog_purchase_confirmed.emit(total_price, selected_items)
 		_close_restock_screen()
 		
@@ -410,11 +498,58 @@ func _on_confirm_pressed() -> void:
 		get_tree().root.add_child(delivery)
 		delivery.start_delivery(selected_items)
 # ========== HELPERS ==========
+func _get_unlock_day(item_id: String) -> int:
+	# Returns the day number when this item first becomes available.
+	# item_id matches the .tres filename (without extension), case-sensitive.
+	var unlock_map: Dictionary = {
+		# DAY 1
+		"Anoba": 1, "Patos": 1,
+		"Argentita": 1, "Cenchuree": 1,
+		"Champyon": 1,
+		# DAY 2
+		"Mentor": 2, "Pocha": 2,
+		"Water": 2,
+		"Chicken": 2, "Pantit": 2,
+		# DAY 3
+		"Hotdog": 3, "Borgir": 3,
+		"NgaragYa": 3, "Dantes": 3,
+		"Mayti": 3,
+		# DAY 4
+		"Coke": 4,
+		"Marites": 4, "Utang": 4,
+		# DAY 5
+		"Lucky9": 5, "Mema": 5,
+		"Nagets": 5,
+		# DAY 6
+		"Marboro": 6,
+		"Gin": 6,
+		# DAY 7
+		"Tocino": 7,
+		"Scam": 7,
+		"Chubs": 7,
+	}
+	return unlock_map.get(item_id, 1)  # Default to Day 1 if not found
+
+func _get_current_day() -> int:
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	if gm_nodes.size() > 0:
+		var gm = gm_nodes[0]
+		if "day" in gm:
+			return int(gm.day)
+	return 1
+
+func _get_display_name(item: ItemData) -> String:
+	# Use the friendly display name from the map, falling back to the raw item_name.
+	return ITEM_DISPLAY_NAMES.get(item.item_name, item.item_name)
+
 func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 	var result: Array[ItemData] = []
+	var current_day = _get_current_day()
 	for item in InventoryManager.get_all_items():
 		if item.category == cat_key:
-			result.append(item)
+			var unlock_day = _get_unlock_day(item.item_name)
+			if current_day >= unlock_day:
+				result.append(item)
 	return result
 
 func _style_button(btn: Button, bg_color: Color, font_color: Color, font_size: float = 14.0) -> void:

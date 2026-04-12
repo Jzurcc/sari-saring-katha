@@ -1,10 +1,9 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d2mf426qt8lwt"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://cmgdyxetqfmpq" path="res://Assets/items/icons/15_candy_pocha.png" id="2_tex"]
+[ext_resource type="Texture2D" uid="uid://cxk0523x3w04h" path="res://Assets/items/icons/15_candy_pocha.png" id="2_tex"]
 
 [resource]
-id = "pocha"
 script = ExtResource("1_item")
 item_name = "Pocha"
 texture = ExtResource("2_tex")
