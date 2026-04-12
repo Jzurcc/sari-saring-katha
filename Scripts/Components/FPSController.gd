@@ -19,8 +19,6 @@ var _t_bob: float = 0.0
 var _pitch: float = 0.0
 var _yaw: float = 0.0
 
-var _nokia_outline_timer: SceneTreeTimer = null
-
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 
@@ -43,7 +41,7 @@ func _input(event: InputEvent) -> void:
 		
 		if event is InputEventKey and event.pressed and not event.echo:
 			if event.keycode == KEY_R:
-				_flash_nokia_outline()
+				_rotate_to_nokia_and_open()
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -104,23 +102,52 @@ func _physics_process(delta: float) -> void:
 		
 	move_and_slide()
 
-## Flash the Nokia white outline when R is pressed — same shader as crosshair hover.
-## Auto-clears after 2 seconds.
-func _flash_nokia_outline() -> void:
-	var nokia_region = get_tree().get_first_node_in_group("nokia_interactable")
-	if not nokia_region:
-		nokia_region = get_node_or_null("/root/MainGame/NokiaInteractable")
-	if not is_instance_valid(nokia_region) or not nokia_region.has_method("on_hover"):
+## Smoothly rotate view to Nokia phone and then open it.
+func _rotate_to_nokia_and_open() -> void:
+	# Try to find the specific marker first, then fallback to the interaction region
+	var target_node = get_tree().root.find_child("PhoneMarker3D", true, false)
+	if not is_instance_valid(target_node):
+		target_node = get_node_or_null("/root/MainGame/NokiaInteractable")
+		
+	if not is_instance_valid(target_node):
+		return
+		
+	var target_world_pos = target_node.global_position
+	# Convert world target to local space relative to the player body.
+	# This ensures we 'look at' the point correctly even if the body is rotated.
+	var target_local_pos = to_local(target_world_pos)
+	
+	# Calculate target yaw (local head rotation) and pitch (camera rotation)
+	var target_yaw = atan2(-target_local_pos.x, -target_local_pos.z)
+	var horizontal_dist = Vector2(target_local_pos.x, target_local_pos.z).length()
+	# Account for head height in the pitch calculation
+	var target_pitch = clamp(atan2(target_local_pos.y - head.position.y, horizontal_dist), -PI/2, PI/2)
+	
+	# Handle angle wrapping to take the shortest path around the circle
+	_yaw = fposmod(_yaw + PI, TAU) - PI
+	target_yaw = fposmod(target_yaw + PI, TAU) - PI
+	if abs(target_yaw - _yaw) > PI:
+		if target_yaw > _yaw: target_yaw -= TAU
+		else: target_yaw += TAU
+
+	var tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	
+	# Tween the internal state variables so mouse look stays synchronized
+	tween.tween_property(self, "_yaw", target_yaw, 0.4)
+	tween.tween_property(self, "_pitch", target_pitch, 0.4)
+	
+	# Update the actual nodes every frame during the tween
+	tween.chain().tween_callback(_open_nokia)
+
+func _process(_delta: float) -> void:
+	# Ensure the nodes match our state variables (important for smooth tweening)
+	head.rotation.y = _yaw
+	camera.rotation.x = _pitch
+
+## Triggers the Nokia UI interaction.
+func _open_nokia() -> void:
+	var nokia_region = get_node_or_null("/root/MainGame/NokiaInteractable")
+	if not is_instance_valid(nokia_region) or not nokia_region.has_method("on_interact"):
 		return
 	
-	nokia_region.on_hover(true)
-	
-	if _nokia_outline_timer != null and is_instance_valid(_nokia_outline_timer):
-		_nokia_outline_timer.timeout.emit()
-	
-	_nokia_outline_timer = get_tree().create_timer(2.0)
-	_nokia_outline_timer.timeout.connect(func():
-		if is_instance_valid(nokia_region):
-			nokia_region.on_hover(false)
-		_nokia_outline_timer = null
-	, CONNECT_ONE_SHOT)
+	nokia_region.on_interact()

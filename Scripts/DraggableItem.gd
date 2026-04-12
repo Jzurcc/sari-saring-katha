@@ -34,7 +34,7 @@ func _ready() -> void:
 	if item_data:
 		setup(item_data)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if camera and is_instance_valid(collider):
 		var dir = camera.global_position - collider.global_position
 		if dir.length_squared() > 0.001 and abs(dir.normalized().dot(Vector3.UP)) < 0.99:
@@ -124,8 +124,9 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 
 
 
-func on_hover(is_hovered: bool) -> void:
-	if is_hovered:
+func on_hover(hovered: bool) -> void:
+	self.is_hovered = hovered
+	if hovered:
 		if not outline_material and sprite.texture:
 			outline_material = ShaderMaterial.new()
 			outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")

@@ -21,8 +21,6 @@ var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 
 @onready var body_sprite: Sprite3D = $Body
-@onready var _collision: CollisionShape3D = $CollisionShape3D
-
 var _outline_material: ShaderMaterial = null
 
 func _ready() -> void:
@@ -48,6 +46,13 @@ func setup(context: TransactionContext, target: Vector3) -> void:
 	if transaction_context:
 		character_id = transaction_context.character_id
 	target_position = target
+
+	# Apply the character's sprite texture and scale from their CustomerData resource.
+	var char_data = StoryManager._get_character_data(character_id)
+	if char_data and body_sprite:
+		if char_data.sprite_texture:
+			body_sprite.texture = char_data.sprite_texture
+		body_sprite.scale = Vector3.ONE * char_data.sprite_scale
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
 ## Only responds when waiting at the counter and not mid-animation.
@@ -95,7 +100,12 @@ func satisfy() -> void:
 	_clear_outline()
 	InventoryManager.decrement_cooldown()
 	
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().process_frame
+	
+	if Dialogic.current_timeline != null:
+		await Dialogic.timeline_ended
+	else:
+		await get_tree().create_timer(1.5).timeout
 	
 	# Smooth fade out before freeing
 	var fade_tween = create_tween()

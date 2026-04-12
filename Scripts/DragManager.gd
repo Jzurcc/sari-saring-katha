@@ -9,6 +9,10 @@ var _canvas_layer: CanvasLayer = null
 var _sway_offset: Vector2 = Vector2.ZERO
 var _drag_velocity: Vector2 = Vector2.ZERO
 
+# 3D Ghost preview support
+var _ghost_parent: Node3D = null
+var _ghost_sprite: Sprite3D = null
+
 # Reuse raycast query parameters instead of creating new ones each frame
 var _raycast_query: PhysicsRayQueryParameters3D
 
@@ -43,9 +47,8 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	if texture:
 		_dragged_texture_rect.texture = texture
 		
-		# Scale dragged UI to closely match real-world physical proportions (1 meter = ~640 pixels)
-		# Applied a 0.85 multiplier so the item visually recedes from the camera when picked up.
-		var pixels_per_meter: float = 640.0 * 0.85
+		# Scale dragged UI to closely match real-world physical proportions, but scaled up to look held
+		var pixels_per_meter: float = 640.0 * 1.25
 		var display_w: float = 128.0
 		var display_h: float = 128.0
 		if item and item.collider and item.collider.shape:
@@ -56,12 +59,30 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		_dragged_texture_rect.size = Vector2(display_w, display_h)
 		_dragged_texture_rect.pivot_offset = _dragged_texture_rect.size / 2.0
 		# Start from slightly below for a nice jump-in animation
-		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 100)
+		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 150)
 		_dragged_texture_rect.show()
 
 	_sway_offset = Vector2.ZERO
 	_drag_velocity = Vector2.ZERO
 	_dragged_texture_rect.rotation = 0.0
+
+	# Setup 3D Ghost Preview
+	if is_instance_valid(_ghost_parent):
+		_ghost_parent.queue_free()
+	
+	_ghost_parent = Node3D.new()
+	_ghost_parent.hide()
+	var scene = get_tree().current_scene
+	if scene:
+		scene.add_child(_ghost_parent)
+	else:
+		add_child(_ghost_parent)
+		
+	if item.sprite:
+		_ghost_sprite = item.sprite.duplicate()
+		_ghost_sprite.material_overlay = null # Ensure no highlight outline on ghost
+		_ghost_sprite.show()
+		_ghost_parent.add_child(_ghost_sprite)
 
 	EventBus.drag_started.emit(_dragged_item)
 
@@ -82,6 +103,9 @@ func _process(_delta: float) -> void:
 		target_pos = get_viewport().get_visible_rect().size / 2.0
 	else:
 		target_pos = get_viewport().get_mouse_position()
+		
+	# Offset downward to mimic holding the item rather than impaling it on the crosshair/cursor
+	target_pos.y += _dragged_texture_rect.size.y * 0.45
 
 	# Decay sway back to zero
 	_sway_offset = _sway_offset.lerp(Vector2.ZERO, 10.0 * _delta)
@@ -104,6 +128,32 @@ func _process(_delta: float) -> void:
 	# Apply dynamic tilt/rotation based on the horizontal sway
 	var target_rotation = _sway_offset.x * 0.003
 	_dragged_texture_rect.rotation = lerp(_dragged_texture_rect.rotation, target_rotation, 15.0 * _delta)
+
+	# --- 3D Ghost Preview Logic ---
+	var result := _get_drag_raycast_result()
+	var valid_ghost := false
+	if result and result.collider:
+		var collider = (result.collider as Node)
+		if collider.is_in_group("shelf_drop_zone"):
+			var shelf = collider.get_parent()
+			if shelf and shelf.has_method("receive_item"):
+				var local_x = shelf.to_local(result.position).x
+				var slot_idx: int = shelf._find_nearest_empty_slot(local_x)
+				if slot_idx >= 0:
+					var slot_pos: Vector3 = shelf._slot_transforms[slot_idx].origin
+					var world_pos: Vector3 = shelf.to_global(slot_pos)
+					if is_instance_valid(_ghost_parent):
+						_ghost_parent.show()
+						var slot_transform = shelf.global_transform * shelf._slot_transforms[slot_idx]
+						_ghost_parent.global_transform = Transform3D(slot_transform.basis, world_pos)
+						
+						var can_accept = shelf.accepts_drop(_dragged_item.item_data)
+						if is_instance_valid(_ghost_sprite):
+							_ghost_sprite.modulate = Color(1.0, 1.0, 1.0, 0.4) if can_accept else Color(1.0, 0.3, 0.3, 0.5)
+						valid_ghost = true
+
+	if not valid_ghost and is_instance_valid(_ghost_parent):
+		_ghost_parent.hide()
 
 func _input(event: InputEvent) -> void:
 	if not _is_dragging:
@@ -136,6 +186,9 @@ func end_drag() -> void:
 
 	var success = false
 
+	if is_instance_valid(_ghost_parent):
+		_ghost_parent.queue_free()
+
 	# Deactivate drop zone highlight (will also fire on bad drop)
 	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
 	if tray_nodes.size() > 0 and tray_nodes[0].has_method("deactivate_dropzone"):
@@ -146,30 +199,7 @@ func end_drag() -> void:
 		_cancel_drag()
 		return
 
-	# In FPS mode the mouse is locked, so we always raycast from screen center.
-	# In cursor mode we use the actual mouse position.
-	var screen_pos: Vector2
-	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		screen_pos = get_viewport().get_visible_rect().size / 2.0
-	else:
-		screen_pos = get_viewport().get_mouse_position()
-
-	var ray_origin := camera.project_ray_origin(screen_pos)
-	var ray_dir := camera.project_ray_normal(screen_pos)
-	var ray_end := ray_origin + ray_dir * 50.0
-
-	var space_state := camera.get_world_3d().direct_space_state
-	_raycast_query.from = ray_origin
-	_raycast_query.to = ray_end
-
-	# Exclude the dragged item itself from the raycast
-	var exclude_rids: Array[RID] = []
-	if _dragged_item:
-		exclude_rids.append(_dragged_item.get_rid())
-	_raycast_query.exclude = exclude_rids
-
-	var result := space_state.intersect_ray(_raycast_query)
-
+	var result := _get_drag_raycast_result()
 
 	if result:
 		var collider: Node = result.collider
@@ -198,6 +228,32 @@ func end_drag() -> void:
 
 
 
+func _get_drag_raycast_result() -> Dictionary:
+	var camera := get_viewport().get_camera_3d()
+	if not camera:
+		return {}
+
+	var screen_pos: Vector2
+	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		screen_pos = get_viewport().get_visible_rect().size / 2.0
+	else:
+		screen_pos = get_viewport().get_mouse_position()
+
+	var ray_origin := camera.project_ray_origin(screen_pos)
+	var ray_dir := camera.project_ray_normal(screen_pos)
+	var ray_end := ray_origin + ray_dir * 50.0
+
+	var space_state := camera.get_world_3d().direct_space_state
+	_raycast_query.from = ray_origin
+	_raycast_query.to = ray_end
+
+	var exclude_rids: Array[RID] = []
+	if _dragged_item and is_instance_valid(_dragged_item):
+		exclude_rids.append(_dragged_item.get_rid())
+	_raycast_query.exclude = exclude_rids
+
+	return space_state.intersect_ray(_raycast_query)
+
 func _cancel_drag() -> void:
 	if _dragged_item:
 		_dragged_item._on_drag_cancelled_by_manager()
@@ -212,3 +268,5 @@ func _on_node_removed(node: Node) -> void:
 		_is_dragging = false
 		_dragged_item = null
 		_dragged_texture_rect.hide()
+		if is_instance_valid(_ghost_parent):
+			_ghost_parent.queue_free()
