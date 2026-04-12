@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dw3vfrw1auxp4"
+path="res://.godot/imported/Calming Morning Sounds.mp3-fbb726589e7015f12957cccb230a18f5.mp3str"
+
+[deps]
+
+source_file="res://Audio/SFX/Calming Morning Sounds.mp3"
+dest_files=["res://.godot/imported/Calming Morning Sounds.mp3-fbb726589e7015f12957cccb230a18f5.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

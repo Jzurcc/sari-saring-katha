@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://picxilgnjstn"
+path="res://.godot/imported/Fantastic Idea.mp3-9db3c333782fb35ff14edd00d746ed13.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Fantastic Idea.mp3"
+dest_files=["res://.godot/imported/Fantastic Idea.mp3-9db3c333782fb35ff14edd00d746ed13.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
