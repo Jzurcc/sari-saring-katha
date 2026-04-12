@@ -36,28 +36,37 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 	var handled = false
 	var spawners = get_tree().get_nodes_in_group("customer_spawner")
 	if spawners.size() > 0:
-		var spawner = spawners[0]
+		var spawner := spawners[0] as CustomerSpawner
 		var customer = spawner.current_customer
 		if customer and customer.is_waiting:
 			handled = true
 			var is_correct = customer.check_item(item.item_data)
+			var context = customer.transaction_context
 			
 			if is_correct:
 				EventBus.transaction_completed.emit(item.item_data, true)
-				# Consume one unit of stock and hide the physical item — it was sold.
 				InventoryManager.take_item(item.item_data)
 				item.hide()
-				if Dialogic.current_timeline == null:
-					Dialogic.Styles.load_style("DialogueStyle")
-					await get_tree().process_frame
-					Dialogic.start("res://Dialogue/customer_satisfied.dtl")
+				if Dialogic.current_timeline == null and context and context.timeline_satisfied != "":
+					if spawner:
+						spawner.notify_satisfied_dialogue()
+					Dialogic.Styles.load_style("FollowBubble")
+					var layout = Dialogic.start(context.timeline_satisfied)
+					var char_res = load("res://Dialogue/Timelines/" + customer.character_id + ".dch")
+					if layout and layout.has_method("register_character") and char_res and is_instance_valid(customer.body_sprite):
+						layout.register_character(char_res, customer.body_sprite)
 				item = null  # prevent return_to_start below from running on a hidden node
 			else:
 				EventBus.transaction_completed.emit(item.item_data, false)
-				if Dialogic.current_timeline == null:
-					Dialogic.Styles.load_style("DialogueStyle")
-					await get_tree().process_frame
-					Dialogic.start("res://Dialogue/customer_rejected.dtl")
+				# Wrong item — play per-character reaction, customer stays waiting for a retry.
+				if Dialogic.current_timeline == null and context and context.timeline_wrong_item != "":
+					if spawner:
+						spawner.notify_wrong_item_dialogue()
+					Dialogic.Styles.load_style("FollowBubble")
+					var layout = Dialogic.start(context.timeline_wrong_item)
+					var char_res = load("res://Dialogue/Timelines/" + customer.character_id + ".dch")
+					if layout and layout.has_method("register_character") and char_res and is_instance_valid(customer.body_sprite):
+						layout.register_character(char_res, customer.body_sprite)
 			
 	if not handled:
 		print("[MainGame] No customer waiting, dropping item")

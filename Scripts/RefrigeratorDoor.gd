@@ -57,7 +57,7 @@ func _build_outline_material() -> void:
 	_outline_mat = ShaderMaterial.new()
 	_outline_mat.shader = shader
 	_outline_mat.set_shader_parameter("outline_color", Color.WHITE)
-	_outline_mat.set_shader_parameter("outline_width", 8.0)
+	_outline_mat.set_shader_parameter("outline_width", 16.0)
 
 
 # Called by FridgeDoorInteractor (Area3D child) — matches PlayerInteraction API
