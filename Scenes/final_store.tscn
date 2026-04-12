@@ -70,6 +70,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.006450653, 103.4711, -0.009
 [node name="CollisionShape3D" type="CollisionShape3D" parent="door_floor1/StaticBody3D" index="0" unique_id=948861613]
 shape = SubResource("BoxShape3D_1x4fi")
 
+[node name="metal_sheet" parent="." index="9" unique_id=921604536]
+transform = Transform3D(3.161389, 0, 0, 0, 0.0901853, -0.985536, 0, 0.5244746, 0.16946647, -3.1931646, 6.02852, -4.769981)
+
 [node name="StaticBody3D" type="StaticBody3D" parent="floating_shelf" parent_id_path=PackedInt32Array(1328084528) index="0" unique_id=1162913696]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61691, -0.5)
 
@@ -130,6 +133,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.536743e-07)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="table/metal_table/StaticBody3D" index="0" unique_id=781458055]
 shape = SubResource("BoxShape3D_wqspr")
+
+[node name="Cube_002" parent="." index="34" unique_id=1449218038]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3880229, 0)
 
 [node name="Cylinder_003" parent="." index="41" unique_id=641646260]
 transform = Transform3D(0.004931079, 0.01599785, 1.4695757e-10, 4.98908e-10, -1.4868616e-17, -0.016740568, -0.015997853, 0.0049310788, -4.7677307e-10, -3.9195313, 4.6267858, -3.864512)
@@ -194,13 +200,17 @@ transform = Transform3D(-0.8702954, -0.01764991, -1.8625422e-09, 8.1069235e-10, 
 transform = Transform3D(-1.1019387, -0.022347717, -3.0576766e-10, -1.0264714e-09, 6.569417e-08, -1.1021652, 0.022347718, -1.1019386, -6.570147e-08, 4.1405535, 2.6904697, -24.343407)
 
 [node name="roof_004" parent="." index="605" unique_id=1222098227]
-transform = Transform3D(-4.5738297, 0, -0.11048501, 0, 2.5313, 0, 0.09275895, 0, -5.44788, -1.4991994, 3.0928164, -29.255768)
+transform = Transform3D(-4.5738297, 0, -0.11048501, 0, 2.5313, 0, 0.09275895, 0, -5.44788, -1.4991994, 2.698556, -29.255768)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." index="614" unique_id=1240598993]
-transform = Transform3D(1, 0, 0, 0, 0.04411435, 0, 0, 0, 1.9101058, 4.1226363, 2.24376, 0.28677338)
+transform = Transform3D(1, 0, 0, 0, 0.04411435, 0, 0, 0, 1.9101058, 4.1226363, 1.9232085, 0.28677338)
 mesh = SubResource("BoxMesh_gfpct")
 
-[node name="NokiaInteractable" type="Area3D" parent="." index="615" unique_id=948310972]
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." index="615" unique_id=1898365057]
+transform = Transform3D(1, 0, 0, 0, 0.04411435, 0, 0, 0, 1.9101058, 4.1226363, 2.9920547, 0.28677338)
+mesh = SubResource("BoxMesh_gfpct")
+
+[node name="NokiaInteractable" type="Area3D" parent="." index="616" unique_id=948310972]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.202428, 2.20964, 2.13682)
 script = ExtResource("3_jifwv")
 nokia_ui_scene = ExtResource("4_ikyjm")
