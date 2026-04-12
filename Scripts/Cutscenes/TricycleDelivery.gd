@@ -25,11 +25,9 @@ func _ready() -> void:
 func start_delivery(items_to_restock: Dictionary) -> void:
 	target_items = items_to_restock
 	
-	# Wait before the tricycle shows up
 	print("[TricycleDelivery] Waiting %.0f seconds for delivery..." % DELIVERY_DELAY_SEC)
 	await get_tree().create_timer(DELIVERY_DELAY_SEC).timeout
 	
-	# Create the sprite only now — it doesn't exist until delivery is triggered
 	sprite = Sprite3D.new()
 	sprite.pixel_size = 0.01
 	sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
