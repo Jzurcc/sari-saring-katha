@@ -10,6 +10,7 @@ const OUTLINE_SHADER := "res://Shaders/outline.gdshader"
 
 var _meshes: Array[MeshInstance3D] = []
 var _outline_mat: ShaderMaterial
+var _nokia_root: Node = null  # Kept so we can hide/show the 3D model
 
 func _ready() -> void:
 	_build_outline_material()
@@ -34,20 +35,18 @@ func _collect_meshes() -> void:
 	if not nokia_root:
 		push_warning("[NokiaClickRegion] No sibling 'nokia' or 'nokia_phone' found.")
 		return
-		
+	
+	_nokia_root = nokia_root
 	_find_meshes_recursive(nokia_root)
-	print("[NokiaClickRegion] Found ", _meshes.size(), " meshes for outline.")
 
 
 func _find_meshes_recursive(node: Node) -> void:
 	if node is MeshInstance3D:
 		_meshes.append(node)
-		print("[NokiaClickRegion] Targeted mesh found: ", node.name)
 	for child in node.get_children():
 		_find_meshes_recursive(child)
 
 func on_hover(is_hovered: bool) -> void:
-	print("[NokiaClickRegion] on_hover: ", is_hovered)
 	if not _outline_mat:
 		return
 		
@@ -58,8 +57,30 @@ func on_hover(is_hovered: bool) -> void:
 
 func on_interact() -> void:
 	if nokia_ui_scene:
-		var ui = nokia_ui_scene.instantiate()
+		var ui := nokia_ui_scene.instantiate()
 		get_tree().root.add_child(ui)
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		# Hide the 3D model while the 2D Nokia UI is open
+		if is_instance_valid(_nokia_root):
+			_nokia_root.visible = false
+		# Restore state when the UI closes (cancel or end of call)
+		ui.nokia_closed.connect(_on_nokia_ui_closed, CONNECT_ONE_SHOT)
+		if ui.has_signal("menu_close_requested"):
+			var restock_menu = ui.get_node_or_null("RestockMenu")
+			if restock_menu:
+				restock_menu.menu_close_requested.connect(_on_restock_screen_closed, CONNECT_ONE_SHOT)
 	else:
 		push_error("[Nokia3D] Missing Nokia UI Scene in the Inspector!")
+
+func _on_nokia_ui_closed() -> void:
+	# Restore the 3D model and first-person input
+	if is_instance_valid(_nokia_root):
+		_nokia_root.visible = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _on_restock_screen_closed() -> void:
+	# Hide the RestockScreen container that wraps the Nokia UI
+	var restock_screen = get_tree().get_first_node_in_group("restock_screen")
+	if restock_screen:
+		restock_screen.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

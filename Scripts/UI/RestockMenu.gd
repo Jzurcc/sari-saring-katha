@@ -2,6 +2,8 @@ extends Control
 
 signal catalog_purchase_confirmed(total_cost: int, items_bought: Dictionary)
 signal catalog_menu_closed
+## Emitted when the restock screen should close — the parent scene handles visibility.
+signal menu_close_requested
 
 @export_group("Card Sizes")
 ## Size of each product card in the grid
@@ -25,6 +27,9 @@ signal catalog_menu_closed
 @export var list_header_font_size: int = 20
 ## Font size for tab buttons
 @export var tab_font_size: int = 15
+
+## TricycleDelivery is a bare script-node (no .tscn), so load it as a script and call .new().
+const TricycleDelivery := preload("res://Scripts/Cutscenes/TricycleDelivery.gd")
 
 @export_group("Detail Panel")
 ## Size of the product icon in the detail panel
@@ -70,36 +75,7 @@ var category_labels: Dictionary = {
 	"bottle": "Beverages"
 }
 
-# --- Item Display Names ---
-# Maps the .tres file's item_name to the friendly name shown in the Restock Menu.
-var ITEM_DISPLAY_NAMES: Dictionary = {
-	"Anoba": "Anoba",
-	"Patos": "Patos",
-	"NgaragYa": "Ngarag-Ya",
-	"Dantes": "Ding Dong Dantes",
-	"Marites": "Marites Cracklin'",
-	"Utang": "Utang ni Mang Juan",
-	"Chicken": "Dadi Chicken na Chicken",
-	"Pantit": "Pantit Cantot",
-	"Hotdog": "PurifiedFoods Tender Juicy",
-	"Borgir": "COD Ulam Borgir",
-	"Nagets": "PurifiedFoods Nagets",
-	"Tocino": "Pampanga's Good Tocino",
-	"Champyon": "Champyon",
-	"Mayti": "Mayti",
-	"Marboro": "Marboro",
-	"Mentor": "Mentor",
-	"Pocha": "Pocha",
-	"Chubs": "Chubs",
-	"Argentita": "Argentita Corned Beef",
-	"Cenchuree": "Cenchuree Tuna",
-	"Lucky9": "Lucky9 Carne Norte",
-	"Mema": "Mema Sardines",
-	"Scam": "Scam",
-	"Water": "Tubig",
-	"Coke": "Kokaloka",
-	"Gin": "Gin",
-}
+
 
 # --- Audio Resources ---
 var stream_sfx_4 = preload("res://Audio/SFX/ui_sfx_4.mp3")
@@ -467,15 +443,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 
 # ========== ACTIONS ==========
 func _close_restock_screen() -> void:
-	# Walk up to the RestockScreen parent and hide it
-	var parent = get_parent()
-	while parent != null:
-		if parent.name == "RestockScreen":
-			parent.visible = false
-			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-			break
-		parent = parent.get_parent()
-	
+	menu_close_requested.emit()
 	hide()
 
 func _on_cancel_pressed() -> void:
@@ -484,19 +452,16 @@ func _on_cancel_pressed() -> void:
 	_close_restock_screen()
 
 func _on_confirm_pressed() -> void:
-	if total_price > 0:
-		_play_sfx(stream_sfx_7)
-		catalog_purchase_confirmed.emit(total_price, selected_items)
-		_close_restock_screen()
-		
-		# Set cooldown for Uncle Mario (3 to 5 customers)
-		InventoryManager.customers_needed_for_delivery = randi() % 3 + 3
-		InventoryManager.save_state()
-		# Trigger 3D Delivery Cutscene
-		var delivery_script = load("res://Scripts/Cutscenes/TricycleDelivery.gd")
-		var delivery = delivery_script.new()
-		get_tree().root.add_child(delivery)
-		delivery.start_delivery(selected_items)
+	if total_price <= 0:
+		return
+	_play_sfx(stream_sfx_7)
+	catalog_purchase_confirmed.emit(total_price, selected_items)
+	_close_restock_screen()
+	# Set delivery cooldown and trigger the 3D cutscene
+	InventoryManager.start_delivery_cooldown()
+	var delivery := TricycleDelivery.new()
+	get_tree().current_scene.add_child(delivery)
+	delivery.start_delivery(selected_items)
 # ========== HELPERS ==========
 func _get_unlock_day(item_id: String) -> int:
 	# Returns the day number when this item first becomes available.
@@ -531,16 +496,11 @@ func _get_unlock_day(item_id: String) -> int:
 	return unlock_map.get(item_id, 1)  # Default to Day 1 if not found
 
 func _get_current_day() -> int:
-	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
-	if gm_nodes.size() > 0:
-		var gm = gm_nodes[0]
-		if "day" in gm:
-			return int(gm.day)
-	return 1
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	return gm.day if gm else 1
 
 func _get_display_name(item: ItemData) -> String:
-	# Use the friendly display name from the map, falling back to the raw item_name.
-	return ITEM_DISPLAY_NAMES.get(item.item_name, item.item_name)
+	return item.item_name
 
 func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 	var result: Array[ItemData] = []
