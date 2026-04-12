@@ -91,6 +91,16 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_warning_dialog"]
+bg_color = Color(0.075, 0.075, 0.075, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.451, 0.451, 0.451, 0.5)
+shadow_size = 4
+shadow_offset = Vector2(2, 2)
+
 [node name="RestockMenu" type="Control" unique_id=2065680726]
 layout_mode = 3
 anchors_preset = 15
@@ -289,14 +299,23 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="WarningLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=987654321]
+[node name="TotalRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=555555561]
+layout_mode = 2
+
+[node name="TotalLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/TotalRow" unique_id=555555562]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Total :"
+
+[node name="TotalAmountLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/TotalRow" unique_id=555555563]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 18
-text = "Magtipid ka naman!"
-horizontal_alignment = 1
-visible = false
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "₱0.00"
+horizontal_alignment = 2
 
 [node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=642272564]
 layout_mode = 2
@@ -326,3 +345,47 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_order_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_order_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_order_btn")
 text = "Order"
+
+[node name="WarningDialog" type="PanelContainer" parent="." unique_id=555555555]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = -140.0
+offset_right = 330.0
+offset_bottom = -40.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_warning_dialog")
+visible = false
+
+[node name="DialogVBox" type="VBoxContainer" parent="WarningDialog" unique_id=555555556]
+layout_mode = 2
+
+[node name="CloseHBox" type="HBoxContainer" parent="WarningDialog/DialogVBox" unique_id=555555557]
+layout_mode = 2
+alignment = 0
+
+[node name="DialogCloseBtn" type="Button" parent="WarningDialog/DialogVBox/CloseHBox" unique_id=555555558]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.741, 0.741, 0.741, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_x")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_x")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_x")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_x")
+text = "X"
+
+[node name="Spacer" type="Control" parent="WarningDialog/DialogVBox/CloseHBox" unique_id=555555559]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DialogMessage" type="Label" parent="WarningDialog/DialogVBox" unique_id=555555560]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.741, 0.741, 0.741, 1)
+theme_override_font_sizes/font_size = 18
+text = "You have no more money.
+Magtipid ka naman!"
+horizontal_alignment = 1
