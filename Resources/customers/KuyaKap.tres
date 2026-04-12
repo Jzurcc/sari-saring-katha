@@ -4,11 +4,13 @@
 [ext_resource type="AudioStream" uid="uid://dwx84ny6shfy5" path="res://Audio/DialogueBlips/KuyaKap.wav" id="1_g8i5g"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_ux6bh"]
 [ext_resource type="Resource" uid="uid://b8wdl1xo1irfb" path="res://Resources/items/cigarette/Marboro.tres" id="2_item"]
+[ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
 
 [resource]
 script = ExtResource("1_cst")
 character_id = "KuyaKap"
 character_name = "Kuya Kap"
+dialogic_character = ExtResource("dch_kuyakap")
 filler_items = Array[ExtResource("1_ux6bh")]([ExtResource("2_item")])
 timelines_dir = "res://Dialogue/KuyaKap/"
 dialogue_blip_sound = ExtResource("1_g8i5g")
