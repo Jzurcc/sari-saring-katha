@@ -25,15 +25,22 @@ func _ready() -> void:
 	_hide_all()
 
 func _hide_all() -> void:
-	if mix_container:    mix_container.visible = false
-	if mentor_container: mentor_container.visible = false
-	if pocha_container:  pocha_container.visible = false
-	if chubs_container:  chubs_container.visible = false
+	_set_container_active(mix_container, false)
+	_set_container_active(mentor_container, false)
+	_set_container_active(pocha_container, false)
+	_set_container_active(chubs_container, false)
 
 func _on_day_started(day: int) -> void:
-	# Cumulative — once a container appears, it stays visible for the rest of the game.
-	if mix_container:    mix_container.visible    = day >= 2
-	if mentor_container: mentor_container.visible = day >= 5
-	if pocha_container:  pocha_container.visible  = day >= 5
-	if chubs_container:  chubs_container.visible  = day >= 7
+	# Cumulative — once a container appears, it stays active for the rest of the game.
+	_set_container_active(mix_container, day >= 2)
+	_set_container_active(mentor_container, day >= 5)
+	_set_container_active(pocha_container, day >= 5)
+	_set_container_active(chubs_container, day >= 7)
+			
 	print("[CandyContainerManager] Day %d — updated container visibility." % day)
+
+func _set_container_active(container: Node3D, active: bool) -> void:
+	if not container: return
+	container.visible = active
+	# Ensure physics, scripts, and inputs are completely disabled when invisible
+	container.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED

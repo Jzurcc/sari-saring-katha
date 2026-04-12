@@ -3,6 +3,8 @@ extends Resource
 
 @export var character_id: String
 @export var character_name: String
+## The Dialogic Character resource (.dch) for this customer
+@export var dialogic_character: DialogicCharacter
 ## The pool of items this customer can ask for during a Filler transaction.
 @export var filler_items: Array[ItemData] = []
 ## Base directory containing the dialog files for this character, e.g. "res://Dialogue/KuyaKap/"

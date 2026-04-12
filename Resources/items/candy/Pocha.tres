@@ -7,6 +7,8 @@
 script = ExtResource("1_item")
 item_name = "Pocha"
 texture = ExtResource("2_tex")
+price = 2
+max_stock = 20
 price = 0.5
 markup = 0.5
 max_stock = 20

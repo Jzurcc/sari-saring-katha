@@ -1,5 +1,8 @@
 extends Control
 
+## Emitted when the Nokia UI closes so the owner can restore mouse capture.
+signal nokia_closed
+
 var current_input: String = ""
 var target_number: String = "62777444666"
 
@@ -18,12 +21,43 @@ var sfx_btn_3: AudioStream = preload("res://Audio/SFX/phone_btn_3.mp3")
 
 var button_audio_player: AudioStreamPlayer
 
+var _cancel_btn: Button = null
+
 func _ready() -> void:
 	button_audio_player = AudioStreamPlayer.new()
 	add_child(button_audio_player)
 	
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
+	_add_cancel_button()
+
+func _add_cancel_button() -> void:
+	# Inject a cancel button so the player can always exit the Nokia UI.
+	# Positioned at the bottom-centre of the screen, above the keypad area.
+	_cancel_btn = Button.new()
+	_cancel_btn.name = "CancelOverlay"
+	_cancel_btn.text = "✕  Cancel"
+	_cancel_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_cancel_btn.offset_top = -60
+	_cancel_btn.offset_bottom = -12
+	_cancel_btn.offset_left = 60
+	_cancel_btn.offset_right = -60
+	# Style — dark semi-transparent pill
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.08, 0.85)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	_cancel_btn.add_theme_stylebox_override("normal", style)
+	var hover_style := style.duplicate()
+	(hover_style as StyleBoxFlat).bg_color = Color(0.7, 0.15, 0.1, 0.95)
+	_cancel_btn.add_theme_stylebox_override("hover", hover_style)
+	_cancel_btn.add_theme_color_override("font_color", Color.WHITE)
+	_cancel_btn.add_theme_font_size_override("font_size", 15)
+	_cancel_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_cancel_btn.pressed.connect(_on_close_pressed)
+	add_child(_cancel_btn)
 
 func _scan_and_connect_nodes(node: Node) -> void:
 	# Skip the RestockMenu subtree entirely — its buttons are NOT Nokia keys
@@ -40,7 +74,7 @@ func _scan_and_connect_nodes(node: Node) -> void:
 			node.pressed.connect(_on_clear_pressed)
 		elif btn_name == "enter" or btn_name == "call" or btn_name == "ok":
 			node.pressed.connect(_on_enter_pressed)
-		elif btn_name == "back":
+		elif btn_name == "back" or btn_name == "cancel":
 			node.pressed.connect(_on_close_pressed)
 		elif str(node.name).length() == 1 and str(node.name)[0].is_valid_int():
 			# Single digit number buttons only
@@ -104,17 +138,16 @@ func _trigger_store_menu() -> void:
 func _on_dialogue_ended_rest() -> void:
 	# After the "rest" dialogue, show the Nokia UI again and reset input
 	self.visible = true
+	if _cancel_btn:
+		_cancel_btn.visible = true
 	current_input = ""
 	if screen_label:
 		screen_label.text = ""
 
 func _on_dialogue_ended_call() -> void:
-	# Make the screen visible again so the store menu can appear
 	self.visible = true
-	print("[NokiaUI] Dialogue ended — looking for RestockMenu...")
 	# After Uncle Mario agrees, open the store catalog
 	var store = get_node_or_null("RestockMenu")
-	print("[NokiaUI] RestockMenu node: ", store)
 	if store and store.has_method("open_menu"):
 		store.open_menu()
 	elif store_menu and store_menu.has_method("open_menu"):
@@ -123,6 +156,5 @@ func _on_dialogue_ended_call() -> void:
 		push_warning("[NokiaUI] No RestockMenu found to open!")
 
 func _on_close_pressed() -> void:
-	# Safely return to crosshair control and close screen
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	nokia_closed.emit()
 	queue_free()

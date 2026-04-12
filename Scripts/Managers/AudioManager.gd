@@ -218,13 +218,12 @@ func _connect_dialogic() -> void:
 
 func _on_dialogue_about_to_show(info: Dictionary) -> void:
 	if info.has("character") and info.character != null:
-		var char_identifier = info.character.get_identifier()
-		var char_name = char_identifier.get_file().trim_suffix(".dch")
-		
 		var story_mgr = get_node_or_null("/root/StoryManager")
 		if story_mgr:
-			var customer_data = story_mgr._get_character_data(char_name)
-			if customer_data and customer_data.dialogue_blip_sound:
-				dialogue_blip_player.pitch_scale = randf_range(0.95, 1.05)
-				dialogue_blip_player.stream = customer_data.dialogue_blip_sound
-				dialogue_blip_player.play()
+			for c in story_mgr.available_characters:
+				if c.dialogic_character and c.dialogic_character.resource_path == info.character.resource_path:
+					if c.dialogue_blip_sound:
+						dialogue_blip_player.pitch_scale = randf_range(0.95, 1.05)
+						dialogue_blip_player.stream = c.dialogue_blip_sound
+						dialogue_blip_player.play()
+					break

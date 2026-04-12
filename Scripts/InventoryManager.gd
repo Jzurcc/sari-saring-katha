@@ -101,10 +101,21 @@ func restock_item(item: ItemData, count: int = -1) -> void:
 	_stock[item.resource_path] = mini(count, item.max_stock)
 	save_state()
 
+## Add a delta amount of stock (e.g. ordered quantity), capped at max_stock.
+func add_stock(item: ItemData, amount: int) -> void:
+	var current := _stock.get(item.resource_path, 0)
+	_stock[item.resource_path] = mini(current + amount, item.max_stock)
+	save_state()
+
 func decrement_cooldown() -> void:
 	if customers_needed_for_delivery > 0:
 		customers_needed_for_delivery -= 1
 		save_state()
+
+## Set the post-order delivery cooldown (randomised 3–5 customers).
+func start_delivery_cooldown() -> void:
+	customers_needed_for_delivery = randi() % 3 + 3
+	save_state()
 
 func save_state() -> void:
 	var save_data = {

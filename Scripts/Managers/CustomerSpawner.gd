@@ -201,7 +201,8 @@ func _start_dialogue(timeline_path: String, customer: Customer) -> void:
 	var layout = Dialogic.start(timeline_path)
 
 	# Anchor the follow-bubble to the customer's SpeechMarker node.
-	var char_res = load("res://Dialogue/Timelines/" + customer.character_id + ".dch")
+	var char_data = StoryManager._get_character_data(customer.character_id)
+	var char_res = char_data.dialogic_character if char_data else null
 	var marker = customer.get_node_or_null("SpeechMarker")
 	if marker == null:
 		push_warning("[CustomerSpawner] Customer '%s' has no SpeechMarker node — bubble will not follow." % customer.character_id)

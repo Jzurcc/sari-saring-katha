@@ -2,8 +2,6 @@ extends Node
 
 var target_items: Dictionary
 var sprite: Sprite3D
-var _moving: bool = false
-var _time: float = 0.0
 
 var sfx_player: AudioStreamPlayer
 
@@ -49,18 +47,15 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	sfx_player.stream = sfx_arrive
 	sfx_player.play()
 	
-	# Start driving toward the stop position
-	_moving = true
 	var arrive_tween = create_tween()
 	arrive_tween.tween_property(sprite, "position:z", TARGET_POS.z, 3.5) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	arrive_tween.parallel().tween_property(sprite, "position:x", TARGET_POS.x, 3.5) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# Bounce on Y via tween so only one system writes to position (no _process fighting)
+	arrive_tween.parallel().tween_property(sprite, "position:y",
+			TARGET_POS.y + 0.15, 0.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	await arrive_tween.finished
-	_moving = false
-	
-	# Snap Y after bouncing
-	sprite.position.y = TARGET_POS.y
 	
 	# Wait for the arrive + honk audio to fully finish before dialogue
 	if sfx_player.playing:
@@ -85,7 +80,6 @@ func _on_delivery_dialogue_ended() -> void:
 	leave_tween.tween_property(sprite, "position:z", EXIT_POS.z, 2.5) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await leave_tween.finished
-	_moving = false
 	
 	# Wait for leave audio to finish before cleanup
 	if sfx_player.playing:
@@ -93,9 +87,7 @@ func _on_delivery_dialogue_ended() -> void:
 	
 	# ── Phase 4: Restock & Cleanup ───────────────────────────────────
 	for item in target_items.keys():
-		var amount_ordered = target_items[item]
-		var current_stock = InventoryManager.get_stock(item)
-		InventoryManager.restock_item(item, current_stock + amount_ordered)
+		InventoryManager.add_stock(item, target_items[item])
 	
 	_refresh_containers(get_tree().root)
 	print("[TricycleDelivery] Delivery complete. Restocked shelf containers.")
@@ -103,11 +95,6 @@ func _on_delivery_dialogue_ended() -> void:
 	
 	sprite.queue_free()
 	queue_free()
-
-func _process(delta: float) -> void:
-	if _moving:
-		_time += delta * 20.0
-		sprite.position.y = TARGET_POS.y + (abs(sin(_time)) * 0.15)
 
 func _refresh_containers(node: Node) -> void:
 	if node.has_method("refresh_visibility"):

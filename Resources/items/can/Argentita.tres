@@ -5,7 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Argentita"
+item_name = "Argentita Corned Beef"
 texture = ExtResource("2_tex")
 price = 14.0
 markup = 4.0

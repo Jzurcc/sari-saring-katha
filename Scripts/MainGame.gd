@@ -52,7 +52,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 						spawner.notify_satisfied_dialogue()
 					Dialogic.Styles.load_style("FollowBubble")
 					var layout = Dialogic.start(context.timeline_satisfied)
-					var char_res = load("res://Dialogue/Timelines/" + customer.character_id + ".dch")
+					var char_data = StoryManager._get_character_data(customer.character_id)
+					var char_res = char_data.dialogic_character if char_data else null
 					if layout and layout.has_method("register_character") and char_res and is_instance_valid(customer.body_sprite):
 						layout.register_character(char_res, customer.body_sprite)
 				item = null  # prevent return_to_start below from running on a hidden node
@@ -64,7 +65,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 						spawner.notify_wrong_item_dialogue()
 					Dialogic.Styles.load_style("FollowBubble")
 					var layout = Dialogic.start(context.timeline_wrong_item)
-					var char_res = load("res://Dialogue/Timelines/" + customer.character_id + ".dch")
+					var char_data = StoryManager._get_character_data(customer.character_id)
+					var char_res = char_data.dialogic_character if char_data else null
 					if layout and layout.has_method("register_character") and char_res and is_instance_valid(customer.body_sprite):
 						layout.register_character(char_res, customer.body_sprite)
 			
