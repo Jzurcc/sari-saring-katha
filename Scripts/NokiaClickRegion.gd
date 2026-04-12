@@ -1,17 +1,60 @@
-extends CollisionObject3D
+## NokiaClickRegion.gd
+## Attached to NokiaInteractable (Area3D) in MainGame.
+## Mirrors the RefrigeratorDoor pattern: find the sibling "nokia" scene node,
+## collect every MeshInstance3D inside it, and toggle material_overlay on hover.
+extends Area3D
+
+const OUTLINE_SHADER := "res://Shaders/outline.gdshader"
 
 @export var nokia_ui_scene: PackedScene
-@export var target_mesh_path: NodePath
-var mesh_node: MeshInstance3D = null
+
+var _meshes: Array[MeshInstance3D] = []
+var _outline_mat: ShaderMaterial
 
 func _ready() -> void:
-	if target_mesh_path:
-		mesh_node = get_node(target_mesh_path) as MeshInstance3D
-	else:
-		mesh_node = get_parent() as MeshInstance3D
+	_build_outline_material()
+	_collect_meshes()
+
+func _build_outline_material() -> void:
+	var shader := load(OUTLINE_SHADER) as Shader
+	if not shader:
+		push_warning("[NokiaClickRegion] Outline shader not found: " + OUTLINE_SHADER)
+		return
+	
+	_outline_mat = ShaderMaterial.new()
+	_outline_mat.shader = shader
+	_outline_mat.set_shader_parameter("outline_color", Color.WHITE)
+	_outline_mat.set_shader_parameter("outline_width", 48.0)
+
+func _collect_meshes() -> void:
+	var nokia_root = get_node_or_null("../nokia")
+	if not nokia_root:
+		nokia_root = get_node_or_null("../nokia_phone")
+		
+	if not nokia_root:
+		push_warning("[NokiaClickRegion] No sibling 'nokia' or 'nokia_phone' found.")
+		return
+		
+	_find_meshes_recursive(nokia_root)
+	print("[NokiaClickRegion] Found ", _meshes.size(), " meshes for outline.")
+
+
+func _find_meshes_recursive(node: Node) -> void:
+	if node is MeshInstance3D:
+		_meshes.append(node)
+		print("[NokiaClickRegion] Targeted mesh found: ", node.name)
+	for child in node.get_children():
+		_find_meshes_recursive(child)
 
 func on_hover(is_hovered: bool) -> void:
-	pass
+	print("[NokiaClickRegion] on_hover: ", is_hovered)
+	if not _outline_mat:
+		return
+		
+	var target_mat = _outline_mat if is_hovered else null
+	for mesh in _meshes:
+		if is_instance_valid(mesh):
+			mesh.material_overlay = target_mat
 
 func on_interact() -> void:
 	if nokia_ui_scene:

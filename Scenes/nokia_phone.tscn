@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cvvodeh5lj33q"]
+
+[ext_resource type="PackedScene" uid="uid://blgrpddf7sjqc" path="res://Assets/3D/nokia/nokia_phone.glb" id="1_q21uf"]
+
+[node name="nokia_phone" unique_id=1539363857 instance=ExtResource("1_q21uf")]
+
+[node name="Cube_side_0" parent="." index="0" unique_id=589520577]
+transform = Transform3D(0.02895733, -1.4150914e-05, 0.014614633, 4.720107e-12, -0.015850231, -6.4272106e-05, 0.014614664, 2.8038463e-05, -0.028957268, 0, 0, 0)
