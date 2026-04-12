@@ -5,14 +5,13 @@ uniform vec4 outline_color : source_color;
 uniform float outline_width = 4.0;
 
 void vertex() {
-	vec4 clip_position = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(VERTEX, 1.0));
-	vec3 clip_normal = mat3(PROJECTION_MATRIX) * (mat3(MODELVIEW_MATRIX) * NORMAL);
+	// Expand the vertex in object space so the outline stays perfectly glued to the model
+	// regardless of how far away the camera gets. The multiplier scales the existing
+	// 4.0 - 16.0 values down to a physical thickness.
+	VERTEX += NORMAL * (outline_width * 0.002);
 	
-	vec2 offset = normalize(clip_normal.xy) / VIEWPORT_SIZE * clip_position.w * outline_width * 2.0;
-	
-	clip_position.xy += offset;
-	
-	POSITION = clip_position;
+	// Standard clip-space projection
+	POSITION = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(VERTEX, 1.0));
 }
 
 void fragment() {

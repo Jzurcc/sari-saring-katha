@@ -20,7 +20,14 @@
 [ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="27_0wdc3"]
 [ext_resource type="Texture2D" uid="uid://bf27xwxax7q4s" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="28_w42fa"]
 [ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="29_upseh"]
-[ext_resource type="Script" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
+[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
+[ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/RestockScreen.tscn" id="36_fto8l"]
+[ext_resource type="Resource" uid="uid://sbu21ye633d5" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
+[ext_resource type="Resource" uid="uid://mdcyjtl1s53y" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
+[ext_resource type="Resource" uid="uid://d2mf426qt8lwt" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
+[ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
+[ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
 [ext_resource type="Script" path="res://Scripts/UI/DayTimeUI.gd" id="dt_scr"]
@@ -59,6 +66,12 @@ script = ExtResource("23_fgk2h")
 
 [sub_resource type="Resource" id="Resource_fgk2h"]
 script = ExtResource("23_fgk2h")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_candy"]
+size = Vector3(2.6975098, 4.6657715, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3ijh3"]
+size = Vector3(200.6779, 114.64903, 426.17346)
 
 [node name="MainGame" type="Node3D" unique_id=572606432]
 script = ExtResource("1_script")
@@ -139,7 +152,7 @@ color = Color(1, 1, 1, 0.784313)
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.671936, 3.9905696, 0)
 
 [node name="CollisionShape3D" parent="TransactionTray" index="0" unique_id=319493410]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1054274e-14, 0.18831778, 0.18249512)
+transform = Transform3D(0.27484417, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1.4210855e-13, -0.038028, 0.18249512)
 
 [node name="FlickeringLight" type="OmniLight3D" parent="." unique_id=132296177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19843912, 5.0687175, 0.016890496)
@@ -150,6 +163,9 @@ light_specular = 0.978
 shadow_enabled = true
 omni_range = 7.607585
 script = ExtResource("17_r5sjn")
+flicker_amount = 0.065
+flicker_rate = 0.03
+glitch_chance = 0.015
 
 [node name="SpotLight3D" type="SpotLight3D" parent="FlickeringLight" unique_id=1744378698]
 transform = Transform3D(-4.3337035e-08, -0.13059543, 0.99143577, -5.708507e-09, 0.99143577, 0.13059543, -1, 6.661338e-16, -4.371139e-08, -0.49033928, -0.12397289, 0)
@@ -183,7 +199,7 @@ data = ExtResource("23_7p2u3")
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
 fog_enabled = true
-current_time = 10.63
+current_time = 17.41
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
@@ -204,7 +220,7 @@ layout_strategy = SubResource("Resource_r5sjn")
 [node name="ShelfSurface2" type="Node3D" parent="." unique_id=1927767560]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 3.1444204, 4.019844)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), ExtResource("16_glaac"), ExtResource("22_him8o"), null, null, null, null])
+items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), ExtResource("16_glaac"), null, null, null, null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
@@ -264,20 +280,72 @@ allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_fgk2h")
 
-[node name="CandyContainer_Mix" type="Sprite3D" parent="." unique_id=290924167]
+[node name="CandyContainer_Mix" type="Area3D" parent="." unique_id=290924167]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.399547, 3.4277682, -2.334823)
+visible = false
+script = ExtResource("cci_scr")
+possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha"), ExtResource("candy_mentor")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Mix" unique_id=290924168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03137207, -0.064819336, 0)
+shape = SubResource("BoxShape3D_candy")
+
+[node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mix" unique_id=290924169]
+billboard = 1
+shaded = true
 texture = ExtResource("26_yy0n7")
 
-[node name="CandyContainer_Chubs" type="Sprite3D" parent="." unique_id=1977615064]
+[node name="CandyContainer_Chubs" type="Area3D" parent="." unique_id=1977615064]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.224358, 3.4277682, 2.3739066)
+visible = false
+script = ExtResource("cci_scr")
+possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_chubs")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Chubs" unique_id=1977615065]
+shape = SubResource("BoxShape3D_candy")
+
+[node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Chubs" unique_id=1977615066]
+billboard = 1
+shaded = true
 texture = ExtResource("27_0wdc3")
 
-[node name="CandyContainer_Mentor" type="Sprite3D" parent="." unique_id=394685185]
+[node name="CandyContainer_Mentor" type="Area3D" parent="." unique_id=394685185]
 transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, -4.328629, 3.3153253, -1.7661636)
+visible = false
+script = ExtResource("cci_scr")
+possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_mentor")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Mentor" unique_id=394685186]
+shape = SubResource("BoxShape3D_candy")
+
+[node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mentor" unique_id=394685187]
+billboard = 1
+shaded = true
 texture = ExtResource("28_w42fa")
 
-[node name="CandyContainer_Pocha" type="Sprite3D" parent="." unique_id=82948426]
+[node name="CandyContainer_Pocha" type="Area3D" parent="." unique_id=82948426]
 transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, -4.4829006, 3.3153253, -1.3061287)
+visible = false
+script = ExtResource("cci_scr")
+possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha")])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Pocha" unique_id=82948427]
+shape = SubResource("BoxShape3D_candy")
+
+[node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Pocha" unique_id=82948428]
+billboard = 1
+shaded = true
 texture = ExtResource("29_upseh")
+
+[node name="nokia" parent="." unique_id=83503094 instance=ExtResource("34_1r7st")]
+transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)
+
+[node name="NokiaInteractable" type="Area3D" parent="." unique_id=1636395040]
+transform = Transform3D(-0.00041700015, 5.1847568e-11, 0.00059306703, -3.4507866e-19, -0.0007249949, 6.3381064e-11, 0.00059306703, 3.645531e-11, 0.00041700012, 2.1762958, 2.205704, -0.26590863)
+script = ExtResource("35_3ijh3")
+nokia_ui_scene = ExtResource("36_fto8l")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NokiaInteractable" unique_id=459392347]
+shape = SubResource("BoxShape3D_3ijh3")
 
 [editable path="TransactionTray"]
