@@ -89,6 +89,10 @@ func _input(event: InputEvent) -> void:
 	# Block all world interaction while dialogue is open.
 	if Dialogic.current_timeline != null:
 		return
+	
+	# Block interaction triggers if we are actively dragging/holding an item
+	if DragManager._is_dragging:
+		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if is_instance_valid(_last_hovered):

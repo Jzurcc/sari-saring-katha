@@ -28,7 +28,7 @@ func _ready() -> void:
 	_raycast_query = PhysicsRayQueryParameters3D.new()
 	_raycast_query.collide_with_areas = true
 	_raycast_query.collide_with_bodies = false
-	_raycast_query.collision_mask = 3  # Layer 1 (tray) + layer 2 (shelf drop zones)
+	_raycast_query.collision_mask = 19  # Layer 1 (tray) + layer 2 (shelf) + layer 5 (customer)
 
 	# Release the drag reference if the held node is freed (e.g. scene change).
 	get_tree().node_removed.connect(_on_node_removed)
@@ -176,6 +176,12 @@ func end_drag() -> void:
 		if collider.is_in_group("transaction_tray") and collider.has_method("receive_item"):
 			collider.receive_item(_dragged_item)
 			success = true
+		elif collider is Customer:
+			# Redirect the drop to the standard transaction tray logic
+			tray_nodes = get_tree().get_nodes_in_group("transaction_tray")
+			if tray_nodes.size() > 0 and tray_nodes[0].has_method("receive_item"):
+				tray_nodes[0].receive_item(_dragged_item)
+				success = true
 		elif collider.is_in_group("shelf_drop_zone"):
 			# The drop zone Area3D's parent is the ShelfSurface
 			var shelf_surface := collider.get_parent()
