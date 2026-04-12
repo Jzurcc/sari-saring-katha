@@ -9,6 +9,7 @@ script = ExtResource("1_item")
 item_name = "Hotdog"
 texture = ExtResource("2_tex")
 price = 80
+type = 1
 max_stock = 0
 category = "frozen"
 display_height_meters = 0.6
