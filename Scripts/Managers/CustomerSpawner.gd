@@ -3,13 +3,13 @@ class_name CustomerSpawner
 
 ## Tracks which phase of dialogue is currently playing.
 ## Used by _on_dialogue_ended to decide what to do when a timeline ends.
-## timeline_ended fires EXACTLY ONCE per timeline (confirmed from Dialogic source).
+## timeline_ended fires EXACTLY ONCE per timeline (confirmed from Dialogic source)
 enum DialoguePhase {
 	NONE,         ## No dialogue running / unknown context
 	GREETING,     ## Customer arrived and played their greeting — waiting for player to give item
 	TALK,         ## Player clicked customer to reconfirm request — waiting for player to give item
 	SATISFIED,    ## Correct item given — satisfy() is running its own exit animation
-	GENERIC_TALK, ## Drop-in visit with no purchase — dismiss when done
+	SOCIAL_VISIT, ## Drop-in visit with no purchase — dismiss when done
 	WRONG_ITEM,   ## Wrong item dropped — customer reacts but stays so player can retry
 }
 
@@ -18,13 +18,19 @@ enum DialoguePhase {
 @export var target_pos: NodePath
 
 ## Fallback timeline played when a STORY/FILLER greeting DTL does not exist yet.
-## After it plays the customer is dismissed (GENERIC_TALK phase) so the day advances.
+## After it plays the customer is dismissed (SOCIAL_VISIT phase) so the day advances.
 const PLACEHOLDER_EMPTY_STORY := "res://Dialogue/placeholder_story_missing.dtl"
+
+## Proxy character used in generic dialogues (e.g. "Customer: Hello!").
+## We patch this at runtime to show the correct name and anchor to the sprite.
+var GENERIC_CHAR_RES := preload("res://Dialogue/Timelines/Customer.dch")
 
 var current_customer: Customer = null
 var _pending_dismiss: bool = false
 var _is_spawning: bool = false
 var _greeting_interrupted: bool = false # Remembers if Uncle Mario forcibly shut down the greeting.
+
+
 
 var is_paused: bool = false:
 	set(value):
@@ -45,43 +51,38 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 func _on_day_started(_day: int) -> void:
+	print("[CustomerSpawner] Day starts — customers will spawn until 8 PM.")
 	_spawn_next_customer()
 
 func _spawn_next_customer() -> void:
 	if is_paused or current_customer != null or _is_spawning:
 		return
 
+	# Closing time — no new customers at or after 8 PM
+	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
+		print("[CustomerSpawner] Store is closing. Ending day.")
+		_end_day()
+		return
+
 	_is_spawning = true
 
 	var transaction = StoryManager.get_next_transaction()
 
-	if StoryManager.current_event_index >= StoryManager.MAX_EVENTS_PER_DAY:
-		_is_spawning = false
-		var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
-		EventBus.day_ended.emit(gm.day if gm else 1)
-		return
-
 	if transaction == null:
-		# Quiet hour — kick off a fast time-sweep then wait.
-		# _update_game_time() already moved to the next event hour; this overrides
-		# that with a single smooth tween covering the full hour over the wait period.
-		const QUIET_WAIT := 10.0
-		print("[CustomerSpawner] Quiet hour. Waiting %.0f seconds..." % QUIET_WAIT)
-		StoryManager.start_quiet_hour_transition(QUIET_WAIT)
-		await get_tree().create_timer(QUIET_WAIT).timeout
+		# No characters configured — nothing to spawn
 		_is_spawning = false
-		_spawn_next_customer()
+		_end_day()
 		return
 
-	var type_name: String = (["STORY", "FILLER", "GENERIC"] as Array[String])[transaction.transaction_type]
+	var type_name: String = ([" STORY", "PURCHASE", "VISIT "])[transaction.transaction_type]
 	var item_list: Array[String] = []
 	for item in transaction.desired_items:
 		item_list.append(item.item_name)
 	print("\n[CUSTOMER] ── Incoming transaction ──────────────────")
 	print("  Character : ", transaction.character_id)
 	print("  Type      : ", type_name)
-	print("  Event     : ", StoryManager.current_event_index, " / ", StoryManager.MAX_EVENTS_PER_DAY)
-	print("  Wants     : ", ", ".join(item_list) if item_list.size() > 0 else "(nothing — generic/visit)")
+	print("  Status    : Spawning...")
+	print("  Wants     : ", ", ".join(item_list) if item_list.size() > 0 else "(nothing — visit)")
 	print("[CUSTOMER] ─────────────────────────────────────────")
 
 	await get_tree().create_timer(2.0).timeout
@@ -105,18 +106,22 @@ func _spawn_next_customer() -> void:
 func _on_customer_arrived(customer: Customer) -> void:
 	EventBus.customer_arrived.emit(customer)
 
-	# Set the global item name so Dialogic {expressions} can read it from .dtl files.
+	# Set global variables so Dialogic {expressions} can read them from .dtl files.
 	var item_names: Array[String] = []
 	for item in customer.transaction_context.desired_items:
 		item_names.append(item.item_name)
 	InventoryManager.current_item_name = ", ".join(item_names) if item_names.size() > 0 else "something"
 
+	# Set the character display name so generic dialogues can use {InventoryManager.current_character_name}
+	var char_data_for_name = StoryManager._get_character_data(customer.character_id)
+	InventoryManager.current_character_name = char_data_for_name.character_name if char_data_for_name else customer.character_id
+
 	var context := customer.transaction_context
 	var timeline_path: String
 
-	if context.transaction_type == TransactionContext.Type.GENERIC:
-		timeline_path = context.timeline_generic_talk
-		_dialogue_phase = DialoguePhase.GENERIC_TALK
+	if context.transaction_type == TransactionContext.Type.VISIT:
+		timeline_path = context.timeline_visit
+		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
 	else:
 		timeline_path = context.timeline_greeting
 		if timeline_path.is_empty():
@@ -124,7 +129,7 @@ func _on_customer_arrived(customer: Customer) -> void:
 			push_warning("[CustomerSpawner] Empty greeting for '%s' (%s) — using placeholder." \
 				% [context.character_id, TransactionContext.Type.keys()[context.transaction_type]])
 			timeline_path = PLACEHOLDER_EMPTY_STORY
-			_dialogue_phase = DialoguePhase.GENERIC_TALK  # Dismiss after placeholder
+			_dialogue_phase = DialoguePhase.SOCIAL_VISIT  # Dismiss after placeholder
 		else:
 			_dialogue_phase = DialoguePhase.GREETING
 
@@ -136,7 +141,7 @@ func _on_customer_arrived(customer: Customer) -> void:
 	print("  Satisfied : ", context.timeline_satisfied  if context.timeline_satisfied  != "" else "(empty)")
 	print("  WrongItem : ", context.timeline_wrong_item if context.timeline_wrong_item != "" else "(empty)")
 	print("  Rejected  : ", context.timeline_rejected   if context.timeline_rejected   != "" else "(empty)")
-	print("  Generic   : ", context.timeline_generic_talk if context.timeline_generic_talk != "" else "(empty)")
+	print("  Visit     : ", context.timeline_visit      if context.timeline_visit      != "" else "(empty)")
 	print("  Starting  → ", timeline_path if timeline_path != "" else "(NO TIMELINE — nothing will play!)")
 	print("[CUSTOMER] ─────────────────────────────────────────")
 	# ─────────────────────────────────────────────────────
@@ -144,16 +149,14 @@ func _on_customer_arrived(customer: Customer) -> void:
 	_start_dialogue(timeline_path, customer)
 
 func _on_customer_finished(_customer: Customer) -> void:
-	# satisfy() ran its own exit animation. Advance the day.
+	# satisfy() ran its own exit animation. Wait a natural gap then spawn next.
 	current_customer = null
-	if StoryManager.current_event_index < StoryManager.MAX_EVENTS_PER_DAY:
-		_spawn_next_customer()
-	else:
-		var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
-		EventBus.day_ended.emit(gm.day if gm else 1)
+	await get_tree().create_timer(randf_range(5.0, 15.0)).timeout
+	_spawn_next_customer()
 
 func _on_customer_dismissed(_customer: Customer) -> void:
 	current_customer = null
+	await get_tree().create_timer(randf_range(5.0, 15.0)).timeout
 	_spawn_next_customer()
 
 func _on_customer_clicked(customer: Customer) -> void:
@@ -173,9 +176,9 @@ func _on_customer_clicked(customer: Customer) -> void:
 
 	var timeline_path: String
 
-	if customer.transaction_context.transaction_type == TransactionContext.Type.GENERIC:
-		timeline_path = customer.transaction_context.timeline_generic_talk
-		_dialogue_phase = DialoguePhase.GENERIC_TALK
+	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
+		timeline_path = customer.transaction_context.timeline_visit
+		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
 	else:
 		if _greeting_interrupted:
 			timeline_path = customer.transaction_context.timeline_greeting
@@ -210,18 +213,33 @@ func _start_dialogue(timeline_path: String, customer: Customer) -> void:
 	if not is_instance_valid(customer) or not customer.is_waiting:
 		return
 
+	# Patch both the unique character and the generic "Customer" character
+	# so that even generic timelines show the real name and anchor correctly.
+	var char_data = StoryManager._get_character_data(customer.character_id)
+	var real_name = char_data.character_name if char_data else customer.character_id
+	
+	if char_data and char_data.dialogic_character:
+		char_data.dialogic_character.display_name = real_name
+	
+	if GENERIC_CHAR_RES:
+		GENERIC_CHAR_RES.display_name = real_name
+
 	Dialogic.Styles.load_style("FollowBubble")
 	_current_timeline_path = timeline_path
 	var layout = Dialogic.start(timeline_path)
 
-	# Anchor the follow-bubble to the customer's SpeechMarker node.
-	var char_data = StoryManager._get_character_data(customer.character_id)
-	var char_res = char_data.dialogic_character if char_data else null
+	# Anchor both characters to the speech marker.
 	var marker = customer.get_node_or_null("SpeechMarker")
 	if marker == null:
 		push_warning("[CustomerSpawner] Customer '%s' has no SpeechMarker node — bubble will not follow." % customer.character_id)
-	if layout and layout.has_method("register_character") and char_res and is_instance_valid(marker):
-		layout.register_character(char_res, marker)
+	
+	if layout and layout.has_method("register_character") and is_instance_valid(marker):
+		# Register specific character (for story lines)
+		if char_data and char_data.dialogic_character:
+			layout.register_character(char_data.dialogic_character, marker)
+		# Register generic proxy (for generic/filler lines using "Customer:")
+		if GENERIC_CHAR_RES:
+			layout.register_character(GENERIC_CHAR_RES, marker)
 
 func _on_dialogue_ended() -> void:
 	# Ignore if the ended timeline isn't the one we started (e.g., Uncle Mario call ended)
@@ -245,10 +263,6 @@ func _on_dialogue_ended() -> void:
 			_start_dialogue(timeline_path, current_customer)
 		return
 		
-	# Check if this end signal actually belongs to the customer we were talking to
-	# Note: If Mario replaced the customer, _current_timeline_path remains set, 
-	# but we want to ignore Mario's end. 
-	
 	# Read and clear the phase atomically.
 	var phase := _dialogue_phase
 	_dialogue_phase = DialoguePhase.NONE
@@ -263,7 +277,7 @@ func _on_dialogue_ended() -> void:
 		return
 
 	match phase:
-		DialoguePhase.GENERIC_TALK:
+		DialoguePhase.SOCIAL_VISIT:
 			# Drop-in visit. Dismiss customer — _on_customer_dismissed spawns next.
 			if is_instance_valid(current_customer) and current_customer.is_waiting:
 				current_customer.dismiss()
@@ -281,3 +295,8 @@ func _on_dialogue_ended() -> void:
 		DialoguePhase.GREETING, DialoguePhase.TALK, DialoguePhase.NONE:
 			# Customer is at the counter waiting for their item. Player must act.
 			pass
+
+## Emit day_ended when no more customers will come today.
+func _end_day() -> void:
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	EventBus.day_ended.emit(gm.day if gm else 1)

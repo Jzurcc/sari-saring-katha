@@ -6,6 +6,8 @@ extends Node
 ## Exposed for Dialogic timelines — set before calling Dialogic.start().
 ## Reference in .dtl files as: {InventoryManager.current_item_name}
 var current_item_name: String = ""
+## The display name of the current customer. Use as {InventoryManager.current_character_name} in .dtl files.
+var current_character_name: String = ""
 
 ## Number of customers that must be served before Uncle Mario can restock again.
 var customers_needed_for_delivery: int = 0
@@ -54,6 +56,7 @@ func _load_folder(folder_path: String) -> void:
 		if not dir.current_is_dir() and file_name.ends_with(".tres"):
 			var res: Resource = load(folder_path + "/" + file_name)
 			if res is ItemData:
+				res.id = file_name.get_basename()
 				_items.append(res)
 				_stock[res.resource_path] = res.max_stock
 		file_name = dir.get_next()

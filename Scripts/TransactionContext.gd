@@ -1,11 +1,11 @@
 class_name TransactionContext
 extends RefCounted
 
-enum Type { STORY, FILLER, GENERIC }
+enum Type { STORY, PURCHASE, VISIT }
 
-var transaction_type: Type = Type.GENERIC
+var transaction_type: Type = Type.VISIT
 var character_id: String = ""
-## List of valid items that the customer would accept. Can be empty for generic/talk only.
+## List of valid items that the customer would accept. Can be empty for visit only.
 var desired_items: Array[ItemData] = []
 
 ## Ticks from 0 (5 AM) to 15 (8 PM, moving towards 9 PM).
@@ -21,8 +21,8 @@ var timeline_satisfied: String = ""
 var timeline_wrong_item: String = ""
 ## Called when the player explicitly refuses service — customer leaves
 var timeline_rejected: String = ""
-## Called instead of greeting/talk if it's a generic "no purchase" transaction
-var timeline_generic_talk: String = ""
+## Called instead of greeting/talk if it's a social "no purchase" visit
+var timeline_visit: String = ""
 
 func is_item_desired(item: ItemData) -> bool:
 	if desired_items.is_empty():

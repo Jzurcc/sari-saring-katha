@@ -59,9 +59,7 @@ func _on_day_ended(ended_day_number: int) -> void:
 ## Resets the in-game clock back to 5:00 AM for the new day.
 func _reset_clock_to_morning() -> void:
 	# Reset StoryManager's internal display time so it doesn't carry over
-	StoryManager._current_display_time = 5.0
-	StoryManager._clock_cap_hour = 6.0
-	StoryManager._clock_running = false
+	StoryManager._current_display_time = StoryManager.DAY_START_HOUR
 
 	# Reset the sky / TimeOfDay node
 	var tod = get_tree().root.find_child("TimeOfDay", true, false)
