@@ -91,6 +91,16 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_warning_dialog"]
+bg_color = Color(0.075, 0.075, 0.075, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.451, 0.451, 0.451, 0.5)
+shadow_size = 4
+shadow_offset = Vector2(2, 2)
+
 [node name="RestockMenu" type="Control" unique_id=2065680726]
 layout_mode = 3
 anchors_preset = 15
@@ -289,6 +299,24 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
+[node name="TotalRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=555555561]
+layout_mode = 2
+
+[node name="TotalLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/TotalRow" unique_id=555555562]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Total :"
+
+[node name="TotalAmountLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/TotalRow" unique_id=555555563]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "₱0.00"
+horizontal_alignment = 2
+
 [node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=642272564]
 layout_mode = 2
 theme_override_constants/separation = 10
@@ -317,3 +345,4 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_order_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_order_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_order_btn")
 text = "Order"
+

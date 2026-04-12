@@ -7,7 +7,8 @@
 script = ExtResource("1_item")
 item_name = "Kokaloka"
 texture = ExtResource("2_tex")
-price = 20
+price = 11.0
+markup = 4.0
 max_stock = 0
 category = "bottle"
 display_height_meters = 0.6499999999999999

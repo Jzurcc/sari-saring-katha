@@ -29,10 +29,18 @@ signal day_started(day_number: int)
 
 # --- Economy ---
 @warning_ignore("unused_signal")
-signal money_changed(new_amount: int)
+signal money_changed(new_amount: float)
+@warning_ignore("unused_signal")
+signal insufficient_funds()
 
 # --- Drag & Drop ---
 @warning_ignore("unused_signal")
 signal drag_started(item: DraggableItem)
 @warning_ignore("unused_signal")
 signal drag_ended(item: DraggableItem, dropped_successfully: bool)
+
+# --- Restock UI ---
+@warning_ignore("unused_signal")
+signal restock_screen_opened()
+@warning_ignore("unused_signal")
+signal restock_screen_closed()

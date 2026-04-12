@@ -8,7 +8,8 @@ enum ItemType {
 
 @export var item_name: String = "New Item"
 @export var texture: Texture2D
-@export var price: int = 10
+@export var price: float = 10.0
+@export var markup: float = 0.0
 @export var type: ItemType = ItemType.SHELF
 @export var max_stock: int = 5
 @export_enum("snacks", "sachet", "canned goods", "candy", "cigarette", "beverages", "instant noodles", "frozen goods") var category: String = "snacks"

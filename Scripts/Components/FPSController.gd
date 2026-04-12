@@ -19,6 +19,8 @@ var _t_bob: float = 0.0
 var _pitch: float = 0.0
 var _yaw: float = 0.0
 
+var _nokia_outline_timer: SceneTreeTimer = null
+
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 
@@ -38,6 +40,10 @@ func _input(event: InputEvent) -> void:
 			
 			head.rotation.y = _yaw
 			camera.rotation.x = _pitch
+		
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_R:
+				_flash_nokia_outline()
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -97,3 +103,24 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0, movement_friction * delta)
 		
 	move_and_slide()
+
+## Flash the Nokia white outline when R is pressed — same shader as crosshair hover.
+## Auto-clears after 2 seconds.
+func _flash_nokia_outline() -> void:
+	var nokia_region = get_tree().get_first_node_in_group("nokia_interactable")
+	if not nokia_region:
+		nokia_region = get_node_or_null("/root/MainGame/NokiaInteractable")
+	if not is_instance_valid(nokia_region) or not nokia_region.has_method("on_hover"):
+		return
+	
+	nokia_region.on_hover(true)
+	
+	if _nokia_outline_timer != null and is_instance_valid(_nokia_outline_timer):
+		_nokia_outline_timer.timeout.emit()
+	
+	_nokia_outline_timer = get_tree().create_timer(2.0)
+	_nokia_outline_timer.timeout.connect(func():
+		if is_instance_valid(nokia_region):
+			nokia_region.on_hover(false)
+		_nokia_outline_timer = null
+	, CONNECT_ONE_SHOT)

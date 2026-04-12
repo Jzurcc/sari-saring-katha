@@ -7,7 +7,8 @@
 script = ExtResource("1_item")
 item_name = "Pampanga's Good Tocino"
 texture = ExtResource("2_tex")
-price = 80
+price = 50.0
+markup = 15.0
 max_stock = 0
 category = "frozen"
 display_height_meters = 0.6

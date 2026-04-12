@@ -86,6 +86,7 @@ func on_interact() -> void:
 func _on_nokia_ui_closed() -> void:
 	# Restore first-person input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	EventBus.restock_screen_closed.emit()
 
 func _on_restock_screen_closed(ui: Node) -> void:
 	# Free the dynamically instantiated RestockScreen
@@ -93,3 +94,4 @@ func _on_restock_screen_closed(ui: Node) -> void:
 		ui.queue_free()
 	
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	EventBus.restock_screen_closed.emit()

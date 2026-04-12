@@ -46,6 +46,7 @@ signal menu_close_requested
 @onready var cancel_btn: Button = %CancelBtn
 @onready var confirm_btn: Button = %ConfirmBtn
 @onready var list_header: Label = %ListHeader
+@onready var total_amount_label: Label = %TotalAmountLabel
 
 # Drag-to-scroll state for the tab bar
 var _tab_drag_active: bool = false
@@ -53,7 +54,7 @@ var _tab_drag_start_x: float = 0.0
 var _tab_scroll_start: float = 0.0
 
 var selected_items: Dictionary = {}  # ItemData -> int (order count)
-var total_price: int = 0
+var total_price: float = 0.0
 var current_category: String = ""
 var currently_selected_item: ItemData = null
 
@@ -64,9 +65,9 @@ var category_tabs: Array[String] = [
 	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
-	"snack": "Snacks",
+	"snack": "Snack",
 	"sachet": "Sachets",
-	"can": "Canned",
+	"can": "Can",
 	"candy": "Candy",
 	"cigarette": "Cigarette",
 	"pack": "Noodles",
@@ -83,6 +84,7 @@ var stream_sfx_7 = preload("res://Audio/SFX/ui_sfx_7.mp3")
 var stream_sfx_9 = preload("res://Audio/SFX/ui_sfx_9.mp3")
 var stream_sfx_12 = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var stream_sfx_15 = preload("res://Audio/SFX/ui_sfx_15.mp3")
+var stream_sfx_kaching = preload("res://Audio/SFX/money kaching.mp3")
 var sfx_player: AudioStreamPlayer
 
 # --- Colors ---
@@ -303,7 +305,7 @@ func _update_detail_panel(item: ItemData) -> void:
 	detail_icon.custom_minimum_size = detail_icon_size
 	detail_name.text = _get_display_name(item)
 	detail_name.add_theme_font_size_override("font_size", detail_name_font_size)
-	detail_price.text = "₱" + str(item.price)
+	detail_price.text = "₱%.2f" % item.price
 	detail_price.add_theme_font_size_override("font_size", detail_price_font_size)
 	add_btn.visible = true
 
@@ -322,12 +324,19 @@ func _on_add_pressed() -> void:
 	var current_count = selected_items.get(item, 0)
 	
 	# max_stock is the shelf capacity; allow ordering up to that many units.
-	# Fall back to 10 if max_stock is 0 (not yet configured in the resource).
-	var order_cap = item.max_stock if item.max_stock > 0 else 10
+	var order_cap = item.max_stock if item.max_stock > 0 else 99
 	
 	if current_count + 1 > order_cap:
 		return
 	
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	var money: float = 0.0
+	if gm_nodes.size() > 0: money = gm_nodes[0].money
+	if total_price + item.price > money:
+		EventBus.insufficient_funds.emit()
+		return
+	
+	_play_sfx(stream_sfx_12)
 	selected_items[item] = current_count + 1
 	total_price += item.price
 	_update_order_list()
@@ -351,6 +360,8 @@ func _update_order_list() -> void:
 				continue
 			var row = _create_order_row(item, count)
 			order_list_container.add_child(row)
+			
+	total_amount_label.text = "₱%.2f" % total_price
 	
 	# Keep header static — total shown separately at confirm
 	list_header.text = "Order List"
@@ -425,12 +436,20 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	selected_items[item] = new_count
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
+	total_amount_label.text = "₱%.2f" % total_price
 
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
 	var count = selected_items.get(item, 0)
-	var order_cap = item.max_stock if item.max_stock > 0 else 10
+	var order_cap = item.max_stock if item.max_stock > 0 else 99
 	
 	if count + 1 > order_cap:
+		return
+		
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	var money: float = 0.0
+	if gm_nodes.size() > 0: money = gm_nodes[0].money
+	if total_price + item.price > money:
+		EventBus.insufficient_funds.emit()
 		return
 	
 	_play_sfx(stream_sfx_12)
@@ -439,6 +458,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	total_price += item.price
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
+	total_amount_label.text = "₱%.2f" % total_price
 
 # ========== ACTIONS ==========
 func _close_restock_screen() -> void:

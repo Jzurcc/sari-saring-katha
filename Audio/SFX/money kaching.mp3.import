@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dudqm1b855eic"
+path="res://.godot/imported/money kaching.mp3-1f1759e848c2be0db9c0898eefb6a245.mp3str"
+
+[deps]
+
+source_file="res://Audio/SFX/money kaching.mp3"
+dest_files=["res://.godot/imported/money kaching.mp3-1f1759e848c2be0db9c0898eefb6a245.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
