@@ -219,11 +219,36 @@ func _connect_dialogic() -> void:
 func _on_dialogue_about_to_show(info: Dictionary) -> void:
 	if info.has("character") and info.character != null:
 		var story_mgr = get_node_or_null("/root/StoryManager")
-		if story_mgr:
+		if not story_mgr:
+			return
+
+		var char_to_play: CustomerData = null
+		var char_path = info.character.resource_path
+
+		# Case A: Information matches a specific character's .dch (Story/Filler)
+		for c in story_mgr.available_characters:
+			if c.dialogic_character and c.dialogic_character.resource_path == char_path:
+				char_to_play = c
+				break
+		
+		# Case B: Information matches our generic Customer.dch (Generic/Social)
+		# We match by display_name which was patched in CustomerSpawner.
+		if char_to_play == null and char_path.ends_with("Customer.dch"):
 			for c in story_mgr.available_characters:
-				if c.dialogic_character and c.dialogic_character.resource_path == info.character.resource_path:
-					if c.dialogue_blip_sound:
-						dialogue_blip_player.pitch_scale = randf_range(0.95, 1.05)
-						dialogue_blip_player.stream = c.dialogue_blip_sound
-						dialogue_blip_player.play()
+				if c.character_name == info.character.display_name:
+					char_to_play = c
 					break
+		
+		
+		# Case C: Information matches Uncle Mario's .dch (which is outside standard available_characters)
+		if char_to_play == null:
+			var mario_manager = get_node_or_null("/root/MarioManager")
+			if mario_manager and mario_manager.get("_mario_data"):
+				var m_data = mario_manager.get("_mario_data")
+				if m_data and m_data.dialogic_character and m_data.dialogic_character.resource_path == char_path:
+					char_to_play = m_data
+
+		if char_to_play and char_to_play.dialogue_blip_sound:
+			dialogue_blip_player.pitch_scale = randf_range(0.90, 1.10)
+			dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
+			dialogue_blip_player.play()

@@ -7,32 +7,32 @@
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/ShelfSurface.gd" id="11_ktwve"]
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
-[ext_resource type="Texture2D" uid="uid://477m82fgpway" path="res://Assets/items/icons/4_snack_anoba.png" id="13_k6vqf"]
-[ext_resource type="Resource" uid="uid://csksk82fco6uv" path="res://Resources/items/can/Scam.tres" id="14_jn25s"]
 [ext_resource type="Resource" uid="uid://cpcgoekabpt4x" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
-[ext_resource type="Resource" uid="uid://b8wdl1xo1irfb" path="res://Resources/items/cigarette/Marboro.tres" id="16_glaac"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="19_k6vqf"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
-[ext_resource type="Resource" uid="uid://b83qhc1lkdq1w" path="res://Resources/items/frozen/Borgir.tres" id="22_him8o"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
-[ext_resource type="Script" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Resource" uid="uid://dmn5s1v8mjqcf" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
+[ext_resource type="Resource" uid="uid://3n6igstcuejf" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
 [ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
 [ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="27_0wdc3"]
 [ext_resource type="Texture2D" uid="uid://bf27xwxax7q4s" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="28_w42fa"]
+[ext_resource type="Resource" uid="uid://bbfaghymgce0c" path="res://Resources/items/can/Argentita.tres" id="29_lcmar"]
 [ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="29_upseh"]
+[ext_resource type="Resource" uid="uid://c22inoq8pabcm" path="res://Resources/items/can/Cenchuree.tres" id="30_cqekc"]
 [ext_resource type="Texture2D" uid="uid://m2xmxd7f13vb" path="res://Assets/ui/trophy.png" id="30_si6xw"]
 [ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
 [ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
-[ext_resource type="PackedScene" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
 [ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/RestockScreen.tscn" id="36_fto8l"]
 [ext_resource type="Resource" uid="uid://sbu21ye633d5" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://mdcyjtl1s53y" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://d2mf426qt8lwt" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
-[ext_resource type="Script" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
+[ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
@@ -42,7 +42,7 @@
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
 [ext_resource type="Script" uid="uid://camum248co0qu" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
-[ext_resource type="Script" uid="uid://biotsackhhbci" path="res://Scripts/UI/RestockBtnUI.gd" id="restock_btn_scr"]
+[ext_resource type="Script" path="res://Scripts/UI/RestockBtnUI.gd" id="restock_btn_scr"]
 [ext_resource type="Texture2D" uid="uid://ciq32eqg6o1qr" path="res://Assets/ui/restock_btn.png" id="tex_restock_btn"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -55,15 +55,6 @@ script = ExtResource("12_r5sjn")
 depth_variance = 0.235
 tilt_variance_deg = 3.455
 item_gap = 0.0
-
-[sub_resource type="Resource" id="Resource_ev6kq"]
-script = ExtResource("12_yc6xl")
-item_name = "Anoba"
-texture = ExtResource("13_k6vqf")
-max_stock = 1
-category = "snack"
-display_height_meters = 0.6
-opaque_rect = Rect2i(81, 11, 335, 471)
 
 [sub_resource type="Resource" id="Resource_7p2u3"]
 script = ExtResource("23_fgk2h")
@@ -281,7 +272,7 @@ transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 
 [node name="ShelfSurface" type="Node3D" parent="." unique_id=685570783]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 4.0375986, 4.019844)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
+items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), null, ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), null])
 shelf_width = 2.535
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
@@ -290,7 +281,7 @@ layout_strategy = SubResource("Resource_r5sjn")
 [node name="ShelfSurface2" type="Node3D" parent="." unique_id=1927767560]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 3.1444204, 4.019844)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([SubResource("Resource_ev6kq"), ExtResource("14_jn25s"), ExtResource("15_glaac"), ExtResource("16_glaac"), null, null, null, null])
+items = Array[ExtResource("12_yc6xl")]([ExtResource("29_lcmar"), ExtResource("30_cqekc"), ExtResource("29_lcmar"), null, ExtResource("15_glaac"), ExtResource("15_glaac"), ExtResource("30_cqekc"), null, ExtResource("29_lcmar"), null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
@@ -299,7 +290,7 @@ layout_strategy = SubResource("Resource_r5sjn")
 [node name="ShelfSurface3" type="Node3D" parent="." unique_id=1019299572]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 2.0404532, 4.019844)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
+items = Array[ExtResource("12_yc6xl")]([ExtResource("30_cqekc"), null, null, null, null, null, null, null, null, null])
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
@@ -314,21 +305,12 @@ allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
 
-[node name="ShelfSurface5" type="Node3D" parent="." unique_id=1220161792]
-transform = Transform3D(1.3113416e-07, 0, -1, 0, 1, 0, 1, 0, 1.3113416e-07, 4.403581, 4.5687675, -1.4147553)
-script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null, null, null, null])
-shelf_width = 4.005
-allowed_categories = PackedStringArray()
-rejected_categories = PackedStringArray()
-layout_strategy = SubResource("Resource_r5sjn")
-
 [node name="FridgeSurface1" type="Node3D" parent="." unique_id=1039361648]
 transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.55696297, 0.7388933, -4.0581837)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([ExtResource("22_him8o"), ExtResource("22_him8o"), null, null])
+items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray()
+allowed_categories = PackedStringArray("frozen", "bottle")
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_7p2u3")
 
@@ -337,7 +319,7 @@ transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.5
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray()
+allowed_categories = PackedStringArray("frozen", "bottle")
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_him8o")
 
@@ -421,18 +403,22 @@ shape = SubResource("BoxShape3D_3ijh3")
 
 [node name="Trophy" type="Sprite3D" parent="." unique_id=719813067]
 transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, 4.3776584, 5.060807, -0.8048922)
+shaded = true
 texture = ExtResource("30_si6xw")
 
 [node name="Cat" type="Sprite3D" parent="." unique_id=509141086]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.3776584, 4.8488646, 0.9894613)
+shaded = true
 texture = ExtResource("31_1r7st")
 
 [node name="Statue" type="Sprite3D" parent="." unique_id=2103369003]
 transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.1954145, -0.11046374)
+shaded = true
 texture = ExtResource("32_o6tew")
 
 [node name="Frame" type="Sprite3D" parent="." unique_id=1757741366]
 transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.8402715, 2.1249723)
+shaded = true
 texture = ExtResource("33_3ijh3")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=800251844]

@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://cuyl4xi7b1i1v"
-path="res://.godot/imported/QueenMayari.wav-69f89d694cb4e0deb6473b8598e96706.sample"
+path="res://.godot/imported/ReynaMayari.wav-28f699f08dd42b2102bb7dee7ac07a0f.sample"
 
 [deps]
 
-source_file="res://Audio/DialogueBlips/QueenMayari.wav"
-dest_files=["res://.godot/imported/QueenMayari.wav-69f89d694cb4e0deb6473b8598e96706.sample"]
+source_file="res://Audio/DialogueBlips/ReynaMayari.wav"
+dest_files=["res://.godot/imported/ReynaMayari.wav-28f699f08dd42b2102bb7dee7ac07a0f.sample"]
 
 [params]
 

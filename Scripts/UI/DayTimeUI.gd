@@ -42,7 +42,9 @@ func _refresh() -> void:
 			if _time_of_day and "current_time" in _time_of_day:
 				var t: float = _time_of_day.current_time
 				var hour: int = int(t) % 24
-				var minute: int = int(fmod(t, 1.0) * 60.0)
+				var raw_minute: int = int(fmod(t, 1.0) * 60.0)
+				# Snap to :00 or :30 — sky still moves smoothly underneath
+				var minute: int = (raw_minute / 30) * 30
 				var suffix := "AM" if hour < 12 else "PM"
 				var display_hour := hour % 12
 				if display_hour == 0:
