@@ -13,7 +13,11 @@ var target_number: String = "62777444666"
 
 @export_range(-80.0, 24.0) var button_volume_db: float = 0.0
 
+## 3D marker in MainGame where Uncle Mario's speech bubble anchors.
+@export var phone_anchor: Node3D
+
 var screen_label: Label = null
+var _is_calling: bool = false
 
 var sfx_btn_1: AudioStream = preload("res://Audio/SFX/phone_btn_1.mp3")
 var sfx_btn_2: AudioStream = preload("res://Audio/SFX/phone_btn_2.mp3")
@@ -22,6 +26,7 @@ var sfx_btn_3: AudioStream = preload("res://Audio/SFX/phone_btn_3.mp3")
 var button_audio_player: AudioStreamPlayer
 
 var _cancel_btn: Button = null
+
 
 func _ready() -> void:
 	button_audio_player = AudioStreamPlayer.new()
@@ -103,6 +108,7 @@ func _play_button_sound(key: String) -> void:
 	button_audio_player.play()
 
 func _on_key_pressed(digit: String) -> void:
+	if _is_calling: return
 	_play_button_sound(digit)
 	# Max character limit of 14
 	if current_input.length() < 14:
@@ -111,6 +117,7 @@ func _on_key_pressed(digit: String) -> void:
 			screen_label.text = current_input
 
 func _on_clear_pressed() -> void:
+	if _is_calling: return
 	_play_button_sound("clear")
 	if current_input.length() > 0:
 		current_input = current_input.left(current_input.length() - 1)
@@ -118,43 +125,67 @@ func _on_clear_pressed() -> void:
 			screen_label.text = current_input
 
 func _on_enter_pressed() -> void:
+	if _is_calling: return
 	_play_button_sound("enter")
 	if current_input == target_number:
 		_trigger_store_menu()
 
 func _trigger_store_menu() -> void:
-	# Hide Nokia UI so Dialogic can receive input to advance dialogue
-	self.visible = false
+	_is_calling = true
+	print("[NokiaUI] Triggering direct Mario call via Dialogic...")
 	
-	var on_cooldown = InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown
-	if on_cooldown:
-		Dialogic.start("UncleMario_Call_Rest")
-		Dialogic.timeline_ended.connect(_on_dialogue_ended_rest, CONNECT_ONE_SHOT)
-	else:
-		# Correct number — Uncle Mario picks up!
-		Dialogic.start("UncleMario_Call")
-		Dialogic.timeline_ended.connect(_on_dialogue_ended_call, CONNECT_ONE_SHOT)
+	var timeline_path = "res://Dialogue/UncleMario/UncleMario_Call.dtl"
+	
+	Dialogic.Styles.load_style("FollowBubble")
+	var layout = Dialogic.start(timeline_path)
+	
+	# Dynamically grab the marker if not explicitly assigned
+	if not phone_anchor:
+		phone_anchor = get_tree().root.find_child("PhoneMarker3D", true, false) as Node3D
+		print("found phone anchor at ", phone_anchor.global_position)
+	
+	if layout and phone_anchor:
+		# Use Dialogic's internal cache to get the EXACT character resource instance.
+		# Loading the path directly creates a duplicate object that Dialogic won't match!
+		var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
+		if mario_dch and layout.has_method("register_character"):
+			layout.register_character(mario_dch, phone_anchor)
+			print("registered mario dch")
+	elif not phone_anchor:
+		push_error("[NokiaUI] Could not find PhoneMarker3D in the scene tree to anchor the bubble!")
+				
+	Dialogic.timeline_ended.connect(_on_call_ended, CONNECT_ONE_SHOT)
 
-func _on_dialogue_ended_rest() -> void:
-	# After the "rest" dialogue, show the Nokia UI again and reset input
-	self.visible = true
-	if _cancel_btn:
-		_cancel_btn.visible = true
+func _on_call_ended() -> void:
+	print("[NokiaUI] Mario call ended.")
+	_is_calling = false
 	current_input = ""
-	if screen_label:
-		screen_label.text = ""
-
-func _on_dialogue_ended_call() -> void:
-	self.visible = true
-	# After Uncle Mario agrees, open the store catalog
-	var store = get_node_or_null("RestockMenu")
-	if store and store.has_method("open_menu"):
-		store.open_menu()
-	elif store_menu and store_menu.has_method("open_menu"):
-		store_menu.open_menu()
+	_update_screen()
+	
+	# Hide the Nokia interface child (we don't hide self, because we are the RestockScreen holding both)
+	var nokia_ui = get_node_or_null("Nokia")
+	if nokia_ui:
+		nokia_ui.visible = false
+	if _cancel_btn:
+		_cancel_btn.visible = false
+	
+	if not store_menu:
+		store_menu = find_child("RestockMenu", true, false)
+		
+	if store_menu:
+		print("[NokiaUI] Opening RestockMenu...")
+		store_menu.visible = true
+		if store_menu.has_method("open_menu"):
+			store_menu.open_menu()
 	else:
-		push_warning("[NokiaUI] No RestockMenu found to open!")
+		push_warning("[NokiaUI] No store_menu found to open!")
+		nokia_closed.emit()
+
+func _update_screen() -> void:
+	if screen_label:
+		screen_label.text = current_input
 
 func _on_close_pressed() -> void:
+	if _is_calling: return
 	nokia_closed.emit()
 	queue_free()

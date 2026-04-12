@@ -216,11 +216,11 @@ func _build_story_context(t: TransactionContext, data: CustomerData) -> void:
 func _build_filler_context(t: TransactionContext, data: CustomerData) -> void:
 	var base := data.timelines_dir if data.timelines_dir != "" else "res://Dialogue/" + data.character_id + "/"
 
-	_assign_timeline(t, "timeline_greeting",  base + "Filler/filler_greeting_1.dtl")
-	_assign_timeline(t, "timeline_talk",       base + "Filler/filler_talk_1.dtl")
-	_assign_timeline(t, "timeline_satisfied",  base + "Filler/filler_satisfied_1.dtl")
-	_assign_timeline(t, "timeline_wrong_item", base + "Filler/filler_wrong_item_1.dtl")
-	_assign_timeline(t, "timeline_rejected",   base + "Filler/filler_rejected_1.dtl")
+	_search_and_assign_filler(t, "timeline_greeting",  base, "filler_greeting_1.dtl")
+	_search_and_assign_filler(t, "timeline_talk",       base, "filler_talk_1.dtl")
+	_search_and_assign_filler(t, "timeline_satisfied",  base, "filler_satisfied_1.dtl")
+	_search_and_assign_filler(t, "timeline_wrong_item", base, "filler_wrong_item_1.dtl")
+	_search_and_assign_filler(t, "timeline_rejected",   base, "filler_rejected_1.dtl")
 
 	if data.filler_items.size() > 0:
 		t.desired_items.append(data.filler_items.pick_random())
@@ -242,6 +242,27 @@ func _assign_timeline(t: TransactionContext, property: String, path: String) -> 
 		t.set(property, path)
 	else:
 		push_warning("[StoryManager] Missing timeline file for '%s': %s" % [property, path])
+
+func _search_and_assign_filler(t: TransactionContext, property: String, base: String, filename: String) -> void:
+	# 1. Try Filler/ subfolder
+	var p1 = base + "Filler/" + filename
+	if ResourceLoader.exists(p1):
+		t.set(property, p1)
+		return
+	# 2. Try base folder
+	var p2 = base + filename
+	if ResourceLoader.exists(p2):
+		t.set(property, p2)
+		return
+	# 3. Fall back to generic dialogue (e.g. filler_rejected_1 → customer_rejected)
+	#    Extract the timeline type from the property name: "timeline_rejected" → "rejected"
+	var generic_type := property.replace("timeline_", "")
+	var p3 = "res://Dialogue/customer_" + generic_type + ".dtl"
+	if ResourceLoader.exists(p3):
+		t.set(property, p3)
+		return
+	# 4. Only warn if even the generic fallback is missing
+	push_warning("[StoryManager] Missing filler timeline for '%s': tried %s, %s, and %s" % [property, p1, p2, p3])
 
 func _on_customer_satisfied(customer) -> void:
 	if customer.transaction_context and customer.transaction_context.transaction_type == TransactionContext.Type.STORY:

@@ -28,8 +28,7 @@ signal menu_close_requested
 ## Font size for tab buttons
 @export var tab_font_size: int = 15
 
-## TricycleDelivery is a bare script-node (no .tscn), so load it as a script and call .new().
-const TricycleDelivery := preload("res://Scripts/Cutscenes/TricycleDelivery.gd")
+
 
 @export_group("Detail Panel")
 ## Size of the product icon in the detail panel
@@ -457,11 +456,9 @@ func _on_confirm_pressed() -> void:
 	_play_sfx(stream_sfx_7)
 	catalog_purchase_confirmed.emit(total_price, selected_items)
 	_close_restock_screen()
-	# Set delivery cooldown and trigger the 3D cutscene
+	# Set delivery cooldown and trigger the manager
 	InventoryManager.start_delivery_cooldown()
-	var delivery := TricycleDelivery.new()
-	get_tree().current_scene.add_child(delivery)
-	delivery.start_delivery(selected_items)
+	MarioManager.start_delivery(selected_items)
 # ========== HELPERS ==========
 func _get_unlock_day(item_id: String) -> int:
 	# Returns the day number when this item first becomes available.

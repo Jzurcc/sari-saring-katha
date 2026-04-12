@@ -1,0 +1,188 @@
+extends Node
+
+## MarioManager.gd
+## Centralized controller for Uncle Mario's interaction lifecycle:
+## Call -> Order -> Delivery.
+##
+## IMPORTANT: Dialogic.start(timeline, X) — X is a LABEL, not a style.
+## Style must be set via Dialogic.Styles.load_style() BEFORE calling start().
+
+signal call_ended(success: bool)
+signal delivery_finished
+
+const MARIO_DATA_PATH = "res://Resources/customers/UncleMario.tres"
+const TRICYCLE_TEXTURE = "res://Assets/ui/mario_tricycle.png"
+
+## Timeline paths — full res:// paths, immune to stale Dialogic directory cache.
+const TL_CALL      := "res://Dialogue/UncleMario/UncleMario_Call.dtl"
+const TL_CALL_REST := "res://Dialogue/UncleMario/UncleMario_Call_Rest.dtl"
+const TL_DELIVERY  := "res://Dialogue/UncleMario/UncleMario_Delivery.dtl"
+
+var _mario_data: CustomerData = null
+
+# Delivery Positions (3D)
+const START_POS = Vector3(-15.299, 3.206, 11.855)
+const TARGET_POS = Vector3(-15.299, 3.206, -6.055)
+const EXIT_POS = Vector3(-15.299, 3.206, -45.0)
+
+# Timing
+const DELIVERY_DELAY_SEC := 2.0
+
+# Audio
+var sfx_arrive: AudioStream = preload("res://Audio/SFX/motorcyle arrives and honks.mp3")
+var sfx_leave: AudioStream = preload("res://Audio/SFX/motorcyle leaves.mp3")
+
+var _current_anchor: Node = null
+var _is_calling: bool = false
+var _delivery_sprite: Sprite3D = null
+var _sfx_player: AudioStreamPlayer
+
+func _ready() -> void:
+	_sfx_player = AudioStreamPlayer.new()
+	add_child(_sfx_player)
+	
+	if ResourceLoader.exists(MARIO_DATA_PATH):
+		_mario_data = load(MARIO_DATA_PATH)
+	else:
+		push_warning("[MarioManager] CustomerData resource not found: " + MARIO_DATA_PATH)
+
+# ── CALL LOGIC ───────────────────────────────────────────────────────
+
+func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
+	if _is_calling:
+		print("[MarioManager] Already calling — ignoring.")
+		return
+	_is_calling = true
+	_current_anchor = anchor
+	
+	# Determine which timeline to use
+	var timeline_path := TL_CALL
+	var success_expected := true
+	
+	if InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
+		timeline_path = TL_CALL_REST
+		success_expected = false
+	
+	print("[MarioManager] Initiating call → ", timeline_path)
+	_start_dialogue(timeline_path, anchor, _on_call_dialogue_ended.bind(success_expected))
+
+func _on_call_dialogue_ended(success: bool) -> void:
+	print("[MarioManager] Call dialogue ended. Success: ", success)
+	_is_calling = false
+	_current_anchor = null
+	call_ended.emit(success)
+
+# ── DELIVERY LOGIC ───────────────────────────────────────────────────
+
+func start_delivery(items_to_restock: Dictionary) -> void:
+	print("[MarioManager] Starting delivery sequence...")
+	await get_tree().create_timer(DELIVERY_DELAY_SEC).timeout
+	
+	# 1. Setup Tricycle
+	_delivery_sprite = Sprite3D.new()
+	_delivery_sprite.pixel_size = 0.01
+	_delivery_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	_delivery_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	_delivery_sprite.shaded = true
+	_delivery_sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_delivery_sprite.scale = Vector3(1.5, 1.5, 1.5)
+	
+	if ResourceLoader.exists(TRICYCLE_TEXTURE):
+		_delivery_sprite.texture = load(TRICYCLE_TEXTURE)
+	
+	_delivery_sprite.position = START_POS
+	get_tree().current_scene.add_child(_delivery_sprite)
+	
+	# Start a continuous rocking/bobbing animation
+	var rock_tween = create_tween().set_loops()
+	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", 3.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", -3.0, 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", 0.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	# 2. Arrive
+	_play_sfx(sfx_arrive)
+	var arrive_tween = create_tween()
+	arrive_tween.set_parallel(true)
+	arrive_tween.tween_property(_delivery_sprite, "position:z", TARGET_POS.z, 3.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	arrive_tween.tween_property(_delivery_sprite, "position:x", TARGET_POS.x, 3.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	arrive_tween.tween_property(_delivery_sprite, "position:y", TARGET_POS.y + 0.15, 0.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	
+	await arrive_tween.finished
+	if _sfx_player.playing: await _sfx_player.finished
+	
+	# 3. Delivery Dialogue
+	_current_anchor = _delivery_sprite
+	_start_dialogue(TL_DELIVERY, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock))
+
+func _on_delivery_dialogue_ended(items: Dictionary) -> void:
+	# 4. Leave
+	_play_sfx(sfx_leave)
+	var leave_tween = create_tween()
+	leave_tween.tween_property(_delivery_sprite, "position:z", EXIT_POS.z, 3.5).set_trans(Tween.TRANS_LINEAR)
+	await leave_tween.finished
+	if _sfx_player.playing: await _sfx_player.finished
+	
+	# 5. Finalize Stock
+	for item in items.keys():
+		InventoryManager.add_stock(item, items[item])
+	
+	_refresh_containers(get_tree().root)
+	InventoryManager.save_state()
+	
+	# Cleanup
+	_delivery_sprite.queue_free()
+	_delivery_sprite = null
+	_current_anchor = null
+	delivery_finished.emit()
+
+# ── INTERNAL HELPERS ────────────────────────────────────────────────
+
+## Starts a Dialogic timeline with the FollowBubble style.
+## Mirrors the WORKING pattern from CustomerSpawner._start_dialogue:
+##   1. Load style via Dialogic.Styles.load_style()
+##   2. Start timeline via Dialogic.start() with NO second argument
+##   3. Register character anchor for bubble positioning
+func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) -> void:
+	print("[MarioManager] --- Starting Dialogue ---")
+	print("[MarioManager]   Path:   ", timeline_path)
+	print("[MarioManager]   Anchor: ", anchor.name if anchor else "NULL")
+	
+	# 1. Verify the file exists
+	if not ResourceLoader.exists(timeline_path):
+		push_error("[MarioManager] Timeline file does not exist: " + timeline_path)
+		callback.call()
+		return
+	
+	# 2. If Dialogic is running, wait for it to finish first
+	if Dialogic.current_timeline != null:
+		print("[MarioManager]   Dialogic busy — waiting for current timeline to end...")
+		await Dialogic.timeline_ended
+		print("[MarioManager]   Previous timeline ended. Proceeding with Mario call.")
+	
+	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
+	Dialogic.Styles.load_style("FollowBubble")
+	
+	# 4. Start the timeline (second arg is label/index, NOT style name)
+	var layout = Dialogic.start(timeline_path)
+	
+	print("[MarioManager]   Layout: ", layout.name if layout else "NULL")
+	
+	# 5. Register character so the bubble anchors to the marker
+	if layout and _mario_data and _mario_data.dialogic_character:
+		if layout.has_method("register_character"):
+			layout.register_character(_mario_data.dialogic_character, anchor)
+			print("[MarioManager]   Registered character → ", anchor.name)
+	
+	# 6. Connect the end signal
+	Dialogic.timeline_ended.connect(callback, CONNECT_ONE_SHOT)
+	print("[MarioManager] --- Dialogue Started OK ---")
+
+func _play_sfx(stream: AudioStream) -> void:
+	_sfx_player.stream = stream
+	_sfx_player.play()
+
+func _refresh_containers(node: Node) -> void:
+	if node.has_method("refresh_visibility"):
+		node.refresh_visibility()
+	for child in node.get_children():
+		_refresh_containers(child)

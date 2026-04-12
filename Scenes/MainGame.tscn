@@ -340,12 +340,16 @@ texture = ExtResource("29_upseh")
 [node name="nokia" parent="." unique_id=83503094 instance=ExtResource("34_1r7st")]
 transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)
 
-[node name="NokiaInteractable" type="Area3D" parent="." unique_id=1636395040]
+[node name="NokiaInteractable" type="Area3D" parent="." unique_id=1636395040 node_paths=PackedStringArray("phone_anchor")]
 transform = Transform3D(-0.00041700015, 5.1847568e-11, 0.00059306703, -3.4507866e-19, -0.0007249949, 6.3381064e-11, 0.00059306703, 3.645531e-11, 0.00041700012, 2.1762958, 2.205704, -0.26590863)
 script = ExtResource("35_3ijh3")
 nokia_ui_scene = ExtResource("36_fto8l")
+phone_anchor = NodePath("../PhoneMarker3D")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NokiaInteractable" unique_id=459392347]
 shape = SubResource("BoxShape3D_3ijh3")
+
+[node name="PhoneMarker3D" type="Marker3D" parent="." unique_id=46839002]
+transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)
 
 [editable path="TransactionTray"]
