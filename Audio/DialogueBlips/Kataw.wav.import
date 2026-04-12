@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://cd6kcxidbnq0c"
-path="res://.godot/imported/KuyaKap.wav-8671c0c7bec871a013a10c9316e94637.sample"
+uid="uid://i5wq3jd100ji"
+path="res://.godot/imported/Kataw.wav-d5af67175aa2e5cdfcbe8f317adf426b.sample"
 
 [deps]
 
-source_file="res://Audio/DialogueBlips/KuyaKap.wav"
-dest_files=["res://.godot/imported/KuyaKap.wav-8671c0c7bec871a013a10c9316e94637.sample"]
+source_file="res://Audio/DialogueBlips/Kataw.wav"
+dest_files=["res://.godot/imported/Kataw.wav-d5af67175aa2e5cdfcbe8f317adf426b.sample"]
 
 [params]
 
