@@ -42,8 +42,6 @@ signal catalog_menu_closed
 @onready var cancel_btn: Button = %CancelBtn
 @onready var confirm_btn: Button = %ConfirmBtn
 @onready var list_header: Label = %ListHeader
-@onready var warning_dialog: Control = %WarningDialog
-@onready var dialog_close_btn: Button = %DialogCloseBtn
 @onready var total_amount_label: Label = %TotalAmountLabel
 
 # Drag-to-scroll state for the tab bar
@@ -155,9 +153,6 @@ func _ready() -> void:
 	var close_btn_node = get_node_or_null("%CloseBtn")
 	if close_btn_node:
 		close_btn_node.pressed.connect(_on_cancel_pressed)
-		
-	if dialog_close_btn:
-		dialog_close_btn.pressed.connect(hide_warning_dialog)
 	
 	hide()
 
@@ -354,8 +349,7 @@ func _on_add_pressed() -> void:
 	var current_count = selected_items.get(item, 0)
 	
 	# max_stock is the shelf capacity; allow ordering up to that many units.
-	# Fall back to 10 if max_stock is 0 (not yet configured in the resource).
-	var order_cap = item.max_stock if item.max_stock > 0 else 10
+	var order_cap = item.max_stock if item.max_stock > 0 else 99
 	
 	if current_count + 1 > order_cap:
 		return
@@ -364,10 +358,9 @@ func _on_add_pressed() -> void:
 	var money: float = 0.0
 	if gm_nodes.size() > 0: money = gm_nodes[0].money
 	if total_price + item.price > money:
-		show_warning_dialog()
+		EventBus.insufficient_funds.emit()
 		return
 	
-	hide_warning_dialog()
 	_play_sfx(stream_sfx_12)
 	selected_items[item] = current_count + 1
 	total_price += item.price
@@ -453,7 +446,6 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	if count <= 0:
 		return
 	
-	hide_warning_dialog()
 	_play_sfx(stream_sfx_15)
 	
 	var new_count = count - 1
@@ -469,10 +461,11 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	selected_items[item] = new_count
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
+	total_amount_label.text = "₱%.2f" % total_price
 
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
 	var count = selected_items.get(item, 0)
-	var order_cap = item.max_stock if item.max_stock > 0 else 10
+	var order_cap = item.max_stock if item.max_stock > 0 else 99
 	
 	if count + 1 > order_cap:
 		return
@@ -481,16 +474,16 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	var money: float = 0.0
 	if gm_nodes.size() > 0: money = gm_nodes[0].money
 	if total_price + item.price > money:
-		show_warning_dialog()
+		EventBus.insufficient_funds.emit()
 		return
 	
-	hide_warning_dialog()
 	_play_sfx(stream_sfx_12)
 	var new_count = count + 1
 	selected_items[item] = new_count
 	total_price += item.price
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
+	total_amount_label.text = "₱%.2f" % total_price
 
 # ========== ACTIONS ==========
 func _close_restock_screen() -> void:
@@ -530,21 +523,6 @@ func _on_confirm_pressed() -> void:
 		var delivery = delivery_script.new()
 		get_tree().root.add_child(delivery)
 		delivery.start_delivery(selected_items)
-
-func show_warning_dialog() -> void:
-	if warning_dialog.visible:
-		return
-	warning_dialog.position.x = -warning_dialog.size.x
-	warning_dialog.show()
-	var tween = create_tween()
-	tween.tween_property(warning_dialog, "position:x", 30.0, 0.4).set_trans(Tween.TRANS_OUT).set_ease(Tween.EASE_OUT)
-
-func hide_warning_dialog() -> void:
-	if not warning_dialog.visible:
-		return
-	var tween = create_tween()
-	tween.tween_property(warning_dialog, "position:x", -warning_dialog.size.x, 0.3).set_trans(Tween.TRANS_IN).set_ease(Tween.EASE_IN)
-	tween.tween_callback(warning_dialog.hide)
 
 # ========== HELPERS ==========
 func _get_unlock_day(item_id: String) -> int:
