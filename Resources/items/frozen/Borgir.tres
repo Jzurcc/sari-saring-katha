@@ -5,7 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Borgir"
+item_name = "COD Ulam Borgir"
 texture = ExtResource("2_tex")
 price = 80
 type = 1

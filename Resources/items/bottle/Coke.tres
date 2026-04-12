@@ -5,7 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Coke"
+item_name = "Kokaloka"
 texture = ExtResource("2_tex")
 price = 20
 max_stock = 0

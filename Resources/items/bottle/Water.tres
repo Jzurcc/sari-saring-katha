@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c24ioc10cyovi"]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c5kgvev543yjk"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://osqfv480efm7" path="res://Assets/items/icons/27_bottle_water.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Water"
+item_name = "Tubig"
 texture = ExtResource("2_tex")
 price = 20
 max_stock = 0

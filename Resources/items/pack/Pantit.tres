@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bfvs1gwef18l0"]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://3ka08i00pynd"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://c467ht84hhr2o" path="res://Assets/items/icons/28_pack_pantit.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Pantit"
+item_name = "Pantit Cantot"
 texture = ExtResource("2_tex")
 price = 18
 max_stock = 0

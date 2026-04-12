@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b8fdvm3kol2hw"]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c22inoq8pabcm"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://b4pqpjrn0w2he" path="res://Assets/items/icons/11_can_cenchuree.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Cenchuree"
+item_name = "Cenchuree Tuna"
 texture = ExtResource("2_tex")
 price = 30
 max_stock = 0

@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://sdbgssfdqvbh"]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bot1l7o4oi5xs"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://dpirg5fxktoe7" path="res://Assets/items/icons/33_frozen_nagets.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Nagets"
+item_name = "Purified Foods Nagets"
 texture = ExtResource("2_tex")
 price = 80
 max_stock = 0

@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://clw021t4kjxl"]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c8gktyld21aq2"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://bxr3rn4i45yo3" path="res://Assets/items/icons/29_pack_chicken.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Chicken"
+item_name = "Dadi Chicken na Chicken"
 texture = ExtResource("2_tex")
 price = 18
 max_stock = 0
