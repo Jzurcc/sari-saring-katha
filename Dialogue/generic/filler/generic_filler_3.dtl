@@ -1,0 +1,10 @@
+Customer: Hey there! Have you heard the latest news going around the neighborhood today?
+
+- No, what happened?
+	Customer: Haha, I'll spare you the long version, but let's just say someone's stray dog chased the delivery guy again!
+	- Oh no, not again. I hope everyone is okay!
+	[end_timeline]
+
+- I try to stay out of the drama.
+	Customer: Very wise of you. It's better to mind the business than the neighbors anyway! See you later.
+	[end_timeline]

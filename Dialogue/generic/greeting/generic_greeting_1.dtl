@@ -1,0 +1,3 @@
+Customer: Tao po! Good morning! 
+Customer: Do you have any {InventoryManager.current_item_name} available today?
+[end_timeline]

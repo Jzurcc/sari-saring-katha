@@ -1,8 +1,0 @@
-KuyaKap: {InventoryManager.current_item_name} pa rin please!
-- Sige, antayin lang.
-	KuyaKap: Sige sige, mag-aabang na lang ako.
-	[end_timeline]
-- Pasensya na, hindi kita maseserbisyuhan ngayon.
-	KuyaKap: Nako, ganon ba? Sige, aalis na ako.
-	[signal arg="refuse_service"]
-	[end_timeline]

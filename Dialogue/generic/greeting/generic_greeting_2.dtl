@@ -1,0 +1,3 @@
+Customer: Hello po!
+Customer: Can I buy {InventoryManager.current_item_name}, please?
+[end_timeline]

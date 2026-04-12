@@ -1,9 +1,0 @@
-
-Customer: Hindi 'yan yung hinihingi ko ah.
-- Sorry, sandali lang.
-	Customer: Okay, mag-aabang na lang.
-	[end_timeline]
-- Sorry, wala kaming stock.
-	Customer: Ah sige, susunod na lang.
-	[signal arg="refuse_service"]
-	[end_timeline]

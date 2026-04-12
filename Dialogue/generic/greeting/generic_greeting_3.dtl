@@ -1,0 +1,3 @@
+Customer: Hi there! Magandang araw. 
+Customer: I'm just looking to buy some {InventoryManager.current_item_name} if you have some in stock.
+[end_timeline]
