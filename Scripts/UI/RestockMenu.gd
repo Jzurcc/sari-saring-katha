@@ -42,6 +42,7 @@ signal catalog_menu_closed
 @onready var cancel_btn: Button = %CancelBtn
 @onready var confirm_btn: Button = %ConfirmBtn
 @onready var list_header: Label = %ListHeader
+@onready var warning_label: Label = %WarningLabel
 
 # Drag-to-scroll state for the tab bar
 var _tab_drag_active: bool = false
@@ -49,7 +50,7 @@ var _tab_drag_start_x: float = 0.0
 var _tab_scroll_start: float = 0.0
 
 var selected_items: Dictionary = {}  # ItemData -> int (order count)
-var total_price: int = 0
+var total_price: float = 0.0
 var current_category: String = ""
 var currently_selected_item: ItemData = null
 
@@ -108,6 +109,7 @@ var stream_sfx_7 = preload("res://Audio/SFX/ui_sfx_7.mp3")
 var stream_sfx_9 = preload("res://Audio/SFX/ui_sfx_9.mp3")
 var stream_sfx_12 = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var stream_sfx_15 = preload("res://Audio/SFX/ui_sfx_15.mp3")
+var stream_sfx_kaching = preload("res://Audio/SFX/money kaching.mp3")
 var sfx_player: AudioStreamPlayer
 
 # --- Colors ---
@@ -328,7 +330,7 @@ func _update_detail_panel(item: ItemData) -> void:
 	detail_icon.custom_minimum_size = detail_icon_size
 	detail_name.text = _get_display_name(item)
 	detail_name.add_theme_font_size_override("font_size", detail_name_font_size)
-	detail_price.text = "₱" + str(item.price)
+	detail_price.text = "₱%.2f" % item.price
 	detail_price.add_theme_font_size_override("font_size", detail_price_font_size)
 	add_btn.visible = true
 
@@ -353,6 +355,15 @@ func _on_add_pressed() -> void:
 	if current_count + 1 > order_cap:
 		return
 	
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	var money: float = 0.0
+	if gm_nodes.size() > 0: money = gm_nodes[0].money
+	if total_price + item.price > money:
+		warning_label.show()
+		return
+	
+	warning_label.hide()
+	_play_sfx(stream_sfx_12)
 	selected_items[item] = current_count + 1
 	total_price += item.price
 	_update_order_list()
@@ -376,6 +387,11 @@ func _update_order_list() -> void:
 				continue
 			var row = _create_order_row(item, count)
 			order_list_container.add_child(row)
+			
+	if total_price > 0:
+		confirm_btn.text = "Order - ₱%.2f" % total_price
+	else:
+		confirm_btn.text = "Confirm Order"
 	
 	# Keep header static — total shown separately at confirm
 	list_header.text = "Order List"
@@ -435,6 +451,7 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	if count <= 0:
 		return
 	
+	warning_label.hide()
 	_play_sfx(stream_sfx_15)
 	
 	var new_count = count - 1
@@ -457,7 +474,15 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	
 	if count + 1 > order_cap:
 		return
+		
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	var money: float = 0.0
+	if gm_nodes.size() > 0: money = gm_nodes[0].money
+	if total_price + item.price > money:
+		warning_label.show()
+		return
 	
+	warning_label.hide()
 	_play_sfx(stream_sfx_12)
 	var new_count = count + 1
 	selected_items[item] = new_count
@@ -485,7 +510,13 @@ func _on_cancel_pressed() -> void:
 
 func _on_confirm_pressed() -> void:
 	if total_price > 0:
-		_play_sfx(stream_sfx_7)
+		_play_sfx(stream_sfx_kaching)
+		
+		# Deduct money instantly
+		var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+		if gm_nodes.size() > 0:
+			gm_nodes[0].deduct_money(total_price)
+			
 		catalog_purchase_confirmed.emit(total_price, selected_items)
 		_close_restock_screen()
 		

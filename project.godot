@@ -29,9 +29,9 @@ EventBus="*res://Scripts/EventBus.gd"
 DragManager="*res://Scripts/DragManager.gd"
 InventoryManager="*res://Scripts/InventoryManager.gd"
 Dialogic="*uid://ds2q0uclmolvu"
+SaveManager="*res://Scripts/SaveManager.gd"
 SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
-SaveManager="*res://Scripts/SaveManager.gd"
 AudioManager="*res://Scripts/Managers/AudioManager.gd"
 StoryManager="*res://Scripts/Managers/StoryManager.gd"
 
@@ -42,9 +42,9 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 [dialogic]
 
 directories/dch_directory={
-"KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
 "TK": "res://Dialogue/Timelines/TK.dch",
-"UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
+"Timelines/KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
+"Timelines/UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
 }
 directories/dtl_directory={
 "UncleMario_Call": "res://Dialogue/Timelines/UncleMario_Call.dtl",

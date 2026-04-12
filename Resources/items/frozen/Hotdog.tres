@@ -7,7 +7,8 @@
 script = ExtResource("1_item")
 item_name = "Hotdog"
 texture = ExtResource("2_tex")
-price = 80
+price = 25.0
+markup = 7.0
 type = 1
 max_stock = 0
 category = "frozen"

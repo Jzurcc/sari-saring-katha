@@ -289,6 +289,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
+[node name="WarningLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=987654321]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "Magtipid ka naman!"
+horizontal_alignment = 1
+visible = false
+
 [node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox" unique_id=642272564]
 layout_mode = 2
 theme_override_constants/separation = 10

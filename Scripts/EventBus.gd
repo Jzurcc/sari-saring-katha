@@ -29,7 +29,7 @@ signal day_started(day_number: int)
 
 # --- Economy ---
 @warning_ignore("unused_signal")
-signal money_changed(new_amount: int)
+signal money_changed(new_amount: float)
 
 # --- Drag & Drop ---
 @warning_ignore("unused_signal")

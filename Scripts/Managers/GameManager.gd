@@ -5,8 +5,8 @@ class_name GameManager
 
 const MAX_DAYS := 7
 
-@export var starting_money: int = 0
-var money: int = 0
+@export var starting_money: float = 200.0
+var money: float = 0.0
 var day: int = 1
 
 func _ready() -> void:
@@ -29,9 +29,18 @@ func _ready() -> void:
 
 func _on_transaction_completed(item: ItemData, was_correct: bool) -> void:
 	if was_correct and item:
-		money += item.price
+		var earning = item.price + item.markup
+		money += earning
 		EventBus.money_changed.emit(money)
-		print("[GameManager] Earned %d. Total: %d" % [item.price, money])
+		print("[GameManager] Earned %.2f (Buy: %.2f, Markup: %.2f). Total: %.2f" % [earning, item.price, item.markup, money])
+
+func deduct_money(amount: float) -> void:
+	if money >= amount:
+		money -= amount
+		EventBus.money_changed.emit(money)
+		print("[GameManager] Spent %.2f. Remaining: %.2f" % [amount, money])
+	else:
+		print("[GameManager] Error: Tried to spend %.2f but only has %.2f!" % [amount, money])
 
 func _on_day_ended(ended_day_number: int) -> void:
 	print("[GameManager] Day %d ended!" % ended_day_number)
