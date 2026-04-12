@@ -17,6 +17,8 @@ var character_themes: Dictionary = {
 	# "KuyaKap": audio_laughing_horse
 }
 
+var dialogue_blip_player: AudioStreamPlayer
+
 var audio_calming_morning = preload("res://Audio/SFX/Calming Morning Sounds.mp3")
 var audio_night_crickets = preload("res://Audio/SFX/Sounds of Night Crickets.mp3")
 
@@ -51,6 +53,10 @@ func _ready() -> void:
 	ambience_night.volume_db = -4.0
 	add_child(ambience_night)
 	
+	dialogue_blip_player = AudioStreamPlayer.new()
+	dialogue_blip_player.bus = "SFX"
+	add_child(dialogue_blip_player)
+	
 	afternoon_playlist = [audio_fantastic_idea, audio_not_me]
 	
 	bgm_player.finished.connect(_on_bgm_finished)
@@ -72,6 +78,8 @@ func _ready() -> void:
 	bgm_player.stream = audio_autumn_wind
 	bgm_player.volume_db = base_volume_db
 	bgm_player.play()
+	
+	call_deferred("_connect_dialogic")
 
 func _process(_delta: float) -> void:
 	# Prevent the dummy TimeOfDay inside the TitleScreen3D from hijacking the music!
@@ -202,3 +210,21 @@ func stop_character_theme() -> void:
 func _on_ambience_night_finished() -> void:
 	if current_bgm_phase == BGMPhase.DUSK:
 		ambience_night.play()
+
+func _connect_dialogic() -> void:
+	if has_node("/root/Dialogic"):
+		var dialogic = get_node("/root/Dialogic")
+		dialogic.Text.about_to_show_text.connect(_on_dialogue_about_to_show)
+
+func _on_dialogue_about_to_show(info: Dictionary) -> void:
+	if info.has("character") and info.character != null:
+		var char_identifier = info.character.get_identifier()
+		var char_name = char_identifier.get_file().trim_suffix(".dch")
+		
+		var story_mgr = get_node_or_null("/root/StoryManager")
+		if story_mgr:
+			var customer_data = story_mgr._get_character_data(char_name)
+			if customer_data and customer_data.dialogue_blip_sound:
+				dialogue_blip_player.pitch_scale = randf_range(0.95, 1.05)
+				dialogue_blip_player.stream = customer_data.dialogue_blip_sound
+				dialogue_blip_player.play()
