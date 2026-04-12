@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://btpkpjvi4h2xs"]
+
+[ext_resource type="Resource" uid="uid://cegjg31uitlcf" path="res://Dialogue/Timelines/TK.dch" id="1_6cmda"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_iwd4p"]
+[ext_resource type="AudioStream" uid="uid://1pvsjry1o4fe" path="res://Audio/DialogueBlips/TK.wav" id="2_0aich"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_lhygj"]
+[ext_resource type="Texture2D" uid="uid://dkniinpqcxqbj" path="res://Assets/characters/sprites/TK.png" id="5_0aich"]
+
+[resource]
+script = ExtResource("2_lhygj")
+character_id = "tk"
+character_name = "T.K."
+sprite_texture = ExtResource("5_0aich")
+dialogic_character = ExtResource("1_6cmda")
+sprite_scale = 0.8
+dialogue_blip_sound = ExtResource("2_0aich")
+metadata/_custom_type_script = "uid://b7rtu6knii7es"

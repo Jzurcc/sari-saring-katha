@@ -4,13 +4,16 @@
 [ext_resource type="AudioStream" uid="uid://cd6kcxidbnq0c" path="res://Audio/DialogueBlips/KuyaKap.wav" id="1_g8i5g"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_ux6bh"]
 [ext_resource type="Resource" uid="uid://b8wdl1xo1irfb" path="res://Resources/items/cigarette/Marboro.tres" id="2_item"]
+[ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/characters/sprites/Kuya_Kap.png" id="6_5suku"]
 [ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
 
 [resource]
 script = ExtResource("1_cst")
 character_id = "kuyakap"
 character_name = "Kuya Kap"
+sprite_texture = ExtResource("6_5suku")
 dialogic_character = ExtResource("dch_kuyakap")
 filler_items = Array[ExtResource("1_ux6bh")]([ExtResource("2_item")])
-timelines_dir = "res://Dialogue/KuyaKap/"
+timelines_dir = "res://Dialogue/kuyakap/"
+sprite_scale = 0.65
 dialogue_blip_sound = ExtResource("1_g8i5g")

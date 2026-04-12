@@ -19,7 +19,7 @@
 &"portraits": {
 "Default": {
 "export_overrides": {
-"image": "\"res://Assets/characters/portraits/Kuya_Kap_Portrait.png\""
+"image": "\"\""
 },
 "mirror": false,
 "offset": Vector2(0, 0),
