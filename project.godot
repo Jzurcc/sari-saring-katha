@@ -33,6 +33,7 @@ SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
 SaveManager="*res://Scripts/SaveManager.gd"
 AudioManager="*res://Scripts/Managers/AudioManager.gd"
+StoryManager="*res://Scripts/Managers/StoryManager.gd"
 
 [debug_draw_3d]
 
@@ -41,10 +42,9 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 [dialogic]
 
 directories/dch_directory={
-"KuyaKap": "res://Characters/KuyaKap.dch",
-"Timelines/KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
-"Timelines/UncleMario": "res://Dialogue/Timelines/UncleMario.dch",
-"UncleMario": "res://Characters/UncleMario.dch"
+"KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
+"TK": "res://Dialogue/Timelines/TK.dch",
+"UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
 }
 directories/dtl_directory={
 "UncleMario_Call": "res://Dialogue/Timelines/UncleMario_Call.dtl",
@@ -55,11 +55,28 @@ directories/dtl_directory={
 "customer_returning": "res://Dialogue/customer_returning.dtl",
 "customer_satisfied": "res://Dialogue/customer_satisfied.dtl",
 "customer_talk": "res://Dialogue/customer_talk.dtl",
+"customer_wrong_item": "res://Dialogue/customer_wrong_item.dtl",
 "day_ended": "res://Dialogue/day_ended.dtl",
-"main_timeline": "res://Dialogue/Timelines/main_timeline.dtl"
+"filler_greeting_1": "res://Dialogue/KuyaKap/Filler/filler_greeting_1.dtl",
+"filler_satisfied_1": "res://Dialogue/KuyaKap/Filler/filler_satisfied_1.dtl",
+"filler_talk_1": "res://Dialogue/KuyaKap/Filler/filler_talk_1.dtl",
+"filler_wrong_item_1": "res://Dialogue/KuyaKap/Filler/filler_wrong_item_1.dtl",
+"generic_talk_1": "res://Dialogue/KuyaKap/Generic/generic_talk_1.dtl",
+"main_timeline": "res://Dialogue/Timelines/main_timeline.dtl",
+"placeholder_story_missing": "res://Dialogue/placeholder_story_missing.dtl",
+"stage_0_greeting": "res://Dialogue/KuyaKap/Story/stage_0_greeting.dtl",
+"stage_0_rejected": "res://Dialogue/KuyaKap/Story/stage_0_rejected.dtl",
+"stage_0_satisfied": "res://Dialogue/KuyaKap/Story/stage_0_satisfied.dtl",
+"stage_0_talk": "res://Dialogue/KuyaKap/Story/stage_0_talk.dtl",
+"stage_0_wrong_item": "res://Dialogue/KuyaKap/Story/stage_0_wrong_item.dtl"
 }
-layout/style_directory={}
-layout/style_list=[]
+layout/style_directory={
+"BubbleDialogue": "res://Assets/Dialogue/BubbleDialogue.tres",
+"BubbleStyle": "res://Assets/Dialogue/BubbleStyle.tres",
+"DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
+"FollowBubble": "res://Assets/Dialogue/FollowBubble.tres"
+}
+layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres", "res://Assets/Dialogue/BubbleStyle.tres", "res://Assets/Dialogue/BubbleDialogue.tres", "res://Assets/Dialogue/FollowBubble.tres"]
 layout/default_style=""
 glossary/default_case_sensitive=true
 extensions_folder="res://addons/dialogic_additions"

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://d4jnw03hx3nfe"]
+
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="1_cst"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_ux6bh"]
+[ext_resource type="Resource" uid="uid://b8wdl1xo1irfb" path="res://Resources/items/cigarette/Marboro.tres" id="2_item"]
+
+[resource]
+script = ExtResource("1_cst")
+character_id = "KuyaKap"
+character_name = "Kuya Kap"
+filler_items = Array[ExtResource("1_ux6bh")]([ExtResource("2_item")])
+timelines_dir = "res://Dialogue/KuyaKap/"
