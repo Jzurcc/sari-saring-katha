@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://d4eu1sjihbv1"]
+
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_gd2q0"]
+[ext_resource type="Resource" uid="uid://ujg1okhawa3p" path="res://Dialogue/Timelines/ManangAna.dch" id="1_m676v"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_m676v"]
+[ext_resource type="AudioStream" uid="uid://dermcytbup648" path="res://Audio/DialogueBlips/ManangAna.wav" id="2_n8hjk"]
+[ext_resource type="Texture2D" uid="uid://b4g72wi816xwj" path="res://Assets/characters/sprites/ManangAna.png" id="5_4587l"]
+
+[resource]
+script = ExtResource("2_m676v")
+character_id = "manangana"
+character_name = "Manang Ana"
+sprite_texture = ExtResource("5_4587l")
+dialogic_character = ExtResource("1_m676v")
+sprite_scale = 0.5
+dialogue_blip_sound = ExtResource("2_n8hjk")
+metadata/_custom_type_script = "uid://b7rtu6knii7es"
