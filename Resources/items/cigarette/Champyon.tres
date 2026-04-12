@@ -11,5 +11,5 @@ price = 1.0
 markup = 1.0
 max_stock = 0
 category = "cigarette"
-display_height_meters = 0.45
+display_height_meters = 0.3
 opaque_rect = Rect2i(112, 22, 280, 452)
