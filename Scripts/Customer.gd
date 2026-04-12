@@ -11,7 +11,7 @@ signal clicked(customer: Customer)
 var target_position: Vector3
 var is_waiting: bool = false
 @export var character_id: String = "KuyaKap"
-var desire: ItemData
+var transaction_context: TransactionContext
 
 @export var vertical_follow_factor: float = 1.0
 @export var min_sprite_y: float = 1.3
@@ -21,11 +21,18 @@ var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 
 @onready var body_sprite: Sprite3D = $Body
+@onready var _collision: CollisionShape3D = $CollisionShape3D
+
+var _outline_material: ShaderMaterial = null
 
 func _ready() -> void:
 	input_event.connect(_on_input_event)
-	
-	# Store the initial position of the body sprite for the vertical follow logic
+
+	# Place customers on layer 5 (value 16) so PlayerInteraction can detect
+	# them with a dedicated raycast that passes through counters and items.
+	collision_layer = 0
+	set_collision_layer_value(5, true)
+
 	if body_sprite:
 		_base_sprite_y = body_sprite.position.y
 
@@ -34,10 +41,12 @@ func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _norm
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			clicked.emit(self)
 
-func setup(data: ItemData, target: Vector3) -> void:
+func setup(context: TransactionContext, target: Vector3) -> void:
 	# Capture spawn position now — global_position is already set by CustomerSpawner.
 	_spawn_position = global_position
-	desire = data
+	transaction_context = context
+	if transaction_context:
+		character_id = transaction_context.character_id
 	target_position = target
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
@@ -47,16 +56,13 @@ func on_interact() -> void:
 		clicked.emit(self)
 
 func _process(delta: float) -> void:
-	var camera := get_viewport().get_camera_3d()
-	if camera and body_sprite:
-		var pitch_deg := rad_to_deg(camera.global_rotation.x)
-		var target_y := _base_sprite_y + (pitch_deg * 0.01 * vertical_follow_factor)
-		body_sprite.position.y = clamp(target_y, min_sprite_y, max_sprite_y)
-
-	# Early return optimization: skip processing when waiting at counter
-	if is_waiting:
+	# Skip movement and arrival while waiting at the counter OR while a
+	# resolve/dismiss animation is playing. Without the _is_resolving check,
+	# dismiss() sets is_waiting=false on the same frame, _process resumes,
+	# and arrived_at_counter() fires a second time → double dialogue.
+	if is_waiting or _is_resolving:
 		return
-	
+
 	global_position = global_position.move_toward(target_position, movement_speed * delta)
 	if global_position.distance_to(target_position) < 0.1:
 		arrived_at_counter()
@@ -69,16 +75,12 @@ func check_item(item: ItemData) -> bool:
 	# Ignore new drops while a satisfaction/rejection animation is playing.
 	if _is_resolving:
 		return false
-	if item == null or desire == null:
+		
+	if item == null or transaction_context == null:
 		reject()
 		return false
 
-	# Prefer the explicit id field; fall back to resource_path which is always
-	# unique per .tres file. This prevents blank ids from matching everything.
-	var item_key := item.id if item.id not in ["", "unset"] else item.resource_path
-	var desire_key := desire.id if desire.id not in ["", "unset"] else desire.resource_path
-
-	if item_key == desire_key:
+	if transaction_context.is_item_desired(item):
 		satisfy()
 		return true
 	else:
@@ -86,9 +88,12 @@ func check_item(item: ItemData) -> bool:
 		return false
 
 func satisfy() -> void:
-	# Lock against re-entry during the animation chain.
+	# Immediately mark as no longer waiting so nothing else can interact with
+	# or dismiss this customer while the exit animation plays.
+	is_waiting = false
 	_is_resolving = true
-	InventoryManager.decrement_cooldown() #
+	_clear_outline()
+	InventoryManager.decrement_cooldown()
 	
 	await get_tree().create_timer(2.0).timeout
 	
@@ -98,7 +103,6 @@ func satisfy() -> void:
 	await fade_tween.finished
 	
 	satisfied.emit()
-	# Broadcast on the EventBus so CustomerSpawner._on_customer_finished fires.
 	EventBus.customer_satisfied.emit(self)
 	queue_free()
 
@@ -114,6 +118,7 @@ func reject() -> void:
 func dismiss() -> void:
 	is_waiting = false
 	_is_resolving = true
+	_clear_outline()
 
 	# Walk back toward the spawn edge
 	var walk_tween = create_tween()
@@ -127,3 +132,25 @@ func dismiss() -> void:
 	await walk_tween.finished
 	EventBus.customer_dismissed.emit(self)
 	queue_free()
+
+## Show or hide the hover outline on the customer sprite.
+## Only shows when the customer is actively waiting and can be interacted with.
+func on_hover(hovered: bool) -> void:
+	if hovered and is_waiting and not _is_resolving:
+		if _outline_material == null and body_sprite and body_sprite.texture:
+			_outline_material = ShaderMaterial.new()
+			_outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")
+			_outline_material.set_shader_parameter("albedo_texture", body_sprite.texture)
+			_outline_material.set_shader_parameter("outline_color", Color.WHITE)
+			_outline_material.set_shader_parameter("outline_width", 16.0)
+			# Match the Sprite3D's billboard = 2 (Fixed Y) so the outline never
+			# tilts when the player looks up or down.
+			_outline_material.set_shader_parameter("fixed_y_billboard", true)
+		if body_sprite:
+			body_sprite.material_overlay = _outline_material
+	else:
+		_clear_outline()
+
+func _clear_outline() -> void:
+	if body_sprite:
+		body_sprite.material_overlay = null
