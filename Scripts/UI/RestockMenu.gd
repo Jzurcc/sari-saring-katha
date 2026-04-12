@@ -66,9 +66,9 @@ var category_tabs: Array[String] = [
 	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
-	"snack": "Snacks",
+	"snack": "Snack",
 	"sachet": "Sachets",
-	"can": "Canned",
+	"can": "Can",
 	"candy": "Candy",
 	"cigarette": "Cigarette",
 	"pack": "Noodles",
@@ -477,11 +477,6 @@ func _on_confirm_pressed() -> void:
 	_play_sfx(stream_sfx_7)
 	catalog_purchase_confirmed.emit(total_price, selected_items)
 	_close_restock_screen()
-	# Set delivery cooldown and trigger the 3D cutscene
-	InventoryManager.start_delivery_cooldown()
-	var delivery := TricycleDelivery.new()
-	get_tree().current_scene.add_child(delivery)
-	delivery.start_delivery(selected_items)
 	if total_price > 0:
 		_play_sfx(stream_sfx_kaching)
 		
@@ -496,11 +491,15 @@ func _on_confirm_pressed() -> void:
 		# Set cooldown for Uncle Mario (3 to 5 customers)
 		InventoryManager.customers_needed_for_delivery = randi() % 3 + 3
 		InventoryManager.save_state()
+		
 		# Trigger 3D Delivery Cutscene
-		var delivery_script = load("res://Scripts/Cutscenes/TricycleDelivery.gd")
-		var delivery = delivery_script.new()
+		var delivery := TricycleDelivery.new()
 		get_tree().root.add_child(delivery)
 		delivery.start_delivery(selected_items)
+		
+		selected_items.clear()
+		total_price = 0.0
+		_update_order_list()
 
 # ========== HELPERS ==========
 func _get_unlock_day(item_id: String) -> int:

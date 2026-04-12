@@ -60,6 +60,7 @@ func on_interact() -> void:
 		var ui := nokia_ui_scene.instantiate()
 		get_tree().root.add_child(ui)
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		EventBus.restock_screen_opened.emit()
 		# Hide the 3D model while the 2D Nokia UI is open
 		if is_instance_valid(_nokia_root):
 			_nokia_root.visible = false
@@ -77,6 +78,7 @@ func _on_nokia_ui_closed() -> void:
 	if is_instance_valid(_nokia_root):
 		_nokia_root.visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	EventBus.restock_screen_closed.emit()
 
 func _on_restock_screen_closed() -> void:
 	# Hide the RestockScreen container that wraps the Nokia UI
@@ -84,3 +86,4 @@ func _on_restock_screen_closed() -> void:
 	if restock_screen:
 		restock_screen.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	EventBus.restock_screen_closed.emit()

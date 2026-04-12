@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://maingame123"]
 
 [ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/MainGame.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="5_eeqno"]
 [ext_resource type="PackedScene" uid="uid://c4vq703xgyume" path="res://Scenes/TransactionTray.tscn" id="6_d4f28"]
+[ext_resource type="Texture2D" uid="uid://dlcdiuky20ro2" path="res://Assets/ui/peso_icon.png" id="6_eeqno"]
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/ShelfSurface.gd" id="11_ktwve"]
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
@@ -20,18 +22,17 @@
 [ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="27_0wdc3"]
 [ext_resource type="Texture2D" uid="uid://bf27xwxax7q4s" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="28_w42fa"]
 [ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="29_upseh"]
-[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="Texture2D" uid="uid://m2xmxd7f13vb" path="res://Assets/ui/trophy.png" id="30_si6xw"]
+[ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
+[ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
+[ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
+[ext_resource type="PackedScene" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
 [ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/RestockScreen.tscn" id="36_fto8l"]
 [ext_resource type="Resource" uid="uid://sbu21ye633d5" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://mdcyjtl1s53y" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://d2mf426qt8lwt" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
-[ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
-[ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
-[ext_resource type="Texture2D" uid="uid://m2xmxd7f13vb" path="res://Assets/ui/trophy.png" id="30_si6xw"]
-[ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
-[ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
-[ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
+[ext_resource type="Script" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
@@ -41,6 +42,8 @@
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
 [ext_resource type="Script" uid="uid://camum248co0qu" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
+[ext_resource type="Script" uid="uid://biotsackhhbci" path="res://Scripts/UI/RestockBtnUI.gd" id="restock_btn_scr"]
+[ext_resource type="Texture2D" uid="uid://ciq32eqg6o1qr" path="res://Assets/ui/restock_btn.png" id="tex_restock_btn"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -102,30 +105,91 @@ transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1703619609]
 
-[node name="MoneyLabel" type="Label" parent="CanvasLayer" unique_id=719210032]
-offset_left = 20.0
+[node name="LeftHUD" type="Control" parent="CanvasLayer" unique_id=495697440]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 50.0
 offset_top = 20.0
-offset_right = 150.0
-offset_bottom = 60.0
+offset_right = 334.0
+offset_bottom = 250.0
+
+[node name="MoneyContainer" type="Control" parent="CanvasLayer/LeftHUD" unique_id=21228685]
+anchors_preset = 0
+offset_right = 296.0
+offset_bottom = 52.0
+
+[node name="MoneyLabel" type="Label" parent="CanvasLayer/LeftHUD/MoneyContainer" unique_id=719210032]
+layout_mode = 0
+offset_left = 65.2
+offset_top = 6.83
+offset_right = 207.20015
+offset_bottom = 50.83
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("5_eeqno")
 theme_override_font_sizes/font_size = 32
-text = "Peso: 0"
+text = "200.00"
+vertical_alignment = 1
 script = ExtResource("ml_scr")
 
-[node name="DayLabel" type="Label" parent="CanvasLayer" unique_id=720000001]
-offset_left = 20.0
-offset_top = 62.0
-offset_right = 200.0
-offset_bottom = 95.0
-theme_override_font_sizes/font_size = 22
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer/LeftHUD/MoneyContainer" unique_id=1279123241]
+layout_mode = 0
+offset_right = 58.15
+offset_bottom = 58.0
+texture = ExtResource("6_eeqno")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RestockBtn" type="TextureRect" parent="CanvasLayer/LeftHUD" unique_id=664189215]
+layout_mode = 0
+offset_top = 53.0
+offset_right = 83.0
+offset_bottom = 229.0
+texture = ExtResource("tex_restock_btn")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("restock_btn_scr")
+
+[node name="RightHUD" type="Control" parent="CanvasLayer" unique_id=1056939455]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 20.0
+offset_right = -36.0
+offset_bottom = 124.0
+grow_horizontal = 0
+
+[node name="DayLabel" type="Label" parent="CanvasLayer/RightHUD" unique_id=720000001]
+layout_mode = 0
+offset_right = 224.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("5_eeqno")
+theme_override_font_sizes/font_size = 30
 text = "Day 1"
+horizontal_alignment = 2
 script = ExtResource("dt_scr")
 
-[node name="TimeLabel" type="Label" parent="CanvasLayer" unique_id=720000002]
-offset_left = 20.0
-offset_top = 97.0
-offset_right = 200.0
-offset_bottom = 130.0
-theme_override_font_sizes/font_size = 22
+[node name="TimeContainer" type="HBoxContainer" parent="CanvasLayer/RightHUD" unique_id=2116547955]
+layout_mode = 0
+offset_top = 48.0
+offset_right = 224.0
+offset_bottom = 84.0
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="TimeLabel" type="Label" parent="CanvasLayer/RightHUD/TimeContainer" unique_id=720000002]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("5_eeqno")
+theme_override_font_sizes/font_size = 30
 text = "5:00 AM"
 script = ExtResource("dt_scr")
 display_mode = 1
@@ -133,9 +197,9 @@ display_mode = 1
 [node name="HeldItemLabel" type="Label" parent="CanvasLayer" unique_id=195192398]
 visible = false
 offset_left = 20.0
-offset_top = 80.0
+offset_top = 135.0
 offset_right = 250.0
-offset_bottom = 120.0
+offset_bottom = 170.0
 theme_override_font_sizes/font_size = 24
 script = ExtResource("hil_scr")
 
@@ -143,6 +207,8 @@ script = ExtResource("hil_scr")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("ch_scr")
 
@@ -203,7 +269,6 @@ data = ExtResource("23_7p2u3")
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
 fog_enabled = true
-current_time = 17.41
 current_time = 5.23
 wind_direction = 2.35619451204804
 
@@ -345,7 +410,7 @@ texture = ExtResource("29_upseh")
 [node name="nokia" parent="." unique_id=83503094 instance=ExtResource("34_1r7st")]
 transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)
 
-[node name="NokiaInteractable" type="Area3D" parent="." unique_id=1636395040]
+[node name="NokiaInteractable" type="Area3D" parent="." unique_id=1636395040 groups=["nokia_interactable"]]
 transform = Transform3D(-0.00041700015, 5.1847568e-11, 0.00059306703, -3.4507866e-19, -0.0007249949, 6.3381064e-11, 0.00059306703, 3.645531e-11, 0.00041700012, 2.1762958, 2.205704, -0.26590863)
 script = ExtResource("35_3ijh3")
 nokia_ui_scene = ExtResource("36_fto8l")

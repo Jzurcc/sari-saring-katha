@@ -38,3 +38,9 @@ signal insufficient_funds()
 signal drag_started(item: DraggableItem)
 @warning_ignore("unused_signal")
 signal drag_ended(item: DraggableItem, dropped_successfully: bool)
+
+# --- Restock UI ---
+@warning_ignore("unused_signal")
+signal restock_screen_opened()
+@warning_ignore("unused_signal")
+signal restock_screen_closed()

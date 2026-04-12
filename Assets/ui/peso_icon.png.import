@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfohvt3pk70ou"
-path="res://.godot/imported/mdi_clock.png-aea8fc10b8a9b2ddc9dd4c2fd47f1255.ctex"
+uid="uid://dlcdiuky20ro2"
+path="res://.godot/imported/peso_icon.png-fcc0348881ae16bbba425cc8aee7217b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ui/mdi_clock.png"
-dest_files=["res://.godot/imported/mdi_clock.png-aea8fc10b8a9b2ddc9dd4c2fd47f1255.ctex"]
+source_file="res://Assets/ui/peso_icon.png"
+dest_files=["res://.godot/imported/peso_icon.png-fcc0348881ae16bbba425cc8aee7217b.ctex"]
 
 [params]
 

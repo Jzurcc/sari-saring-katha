@@ -2,6 +2,7 @@ extends Node
 
 var target_items: Dictionary
 var sprite: Sprite3D
+var _moving: bool = false
 
 var sfx_player: AudioStreamPlayer
 

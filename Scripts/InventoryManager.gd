@@ -103,7 +103,7 @@ func restock_item(item: ItemData, count: int = -1) -> void:
 
 ## Add a delta amount of stock (e.g. ordered quantity), capped at max_stock.
 func add_stock(item: ItemData, amount: int) -> void:
-	var current := _stock.get(item.resource_path, 0)
+	var current: int = _stock.get(item.resource_path, 0) as int
 	_stock[item.resource_path] = mini(current + amount, item.max_stock)
 	save_state()
 
