@@ -52,6 +52,9 @@ func reset() -> void:
 	position = base_position
 
 
+var _is_opening := false
+var _is_closing := false
+
 func _process(delta:float) -> void:
 	base_position = get_speaker_canvas_position()
 
@@ -91,17 +94,36 @@ func _process(delta:float) -> void:
 	tail.points = curve.tessellate(5)
 	tail.width = bubble_rect.size.x * 0.15
 
+	if not _is_opening and not _is_closing:
+		var in_view := true
+		if is_instance_valid(node_to_point_at) and node_to_point_at is Node3D:
+			var cam: Camera3D = get_viewport().get_camera_3d()
+			if cam:
+				if cam.is_position_behind((node_to_point_at as Node3D).global_position):
+					in_view = false
+				else:
+					var margin := 200.0
+					var rect := get_viewport_rect().grow(margin)
+					if not rect.has_point(base_position):
+						in_view = false
+						
+		var target_alpha := 1.0 if in_view else 0.0
+		var fade_speed := 8.0 if in_view else 20.0
+		modulate.a = move_toward(modulate.a, target_alpha, delta * fade_speed)
 
 func open() -> void:
+	_is_closing = false
+	_is_opening = true
 	set_process(true)
 	show()
 	text.enabled = true
 	var open_tween := create_tween().set_parallel(true)
 	open_tween.tween_property(self, "scale", Vector2.ONE, 0.1).from(Vector2.ZERO)
 	open_tween.tween_property(self, "modulate:a", 1.0, 0.1).from(0.0)
-
+	open_tween.finished.connect(func(): _is_opening = false)
 
 func close() -> void:
+	_is_closing = true
 	text.enabled = false
 	var close_tween := create_tween().set_parallel(true)
 	close_tween.tween_property(self, "scale", Vector2.ONE * 0.8, 0.2)

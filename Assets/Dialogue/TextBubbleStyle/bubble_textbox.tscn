@@ -1,0 +1,203 @@
+[gd_scene format=3 uid="uid://bubble_textbox_scene"]
+
+[ext_resource type="Script" path="res://Assets/Dialogue/TextBubbleStyle/bubble_textbox_layer.gd" id="1_layer"]
+[ext_resource type="Script" path="res://Assets/Dialogue/TextBubbleStyle/bubble_animations.gd" id="2_anim"]
+[ext_resource type="Script" uid="uid://drhfq6rmdeuri" path="res://addons/dialogic/Modules/Text/node_dialog_text.gd" id="3_text"]
+[ext_resource type="Script" uid="uid://dpv2dfiv5dhmr" path="res://addons/dialogic/Modules/Text/node_type_sound.gd" id="4_sound"]
+[ext_resource type="Script" uid="uid://dve1vwse2peji" path="res://addons/dialogic/Modules/Text/node_next_indicator.gd" id="5_next"]
+[ext_resource type="Script" uid="uid://bklme8oymw6h7" path="res://addons/dialogic/Modules/DefaultLayoutParts/Layer_VN_Textbox/autoadvance_indicator.gd" id="6_autoadv"]
+[ext_resource type="Script" uid="uid://bak74s0kcr0ao" path="res://addons/dialogic/Modules/Text/node_name_label.gd" id="7_name"]
+[ext_resource type="Texture2D" uid="uid://m4kluld7hrfo" path="res://Assets/Dialogue/TextBubbleStyle/Bubble.png" id="8_bubble"]
+[ext_resource type="Texture2D" uid="uid://b0rpqfg4fhebk" path="res://addons/dialogic/Modules/DefaultLayoutParts/Layer_VN_Textbox/next.svg" id="9_next_icon"]
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BubbleAnchor:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_pop"]
+resource_name = "textbox_pop"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BubbleAnchor:scale")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.8, 0.8), Vector2(1.05, 1.05), Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("BubbleAnchor:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_fadeup"]
+resource_name = "textbox_fade_up"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("BubbleAnchor:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_main"]
+_data = {
+&"RESET": SubResource("Animation_reset"),
+&"textbox_pop": SubResource("Animation_pop"),
+&"textbox_fade_up": SubResource("Animation_fadeup")
+}
+
+[node name="BubbleTextboxLayer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_layer")
+
+[node name="Animations" type="AnimationPlayer" parent="." unique_id="animations_node"]
+unique_name_in_owner = true
+libraries/ = SubResource("AnimationLibrary_main")
+autoplay = &"RESET"
+script = ExtResource("2_anim")
+
+[node name="BubbleAnchor" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 320.0
+offset_top = -750.0
+offset_right = 1460.0
+offset_bottom = -405.0
+grow_horizontal = 1
+grow_vertical = 0
+
+[node name="BubbleImage" type="TextureRect" parent="BubbleAnchor"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("8_bubble")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextArea" type="MarginContainer" parent="BubbleAnchor"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 75.0
+offset_top = 27.0
+offset_right = -75.0
+offset_bottom = -150.0
+mouse_filter = 2
+
+[node name="DialogicNode_DialogText" type="RichTextLabel" parent="BubbleAnchor/TextArea" unique_id="dialog_text"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 1
+theme_override_colors/default_color = Color(0.08, 0.06, 0.06, 1)
+theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/bold_font_size = 16
+theme_override_font_sizes/italics_font_size = 16
+theme_override_font_sizes/bold_italics_font_size = 16
+bbcode_enabled = true
+text = "Some default text"
+visible_characters_behavior = 1
+script = ExtResource("3_text")
+textbox_root = NodePath("..")
+
+[node name="DialogicNode_TypeSounds" type="AudioStreamPlayer" parent="BubbleAnchor/TextArea/DialogicNode_DialogText" unique_id="type_sounds"]
+unique_name_in_owner = true
+script = ExtResource("4_sound")
+play_every_character = 0
+
+[node name="NextIndicator" type="Control" parent="BubbleAnchor" unique_id="next_ind"]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -90.0
+offset_top = -165.0
+offset_right = -30.0
+offset_bottom = -120.0
+mouse_filter = 2
+script = ExtResource("5_next")
+show_on_questions = true
+texture = ExtResource("9_next_icon")
+
+[node name="AutoAdvanceProgressbar" type="ProgressBar" parent="BubbleAnchor" unique_id="autoadvance_pb"]
+unique_name_in_owner = true
+modulate = Color(0.2, 0.2, 0.2, 0.3)
+layout_mode = 1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -162.0
+offset_right = -75.0
+offset_bottom = -155.0
+mouse_filter = 2
+max_value = 1.0
+step = 0.001
+value = 0.5
+show_percentage = false
+script = ExtResource("6_autoadv")
+
+[node name="NameLabelHolder" type="Control" parent="BubbleAnchor"]
+layout_mode = 1
+anchor_right = 1.0
+offset_top = -48.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+
+[node name="DialogicNode_NameLabel" type="Label" parent="BubbleAnchor/NameLabelHolder" unique_id="name_label"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 0
+offset_left = 75.0
+offset_top = 3.0
+offset_right = 450.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(0.08, 0.06, 0.06, 1)
+theme_override_font_sizes/font_size = 15
+text = "Name"
+script = ExtResource("7_name")
+name_label_root = NodePath("..")
