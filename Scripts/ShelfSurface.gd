@@ -49,11 +49,11 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 
 @export_group("Drop Guards")
 
-## Which ItemData.ItemType this surface accepts when items are dragged onto it.
-@export var accepted_type: ItemData.ItemType = ItemData.ItemType.SHELF
+## Optional. If not empty, only items matching these categories can be dropped here.
+@export var allowed_categories: PackedStringArray = []
 
-## Optional category filter for drag-and-drop. Empty array = accept all categories.
-@export var accepted_categories: PackedStringArray = []
+## Optional. Items matching these categories will be rejected.
+@export var rejected_categories: PackedStringArray = []
 
 @export_group("Layout")
 
@@ -272,13 +272,13 @@ func _free_slot_for(item: DraggableItem) -> void:
 
 
 ## Returns true if [param item] is allowed to be dropped onto this surface
-## based on the [member accepted_type] and [member accepted_categories] guards.
+## based on the [member allowed_categories] and [member rejected_categories] guards.
 func accepts_drop(item: ItemData) -> bool:
 	if not item:
 		return false
-	if item.type != accepted_type:
+	if rejected_categories.has(item.category):
 		return false
-	if accepted_categories.size() > 0 and item.category not in accepted_categories:
+	if allowed_categories.size() > 0 and not allowed_categories.has(item.category):
 		return false
 	return true
 
