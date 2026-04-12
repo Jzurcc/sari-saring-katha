@@ -34,6 +34,7 @@ DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
 SaveManager="*res://Scripts/SaveManager.gd"
 AudioManager="*res://Scripts/Managers/AudioManager.gd"
 StoryManager="*res://Scripts/Managers/StoryManager.gd"
+MarioManager="*res://Scripts/Managers/MarioManager.gd"
 
 [debug_draw_3d]
 
@@ -47,9 +48,10 @@ directories/dch_directory={
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
 }
 directories/dtl_directory={
-"UncleMario_Call": "res://Dialogue/Timelines/UncleMario_Call.dtl",
-"UncleMario_Call_Rest": "res://Dialogue/Timelines/UncleMario_Call_Rest.dtl",
-"UncleMario_Delivery": "res://Dialogue/Timelines/UncleMario_Delivery.dtl",
+"UncleMario/UncleMario_Call": "res://Dialogue/UncleMario/UncleMario_Call.dtl",
+"UncleMario/UncleMario_Call_Rest": "res://Dialogue/UncleMario/UncleMario_Call_Rest.dtl",
+"UncleMario/UncleMario_Delivery": "res://Dialogue/UncleMario/UncleMario_Delivery.dtl",
+"UncleMario_Busy": "res://Dialogue/UncleMario/UncleMario_Busy.dtl",
 "customer_greeting": "res://Dialogue/customer_greeting.dtl",
 "customer_rejected": "res://Dialogue/customer_rejected.dtl",
 "customer_returning": "res://Dialogue/customer_returning.dtl",

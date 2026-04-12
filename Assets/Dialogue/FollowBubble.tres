@@ -10,7 +10,7 @@
 script = ExtResource("2_f1p2q")
 scene = ExtResource("1_4mo22")
 overrides = {
-"bubble_count": "1.0"
+"bubble_count": "5.0"
 }
 
 [sub_resource type="Resource" id="Resource_2dqtx"]
@@ -53,4 +53,4 @@ layer_info = {
 "10": SubResource("Resource_2dqtx"),
 "11": SubResource("Resource_xwpe6")
 }
-metadata/_latest_layer = "10"
+metadata/_latest_layer = "11"
