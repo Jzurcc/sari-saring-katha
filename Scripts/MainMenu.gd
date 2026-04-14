@@ -8,7 +8,7 @@ var cam: Camera3D = null
 var cam_origin_rot: Vector3
 var cam_origin_pos: Vector3
 var is_starting_game: bool = false
-var pan_sensitivity: float = 0.5
+var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
 
@@ -56,18 +56,15 @@ func _process(delta: float) -> void:
 	var mouse_pos = get_viewport().get_mouse_position()
 	var window_size = get_viewport().get_visible_rect().size
 	
-	var is_hovering_menu = buttons.get_global_rect().has_point(mouse_pos)
-	
-	if not is_hovering_menu:
-		# Mapped from -1.0 to 1.0 based on screen center
-		current_offset_x = (mouse_pos.x / window_size.x) * 2.0 - 1.0
-		current_offset_y = (mouse_pos.y / window_size.y) * 2.0 - 1.0
+	# Mapped from -1.0 to 1.0 based on screen center
+	current_offset_x = (mouse_pos.x / window_size.x) * 2.0 - 1.0
+	current_offset_y = (mouse_pos.y / window_size.y) * 2.0 - 1.0
 	
 	var target_rot_x = cam_origin_rot.x - (current_offset_y * pan_sensitivity)
 	var target_rot_y = cam_origin_rot.y - (current_offset_x * pan_sensitivity)
 	
-	var target_pos_x = cam_origin_pos.x + (current_offset_x * 0.05)
-	var target_pos_y = cam_origin_pos.y - (current_offset_y * 0.05)
+	var target_pos_x = cam_origin_pos.x + (current_offset_x * 0.02)
+	var target_pos_y = cam_origin_pos.y - (current_offset_y * 0.02)
 	
 	# Smoothly interpolate the camera's transform
 	cam.rotation.x = lerp(cam.rotation.x, target_rot_x, delta * 3.0)
@@ -85,7 +82,7 @@ func _on_new_game_pressed() -> void:
 		return
 		
 	var tween = create_tween()
-	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	
 	var target_pos = Vector3(-1.638, 4.1, -0.05)
 	var target_rot = Vector3(0, deg_to_rad(90.0), 0)

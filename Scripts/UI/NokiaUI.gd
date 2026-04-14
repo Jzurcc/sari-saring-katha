@@ -18,6 +18,7 @@ var target_number: String = "62777444666"
 
 var screen_label: Label = null
 var _is_calling: bool = false
+var _current_layout: Node = null
 
 var sfx_btn_1: AudioStream = preload("res://Audio/SFX/phone_btn_1.mp3")
 var sfx_btn_2: AudioStream = preload("res://Audio/SFX/phone_btn_2.mp3")
@@ -35,6 +36,8 @@ func _ready() -> void:
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
 	_add_cancel_button()
+	
+	EventBus.customer_arrived.connect(_on_customer_arrived)
 
 func _add_cancel_button() -> void:
 	# Inject a cancel button so the player can always exit the Nokia UI.
@@ -137,19 +140,19 @@ func _trigger_store_menu() -> void:
 	var timeline_path = "res://Dialogue/unclemario/UncleMario_Call.dtl"
 	
 	Dialogic.Styles.load_style("FollowBubble")
-	var layout = Dialogic.start(timeline_path)
+	_current_layout = Dialogic.start(timeline_path)
 	
 	# Dynamically grab the marker if not explicitly assigned
 	if not phone_anchor:
 		phone_anchor = get_tree().root.find_child("PhoneMarker3D", true, false) as Node3D
 		print("found phone anchor at ", phone_anchor.global_position)
 	
-	if layout and phone_anchor:
+	if _current_layout and phone_anchor:
 		# Use Dialogic's internal cache to get the EXACT character resource instance.
 		# Loading the path directly creates a duplicate object that Dialogic won't match!
 		var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
-		if mario_dch and layout.has_method("register_character"):
-			layout.register_character(mario_dch, phone_anchor)
+		if mario_dch and _current_layout.has_method("register_character"):
+			_current_layout.register_character(mario_dch, phone_anchor)
 			print("registered mario dch")
 	elif not phone_anchor:
 		push_error("[NokiaUI] Could not find PhoneMarker3D in the scene tree to anchor the bubble!")
@@ -157,7 +160,16 @@ func _trigger_store_menu() -> void:
 	Dialogic.timeline_ended.connect(_on_call_ended, CONNECT_ONE_SHOT)
 
 func _on_call_ended() -> void:
-	print("[NokiaUI] Mario call ended.")
+	print("[NokiaUI] Mario call ended. Clearing phone anchor registration.")
+	
+	# Explicitly clear the character anchor registration so it doesn't persist
+	# into the delivery sequence (Dialogic reloads these registers by default).
+	if _current_layout and _current_layout.has_method("register_character"):
+		var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
+		if mario_dch:
+			_current_layout.register_character(mario_dch, null)
+	_current_layout = null
+	
 	_is_calling = false
 	current_input = ""
 	_update_screen()
@@ -189,3 +201,24 @@ func _on_close_pressed() -> void:
 	if _is_calling: return
 	nokia_closed.emit()
 	queue_free()
+
+func _on_customer_arrived(customer: Node3D) -> void:
+	# If a customer arrives while we are in the Nokia UI (any part of it:
+	# keypad or restock catalog), we close it so the player can serve them.
+	# We ONLY block this if Uncle Mario is actively speaking on the phone.
+	if Dialogic.current_timeline != null:
+		print("[NokiaUI] Customer arrived, but Mario is mid-timeline — ignoring.")
+		return
+	
+	print("[NokiaUI] Customer arrived while phone open! Closing and facing customer.")
+	
+	# 1. Close the UI (this handles the Nokia part and the RestockMenu part)
+	# We bypass the _is_calling check here because we want to allow closing 
+	# if they are just in the menu (where _is_calling is false anyway).
+	nokia_closed.emit()
+	queue_free()
+	
+	# 2. Make the player face the customer
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("face_node"):
+		player.face_node(customer)
