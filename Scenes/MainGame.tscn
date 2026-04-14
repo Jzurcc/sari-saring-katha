@@ -35,6 +35,7 @@
 [ext_resource type="VoxelGIData" uid="uid://lqnf363acqsg" path="res://Scenes/MainGame.VoxelGI_data.res" id="46_uvjf7"]
 [ext_resource type="Texture2D" uid="uid://4jopyanab23j" path="res://Assets/items/icons/9_sachet_kopimo.png" id="47_hfiw1"]
 [ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="48_d7jqg"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/TierAdvanceOverlay.tscn" id="51_tier_overlay"]
 [ext_resource type="Resource" uid="uid://sbu21ye633d5" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://mdcyjtl1s53y" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://d2mf426qt8lwt" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
@@ -111,6 +112,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/Head" unique_id=1125636583]
 script = ExtResource("pi_scr")
+interaction_range = null
 
 [node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
 transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.287584, 0.75612736, 1.1670127)
@@ -279,10 +281,11 @@ transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 
 [node name="ShelfSurface" type="Node3D" parent="." unique_id=685570783]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 4.0375986, 4.019844)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), null, ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), null])
+items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), ExtResource("25_yh2yp"), ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), ExtResource("25_yh2yp")])
 shelf_width = 2.535
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
+surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface2" type="Node3D" parent="." unique_id=1927767560]
@@ -292,6 +295,7 @@ items = Array[ExtResource("12_yc6xl")]([ExtResource("29_lcmar"), ExtResource("30
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
+surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface3" type="Node3D" parent="." unique_id=1019299572]
@@ -301,6 +305,7 @@ items = Array[ExtResource("12_yc6xl")]([ExtResource("30_cqekc"), null, null, nul
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
+surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface4" type="Node3D" parent="." unique_id=1503542262]
@@ -310,6 +315,7 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
+surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="FridgeSurface1" type="Node3D" parent="." unique_id=1039361648]
@@ -319,6 +325,7 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
 allowed_categories = PackedStringArray("frozen", "bottle")
 rejected_categories = PackedStringArray()
+surface_type = 1
 layout_strategy = SubResource("Resource_7p2u3")
 
 [node name="FridgeSurface2" type="Node3D" parent="." unique_id=1610165251]
@@ -328,6 +335,7 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
 allowed_categories = PackedStringArray("frozen", "bottle")
 rejected_categories = PackedStringArray()
+surface_type = 1
 layout_strategy = SubResource("Resource_him8o")
 
 [node name="Node3D" type="Node3D" parent="FridgeSurface2" unique_id=1480081814]
@@ -337,6 +345,7 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
+surface_type = null
 layout_strategy = SubResource("Resource_fgk2h")
 
 [node name="CandyContainer_Mix" type="Area3D" parent="." unique_id=290924167]
@@ -509,5 +518,7 @@ shape = SubResource("BoxShape3D_d7jqg")
 transform = Transform3D(0.20480032, 0.009045633, -8.7290175e-12, -0.009045633, 0.20480032, -3.9539716e-10, -8.727241e-12, 3.9539716e-10, 0.205, -0.0731678, 0.08774614, 0)
 billboard = 2
 texture = ExtResource("48_d7jqg")
+
+[node name="TierAdvanceOverlay" parent="." unique_id=510000000 instance=ExtResource("51_tier_overlay")]
 
 [editable path="TransactionTray"]
