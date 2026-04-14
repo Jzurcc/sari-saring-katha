@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Sari-Saring Katha"
-run/main_scene="uid://maingame123"
+run/main_scene="uid://b46bhnivkyc61"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -43,11 +43,16 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 [dialogic]
 
 directories/dch_directory={
+"Buboy": "res://Dialogue/Timelines/Buboy.dch",
 "Customer": "res://Dialogue/Timelines/Customer.dch",
+"Danilo": "res://Dialogue/Timelines/Danilo.dch",
+"Dionisio": "res://Dialogue/Timelines/Dionisio.dch",
 "KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
 "ManangAna": "res://Dialogue/Timelines/ManangAna.dch",
 "ReynaMayari": "res://Dialogue/Timelines/ReynaMayari.dch",
+"Rodel": "res://Dialogue/Timelines/Rodel.dch",
 "Rosalyn": "res://Dialogue/Timelines/Rosalyn.dch",
+"Sarimanok": "res://Dialogue/Timelines/Sarimanok.dch",
 "TK": "res://Dialogue/Timelines/TK.dch",
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
 }

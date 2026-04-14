@@ -44,6 +44,7 @@ func _refresh() -> void:
 				var hour: int = int(t) % 24
 				var raw_minute: int = int(fmod(t, 1.0) * 60.0)
 				# Snap to :00 or :30 — sky still moves smoothly underneath
+				@warning_ignore("integer_division")
 				var minute: int = (raw_minute / 30) * 30
 				var suffix := "AM" if hour < 12 else "PM"
 				var display_hour := hour % 12

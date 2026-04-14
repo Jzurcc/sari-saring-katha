@@ -5,18 +5,26 @@ extends Node
 
 const DAY_START_HOUR := 5.0
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
-## 1 in-game hour = 20 real seconds.
-const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 20.0
+## 1 in-game hour = 25 real seconds.
+const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 25.0
 
 var day: int = 1
 
 
 var todays_focus_character: String = ""
-## Tracks which story stage each character is on, e.g. {"KuyaKap": 1}
+
 var character_story_states: Dictionary = {}
+var is_clock_running: bool = false:
+	set(value):
+		is_clock_running = value
+		_ensure_tod_node()
+		if _time_of_day_node:
+			_time_of_day_node.game_time_enabled = is_clock_running
+
+var _debug_seq_index: int = 0
 
 ## Float representation of the currently displayed in-game hour (0–24).
-var _current_display_time: float = DAY_START_HOUR
+var _current_display_time: float = 16.0
 ## Cached reference to the TimeOfDay node (searched once on first use).
 var _time_of_day_node: Node = null
 
@@ -28,12 +36,28 @@ var _time_of_day_node: Node = null
 	preload("res://Resources/customers/ReynaMayari.tres"),
 	preload("res://Resources/customers/Rosalyn.tres"),
 	preload("res://Resources/customers/TK.tres"),
+	preload("res://Resources/customers/Buboy.tres"),
+	preload("res://Resources/customers/Sarimanok.tres"),
+	preload("res://Resources/customers/Danilo.tres"),
+	preload("res://Resources/customers/Dionisio.tres"),
+	preload("res://Resources/customers/Rodel.tres")
 ]
 
 func _ready() -> void:
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_satisfied)
+	
+	_ensure_tod_node()
+	if _time_of_day_node:
+		_time_of_day_node.time_changed.connect(_on_tod_time_changed)
+	
 	randomize()
+
+func _on_tod_time_changed(t: float) -> void:
+	_current_display_time = t
+	# End of day check
+	if _current_display_time >= CLOSING_HOUR and is_clock_running:
+		is_clock_running = false
 
 func _on_day_started(new_day: int) -> void:
 	day = new_day
@@ -54,53 +78,25 @@ func get_next_transaction() -> TransactionContext:
 	if available_characters.is_empty():
 		return null
 
+	# DEBUG: Sequential spawning
+	var char_data = available_characters[_debug_seq_index]
+	_debug_seq_index = (_debug_seq_index + 1) % available_characters.size()
+	
 	var t = TransactionContext.new()
-
-	var type_pool: Array = []
-	if todays_focus_character != "":
-		type_pool.append(TransactionContext.Type.STORY)
-
-	# Add purchase and visit probability weights
-	type_pool.append(TransactionContext.Type.PURCHASE)
-	type_pool.append(TransactionContext.Type.PURCHASE)
-	type_pool.append(TransactionContext.Type.VISIT)
-
-	var chosen_type = type_pool.pick_random()
-
-	if chosen_type == TransactionContext.Type.STORY and todays_focus_character != "":
-		t.transaction_type = TransactionContext.Type.STORY
-		t.character_id = todays_focus_character
-		var char_data = _get_character_data(todays_focus_character)
-		if char_data:
-			_build_story_context(t, char_data)
-		else:
-			_build_fallback_context(t)
-	elif chosen_type == TransactionContext.Type.PURCHASE:
-		var char_data = available_characters.pick_random()
-		t.transaction_type = TransactionContext.Type.PURCHASE
-		t.character_id = char_data.character_id
-		_build_purchase_context(t, char_data)
-	else:
-		var char_data = available_characters.pick_random()
-		t.transaction_type = TransactionContext.Type.VISIT
-		t.character_id = char_data.character_id
-		_build_visit_context(t, char_data)
+	t.character_id = char_data.character_id
+	t.transaction_type = TransactionContext.Type.PURCHASE
+	
+	print("\n[DEBUG-SEQ] Spawning: ", t.character_id)
+	_build_purchase_context(t, char_data)
 
 	return t
 
 ## Tick the clock every frame — runs continuously from DAY_START_HOUR to CLOSING_HOUR.
 ## No caps, no tweens, no toggling. The sky just moves.
-func _process(delta: float) -> void:
-	if _current_display_time >= CLOSING_HOUR:
-		return
+func _process(_delta: float) -> void:
+	# Continuous sync check — primarily uses signals now, but ensures
+	# StoryManager logic stays informed if external factors change TOD time.
 	_ensure_tod_node()
-	if not _time_of_day_node:
-		return
-	_current_display_time = minf(
-		_current_display_time + CLOCK_SPEED_HOURS_PER_SEC * delta,
-		CLOSING_HOUR
-	)
-	_apply_display_time(_current_display_time)
 
 ## Write the float hour value to the TimeOfDay node (drives sky/shadow).
 func _apply_display_time(t: float) -> void:
@@ -117,7 +113,7 @@ func _ensure_tod_node() -> void:
 
 func _get_character_data(id: String) -> CustomerData:
 	for c in available_characters:
-		if c.character_id == id:
+		if c.character_id.to_lower() == id.to_lower():
 			return c
 	return null
 

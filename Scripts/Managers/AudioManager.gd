@@ -112,9 +112,9 @@ func _update_audio_for_time(time: float) -> void:
 	var new_phase = BGMPhase.NONE
 	var is_night = false
 	
-	if time >= 5.0 and time < 12.0:
+	if time >= 4.0 and time < 11.0:
 		new_phase = BGMPhase.MORNING
-	elif time >= 12.0 and time < 18.0:
+	elif time >= 11.0 and time < 18.0:
 		new_phase = BGMPhase.AFTERNOON
 	else:
 		new_phase = BGMPhase.DUSK
@@ -249,6 +249,6 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 					char_to_play = m_data
 
 		if char_to_play and char_to_play.dialogue_blip_sound:
-			dialogue_blip_player.pitch_scale = randf_range(0.90, 1.10)
+			dialogue_blip_player.pitch_scale = randf_range(0.95, 1.05)
 			dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
 			dialogue_blip_player.play()

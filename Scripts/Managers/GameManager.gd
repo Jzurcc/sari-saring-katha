@@ -56,17 +56,20 @@ func _on_day_ended(ended_day_number: int) -> void:
 	_reset_clock_to_morning()
 	EventBus.day_started.emit(day)
 
-## Resets the in-game clock back to 5:00 AM for the new day.
 func _reset_clock_to_morning() -> void:
-	# Reset StoryManager's internal display time so it doesn't carry over
+	# Set the initial hour in StoryManager context
 	StoryManager._current_display_time = StoryManager.DAY_START_HOUR
 
-	# Reset the sky / TimeOfDay node
+	# Configure the sky / TimeOfDay node
 	var tod = get_tree().root.find_child("TimeOfDay", true, false)
 	if tod and tod.has_method("set_time"):
-		tod.game_time_enabled = false
 		tod.system_sync = false
-		tod.set_time(5, 0, 0)
+		tod.minutes_per_day = 10.0 # 25s/hour * 24h = 600s = 10m
+		tod.set_time(int(StoryManager.DAY_START_HOUR), 0, 0)
+	
+	# Start the clock via StoryManager's managed property
+	# This automatically sets tod.game_time_enabled = true
+	StoryManager.is_clock_running = true
 
 func _unhandled_input(event: InputEvent) -> void:
 	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:

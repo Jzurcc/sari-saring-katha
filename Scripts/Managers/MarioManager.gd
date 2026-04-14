@@ -93,6 +93,12 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	_delivery_sprite.position = START_POS
 	get_tree().current_scene.add_child(_delivery_sprite)
 	
+	# Add a speech marker so the bubble floats above the tricycle
+	var marker = Marker3D.new()
+	marker.name = "SpeechMarker"
+	marker.position = Vector3(0.4, 1.3, 0)
+	_delivery_sprite.add_child(marker)
+	
 	# Start a continuous rocking/bobbing animation
 	var rock_tween = create_tween().bind_node(_delivery_sprite).set_loops()
 	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", 3.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -185,7 +191,7 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) ->
 		print("[MarioManager]   Previous timeline ended. Proceeding with Mario call.")
 	
 	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
-	Dialogic.Styles.load_style("MarioBubble")
+	Dialogic.Styles.load_style("FollowBubble")
 	
 	# 4. Start the timeline (second arg is label/index, NOT style name)
 	var layout = Dialogic.start(timeline_path)
@@ -193,10 +199,22 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) ->
 	print("[MarioManager]   Layout: ", str(layout.name) if layout else "NULL")
 	
 	# 5. Register character so the bubble anchors to the marker
-	if layout and _mario_data and _mario_data.dialogic_character:
+	# We use DialogicResourceUtil to ensure we get the exact same object reference as NokiaUI.
+	var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
+	if layout and mario_dch:
 		if layout.has_method("register_character"):
-			layout.register_character(_mario_data.dialogic_character, anchor)
-			print("[MarioManager]   Registered character → ", anchor.name)
+			var marker = anchor.get_node_or_null("SpeechMarker")
+			var final_anchor = marker if marker else anchor
+			
+			# Force clear any previous global registration before setting the new one
+			layout.register_character(mario_dch, null)
+			layout.register_character(mario_dch, final_anchor)
+			
+			print("[MarioManager]   Registered character → ", final_anchor.name, " @ ", final_anchor.global_position)
+		else:
+			push_warning("[MarioManager]   Layout does not support register_character!")
+	else:
+		push_warning("[MarioManager]   Failed to find layout or UncleMario dch resource!")
 	
 	# 6. Connect the end signal
 	Dialogic.timeline_ended.connect(callback, CONNECT_ONE_SHOT)
