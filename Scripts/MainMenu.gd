@@ -24,7 +24,7 @@ var cam_origin_pos: Vector3
 var is_starting_game: bool = false
 var settings_open: bool = false
 var _is_fullscreen: bool = false
-var pan_sensitivity: float = 0.5
+var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
 
@@ -43,6 +43,7 @@ func _ready() -> void:
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "SFX"
 	add_child(_ui_player)
+	$OptionsOverlay.hide()
 
 	if has_node("TitleScreen3D/Camera3D"):
 		cam = $TitleScreen3D/Camera3D
@@ -123,7 +124,7 @@ func _on_btn_unhover(btn: Button) -> void:
 # ─── Camera parallax pan ───────────────────────────────────────────────────────
 
 func _process(delta: float) -> void:
-	if is_starting_game or cam == null or settings_open:
+	if is_starting_game or cam == null:
 		return
 
 	var mouse_pos   = get_viewport().get_mouse_position()
@@ -269,18 +270,19 @@ func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
 
 	_is_fullscreen = not _is_fullscreen
 	if _is_fullscreen:
-		# Exclusive Fullscreen: takes 100% GPU control, max performance, no desktop overhead
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+		# Borderless Fullscreen: Standard modern fullscreen mode
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
-		# Windowed: floating window with title bar, best for multitasking
+		# Windowed: standard floating window
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 	_sync_display_label()
 
 func _sync_display_label() -> void:
 	display_label.text  = "Full Screen" if _is_fullscreen else "Windowed Mode"
-	left_arrow.visible  = not _is_fullscreen   # left arrow = can go back to windowed
-	right_arrow.visible = _is_fullscreen        # right arrow = can go to fullscreen
+	# Flip arrows: if Windowed, show Right arrow to go to Fullscreen. If Fullscreen, show Left arrow to go back.
+	left_arrow.visible  = _is_fullscreen
+	right_arrow.visible = not _is_fullscreen
 
 
 # ─── Settings persistence ─────────────────────────────────────────────────────
@@ -322,6 +324,6 @@ func _load_settings() -> void:
 	var want_fs : bool = cfg.get_value("display", "fullscreen", false)
 	_is_fullscreen = want_fs
 	if want_fs:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
