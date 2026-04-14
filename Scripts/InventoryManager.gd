@@ -27,13 +27,13 @@ func initialize() -> void:
 	_initialized = true
 	_items.clear()
 	_stock.clear()
-	var base_path := "res://Resources/items"
-	var base_dir := DirAccess.open(base_path)
+	var base_path: String = "res://Resources/items"
+	var base_dir: DirAccess = DirAccess.open(base_path)
 	if not base_dir:
 		push_error("InventoryManager: cannot open " + base_path)
 		return
 	base_dir.list_dir_begin()
-	var subdir := base_dir.get_next()
+	var subdir: String = base_dir.get_next()
 	while subdir != "":
 		if base_dir.current_is_dir() and subdir != "." and subdir != "..":
 			_load_folder(base_path + "/" + subdir)
@@ -47,18 +47,18 @@ func initialize() -> void:
 	print("[InventoryManager] Loaded ", _items.size(), " items")
 
 func _load_folder(folder_path: String) -> void:
-	var dir := DirAccess.open(folder_path)
+	var dir: DirAccess = DirAccess.open(folder_path)
 	if not dir:
 		return
 	dir.list_dir_begin()
-	var file_name := dir.get_next()
+	var file_name: String = dir.get_next()
 	while file_name != "":
 		if not dir.current_is_dir() and file_name.ends_with(".tres"):
 			var res: Resource = load(folder_path + "/" + file_name)
 			if res is ItemData:
-				res.id = file_name.get_basename()
 				_items.append(res)
-				_stock[res.resource_path] = res.max_stock
+				# Initial stock is now 0 by default; items must be ordered or delivered.
+				_stock[res.resource_path] = 0
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
@@ -82,6 +82,47 @@ func get_stock(item: ItemData) -> int:
 func is_in_stock(item: ItemData) -> bool:
 	return get_stock(item) > 0
 
+## Returns the dynamic max stock for a specific item based on unlocked containers/day.
+func get_max_stock(item: ItemData) -> int:
+	var id: String = item.get_clean_id()
+	var day: int = StoryManager.day
+	return _get_max_stock_internal(id, day)
+
+func _get_max_stock_internal(id: String, day: int) -> int:
+	# Progression logic
+	match id:
+		"pocha", "mentor":
+			return 10 if day >= 5 else 5
+		"chubs":
+			return 5 # Always 5 once unlocked (Day 7+)
+		"ariel", "kneestoes", "kopimo": 
+			return 5
+		_:
+			return 99 # Default for snacks/packs
+
+func get_capacity_limit(type: ItemData.ItemType) -> int:
+	return 36 if type == ItemData.ItemType.SHELF else 12
+
+func get_count_on_shelves(type: ItemData.ItemType) -> int:
+	var total: int = 0
+	var surfaces: Array[Node] = get_tree().get_nodes_in_group("shelf_surface")
+	for s in surfaces:
+		if s is ShelfSurface and s.surface_type == type:
+			for occupant in s._slot_occupants:
+				if occupant != null and is_instance_valid(occupant):
+					total += 1
+	return total
+
+func get_total_owned_count(type: ItemData.ItemType) -> int:
+	var total: int = get_count_on_shelves(type)
+	for item in _items:
+		if item.type == type:
+			total += get_stock(item)
+	return total
+
+func get_available_capacity(type: ItemData.ItemType) -> int:
+	return get_capacity_limit(type) - get_total_owned_count(type)
+
 ## Take one item from stock. Returns false if out of stock.
 func take_item(item: ItemData) -> bool:
 	var count: int = _stock.get(item.resource_path, 0)
@@ -94,20 +135,21 @@ func take_item(item: ItemData) -> bool:
 ## Add stock back (e.g. when a drag is cancelled).
 func return_item(item: ItemData) -> void:
 	var count: int = _stock.get(item.resource_path, 0)
-	_stock[item.resource_path] = mini(count + 1, item.max_stock)
+	_stock[item.resource_path] = mini(count + 1, get_max_stock(item))
 	save_state()
 
-## Restock an item to a specific count (capped at max_stock).
+## Restock an item to a specific count (capped at get_max_stock).
 func restock_item(item: ItemData, count: int = -1) -> void:
+	var limit: int = get_max_stock(item)
 	if count < 0:
-		count = item.max_stock
-	_stock[item.resource_path] = mini(count, item.max_stock)
+		count = limit
+	_stock[item.resource_path] = mini(count, limit)
 	save_state()
 
-## Add a delta amount of stock (e.g. ordered quantity), capped at max_stock.
+## Add a delta amount of stock (e.g. ordered quantity), capped at get_max_stock.
 func add_stock(item: ItemData, amount: int) -> void:
 	var current: int = _stock.get(item.resource_path, 0) as int
-	_stock[item.resource_path] = mini(current + amount, item.max_stock)
+	_stock[item.resource_path] = mini(current + amount, get_max_stock(item))
 	save_state()
 
 func decrement_cooldown() -> void:

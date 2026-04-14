@@ -10,6 +10,8 @@ extends WorldInteractor
 const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.tscn")
 
 @export var possible_candies: Array[ItemData] = []
+@export var max_stock: int = 5
+var current_stock: int = 0
 
 @onready var sprite: Sprite3D = $Sprite3D
 
@@ -28,6 +30,8 @@ func on_hover(is_hovered: bool) -> void:
 func on_interact() -> void:
 	if DragManager._is_dragging:
 		return
+	
+	_update_local_stock()
 
 	var available_candies: Array[ItemData] = []
 	for candy in possible_candies:
@@ -41,12 +45,21 @@ func on_interact() -> void:
 	var chosen_candy: ItemData = available_candies[randi() % available_candies.size()]
 
 	if InventoryManager.take_item(chosen_candy):
+		_update_local_stock()
 		var drag_item: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
 		get_tree().current_scene.add_child(drag_item)
 		drag_item.is_transient = true
 		drag_item.setup(chosen_candy, self.global_transform)
 		drag_item.sprite.hide()
 		DragManager.start_drag(drag_item, chosen_candy.texture)
+
+func _update_local_stock() -> void:
+	current_stock = 0
+	for candy in possible_candies:
+		current_stock += InventoryManager.get_stock(candy)
+	# Also update max_stock from InventoryManager
+	if not possible_candies.is_empty():
+		max_stock = InventoryManager.get_max_stock(possible_candies[0])
 
 
 # --- Private ---
