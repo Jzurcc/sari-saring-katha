@@ -11,7 +11,7 @@ extends Control
 @onready var left_arrow     : TextureRect   = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/LeftArrow
 @onready var right_arrow    : TextureRect   = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/RightArrow
 
-var target_scene = "res://Scenes/MainGame.tscn"
+var target_scene = "res://Scenes/IntroCutscene.tscn"
 var original_styles = {}
 
 @export var default_master_volume : float = 0.8
@@ -158,26 +158,7 @@ func _on_new_game_pressed() -> void:
 	buttons.hide()
 	$LeftVignette.hide()
 
-	if cam == null:
-		SceneTransition.change_scene(target_scene)
-		return
-
-	var tween = create_tween()
-	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	
-	var target_pos = Vector3(-1.638, 4.1, -0.05)
-	var target_rot = Vector3(0, deg_to_rad(90.0), 0)
-
-	tween.set_parallel(true)
-	tween.tween_property(cam, "position", target_pos, 1.8)
-	tween.tween_property(cam, "rotation", target_rot, 1.8)
-	tween.tween_property(cam, "fov",  75.0,   1.8)
-	tween.tween_property(cam, "near", 0.05,   1.8)
-	tween.tween_property(cam, "far",  4000.0, 1.8)
-	tween.set_parallel(false)
-	tween.chain().tween_callback(_on_pan_finished)
-
-func _on_pan_finished() -> void:
+	# Immediately fade to black and transition to intro cutscene
 	SceneTransition.change_scene(target_scene)
 
 func _on_exit_pressed() -> void:
@@ -287,7 +268,6 @@ func _save_settings() -> void:
 	cfg.set_value("audio", "bgm",    slider_bgm.value)
 	cfg.set_value("audio", "sfx",    slider_sfx.value)
 	cfg.set_value("accessibility", "mute_in_background", mute_toggle.button_pressed)
-	var mode = DisplayServer.window_get_mode()
 	cfg.set_value("display", "fullscreen", _is_fullscreen)
 	cfg.save(SETTINGS_PATH)
 
