@@ -1,5 +1,9 @@
 extends Node
 
+var mute_in_background: bool = false
+var master_muted_by_user: bool = false
+const SETTINGS_PATH = "user://settings.cfg"
+
 var bgm_player: AudioStreamPlayer
 var theme_player: AudioStreamPlayer
 var ambience_base: AudioStreamPlayer
@@ -79,6 +83,8 @@ func _ready() -> void:
 	bgm_player.volume_db = base_volume_db
 	bgm_player.play()
 	
+	_load_audio_settings()
+	
 	call_deferred("_connect_dialogic")
 
 func _process(_delta: float) -> void:
@@ -107,6 +113,53 @@ func _find_time_of_day(node: Node) -> Node:
 		if result:
 			return result
 	return null
+
+func _load_audio_settings() -> void:
+	var cfg = ConfigFile.new()
+	if cfg.load(SETTINGS_PATH) == OK:
+		var master_val : float = cfg.get_value("audio", "master", 0.8)
+		var bgm_val    : float = cfg.get_value("audio", "bgm",    0.6)
+		var sfx_val    : float = cfg.get_value("audio", "sfx",    0.9)
+		
+		# Only update default base_volume_db if master is different? 
+		# No, the volume buses will handle real volumes.
+		
+		var m_idx = AudioServer.get_bus_index("Master")
+		if m_idx >= 0:
+			AudioServer.set_bus_volume_db(m_idx, linear_to_db(master_val) if master_val > 0.0 else -80.0)
+			AudioServer.set_bus_mute(m_idx, master_val <= 0.0)
+			master_muted_by_user = master_val <= 0.0
+			
+		var b_idx = AudioServer.get_bus_index("Music")
+		if b_idx >= 0:
+			AudioServer.set_bus_volume_db(b_idx, linear_to_db(bgm_val) if bgm_val > 0.0 else -80.0)
+			AudioServer.set_bus_mute(b_idx, bgm_val <= 0.0)
+			
+		var s_idx = AudioServer.get_bus_index("SFX")
+		if s_idx >= 0:
+			AudioServer.set_bus_volume_db(s_idx, linear_to_db(sfx_val) if sfx_val > 0.0 else -80.0)
+			AudioServer.set_bus_mute(s_idx, sfx_val <= 0.0)
+		
+		mute_in_background = cfg.get_value("accessibility", "mute_in_background", false)
+
+func update_mute_in_background(value: bool) -> void:
+	mute_in_background = value
+
+func update_master_muted_by_user(value: bool) -> void:
+	master_muted_by_user = value
+
+func _notification(what: int) -> void:
+	if not mute_in_background:
+		return
+	var master_idx = AudioServer.get_bus_index("Master")
+	if master_idx < 0:
+		return
+	match what:
+		NOTIFICATION_APPLICATION_FOCUS_OUT:
+			AudioServer.set_bus_mute(master_idx, true)
+		NOTIFICATION_APPLICATION_FOCUS_IN:
+			AudioServer.set_bus_mute(master_idx, master_muted_by_user)
+
 
 func _update_audio_for_time(time: float) -> void:
 	var new_phase = BGMPhase.NONE
