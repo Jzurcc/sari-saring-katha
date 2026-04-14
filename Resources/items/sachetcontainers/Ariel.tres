@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://wm1gpkw3glu2"]
+
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_08rbf"]
+[ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="2_owfh5"]
+
+[resource]
+script = ExtResource("1_08rbf")
+item_name = "Aryel"
+texture = ExtResource("2_owfh5")
+max_stock = 0
+category = "sachet"
+display_height_meters = 0.5
+opaque_rect = Rect2i(137, 7, 233, 489)
