@@ -24,11 +24,25 @@ func is_item_desired(item: ItemData) -> bool:
 	if desired_items.is_empty():
 		return false
 	
-	# Fallback key matching using resource path
-	var drop_key = item.id if item.id not in ["", "unset"] else item.resource_path
+	var drop_id = item.get_clean_id()
 	
 	for desired in desired_items:
-		var target_key = desired.id if desired.id not in ["", "unset"] else desired.resource_path
-		if drop_key == target_key:
+		if drop_id == desired.get_clean_id():
 			return true
+	return false
+
+
+## Removes the first instance of a matching item from the desired list.
+## Useful for multi-item requests. Returns true if an item was removed.
+func fulfill_item(item: ItemData) -> bool:
+	if desired_items.is_empty():
+		return false
+	
+	var drop_id = item.get_clean_id()
+	
+	for i in range(desired_items.size()):
+		if drop_id == desired_items[i].get_clean_id():
+			desired_items.remove_at(i)
+			return true
+			
 	return false

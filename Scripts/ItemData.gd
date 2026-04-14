@@ -13,12 +13,19 @@ enum ItemType {
 ## Final selling price = price + round(price * profit_margin).
 @export var profit_margin: float = 0.2
 @export var type: ItemType = ItemType.SHELF
-@export var max_stock: int = 5
 @export_enum("snacks", "sachet", "canned goods", "candy", "cigarette", "beverages", "instant noodles", "frozen goods") var category: String = "snacks"
 ## Unique identifier for this item. Matches the .tres filename, lowercase.
 ## Used for transaction matching. Set via patch_item_ids.py or the Inspector.
 @export var id: String = "unset"
+@export var tier: int = 1
 @export var item_hint: String = ""
+
+func get_clean_id() -> String:
+	if id != "unset" and not id.is_empty():
+		return id.to_lower()
+	
+	# Fallback to filename if ID is unset
+	return resource_path.get_file().get_basename().to_lower()
 
 @export_group("Display")
 ## Real-world height of the item on the shelf in meters.

@@ -60,9 +60,6 @@ func _input(event: InputEvent) -> void:
 			head.rotation.y = _yaw
 			camera.rotation.x = _pitch
 		
-		if event is InputEventKey and event.pressed and not event.echo:
-			if event.keycode == KEY_R:
-				_rotate_to_nokia_and_open()
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
@@ -123,19 +120,9 @@ func _physics_process(delta: float) -> void:
 		
 	move_and_slide()
 
-## Smoothly rotate view to Nokia phone and then open it.
-func _rotate_to_nokia_and_open() -> void:
-	# Try to find the specific marker first, then fallback to the interaction region
-	var target_node = get_tree().root.find_child("PhoneMarker3D", true, false)
-	if not is_instance_valid(target_node):
-		target_node = get_node_or_null("/root/MainGame/NokiaInteractable")
-		
-	if is_instance_valid(target_node):
-		await face_node(target_node, 0.4)
-		_open_nokia()
 
 ## Makes the player camera smoothly rotate to look at a specific world position.
-func face_pos(target_world_pos: Vector3, duration: float = 0.45) -> Signal:
+func face_pos(target_world_pos: Vector3, duration: float = 0.4) -> Signal:
 	# Convert world target to local space relative to the player body.
 	var target_local_pos = to_local(target_world_pos)
 	
@@ -156,7 +143,7 @@ func face_pos(target_world_pos: Vector3, duration: float = 0.45) -> Signal:
 
 ## Makes the player camera smoothly rotate to look at a node.
 ## If the node has a SpeechMarker child, it will aim for that instead.
-func face_node(target: Node3D, duration: float = 0.45) -> Signal:
+func face_node(target: Node3D, duration: float = 0.4) -> Signal:
 	if not is_instance_valid(target):
 		return get_tree().process_frame # Return a dummy signal-like object
 		
@@ -171,11 +158,3 @@ func _process(_delta: float) -> void:
 	# Ensure the nodes match our state variables (important for smooth tweening)
 	head.rotation.y = _yaw
 	camera.rotation.x = _pitch
-
-## Triggers the Nokia UI interaction.
-func _open_nokia() -> void:
-	var nokia_region = get_node_or_null("/root/MainGame/NokiaInteractable")
-	if not is_instance_valid(nokia_region) or not nokia_region.has_method("on_interact"):
-		return
-	
-	nokia_region.on_interact()

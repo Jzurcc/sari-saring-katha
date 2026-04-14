@@ -57,6 +57,9 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 
 @export_group("Layout")
 
+## Whether this is a shelf for dry goods or a fridge for cold items.
+@export var surface_type: ItemData.ItemType = ItemData.ItemType.SHELF
+
 ## The layout strategy resource that determines item placement.
 ## Assign a [ProceduralPackStrategy] (or any [LayoutStrategy] subclass)
 ## in the Inspector.
@@ -301,9 +304,11 @@ func _free_slot_for(item: DraggableItem) -> void:
 
 
 ## Returns true if [param item] is allowed to be dropped onto this surface
-## based on the [member allowed_categories] and [member rejected_categories] guards.
+## based on the [member surface_type] and category guards.
 func accepts_drop(item: ItemData) -> bool:
 	if not item:
+		return false
+	if item.type != surface_type:
 		return false
 	if rejected_categories.has(item.category):
 		return false
