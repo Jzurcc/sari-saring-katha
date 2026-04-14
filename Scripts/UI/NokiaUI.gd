@@ -26,7 +26,6 @@ var sfx_btn_3: AudioStream = preload("res://Audio/SFX/phone_btn_3.mp3")
 
 var button_audio_player: AudioStreamPlayer
 
-var _cancel_btn: Button = null
 
 
 func _ready() -> void:
@@ -35,37 +34,9 @@ func _ready() -> void:
 	
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
-	_add_cancel_button()
 	
 	EventBus.customer_arrived.connect(_on_customer_arrived)
 
-func _add_cancel_button() -> void:
-	# Inject a cancel button so the player can always exit the Nokia UI.
-	# Positioned at the bottom-centre of the screen, above the keypad area.
-	_cancel_btn = Button.new()
-	_cancel_btn.name = "CancelOverlay"
-	_cancel_btn.text = "✕  Cancel"
-	_cancel_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_cancel_btn.offset_top = -60
-	_cancel_btn.offset_bottom = -12
-	_cancel_btn.offset_left = 60
-	_cancel_btn.offset_right = -60
-	# Style — dark semi-transparent pill
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.08, 0.85)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	_cancel_btn.add_theme_stylebox_override("normal", style)
-	var hover_style := style.duplicate()
-	(hover_style as StyleBoxFlat).bg_color = Color(0.7, 0.15, 0.1, 0.95)
-	_cancel_btn.add_theme_stylebox_override("hover", hover_style)
-	_cancel_btn.add_theme_color_override("font_color", Color.WHITE)
-	_cancel_btn.add_theme_font_size_override("font_size", 15)
-	_cancel_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_cancel_btn.pressed.connect(_on_close_pressed)
-	add_child(_cancel_btn)
 
 func _scan_and_connect_nodes(node: Node) -> void:
 	# Skip the RestockMenu subtree entirely — its buttons are NOT Nokia keys
@@ -87,10 +58,10 @@ func _scan_and_connect_nodes(node: Node) -> void:
 		elif str(node.name).length() == 1 and str(node.name)[0].is_valid_int():
 			# Single digit number buttons only
 			node.pressed.connect(_on_key_pressed.bind(str(node.name)))
-		elif node.name == "Star":
-			node.pressed.connect(_on_key_pressed.bind("*"))
-		elif node.name == "Hash":
-			node.pressed.connect(_on_key_pressed.bind("#"))
+		elif node.name.to_lower() == "asterisk" or node.name == "Star":
+			node.pressed.connect(_on_asterisk_pressed)
+		elif node.name.to_lower() == "home" or node.name == "Hash":
+			node.pressed.connect(_on_close_pressed)
 		# All other buttons (Add, Cancel, Order, tab buttons, etc.) are ignored
 		
 	for child in node.get_children():
@@ -99,12 +70,12 @@ func _scan_and_connect_nodes(node: Node) -> void:
 func _play_button_sound(key: String) -> void:
 	if key in ["1", "4", "7", "clear"]:
 		button_audio_player.stream = sfx_btn_1
-	elif key in ["2", "5", "8"]:
+	elif key in ["2", "5", "8", "0", "home"]:
 		button_audio_player.stream = sfx_btn_2
-	elif key in ["3", "6", "9", "enter", "call", "ok"]:
+	elif key in ["3", "6", "9", "enter", "call", "ok", "asterisk"]:
 		button_audio_player.stream = sfx_btn_3
 	else:
-		# Default for Star, Hash, 0, or any other button
+		# Default fallback
 		button_audio_player.stream = sfx_btn_2
 	
 	button_audio_player.volume_db = button_volume_db
@@ -132,6 +103,11 @@ func _on_enter_pressed() -> void:
 	_play_button_sound("enter")
 	if current_input == target_number:
 		_trigger_store_menu()
+
+func _on_asterisk_pressed() -> void:
+	if _is_calling: return
+	_play_button_sound("asterisk")
+	_trigger_store_menu()
 
 func _trigger_store_menu() -> void:
 	_is_calling = true
@@ -178,8 +154,6 @@ func _on_call_ended() -> void:
 	var nokia_ui = get_node_or_null("Nokia")
 	if nokia_ui:
 		nokia_ui.visible = false
-	if _cancel_btn:
-		_cancel_btn.visible = false
 	
 	if not store_menu:
 		store_menu = find_child("RestockMenu", true, false)
