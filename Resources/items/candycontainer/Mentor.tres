@@ -1,16 +1,16 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="2_tex"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/18_candycontainer_mentor.png" id = "2_tex"]
 
 [resource]
 id = "mentor"
+tier = 2
 script = ExtResource("1_item")
 item_name = "Mentor"
 texture = ExtResource("2_tex")
 price = 0.5
 markup = 0.5
-max_stock = 0
 category = "candycontainer"
 display_height_meters = 0.6
 opaque_rect = Rect2i(109, 17, 273, 474)

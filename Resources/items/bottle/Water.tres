@@ -1,14 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://c5kgvev543yjk"]
+[gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://osqfv480efm7" path="res://Assets/items/icons/27_bottle_water.png" id="2_tex"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/27_bottle_water.png" id = "2_tex"]
 
 [resource]
+id = "water"
+tier = 2
 script = ExtResource("1_item")
 item_name = "Tubig"
 texture = ExtResource("2_tex")
 price = 8.0
-max_stock = 0
 category = "bottle"
 item_hint = "quenches my thirst"
 display_height_meters = 0.6499999999999999

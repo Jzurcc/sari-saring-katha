@@ -1,14 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://tyhqq7fjut38"]
+[gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://dlsqxh886322l" path="res://Assets/items/icons/14_can_lucky_9.png" id="2_tex"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/14_can_lucky_9.png" id = "2_tex"]
 
 [resource]
+id = "lucky9"
+tier = 5
 script = ExtResource("1_item")
 item_name = "Lucky 9 Carne Norte"
 texture = ExtResource("2_tex")
 price = 18.0
-max_stock = 0
 category = "can"
 item_hint = "will bring me good luck"
 display_height_meters = 0.47
