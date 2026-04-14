@@ -13,17 +13,20 @@ var _last_earning: float = 0.0
 # --- Debt System ---
 const DAILY_QUOTAS = {
 	1: 50.0,
-	2: 100.0,
-	3: 150.0,
-	4: 250.0,
-	5: 350.0,
-	6: 500.0,
-	7: 750.0
+	2: 75.0,
+	3: 100.0,
+	4: 125.0,
+	5: 150.0,
+	6: 175.0,
+	7: 200.0
 }
 
 func _ready() -> void:
 	add_to_group("game_manager")
-	money = starting_money
+	
+	# Load state before emitting money_changed
+	_load_state()
+	
 	# Wait two frames so every node's _ready() — including CustomerSpawner's
 	# signal connections — completes before we broadcast day_started.
 	await get_tree().process_frame
@@ -33,6 +36,9 @@ func _ready() -> void:
 	EventBus.transaction_completed.connect(_on_transaction_completed)
 	EventBus.day_ended.connect(_on_day_ended)
 	EventBus.utang_accepted.connect(_on_utang_accepted)
+	
+	if not Dialogic.signal_event.is_connected(_on_dialogic_signal):
+		Dialogic.signal_event.connect(_on_dialogic_signal)
 
 	# Reset the clock to 5 AM for day 1
 	_reset_clock_to_morning()
@@ -45,8 +51,9 @@ func _on_transaction_completed(item: ItemData, was_correct: bool) -> void:
 		_last_earning = item.get_final_price()
 		money += _last_earning
 		EventBus.money_changed.emit(money)
-		print("[GameManager] Sold %s for %.2f (Base: %.2f, Margin: %d%%). TOTAL: %.2f" % [
-			item.item_name, _last_earning, item.price, int(item.profit_margin * 100), money
+		save_state()
+		print("[GameManager] Sold %s for %.2f (Base: %.2f, Price: %.2f). TOTAL: %.2f" % [
+			item.item_name, _last_earning, item.price, item.get_final_price(), money
 		])
 
 func _on_utang_accepted(_customer: Customer) -> void:
@@ -73,23 +80,15 @@ func _on_day_ended(ended_day_number: int) -> void:
 		Dialogic.start("res://Dialogue/day_ended.dtl")
 		await Dialogic.timeline_ended
 	
-	# 2. Debt Collection Logic
+	# 2. Debt Collection Logic Setup
 	var quota = DAILY_QUOTAS.get(ended_day_number, 0.0)
-	var was_successful = false
+	var was_successful = money >= quota
 	
-	if money >= quota:
-		money -= quota
-		was_successful = true
-		EventBus.money_changed.emit(money)
-		print("[GameManager] Quota met! Subtracted %.2f. New balance: %.2f" % [quota, money])
-	else:
-		print("[GameManager] Quota FAILED! Only had %.2f / %.2f" % [money, quota])
-	
-	EventBus.debt_quota_met.emit(was_successful)
+	Dialogic.VAR.set_variable("Global.TodayQuota", quota)
+	Dialogic.VAR.set_variable("Global.HasEnoughMoney", 1.0 if was_successful else 0.0)
 	
 	# 3. Mayari Presence
-	var mayari_label = "Success" if was_successful else "Angry"
-	Dialogic.start("res://Dialogue/Timelines/mayari_collect.dtl", mayari_label)
+	Dialogic.start("res://Dialogue/Timelines/mayari_collect.dtl", "CollectionIntro")
 	await Dialogic.timeline_ended
 	
 	# 4. Advance Day
@@ -100,6 +99,21 @@ func _on_day_ended(ended_day_number: int) -> void:
 	day += 1
 	_reset_clock_to_morning()
 	EventBus.day_started.emit(day)
+
+func _on_dialogic_signal(argument: String) -> void:
+	if argument == "deduct_quota":
+		var quota = DAILY_QUOTAS.get(day, 0.0)
+		var was_successful = money >= quota
+		
+		if was_successful:
+			money -= quota
+			EventBus.money_changed.emit(money)
+			save_state()
+			print("[GameManager] Quota met! Subtracted %.2f. New balance: %.2f" % [quota, money])
+		else:
+			print("[GameManager] Quota FAILED! Only had %.2f / %.2f" % [money, quota])
+		
+		EventBus.debt_quota_met.emit(was_successful)
 
 func _reset_clock_to_morning() -> void:
 	# Set the initial hour in StoryManager context
@@ -133,3 +147,22 @@ func _unhandled_input(event: InputEvent) -> void:
 			
 		# Trigger the normal end of day sequence
 		_on_day_ended(day)
+func save_state() -> void:
+	var save_data = {
+		"manager": {
+			"money": money,
+			"day": day
+		}
+	}
+	SaveManager.save_game(save_data)
+
+func _load_state() -> void:
+	var save_data = SaveManager.load_game()
+	if save_data.has("manager"):
+		var m = save_data["manager"]
+		money = m.get("money", starting_money)
+		day = m.get("day", 1)
+		print("[GameManager] State loaded. Money: %.2f, Day: %d" % [money, day])
+	else:
+		money = starting_money
+		day = 1

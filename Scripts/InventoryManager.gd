@@ -95,7 +95,7 @@ func _get_max_stock_internal(id: String, day: int) -> int:
 			return 10 if day >= 5 else 5
 		"chubs":
 			return 5 # Always 5 once unlocked (Day 7+)
-		"ariel", "kneestoes", "kopimo": 
+		"aryel", "ariel", "kneestoes", "kopimo": 
 			return 5
 		_:
 			return 99 # Default for snacks/packs
@@ -164,16 +164,29 @@ func start_delivery_cooldown() -> void:
 
 func save_state() -> void:
 	var save_data = {
-		"stock": _stock,
-		"customers_needed_for_delivery": customers_needed_for_delivery
+		"inventory": {
+			"stock": _stock,
+			"customers_needed_for_delivery": customers_needed_for_delivery
+		}
 	}
 	SaveManager.save_game(save_data)
 
 func load_state() -> void:
 	var save_data = SaveManager.load_game()
-	if save_data.has("stock"):
+	if save_data.has("inventory"):
+		var inv = save_data["inventory"]
+		var saved_stock = inv.get("stock", {})
+		# Merge saved stock into our initialized stock (which has all items at 0)
+		for path in saved_stock:
+			_stock[path] = saved_stock[path]
+			
+		customers_needed_for_delivery = inv.get("customers_needed_for_delivery", 0)
+		print("[InventoryManager] State loaded from 'inventory' key.")
+	elif save_data.has("stock"):
+		# Fallback for old save format
 		var saved_stock = save_data["stock"]
 		for key in saved_stock.keys():
 			_stock[key] = saved_stock[key]
-	if save_data.has("customers_needed_for_delivery"):
-		customers_needed_for_delivery = int(save_data["customers_needed_for_delivery"])
+		if save_data.has("customers_needed_for_delivery"):
+			customers_needed_for_delivery = int(save_data["customers_needed_for_delivery"])
+		print("[InventoryManager] State loaded from legacy keys.")
