@@ -249,6 +249,6 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 					char_to_play = m_data
 
 		if char_to_play and char_to_play.dialogue_blip_sound:
-			dialogue_blip_player.pitch_scale = randf_range(0.95, 1.05)
+			dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
 			dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
 			dialogue_blip_player.play()
