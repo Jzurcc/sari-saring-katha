@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3]
+
+[ext_resource type="Resource" path="res://Dialogue/Timelines/UncleMario.dch" id="1_x7l5d"]
+[ext_resource type="Script" path="res://Scripts/CustomerData.gd" id="2_voalc"]
+[ext_resource type="Script" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
+[ext_resource type="Texture2D" path="res://Assets/characters/sprites/UncleMario.png" id="5_mx7nj"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/UncleMarioTutorial.dtl" id="tut_timeline"]
+
+[resource]
+script = ExtResource("2_voalc")
+character_id = "UncleMarioTutorial"
+character_name = "Uncle Mario"
+sprite_texture = ExtResource("5_mx7nj")
+dialogic_character = ExtResource("1_x7l5d")
+generic_visit_timelines = Array[ExtResource("3_timeline")]([])
+generic_purchase_timelines = Array[ExtResource("3_timeline")]([])
+story_timelines = Array[ExtResource("3_timeline")]([ExtResource("tut_timeline")])
+sprite_scale = 0.4

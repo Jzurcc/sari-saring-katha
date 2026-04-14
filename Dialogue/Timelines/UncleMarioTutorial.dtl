@@ -1,0 +1,36 @@
+ Uncle Mario: Uy, [i]anak[/i]! Nandito ka na pala. You opened the store so early.
+
+ Uncle Mario: Looking at you standing behind that counter... it just brings back memories to finally see this window open again after such long years.
+
+ Uncle Mario: Your Lola from heaven is definitely overjoyed to see you back here managing her store.
+
+Uncle Mario: Anyway, do you need help with how things are done here? Or are you ready to run this place on your own?
+
+- "Yes, help me out, Uncle."
+	Uncle Mario: Mabuti. Listen closely, kid.
+
+	Uncle Mario: Just use your mouse to look around the shop. Familiarize yourself with the shelves so you don't take forever looking for things. Oh, and don't forget the Refrigerator! Just click the handle to open it if someone wants a cold drink.
+
+	Uncle Mario: If you see something a customer asked for, just Left-Click to pick it up. Once you're holding it, move it to the Transaction Tray right in front of them. The money automatically goes into the register.
+
+	Uncle Mario: But watch out... some people around here might ask for Utang (Credit). Be careful who you trust, because those don't pay right away!
+
+	Uncle Mario: And if your stock is running low? Look at that old Nokia phone on the table at the back. Just enter my name and that will call my line. Tell me what you need so I can get moving.
+
+	Uncle Mario: Once you select the quantity of your ordered items, I will come and deliver them to you right away.
+
+	Uncle Mario: Don't worry, I will put them in place for you so you can just focus on selling to your customers.
+
+	Uncle Mario: Also, keep an eye out. More products will become available each day. Soon, this store will be filled with snacks and candies just like back then!
+	jump Outro
+- "[Skip Tutorial] I know the drill."
+	jump Outro
+
+label Outro
+Uncle Mario: Right, that's enough of that. My throat is dry.
+
+Uncle Mario: I'm going to have my coffee and pandesal now. Don't call me while I'm refilling my own stomach, sige?
+
+Uncle Mario: Good luck today. Don't work too hard, [i]anak[/i]. See you around!
+
+[signal arg="refuse_service"]
