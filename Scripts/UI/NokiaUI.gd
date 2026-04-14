@@ -61,7 +61,7 @@ func _scan_and_connect_nodes(node: Node) -> void:
 		elif node.name.to_lower() == "asterisk" or node.name == "Star":
 			node.pressed.connect(_on_asterisk_pressed)
 		elif node.name.to_lower() == "home" or node.name == "Hash":
-			node.pressed.connect(_on_close_pressed)
+			node.pressed.connect(_on_home_pressed)
 		# All other buttons (Add, Cancel, Order, tab buttons, etc.) are ignored
 		
 	for child in node.get_children():
@@ -98,6 +98,11 @@ func _on_clear_pressed() -> void:
 		if screen_label:
 			screen_label.text = current_input
 
+func _on_home_pressed() -> void:
+	if _is_calling: return
+	_play_button_sound("home")
+	_on_close_pressed()
+
 func _on_enter_pressed() -> void:
 	if _is_calling: return
 	_play_button_sound("enter")
@@ -110,62 +115,52 @@ func _on_asterisk_pressed() -> void:
 	_trigger_store_menu()
 
 func _trigger_store_menu() -> void:
+	# Block if already in a call or restocking is active
+	if _is_calling or MarioManager.is_restocking_active:
+		return
+		
 	_is_calling = true
-	print("[NokiaUI] Triggering direct Mario call via Dialogic...")
-	
-	var timeline_path = "res://Dialogue/unclemario/UncleMario_Call.dtl"
-	
-	Dialogic.Styles.load_style("FollowBubble")
-	_current_layout = Dialogic.start(timeline_path)
+	print("[NokiaUI] Triggering direct Mario call via MarioManager...")
 	
 	# Dynamically grab the marker if not explicitly assigned
 	if not phone_anchor:
 		phone_anchor = get_tree().root.find_child("PhoneMarker3D", true, false) as Node3D
-		print("found phone anchor at ", phone_anchor.global_position)
 	
-	if _current_layout and phone_anchor:
-		# Use Dialogic's internal cache to get the EXACT character resource instance.
-		# Loading the path directly creates a duplicate object that Dialogic won't match!
-		var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
-		if mario_dch and _current_layout.has_method("register_character"):
-			_current_layout.register_character(mario_dch, phone_anchor)
-			print("registered mario dch")
-	elif not phone_anchor:
-		push_error("[NokiaUI] Could not find PhoneMarker3D in the scene tree to anchor the bubble!")
-				
-	Dialogic.timeline_ended.connect(_on_call_ended, CONNECT_ONE_SHOT)
+	if not phone_anchor:
+		push_error("[NokiaUI] No phone_anchor found! Aborting call.")
+		_is_calling = false
+		return
 
-func _on_call_ended() -> void:
-	print("[NokiaUI] Mario call ended. Clearing phone anchor registration.")
-	
-	# Explicitly clear the character anchor registration so it doesn't persist
-	# into the delivery sequence (Dialogic reloads these registers by default).
-	if _current_layout and _current_layout.has_method("register_character"):
-		var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
-		if mario_dch:
-			_current_layout.register_character(mario_dch, null)
-	_current_layout = null
-	
+	# Use MarioManager to handle all dialogue logic (states, randomization, etc.)
+	MarioManager.call_ended.connect(_on_mario_call_finished, CONNECT_ONE_SHOT)
+	MarioManager.initiate_call(phone_anchor, bypass_cooldown)
+
+func _on_mario_call_finished(success: bool) -> void:
+	print("[NokiaUI] Mario call finished. Success: ", success)
 	_is_calling = false
 	current_input = ""
 	_update_screen()
 	
-	# Hide the Nokia interface child (we don't hide self, because we are the RestockScreen holding both)
-	var nokia_ui = get_node_or_null("Nokia")
-	if nokia_ui:
-		nokia_ui.visible = false
-	
-	if not store_menu:
-		store_menu = find_child("RestockMenu", true, false)
-		
-	if store_menu:
-		print("[NokiaUI] Opening RestockMenu...")
-		store_menu.visible = true
-		if store_menu.has_method("open_menu"):
-			store_menu.open_menu()
+	if success:
+		if not store_menu:
+			store_menu = find_child("RestockMenu", true, false)
+			
+		if store_menu:
+			print("[NokiaUI] Opening RestockMenu...")
+			store_menu.visible = true
+			if store_menu.has_method("open_menu"):
+				store_menu.open_menu()
+		else:
+			push_warning("[NokiaUI] No store_menu found to open!")
+			nokia_closed.emit()
 	else:
-		push_warning("[NokiaUI] No store_menu found to open!")
+		# If the call failed (Mario was busy or resting), we just close the Nokia UI
+		# so the player can continue serving customers.
+		var nokia_ui = get_node_or_null("Nokia")
+		if nokia_ui:
+			nokia_ui.visible = false
 		nokia_closed.emit()
+		queue_free()
 
 func _update_screen() -> void:
 	if screen_label:
@@ -179,9 +174,10 @@ func _on_close_pressed() -> void:
 func _on_customer_arrived(customer: Node3D) -> void:
 	# If a customer arrives while we are in the Nokia UI (any part of it:
 	# keypad or restock catalog), we close it so the player can serve them.
-	# We ONLY block this if Uncle Mario is actively speaking on the phone.
-	if Dialogic.current_timeline != null:
-		print("[NokiaUI] Customer arrived, but Mario is mid-timeline — ignoring.")
+	# We ONLY block this if Uncle Mario is actively speaking on the phone,
+	# OR if we are in the middle of a restock process.
+	if Dialogic.current_timeline != null or MarioManager.is_restocking_active:
+		print("[NokiaUI] Customer arrived, but Mario is busy/restock active — ignoring.")
 		return
 	
 	print("[NokiaUI] Customer arrived while phone open! Closing and facing customer.")

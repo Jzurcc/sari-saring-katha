@@ -1,33 +1,19 @@
-## NokiaClickRegion.gd
-## Attached to NokiaInteractable (Area3D) in MainGame.
-## Mirrors the RefrigeratorDoor pattern: find the sibling "nokia" scene node,
-## collect every MeshInstance3D inside it, and toggle material_overlay on hover.
-extends Area3D
-
-const OUTLINE_SHADER := "res://Shaders/outline.gdshader"
+extends WorldInteractor
 
 @export var nokia_ui_scene: PackedScene
 ## 3D marker near the phone where Uncle Mario's speech bubble will anchor.
 @export var phone_anchor: Node3D
 
 var _meshes: Array[MeshInstance3D] = []
-var _outline_mat: ShaderMaterial
 var _nokia_root: Node = null  # Kept so we can hide/show the 3D model
 
 func _ready() -> void:
-	_build_outline_material()
+	super._ready()
+	# Nokia outline needs to be thicker since the model is small/detailed
+	outline_width = 96.0
+	# RESTORE: Use the specialized 3D mesh outline shader instead of the 2D billboard one
+	outline_shader = preload("res://Shaders/outline.gdshader")
 	_collect_meshes()
-
-func _build_outline_material() -> void:
-	var shader := load(OUTLINE_SHADER) as Shader
-	if not shader:
-		push_warning("[NokiaClickRegion] Outline shader not found: " + OUTLINE_SHADER)
-		return
-	
-	_outline_mat = ShaderMaterial.new()
-	_outline_mat.shader = shader
-	_outline_mat.set_shader_parameter("outline_color", Color.WHITE)
-	_outline_mat.set_shader_parameter("outline_width", 48.0)
 
 func _collect_meshes() -> void:
 	var nokia_root = get_node_or_null("../nokia")
@@ -48,21 +34,21 @@ func _find_meshes_recursive(node: Node) -> void:
 	for child in node.get_children():
 		_find_meshes_recursive(child)
 
+## Override base visual node detection to use our collected mesh list
+func get_visual_nodes() -> Array[Node3D]:
+	# Cast Array[MeshInstance3D] to Array[Node3D]
+	var result: Array[Node3D] = []
+	for m in _meshes:
+		result.append(m)
+	return result
+
 func on_hover(is_hovered: bool) -> void:
-	if not _outline_mat:
-		return
-		
 	var is_blocked = (Dialogic.current_timeline != null)
 	if is_hovered:
-		if is_blocked:
-			_outline_mat.set_shader_parameter("outline_color", Color.RED)
-		else:
-			_outline_mat.set_shader_parameter("outline_color", Color.WHITE)
-			
-	var target_mat = _outline_mat if is_hovered else null
-	for mesh in _meshes:
-		if is_instance_valid(mesh):
-			mesh.material_overlay = target_mat
+		var color = Color.RED if is_blocked else default_outline_color
+		_apply_outline(color)
+	else:
+		_remove_outline()
 
 func on_interact() -> void:
 	if Dialogic.current_timeline != null:
@@ -86,7 +72,6 @@ func on_interact() -> void:
 func _on_nokia_ui_closed() -> void:
 	# Restore first-person input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	EventBus.restock_screen_closed.emit()
 
 func _on_restock_screen_closed(ui: Node) -> void:
 	# Free the dynamically instantiated RestockScreen
@@ -94,4 +79,3 @@ func _on_restock_screen_closed(ui: Node) -> void:
 		ui.queue_free()
 	
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	EventBus.restock_screen_closed.emit()
