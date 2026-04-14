@@ -1,9 +1,0 @@
-
-KuyaKap: Hindi 'yan yung hinihingi ko ah. {InventoryManager.current_item_name} nga.
-- Ah sorry, sandali lang.
-	KuyaKap: Sige, mag-aabang na lang ako.
-	[end_timeline]
-- Sorry, wala kaming stock nun.
-	KuyaKap: Ganon? Sige na lang.
-	[signal arg="refuse_service"]
-	[end_timeline]

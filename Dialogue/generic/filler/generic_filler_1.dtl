@@ -1,9 +1,0 @@
-Customer: Grabe, the sun is so unforgiving today! I feel like I'm going to melt out there.
-
-- Tell me about it.
-	Customer: You said it! Anyway, let me get back to my errands before it gets any hotter.
-	[end_timeline]
-
-- Make sure to drink water!
-	Customer: Good advice. I'll make sure to do that. Salamat!
-	[end_timeline]

@@ -1,9 +1,0 @@
-Customer: Kumusta? How is the store doing today? You look like you've been working hard.
-
-- We're surviving!
-	Customer: That's the spirit! Keep up the good work. I'll see you around!
-	[end_timeline]
-
-- It's a bit slow right now.
-	Customer: Ah, well, enjoy the peace and quiet while it lasts! The afternoon rush will come soon enough.
-	[end_timeline]

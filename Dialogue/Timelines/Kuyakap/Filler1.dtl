@@ -1,0 +1,28 @@
+label Greeting
+KuyaKap: Oh hello. [pause=0.4] Can you get me [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse]? Just what I need today.
+- Will do!
+[end_timeline]
+
+label Talk
+KuyaKap: Just [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse] for now.
+- Alright, one moment.
+	KuyaKap: Sige sige.
+	[end_timeline]
+- Sorry, I can't get that right now.
+	KuyaKap: Ah, ganon ba? [pause=0.4] No worries.
+	[signal arg="refuse_service"]
+	[end_timeline]
+
+label Satisfy
+KuyaKap: Perfect. Thanks.
+[end_timeline]
+
+label WrongItem
+KuyaKap: Hindi 'yan yung hinihingi ko ah. [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse] nga.
+- Ah sorry, sandali lang.
+	KuyaKap: Sige, mag-aabang na lang ako.
+	[end_timeline]
+- Sorry, wala kaming stock nun.
+	KuyaKap: Ganon? Sige na lang.
+	[signal arg="refuse_service"]
+	[end_timeline]
