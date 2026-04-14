@@ -210,6 +210,9 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 	# 4. Start the timeline (second arg is label)
 	var layout = Dialogic.start(timeline_path, label)
 	
+	# Freeze game clock while dialogue is active
+	StoryManager.is_clock_running = false
+	
 	print("[MarioManager]   Layout: ", str(layout.name) if layout else "NULL")
 	
 	# 5. Register character so the bubble anchors to the marker

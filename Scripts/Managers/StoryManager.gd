@@ -21,7 +21,6 @@ var is_clock_running: bool = false:
 		if _time_of_day_node:
 			_time_of_day_node.game_time_enabled = is_clock_running
 
-var _debug_seq_index: int = 0
 var _last_character_id: String = ""
 
 ## Float representation of the currently displayed in-game hour (0–24).
@@ -73,9 +72,25 @@ func _setup_daily_focus() -> void:
 	todays_focus_character = focus_char.character_id
 	print("[StoryManager] Day ", day, " focus character is: ", todays_focus_character)
 
-## Ask the StoryManager for the next customer's context.
-## Returns null only if no characters are configured.
 func get_next_transaction() -> TransactionContext:
+	# --- TUTORIAL INJECTION ---
+	var tutorial_stage = character_story_states.get("UncleMarioTutorial", 0)
+	if day == 1 and tutorial_stage == 0:
+		var tutorial_char_data = preload("res://Resources/customers/UncleMarioTutorial.tres")
+		var tutorial_t = TransactionContext.new()
+		tutorial_t.character_id = tutorial_char_data.character_id
+		
+		# Build context explicitly for the tutorial so it's treated like a STORY
+		tutorial_t.transaction_type = TransactionContext.Type.STORY
+		tutorial_t.timeline = tutorial_char_data.story_timelines[0]
+		
+		# Flag it so it doesn't repeat
+		character_story_states["UncleMarioTutorial"] = 1
+		
+		print("[STORY] Spawning Uncle Mario Tutorial")
+		return tutorial_t
+	# --------------------------
+
 	if available_characters.is_empty():
 		return null
 
@@ -143,6 +158,9 @@ func _ensure_tod_node() -> void:
 		_time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
 
 func _get_character_data(id: String) -> CustomerData:
+	if id.to_lower() == "unclemariotutorial":
+		return preload("res://Resources/customers/UncleMarioTutorial.tres")
+
 	for c in available_characters:
 		if c.character_id.to_lower() == id.to_lower():
 			return c

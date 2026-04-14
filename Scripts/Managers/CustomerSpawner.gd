@@ -250,6 +250,9 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 	Dialogic.Styles.load_style("FollowBubble")
 	var layout = Dialogic.start(timeline, label)
 
+	# Freeze the game clock while dialogue is active
+	StoryManager.is_clock_running = false
+
 	# Anchor both characters to the speech marker.
 	var marker = customer.get_node_or_null("SpeechMarker")
 	if marker == null:
@@ -265,6 +268,8 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 			layout.register_character(GENERIC_CHAR_RES, marker)
 
 func _on_dialogue_ended() -> void:
+	# Resume the game clock when dialogue ends
+	StoryManager.is_clock_running = true
 	# 1. Detect if Mario just cut in
 	if Dialogic.current_timeline != null and "UncleMario" in Dialogic.current_timeline.resource_path:
 		print("[CustomerSpawner] Mario interrupted current flow. Interruption flag set.")
