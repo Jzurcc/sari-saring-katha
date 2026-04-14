@@ -135,7 +135,7 @@ func _rotate_to_nokia_and_open() -> void:
 		_open_nokia()
 
 ## Makes the player camera smoothly rotate to look at a specific world position.
-func face_pos(target_world_pos: Vector3, duration: float = 0.35) -> Signal:
+func face_pos(target_world_pos: Vector3, duration: float = 0.45) -> Signal:
 	# Convert world target to local space relative to the player body.
 	var target_local_pos = to_local(target_world_pos)
 	
@@ -156,7 +156,7 @@ func face_pos(target_world_pos: Vector3, duration: float = 0.35) -> Signal:
 
 ## Makes the player camera smoothly rotate to look at a node.
 ## If the node has a SpeechMarker child, it will aim for that instead.
-func face_node(target: Node3D, duration: float = 0.35) -> Signal:
+func face_node(target: Node3D, duration: float = 0.45) -> Signal:
 	if not is_instance_valid(target):
 		return get_tree().process_frame # Return a dummy signal-like object
 		
