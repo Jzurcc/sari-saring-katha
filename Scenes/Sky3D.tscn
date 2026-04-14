@@ -127,11 +127,17 @@ metadata/_custom_type_script = "uid://deo0gxkmk2ahd"
 light_color = Color(0.98, 0.523, 0.294, 1)
 light_energy = 0.0
 shadow_enabled = true
+directional_shadow_max_distance = 250.0
+directional_shadow_blend_splits = true
+directional_shadow_fade_start = 0.8
 
 [node name="MoonLight" type="DirectionalLight3D" parent="."]
 light_color = Color(0.572549, 0.776471, 0.956863, 1)
 light_energy = 0.0
 shadow_enabled = true
+directional_shadow_max_distance = 250.0
+directional_shadow_blend_splits = true
+directional_shadow_fade_start = 0.8
 
 [node name="SkyDome" type="Node" parent="."]
 script = ExtResource("9_skydome")
