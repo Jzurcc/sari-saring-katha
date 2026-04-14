@@ -22,6 +22,7 @@ var is_clock_running: bool = false:
 			_time_of_day_node.game_time_enabled = is_clock_running
 
 var _debug_seq_index: int = 0
+var _last_character_id: String = ""
 
 ## Float representation of the currently displayed in-game hour (0–24).
 var _current_display_time: float = 16.0
@@ -78,16 +79,47 @@ func get_next_transaction() -> TransactionContext:
 	if available_characters.is_empty():
 		return null
 
-	# DEBUG: Sequential spawning
-	var char_data = available_characters[_debug_seq_index]
-	_debug_seq_index = (_debug_seq_index + 1) % available_characters.size()
+	# 1. Selection with Sequential Guard (Prevent same character twice in a row)
+	var possible_chars = available_characters.filter(func(c): return c.character_id != _last_character_id)
+	if possible_chars.is_empty(): possible_chars = available_characters # Fallback
+
+	var char_data = possible_chars.pick_random()
+	_last_character_id = char_data.character_id
 	
 	var t = TransactionContext.new()
 	t.character_id = char_data.character_id
-	t.transaction_type = TransactionContext.Type.PURCHASE
 	
-	print("\n[DEBUG-SEQ] Spawning: ", t.character_id)
-	_build_purchase_context(t, char_data)
+	_build_transaction_context(t, char_data)
+	
+	# 2. Chance-based feature triggers (Consolidated for clarity & sync)
+	
+	# 20% Rumor Mill chance
+	var last_cust = Dialogic.VAR.get_variable("Global.LastCustomer")
+	var rumor_roll = randf()
+	if last_cust != "" and last_cust != t.character_id and rumor_roll < 0.20:
+		t.rumor_active = true
+	else:
+		t.rumor_active = false
+	Dialogic.VAR.set_variable("Global.RumorActive", 1.0 if t.rumor_active else 0.0)
+	t.rumor_type = 1.0 if randf() < 0.5 else 0.0
+	Dialogic.VAR.set_variable("Global.RumorType", t.rumor_type)
+
+	# 15% Utang (Debt) chance
+	var debt_roll = randf()
+	if t.transaction_type == TransactionContext.Type.PURCHASE and debt_roll < 0.15:
+		t.wants_debt = true
+	else:
+		t.wants_debt = false
+	Dialogic.VAR.set_variable("Transaction.WantsDebt", 1.0 if t.wants_debt else 0.0)
+	
+	# Riddle Sync (IsRiddle was rolled in _build_transaction_context)
+	Dialogic.VAR.set_variable("Transaction.IsRiddle", 1.0 if t.is_riddle else 0.0)
+
+	print("\n[STORY] --- Transaction Setup ---")
+	print("[STORY] Spawning: ", t.character_id, " (Type: ", TransactionContext.Type.keys()[t.transaction_type], ")")
+	print("[STORY] Rumor Roll: ", rumor_roll, " (Target < 0.20) -> ", t.rumor_active)
+	print("[STORY] Riddle State: ", t.is_riddle) # Riddle chance check remains in _build since it needs items
+	print("[STORY] Debt Roll:  ", debt_roll, " (Target < 0.15) -> ", t.wants_debt)
 
 	return t
 
@@ -106,7 +138,6 @@ func _apply_display_time(t: float) -> void:
 	var m := int((t - h) * 60.0)
 	_time_of_day_node.set_time(h, m, 0)
 
-## Lazy-initialise _time_of_day_node so we don't search the tree every tick.
 func _ensure_tod_node() -> void:
 	if not is_instance_valid(_time_of_day_node):
 		_time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
@@ -116,6 +147,62 @@ func _get_character_data(id: String) -> CustomerData:
 		if c.character_id.to_lower() == id.to_lower():
 			return c
 	return null
+
+## Build the transaction context by choosing the appropriate timeline.
+func _build_transaction_context(t: TransactionContext, data: CustomerData) -> void:
+	# 1. Reset Social flags in context object (GDScript base)
+	t.is_riddle = false
+	t.wants_debt = false
+	# We will sync these to Dialogic at the end of get_next_transaction().
+
+	# 2. Choose Transaction Type
+	# If this is their first visit (stage 0), always trigger STORY type.
+	var stage = character_story_states.get(data.character_id, 0)
+	
+	if stage < data.story_timelines.size():
+		# Play next story stage
+		t.transaction_type = TransactionContext.Type.STORY
+		t.timeline = data.story_timelines[stage]
+	elif not data.generic_purchase_timelines.is_empty():
+		# Fallback to generic purchase
+		t.transaction_type = TransactionContext.Type.PURCHASE
+		t.timeline = data.generic_purchase_timelines.pick_random()
+	elif not data.generic_visit_timelines.is_empty():
+		# Fallback to social visit
+		t.transaction_type = TransactionContext.Type.VISIT
+		t.timeline = data.generic_visit_timelines.pick_random()
+	else:
+		# Ultimate fallback
+		t.transaction_type = TransactionContext.Type.VISIT
+		t.timeline = "res://Dialogue/customer_talk.dtl"
+		t.is_placeholder = true
+
+	# 2. Assign Desired Items (unless it's a social visit)
+	if t.transaction_type != TransactionContext.Type.VISIT:
+		var pool: Array[ItemData] = []
+		for item in data.filler_items:
+			if _is_item_unlocked(item):
+				pool.append(item)
+
+		if not pool.is_empty():
+			t.desired_items.append(pool.pick_random())
+		else:
+			var fallback := _pick_random_orderable_item()
+			if fallback:
+				t.desired_items.append(fallback)
+		
+		# 20% Tingting (Riddle) chance
+		var riddle_roll = randf()
+		if not t.desired_items.is_empty() and riddle_roll < 0.20:
+			var main_item = t.desired_items[0]
+			if main_item.item_hint != "":
+				t.is_riddle = true
+				Dialogic.VAR.set_variable("Transaction.ItemHint", main_item.item_hint)
+				print("[STORY] Riddle Roll: ", riddle_roll, " (Target < 0.20) -> SUCCESS (Hint: ", main_item.item_hint, ")")
+			else:
+				print("[STORY] Riddle Roll: ", riddle_roll, " (Target < 0.20) -> FAIL (No hint found for ", main_item.item_name, ")")
+		else:
+			t.is_riddle = false
 
 ## Returns a random item that is unlocked for the current day.
 ## Prioritizes items that are currently in stock. 
@@ -175,135 +262,24 @@ func _is_item_unlocked(item: ItemData) -> bool:
 	var unlock_day = unlock_map.get(item.id, 1)
 	return day >= unlock_day
 
-func _build_story_context(t: TransactionContext, data: CustomerData) -> void:
-	var stage: int = character_story_states.get(t.character_id, 0)
-	var base := (data.timelines_dir if data.timelines_dir != "" else "res://Dialogue/" + data.character_id + "/") + "Story/stage_" + str(stage)
-	var greeting_path := base + "_greeting.dtl"
-
-	# If the greeting for this story stage doesn't exist, downgrade to a regular purchase.
-	if not ResourceLoader.exists(greeting_path):
-		push_warning("[StoryManager] Story stage %d for '%s' is missing. Downgrading to PURCHASE." % [stage, t.character_id])
-		t.transaction_type = TransactionContext.Type.PURCHASE
-		_build_purchase_context(t, data)
-		return
-
-	_assign_timeline(t, "timeline_greeting",  greeting_path)
-	_assign_timeline(t, "timeline_talk",       base + "_talk.dtl")
-	_assign_timeline(t, "timeline_satisfied",  base + "_satisfied.dtl")
-	_assign_timeline(t, "timeline_wrong_item", base + "_wrong_item.dtl")
-	_assign_timeline(t, "timeline_rejected",   base + "_rejected.dtl")
-
-	var pool: Array[ItemData] = []
-	for item in data.filler_items:
-		if _is_item_unlocked(item):
-			pool.append(item)
-
-	if pool.size() > 0:
-		t.desired_items.append(pool.pick_random())
-	else:
-		var fallback := _pick_random_orderable_item()
-		if fallback:
-			t.desired_items.append(fallback)
-
-func _build_purchase_context(t: TransactionContext, data: CustomerData) -> void:
-	var base := data.timelines_dir if data.timelines_dir != "" else "res://Dialogue/" + data.character_id + "/"
-
-	_search_and_assign_purchase_tl(t, "timeline_greeting",  base, "filler_greeting_1.dtl")
-	_search_and_assign_purchase_tl(t, "timeline_talk",       base, "filler_talk_1.dtl")
-	_search_and_assign_purchase_tl(t, "timeline_satisfied",  base, "filler_satisfied_1.dtl")
-	_search_and_assign_purchase_tl(t, "timeline_wrong_item", base, "filler_wrong_item_1.dtl")
-	_search_and_assign_purchase_tl(t, "timeline_rejected",   base, "filler_rejected_1.dtl")
-
-	var pool: Array[ItemData] = []
-	for item in data.filler_items:
-		if _is_item_unlocked(item):
-			pool.append(item)
-
-	if pool.size() > 0:
-		t.desired_items.append(pool.pick_random())
-	else:
-		var fallback := _pick_random_orderable_item()
-		if fallback:
-			t.desired_items.append(fallback)
-
-func _build_visit_context(t: TransactionContext, data: CustomerData) -> void:
-	var base := data.timelines_dir if data.timelines_dir != "" else "res://Dialogue/" + data.character_id + "/"
-	# 1. Try character's own Social/ subfolder
-	var p1 := base + "Social/social_talk_1.dtl"
-	if ResourceLoader.exists(p1):
-		t.timeline_visit = p1
-		return
-	# 2. Pick randomly from shared generic/filler/ pool (per user request)
-	var random_talk := _pick_random_from_folder("res://Dialogue/generic/filler/")
-	if random_talk != "":
-		t.timeline_visit = random_talk
-		return
-	# 3. Final catch-all fallback
-	var p3 := "res://Dialogue/customer_talk.dtl"
-	if ResourceLoader.exists(p3):
-		t.timeline_visit = p3
-		return
-	push_warning("[StoryManager] No visit timeline for '%s'" % data.character_id)
-
-func _build_fallback_context(t: TransactionContext) -> void:
-	_assign_timeline(t, "timeline_greeting",  "res://Dialogue/customer_greeting.dtl")
-	_assign_timeline(t, "timeline_talk",       "res://Dialogue/customer_talk.dtl")
-	_assign_timeline(t, "timeline_satisfied",  "res://Dialogue/customer_satisfied.dtl")
-	_assign_timeline(t, "timeline_wrong_item", "res://Dialogue/customer_wrong_item.dtl")
-	_assign_timeline(t, "timeline_rejected",   "res://Dialogue/customer_rejected.dtl")
-
-## Assigns a timeline path only if the file exists; warns otherwise.
-func _assign_timeline(t: TransactionContext, property: String, path: String) -> void:
-	if ResourceLoader.exists(path):
-		t.set(property, path)
-	else:
-		push_warning("[StoryManager] Missing timeline file for '%s': %s" % [property, path])
-
-func _search_and_assign_purchase_tl(t: TransactionContext, property: String, base: String, filename: String) -> void:
-	# 1. Try character's own Filler/ subfolder
-	var p1 = base + "Filler/" + filename
-	if ResourceLoader.exists(p1):
-		t.set(property, p1)
-		return
-	# 2. Try character's base folder
-	var p2 = base + filename
-	if ResourceLoader.exists(p2):
-		t.set(property, p2)
-		return
-	# 3. Pick a random file from the shared generic pool subfolder
-	#    e.g. timeline_wrong_item → res://Dialogue/generic/wrong_item/
-	var type_name := property.replace("timeline_", "")
-	var generic_folder := "res://Dialogue/generic/" + type_name + "/"
-	var random_generic := _pick_random_from_folder(generic_folder)
-	if random_generic != "":
-		t.set(property, random_generic)
-		return
-	# 4. Old customer_* catch-all
-	var p4 = "res://Dialogue/customer_" + type_name + ".dtl"
-	if ResourceLoader.exists(p4):
-		t.set(property, p4)
-		return
-	# 5. Warn if everything is missing
-	push_warning("[StoryManager] No generic dialogue for '%s': tried %s, %s, %s, %s" % [property, p1, p2, generic_folder, p4])
-
-## Picks a random .dtl file from a folder. Returns "" if folder is missing or empty.
-func _pick_random_from_folder(folder_path: String) -> String:
-	var dir := DirAccess.open(folder_path)
-	if not dir:
-		return ""
-	var files: Array[String] = []
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".dtl"):
-			files.append(folder_path + file_name)
-		file_name = dir.get_next()
-	dir.list_dir_end()
-	if files.is_empty():
-		return ""
-	return files.pick_random()
 
 func _on_customer_satisfied(customer) -> void:
+	# Update Rumor Mill State
+	if customer.transaction_context:
+		var id = customer.transaction_context.character_id
+		# Use the Character resource's name if available, otherwise fallback to ID
+		var display_name = id # Default
+		var data = _get_character_data(id)
+		if data and data.character_name != "":
+			display_name = data.character_name
+			
+		Dialogic.VAR.set_variable("Global.LastCustomer", display_name)
+		Dialogic.VAR.set_variable("Global.LastSatisfaction", "Happy")
+		
+		# Save specific item for rumors if applicable
+		if not customer.transaction_context.desired_items.is_empty():
+			Dialogic.VAR.set_variable("Global.LastItem", customer.transaction_context.desired_items[0].item_name)
+
 	if customer.transaction_context and customer.transaction_context.transaction_type == TransactionContext.Type.STORY:
 		var id = customer.transaction_context.character_id
 		var stage = character_story_states.get(id, 0)

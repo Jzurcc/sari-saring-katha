@@ -15,6 +15,7 @@ const LAYER_CUSTOMERS: int = 16 ## Customers only – bit 4 (layer 5).
 @export var camera: Camera3D
 
 var _last_hovered: Node = null
+var pricing_mode_active: bool = false
 
 func _ready():
 	if not camera:
@@ -81,6 +82,9 @@ func _physics_process(_delta: float) -> void:
 			_last_hovered.on_hover(false)
 		if current_hovered and current_hovered.has_method("on_hover"):
 			current_hovered.on_hover(true)
+			# If we just hovered something and pricing mode is on, sync the UI state
+			if current_hovered.has_method("set_pricing_ui_active"):
+				current_hovered.set_pricing_ui_active(pricing_mode_active)
 		_last_hovered = current_hovered
 
 func _input(event: InputEvent) -> void:
@@ -90,6 +94,40 @@ func _input(event: InputEvent) -> void:
 	if Dialogic.current_timeline != null:
 		return
 	
+	# Pricing Mode Toggle (Alt)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ALT and not event.echo:
+		pricing_mode_active = !pricing_mode_active
+		EventBus.pricing_mode_changed.emit(pricing_mode_active)
+		print("[PlayerInteraction] Pricing Mode: ", "ON" if pricing_mode_active else "OFF")
+		
+		# Update currently hovered item immediately
+		if is_instance_valid(_last_hovered) and _last_hovered.has_method("set_pricing_ui_active"):
+			_last_hovered.set_pricing_ui_active(pricing_mode_active)
+		return
+
+	# Pricing Adjustments
+	if pricing_mode_active and is_instance_valid(_last_hovered) and _last_hovered is DraggableItem:
+		var delta := 0.0
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				delta = 0.01
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				delta = -0.01
+		elif event is InputEventKey:
+			if event.keycode == KEY_PERIOD:
+				delta = 0.01
+			elif event.keycode == KEY_COMMA:
+				delta = -0.01
+		
+		if delta != 0.0:
+			var item: DraggableItem = _last_hovered
+			if item.item_data:
+				item.item_data.profit_margin = clamp(item.item_data.profit_margin + delta, 0.10, 0.30)
+				# Refresh all items of this type (they share the resource)
+				get_tree().call_group("draggable_items", "update_pricing_ui")
+			get_viewport().set_input_as_handled()
+			return
+
 	# Block interaction triggers if we are actively dragging/holding an item
 	if DragManager._is_dragging:
 		return

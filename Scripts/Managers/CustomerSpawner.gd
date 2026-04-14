@@ -29,6 +29,7 @@ var current_customer: Customer = null
 var _pending_dismiss: bool = false
 var _is_spawning: bool = false
 var _greeting_interrupted: bool = false # Remembers if Uncle Mario forcibly shut down the greeting.
+var _greeting_deferred: bool = false # Remembers if a greeting was stalled because Mario was busy.
 
 
 
@@ -47,6 +48,8 @@ func _ready() -> void:
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
+	MarioManager.delivery_finished.connect(_on_mario_delivery_finished)
+	MarioManager.call_ended.connect(_on_mario_call_ended)
 
 	await get_tree().process_frame
 
@@ -92,10 +95,19 @@ func _spawn_next_customer() -> void:
 		_is_spawning = false
 		return
 
+	var spawn_global = get_node(spawn_pos).global_position
+	var target_global = get_node(target_pos).global_position
+	var final_target = target_global
+	
+	# If the customer is Kuya Kap, offset him back so he doesn't hit his head on the roof.
+	if transaction.character_id.to_lower() == "kuyakap":
+		var dir_back = (spawn_global - target_global).normalized()
+		final_target = target_global + (dir_back * 0.7)
+
 	current_customer = customer_scene.instantiate()
 	get_parent().add_child(current_customer)
-	current_customer.global_position = get_node(spawn_pos).global_position
-	current_customer.setup(transaction, get_node(target_pos).global_position)
+	current_customer.global_position = spawn_global
+	current_customer.setup(transaction, final_target)
 
 	current_customer.arrived.connect(_on_customer_arrived)
 	current_customer.clicked.connect(_on_customer_clicked)
@@ -104,49 +116,56 @@ func _spawn_next_customer() -> void:
 	_is_spawning = false
 
 func _on_customer_arrived(customer: Customer) -> void:
-	EventBus.customer_arrived.emit(customer)
+	_handle_customer_logic(customer, true)
 
-	# Set global variables so Dialogic {expressions} can read them from .dtl files.
-	var item_names: Array[String] = []
-	for item in customer.transaction_context.desired_items:
-		item_names.append(item.item_name)
-	InventoryManager.current_item_name = ", ".join(item_names) if item_names.size() > 0 else "something"
+## Helper to process arrival signals and dialogues.
+## is_initial_arrival: if true, emits signals and sets naming globals.
+func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> void:
+	if is_initial_arrival:
+		EventBus.customer_arrived.emit(customer)
+		
+		# Automatically face the customer upon arrival (even if the phone isn't open).
+		var player = get_tree().get_first_node_in_group("player")
+		if player and player.has_method("face_node"):
+			player.face_node(customer)
 
-	# Set the character display name so generic dialogues can use {InventoryManager.current_character_name}
-	var char_data_for_name = StoryManager._get_character_data(customer.character_id)
-	InventoryManager.current_character_name = char_data_for_name.character_name if char_data_for_name else customer.character_id
+		# Set global variables so Dialogic {expressions} can read them from .dtl files.
+		var item_names: Array[String] = []
+		for item in customer.transaction_context.desired_items:
+			item_names.append(item.item_name)
+		InventoryManager.current_item_name = ", ".join(item_names) if item_names.size() > 0 else "something"
 
-	var context := customer.transaction_context
-	var timeline_path: String
+		# Set the character display name so generic dialogues can use {InventoryManager.current_character_name}
+		var char_data_for_name = StoryManager._get_character_data(customer.character_id)
+		InventoryManager.current_character_name = char_data_for_name.character_name if char_data_for_name else customer.character_id
 
-	if context.transaction_type == TransactionContext.Type.VISIT:
-		timeline_path = context.timeline_visit
-		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
-	else:
-		timeline_path = context.timeline_greeting
-		if timeline_path.is_empty():
-			# Story chapter not written yet — play a placeholder and dismiss.
-			push_warning("[CustomerSpawner] Empty greeting for '%s' (%s) — using placeholder." \
-				% [context.character_id, TransactionContext.Type.keys()[context.transaction_type]])
-			timeline_path = PLACEHOLDER_EMPTY_STORY
-			_dialogue_phase = DialoguePhase.SOCIAL_VISIT  # Dismiss after placeholder
-		else:
-			_dialogue_phase = DialoguePhase.GREETING
+		# Set context in Dialogic Variables instead of globals
+		Dialogic.VAR.set_variable("Transaction.CustomerName", InventoryManager.current_character_name)
+		Dialogic.VAR.set_variable("Transaction.ItemWants", InventoryManager.current_item_name)
+
+	# ── DIALOGUE LOGIC ──
+	var timeline = customer.transaction_context.timeline
+	var start_label := "Greeting"
+	var next_phase := DialoguePhase.GREETING
+	
+	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
+		start_label = "" # Play from start for social visits
+		next_phase = DialoguePhase.SOCIAL_VISIT
+
+	if MarioManager.is_restocking_active:
+		print("[CustomerSpawner] Mario is restocking — deferring greeting for %s." % customer.character_id)
+		_greeting_deferred = true
+		return
 
 	# ── Arrival debug ────────────────────────────────────
-	print("\n[CUSTOMER] ── Arrived at counter ────────────────────")
-	print("  Phase     : ", DialoguePhase.keys()[_dialogue_phase])
-	print("  Greeting  : ", context.timeline_greeting  if context.timeline_greeting  != "" else "(empty)")
-	print("  Talk      : ", context.timeline_talk       if context.timeline_talk       != "" else "(empty)")
-	print("  Satisfied : ", context.timeline_satisfied  if context.timeline_satisfied  != "" else "(empty)")
-	print("  WrongItem : ", context.timeline_wrong_item if context.timeline_wrong_item != "" else "(empty)")
-	print("  Rejected  : ", context.timeline_rejected   if context.timeline_rejected   != "" else "(empty)")
-	print("  Visit     : ", context.timeline_visit      if context.timeline_visit      != "" else "(empty)")
-	print("  Starting  → ", timeline_path if timeline_path != "" else "(NO TIMELINE — nothing will play!)")
+	print("\n[CUSTOMER] ── Triggering Greeting ──────────────────")
+	print("  Phase     : ", DialoguePhase.keys()[next_phase])
+	print("  Timeline  : ", timeline)
+	print("  Label     : ", start_label if start_label != "" else "(Start)")
 	print("[CUSTOMER] ─────────────────────────────────────────")
 	# ─────────────────────────────────────────────────────
 
-	_start_dialogue(timeline_path, customer)
+	start_dialogue(timeline, customer, next_phase, start_label)
 
 func _on_customer_finished(_customer: Customer) -> void:
 	# satisfy() ran its own exit animation. Wait a natural gap then spawn next.
@@ -174,59 +193,62 @@ func _on_customer_clicked(customer: Customer) -> void:
 	if _dialogue_phase != DialoguePhase.NONE:
 		return
 
-	var timeline_path: String
+	var timeline = customer.transaction_context.timeline
+	var label: String = ""
 
 	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
-		timeline_path = customer.transaction_context.timeline_visit
 		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
 	else:
 		if _greeting_interrupted:
-			timeline_path = customer.transaction_context.timeline_greeting
+			label = "Greeting"
 			_dialogue_phase = DialoguePhase.GREETING
 			_greeting_interrupted = false  # Consume the flag
 		else:
-			timeline_path = customer.transaction_context.timeline_talk
+			label = "Talk"
 			_dialogue_phase = DialoguePhase.TALK
 
-	_start_dialogue(timeline_path, customer)
+	start_dialogue(timeline, customer, _dialogue_phase, label)
 
 func _on_dialogic_signal(argument: String) -> void:
 	# [signal arg="refuse_service"] fires mid-execution. Set the flag here,
 	# act on it ONLY after timeline_ended fires (never during signal_event).
 	if argument == "refuse_service":
 		_pending_dismiss = true
+	elif argument == "utang_accepted":
+		EventBus.utang_accepted.emit(current_customer)
+	elif argument == "utang_rejected":
+		EventBus.utang_rejected.emit(current_customer)
+		_pending_dismiss = true
 
-## Called from MainGame when the correct item is placed into the tray.
-func notify_satisfied_dialogue() -> void:
-	_dialogue_phase = DialoguePhase.SATISFIED
-
-## Called from MainGame when the wrong item is placed into the tray.
-func notify_wrong_item_dialogue() -> void:
-	_dialogue_phase = DialoguePhase.WRONG_ITEM
 
 ## Shared helper — sets style, starts the timeline, and registers the bubble anchor.
-func _start_dialogue(timeline_path: String, customer: Customer) -> void:
+func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase = DialoguePhase.NONE, label: String = "") -> void:
 	# Never start a dialogue if one is playing, if the path is empty,
 	# or if the customer is being dismissed.
-	if timeline_path.is_empty() or Dialogic.current_timeline != null:
+	if (timeline == null or (timeline is String and timeline.is_empty())) or Dialogic.current_timeline != null:
 		return
 	if not is_instance_valid(customer) or not customer.is_waiting:
 		return
 
-	# Patch both the unique character and the generic "Customer" character
-	# so that even generic timelines show the real name and anchor correctly.
-	var char_data = StoryManager._get_character_data(customer.character_id)
-	var real_name = char_data.character_name if char_data else customer.character_id
-	
-	if char_data and char_data.dialogic_character:
-		char_data.dialogic_character.display_name = real_name
-	
-	if GENERIC_CHAR_RES:
-		GENERIC_CHAR_RES.display_name = real_name
+	_dialogue_phase = phase
+	_current_timeline_path = timeline.resource_path if timeline is Resource else timeline
+
+	# If this exact timeline is ALREADY running (e.g., Greeting is playing),
+	# jump to the requested label (e.g., Satisfy) instead of restarting it.
+	if Dialogic.current_timeline != null:
+		if Dialogic.current_timeline.resource_path == _current_timeline_path:
+			if label != "":
+				print("[CustomerSpawner] Jumping directly to label: ", label)
+				Dialogic.Jump.jump_to_label(label)
+				return
+		else:
+			# If a DIFFERENT timeline is running (e.g., Uncle Mario), end it first
+			# to prioritize the customer's reaction to the delivery.
+			print("[CustomerSpawner] Ending current timeline to play: ", _current_timeline_path)
+			Dialogic.end_timeline()
 
 	Dialogic.Styles.load_style("FollowBubble")
-	_current_timeline_path = timeline_path
-	var layout = Dialogic.start(timeline_path)
+	var layout = Dialogic.start(timeline, label)
 
 	# Anchor both characters to the speech marker.
 	var marker = customer.get_node_or_null("SpeechMarker")
@@ -234,6 +256,7 @@ func _start_dialogue(timeline_path: String, customer: Customer) -> void:
 		push_warning("[CustomerSpawner] Customer '%s' has no SpeechMarker node — bubble will not follow." % customer.character_id)
 	
 	if layout and layout.has_method("register_character") and is_instance_valid(marker):
+		var char_data = StoryManager._get_character_data(customer.character_id)
 		# Register specific character (for story lines)
 		if char_data and char_data.dialogic_character:
 			layout.register_character(char_data.dialogic_character, marker)
@@ -242,14 +265,21 @@ func _start_dialogue(timeline_path: String, customer: Customer) -> void:
 			layout.register_character(GENERIC_CHAR_RES, marker)
 
 func _on_dialogue_ended() -> void:
-	# Ignore if the ended timeline isn't the one we started (e.g., Uncle Mario call ended)
-	# Dialogic.current_timeline is already null here, so we rely on our tracked state.
-	# We also check if any Mario timeline is active to be safe.
+	# 1. Detect if Mario just cut in
 	if Dialogic.current_timeline != null and "UncleMario" in Dialogic.current_timeline.resource_path:
+		print("[CustomerSpawner] Mario interrupted current flow. Interruption flag set.")
 		if _dialogue_phase == DialoguePhase.GREETING:
 			_greeting_interrupted = true
 		_dialogue_phase = DialoguePhase.NONE
 		_current_timeline_path = ""
+		return
+		
+	# 2. Detect if Mario just FINISHED (leaving Dialogic empty)
+	# We check if restocking is active to verify it was likely Mario's timeline that just ended.
+	if MarioManager.is_restocking_active and Dialogic.current_timeline == null:
+		print("[CustomerSpawner] Mario timeline ended. (Phase '%s' preserved)" % DialoguePhase.keys()[_dialogue_phase])
+		# Do NOT clear _dialogue_phase here! MarioManager will emit delivery_finished 
+		# which triggers the deferred/interrupted logic correctly.
 		return
 		
 	# If Dialogic is now free and we have a queued greeting, automatically replay it!
@@ -258,9 +288,9 @@ func _on_dialogue_ended() -> void:
 		if is_instance_valid(current_customer) and current_customer.is_waiting:
 			# Yield 1 frame to ensure Dialogic has completely cleaned up the old timeline
 			await get_tree().process_frame
-			var timeline_path = current_customer.transaction_context.timeline_greeting
+			var timeline = current_customer.transaction_context.timeline
 			_dialogue_phase = DialoguePhase.GREETING
-			_start_dialogue(timeline_path, current_customer)
+			start_dialogue(timeline, current_customer, DialoguePhase.GREETING, "Greeting")
 		return
 		
 	# Read and clear the phase atomically.
@@ -300,3 +330,16 @@ func _on_dialogue_ended() -> void:
 func _end_day() -> void:
 	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
 	EventBus.day_ended.emit(gm.day if gm else 1)
+
+func _on_mario_delivery_finished() -> void:
+	_trigger_deferred_greeting()
+
+func _on_mario_call_ended(success: bool) -> void:
+	if not success:
+		_trigger_deferred_greeting()
+
+func _trigger_deferred_greeting() -> void:
+	if _greeting_deferred and is_instance_valid(current_customer):
+		print("[CustomerSpawner] Restock complete — triggering deferred greeting for %s." % current_customer.character_id)
+		_greeting_deferred = false
+		_handle_customer_logic(current_customer, false)
