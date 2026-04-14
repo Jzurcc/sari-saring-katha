@@ -83,7 +83,11 @@ func _ready() -> void:
 	slider_sfx.drag_ended.connect(func(_vc: bool): _play_confirm())
 
 	# Mute toggle sound (ui_sfx_4)
-	mute_toggle.toggled.connect(func(_pressed: bool): _play_click())
+	mute_toggle.toggled.connect(func(pressed: bool):
+		_play_click()
+		if has_node("/root/AudioManager"):
+			AudioManager.update_mute_in_background(pressed)
+	)
 
 	# Ensure Music and SFX buses exist (creates them routed to Master if missing)
 	_ensure_audio_buses()
@@ -225,6 +229,8 @@ func _on_master_changed(value: float) -> void:
 	var idx := AudioServer.get_bus_index("Master")
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
 	AudioServer.set_bus_mute(idx, value <= 0.0)
+	if has_node("/root/AudioManager"):
+		AudioManager.update_master_muted_by_user(value <= 0.0)
 
 func _on_bgm_changed(value: float) -> void:
 	# Music bus — only soundtracks, not SFX
@@ -243,19 +249,7 @@ func _on_sfx_changed(value: float) -> void:
 	AudioServer.set_bus_mute(idx, value <= 0.0)
 
 
-# ─── Mute in Background ───────────────────────────────────────────────────────
 
-func _notification(what: int) -> void:
-	if not is_instance_valid(mute_toggle) or not mute_toggle.button_pressed:
-		return
-	var master_idx = AudioServer.get_bus_index("Master")
-	if master_idx < 0:
-		return
-	match what:
-		NOTIFICATION_APPLICATION_FOCUS_OUT:
-			AudioServer.set_bus_mute(master_idx, true)
-		NOTIFICATION_APPLICATION_FOCUS_IN:
-			AudioServer.set_bus_mute(master_idx, slider_master.value <= 0.0)
 
 
 # ─── Display mode toggle ─────────────────────────────────────────────────────────
