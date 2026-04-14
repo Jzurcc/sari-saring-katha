@@ -61,7 +61,8 @@ directories/dtl_directory={
 "Filler1": "res://Dialogue/Timelines/Kuyakap/Filler1.dtl",
 "Neutral": "res://Dialogue/Timelines/Generic/Neutral.dtl",
 "Story0": "res://Dialogue/Timelines/Kuyakap/Story0.dtl",
-"UncleMario": "res://Dialogue/Timelines/UncleMario.dtl"
+"UncleMario": "res://Dialogue/Timelines/UncleMario.dtl",
+"UncleMarioTutorial": "res://Dialogue/Timelines/UncleMarioTutorial.dtl"
 }
 layout/style_directory={
 "BubbleDialogue": "res://Assets/Dialogue/BubbleDialogue.tres",

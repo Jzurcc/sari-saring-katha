@@ -89,7 +89,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	# Prevent the dummy TimeOfDay inside the TitleScreen3D from hijacking the music!
-	if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
+	if get_tree().current_scene and get_tree().current_scene.name in ["MainMenu", "IntroCutscene"]:
 		return
 		
 	if not is_instance_valid(time_of_day_node):
