@@ -8,57 +8,54 @@ extends CanvasLayer
 
 func _ready() -> void:
 	control.visible = false
-	EventBus.tier_advanced.connect(_on_tier_advanced)
+	EventBus.upgrade_available.connect(_on_upgrade_available)
 	
-	# Add a simple dismiss button via code if it doesn't exist in the scene
-	var btn = Button.new()
-	btn.text = "Continue"
-	btn.custom_minimum_size = Vector2(120, 40)
-	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	$Control/Panel/VBox.add_child(btn)
-	btn.pressed.connect(_on_close_pressed)
+	# Apply glassmorphic transparency to match the Alt/Pricing UI
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.082, 0.078, 0.071, 0.5) 
+	style.set_corner_radius_all(20)
+	var panel = $Control/Panel
+	if panel:
+		panel.add_theme_stylebox_override("panel", style)
 
-func _on_tier_advanced(new_tier: int, source: String) -> void:
-	tier_label.text = "TIER %d UNLOCKED" % new_tier
-	source_label.text = "Reached via %s" % source
+func _on_upgrade_available(new_tier: int, cost: float) -> void:
+	tier_label.text = "UPGRADE AVAILABLE (₱%.2f)" % cost
+	source_label.text = "Call Uncle Mario to expand your catalog!"
 	
-	# Clear old items
+	# Clear old items (grid is no longer used for notifications)
 	for child in grid.get_children():
 		child.queue_free()
 	
-	# Show icons + names for new items
-	var all_items = InventoryManager.get_all_items()
-	for item in all_items:
-		if item.tier == new_tier:
-			var item_vbox = VBoxContainer.new()
-			
-			var rect = TextureRect.new()
-			rect.texture = item.texture
-			rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			rect.custom_minimum_size = Vector2(80, 80)
-			item_vbox.add_child(rect)
-			
-			var name_label = Label.new()
-			name_label.text = item.item_name
-			name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			name_label.add_theme_font_size_override("font_size", 14)
-			item_vbox.add_child(name_label)
-			
-			grid.add_child(item_vbox)
+	# Position at TOP (Notification Style)
+	control.anchor_left = 0.5
+	control.anchor_right = 0.5
+	control.anchor_top = 0.0
+	control.anchor_bottom = 0.0
+	control.offset_left = -200 # Assuming a 400px wide panel
+	control.offset_right = 200
+	control.offset_top = 20
+	control.offset_bottom = 150
 	
 	# Visual Fanfare (Tween)
 	control.visible = true
 	control.modulate.a = 0
 	control.scale = Vector2(0.8, 0.8)
-	control.pivot_offset = control.size / 2
+	control.pivot_offset = Vector2(200, 0) # Pivot at the top-center
 	
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(control, "modulate:a", 1.0, 0.5)
-	tween.tween_property(control, "scale", Vector2.ONE, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "modulate:a", 1.0, 0.4)
+	tween.tween_property(control, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(control, "offset_top", 40.0, 0.4).from(0.0)
+	
+	# Wait 2 seconds then auto-dismiss
+	await get_tree().create_timer(2.5).timeout
+	_on_close_pressed()
 
 func _on_close_pressed() -> void:
-	var tween = create_tween()
-	tween.tween_property(control, "modulate:a", 0.0, 0.3)
+	if not control.visible: return
+	
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(control, "modulate:a", 0.0, 0.4)
+	tween.tween_property(control, "offset_top", 0.0, 0.4)
 	await tween.finished
 	control.visible = false

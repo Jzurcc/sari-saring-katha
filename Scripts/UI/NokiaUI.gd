@@ -35,6 +35,18 @@ func _ready() -> void:
 	_scan_and_connect_nodes(self)
 	
 	EventBus.customer_arrived.connect(_on_customer_arrived)
+	_animate_entrance()
+
+func _animate_entrance() -> void:
+	position.y += 400
+	var tween = create_tween()
+	tween.tween_property(self, "position:y", position.y - 400, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _animate_exit_and_free() -> void:
+	var tween = create_tween()
+	tween.tween_property(self, "position:y", position.y + 400, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func(): queue_free())
+
 
 
 func _scan_and_connect_nodes(node: Node) -> void:
@@ -159,7 +171,7 @@ func _on_mario_call_finished(success: bool) -> void:
 		if nokia_ui:
 			nokia_ui.visible = false
 		nokia_closed.emit()
-		queue_free()
+		_animate_exit_and_free()
 
 func _update_screen() -> void:
 	if screen_label:
@@ -168,7 +180,7 @@ func _update_screen() -> void:
 func _on_close_pressed() -> void:
 	if _is_calling: return
 	nokia_closed.emit()
-	queue_free()
+	_animate_exit_and_free()
 
 func _on_customer_arrived(customer: Node3D) -> void:
 	# If a customer arrives while we are in the Nokia UI (any part of it:
@@ -185,7 +197,7 @@ func _on_customer_arrived(customer: Node3D) -> void:
 	# We bypass the _is_calling check here because we want to allow closing 
 	# if they are just in the menu (where _is_calling is false anyway).
 	nokia_closed.emit()
-	queue_free()
+	_animate_exit_and_free()
 	
 	# 2. Make the player face the customer
 	var player = get_tree().get_first_node_in_group("player")
