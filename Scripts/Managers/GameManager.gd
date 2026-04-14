@@ -10,6 +10,17 @@ var money: float = 0.0
 var day: int = 1
 var _last_earning: float = 0.0
 
+# --- Debt System ---
+const DAILY_QUOTAS = {
+	1: 50.0,
+	2: 100.0,
+	3: 150.0,
+	4: 250.0,
+	5: 350.0,
+	6: 500.0,
+	7: 750.0
+}
+
 func _ready() -> void:
 	add_to_group("game_manager")
 	money = starting_money
@@ -56,12 +67,34 @@ func deduct_money(amount: float) -> void:
 
 func _on_day_ended(ended_day_number: int) -> void:
 	print("[GameManager] Day %d ended!" % ended_day_number)
+	
+	# 1. Day Ended Summary Dialogue
 	if Dialogic.current_timeline == null:
 		Dialogic.start("res://Dialogue/day_ended.dtl")
+		await Dialogic.timeline_ended
 	
+	# 2. Debt Collection Logic
+	var quota = DAILY_QUOTAS.get(ended_day_number, 0.0)
+	var was_successful = false
+	
+	if money >= quota:
+		money -= quota
+		was_successful = true
+		EventBus.money_changed.emit(money)
+		print("[GameManager] Quota met! Subtracted %.2f. New balance: %.2f" % [quota, money])
+	else:
+		print("[GameManager] Quota FAILED! Only had %.2f / %.2f" % [money, quota])
+	
+	EventBus.debt_quota_met.emit(was_successful)
+	
+	# 3. Mayari Presence
+	var mayari_label = "Success" if was_successful else "Angry"
+	Dialogic.start("res://Dialogue/Timelines/mayari_collect.dtl", mayari_label)
+	await Dialogic.timeline_ended
+	
+	# 4. Advance Day
 	if day >= MAX_DAYS:
 		print("[GameManager] Final day complete!")
-		# Future: show end-game summary screen
 		return
 	
 	day += 1

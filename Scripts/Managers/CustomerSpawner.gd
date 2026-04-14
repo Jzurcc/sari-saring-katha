@@ -45,6 +45,8 @@ func _ready() -> void:
 	add_to_group("customer_spawner")
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_finished)
+	EventBus.customer_partial_satisfaction.connect(_on_customer_partial_satisfaction)
+	EventBus.customer_rejected.connect(_on_customer_dismissed)
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
@@ -127,21 +129,13 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 		# Automatically face the customer upon arrival (even if the phone isn't open).
 		var player = get_tree().get_first_node_in_group("player")
 		if player and player.has_method("face_node"):
-			player.face_node(customer)
+			await player.face_node(customer)
 
-		# Set global variables so Dialogic {expressions} can read them from .dtl files.
-		var item_names: Array[String] = []
-		for item in customer.transaction_context.desired_items:
-			item_names.append(item.item_name)
-		InventoryManager.current_item_name = ", ".join(item_names) if item_names.size() > 0 else "something"
-
-		# Set the character display name so generic dialogues can use {InventoryManager.current_character_name}
-		var char_data_for_name = StoryManager._get_character_data(customer.character_id)
-		InventoryManager.current_character_name = char_data_for_name.character_name if char_data_for_name else customer.character_id
-
-		# Set context in Dialogic Variables instead of globals
-		Dialogic.VAR.set_variable("Transaction.CustomerName", InventoryManager.current_character_name)
-		Dialogic.VAR.set_variable("Transaction.ItemWants", InventoryManager.current_item_name)
+		_update_item_names(customer)
+		
+		# Patch the generic character resource so "Customer:" lines show the right name and play sounds.
+		if GENERIC_CHAR_RES:
+			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 
 	# ── DIALOGUE LOGIC ──
 	var timeline = customer.transaction_context.timeline
@@ -220,6 +214,52 @@ func _on_dialogic_signal(argument: String) -> void:
 		EventBus.utang_rejected.emit(current_customer)
 		_pending_dismiss = true
 
+func _on_customer_partial_satisfaction(customer: Customer) -> void:
+	if Dialogic.current_timeline != null:
+		return
+		
+	# Update the strings for the remaining items
+	_update_item_names(customer)
+	
+	# Trigger a "Partial" thanks. We check for a "Partial" label in their timeline.
+	# If omitted, it will just start the timeline at "Talk" or repeat the request.
+	var timeline = customer.transaction_context.timeline
+	_dialogue_phase = DialoguePhase.TALK 
+	
+	# For now, we will just use the "Talk" label which we've already updated 
+	# to show the remaining items in Neutral.dtl.
+	start_dialogue(timeline, customer, _dialogue_phase, "Partial")
+
+func _update_item_names(customer: Customer) -> void:
+	# 1. Build the grammar-aware item list
+	var item_names: Array[String] = []
+	for item in customer.transaction_context.desired_items:
+		item_names.append(item.item_name)
+	
+	var formatted_names = ""
+	if item_names.size() == 0:
+		formatted_names = "something"
+	elif item_names.size() == 1:
+		formatted_names = item_names[0]
+	elif item_names.size() == 2:
+		formatted_names = item_names[0] + " and " + item_names[1]
+	else:
+		var last = item_names.pop_back()
+		formatted_names = ", ".join(item_names) + ", and " + last
+		
+	InventoryManager.current_item_name = formatted_names
+
+	# 2. Set the character display name
+	var char_data_for_name = StoryManager._get_character_data(customer.character_id)
+	InventoryManager.current_character_name = char_data_for_name.character_name if char_data_for_name else customer.character_id
+
+	# 3. Update Dialogic Variables
+	Dialogic.VAR.set_variable("Transaction.CustomerName", InventoryManager.current_character_name)
+	Dialogic.VAR.set_variable("Transaction.ItemWants", InventoryManager.current_item_name)
+	
+	# 4. Patch Generic Character Resource
+	if GENERIC_CHAR_RES:
+		GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 
 ## Shared helper — sets style, starts the timeline, and registers the bubble anchor.
 func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase = DialoguePhase.NONE, label: String = "") -> void:

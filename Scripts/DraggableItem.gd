@@ -14,7 +14,12 @@ var _original_transform: Transform3D = Transform3D.IDENTITY
 
 @onready var sprite: Sprite3D = $Sprite3D
 @onready var collider: CollisionShape3D = $CollisionShape3D
-@onready var label: Label3D = $Label3D
+
+# --- New Pricing UI Nodes (Created in code for cleaner management) ---
+var pricing_ui: Sprite3D
+var pricing_viewport: SubViewport
+var pricing_label: Label
+var pricing_panel: PanelContainer
 
 var is_hovered: bool = false
 var is_mouse_inside: bool = false
@@ -113,19 +118,82 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 			collider.shape.size = Vector3(rendered_w, rendered_h, max(0.1, rendered_w))
 		collider.position.y = rendered_h / 2.0
 
-	if label:
-		label.hide()
-		label.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
-		label.no_depth_test = true
-		label.fixed_size = true
-		label.font_size = 48
-		label.outline_size = 12
+	_setup_pricing_ui()
+
+
+func _setup_pricing_ui() -> void:
+	# Hide the old Label3D if it exists in the scene
+	if has_node("Label3D"):
+		get_node("Label3D").hide()
+
+	# 1. SubViewport for 2D UI rendering
+	pricing_viewport = SubViewport.new()
+	pricing_viewport.transparent_bg = true
+	# Higher resolution for sharper text
+	pricing_viewport.size = Vector2(512, 160)
+	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
+	add_child(pricing_viewport)
+
+	# 2. PanelContainer for the "Modern" look
+	pricing_panel = PanelContainer.new()
+	pricing_viewport.add_child(pricing_panel)
+	# Full size of the viewport to keep the centering consistent
+	pricing_panel.size = Vector2(512, 160)
+	pricing_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	
+	var style := StyleBoxFlat.new()
+	# Glassmorphic transparency: matching color but lower alpha (0.6 is clearer)
+	style.bg_color = Color(0.082, 0.078, 0.071, 0.6) 
+	style.set_corner_radius_all(16)
+	style.content_margin_left = 6
+	style.content_margin_right = 6
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	pricing_panel.add_theme_stylebox_override("panel", style)
+
+	# 3. 2D Label
+	pricing_label = Label.new()
+	pricing_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pricing_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# Refined font size for the higher resolution viewport
+	pricing_label.add_theme_font_size_override("font_size", 28)
+	pricing_label.add_theme_color_override("font_color", Color(1, 0.92, 0.79)) # Warm cream
+	
+	# Load font if available (from MainMenu)
+	var font_path := "res://Assets/Fonts/Inder/Inder-Regular.ttf"
+	if FileAccess.file_exists(font_path):
+		pricing_label.add_theme_font_override("font", load(font_path))
+	
+	pricing_panel.add_child(pricing_label)
+
+	# 4. Sprite3D to display the viewport in 3D space
+	pricing_ui = Sprite3D.new()
+	pricing_ui.texture = pricing_viewport.get_texture()
+	pricing_ui.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	pricing_ui.no_depth_test = true
+	pricing_ui.fixed_size = true
+	# Scale down the sprite so the high-res text is appropriate size on screen
+	pricing_ui.pixel_size = 0.001
+	pricing_ui.alpha_cut = Sprite3D.ALPHA_CUT_DISCARD
+	pricing_ui.transparent = true
+	pricing_ui.shaded = false # DISALED SHADING for proper UI transparency
+	pricing_ui.render_priority = 10
+	add_child(pricing_ui)
+	
+	pricing_ui.hide()
 
 
 
 func on_hover(hovered: bool) -> void:
 	self.is_hovered = hovered
-	super.on_hover(hovered)
+	
+	# Only call super on_hover if pricing mode is OFF.
+	# This suppresses the giant white outline while in pricing mode.
+	if hovered and _pricing_mode_active:
+		_remove_outline()
+	else:
+		super.on_hover(hovered)
+		
 	_update_label_visibility()
 
 func set_pricing_ui_active(active: bool) -> void:
@@ -135,16 +203,22 @@ func set_pricing_ui_active(active: bool) -> void:
 		update_pricing_ui()
 
 func _update_label_visibility() -> void:
-	if label:
-		label.visible = is_hovered and _pricing_mode_active
+	if pricing_ui:
+		pricing_ui.visible = is_hovered and _pricing_mode_active
 
 func update_pricing_ui() -> void:
-	if not label or not item_data: return
+	if not pricing_label or not item_data: return
+	
 	var final_price = item_data.get_final_price()
 	var margin_pct = int(item_data.profit_margin * 100)
-	label.text = "%s\n₱%.2f (%d%%)" % [item_data.item_name, final_price, margin_pct]
-	label.position.y = item_data.display_height_meters + 0.1
-	label.position.z = 0.05
+	
+	# Priority formatting: Selling price first and bold/prominent
+	pricing_label.text = "₱%.2f\n%d%% Profit" % [final_price, margin_pct]
+	
+	# Position at center of item height and push forward (Z = 0.1)
+	if pricing_ui:
+		pricing_ui.position.y = item_data.display_height_meters / 2.0
+		pricing_ui.position.z = 0.15 # Pushed more to the front
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return
@@ -152,7 +226,7 @@ func on_interact() -> void:
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()
-	label.hide()
+	if pricing_ui: pricing_ui.hide()
 	drag_started.emit()
 
 func _on_drag_cancelled_by_manager() -> void:

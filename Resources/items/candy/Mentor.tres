@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://mdcyjtl1s53y"]
+[gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://cvh64dcfchjps" path="res://Assets/items/icons/17_candy_mentor.png" id="2_tex"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/17_candy_mentor.png" id = "2_tex"]
 
 [resource]
+id = "mentor"
+tier = 2
 script = ExtResource("1_item")
 item_name = "Mentor"
 texture = ExtResource("2_tex")
 price = 0.5
 markup = 0.5
-max_stock = 20
 category = "candy"
 item_hint = "can teach me "
 display_height_meters = 0.4

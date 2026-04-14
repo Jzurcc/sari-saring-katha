@@ -323,10 +323,21 @@ func _on_add_pressed() -> void:
 	var item = currently_selected_item
 	var current_count = selected_items.get(item, 0)
 	
-	# max_stock is the shelf capacity; allow ordering up to that many units.
-	var order_cap = item.max_stock if item.max_stock > 0 else 99
+	# Dynamic item limit (Pocha, Mentor, Sachets, etc.)
+	var item_limit = InventoryManager.get_max_stock(item)
+	if current_count + 1 > item_limit:
+		return
 	
-	if current_count + 1 > order_cap:
+	# Global shop capacity limit (On-Shelf + Inventory + Basket <= 36 or 12)
+	var available = InventoryManager.get_available_capacity(item.type)
+	var in_basket = 0
+	for k in selected_items.keys():
+		if k.type == item.type:
+			in_basket += selected_items[k]
+			
+	if in_basket + 1 > available:
+		# Maybe show a notification or tip about shelf space
+		print("[RestockMenu] CANNOT ADD: Shelf/Fridge is too full! Available: ", available, " In Basket: ", in_basket)
 		return
 	
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
@@ -440,9 +451,20 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
 	var count = selected_items.get(item, 0)
-	var order_cap = item.max_stock if item.max_stock > 0 else 99
 	
-	if count + 1 > order_cap:
+	# Individual item limit
+	var item_limit = InventoryManager.get_max_stock(item)
+	if count + 1 > item_limit:
+		return
+		
+	# Global capacity limit
+	var available = InventoryManager.get_available_capacity(item.type)
+	var in_basket = 0
+	for k in selected_items.keys():
+		if k.type == item.type:
+			in_basket += selected_items[k]
+	
+	if in_basket + 1 > available:
 		return
 		
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
@@ -467,6 +489,7 @@ func _close_restock_screen() -> void:
 
 func _on_cancel_pressed() -> void:
 	_play_sfx(stream_sfx_9)
+	MarioManager.cancel_restock()
 	catalog_menu_closed.emit()
 	_close_restock_screen()
 
@@ -521,12 +544,18 @@ func _get_display_name(item: ItemData) -> String:
 
 func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 	var result: Array[ItemData] = []
-	var current_day = _get_current_day()
 	for item in InventoryManager.get_all_items():
 		if item.category == cat_key:
-			var unlock_day = _get_unlock_day(item.id)
-			if current_day >= unlock_day:
-				result.append(item)
+			# Use the new Tier-based check from StoryManager
+			if StoryManager.has_method("_is_item_unlocked"):
+				if StoryManager._is_item_unlocked(item):
+					result.append(item)
+			else:
+				# Fallback if StoryManager doesn't have the method yet
+				var current_day = _get_current_day()
+				var unlock_day = _get_unlock_day(item.get_clean_id())
+				if current_day >= unlock_day:
+					result.append(item)
 	return result
 
 func _style_button(btn: Button, bg_color: Color, font_color: Color, font_size: float = 14.0) -> void:

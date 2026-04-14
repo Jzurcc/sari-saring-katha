@@ -1,0 +1,13 @@
+label Success
+ReynaMayari: I see you've been working hard. [pause=0.4]
+ReynaMayari: The installment for today has been collected from your drawer. 
+ReynaMayari: Keep this up, and your grandmother's debt will be a memory in no time. [pause=0.5]
+ReynaMayari: Until tomorrow. [pause=0.3]
+[end_timeline]
+
+label Angry
+ReynaMayari: [wave blue]I am disappointed.[/wave] [pause=0.5]
+ReynaMayari: Your earnings for today are insufficient to cover your obligations.
+ReynaMayari: Do not think my patience is infinite. [pause=0.4]
+ReynaMayari: Expect... [pause=0.3] complications if this happens again.
+[end_timeline]

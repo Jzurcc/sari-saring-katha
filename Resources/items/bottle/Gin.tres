@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://db7pii1sc6j2e"]
+[gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://d3lkjv8f041hl" path="res://Assets/items/icons/25_bottle_gin.png" id="2_tex"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/25_bottle_gin.png" id = "2_tex"]
 
 [resource]
+id = "gin"
+tier = 6
 script = ExtResource("1_item")
 item_name = "Gin"
 texture = ExtResource("2_tex")
 price = 42.0
 markup = 13.0
-max_stock = 0
 category = "bottle"
 item_hint = "has a strong kick to it"
 display_height_meters = 0.6499999999999999

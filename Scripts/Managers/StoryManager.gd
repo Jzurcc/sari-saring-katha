@@ -23,6 +23,22 @@ var is_clock_running: bool = false:
 
 var _last_character_id: String = ""
 
+# --- Tier Progression ---
+var current_tier: int = 1
+var purchase_counter: int = 0:
+	set(value):
+		purchase_counter = value
+		if purchase_counter >= 8 and current_tier < 7:
+			advance_tier("Activity")
+
+@export_group("Transaction Probabilities")
+## Chance (0.0 to 1.0) that a customer will start with a rumor.
+@export_range(0, 1) var rumor_chance: float = 0.20
+## Chance (0.0 to 1.0) that a customer will ask for debt (utang).
+@export_range(0, 1) var debt_chance: float = 0.15
+## Chance (0.0 to 1.0) that a customer's request will be a riddle.
+@export_range(0, 1) var riddle_chance: float = 0.20
+
 ## Float representation of the currently displayed in-game hour (0–24).
 var _current_display_time: float = 16.0
 ## Cached reference to the TimeOfDay node (searched once on first use).
@@ -46,6 +62,13 @@ var _time_of_day_node: Node = null
 func _ready() -> void:
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_satisfied)
+	
+	# Load progression state
+	var save_data = SaveManager.load_game()
+	if save_data.has("progression"):
+		var p = save_data["progression"]
+		current_tier = p.get("current_tier", 1)
+		purchase_counter = p.get("purchase_counter", 0)
 	
 	_ensure_tod_node()
 	if _time_of_day_node:
@@ -72,6 +95,35 @@ func _setup_daily_focus() -> void:
 	todays_focus_character = focus_char.character_id
 	print("[StoryManager] Day ", day, " focus character is: ", todays_focus_character)
 
+func advance_tier(source: String = "Manual") -> void:
+	if current_tier >= 7:
+		return
+		
+	current_tier += 1
+	purchase_counter = 0
+	print("[StoryManager] TIER ADVANCED to ", current_tier, " via ", source)
+	
+	# Save state
+	_save_progression()
+	
+	# Trigger rewards
+	EventBus.tier_advanced.emit(current_tier, source)
+	
+	# Call Mario for Sample Delivery
+	var mario = get_tree().root.find_child("MarioManager", true, false)
+	if mario and mario.has_method("trigger_sample_delivery"):
+		mario.trigger_sample_delivery(current_tier)
+
+func _save_progression() -> void:
+	var current_save = SaveManager.load_game()
+	current_save["progression"] = {
+		"current_tier": current_tier,
+		"purchase_counter": purchase_counter
+	}
+	SaveManager.save_game(current_save)
+
+## Ask the StoryManager for the next customer's context.
+## Returns null only if no characters are configured.
 func get_next_transaction() -> TransactionContext:
 	# --- TUTORIAL INJECTION ---
 	var tutorial_stage = character_story_states.get("UncleMarioTutorial", 0)
@@ -106,29 +158,43 @@ func get_next_transaction() -> TransactionContext:
 	
 	_build_transaction_context(t, char_data)
 	
-	# 2. Chance-based feature triggers (Consolidated for clarity & sync)
+	# 2. Independent Feature Rolls
 	
-	# 20% Rumor Mill chance
+	# A. Rumor Mill
 	var last_cust = Dialogic.VAR.get_variable("Global.LastCustomer")
 	var rumor_roll = randf()
-	if last_cust != "" and last_cust != t.character_id and rumor_roll < 0.20:
+	if last_cust != "" and last_cust != t.character_id and rumor_roll < rumor_chance:
 		t.rumor_active = true
+		t.rumor_type = 1.0 if randf() < 0.5 else 0.0
 	else:
 		t.rumor_active = false
-	Dialogic.VAR.set_variable("Global.RumorActive", 1.0 if t.rumor_active else 0.0)
-	t.rumor_type = 1.0 if randf() < 0.5 else 0.0
-	Dialogic.VAR.set_variable("Global.RumorType", t.rumor_type)
-
-	# 15% Utang (Debt) chance
+	
+	# B. Utang (Debt)
 	var debt_roll = randf()
-	if t.transaction_type == TransactionContext.Type.PURCHASE and debt_roll < 0.15:
+	if t.transaction_type == TransactionContext.Type.PURCHASE and debt_roll < debt_chance:
 		t.wants_debt = true
 	else:
 		t.wants_debt = false
-	Dialogic.VAR.set_variable("Transaction.WantsDebt", 1.0 if t.wants_debt else 0.0)
+		
+	# C. Riddle (Tingting)
+	# Only possible if there are items and the main item has a hint
+	var riddle_roll = randf()
+	if not t.desired_items.is_empty() and t.transaction_type != TransactionContext.Type.VISIT:
+		var main_item = t.desired_items[0]
+		if main_item.item_hint != "" and riddle_roll < riddle_chance:
+			t.is_riddle = true
+			Dialogic.VAR.set_variable("Transaction.ItemHint", main_item.item_hint)
 	
-	# Riddle Sync (IsRiddle was rolled in _build_transaction_context)
+	# 3. Sync to Dialogic Variables
+	Dialogic.VAR.set_variable("Global.RumorActive", 1.0 if t.rumor_active else 0.0)
+	Dialogic.VAR.set_variable("Global.RumorType", t.rumor_type)
+	Dialogic.VAR.set_variable("Transaction.WantsDebt", 1.0 if t.wants_debt else 0.0)
 	Dialogic.VAR.set_variable("Transaction.IsRiddle", 1.0 if t.is_riddle else 0.0)
+
+	print("\n[STORY] --- Transaction Attributes ---")
+	print("  Rumor : ", t.rumor_active, " (Roll: ", rumor_roll, " < ", rumor_chance, ")")
+	print("  Riddle: ", t.is_riddle, " (Roll: ", riddle_roll, " < ", riddle_chance, ")")
+	print("  Debt  : ", t.wants_debt, " (Roll: ", debt_roll, " < ", debt_chance, ")")
 
 	print("\n[STORY] --- Transaction Setup ---")
 	print("[STORY] Spawning: ", t.character_id, " (Type: ", TransactionContext.Type.keys()[t.transaction_type], ")")
@@ -149,8 +215,8 @@ func _process(_delta: float) -> void:
 func _apply_display_time(t: float) -> void:
 	if not _time_of_day_node:
 		return
-	var h := int(t)
-	var m := int((t - h) * 60.0)
+	var h: int = int(t)
+	var m: int = int((t - h) * 60.0)
 	_time_of_day_node.set_time(h, m, 0)
 
 func _ensure_tod_node() -> void:
@@ -202,83 +268,35 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData) -> vo
 			if _is_item_unlocked(item):
 				pool.append(item)
 
-		if not pool.is_empty():
-			t.desired_items.append(pool.pick_random())
-		else:
-			var fallback := _pick_random_orderable_item()
-			if fallback:
-				t.desired_items.append(fallback)
-		
-		# 20% Tingting (Riddle) chance
-		var riddle_roll = randf()
-		if not t.desired_items.is_empty() and riddle_roll < 0.20:
-			var main_item = t.desired_items[0]
-			if main_item.item_hint != "":
-				t.is_riddle = true
-				Dialogic.VAR.set_variable("Transaction.ItemHint", main_item.item_hint)
-				print("[STORY] Riddle Roll: ", riddle_roll, " (Target < 0.20) -> SUCCESS (Hint: ", main_item.item_hint, ")")
+		# Multi-item request logic (1-3 items)
+		var item_count = randi_range(1, 3)
+		for i in range(item_count):
+			if not pool.is_empty():
+				t.desired_items.append(pool.pick_random())
 			else:
-				print("[STORY] Riddle Roll: ", riddle_roll, " (Target < 0.20) -> FAIL (No hint found for ", main_item.item_name, ")")
-		else:
-			t.is_riddle = false
+				var fallback: ItemData = _pick_random_orderable_item()
+				if fallback:
+					t.desired_items.append(fallback)
 
 ## Returns a random item that is unlocked for the current day.
 ## Prioritizes items that are currently in stock. 
 ## Fallback: picks an unlocked item even if out of stock (prevents "something" dialogue gap).
 func _pick_random_orderable_item() -> ItemData:
-	var stocked_unlocked: Array[ItemData] = []
 	var all_unlocked: Array[ItemData] = []
 	
 	for item in InventoryManager.get_all_items():
 		if _is_item_unlocked(item):
 			all_unlocked.append(item)
-			if InventoryManager.is_in_stock(item):
-				stocked_unlocked.append(item)
 
-	# Pass 1: Try items that the player actually has on the shelf
-	if not stocked_unlocked.is_empty():
-		return stocked_unlocked.pick_random()
-	
-	# Pass 2: Fallback to any unlocked item (so customers still ask for things)
 	if not all_unlocked.is_empty():
 		return all_unlocked.pick_random()
 		
 	push_warning("[StoryManager] No unlocked items available at all for fallback filler.")
 	return null
 
-## Helper to check if an item is available based on the current day's progression.
+## Helper to check if an item is available based on the current tier.
 func _is_item_unlocked(item: ItemData) -> bool:
-	var unlock_map: Dictionary = {
-		# DAY 1
-		"Anoba": 1, "Patos": 1,
-		"Argentita": 1, "Cenchuree": 1,
-		"Champyon": 1,
-		# DAY 2
-		"Mentor": 2, "Pocha": 2,
-		"Water": 2,
-		"Chicken": 2, "Pantit": 2,
-		"Mix": 2,
-		# DAY 3
-		"Hotdog": 3, "Borgir": 3,
-		"NgaragYa": 3, "Dantes": 3,
-		"Mayti": 3,
-		# DAY 4
-		"Coke": 4,
-		"Marites": 4, "Utang": 4,
-		# DAY 5
-		"Lucky9": 5, "Mema": 5,
-		"Nagets": 5,
-		# DAY 6
-		"Marboro": 6,
-		"Gin": 6,
-		# DAY 7
-		"Tocino": 7,
-		"Scam": 7,
-		"Chubs": 7,
-	}
-	
-	var unlock_day = unlock_map.get(item.id, 1)
-	return day >= unlock_day
+	return item.tier <= current_tier
 
 
 func _on_customer_satisfied(customer) -> void:
@@ -303,3 +321,13 @@ func _on_customer_satisfied(customer) -> void:
 		var stage = character_story_states.get(id, 0)
 		character_story_states[id] = stage + 1
 		print("[StoryManager] Advanced story for ", id, " to stage ", stage + 1)
+		
+		# Narrative Tier Progression Check
+		# For simplicity, we trigger a tier up every time a character gets to stage 3 or 5
+		if character_story_states[id] in [3, 5]:
+			advance_tier("Story (%s)" % id)
+	
+	# Increment purchase counter for activity-based progression
+	if customer.transaction_context and customer.transaction_context.transaction_type != TransactionContext.Type.VISIT:
+		purchase_counter += 1
+		_save_progression() # Save intermediate progress

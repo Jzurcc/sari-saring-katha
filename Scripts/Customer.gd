@@ -109,12 +109,28 @@ func check_item(item: ItemData) -> bool:
 		reject()
 		return false
 
-	if transaction_context.is_item_desired(item):
-		satisfy()
+	if transaction_context.fulfill_item(item):
+		pulse_color(Color("#0bb544")) # Vibrant Green
+		
+		if transaction_context.desired_items.is_empty():
+			satisfy()
+		else:
+			# Partial fulfillment: Update naming and stay at the counter.
+			# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
+			if EventBus.has_signal("customer_partial_satisfaction"):
+				EventBus.customer_partial_satisfaction.emit(self)
 		return true
 	else:
 		reject()
 		return false
+
+func pulse_color(color: Color, duration: float = 0.5) -> void:
+	if body_sprite == null: return
+	var tween = create_tween()
+	tween.tween_property(body_sprite, "modulate", color, duration * 0.4) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(body_sprite, "modulate", Color.WHITE, duration * 0.6) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func satisfy() -> void:
 	# Immediately mark as no longer waiting so nothing else can interact with
@@ -123,6 +139,10 @@ func satisfy() -> void:
 	_is_resolving = true
 	_clear_outline()
 	InventoryManager.decrement_cooldown()
+	
+	# Emit completion signals
+	satisfied.emit()
+	EventBus.customer_satisfied.emit(self)
 	
 	await get_tree().process_frame
 	

@@ -9,6 +9,8 @@ extends WorldInteractor
 const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.tscn")
 
 @export var sachet_item: ItemData
+@export var max_stock: int = 5
+var current_stock: int = 0
 
 @onready var sprite: Sprite3D = $Sprite3D
 
@@ -25,6 +27,8 @@ func on_hover(is_hovered: bool) -> void:
 func on_interact() -> void:
 	if DragManager._is_dragging:
 		return
+	
+	_update_local_stock()
 
 	if not sachet_item:
 		push_warning("[SachetContainerItem] No sachet_item assigned to %s" % name)
@@ -35,12 +39,18 @@ func on_interact() -> void:
 		return
 
 	if InventoryManager.take_item(sachet_item):
+		_update_local_stock()
 		var drag_item: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
 		get_tree().current_scene.add_child(drag_item)
 		drag_item.is_transient = true
 		drag_item.setup(sachet_item, self.global_transform)
 		drag_item.sprite.hide()
 		DragManager.start_drag(drag_item, sachet_item.texture)
+
+func _update_local_stock() -> void:
+	if sachet_item:
+		current_stock = InventoryManager.get_stock(sachet_item)
+		max_stock = InventoryManager.get_max_stock(sachet_item)
 
 # --- Private ---
 

@@ -40,12 +40,11 @@ func _resolve_pivot() -> void:
 	# 2. Fall back to the direct parent Node3D (FridgeDoorPivot).
 	#    Instanced-scene-root NodePath overrides are unreliable in Godot 4;
 	#    get_parent() gives us the pivot reliably.
-	var p := get_parent()
+	var p: Node = get_parent()
 	if p is Node3D:
 		_pivot = p as Node3D
 		return
 	# 3. Last resort — rotate self (hinge setup is missing entirely).
-	push_warning("RefrigeratorDoor: no valid hinge found, rotating self.")
 	_pivot = self
 
 
@@ -71,7 +70,7 @@ func on_interact() -> void:
 # Close open
 func toggle_open() -> void:
 	is_open = !is_open
-	var target_rot := Vector3(0, deg_to_rad(OPEN_ANGLE_DEG), 0) if is_open \
+	var target_rot: Vector3 = Vector3(0, deg_to_rad(OPEN_ANGLE_DEG), 0) if is_open \
 					  else Vector3.ZERO
 
 	if _tween:

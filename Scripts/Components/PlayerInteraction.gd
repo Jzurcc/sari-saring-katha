@@ -105,24 +105,40 @@ func _input(event: InputEvent) -> void:
 			_last_hovered.set_pricing_ui_active(pricing_mode_active)
 		return
 
-	# Pricing Adjustments
+	# Pricing Adjustments (Direct Price Mode)
 	if pricing_mode_active and is_instance_valid(_last_hovered) and _last_hovered is DraggableItem:
 		var delta := 0.0
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				delta = 0.01
+				delta = 1.0 # 1 Peso
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				delta = -0.01
+				delta = -1.0 # -1 Peso
 		elif event is InputEventKey:
 			if event.keycode == KEY_PERIOD:
-				delta = 0.01
+				delta = 1.0
 			elif event.keycode == KEY_COMMA:
-				delta = -0.01
+				delta = -1.0
 		
 		if delta != 0.0:
 			var item: DraggableItem = _last_hovered
 			if item.item_data:
-				item.item_data.profit_margin = clamp(item.item_data.profit_margin + delta, 0.10, 0.30)
+				var base_price : float = item.item_data.price
+				var current_price : float = item.item_data.get_final_price()
+				
+				# Range Rules: 
+				# 1. Minimum: 70% of base price (rounded), but at least 1.0 Peso.
+				# 2. Maximum: 130% of base price (rounded).
+				var min_price : float = max(1.0, round(base_price * 0.7))
+				var max_price : float = round(base_price * 1.3) 
+				
+				var new_price : float = clamp(current_price + delta, min_price, max_price)
+				
+				# Calculate profit margin to match target price
+				if base_price > 0:
+					item.item_data.profit_margin = (new_price - base_price) / base_price
+				else:
+					item.item_data.profit_margin = 0.0
+					
 				# Refresh all items of this type (they share the resource)
 				get_tree().call_group("draggable_items", "update_pricing_ui")
 			get_viewport().set_input_as_handled()

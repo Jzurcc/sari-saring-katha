@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d23wq027skjv6"]
+[gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_lphjf"]
-[ext_resource type="Texture2D" uid="uid://y32dg1v018yr" path="res://Assets/items/icons/34_sachet_aryel.png" id="2_tyir5"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_lphjf"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/34_sachet_aryel.png" id = "2_tyir5"]
 
 [resource]
 script = ExtResource("1_lphjf")
 item_name = "Aryel"
 texture = ExtResource("2_tyir5")
-max_stock = 6
 category = "sachet"
 id = "aryel"
+tier = 4
 item_hint = "can't clean the 0.1%"
 metadata/_custom_type_script = "uid://dhbe82ueyiql5"
