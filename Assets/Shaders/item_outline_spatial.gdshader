@@ -44,6 +44,13 @@ void vertex() {
 	MODELVIEW_NORMAL_MATRIX = mat3(MODELVIEW_MATRIX);
 }
 
+float safe_alpha(sampler2D tex, vec2 uv) {
+	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+		return 0.0;
+	}
+	return texture(tex, uv).a;
+}
+
 void fragment() {
 	vec4 tex = texture(albedo_texture, UV);
 
@@ -57,14 +64,14 @@ void fragment() {
 
 	// 8-direction sampling: 4 cardinal + 4 diagonal → smooth corners.
 	float max_a = 0.0;
-	max_a = max(max_a, texture(albedo_texture, UV + vec2( px.x,    0.0)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2(-px.x,    0.0)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2(   0.0,  px.y)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2(   0.0, -px.y)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2( px.x,  px.y)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2(-px.x,  px.y)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2( px.x, -px.y)).a);
-	max_a = max(max_a, texture(albedo_texture, UV + vec2(-px.x, -px.y)).a);
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2( px.x,    0.0)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2(-px.x,    0.0)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2(   0.0,  px.y)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2(   0.0, -px.y)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2( px.x,  px.y)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2(-px.x,  px.y)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2( px.x, -px.y)));
+	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2(-px.x, -px.y)));
 
 	if (max_a > 0.01) {
 		ALBEDO = outline_color.rgb;
