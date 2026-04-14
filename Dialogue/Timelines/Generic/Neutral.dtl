@@ -6,29 +6,29 @@ if {Global.RumorActive}:
 		Customer: Sabi niya ang bait mo raw dito sa tindahan. [pause=0.4]
 	else:
 		Customer: Oh, I ran into {Global.LastCustomer} just a moment ago. [pause=0.3]
-		Customer: They were so happy with the [pulse color=#4a6741 freq=1.0]{Global.LastItem}[/pulse] you sold them! [pause=0.5]
+		Customer: They were so happy with the [color=#0bb544][pulse]{Global.LastItem}[/pulse][/color] you sold them! [pause=0.5]
 
 # 2. Riddle vs Normal Request
 if {Transaction.IsRiddle}:
 	Customer: I have a bit of a problem... [pause=0.4]
-	Customer: I need something that [pulse color=#4a6741 freq=1.0]{Transaction.ItemHint}[/pulse]. [pause=0.4]
+	Customer: I need something that [color=#0bb544][pulse]{Transaction.ItemHint}[/pulse][/color]. [pause=0.4]
 	Customer: Do you have something that fits that description?
 else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
 		Customer: Tao po! Good morning! [pause=0.3]
-		Customer: Do you have any [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse] available today?
+		Customer: Do you have any [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color] available today?
 	elif {Variation} == 2.0:
 		Customer: Hello po! [pause=0.3]
-		Customer: Can I buy [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse], please?
+		Customer: Can I buy [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color], please?
 	else:
 		Customer: Hi there! Magandang araw. [pause=0.3]
-		Customer: I'm just looking to buy some [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse] if you have some in stock.
+		Customer: I'm just looking to buy some [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color] if you have some in stock.
 [end_timeline]
 
 label Talk
 if {Transaction.IsRiddle}:
-	Customer: Like I said, I'm looking for something that [pulse color=#4a6741 freq=1.0]{Transaction.ItemHint}[/pulse].
+	Customer: Like I said, I'm looking for something that [color=#0bb544][pulse]{Transaction.ItemHint}[/pulse][/color].
 	- Sige, sandali lang.
 		Customer: Sige po, wait muna ako rito.
 		[end_timeline]
@@ -39,42 +39,47 @@ if {Transaction.IsRiddle}:
 else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
-		Customer: Just the [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse], please! Take your time.
+		Customer: Just the [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color], please! Take your time.
 		- Sige, sandali lang.
 			Customer: Okay po, I'll be right here.
 			[end_timeline]
 		- Sorry, wala nang stock.
 			Customer: Ay, out of stock ba? Sayang.
-			Customer: That's okay, I'll just check again tomorrow. [pause=0.4] [pulse freq=1.0]Salamat![/pulse]
+			Customer: That's okay, I'll just check again tomorrow. [pause=0.4] [pulse]Salamat![/pulse]
 			[signal arg="refuse_service"]
 			[end_timeline]
 	elif {Variation} == 2.0:
-		Customer: Ay, I was asking for [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse]. Did you forget already? Haha!
+		Customer: Ay, I was asking for [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color]. Did you forget already? Haha!
 		- Sige, sandali lang.
 			Customer: Sige po, no rush! I know you're busy.
 			[end_timeline]
 		- Sorry, wala nang stock.
 			Customer: Wala na po? Aww, okay.
-			Customer: I'll just look somewhere else then. [pause=0.4] [pulse freq=1.0]Bye po![/pulse]
+			Customer: I'll just look somewhere else then. [pause=0.4] [pulse]Bye po![/pulse]
 			[signal arg="refuse_service"]
 			[end_timeline]
 	else:
-		Customer: Still waiting on the [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse] po. No rush!
+		Customer: Still waiting on the [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color] po. No rush!
 		- Sige, sandali lang.
 			Customer: Sure thing! Take your time.
 			[end_timeline]
 		- Sorry, wala nang stock.
 			Customer: Naku, ubos na? Pa-reserve ako next time ha!
-			Customer: Sige, [pulse freq=1.0]salamat[/pulse] na lang po.
+			Customer: Sige, [pulse]salamat[/pulse] na lang po.
 			[signal arg="refuse_service"]
 			[end_timeline]
+
+label Partial
+Customer: [pulse]Salamat![/pulse] [pause=0.3]
+Customer: I still need [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color] though.
+[end_timeline]
 
 label Satisfy
 # Handle Utang (Debt) Choice - 15% chance
 if {Transaction.WantsDebt}:
-	Customer: [pulse freq=1.0]Maraming salamat![/pulse] [pause=0.5]
+	Customer: [pulse]Maraming salamat![/pulse] [pause=0.5]
 	Customer: [wave]Naku...[/wave] [pause=0.4] I just realized I forgot my wallet at home.
-	Customer: Is it okay if I take this on [pulse color=#4a6741]utang[/pulse] for now? [pause=0.4] Babayaran ko rin bukas, promise!
+	Customer: Is it okay if I take this on [color=#0bb544][pulse]utang[/pulse][/color] for now? [pause=0.4] Babayaran ko rin bukas, promise!
 	- Sige, no problem. (Accept Debt)
 		[signal arg="utang_accepted"]
 		Customer: Wow, talagang napakabait mo! [pause=0.3] Maraming salamat talaga.
@@ -86,7 +91,7 @@ if {Transaction.WantsDebt}:
 else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
-		Customer: [pulse freq=1.0]Maraming salamat![/pulse] You're a lifesaver.
+		Customer: [pulse]Maraming salamat![/pulse] You're a lifesaver.
 		Customer: Have a great day!
 	elif {Variation} == 2.0:
 		Customer: Perfect, just what I needed.
@@ -104,11 +109,11 @@ else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
 		Customer: Ay, I think there's a mix-up.
-		Customer: This isn't the [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse] I asked for!
+		Customer: This isn't the [color=#4a6741][pulse]{Transaction.ItemWants}[/pulse][/color] I asked for!
 	elif {Variation} == 2.0:
 		Customer: Hmm, wait lang.
-		Customer: I asked for [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse], not this one po.
+		Customer: I asked for [color=#4a6741][pulse]{Transaction.ItemWants}[/pulse][/color], not this one po.
 	else:
 		Customer: Naku, hindi po ito 'yun.
-		Customer: Can you double-check? I needed [pulse color=#4a6741 freq=1.0]{Transaction.ItemWants}[/pulse].
+		Customer: Can you double-check? I needed [color=#0bb544][pulse]{Transaction.ItemWants}[/pulse][/color].
 [end_timeline]
