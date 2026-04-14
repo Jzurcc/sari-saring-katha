@@ -59,6 +59,7 @@ directories/dch_directory={
 }
 directories/dtl_directory={
 "Buboy/Filler1": "res://Dialogue/Timelines/Buboy/Filler1.dtl",
+"Danilo/Story0": "res://Dialogue/Timelines/Danilo/Story0.dtl",
 "Filler1": "res://Dialogue/Timelines/Kuyakap/Filler1.dtl",
 "Neutral": "res://Dialogue/Timelines/Generic/Neutral.dtl",
 "Story0": "res://Dialogue/Timelines/Kuyakap/Story0.dtl",
@@ -109,6 +110,9 @@ audio/channel_defaults={
 }
 }
 variables={
+"Danilo": {
+"Trust": 0.0
+},
 "Global": {
 "LastCustomer": "",
 "LastItem": "",
@@ -122,10 +126,13 @@ variables={
 "Money": 200.0
 },
 "Transaction": {
+"CurrentArc": 0.0,
 "CustomerName": "",
+"DeliveredCount": 0.0,
 "IsRiddle": false,
 "ItemHint": "",
 "ItemWants": "",
+"RemainingCount": 0.0,
 "WantsDebt": false
 },
 "Variation": 0.0

@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://deo0gxkmk2ahd" path="res://addons/sky_3d/src/Sky3D.gd" id="8_sky3d"]
 [ext_resource type="Script" uid="uid://b4tkplvh7fq40" path="res://addons/sky_3d/src/SkyDome.gd" id="9_skydome"]
 [ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="10_tod"]
-[ext_resource type="Script" path="res://Scripts/SkyColorController.gd" id="11_scc"]
+
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
 shader = ExtResource("1_shader")
@@ -148,5 +148,4 @@ script = ExtResource("10_tod")
 editor_time_enabled = false
 dome_path = NodePath("../SkyDome")
 current_time = 12.0
-[node name="SkyColorController" type="Node" parent="."]
-script = ExtResource("11_scc")
+

@@ -11,6 +11,10 @@ extends Control
 @onready var left_arrow     : TextureRect   = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/LeftArrow
 @onready var right_arrow    : TextureRect   = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/RightArrow
 
+# Collection UI node references
+@onready var collection_overlay : ColorRect = $CollectionOverlay
+@onready var collection_grid    : GridContainer = %Grid
+
 var target_scene = "res://Scenes/MainGame.tscn"
 var original_styles = {}
 
@@ -44,6 +48,7 @@ func _ready() -> void:
 	_ui_player.bus = "SFX"
 	add_child(_ui_player)
 	$OptionsOverlay.hide()
+	$CollectionOverlay.hide()
 
 	if has_node("TitleScreen3D/Camera3D"):
 		cam = $TitleScreen3D/Camera3D
@@ -67,6 +72,7 @@ func _ready() -> void:
 			btn.focus_exited.connect(_on_btn_unhover.bind(btn))
 			if not btn.disabled:
 				btn.pressed.connect(_play_click)
+	_check_save_status()
 	buttons.get_node("NewGame").grab_focus()
 
 	# Set slider defaults from @export values
@@ -154,6 +160,9 @@ func _process(delta: float) -> void:
 # ─── New Game ─────────────────────────────────────────────────────────────────
 
 func _on_new_game_pressed() -> void:
+	# Clear existing save for a fresh start
+	SaveManager.clear_save()
+	
 	is_starting_game = true
 	buttons.hide()
 	$LeftVignette.hide()
@@ -180,6 +189,52 @@ func _on_new_game_pressed() -> void:
 func _on_pan_finished() -> void:
 	SceneTransition.change_scene(target_scene)
 
+func _check_save_status() -> void:
+	if FileAccess.file_exists("user://save_game.json"):
+		_create_continue_button()
+
+func _create_continue_button() -> void:
+	var new_game_btn = buttons.get_node("NewGame")
+	var continue_btn = new_game_btn.duplicate()
+	continue_btn.name = "ContinueGame"
+	continue_btn.text = "CONTINUE"
+	buttons.add_child(continue_btn)
+	buttons.move_child(continue_btn, 0)
+	
+	# Connect signals
+	continue_btn.pressed.connect(_on_continue_pressed)
+	continue_btn.pressed.connect(_play_click)
+	continue_btn.mouse_entered.connect(_on_btn_hover.bind(continue_btn))
+	continue_btn.mouse_exited.connect(_on_btn_unhover.bind(continue_btn))
+	
+	# Grab focus if save exists
+	continue_btn.grab_focus()
+
+func _on_continue_pressed() -> void:
+	# Just start the game; managers will load from the existing save automatically
+	is_starting_game = true
+	buttons.hide()
+	$LeftVignette.hide()
+	
+	if cam == null:
+		SceneTransition.change_scene(target_scene)
+		return
+
+	var tween = create_tween()
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	
+	var target_pos = Vector3(-1.638, 4.1, -0.05)
+	var target_rot = Vector3(0, deg_to_rad(90.0), 0)
+
+	tween.set_parallel(true)
+	tween.tween_property(cam, "position", target_pos, 1.8)
+	tween.tween_property(cam, "rotation", target_rot, 1.8)
+	tween.tween_property(cam, "fov",  75.0,   1.8)
+	tween.tween_property(cam, "near", 0.05,   1.8)
+	tween.tween_property(cam, "far",  4000.0, 1.8)
+	tween.set_parallel(false)
+	tween.chain().tween_callback(_on_pan_finished)
+
 func _on_exit_pressed() -> void:
 	get_tree().quit()
 
@@ -203,6 +258,46 @@ func _on_options_close_pressed() -> void:
 		if child is Control:
 			child.mouse_filter = Control.MOUSE_FILTER_STOP
 	_save_settings()
+
+
+# ─── Collection overlay ───────────────────────────────────────────────────────
+
+func _on_collection_pressed() -> void:
+	_play_click()
+	collection_overlay.show()
+	_populate_collection()
+	buttons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in buttons.get_children():
+		if child is Control:
+			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func _on_collection_close_pressed() -> void:
+	_play_confirm()
+	collection_overlay.hide()
+	buttons.mouse_filter = Control.MOUSE_FILTER_STOP
+	for child in buttons.get_children():
+		if child is Control:
+			child.mouse_filter = Control.MOUSE_FILTER_STOP
+
+func _populate_collection() -> void:
+	# Clear existing items
+	for child in collection_grid.get_children():
+		child.queue_free()
+	
+	# Load item cards
+	var ItemCardScript = load("res://Scripts/UI/CollectionItemCard.gd")
+	var all_items = InventoryManager.get_all_items()
+	
+	for item in all_items:
+		if not item.can_be_sold:
+			continue
+			
+		var card = PanelContainer.new()
+		card.set_script(ItemCardScript)
+		collection_grid.add_child(card)
+		
+		var unlocked = StoryManager.is_item_unlocked(item)
+		card.setup(item, unlocked)
 
 
 # ─── Audio bus setup ─────────────────────────────────────────────────────────

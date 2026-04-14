@@ -1,20 +1,25 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://doc5a0ybqb2b3"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://jpm6q8yy6ifr"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_1gfu6"]
-[ext_resource type="Resource" uid="uid://biocfofav7eq2" path="res://Dialogue/Timelines/Danilo.dch" id="1_dd4xc"]
-[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_h82a8"]
-[ext_resource type="AudioStream" uid="uid://qgyke4cv7rpu" path="res://Audio/DialogueBlips/Danilo.wav" id="2_nipg4"]
+[ext_resource type="Resource" uid="uid://biocfofav7eq2" path="res://Dialogue/Timelines/Danilo.dch" id="1_dch"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_script"]
+[ext_resource type="AudioStream" uid="uid://qgyke4cv7rpu" path="res://Audio/DialogueBlips/Danilo.wav" id="2_wav"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
-[ext_resource type="Texture2D" uid="uid://gwiwtia4ccck" path="res://Assets/characters/sprites/Danilo.png" id="5_xne6h"]
-[ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
+[ext_resource type="Texture2D" uid="uid://gwiwtia4ccck" path="res://Assets/characters/sprites/Danilo.png" id="5_png"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_vsw75"]
+[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arc_script"]
+[ext_resource type="Resource" uid="uid://cxb0y7baqr181" path="res://Dialogue/Timelines/Danilo/Story0.dtl" id="story_0"]
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arc_script")
 
 [resource]
-script = ExtResource("2_h82a8")
-character_id = "danilo"
+script = ExtResource("2_script")
 character_name = "Danilo"
-sprite_texture = ExtResource("5_xne6h")
-dialogic_character = ExtResource("1_dd4xc")
-generic_purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+sprite_texture = ExtResource("5_png")
+dialogic_character = ExtResource("1_dch")
+story_timelines = Array[ExtResource("3_timeline")]([ExtResource("story_0")])
+character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_1")])
 sprite_scale = 0.4
-dialogue_blip_sound = ExtResource("2_nipg4")
-metadata/_custom_type_script = "uid://b7rtu6knii7es"
+dialogue_blip_sound = ExtResource("2_wav")
+metadata/_custom_type_script = "res://Scripts/CustomerData.gd"

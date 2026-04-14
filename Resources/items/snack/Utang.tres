@@ -1,16 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://n1ltpd7etk4k"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/2_snack_utang.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://cefcpb651jqvh" path="res://Assets/items/icons/2_snack_utang.png" id="2_tex"]
 
 [resource]
-id = "utang"
-tier = 4
 script = ExtResource("1_item")
 item_name = "Utang ni Mang Juan"
 texture = ExtResource("2_tex")
 price = 16.0
 category = "snack"
+tier = 7
 item_hint = "has a loan"
 display_height_meters = 0.6
 opaque_rect = Rect2i(82, 15, 335, 475)

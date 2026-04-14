@@ -31,6 +31,8 @@ signal day_started(day_number: int)
 @warning_ignore("unused_signal")
 signal tier_advanced(new_tier: int, source: String)
 @warning_ignore("unused_signal")
+signal upgrade_available(new_tier: int, cost: float)
+@warning_ignore("unused_signal")
 signal purchase_made()
 
 # --- Economy ---
@@ -47,8 +49,20 @@ signal utang_rejected(customer: Customer)
 @warning_ignore("unused_signal")
 signal debt_quota_met(is_successful: bool)
 
+# --- Nokia / Phone UI ---
+@warning_ignore("unused_signal")
+signal nokia_opened()
+@warning_ignore("unused_signal")
+signal nokia_closed()
+
 # --- Drag & Drop ---
 @warning_ignore("unused_signal")
 signal drag_started(item: DraggableItem)
 @warning_ignore("unused_signal")
 signal drag_ended(item: DraggableItem, dropped_successfully: bool)
+
+# --- Juice & Feedback ---
+@warning_ignore("unused_signal")
+signal request_camera_shake(intensity: float, duration: float)
+@warning_ignore("unused_signal")
+signal request_sfx(sfx_name: String)

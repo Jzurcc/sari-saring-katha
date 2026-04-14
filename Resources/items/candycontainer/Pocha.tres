@@ -1,16 +1,14 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cbsrv36cx7m4r"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/19_candycontainer_pocha.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="2_tex"]
 
 [resource]
-id = "pocha"
-tier = 2
 script = ExtResource("1_item")
 item_name = "Pocha"
 texture = ExtResource("2_tex")
 price = 0.5
-markup = 0.5
 category = "candycontainer"
+tier = 10
 display_height_meters = 0.6
 opaque_rect = Rect2i(112, 13, 274, 474)

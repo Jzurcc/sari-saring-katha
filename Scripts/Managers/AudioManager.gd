@@ -22,10 +22,25 @@ var character_themes: Dictionary = {
 }
 
 var dialogue_blip_player: AudioStreamPlayer
+var sfx_player: AudioStreamPlayer
 
 var audio_calming_morning = preload("res://Audio/SFX/Calming Morning Sounds.mp3")
 var audio_night_crickets = preload("res://Audio/SFX/Sounds of Night Crickets.mp3")
 
+# --- SFX Preloads for Juice ---
+var sfx_kaching = preload("res://Audio/SFX/money kaching.mp3")
+var sfx_pop_1 = preload("res://Audio/SFX/ui_sfx_12.mp3")
+var sfx_pop_2 = preload("res://Audio/SFX/ui_sfx_15.mp3")
+var sfx_clink = preload("res://Audio/SFX/ui_sfx_3.mp3")
+var sfx_error = preload("res://Audio/SFX/ui_sfx_9.mp3")
+
+var sfx_library = {
+	"money_gain": sfx_kaching,
+	"pickup": sfx_pop_1,
+	"drop": sfx_pop_2,
+	"interact": sfx_clink,
+	"error": sfx_error
+}
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 var current_bgm_phase: BGMPhase = BGMPhase.NONE
 
@@ -61,6 +76,10 @@ func _ready() -> void:
 	dialogue_blip_player.bus = "SFX"
 	add_child(dialogue_blip_player)
 	
+	sfx_player = AudioStreamPlayer.new()
+	sfx_player.bus = "SFX"
+	add_child(sfx_player)
+	
 	afternoon_playlist = [audio_fantastic_idea, audio_not_me]
 	
 	bgm_player.finished.connect(_on_bgm_finished)
@@ -71,12 +90,13 @@ func _ready() -> void:
 	EventBus.customer_spawned.connect(_on_customer_spawned)
 	EventBus.customer_satisfied.connect(_on_customer_left)
 	EventBus.customer_dismissed.connect(_on_customer_left)
+	EventBus.request_sfx.connect(play_sfx)
 	
 	var audio_autumn_wind = preload("res://Audio/Soundtracks/an Autumn Wind.mp3")
 	
-	# Start base ambience immediately
+	# Start base ambience immediately at a random position
 	ambience_base.stream = audio_calming_morning
-	ambience_base.play()
+	ambience_base.play(randf_range(0.0, ambience_base.stream.get_length()))
 	
 	# Start Title Screen music
 	bgm_player.stream = audio_autumn_wind
@@ -85,34 +105,28 @@ func _ready() -> void:
 	
 	_load_audio_settings()
 	
+	# Cache TimeOfDay once scene is settled
+	await get_tree().process_frame
+	time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
+	
 	call_deferred("_connect_dialogic")
+
+func play_sfx(sfx_name: String) -> void:
+	if sfx_library.has(sfx_name):
+		sfx_player.stream = sfx_library[sfx_name]
+		sfx_player.pitch_scale = randf_range(0.9, 1.1)
+		sfx_player.play()
 
 func _process(_delta: float) -> void:
 	# Prevent the dummy TimeOfDay inside the TitleScreen3D from hijacking the music!
 	if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
 		return
 		
-	if not is_instance_valid(time_of_day_node):
-		time_of_day_node = _find_time_of_day(get_tree().root)
-		
 	if is_instance_valid(time_of_day_node):
 		var time = time_of_day_node.get("current_time")
 		if time != null:
 			_update_audio_for_time(time)
 
-func _find_time_of_day(node: Node) -> Node:
-	if node is TimeOfDay:
-		return node
-	# Fallback if TimeOfDay class isn't loaded everywhere properly, fallback to name check:
-	if node.name == "TimeOfDay" and node.has_method("get_current_time_utc0"):
-		return node
-	
-	for i in range(node.get_child_count()):
-		var child = node.get_child(i)
-		var result = _find_time_of_day(child)
-		if result:
-			return result
-	return null
 
 func _load_audio_settings() -> void:
 	var cfg = ConfigFile.new()
@@ -178,7 +192,7 @@ func _update_audio_for_time(time: float) -> void:
 		
 	if is_night and not ambience_night.playing:
 		ambience_night.stream = audio_night_crickets
-		ambience_night.play()
+		ambience_night.play(randf_range(0.0, ambience_night.stream.get_length()))
 	elif not is_night and ambience_night.playing:
 		ambience_night.stop()
 
@@ -202,6 +216,7 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		if phase == BGMPhase.MORNING:
 			bgm_player.stream = audio_boring_day
 		elif phase == BGMPhase.AFTERNOON:
+			afternoon_playlist.shuffle()
 			afternoon_playlist_index = 0
 			bgm_player.stream = afternoon_playlist[afternoon_playlist_index]
 		elif phase == BGMPhase.DUSK:
@@ -221,7 +236,11 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 
 func _on_bgm_finished() -> void:
 	if current_bgm_phase == BGMPhase.AFTERNOON:
-		afternoon_playlist_index = (afternoon_playlist_index + 1) % afternoon_playlist.size()
+		afternoon_playlist_index += 1
+		if afternoon_playlist_index >= afternoon_playlist.size():
+			afternoon_playlist.shuffle()
+			afternoon_playlist_index = 0
+		
 		bgm_player.stream = afternoon_playlist[afternoon_playlist_index]
 		bgm_player.play()
 	else:
@@ -232,8 +251,8 @@ func _on_theme_finished() -> void:
 	theme_player.play()
 	
 func _on_customer_spawned(customer: Customer) -> void:
-	if character_themes.has(customer.character_id):
-		play_character_theme(character_themes[customer.character_id])
+	if customer.customer_data and character_themes.has(customer.customer_data.resource_path):
+		play_character_theme(character_themes[customer.customer_data.resource_path])
 
 func _on_customer_left(_customer: Customer) -> void:
 	stop_character_theme()

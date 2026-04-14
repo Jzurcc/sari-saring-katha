@@ -1,6 +1,17 @@
+label CollectionIntro
+ReynaMayari: I am here to collect today's installment.
+ReynaMayari: The quota for today is {Global.TodayQuota} pesos.
+[signal arg="deduct_quota"]
+ReynaMayari: Let's see what we have in the drawer... [pause=1.0]
+
+if {Global.HasEnoughMoney} == 1.0:
+	jump Success
+else:
+	jump Angry
+
 label Success
 ReynaMayari: I see you've been working hard. [pause=0.4]
-ReynaMayari: The installment for today has been collected from your drawer. 
+ReynaMayari: The installment has been collected. 
 ReynaMayari: Keep this up, and your grandmother's debt will be a memory in no time. [pause=0.5]
 ReynaMayari: Until tomorrow. [pause=0.3]
 [end_timeline]

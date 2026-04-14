@@ -65,8 +65,12 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		success_expected = false
 	# 2. Rest check: if Mario is still on cooldown
 	elif InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
-		label = "CallRest"
-		success_expected = false
+		# If an upgrade is pending, Mario wants that franchise money! Bypass rest.
+		if StoryManager.pending_upgrade_tier > 0:
+			print("[MarioManager] Upgrade pending — bypassing rest cooldown.")
+		else:
+			label = "CallRest"
+			success_expected = false
 	
 	print("[MarioManager] Initiating call → Label: ", label)
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
@@ -189,18 +193,21 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	_refresh_containers(get_tree().root)
 	InventoryManager.save_state()
 	
-	# 3. Leave
+	# 3. Clear interaction blockers immediately so customers can be clicked 
+	# while Mario is driving off.
+	_current_anchor = null
+	is_restocking_active = false
+	
+	# 4. Leave sequence
 	_play_sfx(sfx_leave)
 	var leave_tween = create_tween()
 	leave_tween.tween_property(_delivery_sprite, "position:z", EXIT_POS.z, 3.5).set_trans(Tween.TRANS_LINEAR)
 	await leave_tween.finished
 	if _sfx_player.playing: await _sfx_player.finished
 	
-	# 4. Cleanup
+	# 5. Cleanup
 	_delivery_sprite.queue_free()
 	_delivery_sprite = null
-	_current_anchor = null
-	is_restocking_active = false
 	delivery_finished.emit()
 
 # ── INTERNAL HELPERS ────────────────────────────────────────────────
@@ -261,8 +268,8 @@ func _play_sfx(stream: AudioStream) -> void:
 	_sfx_player.stream = stream
 	_sfx_player.play()
 
-func _refresh_containers(node: Node) -> void:
-	if node.has_method("refresh_visibility"):
-		node.refresh_visibility()
-	for child in node.get_children():
-		_refresh_containers(child)
+func _refresh_containers(_ignored_node: Node) -> void:
+	print("[MarioManager] Refreshing shelf surfaces via group lookup...")
+	for surface in get_tree().get_nodes_in_group("shelf_surface"):
+		if surface.has_method("refresh_visibility"):
+			surface.refresh_visibility()

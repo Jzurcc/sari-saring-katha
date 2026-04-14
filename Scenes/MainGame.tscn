@@ -7,38 +7,42 @@
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/ShelfSurface.gd" id="11_ktwve"]
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
-[ext_resource type="Resource" uid="uid://cpcgoekabpt4x" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
+[ext_resource type="Resource" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="19_k6vqf"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
-[ext_resource type="Script" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
-[ext_resource type="Resource" uid="uid://dmn5s1v8mjqcf" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
-[ext_resource type="Resource" uid="uid://3n6igstcuejf" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
+[ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Resource" uid="uid://dphi3ws2617ql" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
+[ext_resource type="Resource" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
 [ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
 [ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="27_0wdc3"]
 [ext_resource type="Texture2D" uid="uid://bf27xwxax7q4s" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="28_w42fa"]
-[ext_resource type="Resource" uid="uid://bbfaghymgce0c" path="res://Resources/items/can/Argentita.tres" id="29_lcmar"]
+[ext_resource type="Resource" path="res://Resources/items/can/Argentita.tres" id="29_lcmar"]
 [ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="29_upseh"]
-[ext_resource type="Resource" uid="uid://c22inoq8pabcm" path="res://Resources/items/can/Cenchuree.tres" id="30_cqekc"]
+[ext_resource type="Resource" uid="uid://dlbc3765pw4e4" path="res://Resources/items/can/Cenchuree.tres" id="30_cqekc"]
 [ext_resource type="Texture2D" uid="uid://m2xmxd7f13vb" path="res://Assets/ui/trophy.png" id="30_si6xw"]
 [ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
 [ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
-[ext_resource type="PackedScene" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
-[ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/RestockScreen.tscn" id="36_fto8l"]
+[ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/NokiaUI.tscn" id="36_fto8l"]
+[ext_resource type="Shader" path="res://Assets/Shaders/mesh_outline.gdshader" id="38_cqekc"]
 [ext_resource type="Script" uid="uid://dxmnefrwak8nn" path="res://Scripts/SachetContainerItem.gd" id="45_glkqw"]
 [ext_resource type="Material" uid="uid://db4iw7gjdpieb" path="res://Assets/3D/final store/textures/materials/outer_wall.001.tres" id="45_gnwe2"]
 [ext_resource type="Material" uid="uid://7p3u1xj7ym3f" path="res://Assets/3D/final store/textures/materials/outer_wall.tres" id="46_glkqw"]
 [ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="46_hfiw1"]
 [ext_resource type="VoxelGIData" uid="uid://lqnf363acqsg" path="res://Scenes/MainGame.VoxelGI_data.res" id="46_uvjf7"]
+[ext_resource type="Resource" uid="uid://d23wq027skjv6" path="res://Resources/items/sachet/Aryel.tres" id="47_50m7d"]
 [ext_resource type="Texture2D" uid="uid://4jopyanab23j" path="res://Assets/items/icons/9_sachet_kopimo.png" id="47_hfiw1"]
 [ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="48_d7jqg"]
+[ext_resource type="Resource" uid="uid://0w15pehu11ln" path="res://Resources/items/sachet/Kopimo.tres" id="49_1u2qj"]
+[ext_resource type="Resource" uid="uid://dbw1di2cem1lh" path="res://Resources/items/sachet/KneesToes.tres" id="51_hnhmk"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/TierAdvanceOverlay.tscn" id="51_tier_overlay"]
-[ext_resource type="Resource" uid="uid://sbu21ye633d5" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
-[ext_resource type="Resource" uid="uid://mdcyjtl1s53y" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
-[ext_resource type="Resource" uid="uid://d2mf426qt8lwt" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
+[ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
+[ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
+[ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
@@ -112,7 +116,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/Head" unique_id=1125636583]
 script = ExtResource("pi_scr")
-interaction_range = null
+interaction_range = 10.0
 
 [node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
 transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.287584, 0.75612736, 1.1670127)
@@ -285,7 +289,6 @@ items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), ExtResource("25
 shelf_width = 2.535
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
-surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface2" type="Node3D" parent="." unique_id=1927767560]
@@ -295,7 +298,6 @@ items = Array[ExtResource("12_yc6xl")]([ExtResource("29_lcmar"), ExtResource("30
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
-surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface3" type="Node3D" parent="." unique_id=1019299572]
@@ -305,7 +307,6 @@ items = Array[ExtResource("12_yc6xl")]([ExtResource("30_cqekc"), null, null, nul
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
-surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="ShelfSurface4" type="Node3D" parent="." unique_id=1503542262]
@@ -315,7 +316,6 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null, null, null, null
 shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
-surface_type = 0
 layout_strategy = SubResource("Resource_r5sjn")
 
 [node name="FridgeSurface1" type="Node3D" parent="." unique_id=1039361648]
@@ -345,11 +345,11 @@ items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
-surface_type = null
 layout_strategy = SubResource("Resource_fgk2h")
 
 [node name="CandyContainer_Mix" type="Area3D" parent="." unique_id=290924167]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.399547, 3.4277682, -2.334823)
+visible = false
 script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha"), ExtResource("candy_mentor")])
 
@@ -358,7 +358,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03137207, -0.064819336, 0)
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mix" unique_id=290924169]
-visible = false
 cast_shadow = 0
 billboard = 1
 shaded = true
@@ -421,6 +420,7 @@ transform = Transform3D(-0.00041700015, 5.1847568e-11, 0.00059306703, -3.4507866
 script = ExtResource("35_3ijh3")
 nokia_ui_scene = ExtResource("36_fto8l")
 phone_anchor = NodePath("../PhoneMarker3D")
+outline_shader = ExtResource("38_cqekc")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NokiaInteractable" unique_id=459392347]
 shape = SubResource("BoxShape3D_3ijh3")
@@ -428,6 +428,7 @@ shape = SubResource("BoxShape3D_3ijh3")
 [node name="Trophy" type="Sprite3D" parent="." unique_id=719813067]
 transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, 4.3776584, 5.060807, -0.8048922)
 cast_shadow = 0
+billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("30_si6xw")
@@ -435,6 +436,7 @@ texture = ExtResource("30_si6xw")
 [node name="Cat" type="Sprite3D" parent="." unique_id=509141086]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.3776584, 4.8488646, 0.9894613)
 cast_shadow = 0
+billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("31_1r7st")
@@ -442,6 +444,7 @@ texture = ExtResource("31_1r7st")
 [node name="Statue" type="Sprite3D" parent="." unique_id=2103369003]
 transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.1954145, -0.11046374)
 cast_shadow = 0
+billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("32_o6tew")
@@ -449,6 +452,7 @@ texture = ExtResource("32_o6tew")
 [node name="Frame" type="Sprite3D" parent="." unique_id=1757741366]
 transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.8402715, 2.1249723)
 cast_shadow = 0
+billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("33_3ijh3")
@@ -478,45 +482,51 @@ size = Vector3(19.682861, 23.465332, 17.533234)
 data = ExtResource("46_uvjf7")
 
 [node name="SachetContainerItem" type="Area3D" parent="." unique_id=1273543074]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1811247, 4.497734, 2.1742148)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1811247, 4.4734435, -1.9526131)
 visible = false
 script = ExtResource("45_glkqw")
+sachet_item = ExtResource("47_50m7d")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem" unique_id=746439960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
 shape = SubResource("BoxShape3D_d7jqg")
 
 [node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem" unique_id=1272195789]
-transform = Transform3D(0.27473217, 0.012134388, -1.1707968e-11, -0.012134388, 0.27473217, -5.3041094e-10, -1.170708e-11, 5.3041094e-10, 0.275, -0.091359615, -0.024161339, 0)
+transform = Transform3D(0.27473214, 0.012134387, -1.1708728e-11, -0.012134387, 0.27473214, -5.304109e-10, -1.1707078e-11, 5.304109e-10, 0.275, -0.091359615, -0.024161339, 0)
 billboard = 2
+shaded = true
 texture = ExtResource("46_hfiw1")
 
 [node name="SachetContainerItem2" type="Area3D" parent="." unique_id=512007667]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.2335424, 4.4552646, 1.5788226)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.2335424, 4.4853764, 2.3366644)
 visible = false
 script = ExtResource("45_glkqw")
+sachet_item = ExtResource("49_1u2qj")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem2" unique_id=1366571915]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
 shape = SubResource("BoxShape3D_d7jqg")
 
 [node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem2" unique_id=528168795]
-transform = Transform3D(0.27473217, 0.012134388, -1.1707968e-11, -0.012134388, 0.27473217, -5.3041094e-10, -1.170708e-11, 5.3041094e-10, 0.275, -0.091359615, -0.024161339, 0)
+transform = Transform3D(0.27473214, 0.012134387, -1.1708728e-11, -0.012134387, 0.27473214, -5.304109e-10, -1.1707078e-11, 5.304109e-10, 0.275, -0.091359615, -0.024161339, 0)
 billboard = 2
+shaded = true
 texture = ExtResource("47_hfiw1")
 
 [node name="SachetContainerItem3" type="Area3D" parent="." unique_id=1536702727]
 transform = Transform3D(-4.394796e-08, 2.4781066e-11, 1, 0.104181305, 0.99455833, 4.5539092e-09, -0.99455833, 0.104181305, -4.371139e-08, -4.25853, 4.5573874, -2.593927)
 visible = false
 script = ExtResource("45_glkqw")
+sachet_item = ExtResource("51_hnhmk")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem3" unique_id=1432288744]
-transform = Transform3D(0.205, -1.8626451e-09, -8.881784e-16, 1.8626451e-09, 0.205, 0, -8.881784e-16, 0, 0.205, -0.062466145, 0.13833427, 0.02798462)
+transform = Transform3D(0.205, -1.8626451e-09, 8.881784e-16, 1.8626451e-09, 0.205, 8.070055e-24, -8.881784e-16, 0, 0.205, -0.062466145, 0.13833427, 0.02798462)
 shape = SubResource("BoxShape3D_d7jqg")
 
 [node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem3" unique_id=1613783674]
-transform = Transform3D(0.20480032, 0.009045633, -8.7290175e-12, -0.009045633, 0.20480032, -3.9539716e-10, -8.727241e-12, 3.9539716e-10, 0.205, -0.0731678, 0.08774614, 0)
+transform = Transform3D(0.20480031, 0.009045633, -8.728173e-12, -0.009045633, 0.20480031, -3.9539713e-10, -8.727241e-12, 3.953971e-10, 0.205, -0.0731678, 0.08774614, 0)
 billboard = 2
+shaded = true
 texture = ExtResource("48_d7jqg")
 
 [node name="TierAdvanceOverlay" parent="." unique_id=510000000 instance=ExtResource("51_tier_overlay")]

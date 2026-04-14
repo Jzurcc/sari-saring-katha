@@ -1,10 +1,10 @@
 label Greeting
-KuyaKap: Oh hello.[pause=0.5].[pause=0.5].[pause=0.5] Can you get me [pulse freq=2.0]{Transaction.ItemWants}[/pulse]? Just what I need today.
+KuyaKap: Oh hello.[pause=0.5].[pause=0.5].[pause=0.5] Can you get me [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color]? Just what I need today.
 - Will do!
 [end_timeline]
 
 label Talk
-KuyaKap: Just [pulse freq=2.0]{Transaction.ItemWants}[/pulse] for now.
+KuyaKap: Just [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] for now.
 - Alright, one moment.
 	KuyaKap: Sige sige.
 	[end_timeline]
@@ -18,7 +18,7 @@ KuyaKap: Perfect. Thanks.
 [end_timeline]
 
 label WrongItem
-KuyaKap: Hindi 'yan yung hinihingi ko ah. [pulse freq=2.0]{Transaction.ItemWants}[/pulse] nga.
+KuyaKap: Hindi 'yan yung hinihingi ko ah. [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] nga.
 - Ah sorry, sandali lang.
 	KuyaKap: Sige, mag-aabang na lang ako.
 	[end_timeline]

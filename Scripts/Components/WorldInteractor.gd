@@ -18,12 +18,17 @@ extends Area3D
 @export var outline_width: float = 32.0
 ## The color of the outline when hovered under normal conditions.
 @export var default_outline_color: Color = Color.WHITE
+## Scale multiplier on hover (e.g. 1.05 for 5% growth)
+@export var hover_scale_multiplier: float = 1.0
 
 var _camera: Camera3D
 var _outline_mat: ShaderMaterial = null
+var _tween: Tween
+var _base_scale: Vector3
 
 func _ready() -> void:
 	_camera = get_viewport().get_camera_3d()
+	_base_scale = scale
 
 func _process(_delta: float) -> void:
 	if billboard_collision and _camera:
@@ -48,8 +53,19 @@ func get_visual_nodes() -> Array[Node3D]:
 func on_hover(is_hovered: bool) -> void:
 	if is_hovered:
 		_apply_outline(default_outline_color)
+		_animate_hover(true)
 	else:
 		_remove_outline()
+		_animate_hover(false)
+
+func _animate_hover(hovered: bool) -> void:
+	if hover_scale_multiplier <= 1.0: return
+	
+	if _tween: _tween.kill()
+	_tween = create_tween()
+	
+	var target_scale = _base_scale * hover_scale_multiplier if hovered else _base_scale
+	_tween.tween_property(self, "scale", target_scale, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func on_interact() -> void:
 	# Virtual method to be overridden by subclasses

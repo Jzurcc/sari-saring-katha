@@ -70,6 +70,11 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 ## slot when dropped. Should roughly match the widest item you plan to stock.
 @export var slot_width: float = 0.4
 
+@export_group("Persistence")
+## Unique identifier for this shelf to persist its items. 
+## If empty, the shelf will not save/load its contents.
+@export var save_id: String = ""
+
 # --- Internal ---
 
 var _spawned: Array[DraggableItem] = []
@@ -90,6 +95,11 @@ func _ready() -> void:
 		preview.queue_free()
 
 	_create_drop_zone()
+	
+	# Auto-generate save_id if empty based on hierarchy
+	if save_id == "":
+		save_id = "shelf_" + get_parent().name + "_" + name
+		print("[ShelfSurface] Auto-generated save_id: ", save_id)
 
 	# Validate required config before proceeding
 	if shelf_width <= 0.0:
@@ -103,7 +113,12 @@ func _ready() -> void:
 	EventBus.drag_started.connect(_on_any_drag_started)
 
 	await get_tree().process_frame
-	populate()
+	
+	if not Engine.is_editor_hint() and save_id != "":
+		if not _load_state():
+			populate()
+	else:
+		populate()
 
 
 ## Create a thin Area3D covering the shelf surface so DragManager's
@@ -232,12 +247,15 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	print("[ShelfSurface] '%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
+	
+	if save_id != "":
+		save_state()
 
 
 ## Returns an array of indices for all currently unoccupied slots.
 func get_empty_slots() -> Array[int]:
 	var empty_indices: Array[int] = []
-	for i in range(_slot_transforms.size()):
+	for i in _slot_transforms.size():
 		if _slot_occupants[i] == null or not is_instance_valid(_slot_occupants[i]):
 			empty_indices.append(i)
 	return empty_indices
@@ -280,7 +298,7 @@ func _clear() -> void:
 func _find_nearest_empty_slot(local_x: float) -> int:
 	var best_idx := -1
 	var best_dist := INF
-	for i in range(_slot_transforms.size()):
+	for i in _slot_transforms.size():
 		if _slot_occupants[i] != null and is_instance_valid(_slot_occupants[i]):
 			continue  # occupied
 		var dist := absf(_slot_transforms[i].origin.x - local_x)
@@ -352,3 +370,49 @@ func _update_preview() -> void:
 	preview_box.size = Vector3(shelf_width, 0.02, 0.2)
 	# Position it so the left edge aligns with ShelfSurface X=0
 	preview.position = Vector3(shelf_width / 2.0, 0.01, 0.0)
+
+# --- Persistence ---
+
+func save_state() -> void:
+	if save_id == "":
+		return
+		
+	var slot_data = []
+	for d in _slot_occupants:
+		if d != null and is_instance_valid(d) and d.item_data:
+			slot_data.append(d.item_data.resource_path)
+		else:
+			slot_data.append("")
+			
+	var save_data = {
+		"shelves": {
+			save_id: slot_data
+		}
+	}
+	SaveManager.save_game(save_data)
+
+func _load_state() -> bool:
+	if save_id == "":
+		return false
+		
+	var save_data = SaveManager.load_game()
+	if not save_data.has("shelves") or not save_data["shelves"].has(save_id):
+		return false
+		
+	var slot_data = save_data["shelves"][save_id]
+	
+	_clear()
+	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
+	_slot_occupants.clear()
+	_slot_occupants.resize(_slot_transforms.size())
+	_slot_occupants.fill(null)
+	
+	for i in range(min(slot_data.size(), _slot_transforms.size())):
+		var path = slot_data[i]
+		if path != "":
+			var res = load(path)
+			if res is ItemData:
+				place_item_in_slot(res, i)
+				
+	print("[ShelfSurface] '%s' loaded state from save." % save_id)
+	return true

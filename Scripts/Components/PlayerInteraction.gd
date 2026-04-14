@@ -1,4 +1,4 @@
-extends Node
+extends Camera3D
 class_name PlayerInteraction
 
 ## Component attached to the camera or player head to handle 3D raycast interactions.
@@ -12,21 +12,31 @@ const LAYER_CUSTOMERS: int = 16 ## Customers only – bit 4 (layer 5).
 ## customer even when aim is partially blocked by the tray.
 
 @export var interaction_range: float = 10.0
-@export var camera: Camera3D
 
-var _last_hovered: Node = null
 var pricing_mode_active: bool = false
 
-func _ready():
-	if not camera:
-		if get_node(".") is Camera3D:
-			camera = get_node(".") as Camera3D
-		else:
-			camera = get_parent() as Camera3D
+var _q_items: PhysicsRayQueryParameters3D
+var _q_customer: PhysicsRayQueryParameters3D
+var _last_hovered: Node = null
+
+func _ready() -> void:
+	# Ensure interaction_range is valid
+	if interaction_range <= 0.0:
+		interaction_range = 10.0
+			
+	_q_items = PhysicsRayQueryParameters3D.new()
+	_q_items.collide_with_areas = true
+	_q_items.collide_with_bodies = false
+	_q_items.collision_mask = LAYER_ITEMS
+
+	_q_customer = PhysicsRayQueryParameters3D.new()
+	_q_customer.collide_with_areas = true
+	_q_customer.collide_with_bodies = false
+	_q_customer.collision_mask = LAYER_CUSTOMERS
 
 func _physics_process(_delta: float) -> void:
 	# While dialogue is open or mouse is free — clear hover and exit.
-	if not camera or Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED \
+	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED \
 			or Dialogic.current_timeline != null:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
@@ -34,27 +44,19 @@ func _physics_process(_delta: float) -> void:
 		return
 
 	var center    := get_viewport().get_visible_rect().size / 2.0
-	var ray_origin := camera.project_ray_origin(center)
-	var ray_dir    := camera.project_ray_normal(center)
+	var ray_origin := project_ray_origin(center)
+	var ray_dir    := project_ray_normal(center)
 	var ray_end    := ray_origin + ray_dir * interaction_range
 
 	# --- Raycast 1: items and tray (layer 1) ---
-	var q_items := PhysicsRayQueryParameters3D.new()
-	q_items.from               = ray_origin
-	q_items.to                 = ray_end
-	q_items.collide_with_areas  = true
-	q_items.collide_with_bodies = false
-	q_items.collision_mask     = LAYER_ITEMS
-	var hit_item := camera.get_world_3d().direct_space_state.intersect_ray(q_items)
+	_q_items.from = ray_origin
+	_q_items.to = ray_end
+	var hit_item = get_world_3d().direct_space_state.intersect_ray(_q_items)
 
 	# --- Raycast 2: customers only (layer 5) – passes through items/counter ---
-	var q_customer := PhysicsRayQueryParameters3D.new()
-	q_customer.from               = ray_origin
-	q_customer.to                 = ray_end
-	q_customer.collide_with_areas  = true
-	q_customer.collide_with_bodies = false
-	q_customer.collision_mask     = LAYER_CUSTOMERS
-	var hit_customer := camera.get_world_3d().direct_space_state.intersect_ray(q_customer)
+	_q_customer.from = ray_origin
+	_q_customer.to = ray_end
+	var hit_customer = get_world_3d().direct_space_state.intersect_ray(_q_customer)
 
 	# Resolve which target is "closer" to the camera.
 	var current_hovered: Node = null
@@ -81,10 +83,13 @@ func _physics_process(_delta: float) -> void:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
 		if current_hovered and current_hovered.has_method("on_hover"):
+			print("[PlayerInteraction] Hovering: ", current_hovered.name)
 			current_hovered.on_hover(true)
 			# If we just hovered something and pricing mode is on, sync the UI state
 			if current_hovered.has_method("set_pricing_ui_active"):
 				current_hovered.set_pricing_ui_active(pricing_mode_active)
+		elif _last_hovered:
+			print("[PlayerInteraction] Hover cleared")
 		_last_hovered = current_hovered
 
 func _input(event: InputEvent) -> void:
@@ -126,18 +131,16 @@ func _input(event: InputEvent) -> void:
 				var current_price : float = item.item_data.get_final_price()
 				
 				# Range Rules: 
-				# 1. Minimum: 70% of base price (rounded), but at least 1.0 Peso.
-				# 2. Maximum: 130% of base price (rounded).
-				var min_price : float = max(1.0, round(base_price * 0.7))
-				var max_price : float = round(base_price * 1.3) 
+				# 1. Minimum: Base price.
+				# 2. Maximum: Progressive margin based on tier. 15% (Tier 1) to 35% (Tier 10).
+				var min_price : float = base_price
+				var tier : int = item.item_data.tier
+				var max_margin : float = 0.15 + (float(max(1, tier)) - 1.0) * (0.20 / 9.0)
+				var max_price : float = round(base_price * (1.0 + max_margin))
 				
 				var new_price : float = clamp(current_price + delta, min_price, max_price)
 				
-				# Calculate profit margin to match target price
-				if base_price > 0:
-					item.item_data.profit_margin = (new_price - base_price) / base_price
-				else:
-					item.item_data.profit_margin = 0.0
+				item.item_data.selling_price = new_price
 					
 				# Refresh all items of this type (they share the resource)
 				get_tree().call_group("draggable_items", "update_pricing_ui")

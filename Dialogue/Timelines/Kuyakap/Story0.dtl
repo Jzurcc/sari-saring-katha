@@ -12,12 +12,12 @@ KuyaKap: Haha, this must be the first time you've seen me. [pause=0.4] I'm Kuya 
 KuyaKap: Many stories spread around my kind, but as long as our trees breathe and our territories are respected, you won't need to worry.
 - Haha! Well that's reassuring.
 
-KuyaKap: Anyway, let me buy [pulse freq=2.0]{Transaction.ItemWants}[/pulse]. I need to relax a bit.
+KuyaKap: Anyway, let me buy [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color]. I need to relax a bit.
 - Coming right up!
 [end_timeline]
 
 label Talk
-KuyaKap: [pulse freq=2.0]{Transaction.ItemWants}[/pulse] pa rin please!
+KuyaKap: [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] pa rin please!
 - Sige, antayin lang.
 	KuyaKap: Sige sige, mag-aabang na lang ako.
 	[end_timeline]
@@ -31,7 +31,7 @@ KuyaKap: Salamat. I'll be bystanding here for a while, don't mind me.
 [end_timeline]
 
 label WrongItem
-KuyaKap: Di 'yan yung item ah. [pulse freq=2.0]{Transaction.ItemWants}[/pulse] 'yung hinihingi ko.
+KuyaKap: Di 'yan yung item ah. [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] 'yung hinihingi ko.
 - Ay sorry Kuya, sandali.
 	KuyaKap: Okay lang, mag-hihintay ako.
 	[end_timeline]

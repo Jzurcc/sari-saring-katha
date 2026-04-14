@@ -15,6 +15,11 @@ extends CharacterBody3D
 @export var base_fov: float = 75.0
 @export var fov_change: float = 1.5
 
+@export_group("Camera Juiciness")
+@export var idle_sway_amplitude: float = 0.015
+@export var idle_sway_frequency: float = 1.0
+
+
 @export_group("Debug Tools (Temporary)")
 ## Adjust this value in the Remote Inspector while the game is running to resize the active customer.
 @export var debug_customer_scale: float = 1.0:
@@ -40,6 +45,11 @@ var _t_bob: float = 0.0
 var _pitch: float = 0.0
 var _yaw: float = 0.0
 
+var _idle_time: float = 0.0
+var _shake_intensity: float = 0.0
+var _shake_duration: float = 0.0
+var _shake_timer: float = 0.0
+
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 
@@ -49,6 +59,13 @@ func _ready() -> void:
 		_pitch = camera.rotation.x
 		_yaw = head.rotation.y
 		camera.fov = base_fov
+	EventBus.request_camera_shake.connect(_on_camera_shake)
+
+func _on_camera_shake(intensity: float, duration: float) -> void:
+	if intensity > _shake_intensity * (_shake_timer / max(_shake_duration, 0.01)):
+		_shake_intensity = intensity
+	_shake_duration = duration
+	_shake_timer = duration
 
 func _input(event: InputEvent) -> void:
 	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
@@ -91,10 +108,8 @@ func _physics_process(delta: float) -> void:
 		camera.position.y = sin(_t_bob * bob_frequency) * bob_amplitude
 		camera.position.x = cos(_t_bob * bob_frequency / 2.0) * bob_amplitude
 		
-		# Dynamic FOV (Speed Sense)
-		var clamped_velocity = clamp(velocity.length(), 0.5, sprint_speed * 2.0)
-		var target_fov = base_fov + (fov_change * clamped_velocity)
-		camera.fov = lerp(camera.fov, target_fov, 8.0 * delta)
+		# FOV is now fixed to base_fov (75)
+		camera.fov = base_fov
 		
 		# Automatic Step Up for Stairs / Small Ledges
 		if is_on_floor() and get_slide_collision_count() > 0 and input_dir.length_squared() > 0.01:
@@ -154,7 +169,22 @@ func face_node(target: Node3D, duration: float = 0.4) -> Signal:
 		
 	return face_pos(target_pos_vec, duration)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Ensure the nodes match our state variables (important for smooth tweening)
 	head.rotation.y = _yaw
 	camera.rotation.x = _pitch
+	
+	# --- Idle Sway (disabled) ---
+	camera.rotation.z = lerp(camera.rotation.z, 0.0, delta * 5.0)
+
+	# --- Camera Shake ---
+	if _shake_timer > 0.0:
+		_shake_timer -= delta
+		var decay = clamp(_shake_timer / _shake_duration, 0.0, 1.0)
+		# Add a bit of randomness to h_offset and v_offset of the camera
+		camera.h_offset = randf_range(-1.0, 1.0) * _shake_intensity * decay * 0.1
+		camera.v_offset = randf_range(-1.0, 1.0) * _shake_intensity * decay * 0.1
+	else:
+		# Return to center
+		camera.h_offset = lerp(camera.h_offset, 0.0, delta * 15.0)
+		camera.v_offset = lerp(camera.v_offset, 0.0, delta * 15.0)

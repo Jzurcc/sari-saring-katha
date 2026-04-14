@@ -1,14 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cdxeya1lkobxj"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/23_cigarette_marboro.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://s0506jl2h077" path="res://Assets/items/icons/23_cigarette_marboro.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
 item_name = "Marboro"
 texture = ExtResource("2_tex")
-price = 3.0
+price = 40.0
 category = "cigarette"
+tier = 8
 item_hint = "is royal"
 display_height_meters = 0.3
 opaque_rect = Rect2i(106, 26, 287, 452)
