@@ -11,5 +11,6 @@ price = 9.0
 markup = 3.0
 max_stock = 0
 category = "snack"
+item_hint = "looks like edible roof"
 display_height_meters = 0.6
 opaque_rect = Rect2i(81, 11, 335, 471)

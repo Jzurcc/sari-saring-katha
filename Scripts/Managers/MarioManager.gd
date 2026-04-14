@@ -14,14 +14,13 @@ const MARIO_DATA_PATH = "res://Resources/customers/UncleMario.tres"
 const TRICYCLE_TEXTURE = "res://Assets/ui/mario_tricycle.png"
 
 ## Timeline paths — full res:// paths, immune to stale Dialogic directory cache.
-const TL_CALL      := "res://Dialogue/unclemario/UncleMario_Call.dtl"
-const TL_CALL_REST := "res://Dialogue/unclemario/UncleMario_Call_Rest.dtl"
-const TL_DELIVERY  := "res://Dialogue/unclemario/UncleMario_Delivery.dtl"
+const TIMELINE_PATH := "res://Dialogue/Timelines/UncleMario.dtl"
 
 var _mario_data: CustomerData = null
+var is_restocking_active: bool = false
 
 # Delivery Positions (3D)
-const START_POS = Vector3(-15.299, 3.206, 35.0)
+const START_POS = Vector3(-15.299, 3.206, 20.0)
 const TARGET_POS = Vector3(-15.299, 3.206, -6.055)
 const EXIT_POS = Vector3(-15.299, 3.206, -45.0)
 
@@ -53,22 +52,30 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		print("[MarioManager] Already calling — ignoring.")
 		return
 	_is_calling = true
+	is_restocking_active = true
 	_current_anchor = anchor
 	
-	# Determine which timeline to use
-	var timeline_path := TL_CALL
+	var label := "Call"
 	var success_expected := true
 	
-	if InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
-		timeline_path = TL_CALL_REST
+	# 1. Busy check: if a dialogue is ACTIVELY running (blocking the phone UI)
+	# If a customer is just waiting silently for an item, we are NOT busy.
+	if Dialogic.current_timeline != null:
+		label = "Busy"
+		success_expected = false
+	# 2. Rest check: if Mario is still on cooldown
+	elif InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
+		label = "CallRest"
 		success_expected = false
 	
-	print("[MarioManager] Initiating call → ", timeline_path)
-	_start_dialogue(timeline_path, anchor, _on_call_dialogue_ended.bind(success_expected))
+	print("[MarioManager] Initiating call → Label: ", label)
+	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
 func _on_call_dialogue_ended(success: bool) -> void:
 	print("[MarioManager] Call dialogue ended. Success: ", success)
 	_is_calling = false
+	if not success:
+		is_restocking_active = false
 	_current_anchor = null
 	call_ended.emit(success)
 
@@ -93,6 +100,12 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	_delivery_sprite.position = START_POS
 	get_tree().current_scene.add_child(_delivery_sprite)
 	
+	# Add a speech marker so the bubble floats above the tricycle
+	var marker = Marker3D.new()
+	marker.name = "SpeechMarker"
+	marker.position = Vector3(0.4, 1.3, 0)
+	_delivery_sprite.add_child(marker)
+	
 	# Start a continuous rocking/bobbing animation
 	var rock_tween = create_tween().bind_node(_delivery_sprite).set_loops()
 	rock_tween.tween_property(_delivery_sprite, "rotation_degrees:z", 3.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -112,21 +125,20 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	
 	# 3. Delivery Dialogue
 	_current_anchor = _delivery_sprite
-	_start_dialogue(TL_DELIVERY, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock))
+	
+	# Automatically face the tricycle as dialogue begins.
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("face_node"):
+		player.face_node(_delivery_sprite)
+		
+	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock), "Delivery")
 
 func _on_delivery_dialogue_ended(items: Dictionary) -> void:
-	# 4. Leave
-	_play_sfx(sfx_leave)
-	var leave_tween = create_tween()
-	leave_tween.tween_property(_delivery_sprite, "position:z", EXIT_POS.z, 3.5).set_trans(Tween.TRANS_LINEAR)
-	await leave_tween.finished
-	if _sfx_player.playing: await _sfx_player.finished
-	
-	# 5. Finalize Stock
+	# 1. Finalize Stock Immediately
 	for item in items.keys():
 		InventoryManager.add_stock(item, items[item])
 	
-	# 6. Auto-Restock Physical Slots
+	# 2. Auto-Restock Physical Slots
 	# Randomly pick empty slots on compatible shelves and place items there.
 	print("[MarioManager] Commencing auto-restock sweep...")
 	var all_shelves = get_tree().get_nodes_in_group("shelf_surface")
@@ -154,10 +166,18 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	_refresh_containers(get_tree().root)
 	InventoryManager.save_state()
 	
-	# Cleanup
+	# 3. Leave
+	_play_sfx(sfx_leave)
+	var leave_tween = create_tween()
+	leave_tween.tween_property(_delivery_sprite, "position:z", EXIT_POS.z, 3.5).set_trans(Tween.TRANS_LINEAR)
+	await leave_tween.finished
+	if _sfx_player.playing: await _sfx_player.finished
+	
+	# 4. Cleanup
 	_delivery_sprite.queue_free()
 	_delivery_sprite = null
 	_current_anchor = null
+	is_restocking_active = false
 	delivery_finished.emit()
 
 # ── INTERNAL HELPERS ────────────────────────────────────────────────
@@ -167,7 +187,7 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 ##   1. Load style via Dialogic.Styles.load_style()
 ##   2. Start timeline via Dialogic.start() with NO second argument
 ##   3. Register character anchor for bubble positioning
-func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) -> void:
+func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, label: String = "") -> void:
 	print("[MarioManager] --- Starting Dialogue ---")
 	print("[MarioManager]   Path:   ", timeline_path)
 	print("[MarioManager]   Anchor: ", str(anchor.name) if anchor else "NULL")
@@ -185,18 +205,30 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable) ->
 		print("[MarioManager]   Previous timeline ended. Proceeding with Mario call.")
 	
 	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
-	Dialogic.Styles.load_style("MarioBubble")
+	Dialogic.Styles.load_style("FollowBubble")
 	
-	# 4. Start the timeline (second arg is label/index, NOT style name)
-	var layout = Dialogic.start(timeline_path)
+	# 4. Start the timeline (second arg is label)
+	var layout = Dialogic.start(timeline_path, label)
 	
 	print("[MarioManager]   Layout: ", str(layout.name) if layout else "NULL")
 	
 	# 5. Register character so the bubble anchors to the marker
-	if layout and _mario_data and _mario_data.dialogic_character:
+	# We use DialogicResourceUtil to ensure we get the exact same object reference as NokiaUI.
+	var mario_dch = DialogicResourceUtil.get_character_resource("UncleMario")
+	if layout and mario_dch:
 		if layout.has_method("register_character"):
-			layout.register_character(_mario_data.dialogic_character, anchor)
-			print("[MarioManager]   Registered character → ", anchor.name)
+			var marker = anchor.get_node_or_null("SpeechMarker")
+			var final_anchor = marker if marker else anchor
+			
+			# Force clear any previous global registration before setting the new one
+			layout.register_character(mario_dch, null)
+			layout.register_character(mario_dch, final_anchor)
+			
+			print("[MarioManager]   Registered character → ", final_anchor.name, " @ ", final_anchor.global_position)
+		else:
+			push_warning("[MarioManager]   Layout does not support register_character!")
+	else:
+		push_warning("[MarioManager]   Failed to find layout or UncleMario dch resource!")
 	
 	# 6. Connect the end signal
 	Dialogic.timeline_ended.connect(callback, CONNECT_ONE_SHOT)

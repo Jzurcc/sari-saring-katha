@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://df7283sja821"]
 
 [ext_resource type="Script" uid="uid://ntvhf48bia4u" path="res://Scripts/UI/NokiaUI.gd" id="1_nokia_script"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/RestockMenu.tscn" id="2_store_scene"]
+[ext_resource type="PackedScene" uid="uid://dcqjyggeu0f12" path="res://Scenes/UI/RestockMenu.tscn" id="2_store_scene"]
 [ext_resource type="Texture2D" uid="uid://113sb1lubs47" path="res://Assets/ui/nokia2d.png" id="3_7cmub"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_7cmub"]
@@ -198,3 +198,39 @@ theme_override_colors/font_color = Color(0.22350237, 0.39893174, 0.27810383, 1)
 theme_override_font_sizes/font_size = 27
 horizontal_alignment = 2
 autowrap_mode = 3
+
+[node name="0" type="Button" parent="Nokia" unique_id=982914556]
+layout_mode = 0
+offset_left = 86.42856
+offset_top = 442.14288
+offset_right = 99.79242
+offset_bottom = 450.14288
+scale = Vector2(3.5, 3.5)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_7cmub")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_rrc0a")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_drkx2")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_lynll")
+
+[node name="home" type="Button" parent="Nokia" unique_id=328200876]
+layout_mode = 0
+offset_left = 144.28572
+offset_top = 435.00003
+offset_right = 157.64958
+offset_bottom = 443.00003
+scale = Vector2(3.5, 3.5)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_7cmub")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_rrc0a")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_drkx2")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_lynll")
+
+[node name="asterisk" type="Button" parent="Nokia" unique_id=1369765887]
+layout_mode = 0
+offset_left = 33.57144
+offset_top = 435.71423
+offset_right = 46.935303
+offset_bottom = 443.71423
+scale = Vector2(3.5, 3.5)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_7cmub")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_rrc0a")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_drkx2")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_lynll")

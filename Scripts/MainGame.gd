@@ -47,28 +47,16 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				EventBus.transaction_completed.emit(item.item_data, true)
 				InventoryManager.take_item(item.item_data)
 				item.hide()
-				if Dialogic.current_timeline == null and context and context.timeline_satisfied != "":
-					if spawner:
-						spawner.notify_satisfied_dialogue()
-					Dialogic.Styles.load_style("FollowBubble")
-					var layout = Dialogic.start(context.timeline_satisfied)
-					var char_data = StoryManager._get_character_data(customer.character_id)
-					var char_res = char_data.dialogic_character if char_data else null
-					if layout and layout.has_method("register_character") and char_res and is_instance_valid(customer.body_sprite):
-						layout.register_character(char_res, customer.body_sprite)
+				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
+				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
+				if context and context.timeline and spawner:
+					spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.SATISFIED, "Satisfy")
 				item = null  # prevent return_to_start below from running on a hidden node
 			else:
 				EventBus.transaction_completed.emit(item.item_data, false)
-				# Wrong item — play per-character reaction, customer stays waiting for a retry.
-				if Dialogic.current_timeline == null and context and context.timeline_wrong_item != "":
-					if spawner:
-						spawner.notify_wrong_item_dialogue()
-					Dialogic.Styles.load_style("FollowBubble")
-					var layout = Dialogic.start(context.timeline_wrong_item)
-					var char_data = StoryManager._get_character_data(customer.character_id)
-					var char_res = char_data.dialogic_character if char_data else null
-					if layout and layout.has_method("register_character") and char_res and is_instance_valid(customer.body_sprite):
-						layout.register_character(char_res, customer.body_sprite)
+				# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
+				if context and context.timeline and spawner:
+					spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
 			
 	if not handled:
 		print("[MainGame] No customer waiting, dropping item")

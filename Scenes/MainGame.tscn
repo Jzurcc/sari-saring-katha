@@ -12,8 +12,7 @@
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="19_k6vqf"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
-[ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
-[ext_resource type="Script" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
 [ext_resource type="Resource" uid="uid://dmn5s1v8mjqcf" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
 [ext_resource type="Resource" uid="uid://3n6igstcuejf" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
 [ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
@@ -26,13 +25,20 @@
 [ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
 [ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
-[ext_resource type="PackedScene" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
 [ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/RestockScreen.tscn" id="36_fto8l"]
+[ext_resource type="Script" uid="uid://dxmnefrwak8nn" path="res://Scripts/SachetContainerItem.gd" id="45_glkqw"]
+[ext_resource type="Material" uid="uid://db4iw7gjdpieb" path="res://Assets/3D/final store/textures/materials/outer_wall.001.tres" id="45_gnwe2"]
+[ext_resource type="Material" uid="uid://7p3u1xj7ym3f" path="res://Assets/3D/final store/textures/materials/outer_wall.tres" id="46_glkqw"]
+[ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="46_hfiw1"]
+[ext_resource type="VoxelGIData" uid="uid://lqnf363acqsg" path="res://Scenes/MainGame.VoxelGI_data.res" id="46_uvjf7"]
+[ext_resource type="Texture2D" uid="uid://4jopyanab23j" path="res://Assets/items/icons/9_sachet_kopimo.png" id="47_hfiw1"]
+[ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="48_d7jqg"]
 [ext_resource type="Resource" uid="uid://sbu21ye633d5" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://mdcyjtl1s53y" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://d2mf426qt8lwt" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
-[ext_resource type="Script" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
+[ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/Managers/CustomerSpawner.gd" id="cs_scr"]
@@ -42,8 +48,6 @@
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
 [ext_resource type="Script" uid="uid://camum248co0qu" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
-[ext_resource type="Script" uid="uid://biotsackhhbci" path="res://Scripts/UI/RestockBtnUI.gd" id="restock_btn_scr"]
-[ext_resource type="Texture2D" uid="uid://ciq32eqg6o1qr" path="res://Assets/ui/restock_btn.png" id="tex_restock_btn"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -71,12 +75,32 @@ size = Vector3(2.6975098, 4.6657715, 0.5)
 [sub_resource type="BoxShape3D" id="BoxShape3D_3ijh3"]
 size = Vector3(200.6779, 114.64903, 426.17346)
 
+[sub_resource type="BoxMesh" id="BoxMesh_eeqno"]
+material = ExtResource("45_gnwe2")
+size = Vector3(0.26, 6.17, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gnwe2"]
+material = ExtResource("46_glkqw")
+size = Vector3(0.15, 5.6, 0.21)
+
+[sub_resource type="BoxMesh" id="BoxMesh_glkqw"]
+material = ExtResource("46_glkqw")
+size = Vector3(0.185, 5.68, 0.195)
+
+[sub_resource type="BoxMesh" id="BoxMesh_uvjf7"]
+material = ExtResource("46_glkqw")
+size = Vector3(0.115, 0.785, 9.545)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d7jqg"]
+size = Vector3(0.6658325, 1.3227539, 0.12005615)
+
 [node name="MainGame" type="Node3D" unique_id=572606432]
 script = ExtResource("1_script")
 
 [node name="Player" type="CharacterBody3D" parent="." unique_id=-1541147005 groups=["player"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.596, 2.9326215, -0.05)
 script = ExtResource("fps_scr")
+debug_customer_scale = 0.6
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1498308492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64331055, 0)
@@ -89,10 +113,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 script = ExtResource("pi_scr")
 
 [node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
-transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.287584, 1.2479117, 1.1670127)
+transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.287584, 0.75612736, 1.1670127)
 
 [node name="CustomerTargetPos" type="Marker3D" parent="." unique_id=614298035]
-transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -5.9075007, 1.2479117, -0.2131896)
+transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -5.6717167, 0.75612736, -0.2131896)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1703619609]
 
@@ -131,16 +155,6 @@ offset_bottom = 58.0
 texture = ExtResource("6_eeqno")
 expand_mode = 1
 stretch_mode = 5
-
-[node name="RestockBtn" type="TextureRect" parent="CanvasLayer/LeftHUD" unique_id=664189215]
-layout_mode = 0
-offset_top = 53.0
-offset_right = 83.0
-offset_bottom = 229.0
-texture = ExtResource("tex_restock_btn")
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("restock_btn_scr")
 
 [node name="RightHUD" type="Control" parent="CanvasLayer" unique_id=1056939455]
 layout_mode = 3
@@ -253,14 +267,7 @@ chubs_container = NodePath("../CandyContainer_Chubs")
 [node name="3DModels" parent="." unique_id=1959424565 instance=ExtResource("16_ktwve")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
-[node name="VoxelGI" type="VoxelGI" parent="." unique_id=146136590]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9080963, 5.8179474, 0.6407471)
-size = Vector3(15.606049, 15.635895, 13.080322)
-data = ExtResource("23_7p2u3")
-
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
-fog_enabled = true
-current_time = 5.23
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
@@ -334,7 +341,6 @@ layout_strategy = SubResource("Resource_fgk2h")
 
 [node name="CandyContainer_Mix" type="Area3D" parent="." unique_id=290924167]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.399547, 3.4277682, -2.334823)
-visible = false
 script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha"), ExtResource("candy_mentor")])
 
@@ -343,8 +349,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03137207, -0.064819336, 0)
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mix" unique_id=290924169]
+visible = false
+cast_shadow = 0
 billboard = 1
 shaded = true
+alpha_cut = 1
 texture = ExtResource("26_yy0n7")
 
 [node name="CandyContainer_Chubs" type="Area3D" parent="." unique_id=1977615064]
@@ -357,8 +366,10 @@ possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_chubs")])
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Chubs" unique_id=1977615066]
+cast_shadow = 0
 billboard = 1
 shaded = true
+alpha_cut = 1
 texture = ExtResource("27_0wdc3")
 
 [node name="CandyContainer_Mentor" type="Area3D" parent="." unique_id=394685185]
@@ -371,8 +382,10 @@ possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_mentor")])
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mentor" unique_id=394685187]
+cast_shadow = 0
 billboard = 1
 shaded = true
+alpha_cut = 1
 texture = ExtResource("28_w42fa")
 
 [node name="CandyContainer_Pocha" type="Area3D" parent="." unique_id=82948426]
@@ -385,8 +398,10 @@ possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha")])
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Pocha" unique_id=82948428]
+cast_shadow = 0
 billboard = 1
 shaded = true
+alpha_cut = 1
 texture = ExtResource("29_upseh")
 
 [node name="nokia" parent="." unique_id=83503094 instance=ExtResource("34_1r7st")]
@@ -403,32 +418,96 @@ shape = SubResource("BoxShape3D_3ijh3")
 
 [node name="Trophy" type="Sprite3D" parent="." unique_id=719813067]
 transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, 4.3776584, 5.060807, -0.8048922)
+cast_shadow = 0
 shaded = true
+alpha_cut = 1
 texture = ExtResource("30_si6xw")
 
 [node name="Cat" type="Sprite3D" parent="." unique_id=509141086]
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.3776584, 4.8488646, 0.9894613)
+cast_shadow = 0
 shaded = true
+alpha_cut = 1
 texture = ExtResource("31_1r7st")
 
 [node name="Statue" type="Sprite3D" parent="." unique_id=2103369003]
 transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.1954145, -0.11046374)
+cast_shadow = 0
 shaded = true
+alpha_cut = 1
 texture = ExtResource("32_o6tew")
 
 [node name="Frame" type="Sprite3D" parent="." unique_id=1757741366]
 transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.8402715, 2.1249723)
+cast_shadow = 0
 shaded = true
+alpha_cut = 1
 texture = ExtResource("33_3ijh3")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=800251844]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7778533, 0)
-light_energy = 0.115
-light_indirect_energy = 16.0
-light_volumetric_fog_energy = 1.12
-light_size = 1.38
 
 [node name="PhoneMarker3D" type="Marker3D" parent="." unique_id=46839002]
 transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1165981177]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.549118, 2.9976158, 4.91865)
+mesh = SubResource("BoxMesh_eeqno")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=2079194260]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.0312805, 3.4868903, -4.4725914)
+mesh = SubResource("BoxMesh_gnwe2")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="." unique_id=555942738]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8303413, 3.3276234, -4.5111947)
+mesh = SubResource("BoxMesh_glkqw")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="." unique_id=798404228]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8193216, 0.6916826, 0.14385056)
+mesh = SubResource("BoxMesh_uvjf7")
+
+[node name="VoxelGI" type="VoxelGI" parent="." unique_id=954057711]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5098877, 1.732666, -0.06629944)
+size = Vector3(19.682861, 23.465332, 17.533234)
+data = ExtResource("46_uvjf7")
+
+[node name="SachetContainerItem" type="Area3D" parent="." unique_id=1273543074]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1811247, 4.497734, 2.1742148)
+visible = false
+script = ExtResource("45_glkqw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem" unique_id=746439960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
+shape = SubResource("BoxShape3D_d7jqg")
+
+[node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem" unique_id=1272195789]
+transform = Transform3D(0.27473217, 0.012134388, -1.1707968e-11, -0.012134388, 0.27473217, -5.3041094e-10, -1.170708e-11, 5.3041094e-10, 0.275, -0.091359615, -0.024161339, 0)
+billboard = 2
+texture = ExtResource("46_hfiw1")
+
+[node name="SachetContainerItem2" type="Area3D" parent="." unique_id=512007667]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.2335424, 4.4552646, 1.5788226)
+visible = false
+script = ExtResource("45_glkqw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem2" unique_id=1366571915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
+shape = SubResource("BoxShape3D_d7jqg")
+
+[node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem2" unique_id=528168795]
+transform = Transform3D(0.27473217, 0.012134388, -1.1707968e-11, -0.012134388, 0.27473217, -5.3041094e-10, -1.170708e-11, 5.3041094e-10, 0.275, -0.091359615, -0.024161339, 0)
+billboard = 2
+texture = ExtResource("47_hfiw1")
+
+[node name="SachetContainerItem3" type="Area3D" parent="." unique_id=1536702727]
+transform = Transform3D(-4.394796e-08, 2.4781066e-11, 1, 0.104181305, 0.99455833, 4.5539092e-09, -0.99455833, 0.104181305, -4.371139e-08, -4.25853, 4.5573874, -2.593927)
+visible = false
+script = ExtResource("45_glkqw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem3" unique_id=1432288744]
+transform = Transform3D(0.205, -1.8626451e-09, -8.881784e-16, 1.8626451e-09, 0.205, 0, -8.881784e-16, 0, 0.205, -0.062466145, 0.13833427, 0.02798462)
+shape = SubResource("BoxShape3D_d7jqg")
+
+[node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem3" unique_id=1613783674]
+transform = Transform3D(0.20480032, 0.009045633, -8.7290175e-12, -0.009045633, 0.20480032, -3.9539716e-10, -8.727241e-12, 3.9539716e-10, 0.205, -0.0731678, 0.08774614, 0)
+billboard = 2
+texture = ExtResource("48_d7jqg")
 
 [editable path="TransactionTray"]

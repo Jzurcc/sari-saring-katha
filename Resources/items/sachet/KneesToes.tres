@@ -1,14 +1,13 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cv3kc6f1s6724"]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dbw1di2cem1lh"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="2_tex"]
+[ext_resource type="Texture2D" uid="uid://djvmisnbuvne3" path="res://Assets/items/icons/36_sachet_kneestoes.png" id="2_vm0x7"]
 
 [resource]
 script = ExtResource("1_item")
-item_name = "Knees & Toes"
-texture = ExtResource("2_tex")
-price = 8
-max_stock = 0
+item_name = "Knees and Toes"
+texture = ExtResource("2_vm0x7")
 category = "sachet"
-display_height_meters = 0.5
-opaque_rect = Rect2i(139, 5, 195, 481)
+id = "kneestoes"
+item_hint = "cleans my feet"
+metadata/_custom_type_script = "uid://dhbe82ueyiql5"

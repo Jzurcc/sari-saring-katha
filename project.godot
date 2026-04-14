@@ -15,9 +15,10 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Sari-Saring Katha"
-run/main_scene="uid://maingame123"
+config/version="v1.0"
+run/main_scene="uid://b46bhnivkyc61"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="uid://bev8adkrkd4qd"
 
 [audio]
 
@@ -43,70 +44,24 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 [dialogic]
 
 directories/dch_directory={
+"Buboy": "res://Dialogue/Timelines/Buboy.dch",
 "Customer": "res://Dialogue/Timelines/Customer.dch",
+"Danilo": "res://Dialogue/Timelines/Danilo.dch",
+"Dionisio": "res://Dialogue/Timelines/Dionisio.dch",
 "KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
 "ManangAna": "res://Dialogue/Timelines/ManangAna.dch",
 "ReynaMayari": "res://Dialogue/Timelines/ReynaMayari.dch",
+"Rodel": "res://Dialogue/Timelines/Rodel.dch",
 "Rosalyn": "res://Dialogue/Timelines/Rosalyn.dch",
+"Sarimanok": "res://Dialogue/Timelines/Sarimanok.dch",
 "TK": "res://Dialogue/Timelines/TK.dch",
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
 }
 directories/dtl_directory={
-"Filler/filler_greeting_1": "res://Dialogue/KuyaKap/Filler/filler_greeting_1.dtl",
-"Filler/filler_satisfied_1": "res://Dialogue/KuyaKap/Filler/filler_satisfied_1.dtl",
-"Filler/filler_talk_1": "res://Dialogue/KuyaKap/Filler/filler_talk_1.dtl",
-"Filler/filler_wrong_item_1": "res://Dialogue/KuyaKap/Filler/filler_wrong_item_1.dtl",
-"Generic/generic_talk_1": "res://Dialogue/KuyaKap/Generic/generic_talk_1.dtl",
-"Story/stage_0_greeting": "res://Dialogue/KuyaKap/Story/stage_0_greeting.dtl",
-"Story/stage_0_rejected": "res://Dialogue/KuyaKap/Story/stage_0_rejected.dtl",
-"Story/stage_0_satisfied": "res://Dialogue/KuyaKap/Story/stage_0_satisfied.dtl",
-"Story/stage_0_talk": "res://Dialogue/KuyaKap/Story/stage_0_talk.dtl",
-"Story/stage_0_wrong_item": "res://Dialogue/KuyaKap/Story/stage_0_wrong_item.dtl",
-"UncleMario/UncleMario_Busy": "res://Dialogue/UncleMario/UncleMario_Busy.dtl",
-"UncleMario/UncleMario_Call": "res://Dialogue/unclemario/UncleMario_Call.dtl",
-"UncleMario/UncleMario_Call_Rest": "res://Dialogue/unclemario/UncleMario_Call_Rest.dtl",
-"UncleMario/UncleMario_Delivery": "res://Dialogue/unclemario/UncleMario_Delivery.dtl",
-"UncleMario_Busy": "res://Dialogue/unclemario/UncleMario_Busy.dtl",
-"UncleMario_Call": "res://Dialogue/UncleMario/UncleMario_Call.dtl",
-"UncleMario_Call_Rest": "res://Dialogue/UncleMario/UncleMario_Call_Rest.dtl",
-"UncleMario_Delivery": "res://Dialogue/UncleMario/UncleMario_Delivery.dtl",
-"customer_greeting": "res://Dialogue/customer_greeting.dtl",
-"customer_rejected": "res://Dialogue/customer_rejected.dtl",
-"customer_returning": "res://Dialogue/customer_returning.dtl",
-"customer_satisfied": "res://Dialogue/customer_satisfied.dtl",
-"customer_talk": "res://Dialogue/customer_talk.dtl",
-"customer_wrong_item": "res://Dialogue/customer_wrong_item.dtl",
-"day_ended": "res://Dialogue/day_ended.dtl",
-"filler_greeting_1": "res://Dialogue/kuyakap/Filler/filler_greeting_1.dtl",
-"filler_satisfied_1": "res://Dialogue/kuyakap/Filler/filler_satisfied_1.dtl",
-"filler_talk_1": "res://Dialogue/kuyakap/Filler/filler_talk_1.dtl",
-"filler_wrong_item_1": "res://Dialogue/kuyakap/Filler/filler_wrong_item_1.dtl",
-"generic_filler_1": "res://Dialogue/generic/filler/generic_filler_1.dtl",
-"generic_filler_2": "res://Dialogue/generic/filler/generic_filler_2.dtl",
-"generic_filler_3": "res://Dialogue/generic/filler/generic_filler_3.dtl",
-"generic_greeting_1": "res://Dialogue/generic/greeting/generic_greeting_1.dtl",
-"generic_greeting_2": "res://Dialogue/generic/greeting/generic_greeting_2.dtl",
-"generic_greeting_3": "res://Dialogue/generic/greeting/generic_greeting_3.dtl",
-"generic_rejected_1": "res://Dialogue/generic/rejected/generic_rejected_1.dtl",
-"generic_rejected_2": "res://Dialogue/generic/rejected/generic_rejected_2.dtl",
-"generic_rejected_3": "res://Dialogue/generic/rejected/generic_rejected_3.dtl",
-"generic_satisfied_1": "res://Dialogue/generic/satisfied/generic_satisfied_1.dtl",
-"generic_satisfied_2": "res://Dialogue/generic/satisfied/generic_satisfied_2.dtl",
-"generic_satisfied_3": "res://Dialogue/generic/satisfied/generic_satisfied_3.dtl",
-"generic_talk_1": "res://Dialogue/kuyakap/Generic/generic_talk_1.dtl",
-"generic_talk_2": "res://Dialogue/generic/talk/generic_talk_2.dtl",
-"generic_talk_3": "res://Dialogue/generic/talk/generic_talk_3.dtl",
-"generic_wrong_item_1": "res://Dialogue/generic/wrong_item/generic_wrong_item_1.dtl",
-"generic_wrong_item_2": "res://Dialogue/generic/wrong_item/generic_wrong_item_2.dtl",
-"generic_wrong_item_3": "res://Dialogue/generic/wrong_item/generic_wrong_item_3.dtl",
-"main_timeline": "res://Dialogue/Timelines/main_timeline.dtl",
-"placeholder_story_missing": "res://Dialogue/placeholder_story_missing.dtl",
-"stage_0_greeting": "res://Dialogue/kuyakap/Story/stage_0_greeting.dtl",
-"stage_0_rejected": "res://Dialogue/kuyakap/Story/stage_0_rejected.dtl",
-"stage_0_satisfied": "res://Dialogue/kuyakap/Story/stage_0_satisfied.dtl",
-"stage_0_talk": "res://Dialogue/kuyakap/Story/stage_0_talk.dtl",
-"stage_0_wrong_item": "res://Dialogue/kuyakap/Story/stage_0_wrong_item.dtl",
-"talk/generic_talk_1": "res://Dialogue/generic/talk/generic_talk_1.dtl"
+"Filler1": "res://Dialogue/Timelines/Kuyakap/Filler1.dtl",
+"Neutral": "res://Dialogue/Timelines/Generic/Neutral.dtl",
+"Story0": "res://Dialogue/Timelines/Kuyakap/Story0.dtl",
+"UncleMario": "res://Dialogue/Timelines/UncleMario.dtl"
 }
 layout/style_directory={
 "BubbleDialogue": "res://Assets/Dialogue/BubbleDialogue.tres",
@@ -150,7 +105,28 @@ audio/channel_defaults={
 "volume": 0.0
 }
 }
-variables={}
+variables={
+"Global": {
+"LastCustomer": "",
+"LastItem": "",
+"LastSatisfaction": "",
+"RumorActive": false,
+"RumorType": 0.0
+},
+"Stats": {
+"Affinity": {},
+"Debt": {},
+"Money": 200.0
+},
+"Transaction": {
+"CustomerName": "",
+"IsRiddle": false,
+"ItemHint": "",
+"ItemWants": "",
+"WantsDebt": false
+},
+"Variation": 0.0
+}
 
 [display]
 

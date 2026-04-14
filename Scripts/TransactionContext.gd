@@ -11,18 +11,14 @@ var desired_items: Array[ItemData] = []
 ## Ticks from 0 (5 AM) to 15 (8 PM, moving towards 9 PM).
 var event_hour: int = 0
 
-## Called when they arrive
-var timeline_greeting: String = ""
-## Called when clicked again to confirm their requests
-var timeline_talk: String = ""
-## Called when correct item is dropped into tray
-var timeline_satisfied: String = ""
-## Called when the wrong item is dropped — customer reacts but STAYS waiting
-var timeline_wrong_item: String = ""
-## Called when the player explicitly refuses service — customer leaves
-var timeline_rejected: String = ""
-## Called instead of greeting/talk if it's a social "no purchase" visit
-var timeline_visit: String = ""
+## The unified timeline to play for this transaction. 
+## Can be a DialogicTimeline resource or a string path.
+var timeline: Variant
+var is_placeholder: bool = false
+var is_riddle: bool = false
+var wants_debt: bool = false
+var rumor_active: bool = false
+var rumor_type: float = 0.0
 
 func is_item_desired(item: ItemData) -> bool:
 	if desired_items.is_empty():

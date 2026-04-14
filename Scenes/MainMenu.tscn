@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://bmlw645gf4ajw" path="res://Assets/ui/mingcute_checkbox-fill.png" id="icon_checked"]
 [ext_resource type="Texture2D" uid="uid://pwx1mc3jejjo" path="res://Assets/ui/grabber.png" id="icon_grabber"]
 [ext_resource type="Texture2D" uid="uid://bhc76jwyeq11p" path="res://Assets/ui/carbon_checkbox.png" id="icon_unchecked"]
-[ext_resource type="PackedScene" uid="uid://maingame123" path="res://Scenes/TitleScreen3D.tscn" id="title_screen_scene"]
+[ext_resource type="PackedScene" uid="uid://dyxtw4qitbahn" path="res://Scenes/TitleScreen3D.tscn" id="title_screen_scene"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 bg_color = Color(0, 0, 0, 0)
@@ -389,7 +389,7 @@ text = "Display Options"
 
 [node name="WindowModePanel" type="PanelContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions" unique_id=374305507]
 layout_mode = 2
-mouse_filter = 1
+mouse_filter = 0
 theme_override_styles/panel = SubResource("display_btn")
 
 [node name="HBox" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel" unique_id=261088212]
@@ -402,6 +402,7 @@ custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_vertical = 4
 texture = ExtResource("icon_arrow")
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 flip_h = true
@@ -412,6 +413,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
 theme_override_fonts/font = ExtResource("4_ghw46")
 theme_override_font_sizes/font_size = 20
+mouse_filter = 2
 text = "Windowed Mode"
 horizontal_alignment = 1
 
@@ -420,6 +422,7 @@ custom_minimum_size = Vector2(24, 24)
 layout_mode = 2
 size_flags_vertical = 4
 texture = ExtResource("icon_arrow")
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 

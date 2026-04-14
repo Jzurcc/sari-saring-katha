@@ -2,51 +2,23 @@
 
 [ext_resource type="Script" uid="uid://in1r823inl7v" path="res://Scripts/Customer.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/characters/sprites/Kuya_Kap.png" id="3_tk"]
-[ext_resource type="Script" uid="uid://c2ja1eugyxfeq" path="res://addons/UniParticles3D/UniParticles3D.gd" id="9_uniparticles"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(2.5, 5.186035, 2.5)
+size = Vector3(3.8310547, 6.0703125, 2.5)
 
 [node name="Customer" type="Area3D" unique_id=942979049]
 script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1252328638]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0861268, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Body" type="Sprite3D" parent="." unique_id=1004560236]
-transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 1.810957, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 pixel_size = 0.005
 billboard = 2
 shaded = true
-alpha_cut = 2
+alpha_cut = 1
+cast_shadow = 0
 texture = ExtResource("3_tk")
 
-[node name="HappyParticles" type="Node3D" parent="." unique_id=999888777]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
-script = ExtResource("9_uniparticles")
-start_lifetime_mode = 1
-start_lifetime_random = Vector2(0.5, 0.8)
-start_speed_mode = 1
-start_speed_random = Vector2(3, 6)
-gravity = Vector3(0, -5, 0)
-start_size_mode = 1
-start_size_random = Vector4(0.15, 0.15, 0.25, 0.25)
-use_world_space = true
-enable_play_behavior = Vector2i(1, 1)
-play_on_start = false
-loop = false
-enable_emission = Vector2i(1, 1)
-max_particles = 30
-bursts = [0.0, 0, 30, 30, 0, 1, 1, 0.0, 1.0]
-enable_shape = Vector2i(1, 1)
-shape_type = 1
-radius = 0.2
-random_direction = 1.0
-emit_from = 1
-enable_rendering = Vector2i(1, 1)
-tint_color = Color(1, 0.8, 0.2, 1)
-blend_mode = 1
-
 [node name="SpeechMarker" type="Marker3D" parent="." unique_id=1686229577]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.129527, 0)

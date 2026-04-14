@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://es0alcyyfhpy" path="res://Assets/items/icons/5_snack_patos.png" id="2_tex"]
 
 [resource]
-id = "patos"
 script = ExtResource("1_item")
 item_name = "Patos"
 texture = ExtResource("2_tex")
@@ -12,5 +11,6 @@ price = 9.0
 markup = 3.0
 max_stock = 0
 category = "snack"
+item_hint = "is cheesy"
 display_height_meters = 0.6
 opaque_rect = Rect2i(78, 11, 335, 471)

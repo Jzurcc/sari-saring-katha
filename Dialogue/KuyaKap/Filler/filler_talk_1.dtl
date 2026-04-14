@@ -1,9 +1,0 @@
-
-KuyaKap: Just {InventoryManager.current_item_name} for now.
-- Alright, one moment.
-	KuyaKap: Sige sige.
-	[end_timeline]
-- Sorry, I can't get that right now.
-	KuyaKap: Ah, ganon ba? No worries.
-	[signal arg="refuse_service"]
-	[end_timeline]

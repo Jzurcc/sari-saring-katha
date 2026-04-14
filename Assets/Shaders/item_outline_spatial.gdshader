@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode depth_draw_never, cull_back, unshaded, shadows_disabled;
+render_mode depth_draw_never, cull_back, unshaded, shadows_disabled, fog_disabled;
 
 uniform sampler2D albedo_texture : source_color, filter_nearest;
 uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
@@ -68,7 +68,9 @@ void fragment() {
 
 	if (max_a > 0.01) {
 		ALBEDO = outline_color.rgb;
-		ALPHA  = outline_color.a * 0.8;
+		ALPHA  = outline_color.a;
+		ROUGHNESS = 1.0;
+		SPECULAR = 0.0;
 	} else {
 		discard;
 	}

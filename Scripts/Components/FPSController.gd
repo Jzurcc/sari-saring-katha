@@ -15,6 +15,27 @@ extends CharacterBody3D
 @export var base_fov: float = 75.0
 @export var fov_change: float = 1.5
 
+@export_group("Debug Tools (Temporary)")
+## Adjust this value in the Remote Inspector while the game is running to resize the active customer.
+@export var debug_customer_scale: float = 1.0:
+	set(val):
+		debug_customer_scale = val
+		if not is_inside_tree():
+			return
+		var spawner = get_tree().get_first_node_in_group("customer_spawner")
+		if spawner and is_instance_valid(spawner.current_customer):
+			var customer = spawner.current_customer
+			var body = customer.get_node_or_null("Body")
+			var marker = customer.get_node_or_null("SpeechMarker")
+			
+			if body:
+				body.scale = Vector3.ONE * val
+				if marker and body.texture:
+					var base_middle_y = (body.texture.get_height() / 2.0) * body.pixel_size
+					marker.position.y = base_middle_y * val
+					
+			print("[DEBUG-SCALE] Character: ", customer.character_id, " | New Visual Scale: ", val)
+
 var _t_bob: float = 0.0
 var _pitch: float = 0.0
 var _yaw: float = 0.0
@@ -109,35 +130,42 @@ func _rotate_to_nokia_and_open() -> void:
 	if not is_instance_valid(target_node):
 		target_node = get_node_or_null("/root/MainGame/NokiaInteractable")
 		
-	if not is_instance_valid(target_node):
-		return
-		
-	var target_world_pos = target_node.global_position
+	if is_instance_valid(target_node):
+		await face_node(target_node, 0.4)
+		_open_nokia()
+
+## Makes the player camera smoothly rotate to look at a specific world position.
+func face_pos(target_world_pos: Vector3, duration: float = 0.45) -> Signal:
 	# Convert world target to local space relative to the player body.
-	# This ensures we 'look at' the point correctly even if the body is rotated.
 	var target_local_pos = to_local(target_world_pos)
 	
-	# Calculate target yaw (local head rotation) and pitch (camera rotation)
+	# Calculate target angles
 	var target_yaw = atan2(-target_local_pos.x, -target_local_pos.z)
 	var horizontal_dist = Vector2(target_local_pos.x, target_local_pos.z).length()
-	# Account for head height in the pitch calculation
 	var target_pitch = clamp(atan2(target_local_pos.y - head.position.y, horizontal_dist), -PI/2, PI/2)
 	
-	# Handle angle wrapping to take the shortest path around the circle
-	_yaw = fposmod(_yaw + PI, TAU) - PI
-	target_yaw = fposmod(target_yaw + PI, TAU) - PI
-	if abs(target_yaw - _yaw) > PI:
-		if target_yaw > _yaw: target_yaw -= TAU
-		else: target_yaw += TAU
+	# Shortest path wrapping: calculate the minimal difference and add it to current _yaw
+	var yaw_diff = fposmod(target_yaw - _yaw + PI, TAU) - PI
+	target_yaw = _yaw + yaw_diff
 
-	var tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	var tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "_yaw", target_yaw, duration)
+	tween.tween_property(self, "_pitch", target_pitch, duration)
 	
-	# Tween the internal state variables so mouse look stays synchronized
-	tween.tween_property(self, "_yaw", target_yaw, 0.4)
-	tween.tween_property(self, "_pitch", target_pitch, 0.4)
-	
-	# Update the actual nodes every frame during the tween
-	tween.chain().tween_callback(_open_nokia)
+	return tween.finished
+
+## Makes the player camera smoothly rotate to look at a node.
+## If the node has a SpeechMarker child, it will aim for that instead.
+func face_node(target: Node3D, duration: float = 0.45) -> Signal:
+	if not is_instance_valid(target):
+		return get_tree().process_frame # Return a dummy signal-like object
+		
+	var target_pos_vec = target.global_position
+	var marker = target.get_node_or_null("SpeechMarker")
+	if marker:
+		target_pos_vec = marker.global_position
+		
+	return face_pos(target_pos_vec, duration)
 
 func _process(_delta: float) -> void:
 	# Ensure the nodes match our state variables (important for smooth tweening)

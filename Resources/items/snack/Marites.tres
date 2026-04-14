@@ -10,6 +10,7 @@ texture = ExtResource("2_tex")
 price = 16.0
 max_stock = 0
 category = "snack"
+item_hint = "might gossip about other people"
 display_height_meters = 0.6
 opaque_rect = Rect2i(87, 7, 341, 485)
 metadata/_custom_type_script = "uid://dhbe82ueyiql5"

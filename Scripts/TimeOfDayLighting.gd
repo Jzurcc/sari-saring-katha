@@ -23,6 +23,7 @@ var _current_to_state: LightingKeyframe = null
 var _current_t: float = 0.0
 var _is_transitioning: bool = false
 var _transition_tween: Tween = null
+var _last_signal_time: float = -1.0
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -212,9 +213,24 @@ func _initialize_fallback_keyframes() -> void:
 
 func _on_time_changed(time: float) -> void:
 	var next_state = _get_current_keyframe_pair(time)
+	
+	# Jump detection
+	var diff = abs(time - _last_signal_time)
+	if _last_signal_time > time: # Midnight wrap logic
+		diff = abs((time + 24.0) - _last_signal_time)
+	
+	var is_large_jump = diff > 0.1 and _last_signal_time >= 0.0
+	var phase_changed = next_state.from_state != _current_from_state or next_state.to_state != _current_to_state
+	_last_signal_time = time
 
-	if next_state.from_state != _current_from_state or next_state.to_state != _current_to_state:
+	if phase_changed or is_large_jump:
 		_start_transition(next_state.from_state, next_state.to_state, next_state.t)
+	else:
+		# Normal incremental tick: follow directly if not in a cinematic sweep.
+		if not _is_transitioning:
+			_current_from_state = next_state.from_state
+			_current_to_state = next_state.to_state
+			_current_t = next_state.t
 
 func _get_current_keyframe_pair(time: float) -> Dictionary:
 	var sorted_times: Array = []

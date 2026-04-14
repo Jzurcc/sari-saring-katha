@@ -24,7 +24,7 @@ var cam_origin_pos: Vector3
 var is_starting_game: bool = false
 var settings_open: bool = false
 var _is_fullscreen: bool = false
-var pan_sensitivity: float = 0.5
+var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
 
@@ -43,6 +43,7 @@ func _ready() -> void:
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "SFX"
 	add_child(_ui_player)
+	$OptionsOverlay.hide()
 
 	if has_node("TitleScreen3D/Camera3D"):
 		cam = $TitleScreen3D/Camera3D
@@ -123,21 +124,23 @@ func _on_btn_unhover(btn: Button) -> void:
 # ─── Camera parallax pan ───────────────────────────────────────────────────────
 
 func _process(delta: float) -> void:
-	if is_starting_game or cam == null or settings_open:
+	if is_starting_game or cam == null:
 		return
 
 	var mouse_pos   = get_viewport().get_mouse_position()
 	var window_size = get_viewport().get_visible_rect().size
-
-	if not buttons.get_global_rect().has_point(mouse_pos):
-		current_offset_x = (mouse_pos.x / window_size.x) * 2.0 - 1.0
-		current_offset_y = (mouse_pos.y / window_size.y) * 2.0 - 1.0
-
+	
+	# Mapped from -1.0 to 1.0 based on screen center
+	current_offset_x = (mouse_pos.x / window_size.x) * 2.0 - 1.0
+	current_offset_y = (mouse_pos.y / window_size.y) * 2.0 - 1.0
+	
 	var target_rot_x = cam_origin_rot.x - (current_offset_y * pan_sensitivity)
 	var target_rot_y = cam_origin_rot.y - (current_offset_x * pan_sensitivity)
-	var target_pos_x = cam_origin_pos.x + (current_offset_x * 0.05)
-	var target_pos_y = cam_origin_pos.y - (current_offset_y * 0.05)
-
+	
+	var target_pos_x = cam_origin_pos.x + (current_offset_x * 0.02)
+	var target_pos_y = cam_origin_pos.y - (current_offset_y * 0.02)
+	
+	# Smoothly interpolate the camera's transform
 	cam.rotation.x = lerp(cam.rotation.x, target_rot_x, delta * 3.0)
 	cam.rotation.y = lerp(cam.rotation.y, target_rot_y, delta * 3.0)
 	cam.position.x = lerp(cam.position.x, target_pos_x, delta * 3.0)
@@ -156,8 +159,8 @@ func _on_new_game_pressed() -> void:
 		return
 
 	var tween = create_tween()
-	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
+	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	
 	var target_pos = Vector3(-1.638, 4.1, -0.05)
 	var target_rot = Vector3(0, deg_to_rad(90.0), 0)
 
@@ -267,18 +270,19 @@ func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
 
 	_is_fullscreen = not _is_fullscreen
 	if _is_fullscreen:
-		# Exclusive Fullscreen: takes 100% GPU control, max performance, no desktop overhead
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+		# Borderless Fullscreen: Standard modern fullscreen mode
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
-		# Windowed: floating window with title bar, best for multitasking
+		# Windowed: standard floating window
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 	_sync_display_label()
 
 func _sync_display_label() -> void:
 	display_label.text  = "Full Screen" if _is_fullscreen else "Windowed Mode"
-	left_arrow.visible  = not _is_fullscreen   # left arrow = can go back to windowed
-	right_arrow.visible = _is_fullscreen        # right arrow = can go to fullscreen
+	# Flip arrows: if Windowed, show Right arrow to go to Fullscreen. If Fullscreen, show Left arrow to go back.
+	left_arrow.visible  = _is_fullscreen
+	right_arrow.visible = not _is_fullscreen
 
 
 # ─── Settings persistence ─────────────────────────────────────────────────────
@@ -320,6 +324,6 @@ func _load_settings() -> void:
 	var want_fs : bool = cfg.get_value("display", "fullscreen", false)
 	_is_fullscreen = want_fs
 	if want_fs:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)

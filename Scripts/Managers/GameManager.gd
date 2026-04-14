@@ -8,6 +8,7 @@ const MAX_DAYS := 7
 @export var starting_money: float = 200.0
 var money: float = 0.0
 var day: int = 1
+var _last_earning: float = 0.0
 
 func _ready() -> void:
 	add_to_group("game_manager")
@@ -20,6 +21,7 @@ func _ready() -> void:
 	
 	EventBus.transaction_completed.connect(_on_transaction_completed)
 	EventBus.day_ended.connect(_on_day_ended)
+	EventBus.utang_accepted.connect(_on_utang_accepted)
 
 	# Reset the clock to 5 AM for day 1
 	_reset_clock_to_morning()
@@ -29,10 +31,20 @@ func _ready() -> void:
 
 func _on_transaction_completed(item: ItemData, was_correct: bool) -> void:
 	if was_correct and item:
-		var earning = item.price + item.markup
-		money += earning
+		_last_earning = item.get_final_price()
+		money += _last_earning
 		EventBus.money_changed.emit(money)
-		print("[GameManager] Earned %.2f (Buy: %.2f, Markup: %.2f). Total: %.2f" % [earning, item.price, item.markup, money])
+		print("[GameManager] Sold %s for %.2f (Base: %.2f, Margin: %d%%). TOTAL: %.2f" % [
+			item.item_name, _last_earning, item.price, int(item.profit_margin * 100), money
+		])
+
+func _on_utang_accepted(_customer: Customer) -> void:
+	money -= _last_earning
+	EventBus.money_changed.emit(money)
+	print("[GameManager] Utang accepted! Reverted %.2f. New balance: %.2f" % [_last_earning, money])
+	
+	# Future: We could update a persistent Debt dictionary here if needed for more complex logic.
+	# For now, Dialogic handles its own {Stats.Debt} variable via [set] events in the timeline.
 
 func deduct_money(amount: float) -> void:
 	if money >= amount:
@@ -56,17 +68,20 @@ func _on_day_ended(ended_day_number: int) -> void:
 	_reset_clock_to_morning()
 	EventBus.day_started.emit(day)
 
-## Resets the in-game clock back to 5:00 AM for the new day.
 func _reset_clock_to_morning() -> void:
-	# Reset StoryManager's internal display time so it doesn't carry over
+	# Set the initial hour in StoryManager context
 	StoryManager._current_display_time = StoryManager.DAY_START_HOUR
 
-	# Reset the sky / TimeOfDay node
+	# Configure the sky / TimeOfDay node
 	var tod = get_tree().root.find_child("TimeOfDay", true, false)
 	if tod and tod.has_method("set_time"):
-		tod.game_time_enabled = false
 		tod.system_sync = false
-		tod.set_time(5, 0, 0)
+		tod.minutes_per_day = 10.0 # 25s/hour * 24h = 600s = 10m
+		tod.set_time(int(StoryManager.DAY_START_HOUR), 0, 0)
+	
+	# Start the clock via StoryManager's managed property
+	# This automatically sets tod.game_time_enabled = true
+	StoryManager.is_clock_running = true
 
 func _unhandled_input(event: InputEvent) -> void:
 	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:

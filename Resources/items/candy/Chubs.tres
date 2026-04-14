@@ -7,11 +7,10 @@
 script = ExtResource("1_item")
 item_name = "Chubs"
 texture = ExtResource("2_tex")
-price = 2
-max_stock = 20
 price = 1.0
 markup = 1.0
 max_stock = 20
 category = "candy"
+item_hint = "is chewy"
 display_height_meters = 0.4
 opaque_rect = Rect2i(12, 138, 473, 202)

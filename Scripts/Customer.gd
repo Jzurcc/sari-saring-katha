@@ -52,7 +52,31 @@ func setup(context: TransactionContext, target: Vector3) -> void:
 	if char_data and body_sprite:
 		if char_data.sprite_texture:
 			body_sprite.texture = char_data.sprite_texture
+			# Dynamically set the offset to half the texture height (in pixels).
+			# Since 'centered' is true, this pins the texture bottom to the node origin.
+			body_sprite.offset.y = char_data.sprite_texture.get_height() / 2.0
+		
+		# Reset sprite position to 0 so it sits at the root's origin.
+		body_sprite.position.y = 0
+
+		# Scale only the visuals and the speech marker.
+		# This keeps the collision box at the original size defined in the scene.
 		body_sprite.scale = Vector3.ONE * char_data.sprite_scale
+		
+		# Position the SpeechMarker in the middle of the scaled sprite.
+		var speech_marker = get_node_or_null("SpeechMarker")
+		if speech_marker and char_data.sprite_texture:
+			var base_middle_y = (char_data.sprite_texture.get_height() / 2.0) * body_sprite.pixel_size
+			speech_marker.position.y = base_middle_y * char_data.sprite_scale
+
+		# Move the collision shape so its bottom is at 0 (without scaling it).
+		var collision_shape = get_node_or_null("CollisionShape3D")
+		if collision_shape and collision_shape.shape is BoxShape3D:
+			collision_shape.position.y = collision_shape.shape.size.y / 2.0
+
+		# Ensure the root node stays at unit scale.
+		self.scale = Vector3.ONE
+
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
 ## Only responds when waiting at the counter and not mid-animation.

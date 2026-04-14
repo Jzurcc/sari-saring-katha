@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://dsworumj1ayg3"]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_03kd5"]
+[ext_resource type="AudioStream" uid="uid://bq0gl7t0atxfl" path="res://Audio/DialogueBlips/UncleMario.wav" id="5_blip"]
 [ext_resource type="Resource" uid="uid://ud54y8wnnuay" path="res://Dialogue/Timelines/UncleMario.dch" id="1_mario"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_4srvu"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_03kd5"]
 [ext_resource type="Texture2D" uid="uid://dbeuhl3lp3ih6" path="res://Assets/characters/sprites/UncleMario.png" id="4_pv788"]
-[ext_resource type="AudioStream" uid="uid://bq0gl7t0atxfl" path="res://Audio/DialogueBlips/UncleMario.wav" id="5_blip"]
 
 [resource]
 script = ExtResource("2_4srvu")
@@ -12,6 +12,5 @@ character_id = "UncleMario"
 character_name = "Uncle Mario"
 sprite_texture = ExtResource("4_pv788")
 dialogic_character = ExtResource("1_mario")
-timelines_dir = "res://Dialogue/unclemario/"
 dialogue_blip_sound = ExtResource("5_blip")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

@@ -4,7 +4,9 @@
 [ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/ReynaMayari.dch" id="1_w2e88"]
 [ext_resource type="AudioStream" uid="uid://cuyl4xi7b1i1v" path="res://Audio/DialogueBlips/ReynaMayari.wav" id="2_1p4eh"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_e2ncc"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
+[ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
 
 [resource]
 script = ExtResource("2_e2ncc")
@@ -12,6 +14,7 @@ character_id = "reynamayari"
 character_name = "Reyna Mayari"
 sprite_texture = ExtResource("5_uua7o")
 dialogic_character = ExtResource("1_w2e88")
+generic_purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
 sprite_scale = 0.5
 dialogue_blip_sound = ExtResource("2_1p4eh")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

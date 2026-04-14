@@ -11,5 +11,6 @@ price = 75.0
 markup = 20.0
 max_stock = 0
 category = "can"
+item_hint = "fools me"
 display_height_meters = 0.47
 opaque_rect = Rect2i(31, 46, 442, 412)
