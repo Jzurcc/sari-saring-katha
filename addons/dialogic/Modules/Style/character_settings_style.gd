@@ -30,5 +30,6 @@ func get_style_suggestions(filter:String="") -> Dictionary:
 	suggestions["No Style"] = {'value': "", 'editor_icon': ["EditorHandleDisabled", "EditorIcons"]}
 	for i in styles:
 		var style: DialogicStyle = load(i)
-		suggestions[style.name] = {'value': style.name, 'editor_icon': ["PopupMenu", "EditorIcons"]}
+		if style:
+			suggestions[style.name] = {'value': style.name, 'editor_icon': ["PopupMenu", "EditorIcons"]}
 	return suggestions

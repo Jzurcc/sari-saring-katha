@@ -208,12 +208,12 @@ func _ensure_audio_buses() -> void:
 	# Create Music and SFX buses routed to Master if they don't already exist.
 	if AudioServer.get_bus_index("Music") < 0:
 		AudioServer.add_bus()
-		var idx := AudioServer.get_bus_count() - 1
+		var idx: int = AudioServer.get_bus_count() - 1
 		AudioServer.set_bus_name(idx, "Music")
 		AudioServer.set_bus_send(idx, "Master")
 	if AudioServer.get_bus_index("SFX") < 0:
 		AudioServer.add_bus()
-		var idx := AudioServer.get_bus_count() - 1
+		var idx: int = AudioServer.get_bus_count() - 1
 		AudioServer.set_bus_name(idx, "SFX")
 		AudioServer.set_bus_send(idx, "Master")
 
@@ -222,13 +222,13 @@ func _ensure_audio_buses() -> void:
 
 func _on_master_changed(value: float) -> void:
 	# Master affects ALL audio — including Music and SFX routed through it
-	var idx := AudioServer.get_bus_index("Master")
+	var idx: int = AudioServer.get_bus_index("Master")
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
 	AudioServer.set_bus_mute(idx, value <= 0.0)
 
 func _on_bgm_changed(value: float) -> void:
 	# Music bus — only soundtracks, not SFX
-	var idx := AudioServer.get_bus_index("Music")
+	var idx: int = AudioServer.get_bus_index("Music")
 	if idx < 0:
 		return
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
@@ -236,7 +236,7 @@ func _on_bgm_changed(value: float) -> void:
 
 func _on_sfx_changed(value: float) -> void:
 	# SFX bus — only sound effects, not music
-	var idx := AudioServer.get_bus_index("SFX")
+	var idx: int = AudioServer.get_bus_index("SFX")
 	if idx < 0:
 		return
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
@@ -293,7 +293,6 @@ func _save_settings() -> void:
 	cfg.set_value("audio", "bgm",    slider_bgm.value)
 	cfg.set_value("audio", "sfx",    slider_sfx.value)
 	cfg.set_value("accessibility", "mute_in_background", mute_toggle.button_pressed)
-	var mode = DisplayServer.window_get_mode()
 	cfg.set_value("display", "fullscreen", _is_fullscreen)
 	cfg.save(SETTINGS_PATH)
 

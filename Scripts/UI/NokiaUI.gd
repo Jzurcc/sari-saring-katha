@@ -18,7 +18,6 @@ var target_number: String = "62777444666"
 
 var screen_label: Label = null
 var _is_calling: bool = false
-var _current_layout: Node = null
 
 var sfx_btn_1: AudioStream = preload("res://Audio/SFX/phone_btn_1.mp3")
 var sfx_btn_2: AudioStream = preload("res://Audio/SFX/phone_btn_2.mp3")

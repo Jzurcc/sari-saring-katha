@@ -79,6 +79,29 @@ func _on_call_dialogue_ended(success: bool) -> void:
 	_current_anchor = null
 	call_ended.emit(success)
 
+func cancel_restock() -> void:
+	print("[MarioManager] Restock cancelled by player or system.")
+	is_restocking_active = false
+	_is_calling = false
+	_current_anchor = null
+
+func trigger_sample_delivery(tier: int) -> void:
+	print("[MarioManager] Triggering sample delivery for Tier ", tier)
+	
+	var all_items = InventoryManager.get_all_items()
+	var new_items: Dictionary = {}
+	
+	for item in all_items:
+		if item.tier == tier:
+			new_items[item] = 2 # 2 units of each new item
+	
+	if new_items.is_empty():
+		print("[MarioManager] No new items found for Tier ", tier, ". Skipping sample delivery.")
+		return
+		
+	# Start delivery sequence with the samples
+	start_delivery(new_items)
+
 # ── DELIVERY LOGIC ───────────────────────────────────────────────────
 
 func start_delivery(items_to_restock: Dictionary) -> void:
