@@ -8,23 +8,18 @@ enum ItemType {
 
 @export var item_name: String = "New Item"
 @export var texture: Texture2D
+## The restock cost (what you pay Uncle Mario).
 @export var price: float = 10.0
-## Current profit margin percentage (e.g. 0.20 = 20% profit).
-## Final selling price = price + round(price * profit_margin).
-@export var profit_margin: float = 0.2
+## The current selling price to customers. Initialized to 105% of price if set to 0.
+@export var selling_price: float = 0.0
+## If false, customers will never ask for this item (e.g. for containers/props).
+@export var can_be_sold: bool = true
 @export var type: ItemType = ItemType.SHELF
 @export_enum("snacks", "sachet", "canned goods", "candy", "cigarette", "beverages", "instant noodles", "frozen goods") var category: String = "snacks"
-## Unique identifier for this item. Matches the .tres filename, lowercase.
-## Used for transaction matching. Set via patch_item_ids.py or the Inspector.
-@export var id: String = "unset"
 @export var tier: int = 1
 @export var item_hint: String = ""
 
 func get_clean_id() -> String:
-	if id != "unset" and not id.is_empty():
-		return id.to_lower()
-	
-	# Fallback to filename if ID is unset
 	return resource_path.get_file().get_basename().to_lower()
 
 @export_group("Display")
@@ -61,4 +56,13 @@ func get_visual_aspect() -> float:
 	return 1.0
 
 func get_final_price() -> float:
-	return price + round(price * profit_margin)
+	# Migration/Default: if selling_price hasn't been set, initialize it with a 5% margin
+	if selling_price <= 0.0:
+		var margin = 0.05
+		selling_price = price + round(price * margin)
+		
+	# Floor constraint: selling price can never be below base price
+	if selling_price < price:
+		selling_price = price
+		
+	return selling_price
