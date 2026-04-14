@@ -9,8 +9,14 @@ extends Resource
 @export var dialogic_character: DialogicCharacter
 ## The pool of items this customer can ask for during a Filler transaction.
 @export var filler_items: Array[ItemData] = []
-## Base directory containing the dialog files for this character, e.g. "res://Dialogue/kuyakap/"
-@export var timelines_dir: String = ""
+@export_group("Dialogue")
+## Timelines for unique story progression stages.
+@export var story_timelines: Array[DialogicTimeline] = []
+## Pool of purchase-oriented timelines used when no story is active.
+@export var generic_purchase_timelines: Array[DialogicTimeline] = []
+## Pool of social visit timelines with no purchase.
+@export var generic_visit_timelines: Array[DialogicTimeline] = []
+
 ## Multiplier applied to the 3D sprite scale.
 @export var sprite_scale: float = 1.0
 

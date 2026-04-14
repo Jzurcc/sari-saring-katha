@@ -4,7 +4,9 @@
 [ext_resource type="Resource" uid="uid://ckx12ugj7m8oc" path="res://Dialogue/Timelines/Buboy.dch" id="1_x7l5d"]
 [ext_resource type="AudioStream" uid="uid://bh8uoecpi02gd" path="res://Audio/DialogueBlips/Buboy.wav" id="2_siajg"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_voalc"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://b2klfrum7thsh" path="res://Assets/characters/sprites/Buboy.png" id="5_mx7nj"]
+[ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
 
 [resource]
 script = ExtResource("2_voalc")
@@ -12,6 +14,7 @@ character_id = "buboy"
 character_name = "Buboy"
 sprite_texture = ExtResource("5_mx7nj")
 dialogic_character = ExtResource("1_x7l5d")
-sprite_scale = 0.3
+generic_purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_siajg")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

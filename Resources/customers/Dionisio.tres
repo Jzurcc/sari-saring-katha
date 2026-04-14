@@ -4,7 +4,9 @@
 [ext_resource type="Resource" uid="uid://c3uougawddnkw" path="res://Dialogue/Timelines/Dionisio.dch" id="1_ror6i"]
 [ext_resource type="AudioStream" uid="uid://dilg88qhh1swl" path="res://Audio/DialogueBlips/Dionisio.wav" id="2_omntc"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_op0k0"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://deekyovy0noe8" path="res://Assets/characters/sprites/Dionisio.png" id="5_mxqt4"]
+[ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
 
 [resource]
 script = ExtResource("2_op0k0")
@@ -12,5 +14,7 @@ character_id = "dionisio"
 character_name = "Dionisio"
 sprite_texture = ExtResource("5_mxqt4")
 dialogic_character = ExtResource("1_ror6i")
+generic_purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+sprite_scale = 0.35
 dialogue_blip_sound = ExtResource("2_omntc")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

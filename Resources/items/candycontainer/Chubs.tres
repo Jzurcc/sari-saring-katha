@@ -1,10 +1,9 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://debw72eyxjeo5"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="2_tex"]
 
 [resource]
-id = "chubs"
 script = ExtResource("1_item")
 item_name = "Chubs"
 texture = ExtResource("2_tex")

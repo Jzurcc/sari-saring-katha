@@ -1,5 +1,5 @@
 class_name DraggableItem
-extends Area3D
+extends WorldInteractor
 
 signal drag_started
 signal drag_ended
@@ -16,30 +16,24 @@ var _original_transform: Transform3D = Transform3D.IDENTITY
 @onready var collider: CollisionShape3D = $CollisionShape3D
 @onready var label: Label3D = $Label3D
 
-var outline_material: ShaderMaterial = null
 var is_hovered: bool = false
 var is_mouse_inside: bool = false
 var original_scale: Vector3 = Vector3.ONE
-
-var camera: Camera3D
+var _pricing_mode_active: bool = false
 
 func _ready() -> void:
-	camera = get_viewport().get_camera_3d()
+	super._ready()
 	
 	if not Engine.is_editor_hint():
+		add_to_group("draggable_items")
 		# Connect to global drag events so we drop if clicked elsewhere
 		# EventBus.drag_started.connect(_on_global_drag_started)
 		original_scale = scale
+		billboard_collision = true
 	
 	if item_data:
 		setup(item_data)
 
-func _process(_delta: float) -> void:
-	if camera and is_instance_valid(collider):
-		var dir = camera.global_position - collider.global_position
-		if dir.length_squared() > 0.001 and abs(dir.normalized().dot(Vector3.UP)) < 0.99:
-			# look_at points the -Z axis at the target, keeping the collision box aligned with Sprite3D billboard.
-			collider.look_at(camera.global_position, Vector3.UP)
 
 ## Configure this item with [param data] and place it at [param local_transform]
 ## in the parent surface's local coordinate space.
@@ -121,30 +115,40 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 
 	if label:
 		label.hide()
+		label.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+		label.no_depth_test = true
+		label.fixed_size = true
+		label.font_size = 48
+		label.outline_size = 12
 
 
 
 func on_hover(hovered: bool) -> void:
 	self.is_hovered = hovered
-	if hovered:
-		if not outline_material and sprite.texture:
-			outline_material = ShaderMaterial.new()
-			outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")
-			outline_material.set_shader_parameter("albedo_texture", sprite.texture)
-			outline_material.set_shader_parameter("outline_color", Color.WHITE)
-			outline_material.set_shader_parameter("outline_width", 16.0)
-		sprite.material_overlay = outline_material
-	else:
-		sprite.material_overlay = null
+	super.on_hover(hovered)
+	_update_label_visibility()
+
+func set_pricing_ui_active(active: bool) -> void:
+	_pricing_mode_active = active
+	_update_label_visibility()
+	if active:
+		update_pricing_ui()
+
+func _update_label_visibility() -> void:
+	if label:
+		label.visible = is_hovered and _pricing_mode_active
+
+func update_pricing_ui() -> void:
+	if not label or not item_data: return
+	var final_price = item_data.get_final_price()
+	var margin_pct = int(item_data.profit_margin * 100)
+	label.text = "%s\n₱%.2f (%d%%)" % [item_data.item_name, final_price, margin_pct]
+	label.position.y = item_data.display_height_meters + 0.1
+	label.position.z = 0.05
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return
 	DragManager.start_drag(self, sprite.texture)
-
-func _input_event(_camera: Camera3D, event: InputEvent, _event_position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			on_interact()
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()

@@ -4,7 +4,9 @@
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_qjaua"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_362fa"]
 [ext_resource type="AudioStream" uid="uid://dalp1158audau" path="res://Audio/DialogueBlips/Sarimanok.wav" id="2_eiccw"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://wcnibayq5f8k" path="res://Assets/characters/sprites/Sarimanok.png" id="5_g487b"]
+[ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
 
 [resource]
 script = ExtResource("2_362fa")
@@ -12,6 +14,7 @@ character_id = "sarimanok"
 character_name = "Sarimanok"
 sprite_texture = ExtResource("5_g487b")
 dialogic_character = ExtResource("1_ia7rp")
+generic_purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
 sprite_scale = 0.3
 dialogue_blip_sound = ExtResource("2_eiccw")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

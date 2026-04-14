@@ -10,5 +10,6 @@ texture = ExtResource("2_tex")
 price = 12.0
 max_stock = 0
 category = "snack"
+item_hint = "sounds like a celebrity"
 display_height_meters = 0.6
 opaque_rect = Rect2i(77, 3, 343, 486)

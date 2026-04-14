@@ -398,10 +398,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.029971868, 0)
 shape = SubResource("BoxShape3D_6bn8s")
 
 [node name="9_001" parent="." index="91" unique_id=1309640515]
-transform = Transform3D(-0.57318044, 0, 0.8194293, 0, 1, 0, -0.8194293, 0, -0.57318044, -7.022605, 0.30832458, 1.954071)
+transform = Transform3D(0.7442218, 0, -0.6679326, 0, 1, 0, 0.6679326, 0, 0.7442218, -6.4197874, 0.30832458, 3.6433039)
 
 [node name="9_023" type="MeshInstance3D" parent="." index="92" unique_id=203107127]
-transform = Transform3D(0.60098356, 0, 0.8303274, 0, 1.0249994, 0, -0.8303274, 0, 0.60098356, -5.14099, 0.3786323, -7.0991783)
+transform = Transform3D(0.43722785, 0, 0.92706895, 0, 1.0249996, 0, -0.92706895, 0, 0.43722785, -9.704182, 0.3786323, -8.033216)
+visible = false
 mesh = SubResource("ArrayMesh_k3avc")
 skeleton = NodePath("")
 
