@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://n3u684chm3qk"]
+
+[ext_resource type="Resource" uid="uid://bl2eb1507afc7" path="res://Dialogue/Timelines/Rodel.dch" id="1_eplk6"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_t5u8x"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_2gefu"]
+[ext_resource type="AudioStream" uid="uid://cqrmcgu0suu0x" path="res://Audio/DialogueBlips/Rodel.wav" id="2_7nk2y"]
+[ext_resource type="Texture2D" uid="uid://bqhf8bb28mylt" path="res://Assets/characters/sprites/Rodel.png" id="5_xkoom"]
+
+[resource]
+script = ExtResource("2_2gefu")
+character_id = "rodel"
+character_name = "Rodel"
+sprite_texture = ExtResource("5_xkoom")
+dialogic_character = ExtResource("1_eplk6")
+sprite_scale = 0.4
+dialogue_blip_sound = ExtResource("2_7nk2y")
+metadata/_custom_type_script = "uid://b7rtu6knii7es"
