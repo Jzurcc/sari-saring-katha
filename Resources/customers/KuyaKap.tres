@@ -15,5 +15,5 @@ sprite_texture = ExtResource("6_5suku")
 dialogic_character = ExtResource("dch_kuyakap")
 filler_items = Array[ExtResource("1_ux6bh")]([ExtResource("2_item")])
 timelines_dir = "res://Dialogue/kuyakap/"
-sprite_scale = 0.65
+sprite_scale = 0.55
 dialogue_blip_sound = ExtResource("1_g8i5g")
