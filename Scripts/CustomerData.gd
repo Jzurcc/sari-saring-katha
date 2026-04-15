@@ -39,7 +39,7 @@ func get_clean_id() -> String:
 
 ## Returns the 0-based arc index for a given story stage (floor(stage / 3)).
 func get_arc_index(stage: int) -> int:
-	return stage / 3
+	return floori(float(stage) / 3.0)
 
 ## Returns the ArcData that applies to this stage, falling back toward Arc 0
 ## if the target arc hasn't been filled in yet.

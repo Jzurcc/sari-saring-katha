@@ -150,7 +150,6 @@ func process_pending_unlock() -> void:
 		pending_upgrade_tier = current_tier + 1
 		pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
 		
-		var source = _pending_tier_advance_source
 		_pending_tier_advance_source = ""
 		
 		# Notify the player to call Uncle Mario
@@ -189,17 +188,17 @@ func get_next_transaction() -> TransactionContext:
 			# Skip if it was the last character to avoid back-to-back spawns
 			if c.resource_path == _last_character_path: continue
 			
-			var stage = character_story_states.get(c.resource_path, 0)
+			var c_stage = character_story_states.get(c.resource_path, 0)
 			# Needs to have a story timeline available AND pass prerequisites
-			if stage < c.story_timelines.size() and _is_story_chapter_available(c, stage):
+			if c_stage < c.story_timelines.size() and _is_story_chapter_available(c, c_stage):
 				story_candidates.append(c)
 		
 		# Deadlock Check: If we have stages available but NO candidates passed prerequisites
 		if story_candidates.is_empty():
 			var blocked_story_exists = false
 			for c in available_characters:
-				var stage = character_story_states.get(c.resource_path, 0)
-				if stage < c.story_timelines.size():
+				var c_stage = character_story_states.get(c.resource_path, 0)
+				if c_stage < c.story_timelines.size():
 					blocked_story_exists = true
 					break
 			if blocked_story_exists:
@@ -229,8 +228,8 @@ func get_next_transaction() -> TransactionContext:
 			var fallback_story_candidates: Array[CustomerData] = []
 			for c in available_characters:
 				if c.resource_path == _last_character_path: continue
-				var stage = character_story_states.get(c.resource_path, 0)
-				if stage < c.story_timelines.size() and _is_story_chapter_available(c, stage):
+				var c_stage = character_story_states.get(c.resource_path, 0)
+				if c_stage < c.story_timelines.size() and _is_story_chapter_available(c, c_stage):
 					fallback_story_candidates.append(c)
 			
 			if not fallback_story_candidates.is_empty():
@@ -443,18 +442,9 @@ func _on_customer_satisfied(customer) -> void:
 	if _processed_satisfied_customers.size() > 5:
 		_processed_satisfied_customers.pop_front()
 
-	# Update Rumor Mill State
-	if customer.transaction_context:
-		var data = customer.transaction_context.customer_data
-		var display_name = data.character_name if data.character_name != "" else data.get_clean_id()
-			
-		Dialogic.VAR.set_variable("Global.LastCustomer", display_name)
-		Dialogic.VAR.set_variable("Global.LastSatisfaction", "Happy")
-		
-		# Save specific item for rumors if applicable
-		if not customer.transaction_context.desired_items.is_empty():
-			Dialogic.VAR.set_variable("Global.LastItem", customer.transaction_context.desired_items[0].item_name)
-
+	_set_last_customer_info(customer)
+	Dialogic.VAR.set_variable("Global.LastSatisfaction", "Happy")
+	
 	_process_story_cooldown(customer)
 	
 	# Increment purchase counter for activity-based progression
@@ -463,8 +453,24 @@ func _on_customer_satisfied(customer) -> void:
 		_save_progression() # Save intermediate progress
 
 func _on_customer_dismissed(customer) -> void:
-	# Fix #2: Also decrement cooldown for dismissed generic customers (e.g. social visits)
+	# Update LastCustomer even if they left dissatisfied so rumors stay current
+	_set_last_customer_info(customer)
+	Dialogic.VAR.set_variable("Global.LastSatisfaction", "Unhappy")
+	
 	_process_story_cooldown(customer)
+
+func _set_last_customer_info(customer: Customer) -> void:
+	if customer.transaction_context:
+		var data = customer.transaction_context.customer_data
+		var display_name = data.character_name if data.character_name != "" else data.get_clean_id()
+			
+		Dialogic.VAR.set_variable("Global.LastCustomer", display_name)
+		
+		# Save specific item for rumors if applicable
+		if not customer.transaction_context.desired_items.is_empty():
+			Dialogic.VAR.set_variable("Global.LastItem", customer.transaction_context.desired_items[0].item_name)
+		else:
+			Dialogic.VAR.set_variable("Global.LastItem", "")
 
 func _process_story_cooldown(customer) -> void:
 	if not customer.transaction_context:
