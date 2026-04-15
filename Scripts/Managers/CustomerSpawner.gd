@@ -32,6 +32,7 @@ var _is_spawning: bool = false
 var _greeting_interrupted: bool = false # Remembers if Uncle Mario forcibly shut down the greeting.
 var _is_partial_success: bool = false # Tracks if a dismissal should be treated as a success
 var _greeting_deferred: bool = false # Remembers if a greeting was stalled because Mario was busy.
+var _is_nokia_open: bool = false
 
 
 
@@ -54,6 +55,8 @@ func _ready() -> void:
 	Dialogic.signal_event.connect(_on_dialogic_signal)
 	MarioManager.delivery_finished.connect(_on_mario_delivery_finished)
 	MarioManager.call_ended.connect(_on_mario_call_ended)
+	EventBus.nokia_opened.connect(_on_nokia_opened)
+	EventBus.nokia_closed.connect(_on_nokia_closed)
 
 	await get_tree().process_frame
 
@@ -171,9 +174,14 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
 		start_label = "" # Play from start for social visits
 		next_phase = DialoguePhase.SOCIAL_VISIT
+	elif Dialogic.VAR.get_variable("Global.RumorActive"):
+		# If a rumor is active and the character has a dedicated label, start there
+		if _is_label_in_timeline(timeline, "Rumor") and not customer.has_been_greeted:
+			start_label = "Rumor"
+			print("[CustomerSpawner] Specific Rumor label found and prioritized.")
 
-	if MarioManager.is_restocking_active:
-		print("[CustomerSpawner] Mario is restocking — deferring greeting for %s." % customer.customer_data.get_clean_id())
+	if MarioManager.is_restocking_active or _is_nokia_open:
+		print("[CustomerSpawner] Phone is active — deferring greeting for %s." % customer.customer_data.get_clean_id())
 		_greeting_deferred = true
 		return
 
@@ -204,10 +212,12 @@ func _on_customer_finished(customer: Customer) -> void:
 		# or a riddle resolution that just completed the transaction. 
 		# If the current timeline IS the customer's timeline, we should jump to Satisfy.
 		if Dialogic.current_timeline.resource_path == customer.transaction_context.timeline.resource_path:
-			print("[CustomerSpawner] Jumping to Satisfy label mid-timeline.")
-			Dialogic.Jump.jump_to_label("Satisfy")
-			_dialogue_phase = DialoguePhase.SATISFIED
-			return
+			var label := "Satisfy"
+			if _is_label_in_timeline(_current_timeline_path, label):
+				print("[CustomerSpawner] Jumping to Satisfy label mid-timeline.")
+				Dialogic.Jump.jump_to_label(label)
+				_dialogue_phase = DialoguePhase.SATISFIED
+				return
 		return
 		
 	_update_item_names(customer)
@@ -365,7 +375,7 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 	# jump to the requested label (e.g., Satisfy) instead of restarting it.
 	if Dialogic.current_timeline != null:
 		if Dialogic.current_timeline.resource_path == _current_timeline_path:
-			if label != "":
+			if label != "" and _is_label_in_timeline(_current_timeline_path, label):
 				print("[CustomerSpawner] Jumping directly to label: ", label)
 				Dialogic.Jump.jump_to_label(label)
 				return
@@ -492,17 +502,36 @@ func _handle_transaction_cleanup() -> void:
 
 ## Helper to see if a label exists in a timeline file (.dtl)
 func _is_label_in_timeline(path: String, label_name: String) -> bool:
-	if path == "" or not FileAccess.file_exists(path):
+	if path == "":
 		return false
 	
-	var file = FileAccess.open(path, FileAccess.READ)
+	# Normalize path and handle missing .dtl extension
+	var full_path = path
+	if not full_path.ends_with(".dtl"):
+		full_path += ".dtl"
+		
+	if not FileAccess.file_exists(full_path):
+		# Try one more fallback if Dialogic uses local paths
+		if not full_path.begins_with("res://"):
+			full_path = "res://" + full_path
+		if not FileAccess.file_exists(full_path):
+			return false
+	
+	var file = FileAccess.open(full_path, FileAccess.READ)
 	if not file: return false
 	
 	var content = file.get_as_text()
-	var search_pattern = "label " + label_name
+	
+	# Robust label matching:
+	# - Matches "label" at start of line (after optional whitespace)
+	# - Followed by at least one whitespace
+	# - Then the exact label name
+	# - Ignores anything after (comments, etc)
+	var regex = RegEx.new()
+	regex.compile("^\\s*label\\s+" + label_name + "(\\s+|#|$)")
 	
 	for line in content.split("\n"):
-		if line.strip_edges() == search_pattern:
+		if regex.search(line):
 			return true
 	return false
 
@@ -517,6 +546,15 @@ func _on_mario_delivery_finished() -> void:
 func _on_mario_call_ended(success: bool) -> void:
 	if not success:
 		_trigger_deferred_greeting()
+
+func _on_nokia_opened() -> void:
+	_is_nokia_open = true
+
+func _on_nokia_closed() -> void:
+	_is_nokia_open = false
+	# Small delay to ensure UI closing animations don't overlap with bubble appearances
+	await get_tree().create_timer(0.5).timeout
+	_trigger_deferred_greeting()
 
 func _trigger_deferred_greeting() -> void:
 	if _greeting_deferred and is_instance_valid(current_customer):

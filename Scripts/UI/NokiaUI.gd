@@ -33,8 +33,6 @@ func _ready() -> void:
 	
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
-	
-	EventBus.customer_arrived.connect(_on_customer_arrived)
 	_animate_entrance()
 
 func _animate_entrance() -> void:
@@ -182,24 +180,3 @@ func _on_close_pressed() -> void:
 	nokia_closed.emit()
 	_animate_exit_and_free()
 
-func _on_customer_arrived(customer: Node3D) -> void:
-	# If a customer arrives while we are in the Nokia UI (any part of it:
-	# keypad or restock catalog), we close it so the player can serve them.
-	# We ONLY block this if Uncle Mario is actively speaking on the phone,
-	# OR if we are in the middle of a restock process.
-	if Dialogic.current_timeline != null or MarioManager.is_restocking_active:
-		print("[NokiaUI] Customer arrived, but Mario is busy/restock active — ignoring.")
-		return
-	
-	print("[NokiaUI] Customer arrived while phone open! Closing and facing customer.")
-	
-	# 1. Close the UI (this handles the Nokia part and the RestockMenu part)
-	# We bypass the _is_calling check here because we want to allow closing 
-	# if they are just in the menu (where _is_calling is false anyway).
-	nokia_closed.emit()
-	_animate_exit_and_free()
-	
-	# 2. Make the player face the customer
-	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("face_node"):
-		player.face_node(customer)

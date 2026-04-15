@@ -43,21 +43,14 @@ func get_visual_nodes() -> Array[Node3D]:
 	return result
 
 func on_hover(is_hovered: bool) -> void:
-	var spawner = get_tree().get_first_node_in_group("customer_spawner") as CustomerSpawner
-	var is_phone_locked = spawner and spawner.is_customer_locking_phone()
-	var is_dialogue_playing = (Dialogic.current_timeline != null)
-	
 	if is_hovered:
-		var use_red = is_phone_locked or is_dialogue_playing
-		var color = Color.RED if use_red else default_outline_color
-		_apply_outline(color)
+		_apply_outline(default_outline_color)
 	else:
 		_remove_outline()
 
 func on_interact() -> void:
-	var spawner = get_tree().get_first_node_in_group("customer_spawner") as CustomerSpawner
-	if (spawner and spawner.is_customer_locking_phone()) or Dialogic.current_timeline != null:
-		return # Block call
+	if Dialogic.current_timeline != null:
+		return # Block call while someone is already talking
 		
 	if nokia_ui_scene:
 		var ui := nokia_ui_scene.instantiate()
