@@ -107,7 +107,7 @@ func _ready() -> void:
 	
 	# Cache TimeOfDay once scene is settled
 	await get_tree().process_frame
-	time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
+	_ensure_tod_node()
 	
 	call_deferred("_connect_dialogic")
 
@@ -118,14 +118,23 @@ func play_sfx(sfx_name: String) -> void:
 		sfx_player.play()
 
 func _process(_delta: float) -> void:
-	# Prevent the dummy TimeOfDay inside the TitleScreen3D from hijacking the music!
+	# Keep Title Screen music playing and prevent hijacking
 	if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
+		if current_bgm_phase != BGMPhase.NONE:
+			current_bgm_phase = BGMPhase.NONE
 		return
+		
+	_ensure_tod_node()
 		
 	if is_instance_valid(time_of_day_node):
 		var time = time_of_day_node.get("current_time")
 		if time != null:
 			_update_audio_for_time(time)
+
+
+func _ensure_tod_node() -> void:
+	if not is_instance_valid(time_of_day_node):
+		time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
 
 
 func _load_audio_settings() -> void:
