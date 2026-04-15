@@ -18,7 +18,7 @@ func _ready() -> void:
 	if panel:
 		panel.add_theme_stylebox_override("panel", style)
 
-func _on_upgrade_available(new_tier: int, cost: float) -> void:
+func _on_upgrade_available(_new_tier: int, cost: float) -> void:
 	tier_label.text = "UPGRADE AVAILABLE (₱%.2f)" % cost
 	source_label.text = "Call Uncle Mario to expand your catalog!"
 	

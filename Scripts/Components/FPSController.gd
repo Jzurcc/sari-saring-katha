@@ -45,7 +45,6 @@ var _t_bob: float = 0.0
 var _pitch: float = 0.0
 var _yaw: float = 0.0
 
-var _idle_time: float = 0.0
 var _shake_intensity: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_timer: float = 0.0
