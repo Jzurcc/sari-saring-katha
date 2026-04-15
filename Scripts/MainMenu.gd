@@ -202,24 +202,8 @@ func _on_continue_pressed() -> void:
 	buttons.hide()
 	$LeftVignette.hide()
 	
-	if cam == null:
-		SceneTransition.change_scene(target_scene)
-		return
-
-	var tween = create_tween()
-	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	
-	var target_pos = Vector3(-1.638, 4.1, -0.05)
-	var target_rot = Vector3(0, deg_to_rad(90.0), 0)
-
-	tween.set_parallel(true)
-	tween.tween_property(cam, "position", target_pos, 1.8)
-	tween.tween_property(cam, "rotation", target_rot, 1.8)
-	tween.tween_property(cam, "fov",  75.0,   1.8)
-	tween.tween_property(cam, "near", 0.05,   1.8)
-	tween.tween_property(cam, "far",  4000.0, 1.8)
-	tween.set_parallel(false)
-	tween.chain().tween_callback(_on_pan_finished)
+	# Skip intro and go straight to the game
+	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
 
 func _on_exit_pressed() -> void:
 	get_tree().quit()
