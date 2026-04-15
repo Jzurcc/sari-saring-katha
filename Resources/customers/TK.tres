@@ -6,15 +6,20 @@
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_lhygj"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://dkniinpqcxqbj" path="res://Assets/characters/sprites/TK.png" id="5_0aich"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_ap20c"]
+[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
+
+[sub_resource type="Resource" id="arcdata_script"]
+script = ExtResource("arcdata_script")
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
 
 [resource]
 script = ExtResource("2_lhygj")
-character_id = "tk"
 character_name = "T.K."
 sprite_texture = ExtResource("5_0aich")
 dialogic_character = ExtResource("1_6cmda")
-generic_purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("2_0aich")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

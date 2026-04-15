@@ -6,6 +6,8 @@ signal drag_ended
 
 @export var item_data: ItemData
 
+const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
+
 ## Whether this item was spawned on the fly directly into dragging.
 var is_transient: bool = false
 
@@ -18,7 +20,9 @@ var _original_transform: Transform3D = Transform3D.IDENTITY
 # --- New Pricing UI Nodes (Created in code for cleaner management) ---
 var pricing_ui: Sprite3D
 var pricing_viewport: SubViewport
-var pricing_label: Label
+var name_label: Label
+var price_label: Label
+var comparison_label: Label
 var pricing_panel: PanelContainer
 
 var is_hovered: bool = false
@@ -28,6 +32,8 @@ var _pricing_mode_active: bool = false
 
 func _ready() -> void:
 	super._ready()
+	
+	hover_scale_multiplier = 1.06 # Slightly enlarge when hovered
 	
 	if not Engine.is_editor_hint():
 		add_to_group("draggable_items")
@@ -122,49 +128,61 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 
 
 func _setup_pricing_ui() -> void:
-	# Hide the old Label3D if it exists in the scene
-	if has_node("Label3D"):
-		get_node("Label3D").hide()
-
 	# 1. SubViewport for 2D UI rendering
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
 	# Higher resolution for sharper text
-	pricing_viewport.size = Vector2(512, 160)
+	pricing_viewport.size = Vector2(666, 208)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
 	# 2. PanelContainer for the "Modern" look
 	pricing_panel = PanelContainer.new()
 	pricing_viewport.add_child(pricing_panel)
-	# Full size of the viewport to keep the centering consistent
-	pricing_panel.size = Vector2(512, 160)
+	pricing_panel.size = Vector2(666, 208)
 	pricing_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	
 	var style := StyleBoxFlat.new()
-	# Glassmorphic transparency: matching color but lower alpha (0.6 is clearer)
-	style.bg_color = Color(0.082, 0.078, 0.071, 0.6) 
-	style.set_corner_radius_all(16)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
-	style.content_margin_top = 4
-	style.content_margin_bottom = 4
+	# Glassmorphic transparency: 0.5 alpha as requested
+	style.bg_color = Color(0.082, 0.078, 0.071, 0.5) 
+	style.set_corner_radius_all(26)
+	style.content_margin_left = 16
+	style.content_margin_right = 16
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
 	pricing_panel.add_theme_stylebox_override("panel", style)
 
-	# 3. 2D Label
-	pricing_label = Label.new()
-	pricing_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pricing_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	# Refined font size for the higher resolution viewport
-	pricing_label.add_theme_font_size_override("font_size", 28)
-	pricing_label.add_theme_color_override("font_color", Color(1, 0.92, 0.79)) # Warm cream
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pricing_panel.add_child(vbox)
+
+	# 3. Label: Name
+	name_label = Label.new()
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 23)
+	name_label.add_theme_color_override("font_color", Color(1, 0.92, 0.79, 0.8)) # Slightly faded cream
+	vbox.add_child(name_label)
+
+	# 4. Label: Main Price
+	price_label = Label.new()
+	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	price_label.add_theme_font_size_override("font_size", 47)
+	price_label.add_theme_color_override("font_color", Color(1, 0.92, 0.79)) # Warm cream
+	vbox.add_child(price_label)
+
+	# 5. Label: Comparison (Base -> Selling)
+	comparison_label = Label.new()
+	comparison_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	comparison_label.add_theme_font_size_override("font_size", 21)
+	comparison_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6)) # Greyed out
+	vbox.add_child(comparison_label)
 	
-	# Load font if available (from MainMenu)
-	var font_path := "res://Assets/Fonts/Inder/Inder-Regular.ttf"
-	if FileAccess.file_exists(font_path):
-		pricing_label.add_theme_font_override("font", load(font_path))
-	
-	pricing_panel.add_child(pricing_label)
+	# Use preloaded font for all labels
+	if INDER_FONT:
+		name_label.add_theme_font_override("font", INDER_FONT)
+		price_label.add_theme_font_override("font", INDER_FONT)
+		comparison_label.add_theme_font_override("font", INDER_FONT)
 
 	# 4. Sprite3D to display the viewport in 3D space
 	pricing_ui = Sprite3D.new()
@@ -174,13 +192,20 @@ func _setup_pricing_ui() -> void:
 	pricing_ui.fixed_size = true
 	# Scale down the sprite so the high-res text is appropriate size on screen
 	pricing_ui.pixel_size = 0.001
-	pricing_ui.alpha_cut = Sprite3D.ALPHA_CUT_DISCARD
+	pricing_ui.alpha_cut = Sprite3D.ALPHA_CUT_DISABLED
 	pricing_ui.transparent = true
 	pricing_ui.shaded = false # DISALED SHADING for proper UI transparency
 	pricing_ui.render_priority = 10
 	add_child(pricing_ui)
 	
 	pricing_ui.hide()
+
+
+func get_visual_nodes() -> Array[Node3D]:
+	var nodes = super.get_visual_nodes()
+	if pricing_ui in nodes:
+		nodes.erase(pricing_ui)
+	return nodes
 
 
 
@@ -199,6 +224,11 @@ func on_hover(hovered: bool) -> void:
 func set_pricing_ui_active(active: bool) -> void:
 	_pricing_mode_active = active
 	_update_label_visibility()
+	
+	# Re-trigger hover logic to immediately add/remove outline
+	# if toggled while already hovering.
+	on_hover(is_hovered)
+	
 	if active:
 		update_pricing_ui()
 
@@ -207,13 +237,14 @@ func _update_label_visibility() -> void:
 		pricing_ui.visible = is_hovered and _pricing_mode_active
 
 func update_pricing_ui() -> void:
-	if not pricing_label or not item_data: return
+	if not price_label or not item_data: return
 	
 	var final_price = item_data.get_final_price()
-	var margin_pct = int(item_data.profit_margin * 100)
+	var base_price = item_data.price
 	
-	# Priority formatting: Selling price first and bold/prominent
-	pricing_label.text = "₱%.2f\n%d%% Profit" % [final_price, margin_pct]
+	name_label.text = item_data.item_name
+	price_label.text = "₱%.2f" % [final_price]
+	comparison_label.text = "₱%.2f → ₱%.2f" % [base_price, final_price]
 	
 	# Position at center of item height and push forward (Z = 0.1)
 	if pricing_ui:
@@ -222,6 +253,7 @@ func update_pricing_ui() -> void:
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return
+	EventBus.request_sfx.emit("pickup")
 	DragManager.start_drag(self, sprite.texture)
 
 func _on_drag_started_by_manager() -> void:
@@ -237,6 +269,8 @@ func show_visuals() -> void:
 	sprite.show()
 
 func return_to_start() -> void:
+	EventBus.request_sfx.emit("drop")
+	
 	if is_transient:
 		InventoryManager.return_item(item_data)
 		queue_free()
@@ -247,3 +281,10 @@ func return_to_start() -> void:
 	# Restore full local transform (position only — tilt lives on the sprite node)
 	tween.tween_property(self, "transform", _original_transform, 0.25)\
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			
+	# Bounce scale effect on the sprite only (keeps physics area stable)
+	var base_sprite_scale = Vector3.ONE
+	sprite.scale = base_sprite_scale * Vector3(1.2, 0.8, 1.2) # Squash
+	var scale_tween = create_tween()
+	scale_tween.tween_property(sprite, "scale", base_sprite_scale * Vector3(0.9, 1.1, 0.9), 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	scale_tween.tween_property(sprite, "scale", base_sprite_scale, 0.15).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)

@@ -43,16 +43,14 @@ func get_visual_nodes() -> Array[Node3D]:
 	return result
 
 func on_hover(is_hovered: bool) -> void:
-	var is_blocked = (Dialogic.current_timeline != null)
 	if is_hovered:
-		var color = Color.RED if is_blocked else default_outline_color
-		_apply_outline(color)
+		_apply_outline(default_outline_color)
 	else:
 		_remove_outline()
 
 func on_interact() -> void:
 	if Dialogic.current_timeline != null:
-		return # Cannot interact while dialogue is playing
+		return # Block call while someone is already talking
 		
 	if nokia_ui_scene:
 		var ui := nokia_ui_scene.instantiate()
@@ -60,22 +58,25 @@ func on_interact() -> void:
 		if phone_anchor:
 			ui.phone_anchor = phone_anchor
 		get_tree().root.add_child(ui)
+		EventBus.nokia_opened.emit()
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		# Restore state when the UI closes (cancel or end of call)
 		ui.nokia_closed.connect(_on_nokia_ui_closed, CONNECT_ONE_SHOT)
 		var restock_menu = ui.get_node_or_null("RestockMenu")
 		if restock_menu and restock_menu.has_signal("menu_close_requested"):
-			restock_menu.menu_close_requested.connect(_on_restock_screen_closed.bind(ui), CONNECT_ONE_SHOT)
+			restock_menu.menu_close_requested.connect(_on_nokia_ui_closed_with_parent.bind(ui), CONNECT_ONE_SHOT)
 	else:
 		push_error("[Nokia3D] Missing Nokia UI Scene in the Inspector!")
 
 func _on_nokia_ui_closed() -> void:
 	# Restore first-person input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	EventBus.nokia_closed.emit()
 
-func _on_restock_screen_closed(ui: Node) -> void:
-	# Free the dynamically instantiated RestockScreen
+func _on_nokia_ui_closed_with_parent(ui: Node) -> void:
+	# Free the dynamically instantiated Nokia UI
 	if is_instance_valid(ui):
 		ui.queue_free()
 	
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	EventBus.nokia_closed.emit()

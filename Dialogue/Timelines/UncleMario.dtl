@@ -1,5 +1,4 @@
 label Call
-Customer: They were so happy with the [color=#0bb544][pulse freq=2.0]item[/pulse][/color] you sold them! [pause=0.5]
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
 	UncleMario: Oh hello? What is it again? You need more stock? Just give me the list and I'll bring it to you soon.

@@ -1,16 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://csxdq24asbja8"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/1_snack_marites.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://d0l7ouwh5uod6" path="res://Assets/items/icons/1_snack_marites.png" id="2_tex"]
 
 [resource]
-id = "marites"
-tier = 4
 script = ExtResource("1_item")
 item_name = "Marites Cracklin'"
 texture = ExtResource("2_tex")
 price = 16.0
 category = "snack"
+tier = 7
 item_hint = "might gossip about other people"
 display_height_meters = 0.6
 opaque_rect = Rect2i(87, 7, 341, 485)

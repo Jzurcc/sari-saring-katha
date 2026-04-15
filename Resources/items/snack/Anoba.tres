@@ -1,16 +1,13 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dphi3ws2617ql"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/4_snack_anoba.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://477m82fgpway" path="res://Assets/items/icons/4_snack_anoba.png" id="2_tex"]
 
 [resource]
-id = "anoba"
-tier = 1
 script = ExtResource("1_item")
 item_name = "Anoba"
 texture = ExtResource("2_tex")
 price = 9.0
-markup = 3.0
 category = "snack"
 item_hint = "looks like edible roof"
 display_height_meters = 0.6

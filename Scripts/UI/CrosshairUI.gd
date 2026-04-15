@@ -4,6 +4,8 @@ class_name CrosshairUI
 func _ready() -> void:
 	EventBus.drag_started.connect(_on_drag_started)
 	EventBus.drag_ended.connect(_on_drag_ended)
+	EventBus.nokia_opened.connect(hide)
+	EventBus.nokia_closed.connect(show)
 
 func _on_drag_started(_item) -> void:
 	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:

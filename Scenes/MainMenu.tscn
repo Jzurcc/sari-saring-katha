@@ -149,6 +149,23 @@ theme_override_styles/focus = SubResource("btn_hover")
 text = "SETTINGS"
 alignment = 0
 
+[node name="Collection" type="Button" parent="Buttons" unique_id=2026154123]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("4_ghw46")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "COLLECTION"
+alignment = 0
+
 [node name="Exit" type="Button" parent="Buttons" unique_id=1080384476]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
@@ -424,11 +441,101 @@ texture = ExtResource("icon_arrow")
 expand_mode = 1
 stretch_mode = 5
 
+[node name="CollectionOverlay" type="ColorRect" parent="." unique_id=1357924680]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08235, 0.07843, 0.07059, 0.5)
+
+[node name="CollectionPanel" type="PanelContainer" parent="CollectionOverlay" unique_id=1029384756]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -300.0
+offset_right = 500.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("options_panel")
+
+[node name="Margin" type="MarginContainer" parent="CollectionOverlay/CollectionPanel" unique_id=194756382]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 32
+
+[node name="VBox" type="VBoxContainer" parent="CollectionOverlay/CollectionPanel/Margin" unique_id=1738495021]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Header" type="HBoxContainer" parent="CollectionOverlay/CollectionPanel/Margin/VBox" unique_id=1029384757]
+layout_mode = 2
+
+[node name="SpacerLeft" type="Control" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header" unique_id=1029384758]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header" unique_id=1029384759]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("4_ghw46")
+theme_override_font_sizes/font_size = 36
+text = "COLLECTION"
+horizontal_alignment = 1
+
+[node name="SpacerRight" type="Control" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header" unique_id=1029384760]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseButton" type="Button" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header/SpacerRight" unique_id=1029384761]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_bottom = 31.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_fonts/font = ExtResource("4_ghw46")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_normal")
+theme_override_styles/disabled = SubResource("btn_normal")
+theme_override_styles/focus = SubResource("btn_normal")
+text = "X"
+
+[node name="Scroll" type="ScrollContainer" parent="CollectionOverlay/CollectionPanel/Margin/VBox" unique_id=1029384762]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Grid" type="GridContainer" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Scroll" unique_id=1029384763]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 6
+
 [node name="Cube_001" parent="." unique_id=1452766205 instance=ExtResource("5_df05h")]
 transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, 0.31191707, 0.7678091, -4.009146)
 
 [connection signal="pressed" from="Buttons/NewGame" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="Buttons/Options" to="." method="_on_options_pressed"]
+[connection signal="pressed" from="Buttons/Collection" to="." method="_on_collection_pressed"]
 [connection signal="pressed" from="Buttons/Exit" to="." method="_on_exit_pressed"]
 [connection signal="pressed" from="OptionsOverlay/OptionsPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_options_close_pressed"]
+[connection signal="pressed" from="CollectionOverlay/CollectionPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_collection_close_pressed"]
 [connection signal="gui_input" from="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel" to="." method="_on_window_mode_panel_gui_input"]

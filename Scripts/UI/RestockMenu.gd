@@ -57,6 +57,7 @@ var selected_items: Dictionary = {}  # ItemData -> int (order count)
 var total_price: float = 0.0
 var current_category: String = ""
 var currently_selected_item: ItemData = null
+var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
 
 # Category display names and their internal keys (must match category = "..." in .tres files)
 # NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
@@ -147,7 +148,9 @@ func _on_tab_scroll_input(event: InputEvent) -> void:
 
 func open_menu() -> void:
 	print("[RestockMenu] open_menu() called")
+	_build_category_cache()
 	show()
+	_animate_entrance()
 	selected_items.clear()
 	total_price = 0
 	currently_selected_item = null
@@ -162,6 +165,22 @@ func open_menu() -> void:
 	if category_tabs.size() > 0:
 		_select_category(category_tabs[0])
 
+func _build_category_cache() -> void:
+	_category_cache.clear()
+	for item in InventoryManager.get_all_items():
+		if not _category_cache.has(item.category):
+			var empty: Array[ItemData] = []
+			_category_cache[item.category] = empty
+		_category_cache[item.category].append(item)
+
+func _animate_entrance() -> void:
+	# Slide in from bottom
+	modulate.a = 0.0
+	position.y += 100
+	var tween = create_tween()
+	tween.tween_property(self, "position:y", position.y - 100, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(self, "modulate:a", 1.0, 0.3)
+
 # ========== TAB SYSTEM ==========
 var COLOR_TAB_LOCKED := Color("4D4D4D")       # dark grey for locked tabs
 var COLOR_TAB_LOCKED_FONT := Color("878787")  # muted text for locked tabs
@@ -170,6 +189,17 @@ func _build_tabs() -> void:
 	# Clear existing tabs
 	for child in tab_container.get_children():
 		child.queue_free()
+	
+	# Priority Tab: Upgrade Banner if available
+	if StoryManager.pending_upgrade_tier > 0:
+		var up_btn = Button.new()
+		up_btn.text = "⭐ UPGRADE STORE (₱%.2f)" % StoryManager.pending_upgrade_cost
+		up_btn.custom_minimum_size = Vector2(250, 40)
+		up_btn.name = "Tab_UpgradeStore"
+		_style_button(up_btn, Color(0.84, 0.64, 0.33, 1), Color.WHITE, float(tab_font_size))
+		up_btn.pressed.connect(_on_upgrade_pressed)
+		tab_container.add_child(up_btn)
+
 	
 	# Category tabs — always show ALL categories, dim the locked ones
 	for cat_key in category_tabs:
@@ -228,6 +258,35 @@ func _select_category(cat_key: String) -> void:
 	
 	_populate_grid(cat_key)
 
+# ========== UPGRADE LOGIC ==========
+func _on_upgrade_pressed() -> void:
+	var cost = StoryManager.pending_upgrade_cost
+	var money = _get_money()
+	
+	if cost > money:
+		EventBus.insufficient_funds.emit()
+		return
+		
+	# Deduct money immediately
+	_play_sfx(stream_sfx_kaching)
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	if gm_nodes.size() > 0:
+		gm_nodes[0].money -= cost
+		EventBus.money_changed.emit(gm_nodes[0].money)
+		
+	# Complete the advance
+	StoryManager.advance_tier("Mario Upgrade")
+	
+	# Clear pending state
+	StoryManager.pending_upgrade_tier = 0
+	StoryManager.pending_upgrade_cost = 0.0
+	StoryManager.purchase_counter = 0 # reset counter just in case
+	
+	# Rebuild Tabs and Grid
+	_build_tabs()
+	if category_tabs.size() > 0:
+		_select_category(category_tabs[0])
+
 # ========== PRODUCT GRID ==========
 func _populate_grid(cat_key: String) -> void:
 	# Clear grid
@@ -243,6 +302,8 @@ func _populate_grid(cat_key: String) -> void:
 func _create_product_card(item: ItemData) -> PanelContainer:
 	var card = PanelContainer.new()
 	card.custom_minimum_size = card_size
+	
+	var is_locked = !StoryManager.is_item_unlocked(item)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0, 0, 0, 1) # Black
@@ -263,21 +324,40 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	# Set pivot to the center of the card for the sway animation
+	vbox.pivot_offset = card_size / 2.0
 	
-	# Item icon only — no name label on card
+	# Item icon
 	var icon = TextureRect.new()
 	icon.custom_minimum_size = card_icon_size
 	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if item.texture:
 		icon.texture = item.texture
-	vbox.add_child(icon)
 	
+	if is_locked:
+		icon.modulate = Color(0, 0, 0, 1) # Silhouette
+		card.modulate = Color(0.6, 0.6, 0.6, 0.8) # Dimmed card
+	
+	vbox.add_child(icon)
 	card.add_child(vbox)
 	
-	# Make the whole card clickable via gui_input
-	card.gui_input.connect(_on_card_clicked.bind(item, card))
-	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	# IDLE ANIMATION: Subtle Swaying
+	var tw = card.create_tween().set_loops()
+	var duration = randf_range(2.5, 4.5) # Different speeds
+	var sway_angle = randf_range(1.5, 2.5) # Subtle oscillation
+	# Start at a random point in the cycle
+	vbox.rotation_degrees = randf_range(-sway_angle, sway_angle)
+	tw.tween_property(vbox, "rotation_degrees", sway_angle, duration / 2.0).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(vbox, "rotation_degrees", -sway_angle, duration / 2.0).set_trans(Tween.TRANS_SINE)
+	
+	if is_locked:
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	else:
+		# Make the whole card clickable via gui_input
+		card.gui_input.connect(_on_card_clicked.bind(item, card))
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	
 	return card
 
@@ -303,7 +383,7 @@ func _update_detail_panel(item: ItemData) -> void:
 	if item.texture:
 		detail_icon.texture = item.texture
 	detail_icon.custom_minimum_size = detail_icon_size
-	detail_name.text = _get_display_name(item)
+	detail_name.text = item.item_name
 	detail_name.add_theme_font_size_override("font_size", detail_name_font_size)
 	detail_price.text = "₱%.2f" % item.price
 	detail_price.add_theme_font_size_override("font_size", detail_price_font_size)
@@ -340,9 +420,7 @@ func _on_add_pressed() -> void:
 		print("[RestockMenu] CANNOT ADD: Shelf/Fridge is too full! Available: ", available, " In Basket: ", in_basket)
 		return
 	
-	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
-	var money: float = 0.0
-	if gm_nodes.size() > 0: money = gm_nodes[0].money
+	var money = _get_money()
 	if total_price + item.price > money:
 		EventBus.insufficient_funds.emit()
 		return
@@ -467,9 +545,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	if in_basket + 1 > available:
 		return
 		
-	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
-	var money: float = 0.0
-	if gm_nodes.size() > 0: money = gm_nodes[0].money
+	var money = _get_money()
 	if total_price + item.price > money:
 		EventBus.insufficient_funds.emit()
 		return
@@ -484,8 +560,15 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 
 # ========== ACTIONS ==========
 func _close_restock_screen() -> void:
-	menu_close_requested.emit()
-	hide()
+	var tween = create_tween()
+	tween.tween_property(self, "position:y", position.y + 100, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(self, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(func():
+		menu_close_requested.emit()
+		hide()
+		position.y -= 100 # Reset position for next open
+		modulate.a = 1.0
+	)
 
 func _on_cancel_pressed() -> void:
 	_play_sfx(stream_sfx_9)
@@ -502,61 +585,17 @@ func _on_confirm_pressed() -> void:
 	# Set delivery cooldown and trigger the manager
 	InventoryManager.start_delivery_cooldown()
 	MarioManager.start_delivery(selected_items)
+
+func _get_money() -> float:
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	return gm_nodes[0].money if gm_nodes.size() > 0 else 0.0
+
 # ========== HELPERS ==========
-func _get_unlock_day(item_id: String) -> int:
-	# Returns the day number when this item first becomes available.
-	# item_id matches the .tres filename (without extension), case-sensitive.
-	var unlock_map: Dictionary = {
-		# DAY 1
-		"Anoba": 1, "Patos": 1,
-		"Argentita": 1, "Cenchuree": 1,
-		"Champyon": 1,
-		# DAY 2
-		"Mentor": 2, "Pocha": 2,
-		"Water": 2,
-		"Chicken": 2, "Pantit": 2,
-		# DAY 3
-		"Hotdog": 3, "Borgir": 3,
-		"NgaragYa": 3, "Dantes": 3,
-		"Mayti": 3,
-		# DAY 4
-		"Coke": 4,
-		"Marites": 4, "Utang": 4,
-		# DAY 5
-		"Lucky9": 5, "Mema": 5,
-		"Nagets": 5,
-		# DAY 6
-		"Marboro": 6,
-		"Gin": 6,
-		# DAY 7
-		"Tocino": 7,
-		"Scam": 7,
-		"Chubs": 7,
-	}
-	return unlock_map.get(item_id, 1)  # Default to Day 1 if not found
-
-func _get_current_day() -> int:
-	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
-	return gm.day if gm else 1
-
-func _get_display_name(item: ItemData) -> String:
-	return item.item_name
-
 func _get_items_for_category(cat_key: String) -> Array[ItemData]:
-	var result: Array[ItemData] = []
-	for item in InventoryManager.get_all_items():
-		if item.category == cat_key:
-			# Use the new Tier-based check from StoryManager
-			if StoryManager.has_method("_is_item_unlocked"):
-				if StoryManager._is_item_unlocked(item):
-					result.append(item)
-			else:
-				# Fallback if StoryManager doesn't have the method yet
-				var current_day = _get_current_day()
-				var unlock_day = _get_unlock_day(item.get_clean_id())
-				if current_day >= unlock_day:
-					result.append(item)
-	return result
+	if _category_cache.has(cat_key):
+		return _category_cache[cat_key]
+	var empty: Array[ItemData] = []
+	return empty
 
 func _style_button(btn: Button, bg_color: Color, font_color: Color, font_size: float = 14.0) -> void:
 	var style = StyleBoxFlat.new()

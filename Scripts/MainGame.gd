@@ -44,13 +44,19 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 			var context = customer.transaction_context
 			
 			if is_correct:
+				EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
 				EventBus.transaction_completed.emit(item.item_data, true)
 				InventoryManager.take_item(item.item_data)
 				item.hide()
 				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
 				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
+				# Only trigger Satisfy if the whole order is done.
+				# Otherwise, trigger Partial.
+				var phase = CustomerSpawner.DialoguePhase.SATISFIED if context.desired_items.is_empty() else CustomerSpawner.DialoguePhase.TALK
+				var label = "Satisfy" if context.desired_items.is_empty() else "Partial"
+				
 				if context and context.timeline and spawner:
-					spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.SATISFIED, "Satisfy")
+					spawner.start_dialogue(context.timeline, customer, phase, label)
 				item = null  # prevent return_to_start below from running on a hidden node
 			else:
 				EventBus.transaction_completed.emit(item.item_data, false)

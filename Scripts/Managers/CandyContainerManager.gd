@@ -30,14 +30,9 @@ func _hide_all() -> void:
 	_set_container_active(pocha_container, false)
 	_set_container_active(chubs_container, false)
 
-func _on_day_started(day: int) -> void:
-	# Cumulative — once a container appears, it stays active for the rest of the game.
-	_set_container_active(mix_container, day >= 2)
-	_set_container_active(mentor_container, day >= 5)
-	_set_container_active(pocha_container, day >= 5)
-	_set_container_active(chubs_container, day >= 7)
-			
-	print("[CandyContainerManager] Day %d — updated container visibility." % day)
+func _on_day_started(_day: int) -> void:
+	# Disabled — individual containers now manage themselves via StoryManager tiers
+	pass
 
 func _set_container_active(container: Node3D, active: bool) -> void:
 	if not container: return

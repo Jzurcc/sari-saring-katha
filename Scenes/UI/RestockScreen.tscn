@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://df7283sja821"]
+[gd_scene format=3 uid="uid://bl4oaft4b47ic"]
 
 [ext_resource type="Script" uid="uid://ntvhf48bia4u" path="res://Scripts/UI/NokiaUI.gd" id="1_nokia_script"]
 [ext_resource type="PackedScene" uid="uid://dcqjyggeu0f12" path="res://Scenes/UI/RestockMenu.tscn" id="2_store_scene"]

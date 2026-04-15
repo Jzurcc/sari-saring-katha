@@ -1,17 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://d2h37a85l36ed"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/13_can_scam.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://bvjlejlje0vpo" path="res://Assets/items/icons/13_can_scam.png" id="2_tex"]
 
 [resource]
-id = "scam"
-tier = 7
 script = ExtResource("1_item")
 item_name = "Scam"
 texture = ExtResource("2_tex")
 price = 75.0
-markup = 20.0
 category = "can"
+tier = 8
 item_hint = "fools me"
 display_height_meters = 0.47
 opaque_rect = Rect2i(31, 46, 442, 412)

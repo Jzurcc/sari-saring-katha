@@ -15,6 +15,11 @@ extends Resource
 @export var shader_moon_size: float
 @export var shader_atm_moon_mie_intensity: float = 0.0
 
+@export_subgroup("Sky Scalars")
+@export var atm_darkness: float = 0.5
+@export var atm_thickness: float = 0.5
+@export var atm_sun_mie_intensity: float = 1.0
+
 @export_subgroup("Shader Clouds")
 @export var shader_cumulus_position: Vector2
 @export var shader_cumulus_intensity: float

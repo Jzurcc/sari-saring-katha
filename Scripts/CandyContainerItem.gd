@@ -12,6 +12,7 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 @export var possible_candies: Array[ItemData] = []
 @export var max_stock: int = 5
 var current_stock: int = 0
+var _is_unlocked: bool = false
 
 @onready var sprite: Sprite3D = $Sprite3D
 
@@ -19,8 +20,30 @@ func _ready() -> void:
 	super._ready()
 	# Set baseline settings for WorldInteractor
 	billboard_collision = true
+	
+	EventBus.tier_advanced.connect(_on_tier_advanced)
+	_check_unlock_status()
+
+func _on_tier_advanced(_new_tier: int, _source: String) -> void:
+	_check_unlock_status()
+
+func _check_unlock_status() -> void:
+	if possible_candies.is_empty():
+		_is_unlocked = true
+	else:
+		var min_tier = 999
+		for candy in possible_candies:
+			if candy.tier < min_tier:
+				min_tier = candy.tier
+		_is_unlocked = min_tier <= StoryManager.current_tier
+	
+	visible = _is_unlocked
+	process_mode = Node.PROCESS_MODE_INHERIT if _is_unlocked else Node.PROCESS_MODE_DISABLED
 
 func on_hover(is_hovered: bool) -> void:
+	if not _is_unlocked:
+		return
+		
 	# Keep base behavior for standard outlines
 	super.on_hover(is_hovered)
 	
@@ -28,7 +51,7 @@ func on_hover(is_hovered: bool) -> void:
 		_reset_outline_color()
 
 func on_interact() -> void:
-	if DragManager._is_dragging:
+	if not _is_unlocked or DragManager._is_dragging:
 		return
 	
 	_update_local_stock()

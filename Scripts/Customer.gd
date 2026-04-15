@@ -10,7 +10,8 @@ signal clicked(customer: Customer)
 @export var movement_speed: float = 2.0
 var target_position: Vector3
 var is_waiting: bool = false
-@export var character_id: String = "KuyaKap"
+var has_been_greeted: bool = false
+var customer_data: CustomerData = null
 var transaction_context: TransactionContext
 
 @export var vertical_follow_factor: float = 1.0
@@ -24,8 +25,6 @@ var _spawn_position: Vector3 = Vector3.ZERO
 var _outline_material: ShaderMaterial = null
 
 func _ready() -> void:
-	input_event.connect(_on_input_event)
-
 	# Place customers on layer 5 (value 16) so PlayerInteraction can detect
 	# them with a dedicated raycast that passes through counters and items.
 	collision_layer = 0
@@ -34,21 +33,18 @@ func _ready() -> void:
 	if body_sprite:
 		_base_sprite_y = body_sprite.position.y
 
-func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
-	if event is InputEventMouseButton:
-		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			clicked.emit(self)
+# [REMOVED] _on_input_event moved to on_interact() to prevent double-firing with PlayerInteraction.
 
 func setup(context: TransactionContext, target: Vector3) -> void:
 	# Capture spawn position now — global_position is already set by CustomerSpawner.
 	_spawn_position = global_position
 	transaction_context = context
 	if transaction_context:
-		character_id = transaction_context.character_id
+		customer_data = transaction_context.customer_data
 	target_position = target
 
 	# Apply the character's sprite texture and scale from their CustomerData resource.
-	var char_data = StoryManager._get_character_data(character_id)
+	var char_data = customer_data
 	if char_data and body_sprite:
 		if char_data.sprite_texture:
 			body_sprite.texture = char_data.sprite_texture
@@ -82,6 +78,10 @@ func setup(context: TransactionContext, target: Vector3) -> void:
 ## Only responds when waiting at the counter and not mid-animation.
 func on_interact() -> void:
 	if is_waiting and not _is_resolving:
+		# Don't trigger if already in dialogue
+		if Dialogic.current_timeline != null:
+			return
+			
 		clicked.emit(self)
 
 func _process(delta: float) -> void:
@@ -110,10 +110,15 @@ func check_item(item: ItemData) -> bool:
 		return false
 
 	if transaction_context.fulfill_item(item):
-		pulse_color(Color("#0bb544")) # Vibrant Green
+		pulse_color(Color("#0f6e2f")) # Vibrant Green
+		
+		# If this was a riddle and we just solved the riddle item, clear the riddle flag
+		if transaction_context.is_riddle and item == transaction_context.riddle_item:
+			transaction_context.is_riddle = false
 		
 		if transaction_context.desired_items.is_empty():
-			satisfy()
+			# Trigger the Goodbye/Satisfy dialogue flow in Spawner
+			satisfied.emit()
 		else:
 			# Partial fulfillment: Update naming and stay at the counter.
 			# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
@@ -140,9 +145,8 @@ func satisfy() -> void:
 	_clear_outline()
 	InventoryManager.decrement_cooldown()
 	
-	# Emit completion signals
-	satisfied.emit()
-	EventBus.customer_satisfied.emit(self)
+	# We do NOT emit EventBus signs here yet, because the dialogue is about to start.
+	# The EventBus signal is emitted AFTER the fade out to indicate full resolution.
 	
 	await get_tree().process_frame
 	
@@ -156,9 +160,10 @@ func satisfy() -> void:
 	fade_tween.tween_property(body_sprite, "modulate:a", 0.0, 0.4)
 	await fade_tween.finished
 	
-	satisfied.emit()
+	# Emit completion signal only once FULLY resolved (gone from the scene)
 	EventBus.customer_satisfied.emit(self)
 	queue_free()
+
 
 func reject() -> void:
 	_is_resolving = true

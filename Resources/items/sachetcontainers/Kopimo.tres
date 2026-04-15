@@ -1,16 +1,15 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b1a3e2b3icb32"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/9_sachet_kopimo.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://4jopyanab23j" path="res://Assets/items/icons/9_sachet_kopimo.png" id="2_tex"]
 
 [resource]
-id = "kopimo"
-tier = 4
 script = ExtResource("1_item")
 item_name = "Kopimo"
 texture = ExtResource("2_tex")
-price = 8
+price = 6.0
 category = "sachet"
+tier = 7
 item_hint = "isn't my cofee"
 display_height_meters = 0.5
 opaque_rect = Rect2i(186, 7, 123, 484)
