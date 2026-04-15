@@ -179,4 +179,3 @@ func _on_close_pressed() -> void:
 	if _is_calling: return
 	nokia_closed.emit()
 	_animate_exit_and_free()
-

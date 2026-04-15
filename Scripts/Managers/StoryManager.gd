@@ -174,11 +174,12 @@ func _save_progression() -> void:
 ## Returns null only if no characters are configured.
 func get_next_transaction() -> TransactionContext:
 	# --- TUTORIAL INJECTION ---
-	var tutorial_stage = character_story_states.get("UncleMarioTutorial", 0)
+	var tutorial_path := "res://Resources/customers/UncleMarioTutorial.tres"
+	var tutorial_stage = character_story_states.get(tutorial_path, 0)
 	if day == 1 and tutorial_stage == 0:
 		var tutorial_char_data = preload("res://Resources/customers/UncleMarioTutorial.tres")
 		var tutorial_t = TransactionContext.new()
-		tutorial_t.character_id = tutorial_char_data.character_id
+		tutorial_t.customer_data = tutorial_char_data
 		
 		# Build context explicitly for the tutorial — use VISIT so it plays from
 		# the top of the file, not from a "Greeting" label (which doesn't exist).
@@ -186,7 +187,7 @@ func get_next_transaction() -> TransactionContext:
 		tutorial_t.timeline = tutorial_char_data.story_timelines[0]
 		
 		# Flag it so it doesn't repeat
-		character_story_states["UncleMarioTutorial"] = 1
+		character_story_states[tutorial_path] = 1
 		
 		print("[STORY] Spawning Uncle Mario Tutorial")
 		return tutorial_t

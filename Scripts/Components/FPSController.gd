@@ -39,7 +39,7 @@ extends CharacterBody3D
 					var base_middle_y = (body.texture.get_height() / 2.0) * body.pixel_size
 					marker.position.y = base_middle_y * val
 					
-			print("[DEBUG-SCALE] Character: ", customer.character_id, " | New Visual Scale: ", val)
+			print("[DEBUG-SCALE] Character: ", customer.customer_data.get_clean_id(), " | New Visual Scale: ", val)
 
 var _t_bob: float = 0.0
 var _pitch: float = 0.0
