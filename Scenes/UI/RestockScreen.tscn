@@ -23,15 +23,6 @@ script = ExtResource("1_nokia_script")
 bypass_cooldown = true
 button_volume_db = 17.117999999999995
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1944596228]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.4)
-
 [node name="RestockMenu" parent="." unique_id=1840390671 instance=ExtResource("2_store_scene")]
 layout_mode = 1
 offset_left = 498.0

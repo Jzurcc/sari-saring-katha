@@ -19,7 +19,7 @@ enum DialoguePhase {
 
 ## Fallback timeline played when a STORY/FILLER greeting DTL does not exist yet.
 ## After it plays the customer is dismissed (SOCIAL_VISIT phase) so the day advances.
-const PLACEHOLDER_EMPTY_STORY := "res://Dialogue/placeholder_story_missing.dtl"
+const PLACEHOLDER_EMPTY_STORY := "res://Dialogue/Timelines/Generic/Neutral.dtl"
 
 ## Proxy character used in generic dialogues (e.g. "Customer: Hello!").
 ## We patch this at runtime to show the correct name and anchor to the sprite.

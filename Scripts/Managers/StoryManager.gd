@@ -401,7 +401,7 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			# Edgecase: forced story but no timelines available -> fallback to visit
 			var visit_pool = data.get_visit_timelines(stage)
 			t.transaction_type = TransactionContext.Type.VISIT
-			t.timeline = visit_pool.pick_random() if not visit_pool.is_empty() else "res://Dialogue/customer_talk.dtl"
+			t.timeline = visit_pool.pick_random() if not visit_pool.is_empty() else "res://Dialogue/Timelines/Generic/Neutral.dtl"
 	else:
 		# Generic flow
 		var purchase_pool = data.get_purchase_timelines(stage)
@@ -419,7 +419,7 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			t.timeline = purchase_pool.pick_random()
 		else:
 			t.transaction_type = TransactionContext.Type.VISIT
-			t.timeline = "res://Dialogue/customer_talk.dtl"
+			t.timeline = "res://Dialogue/Timelines/Generic/Neutral.dtl"
 			t.is_placeholder = true
 
 	# 2. Assign Desired Items (unless it's a social visit)

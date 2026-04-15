@@ -1,7 +1,7 @@
 class_name Customer
 extends Area3D
 
-signal satisfied
+signal satisfied(customer: Customer)
 @warning_ignore("unused_signal")
 signal left
 signal arrived(customer: Customer)
@@ -118,7 +118,7 @@ func check_item(item: ItemData) -> bool:
 		
 		if transaction_context.desired_items.is_empty():
 			# Trigger the Goodbye/Satisfy dialogue flow in Spawner
-			satisfied.emit()
+			satisfied.emit(self)
 		else:
 			# Partial fulfillment: Update naming and stay at the counter.
 			# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
