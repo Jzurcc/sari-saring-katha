@@ -58,20 +58,7 @@ func _ready() -> void:
 	# Hook up button hover effects + click sound (ui_sfx_4) for all main buttons
 	for btn in buttons.get_children():
 		if btn is Button:
-			original_styles[btn] = {
-				"font_color":    btn.get_theme_color("font_color"),
-				"shadow_color":  btn.get_theme_color("font_shadow_color"),
-				"outline_color": btn.get_theme_color("font_outline_color"),
-				"outline_size":  btn.get_theme_constant("outline_size"),
-				"shadow_x":      btn.get_theme_constant("shadow_offset_x"),
-				"shadow_y":      btn.get_theme_constant("shadow_offset_y")
-			}
-			btn.mouse_entered.connect(_on_btn_hover.bind(btn))
-			btn.mouse_exited.connect(_on_btn_unhover.bind(btn))
-			btn.focus_entered.connect(_on_btn_hover.bind(btn))
-			btn.focus_exited.connect(_on_btn_unhover.bind(btn))
-			if not btn.disabled:
-				btn.pressed.connect(_play_click)
+			_register_button(btn)
 	_check_save_status()
 	buttons.get_node("NewGame").grab_focus()
 
@@ -114,6 +101,26 @@ func _play_click() -> void:
 func _play_confirm() -> void:
 	_ui_player.stream = _sfx_confirm
 	_ui_player.play()
+
+func _register_button(btn: Button) -> void:
+	# Cache original theme properties for unhover restoration
+	original_styles[btn] = {
+		"font_color":    btn.get_theme_color("font_color"),
+		"shadow_color":  btn.get_theme_color("font_shadow_color"),
+		"outline_color": btn.get_theme_color("font_outline_color"),
+		"outline_size":  btn.get_theme_constant("outline_size"),
+		"shadow_x":      btn.get_theme_constant("shadow_offset_x"),
+		"shadow_y":      btn.get_theme_constant("shadow_offset_y")
+	}
+	
+	# Connect signals for hover/focus effects
+	btn.mouse_entered.connect(_on_btn_hover.bind(btn))
+	btn.mouse_exited.connect(_on_btn_unhover.bind(btn))
+	btn.focus_entered.connect(_on_btn_hover.bind(btn))
+	btn.focus_exited.connect(_on_btn_unhover.bind(btn))
+	
+	if not btn.disabled:
+		btn.pressed.connect(_play_click)
 
 
 # ─── Button hover effects ──────────────────────────────────────────────────────
@@ -201,11 +208,9 @@ func _create_continue_button() -> void:
 	buttons.add_child(continue_btn)
 	buttons.move_child(continue_btn, 0)
 	
-	# Connect signals
+	# Connect signals and register for hover effects
+	_register_button(continue_btn)
 	continue_btn.pressed.connect(_on_continue_pressed)
-	continue_btn.pressed.connect(_play_click)
-	continue_btn.mouse_entered.connect(_on_btn_hover.bind(continue_btn))
-	continue_btn.mouse_exited.connect(_on_btn_unhover.bind(continue_btn))
 	
 	# Grab focus if save exists
 	continue_btn.grab_focus()
