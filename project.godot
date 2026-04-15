@@ -63,19 +63,17 @@ directories/dtl_directory={
 "Neutral": "res://Dialogue/Timelines/Generic/Neutral.dtl",
 "Story0": "res://Dialogue/Timelines/Kuyakap/Story0.dtl",
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dtl",
+"UncleMarioTutorial": "res://Dialogue/Timelines/UncleMarioTutorial.dtl",
 "mayari_collect": "res://Dialogue/Timelines/mayari_collect.dtl"
-"UncleMario": "res://Dialogue/Timelines/UncleMario.dtl",
-"UncleMarioTutorial": "res://Dialogue/Timelines/UncleMarioTutorial.dtl"
 }
 layout/style_directory={
-"": "res://Assets/Dialogue/FollowBubble.tres",
 "BubbleDialogue": "res://Assets/Dialogue/BubbleDialogue.tres",
 "BubbleStyle": "res://Assets/Dialogue/BubbleStyle.tres",
 "DialogueStyle": "res://Assets/Dialogue/DialogueStyle.tres",
 "FollowBubble": "res://Assets/Dialogue/FollowBubble.tres"
 }
 layout/style_list=["res://Assets/Dialogue/DialogueStyle.tres", "res://Assets/Dialogue/BubbleStyle.tres", "res://Assets/Dialogue/BubbleDialogue.tres", "res://Assets/Dialogue/FollowBubble.tres"]
-layout/default_style="res://Assets/Dialogue/FollowBubble.tres"
+layout/default_style=""
 glossary/default_case_sensitive=true
 extensions_folder="res://addons/dialogic_additions"
 text/letter_speed=0.01
@@ -142,7 +140,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/UniParticles3D/plugin.cfg", "res://addons/copy_all_errors/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
+enabled=PackedStringArray("res://addons/UniParticles3D/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
 
 [input]
 

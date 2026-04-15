@@ -300,12 +300,21 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 	
 	if layout and layout.has_method("register_character") and is_instance_valid(marker):
 		var char_data = StoryManager._get_character_data(customer.character_id)
-		# Register specific character (for story lines)
 		if char_data and char_data.dialogic_character:
-			layout.register_character(char_data.dialogic_character, marker)
+			# Use Dialogic's own resource util with the .dch short name (no extension, no path).
+			# This returns the EXACT same singleton instance Dialogic uses internally
+			# for character lookup — avoids mismatch that triggers the fallback bubble.
+			# Mirror the working pattern from MarioManager._start_dialogue().
+			var dch_name: String = char_data.dialogic_character.resource_path.get_file().get_basename()
+			var canonical_char = DialogicResourceUtil.get_character_resource(dch_name)
+			if canonical_char:
+				layout.register_character(canonical_char, marker)
 		# Register generic proxy (for generic/filler lines using "Customer:")
 		if GENERIC_CHAR_RES:
-			layout.register_character(GENERIC_CHAR_RES, marker)
+			var generic_name: String = GENERIC_CHAR_RES.resource_path.get_file().get_basename()
+			var canonical_generic = DialogicResourceUtil.get_character_resource(generic_name)
+			if canonical_generic:
+				layout.register_character(canonical_generic, marker)
 
 func _on_dialogue_ended() -> void:
 	# Resume the game clock when dialogue ends

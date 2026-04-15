@@ -132,8 +132,9 @@ func get_next_transaction() -> TransactionContext:
 		var tutorial_t = TransactionContext.new()
 		tutorial_t.character_id = tutorial_char_data.character_id
 		
-		# Build context explicitly for the tutorial so it's treated like a STORY
-		tutorial_t.transaction_type = TransactionContext.Type.STORY
+		# Build context explicitly for the tutorial — use VISIT so it plays from
+		# the top of the file, not from a "Greeting" label (which doesn't exist).
+		tutorial_t.transaction_type = TransactionContext.Type.VISIT
 		tutorial_t.timeline = tutorial_char_data.story_timelines[0]
 		
 		# Flag it so it doesn't repeat
