@@ -65,7 +65,8 @@ func _animate_hover(hovered: bool) -> void:
 	_tween = create_tween()
 	
 	var target_scale = _base_scale * hover_scale_multiplier if hovered else _base_scale
-	_tween.tween_property(self, "scale", target_scale, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	for visual in get_visual_nodes():
+		_tween.tween_property(visual, "scale", target_scale, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func on_interact() -> void:
 	# Virtual method to be overridden by subclasses

@@ -201,6 +201,13 @@ func _setup_pricing_ui() -> void:
 	pricing_ui.hide()
 
 
+func get_visual_nodes() -> Array[Node3D]:
+	var nodes = super.get_visual_nodes()
+	if pricing_ui in nodes:
+		nodes.erase(pricing_ui)
+	return nodes
+
+
 
 func on_hover(hovered: bool) -> void:
 	self.is_hovered = hovered
@@ -217,6 +224,11 @@ func on_hover(hovered: bool) -> void:
 func set_pricing_ui_active(active: bool) -> void:
 	_pricing_mode_active = active
 	_update_label_visibility()
+	
+	# Re-trigger hover logic to immediately add/remove outline
+	# if toggled while already hovering.
+	on_hover(is_hovered)
+	
 	if active:
 		update_pricing_ui()
 
@@ -270,9 +282,9 @@ func return_to_start() -> void:
 	tween.tween_property(self, "transform", _original_transform, 0.25)\
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 			
-	# Bounce scale effect
-	var current_scale = scale
-	scale = current_scale * Vector3(1.2, 0.8, 1.2) # Squash
+	# Bounce scale effect on the sprite only (keeps physics area stable)
+	var base_sprite_scale = Vector3.ONE
+	sprite.scale = base_sprite_scale * Vector3(1.2, 0.8, 1.2) # Squash
 	var scale_tween = create_tween()
-	scale_tween.tween_property(self, "scale", current_scale * Vector3(0.9, 1.1, 0.9), 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	scale_tween.tween_property(self, "scale", current_scale, 0.15).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	scale_tween.tween_property(sprite, "scale", base_sprite_scale * Vector3(0.9, 1.1, 0.9), 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	scale_tween.tween_property(sprite, "scale", base_sprite_scale, 0.15).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)

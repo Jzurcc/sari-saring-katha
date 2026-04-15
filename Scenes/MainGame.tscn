@@ -27,7 +27,7 @@
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
 [ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
-[ext_resource type="PackedScene" uid="uid://df7283sja821" path="res://Scenes/UI/NokiaUI.tscn" id="36_fto8l"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/NokiaUI.tscn" id="36_fto8l"]
 [ext_resource type="Shader" path="res://Assets/Shaders/mesh_outline.gdshader" id="38_cqekc"]
 [ext_resource type="Script" uid="uid://dxmnefrwak8nn" path="res://Scripts/SachetContainerItem.gd" id="45_glkqw"]
 [ext_resource type="Material" uid="uid://db4iw7gjdpieb" path="res://Assets/3D/final store/textures/materials/outer_wall.001.tres" id="45_gnwe2"]
