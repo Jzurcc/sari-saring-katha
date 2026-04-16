@@ -46,6 +46,8 @@ enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 var current_bgm_phase: BGMPhase = BGMPhase.NONE
 
 var time_of_day_node: Node = null
+var _scene_check_timer: float = 0.0
+var _is_in_intro_or_menu: bool = true
 
 var afternoon_playlist_index: int = 0
 var afternoon_playlist: Array = []
@@ -106,7 +108,6 @@ func _ready() -> void:
 	
 	# Cache TimeOfDay once scene is settled
 	await get_tree().process_frame
-	_ensure_tod_node()
 	
 	call_deferred("_connect_dialogic")
 
@@ -116,8 +117,19 @@ func play_sfx(sfx_name: String) -> void:
 		sfx_player.pitch_scale = randf_range(0.9, 1.1)
 		sfx_player.play()
 
-func _process(_delta: float) -> void:
-	if is_in_intro_or_menu():
+func _process(delta: float) -> void:
+	_scene_check_timer += delta
+	if _scene_check_timer > 1.0:
+		_scene_check_timer = 0.0
+		var scene = get_tree().current_scene
+		if scene:
+			_is_in_intro_or_menu = scene.name in ["MainMenu", "IntroCutscene"] or scene.has_method("play_all_sequences")
+			if not _is_in_intro_or_menu and not is_instance_valid(time_of_day_node):
+				time_of_day_node = scene.get_node_or_null("World/TimeOfDay")
+				if not time_of_day_node:
+					time_of_day_node = scene.find_child("TimeOfDay", true, false)
+
+	if _is_in_intro_or_menu:
 		if current_bgm_phase != BGMPhase.NONE:
 			current_bgm_phase = BGMPhase.NONE
 		# Ensure Autumn Wind is playing if we are in intro/menu
@@ -126,31 +138,10 @@ func _process(_delta: float) -> void:
 			bgm_player.play()
 		return
 		
-	_ensure_tod_node()
-		
 	if is_instance_valid(time_of_day_node):
 		var time = time_of_day_node.get("current_time")
 		if time != null:
 			_update_audio_for_time(time)
-
-func is_in_intro_or_menu() -> bool:
-	var scene = get_tree().current_scene
-	if not scene: return true # Assume menu/intro during transition
-	
-	# Check by name
-	if scene.name in ["MainMenu", "IntroCutscene"]:
-		return true
-		
-	# Check for specific scripts or properties as a fallback
-	if scene.has_method("play_all_sequences"): # This is a unique method in IntroManager
-		return true
-		
-	return false
-
-
-func _ensure_tod_node() -> void:
-	if not is_instance_valid(time_of_day_node):
-		time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
 
 
 func _load_audio_settings() -> void:
@@ -345,7 +336,10 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 				if m_data and m_data.dialogic_character and m_data.dialogic_character.resource_path == char_path:
 					char_to_play = m_data
 
-		if char_to_play and char_to_play.dialogue_blip_sound:
-			dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
-			dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
-			dialogue_blip_player.play()
+		if char_to_play:
+			if char_to_play.dialogue_blip_sound:
+				dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
+				dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
+				dialogue_blip_player.play()
+			
+			EventBus.dialogue_character_speaking.emit(char_to_play)

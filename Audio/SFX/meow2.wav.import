@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://dilg88qhh1swl"
-path="res://.godot/imported/Dionisio.wav-b92fb3c3b4b91040a5464556d53bb66c.sample"
+uid="uid://cita80tdosv0o"
+path="res://.godot/imported/meow2.wav-36c279342fa61f0b7ea661e2675e1c5d.sample"
 
 [deps]
 
-source_file="res://Audio/DialogueBlips/Dionisio.wav"
-dest_files=["res://.godot/imported/Dionisio.wav-b92fb3c3b4b91040a5464556d53bb66c.sample"]
+source_file="res://Audio/SFX/meow2.wav"
+dest_files=["res://.godot/imported/meow2.wav-36c279342fa61f0b7ea661e2675e1c5d.sample"]
 
 [params]
 
