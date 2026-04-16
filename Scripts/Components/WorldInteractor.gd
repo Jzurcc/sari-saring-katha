@@ -90,7 +90,14 @@ func _apply_outline(color: Color) -> void:
 	if not _outline_mat: return
 	
 	_outline_mat.set_shader_parameter("outline_color", color)
-	for visual in get_visual_nodes():
+	
+	# Always ensure the albedo_texture matches what's currently on the sprite.
+	var visuals = get_visual_nodes()
+	if not visuals.is_empty():
+		if visuals[0] is Sprite3D:
+			_outline_mat.set_shader_parameter("albedo_texture", (visuals[0] as Sprite3D).texture)
+			
+	for visual in visuals:
 		visual.material_overlay = _outline_mat
 
 func _remove_outline() -> void:
