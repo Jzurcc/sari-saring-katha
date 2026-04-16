@@ -16,6 +16,9 @@ signal customer_partial_satisfaction(customer: Customer)
 signal customer_rejected(customer: Customer)
 @warning_ignore("unused_signal")
 signal customer_dismissed(customer: Customer)
+@warning_ignore("unused_signal")
+signal dialogue_character_speaking(customer_data: CustomerData)
+
 
 # --- Transactions ---
 @warning_ignore("unused_signal")
@@ -29,9 +32,11 @@ signal day_ended(day_number: int)
 @warning_ignore("unused_signal")
 signal day_started(day_number: int)
 @warning_ignore("unused_signal")
+signal closing_time_reached()
+@warning_ignore("unused_signal")
 signal tier_advanced(new_tier: int, source: String)
 @warning_ignore("unused_signal")
-signal upgrade_available(new_tier: int, cost: float)
+signal upgrade_available(new_tier: int, cost: float, items: Array[ItemData])
 @warning_ignore("unused_signal")
 signal purchase_made()
 
