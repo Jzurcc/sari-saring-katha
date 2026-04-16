@@ -4,7 +4,7 @@ extends Node
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
 const DAY_START_HOUR := 5.0
-const CLOSING_HOUR   := 21.0  ## 9 PM — no new customers after this
+const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 ## 1 in-game hour = 25 real seconds.
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 25.0
 
@@ -24,6 +24,7 @@ var is_clock_running: bool = false:
 var _last_character_path: String = ""
 var _last_focus_character_path: String = ""
 var _pending_tier_advance_source: String = ""
+var has_mayari_visited: bool = false
 
 # --- Story Progression ---
 var global_story_cooldown: int = 0
@@ -66,7 +67,7 @@ var _time_of_day_node: Node = null
 	preload("res://Resources/customers/Buboy.tres"),
 	preload("res://Resources/customers/Sarimanok.tres"),
 	preload("res://Resources/customers/Danilo.tres"),
-	preload("res://Resources/customers/Dionisio.tres"),
+	preload("res://Resources/customers/Brahim.tres"),
 	preload("res://Resources/customers/Rodel.tres")
 ]
 
@@ -100,26 +101,40 @@ func _ready() -> void:
 	
 	randomize()
 
+var _last_saved_hour: int = -1
+
 func _on_tod_time_changed(t: float) -> void:
 	_current_display_time = t
+	
+	# Only save when the integer hour changes (e.g. 17.99 -> 18.00)
+	var current_hour = int(t)
+	if current_hour != _last_saved_hour:
+		_last_saved_hour = current_hour
+		_save_progression()
+		
 	# End of day check
 	if _current_display_time >= CLOSING_HOUR and is_clock_running:
 		is_clock_running = false
+		_current_display_time = CLOSING_HOUR
+		_apply_display_time(CLOSING_HOUR)
+		EventBus.closing_time_reached.emit()
 
 func _on_day_started(new_day: int) -> void:
 	day = new_day
+	has_mayari_visited = false
 	_setup_daily_focus()
 	print("[StoryManager] Day ", day, " starts.")
 
 func _setup_daily_focus() -> void:
-	if available_characters.is_empty():
+	var unlocked = _get_unlocked_characters()
+	if unlocked.is_empty():
 		todays_focus_character_path = ""
 		return
 	
 	# Filter to avoid repeating the same focus character as yesterday
-	var possible_focus = available_characters.filter(func(c): return c.resource_path != _last_focus_character_path)
+	var possible_focus = unlocked.filter(func(c): return c.resource_path != _last_focus_character_path)
 	if possible_focus.is_empty(): 
-		possible_focus = available_characters
+		possible_focus = unlocked
 		
 	var focus_char = possible_focus.pick_random()
 	todays_focus_character_path = focus_char.resource_path
@@ -150,10 +165,16 @@ func process_pending_unlock() -> void:
 		pending_upgrade_tier = current_tier + 1
 		pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
 		
+		# Collect items being unlocked in this tier
+		var new_items: Array[ItemData] = []
+		for item in InventoryManager.get_all_items():
+			if item.tier == pending_upgrade_tier:
+				new_items.append(item)
+		
 		_pending_tier_advance_source = ""
 		
 		# Notify the player to call Uncle Mario
-		EventBus.upgrade_available.emit(pending_upgrade_tier, pending_upgrade_cost)
+		EventBus.upgrade_available.emit(pending_upgrade_tier, pending_upgrade_cost, new_items)
 		_save_progression()
 
 func _save_progression() -> void:
@@ -170,14 +191,28 @@ func _save_progression() -> void:
 	}
 	SaveManager.save_game(current_save)
 
+func reset_state() -> void:
+	day = 1
+	current_tier = 1
+	purchase_counter = 0
+	pending_upgrade_tier = 0
+	pending_upgrade_cost = 0.0
+	global_story_cooldown = 0
+	last_story_advancer_path = ""
+	character_story_states = {}
+	_current_display_time = DAY_START_HOUR
+	_save_progression()
+	print("[StoryManager] Progression reset for New Game.")
+
+
 ## Ask the StoryManager for the next customer's context.
 ## Returns null only if no characters are configured.
 func get_next_transaction() -> TransactionContext:
 	# --- TUTORIAL INJECTION ---
-	var tutorial_path := "res://Resources/customers/UncleMarioTutorial.tres"
+	var tutorial_path := "res://Resources/customers/UncleMario.tres"
 	var tutorial_stage = character_story_states.get(tutorial_path, 0)
 	if day == 1 and tutorial_stage == 0:
-		var tutorial_char_data = preload("res://Resources/customers/UncleMarioTutorial.tres")
+		var tutorial_char_data = preload("res://Resources/customers/UncleMario.tres")
 		var tutorial_t = TransactionContext.new()
 		tutorial_t.customer_data = tutorial_char_data
 		
@@ -193,6 +228,25 @@ func get_next_transaction() -> TransactionContext:
 		return tutorial_t
 	# --------------------------
 
+	# --- DEBUG DUAL CUSTOMER INJECTION ---
+	var debug_dual_path := "debug_dual_encounter"
+	var debug_dual_stage = character_story_states.get(debug_dual_path, 0)
+	if day == 1 and tutorial_stage == 1 and debug_dual_stage == 0:
+		var primary_data = preload("res://Resources/customers/KuyaKap.tres")
+		var secondary_data = preload("res://Resources/customers/ManangAna.tres")
+		
+		var debug_t = TransactionContext.new()
+		debug_t.customer_data = primary_data
+		debug_t.secondary_customer_data = secondary_data
+		debug_t.transaction_type = TransactionContext.Type.VISIT
+		debug_t.timeline = "res://Dialogue/Timelines/debug_dual_customer.dtl"
+		
+		character_story_states[debug_dual_path] = 1
+		
+		print("[STORY] Spawning Debug Dual Customer Encounter (Kuya Kap & Manang Ana)")
+		return debug_t
+	# --------------------------
+
 	if available_characters.is_empty():
 		return null
 
@@ -200,9 +254,10 @@ func get_next_transaction() -> TransactionContext:
 	var force_story = false
 	
 	# Priority 1: Check if a story chapter is ready to be forced
+	var unlocked = _get_unlocked_characters()
 	if global_story_cooldown <= 0:
 		var story_candidates: Array[CustomerData] = []
-		for c in available_characters:
+		for c in unlocked:
 			# Skip the character who just progressed
 			if c.resource_path == last_story_advancer_path: continue
 			# Skip if it was the last character to avoid back-to-back spawns
@@ -246,7 +301,7 @@ func get_next_transaction() -> TransactionContext:
 			# If everything was skipped because of last_story_advancer_path, but that character 
 			# still has story, allow them to proceed if no one else can.
 			var fallback_story_candidates: Array[CustomerData] = []
-			for c in available_characters:
+			for c in unlocked:
 				if c.resource_path == _last_character_path: continue
 				var c_stage = character_story_states.get(c.resource_path, 0)
 				if c_stage < c.story_timelines.size() and _is_story_chapter_available(c, c_stage):
@@ -260,8 +315,8 @@ func get_next_transaction() -> TransactionContext:
 	# Priority 2: Generic flow if no story is forced, or cooldown is active
 	if not char_data:
 		# 1. Selection with Sequential Guard (Prevent same character twice in a row)
-		var possible_chars = available_characters.filter(func(c): return c.resource_path != _last_character_path)
-		if possible_chars.is_empty(): possible_chars = available_characters # Fallback
+		var possible_chars = unlocked.filter(func(c): return c.resource_path != _last_character_path)
+		if possible_chars.is_empty(): possible_chars = unlocked # Fallback
 		char_data = possible_chars.pick_random()
 
 	_last_character_path = char_data.resource_path
@@ -277,20 +332,25 @@ func get_next_transaction() -> TransactionContext:
 	var awareness_roll = randf()
 	var awareness_active = awareness_roll < 0.4 # 40% chance for awareness preamble
 	
-	var current_hour = StoryManager._current_display_time
-	var time_phase = "Morning"
-	if current_hour >= 18.0:
-		time_phase = "Evening"
-	elif current_hour >= 12.0:
-		time_phase = "Afternoon"
+	# B. Price Sensitivity
+	var high_price_roll = randf()
+	var high_price_ratio = _get_high_pricing_ratio()
+	var high_price_active = high_price_ratio >= 0.5 and high_price_roll < 0.4
 	
-	var total_stock = InventoryManager.get_total_owned_count(ItemData.ItemType.SHELF) + InventoryManager.get_total_owned_count(ItemData.ItemType.FRIDGE)
+	var total_stock = 0
+	total_stock += InventoryManager.get_total_owned_count(ItemData.ItemType.SHELF)
+	total_stock += InventoryManager.get_total_owned_count(ItemData.ItemType.FRIDGE)
+	total_stock += InventoryManager.get_total_owned_count(ItemData.ItemType.CANDY_CONTAINER)
+	total_stock += InventoryManager.get_total_owned_count(ItemData.ItemType.SACHET_CONTAINER)
+
 	var stock_status = "Normal"
-	if total_stock < 10:
+	if total_stock == 0:
+		stock_status = "Empty"
+	elif total_stock < 10:
 		stock_status = "Low"
 		
 	Dialogic.VAR.set_variable("Global.AwarenessActive", 1.0 if awareness_active else 0.0)
-	Dialogic.VAR.set_variable("Global.TimeOfDayPhase", time_phase)
+	Dialogic.VAR.set_variable("Global.HighPriceActive", 1.0 if high_price_active else 0.0)
 	Dialogic.VAR.set_variable("Global.StockStatus", stock_status)
 	
 	# B. Dual Customer (Story Events only)
@@ -344,6 +404,28 @@ func get_next_transaction() -> TransactionContext:
 
 	return t
 
+## Returns a special transaction for Reyna Mayari's end-of-day debt collection.
+func get_collection_transaction() -> TransactionContext:
+	if has_mayari_visited:
+		return null
+		
+	var data = _get_character_data("res://Resources/customers/ReynaMayari.tres")
+	if not data:
+		# Fallback if the path is wrong
+		data = _get_character_data("reynamayari")
+	
+	if not data:
+		push_error("[StoryManager] Could not find Reyna Mayari data for collection!")
+		return null
+		
+	var t = TransactionContext.new()
+	t.customer_data = data
+	t.transaction_type = TransactionContext.Type.VISIT
+	t.timeline = "res://Dialogue/Timelines/mayari_collect.dtl"
+	
+	has_mayari_visited = true
+	return t
+
 ## Tick the clock every frame — runs continuously from DAY_START_HOUR to CLOSING_HOUR.
 ## No caps, no tweens, no toggling. The sky just moves.
 func _process(_delta: float) -> void:
@@ -368,7 +450,7 @@ func _ensure_tod_node() -> void:
 
 func _get_character_data(path_or_id: String) -> CustomerData:
 	if path_or_id.to_lower() == "unclemariotutorial":
-		return preload("res://Resources/customers/UncleMarioTutorial.tres")
+		return preload("res://Resources/customers/UncleMario.tres")
 
 	# Try path lookup first (fix branch style)
 	var data = _char_lookup.get(path_or_id)
@@ -393,34 +475,29 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 	var stage = character_story_states.get(path, 0)
 	
 	# If this is their first visit (stage 0) OR the system forced a story chapter
-	if stage == 0 or force_story:
-		if stage < data.story_timelines.size():
-			t.transaction_type = TransactionContext.Type.STORY
-			t.timeline = data.story_timelines[stage]
-		else:
-			# Edgecase: forced story but no timelines available -> fallback to visit
-			var visit_pool = data.get_visit_timelines(stage)
-			t.transaction_type = TransactionContext.Type.VISIT
-			t.timeline = visit_pool.pick_random() if not visit_pool.is_empty() else "res://Dialogue/Timelines/Generic/Neutral.dtl"
+	if (stage == 0 or force_story) and stage < data.story_timelines.size():
+		t.transaction_type = TransactionContext.Type.STORY
+		t.timeline = data.story_timelines[stage]
 	else:
-		# Generic flow
+		# Generic flow selection: 70% purchase, 30% visit
+		var is_purchase = randf() < 0.7
 		var purchase_pool = data.get_purchase_timelines(stage)
 		var visit_pool = data.get_visit_timelines(stage)
 		
-		if not purchase_pool.is_empty() and randf() < 0.7:
-			# 70% chance to purchase if available
+		if is_purchase and not purchase_pool.is_empty():
 			t.transaction_type = TransactionContext.Type.PURCHASE
 			t.timeline = purchase_pool.pick_random()
 		elif not visit_pool.is_empty():
 			t.transaction_type = TransactionContext.Type.VISIT
 			t.timeline = visit_pool.pick_random()
-		elif not purchase_pool.is_empty():
-			t.transaction_type = TransactionContext.Type.PURCHASE
-			t.timeline = purchase_pool.pick_random()
 		else:
-			t.transaction_type = TransactionContext.Type.VISIT
-			t.timeline = "res://Dialogue/Timelines/Generic/Neutral.dtl"
-			t.is_placeholder = true
+			# Fallback to last resort
+			t.transaction_type = TransactionContext.Type.PURCHASE
+			t.timeline = "res://Dialogue/Timelines/Generic/Purchase.dtl"
+		
+		# Log the selection
+		var type_str = "VISIT" if t.transaction_type == TransactionContext.Type.VISIT else "PURCHASE"
+		print("[StoryManager] Selection for %s: %s (Timeline: %s)" % [data.character_name, type_str, t.timeline])
 
 	# 2. Assign Desired Items (unless it's a social visit)
 	if t.transaction_type != TransactionContext.Type.VISIT:
@@ -430,17 +507,52 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			if is_item_unlocked(item) and item.can_be_sold:
 				pool.append(item)
 
-		# Multi-item request logic (1-3 items)
-		var item_count = randi_range(1, 3)
+		# Multi-item request logic based on Tier
+		var item_count = _get_item_count_for_tier(current_tier)
 		for i in range(item_count):
 			if not pool.is_empty():
 				t.desired_items.append(pool.pick_random())
 			else:
-				var fallback: ItemData = _pick_random_orderable_item()
+				var fallback = _pick_random_orderable_item()
 				if fallback:
 					t.desired_items.append(fallback)
 		
-		t.original_count = t.desired_items.size()
+		# Safety: If we expected a purchase but found no items (and no fallback was possible), 
+		# convert to a visit to prevent dialogue errors.
+		if t.desired_items.is_empty():
+			print("[StoryManager] Critical: No items found for purchase, converting to VISIT for: ", data.character_name)
+			t.transaction_type = TransactionContext.Type.VISIT
+			t.timeline = "res://Dialogue/Timelines/Generic/Visit.dtl"
+		else:
+			# If we used fallback items (global stock), use the generic Purchase timeline
+			# unless a specific character/arc timeline was already assigned.
+			var current_path = t.timeline.resource_path if t.timeline is Resource else str(t.timeline)
+			if current_path == "res://Dialogue/Timelines/Generic/Neutral.dtl":
+				t.timeline = "res://Dialogue/Timelines/Generic/Purchase.dtl"
+
+## Returns the number of items a customer should request based on the current tier.
+func _get_item_count_for_tier(tier: int) -> int:
+	var roll = randf() * 100.0
+	
+	match tier:
+		1:
+			if roll < 80: return 1
+			else: return 2
+		2:
+			if roll < 70: return 1
+			else: return 2
+		3:
+			if roll < 50: return 1
+			elif roll < 90: return 2
+			else: return 3
+		4:
+			if roll < 30: return 1
+			elif roll < 70: return 2
+			else: return 3
+		_: # Tier 5 and onwards
+			if roll < 20: return 1
+			elif roll < 60: return 2
+			else: return 3
 
 ## Returns a random item that is unlocked for the current day.
 ## Prioritizes items that are currently in stock. 
@@ -490,6 +602,7 @@ func _on_customer_dismissed(customer) -> void:
 	Dialogic.VAR.set_variable("Global.LastSatisfaction", "Unhappy")
 	
 	_process_story_cooldown(customer)
+	_save_progression()
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer.transaction_context:
@@ -536,4 +649,25 @@ func _is_story_chapter_available(customer: CustomerData, stage: int) -> bool:
 		return true
 		
 	return customer.story_prerequisites[stage].is_met(self)
-	return customer.story_prerequisites[stage].is_met(self)
+
+func _get_high_pricing_ratio() -> float:
+	var im = get_node_or_null("/root/InventoryManager")
+	if not im: return 0.0
+	
+	var stocked_items = im.get_all_items().filter(func(i): return im.is_in_stock(i))
+	if stocked_items.is_empty():
+		return 0.0
+		
+	var high_priced_count = 0
+	for item in stocked_items:
+		if item.get_final_price() >= item.get_max_selling_price():
+			high_priced_count += 1
+			
+	return float(high_priced_count) / float(stocked_items.size())
+
+func _get_unlocked_characters() -> Array[CustomerData]:
+	var unlocked: Array[CustomerData] = []
+	for c in available_characters:
+		if c and c.unlock_tier <= current_tier:
+			unlocked.append(c)
+	return unlocked

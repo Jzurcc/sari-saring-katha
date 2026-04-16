@@ -9,6 +9,7 @@ const MAX_DAYS := 7
 var money: float = 0.0
 var day: int = 1
 var _last_earning: float = 0.0
+var _pending_quota: float = 0.0  # Quota for the day that just ended (cached before day increments)
 
 var _is_waiting_for_tutorial_space := false
 
@@ -42,11 +43,15 @@ func _ready() -> void:
 	if not Dialogic.signal_event.is_connected(_on_dialogic_signal):
 		Dialogic.signal_event.connect(_on_dialogic_signal)
 
-	# Reset the clock to 5 AM for day 1
-	_reset_clock_to_morning()
+	# Only reset to morning if we are on Day 1 and have no money (initial state)
+	# or if we want to ensure Day 1 starts at 5 AM.
+	# Otherwise, _load_state() and StoryManager's own loading will have restored the time.
+	if day == 1 and money == starting_money:
+		_reset_clock_to_morning()
 
-	print("[GameManager] Started Day 1")
+	print("[GameManager] Started Day ", day)
 	EventBus.day_started.emit(day)
+	save_state() # Save immediately on startup/day start
 
 func _on_transaction_completed(item: ItemData, was_correct: bool) -> void:
 	if was_correct and item:
@@ -77,21 +82,16 @@ func deduct_money(amount: float) -> void:
 func _on_day_ended(ended_day_number: int) -> void:
 	print("[GameManager] Day %d ended!" % ended_day_number)
 	
-	# 1. Day Ended Summary Dialogue
-	if Dialogic.current_timeline == null:
-		Dialogic.start("res://Dialogue/day_ended.dtl")
-		await Dialogic.timeline_ended
+	# 2. Debt Collection Logic Setup — cache quota BEFORE day increments
+	_pending_quota = DAILY_QUOTAS.get(ended_day_number, 0.0)
+	var was_successful = money >= _pending_quota
 	
-	# 2. Debt Collection Logic Setup
-	var quota = DAILY_QUOTAS.get(ended_day_number, 0.0)
-	var was_successful = money >= quota
-	
-	Dialogic.VAR.set_variable("Global.TodayQuota", quota)
+	Dialogic.VAR.set_variable("Global.TodayQuota", _pending_quota)
 	Dialogic.VAR.set_variable("Global.HasEnoughMoney", 1.0 if was_successful else 0.0)
 	
-	# 3. Mayari Presence
-	Dialogic.start("res://Dialogue/Timelines/mayari_collect.dtl", "CollectionIntro")
-	await Dialogic.timeline_ended
+	print("[GameManager] End of Day %d. Quota: %.2f, Money: %.2f, Success: %s" % [
+		ended_day_number, _pending_quota, money, was_successful
+	])
 	
 	# 4. Advance Day
 	if day >= MAX_DAYS:
@@ -104,8 +104,9 @@ func _on_day_ended(ended_day_number: int) -> void:
 
 func _on_dialogic_signal(argument: String) -> void:
 	if argument == "deduct_quota":
-		var quota = DAILY_QUOTAS.get(day, 0.0)
-		var was_successful = money >= quota
+		# Use the cached quota from _on_day_ended to avoid the post-increment day value.
+		var quota := _pending_quota
+		var was_successful := money >= quota
 		
 		if was_successful:
 			money -= quota
@@ -113,7 +114,7 @@ func _on_dialogic_signal(argument: String) -> void:
 			save_state()
 			print("[GameManager] Quota met! Subtracted %.2f. New balance: %.2f" % [quota, money])
 		else:
-			print("[GameManager] Quota FAILED! Only had %.2f / %.2f" % [money, quota])
+			print("[GameManager] Quota FAILED! Only had %.2f / %.2f (quota: %.2f)" % [money, quota, quota])
 		
 		EventBus.debt_quota_met.emit(was_successful)
 	
@@ -212,3 +213,11 @@ func _load_state() -> void:
 	else:
 		money = starting_money
 		day = 1
+
+func reset_state() -> void:
+	money = starting_money
+	day = 1
+	_reset_clock_to_morning()
+	save_state()
+	print("[GameManager] State reset to defaults for New Game.")
+
