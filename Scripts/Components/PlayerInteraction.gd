@@ -132,10 +132,10 @@ func _input(event: InputEvent) -> void:
 				
 				# Range Rules: 
 				# 1. Minimum: Base price.
-				# 2. Maximum: Progressive margin based on tier. 15% (Tier 1) to 35% (Tier 10).
+				# 2. Maximum: Progressive margin based on tier. 25% (Tier 1) to 50% (Tier 10).
 				var min_price : float = base_price
 				var tier : int = item.item_data.tier
-				var max_margin : float = 0.15 + (float(max(1, tier)) - 1.0) * (0.20 / 9.0)
+				var max_margin : float = 0.25 + (float(max(1, tier)) - 1.0) * (0.25 / 9.0)
 				var max_price : float = round(base_price * (1.0 + max_margin))
 				
 				var new_price : float = clamp(current_price + delta, min_price, max_price)

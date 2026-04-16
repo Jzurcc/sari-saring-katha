@@ -31,7 +31,6 @@ var _pending_dismiss: bool = false
 var _is_spawning: bool = false
 var _greeting_interrupted: bool = false # Remembers if Uncle Mario forcibly shut down the greeting.
 var _is_partial_success: bool = false # Tracks if a dismissal should be treated as a success
-var _greeting_deferred: bool = false # Remembers if a greeting was stalled because Mario was busy.
 var _is_nokia_open: bool = false
 
 
@@ -149,51 +148,25 @@ func _spawn_next_customer() -> void:
 func _on_customer_arrived(customer: Customer) -> void:
 	_handle_customer_logic(customer, true)
 
-## Helper to process arrival signals and dialogues.
-## is_initial_arrival: if true, emits signals and sets naming globals.
+## Process arrival signals. We no longer auto-play dialogue upon arrival.
 func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> void:
 	if is_initial_arrival:
 		EventBus.customer_arrived.emit(customer)
 		
-		# Automatically face the customer upon arrival (even if the phone isn't open).
-		var player = get_tree().get_first_node_in_group("player")
-		if player and player.has_method("face_node"):
-			await player.face_node(customer)
-
 		_update_item_names(customer)
 		
 		# Patch the generic character resource so "Customer:" lines show the right name and play sounds.
 		if GENERIC_CHAR_RES:
 			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 
-	# ── DIALOGUE LOGIC ──
-	var timeline = customer.transaction_context.timeline
-	var start_label := "Greeting"
-	var next_phase := DialoguePhase.GREETING
-	
-	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
-		start_label = "" # Play from start for social visits
-		next_phase = DialoguePhase.SOCIAL_VISIT
-	elif Dialogic.VAR.get_variable("Global.RumorActive"):
-		# If a rumor is active and the character has a dedicated label, start there
-		if _is_label_in_timeline(timeline, "Rumor") and not customer.has_been_greeted:
-			start_label = "Rumor"
-			print("[CustomerSpawner] Specific Rumor label found and prioritized.")
+		# Just play the reminder sound instead of starting dialogue
+		if customer.customer_data and customer.customer_data.dialogue_blip_sound:
+			var audio_manager = get_node_or_null("/root/AudioManager")
+			if audio_manager:
+				audio_manager.dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
+				audio_manager.dialogue_blip_player.stream = customer.customer_data.dialogue_blip_sound
+				audio_manager.dialogue_blip_player.play()
 
-	if MarioManager.is_restocking_active or _is_nokia_open:
-		print("[CustomerSpawner] Phone is active — deferring greeting for %s." % customer.customer_data.get_clean_id())
-		_greeting_deferred = true
-		return
-
-	# ── Arrival debug ────────────────────────────────────
-	print("\n[CUSTOMER] ── Triggering Greeting ──────────────────")
-	print("  Phase     : ", DialoguePhase.keys()[next_phase])
-	print("  Timeline  : ", timeline)
-	print("  Label     : ", start_label if start_label != "" else "(Start)")
-	print("[CUSTOMER] ─────────────────────────────────────────")
-	# ─────────────────────────────────────────────────────
-
-	start_dialogue(timeline, customer, next_phase, start_label)
 
 var _processed_finished_customers: Array[Customer] = []
 
@@ -256,19 +229,36 @@ func _on_customer_clicked(customer: Customer) -> void:
 	if customer.has_method("_is_resolving") and customer._is_resolving:
 		return
 
+	if MarioManager.is_restocking_active or _is_nokia_open:
+		# Don't allow manual dialogue triggering while phone is open
+		return
+
 	var timeline = customer.transaction_context.timeline
 	var label: String = ""
 
 	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
 		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
+		customer.has_been_greeted = true
 	else:
-		if _greeting_interrupted:
-			label = "Greeting"
+		if not customer.has_been_greeted or _greeting_interrupted:
+			var timeline_path = timeline.resource_path if timeline is Resource else timeline
+			if Dialogic.VAR.get_variable("Global.RumorActive") and _is_label_in_timeline(timeline_path, "Rumor"):
+				label = "Rumor"
+			else:
+				label = "Greeting"
 			_dialogue_phase = DialoguePhase.GREETING
 			_greeting_interrupted = false  # Consume the flag
+			customer.has_been_greeted = true
 		else:
 			label = "Talk"
 			_dialogue_phase = DialoguePhase.TALK
+
+	# ── Manual Trigger debug ─────────────────────────────
+	print("\n[CUSTOMER] ── Manual Dialogue Trigger ─────────────")
+	print("  Phase     : ", DialoguePhase.keys()[_dialogue_phase])
+	print("  Timeline  : ", timeline)
+	print("  Label     : ", label if label != "" else "(Start)")
+	print("[CUSTOMER] ─────────────────────────────────────────")
 
 	start_dialogue(timeline, customer, _dialogue_phase, label)
 
@@ -557,23 +547,13 @@ func _end_day() -> void:
 	EventBus.day_ended.emit(gm.day if gm else 1)
 
 func _on_mario_delivery_finished() -> void:
-	_trigger_deferred_greeting()
+	pass
 
-func _on_mario_call_ended(success: bool) -> void:
-	if not success:
-		_trigger_deferred_greeting()
+func _on_mario_call_ended(_success: bool) -> void:
+	pass
 
 func _on_nokia_opened() -> void:
 	_is_nokia_open = true
 
 func _on_nokia_closed() -> void:
 	_is_nokia_open = false
-	# Small delay to ensure UI closing animations don't overlap with bubble appearances
-	await get_tree().create_timer(0.5).timeout
-	_trigger_deferred_greeting()
-
-func _trigger_deferred_greeting() -> void:
-	if _greeting_deferred and is_instance_valid(current_customer):
-		print("[CustomerSpawner] Restock complete — triggering deferred greeting for %s." % current_customer.customer_data.get_clean_id())
-		_greeting_deferred = false
-		_handle_customer_logic(current_customer, false)
