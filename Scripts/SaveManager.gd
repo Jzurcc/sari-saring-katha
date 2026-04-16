@@ -22,13 +22,34 @@ func _ready() -> void:
 	
 	load_game()
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		print("[SaveManager] Shutdown detected. Forcing immediate save...")
+		force_save()
+
+
+signal save_started
+signal save_finished
+
 ## Merges new data into the save cache and schedules a disk write.
 func save_game(new_data: Dictionary) -> void:
+	# Merge new data into our cache
 	_deep_merge(_save_cache, new_data)
+	
 	_is_dirty = true
 	
-	# Restart the timer to debounce multiple calls
-	_save_timer.start()
+	# If the timer isn't running, this is a new "burst" of saves
+	if _save_timer.is_stopped():
+		_save_timer.start()
+	else:
+		# If it's already running, we only restart it if we haven't reached a max delay.
+		# However, a simpler way is to just let it run if it's already close,
+		# or restart it but check elapsed time.
+		
+		# Better approach for Godot: if the timer is already running and has more than 
+		# 0.1s left, don't restart it to avoid pushing it forever.
+		if _save_timer.time_left < 0.1:
+			_save_timer.start()
 
 ## Immediately commits the cache to disk. Useful for quitting or critical moments.
 func force_save() -> void:
@@ -77,6 +98,8 @@ func _commit_to_disk() -> void:
 	if not _is_dirty:
 		return
 		
+	save_started.emit()
+	
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		var json_string = JSON.stringify(_save_cache, "\t")
@@ -86,6 +109,8 @@ func _commit_to_disk() -> void:
 		print("[SaveManager] State committed to disk.")
 	else:
 		push_error("[SaveManager] Could not open save file for writing: ", SAVE_PATH)
+		
+	save_finished.emit()
 
 ## Performs a recursive merge of two dictionaries.
 func _deep_merge(target: Dictionary, source: Dictionary) -> void:

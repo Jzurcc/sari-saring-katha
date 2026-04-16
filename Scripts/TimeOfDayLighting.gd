@@ -25,6 +25,7 @@ var _is_transitioning: bool = false
 var _transition_tween: Tween = null
 var _last_signal_time: float = -1.0
 var _state_dirty: bool = true
+var _sorted_keyframes: Array = []
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -53,8 +54,11 @@ func _ready() -> void:
 
 	if keyframes.is_empty():
 		push_error("[TimeOfDayLighting] Keyframes array empty! Lighting system will not function correctly. Ensure keyframes are assigned in the Inspector.")
-
-	if _time_of_day:
+		
+	_sorted_keyframes = []
+	for k in keyframes:
+		_sorted_keyframes.append({"kf": k, "start": k.time_range.x})
+	_sorted_keyframes.sort_custom(func(a, b): return a["start"] < b["start"])
 
 func _on_time_changed(time: float) -> void:
 	var next_state = _get_current_keyframe_pair(time)
@@ -66,32 +70,30 @@ func _on_time_changed(time: float) -> void:
 	
 	var is_large_jump = diff > 0.1 and _last_signal_time >= 0.0
 	var phase_changed = next_state.from_state != _current_from_state or next_state.to_state != _current_to_state
-	_last_signal_time = time
-	_state_dirty = true
-
+	
 	if phase_changed or is_large_jump:
+		_last_signal_time = time
 		_start_transition(next_state.from_state, next_state.to_state, next_state.t)
 	else:
 		# Normal incremental tick: follow directly if not in a cinematic sweep.
 		if not _is_transitioning:
-			_current_from_state = next_state.from_state
-			_current_to_state = next_state.to_state
-			_current_t = next_state.t
+			# Only update visually if time has moved significantly (approx 0.01 hours)
+			if diff > 0.01:
+				_current_from_state = next_state.from_state
+				_current_to_state = next_state.to_state
+				_current_t = next_state.t
+				_last_signal_time = time
+				_state_dirty = true
 
 func _get_current_keyframe_pair(time: float) -> Dictionary:
-	var sorted_times: Array = []
-	for k in keyframes:
-		sorted_times.append({"kf": k, "start": k.time_range.x})
-	sorted_times.sort_custom(func(a, b): return a["start"] < b["start"])
-
 	var from_idx = 0
-	for i in range(sorted_times.size()):
-		if time >= sorted_times[i]["start"]:
+	for i in range(_sorted_keyframes.size()):
+		if time >= _sorted_keyframes[i]["start"]:
 			from_idx = i
 
-	var to_idx = (from_idx + 1) % sorted_times.size()
-	var from_kf = sorted_times[from_idx]["kf"]
-	var to_kf = sorted_times[to_idx]["kf"]
+	var to_idx = (from_idx + 1) % _sorted_keyframes.size()
+	var from_kf = _sorted_keyframes[from_idx]["kf"]
+	var to_kf = _sorted_keyframes[to_idx]["kf"]
 
 	var from_start = from_kf.time_range.x
 	var from_end = from_kf.time_range.y
