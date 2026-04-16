@@ -10,6 +10,8 @@ var money: float = 0.0
 var day: int = 1
 var _last_earning: float = 0.0
 
+var _is_waiting_for_tutorial_space := false
+
 # --- Debt System ---
 const DAILY_QUOTAS = {
 	1: 50.0,
@@ -114,6 +116,66 @@ func _on_dialogic_signal(argument: String) -> void:
 			print("[GameManager] Quota FAILED! Only had %.2f / %.2f" % [money, quota])
 		
 		EventBus.debt_quota_met.emit(was_successful)
+	
+	# --- Tutorial Camera Movements ---
+	elif argument == "look_at_fridge":
+		Dialogic.paused = true
+		_is_waiting_for_tutorial_space = true
+		var player = get_tree().get_first_node_in_group("player")
+		if player and player.has_method("face_pos"):
+			# Using updated coordinates for the fridge framing
+			player.face_pos(Vector3(0.575, 2.335, -3.767), 0.6)
+			
+			# Flash white outline on the fridge (found via group)
+			var door = get_tree().get_first_node_in_group("refrigerator_door")
+			_flash_outline(door, 3.0)
+			
+	elif argument == "look_at_nokia":
+		Dialogic.paused = true
+		_is_waiting_for_tutorial_space = true
+		var player = get_tree().get_first_node_in_group("player")
+		if player and player.has_method("face_pos"):
+			# Using requested coordinates: 2.143, 2.206, -0.198
+			player.face_pos(Vector3(2.143, 2.206, -0.198), 0.6)
+			
+			# Flash white outline on the Nokia phone
+			var nokia = get_tree().root.find_child("NokiaInteractable", true, false)
+			_flash_outline(nokia, 3.0)
+
+func _unhandled_input(event: InputEvent) -> void:
+	# 1. Tutorial Space Handling: Resumes Dialogic after camera pan
+	if _is_waiting_for_tutorial_space:
+		if event.is_action_pressed("dialogic_default_action") or event.is_action_pressed("ui_accept"):
+			_is_waiting_for_tutorial_space = false
+			Dialogic.paused = false
+			get_viewport().set_input_as_handled()
+			return
+
+	# 2. Debug Skip Day (L key)
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:
+		print("[GameManager] DEBUG: Skip to next day triggered via L key")
+		
+		# End any current dialogue to prevent locking
+		if Dialogic.current_timeline != null:
+			Dialogic.end_timeline()
+			
+		# Despawn any active customers safely
+		var customers = get_tree().get_nodes_in_group("customer")
+		for c in customers:
+			EventBus.customer_dismissed.emit(c)
+			c.queue_free()
+			
+		# Trigger the normal end of day sequence
+		_on_day_ended(day)
+
+## Helper to highlight an object during the tutorial
+func _flash_outline(node: Node, duration: float) -> void:
+	if node and node.has_method("on_hover"):
+		node.on_hover(true)
+		await get_tree().create_timer(duration).timeout
+		if is_instance_valid(node):
+			node.on_hover(false)
+
 
 func _reset_clock_to_morning() -> void:
 	# Set the initial hour in StoryManager context
@@ -130,23 +192,7 @@ func _reset_clock_to_morning() -> void:
 	# This automatically sets tod.game_time_enabled = true
 	StoryManager.is_clock_running = true
 
-func _unhandled_input(event: InputEvent) -> void:
-	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:
-		print("[GameManager] DEBUG: Skip to next day triggered via L key")
-		
-		# End any current dialogue to prevent locking
-		if Dialogic.current_timeline != null:
-			Dialogic.end_timeline()
-			
-		# Despawn any active customers safely
-		var customers = get_tree().get_nodes_in_group("customer")
-		for c in customers:
-			# Emit dismissed so UI reacts (if any)
-			EventBus.customer_dismissed.emit(c)
-			c.queue_free()
-			
-		# Trigger the normal end of day sequence
-		_on_day_ended(day)
+
 func save_state() -> void:
 	var save_data = {
 		"manager": {

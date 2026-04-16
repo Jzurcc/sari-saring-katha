@@ -16,6 +16,7 @@ var audio_fantastic_idea = preload("res://Audio/Soundtracks/Fantastic Idea.mp3")
 var audio_not_me = preload("res://Audio/Soundtracks/Not ME.mp3")
 var audio_sleepy = preload("res://Audio/Soundtracks/Sleepy.mp3")
 var audio_laughing_horse = preload("res://Audio/Soundtracks/Laughing Horse.mp3")
+var audio_autumn_wind = preload("res://Audio/Soundtracks/an Autumn Wind.mp3")
 
 var character_themes: Dictionary = {
 	# "KuyaKap": audio_laughing_horse
@@ -92,8 +93,6 @@ func _ready() -> void:
 	EventBus.customer_dismissed.connect(_on_customer_left)
 	EventBus.request_sfx.connect(play_sfx)
 	
-	var audio_autumn_wind = preload("res://Audio/Soundtracks/an Autumn Wind.mp3")
-	
 	# Start base ambience immediately at a random position
 	ambience_base.stream = audio_calming_morning
 	ambience_base.play(randf_range(0.0, ambience_base.stream.get_length()))
@@ -118,10 +117,13 @@ func play_sfx(sfx_name: String) -> void:
 		sfx_player.play()
 
 func _process(_delta: float) -> void:
-	# Prevent dummy TimeOfDay from hijacking music in menus/intro
-	if get_tree().current_scene and get_tree().current_scene.name in ["MainMenu", "IntroCutscene"]:
+	if is_in_intro_or_menu():
 		if current_bgm_phase != BGMPhase.NONE:
 			current_bgm_phase = BGMPhase.NONE
+		# Ensure Autumn Wind is playing if we are in intro/menu
+		if bgm_player.stream != audio_autumn_wind:
+			bgm_player.stream = audio_autumn_wind
+			bgm_player.play()
 		return
 		
 	_ensure_tod_node()
@@ -130,6 +132,20 @@ func _process(_delta: float) -> void:
 		var time = time_of_day_node.get("current_time")
 		if time != null:
 			_update_audio_for_time(time)
+
+func is_in_intro_or_menu() -> bool:
+	var scene = get_tree().current_scene
+	if not scene: return true # Assume menu/intro during transition
+	
+	# Check by name
+	if scene.name in ["MainMenu", "IntroCutscene"]:
+		return true
+		
+	# Check for specific scripts or properties as a fallback
+	if scene.has_method("play_all_sequences"): # This is a unique method in IntroManager
+		return true
+		
+	return false
 
 
 func _ensure_tod_node() -> void:

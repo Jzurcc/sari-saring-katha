@@ -7,12 +7,12 @@
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/ShelfSurface.gd" id="11_ktwve"]
 [ext_resource type="Script" uid="uid://os72qy7y81c6" path="res://Scripts/ProceduralPackStrategy.gd" id="12_r5sjn"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="12_yc6xl"]
-[ext_resource type="Resource" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
+[ext_resource type="Resource" uid="uid://c03y0k45fbd18" path="res://Resources/items/cigarette/Champyon.tres" id="15_glaac"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="19_k6vqf"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
-[ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Script" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
 [ext_resource type="Resource" uid="uid://dphi3ws2617ql" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
 [ext_resource type="Resource" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
 [ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
@@ -25,20 +25,20 @@
 [ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
 [ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
-[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="PackedScene" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
-[ext_resource type="PackedScene" path="res://Scenes/UI/NokiaUI.tscn" id="36_fto8l"]
-[ext_resource type="Shader" path="res://Assets/Shaders/mesh_outline.gdshader" id="38_cqekc"]
+[ext_resource type="PackedScene" uid="uid://b4gwqvv7ni0nq" path="res://Scenes/UI/NokiaUI.tscn" id="36_fto8l"]
+[ext_resource type="Shader" uid="uid://dr8eyjq8h2rrs" path="res://Assets/Shaders/mesh_outline.gdshader" id="38_cqekc"]
 [ext_resource type="Script" uid="uid://dxmnefrwak8nn" path="res://Scripts/SachetContainerItem.gd" id="45_glkqw"]
 [ext_resource type="Material" uid="uid://db4iw7gjdpieb" path="res://Assets/3D/final store/textures/materials/outer_wall.001.tres" id="45_gnwe2"]
 [ext_resource type="Material" uid="uid://7p3u1xj7ym3f" path="res://Assets/3D/final store/textures/materials/outer_wall.tres" id="46_glkqw"]
 [ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="46_hfiw1"]
 [ext_resource type="VoxelGIData" uid="uid://lqnf363acqsg" path="res://Scenes/MainGame.VoxelGI_data.res" id="46_uvjf7"]
-[ext_resource type="Resource" uid="uid://d23wq027skjv6" path="res://Resources/items/sachet/Aryel.tres" id="47_50m7d"]
+[ext_resource type="Resource" path="res://Resources/items/sachet/Aryel.tres" id="47_50m7d"]
 [ext_resource type="Texture2D" uid="uid://4jopyanab23j" path="res://Assets/items/icons/9_sachet_kopimo.png" id="47_hfiw1"]
 [ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="48_d7jqg"]
-[ext_resource type="Resource" uid="uid://0w15pehu11ln" path="res://Resources/items/sachet/Kopimo.tres" id="49_1u2qj"]
-[ext_resource type="Resource" uid="uid://dbw1di2cem1lh" path="res://Resources/items/sachet/KneesToes.tres" id="51_hnhmk"]
+[ext_resource type="Resource" path="res://Resources/items/sachet/Kopimo.tres" id="49_1u2qj"]
+[ext_resource type="Resource" path="res://Resources/items/sachet/KneesToes.tres" id="51_hnhmk"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/TierAdvanceOverlay.tscn" id="51_tier_overlay"]
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
@@ -116,7 +116,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/Head" unique_id=1125636583]
 script = ExtResource("pi_scr")
-interaction_range = 10.0
 
 [node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
 transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.287584, 0.75612736, 1.1670127)
@@ -280,7 +279,7 @@ wind_direction = 2.35619451204804
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2324809, 0.8288167, -3.5390637)
 
 [node name="Cube_001" parent="FridgeDoorPivot" unique_id=1452766205 instance=ExtResource("19_k6vqf")]
-transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, -0.9317349, 0, -0.43077898)
+transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, -0.932, 0, -0.431)
 
 [node name="ShelfSurface" type="Node3D" parent="." unique_id=685570783]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 4.0375986, 4.019844)

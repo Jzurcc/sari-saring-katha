@@ -537,5 +537,5 @@ transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 
 [connection signal="pressed" from="Buttons/Collection" to="." method="_on_collection_pressed"]
 [connection signal="pressed" from="Buttons/Exit" to="." method="_on_exit_pressed"]
 [connection signal="pressed" from="OptionsOverlay/OptionsPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_options_close_pressed"]
-[connection signal="pressed" from="CollectionOverlay/CollectionPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_collection_close_pressed"]
 [connection signal="gui_input" from="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel" to="." method="_on_window_mode_panel_gui_input"]
+[connection signal="pressed" from="CollectionOverlay/CollectionPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_collection_close_pressed"]
