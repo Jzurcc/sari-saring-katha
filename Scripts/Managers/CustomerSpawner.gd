@@ -184,9 +184,12 @@ func _on_customer_finished(customer: Customer) -> void:
 		# If a timeline is already running, we might be in the middle of a partial satisfaction
 		# or a riddle resolution that just completed the transaction. 
 		# If the current timeline IS the customer's timeline, we should jump to Satisfy.
-		if Dialogic.current_timeline.resource_path == customer.transaction_context.timeline.resource_path:
+		var active_path = Dialogic.current_timeline.resource_path
+		var target_path = customer.transaction_context.timeline.resource_path if customer.transaction_context.timeline is Resource else customer.transaction_context.timeline
+		
+		if active_path == target_path:
 			var label := "Satisfy"
-			if _is_label_in_timeline(_current_timeline_path, label):
+			if _is_label_in_timeline(target_path, label):
 				print("[CustomerSpawner] Jumping to Satisfy label mid-timeline.")
 				Dialogic.Jump.jump_to_label(label)
 				_dialogue_phase = DialoguePhase.SATISFIED
@@ -507,8 +510,8 @@ func _handle_transaction_cleanup() -> void:
 
 
 ## Helper to see if a label exists in a timeline file (.dtl)
-func _is_label_in_timeline(path: String, label_name: String) -> bool:
-	if path == "":
+func _is_label_in_timeline(path: Variant, label_name: String) -> bool:
+	if typeof(path) != TYPE_STRING or path == "":
 		return false
 	
 	# Normalize path and handle missing .dtl extension

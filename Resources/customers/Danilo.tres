@@ -6,8 +6,8 @@
 [ext_resource type="AudioStream" uid="uid://qgyke4cv7rpu" path="res://Audio/DialogueBlips/Danilo.wav" id="2_wav"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://gwiwtia4ccck" path="res://Assets/characters/sprites/Danilo.png" id="5_png"]
-[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_vsw75"]
-[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arc_script"]
+[ext_resource type="Script" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_vsw75"]
+[ext_resource type="Script" path="res://Scripts/ArcData.gd" id="arc_script"]
 [ext_resource type="Resource" uid="uid://cxb0y7baqr181" path="res://Dialogue/Timelines/Danilo/Story0.dtl" id="story_0"]
 
 [sub_resource type="Resource" id="arc_1"]

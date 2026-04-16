@@ -40,7 +40,7 @@ shadow_mesh = SubResource("ArrayMesh_e85sq")
 [sub_resource type="BoxShape3D" id="BoxShape3D_ngomo"]
 size = Vector3(0.27911407, 1.1166368, 2.2101433)
 
-[node name="Cube_001" type="MeshInstance3D" unique_id=1452766205]
+[node name="Cube_001" type="MeshInstance3D" unique_id=1452766205 groups=["refrigerator_door"]]
 transform = Transform3D(-1.5184417, -0.074364185, -5.1411515e-09, -2.8310578e-09, 2.0154557e-07, -1.5199125, 0.066852756, -1.6890506, -1.8113685e-07, 0, 0, 0)
 mesh = SubResource("ArrayMesh_6fakx")
 skeleton = NodePath("")

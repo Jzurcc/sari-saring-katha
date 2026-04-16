@@ -536,3 +536,4 @@ func _is_story_chapter_available(customer: CustomerData, stage: int) -> bool:
 		return true
 		
 	return customer.story_prerequisites[stage].is_met(self)
+	return customer.story_prerequisites[stage].is_met(self)

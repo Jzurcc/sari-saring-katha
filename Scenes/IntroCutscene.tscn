@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bs0db8j7b70xh"]
 
 [ext_resource type="Script" uid="uid://bod3ji72gqpvb" path="res://Scripts/IntroManager.gd" id="1_manager"]
-[ext_resource type="Script" path="res://Scripts/CutsceneSequence.gd" id="2_seq"]
-[ext_resource type="Script" path="res://Scripts/CameraPan.gd" id="3_pan"]
+[ext_resource type="Script" uid="uid://dmlix7i2ugfar" path="res://Scripts/CutsceneSequence.gd" id="2_seq"]
+[ext_resource type="Script" uid="uid://1lgnvkyd04cb" path="res://Scripts/CameraPan.gd" id="3_pan"]
 [ext_resource type="AudioStream" uid="uid://cwj0dt2xougdf" path="res://Audio/Soundtracks/an Autumn Wind.mp3" id="4_audio"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="5_store"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="6_cysq5"]
@@ -77,7 +77,7 @@ theme_override_colors/font_color = Color(1, 0.921569, 0.792157, 0.588235)
 theme_override_colors/font_hover_color = Color(1, 0.921569, 0.792157, 1)
 theme_override_colors/font_outline_color = Color(0.482353, 0.305882, 0.101961, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 37
 text = "SKIP >>"
 flat = true
 alignment = 2
@@ -155,7 +155,7 @@ duration = 7.0
 
 [node name="Sequence_Court" type="Node" parent="Sequences" unique_id=1097537286]
 script = ExtResource("2_seq")
-subtitle_text = "It is a quiet town. The kind of place where time slows down, and the neighbors share old stories over a cold bottle of Coke as the day ends."
+subtitle_text = "It is a quiet town. The kind of place where time slows down, and the neighbors share old stories over a cold bottle of cola as the day ends."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Court" unique_id=1954687376]
 script = ExtResource("3_pan")

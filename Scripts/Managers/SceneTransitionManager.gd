@@ -67,8 +67,8 @@ func change_scene(path: String) -> void:
 	# Change scene
 	get_tree().change_scene_to_file(path)
 	
-	# Wait for scene to load and settle
-	await get_tree().create_timer(0.25).timeout
+	# Wait for scene to load, settle, and provide requested blackout duration
+	await get_tree().create_timer(1).timeout
 	
 	# Smooth open
 	tween = create_tween()

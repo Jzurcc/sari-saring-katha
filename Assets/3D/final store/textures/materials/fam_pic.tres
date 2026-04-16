@@ -1,6 +1,6 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://13c8ga5mcu8a"]
 
-[ext_resource type="Texture2D" uid="uid://bsnc4nj35t88f" path="res://Assets/3D/final store/textures/fam_pic.png" id="1_jkd7b"]
+[ext_resource type="Texture2D" uid="uid://bahu4miveara0" path="res://Assets/ui/family_portrait.png" id="1_jkd7b"]
 
 [resource]
 resource_name = "fam_pic"
