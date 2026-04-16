@@ -12,7 +12,7 @@
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="19_k6vqf"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
-[ext_resource type="Script" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
+[ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
 [ext_resource type="Resource" uid="uid://dphi3ws2617ql" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
 [ext_resource type="Resource" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
 [ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
@@ -25,7 +25,7 @@
 [ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
 [ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
-[ext_resource type="PackedScene" path="res://Scenes/nokia.tscn" id="34_1r7st"]
+[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="34_1r7st"]
 [ext_resource type="Script" uid="uid://bkp1506g5esmf" path="res://Scripts/NokiaClickRegion.gd" id="35_3ijh3"]
 [ext_resource type="PackedScene" uid="uid://b4gwqvv7ni0nq" path="res://Scenes/UI/NokiaUI.tscn" id="36_fto8l"]
 [ext_resource type="Shader" uid="uid://dr8eyjq8h2rrs" path="res://Assets/Shaders/mesh_outline.gdshader" id="38_cqekc"]
@@ -34,15 +34,18 @@
 [ext_resource type="Material" uid="uid://7p3u1xj7ym3f" path="res://Assets/3D/final store/textures/materials/outer_wall.tres" id="46_glkqw"]
 [ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="46_hfiw1"]
 [ext_resource type="VoxelGIData" uid="uid://lqnf363acqsg" path="res://Scenes/MainGame.VoxelGI_data.res" id="46_uvjf7"]
-[ext_resource type="Resource" path="res://Resources/items/sachet/Aryel.tres" id="47_50m7d"]
+[ext_resource type="Resource" uid="uid://d23wq027skjv6" path="res://Resources/items/sachet/Aryel.tres" id="47_50m7d"]
 [ext_resource type="Texture2D" uid="uid://4jopyanab23j" path="res://Assets/items/icons/9_sachet_kopimo.png" id="47_hfiw1"]
 [ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="48_d7jqg"]
-[ext_resource type="Resource" path="res://Resources/items/sachet/Kopimo.tres" id="49_1u2qj"]
-[ext_resource type="Resource" path="res://Resources/items/sachet/KneesToes.tres" id="51_hnhmk"]
+[ext_resource type="Resource" uid="uid://0w15pehu11ln" path="res://Resources/items/sachet/Kopimo.tres" id="49_1u2qj"]
+[ext_resource type="Resource" uid="uid://ctvt3gfdvj7lc" path="res://Resources/items/sachet/KneesToes.tres" id="51_hnhmk"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/TierAdvanceOverlay.tscn" id="51_tier_overlay"]
+[ext_resource type="PackedScene" uid="uid://is4naxr6ch1" path="res://Scenes/notebook.tscn" id="59_m7vhu"]
+[ext_resource type="Texture2D" uid="uid://bwqts2yr2cm8m" path="res://Assets/ui/trash.png" id="61_32bjv"]
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
+[ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/CatInteractable.gd" id="cat_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/Managers/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
@@ -51,8 +54,14 @@
 [ext_resource type="Script" uid="uid://dnowjpw0mq2o4" path="res://Scripts/Components/FPSController.gd" id="fps_scr"]
 [ext_resource type="Script" uid="uid://dchrvgkvawu1a" path="res://Scripts/Managers/GameManager.gd" id="gm_scr"]
 [ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
+[ext_resource type="AudioStream" uid="uid://co4ijn45uea7r" path="res://Audio/SFX/meow1.wav" id="meow1"]
+[ext_resource type="AudioStream" uid="uid://cita80tdosv0o" path="res://Audio/SFX/meow2.wav" id="meow2"]
+[ext_resource type="AudioStream" uid="uid://bolh1qcr1fith" path="res://Audio/SFX/meow3.wav" id="meow3"]
+[ext_resource type="AudioStream" uid="uid://dovf3rpgrc1uy" path="res://Audio/SFX/meow4.wav" id="meow4"]
 [ext_resource type="Script" uid="uid://camum248co0qu" path="res://Scripts/UI/MoneyLabelUI.gd" id="ml_scr"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
+[ext_resource type="Script" uid="uid://f458ogc2hvl" path="res://Scripts/UI/SaveIndicator.gd" id="save_scr"]
+[ext_resource type="Script" uid="uid://c4nyxybw28ti4" path="res://Scripts/Components/TrashInteractable.gd" id="trash_scr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
@@ -80,6 +89,9 @@ size = Vector3(2.6975098, 4.6657715, 0.5)
 [sub_resource type="BoxShape3D" id="BoxShape3D_3ijh3"]
 size = Vector3(200.6779, 114.64903, 426.17346)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_cqekc"]
+size = Vector3(6.6550903, 3.067398, 4.043152)
+
 [sub_resource type="BoxMesh" id="BoxMesh_eeqno"]
 material = ExtResource("45_gnwe2")
 size = Vector3(0.26, 6.17, 0.12)
@@ -94,10 +106,27 @@ size = Vector3(0.185, 5.68, 0.195)
 
 [sub_resource type="BoxMesh" id="BoxMesh_uvjf7"]
 material = ExtResource("46_glkqw")
-size = Vector3(0.115, 0.785, 9.545)
+size = Vector3(0.2, 0.905, 9.545)
+
+[sub_resource type="BoxMesh" id="BoxMesh_cqekc"]
+material = ExtResource("46_glkqw")
+size = Vector3(0.12, 2.035, 4.57)
+
+[sub_resource type="BoxMesh" id="BoxMesh_50m7d"]
+material = ExtResource("46_glkqw")
+size = Vector3(0.115, 1, 1.575)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_d7jqg"]
 size = Vector3(0.6658325, 1.3227539, 0.12005615)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dhbwi"]
+size = Vector3(1.7578125, 4.565674, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_m7vhu"]
+size = Vector3(0.45751953, 0.26831055, 0.5484009)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ni4m0"]
+size = Vector3(1.2250977, 1.4875488, 0.5532837)
 
 [node name="MainGame" type="Node3D" unique_id=572606432]
 script = ExtResource("1_script")
@@ -105,7 +134,7 @@ script = ExtResource("1_script")
 [node name="Player" type="CharacterBody3D" parent="." unique_id=-1541147005 groups=["player"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.596, 2.9326215, -0.05)
 script = ExtResource("fps_scr")
-debug_customer_scale = 0.6
+debug_customer_scale = 0.53
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1498308492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64331055, 0)
@@ -118,10 +147,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 script = ExtResource("pi_scr")
 
 [node name="CustomerSpawnPos" type="Marker3D" parent="." unique_id=347439750]
-transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -10.287584, 0.75612736, 1.1670127)
+transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -11.358, 0.75612736, 0.16701269)
 
 [node name="CustomerTargetPos" type="Marker3D" parent="." unique_id=614298035]
 transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -5.6717167, 0.75612736, -0.2131896)
+
+[node name="CustomerExitPos" type="Marker3D" parent="." unique_id=37937304]
+transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.999715, -6.489997, 0.6378057, 10.412144)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1703619609]
 
@@ -228,11 +260,37 @@ layout_mode = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 0.784313)
 
+[node name="SaveIndicator" type="Control" parent="CanvasLayer" unique_id=314159265]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -50.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("save_scr")
+
+[node name="Label" type="Label" parent="CanvasLayer/SaveIndicator" unique_id=314159266]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_fonts/font = ExtResource("5_eeqno")
+theme_override_font_sizes/font_size = 18
+text = "Progress Saved..."
+horizontal_alignment = 2
+vertical_alignment = 2
+
 [node name="TransactionTray" parent="." unique_id=995685862 instance=ExtResource("6_d4f28")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.671936, 3.9905696, 0)
-
-[node name="CollisionShape3D" parent="TransactionTray" index="0" unique_id=319493410]
-transform = Transform3D(0.27484417, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1.4210855e-13, -0.038028, 0.18249512)
 
 [node name="FlickeringLight" type="OmniLight3D" parent="." unique_id=132296177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19843912, 5.0687175, 0.016890496)
@@ -251,8 +309,8 @@ glitch_chance = 0.015
 transform = Transform3D(-4.3337035e-08, -0.13059543, 0.99143577, -5.708507e-09, 0.99143577, 0.13059543, -1, 6.661338e-16, -4.371139e-08, -0.49033928, -0.12397289, 0)
 light_color = Color(1, 0.8509804, 0.54901963, 1)
 shadow_enabled = true
-spot_range = 9.305218
-spot_angle = 27.656265
+spot_range = 16.923424
+spot_angle = 30.256962
 
 [node name="GameManager" type="Node" parent="." unique_id=1750367744]
 script = ExtResource("gm_scr")
@@ -261,6 +319,7 @@ script = ExtResource("gm_scr")
 script = ExtResource("cs_scr")
 spawn_pos = NodePath("../CustomerSpawnPos")
 target_pos = NodePath("../CustomerTargetPos")
+exit_pos = NodePath("../CustomerExitPos")
 
 [node name="CandyContainerManager" type="Node" parent="." unique_id=1750400001 node_paths=PackedStringArray("mix_container", "mentor_container", "pocha_container", "chubs_container")]
 script = ExtResource("ccm_scr")
@@ -273,6 +332,7 @@ chubs_container = NodePath("../CandyContainer_Chubs")
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
+current_time = 10.41
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
@@ -322,7 +382,7 @@ transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.5
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("frozen", "bottle")
+allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 surface_type = 1
 layout_strategy = SubResource("Resource_7p2u3")
@@ -332,7 +392,7 @@ transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.5
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("frozen", "bottle")
+allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 surface_type = 1
 layout_strategy = SubResource("Resource_him8o")
@@ -432,16 +492,26 @@ shaded = true
 alpha_cut = 1
 texture = ExtResource("30_si6xw")
 
-[node name="Cat" type="Sprite3D" parent="." unique_id=509141086]
-transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.3776584, 4.8488646, 0.9894613)
+[node name="Cat" type="Area3D" parent="." unique_id=1262654076]
+script = ExtResource("cat_script")
+meow_sounds = Array[AudioStream]([ExtResource("meow1"), ExtResource("meow2"), ExtResource("meow3"), ExtResource("meow4")])
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="Cat" unique_id=346730460]
+
+[node name="Sprite3D" type="Sprite3D" parent="Cat" unique_id=509141086]
+transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.1500525, 4.8488646, 0.9894613)
 cast_shadow = 0
 billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("31_1r7st")
 
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Cat" unique_id=618960453]
+transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.299846, 4.845353, 0.89582586)
+shape = SubResource("BoxShape3D_cqekc")
+
 [node name="Statue" type="Sprite3D" parent="." unique_id=2103369003]
-transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.1954145, -0.11046374)
+transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.22742, -0.11046374)
 cast_shadow = 0
 billboard = 2
 shaded = true
@@ -449,7 +519,7 @@ alpha_cut = 1
 texture = ExtResource("32_o6tew")
 
 [node name="Frame" type="Sprite3D" parent="." unique_id=1757741366]
-transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.8402715, 2.1249723)
+transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.9098506, 2.1249723)
 cast_shadow = 0
 billboard = 2
 shaded = true
@@ -460,7 +530,7 @@ texture = ExtResource("33_3ijh3")
 transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1165981177]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.549118, 2.9976158, 4.91865)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5320225, 2.9976158, 4.91865)
 mesh = SubResource("BoxMesh_eeqno")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=2079194260]
@@ -472,8 +542,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8303413, 3.3276234, -4.511
 mesh = SubResource("BoxMesh_glkqw")
 
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="." unique_id=798404228]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8193216, 0.6916826, 0.14385056)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.838951, 0.53276634, 0.14385056)
 mesh = SubResource("BoxMesh_uvjf7")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="." unique_id=1509122528]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.1227083, 0.6916826, 0.14385056)
+mesh = SubResource("BoxMesh_uvjf7")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="." unique_id=668446333]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.9729927, 1.7854092, 4.982814)
+mesh = SubResource("BoxMesh_cqekc")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="." unique_id=1550270411]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4.335819, 1.1318159, 4.9386473)
+mesh = SubResource("BoxMesh_50m7d")
 
 [node name="VoxelGI" type="VoxelGI" parent="." unique_id=954057711]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5098877, 1.732666, -0.06629944)
@@ -514,13 +596,13 @@ texture = ExtResource("47_hfiw1")
 
 [node name="SachetContainerItem3" type="Area3D" parent="." unique_id=1536702727]
 transform = Transform3D(-4.394796e-08, 2.4781066e-11, 1, 0.104181305, 0.99455833, 4.5539092e-09, -0.99455833, 0.104181305, -4.371139e-08, -4.25853, 4.5573874, -2.593927)
-visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("51_hnhmk")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem3" unique_id=1432288744]
-transform = Transform3D(0.205, -1.8626451e-09, 8.881784e-16, 1.8626451e-09, 0.205, 8.070055e-24, -8.881784e-16, 0, 0.205, -0.062466145, 0.13833427, 0.02798462)
-shape = SubResource("BoxShape3D_d7jqg")
+transform = Transform3D(0.20468557, 0.011357678, -1.4201085e-11, -0.011357678, 0.20468557, -4.9913773e-10, -1.3541168e-11, 4.991555e-10, 0.205, -0.11953378, 0.08510351, 0.02798462)
+visible = false
+shape = SubResource("BoxShape3D_dhbwi")
 
 [node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem3" unique_id=1613783674]
 transform = Transform3D(0.20480031, 0.009045633, -8.728173e-12, -0.009045633, 0.20480031, -3.9539713e-10, -8.727241e-12, 3.953971e-10, 0.205, -0.0731678, 0.08774614, 0)
@@ -530,4 +612,27 @@ texture = ExtResource("48_d7jqg")
 
 [node name="TierAdvanceOverlay" parent="." unique_id=510000000 instance=ExtResource("51_tier_overlay")]
 
-[editable path="TransactionTray"]
+[node name="PlasticMarker" type="Marker3D" parent="." unique_id=2123381481]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.97715116, 0.9105438, 4.409237)
+
+[node name="notebook" parent="." unique_id=961263518 instance=ExtResource("59_m7vhu")]
+transform = Transform3D(-0.017711766, 0, -0.009289424, 0, 0.02, 0, 0.009289424, 0, -0.017711766, 2.4487228, 2.193247, -1.08845)
+
+[node name="NotebookInteractable" type="Area3D" parent="." unique_id=498848053]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NotebookInteractable" unique_id=1890528050]
+transform = Transform3D(0.8872283, 0, 0.46133056, 0, 1, 0, -0.46133056, 0, 0.8872283, 2.4022622, 2.1195786, -1.049197)
+shape = SubResource("BoxShape3D_m7vhu")
+
+[node name="TrashInteractable" type="Area3D" parent="." unique_id=1372230160 groups=["trash"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4831681, 1.228571, -3.8005772)
+script = ExtResource("trash_scr")
+
+[node name="Sprite3D" type="Sprite3D" parent="TrashInteractable" unique_id=154773516]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0.19569421, 0)
+billboard = 1
+texture = ExtResource("61_32bjv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrashInteractable" unique_id=1652016983]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11254883, 0.20617676, -0.053863525)
+shape = SubResource("BoxShape3D_ni4m0")

@@ -1,3 +1,21 @@
 [gd_resource type="AudioBusLayout" format=3 uid="uid://b3scee0b03k1u"]
 
+[sub_resource type="AudioEffectHighPassFilter" id="AudioEffectHighPassFilter_telephone"]
+resource_name = "HighPassFilter"
+cutoff_hz = 500.0
+
+[sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_telephone"]
+resource_name = "LowPassFilter"
+cutoff_hz = 3000.0
+
 [resource]
+bus/1/name = &"Telephone"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = 0.0
+bus/1/send = &"Master"
+bus/1/effect/0/effect = SubResource("AudioEffectHighPassFilter_telephone")
+bus/1/effect/0/enabled = true
+bus/1/effect/1/effect = SubResource("AudioEffectLowPassFilter_telephone")
+bus/1/effect/1/enabled = true

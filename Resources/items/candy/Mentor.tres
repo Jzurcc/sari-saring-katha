@@ -8,6 +8,7 @@ script = ExtResource("1_item")
 item_name = "Mentor"
 texture = ExtResource("2_tex")
 price = 0.5
+type = 2
 category = "candy"
 tier = 2
 item_hint = "can teach me "

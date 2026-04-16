@@ -3,9 +3,16 @@ extends CharacterBody3D
 @export var use_free_camera: bool = true
 @export var walk_speed: float = 5.0
 @export var sprint_speed: float = 8.0
+@export var crouch_speed: float = 2.5
 @export var movement_acceleration: float = 40.0
 @export var movement_friction: float = 30.0
 @export var mouse_sensitivity: float = 0.002
+
+@export_group("Crouch")
+@export var stand_head_y: float = 0.7       ## Head Y position when standing (matches scene default)
+@export var crouch_head_y: float = 0.2      ## Head Y position when crouching (0.5 drop from stand)
+@export var crouch_transition_speed: float = 10.0  ## Lerp speed for the crouch motion
+@export var crouch_capsule_height: float = 1.6   ## CapsuleShape3D height while crouching (standing height is read from the shape at startup)
 
 @export_group("Head Bobbing")
 @export var bob_frequency: float = 2.0
@@ -49,8 +56,12 @@ var _shake_intensity: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_timer: float = 0.0
 
+var _is_crouching: bool = false
+var _stand_capsule_height: float = 0.0
+
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
+@onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
 func _ready() -> void:
 	if use_free_camera:
@@ -58,6 +69,9 @@ func _ready() -> void:
 		_pitch = camera.rotation.x
 		_yaw = head.rotation.y
 		camera.fov = base_fov
+	# Cache the standing capsule height from the scene so we can lerp back to it
+	if collision_shape and collision_shape.shape is CapsuleShape3D:
+		_stand_capsule_height = collision_shape.shape.height
 	EventBus.request_camera_shake.connect(_on_camera_shake)
 
 func _on_camera_shake(intensity: float, duration: float) -> void:
@@ -93,7 +107,20 @@ func _physics_process(delta: float) -> void:
 		right = right.normalized()
 		
 		var direction = (right * input_dir.x + forward * (-input_dir.y)).normalized()
-		var current_speed = sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed
+		# --- Crouch ---
+		var was_crouching = _is_crouching
+		_is_crouching = Input.is_key_pressed(KEY_CTRL)
+		
+		# Snap the capsule size immediately on state change — physics doesn't need to animate.
+		# Only the head/camera lerps for smooth visual feel. This keeps both directions symmetric.
+		if collision_shape and collision_shape.shape is CapsuleShape3D and _stand_capsule_height > 0.0:
+			if _is_crouching != was_crouching:
+				collision_shape.shape.height = crouch_capsule_height if _is_crouching else _stand_capsule_height
+		
+		var target_head_y = crouch_head_y if _is_crouching else stand_head_y
+		head.position.y = lerp(head.position.y, target_head_y, crouch_transition_speed * delta)
+		
+		var current_speed = crouch_speed if _is_crouching else (sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed)
 		
 		if direction:
 			velocity.x = move_toward(velocity.x, direction.x * current_speed, movement_acceleration * delta)

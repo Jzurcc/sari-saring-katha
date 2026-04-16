@@ -3,7 +3,9 @@ extends Resource
 
 enum ItemType {
 	SHELF,
-	FRIDGE
+	FRIDGE,
+	CANDY_CONTAINER,
+	SACHET_CONTAINER
 }
 
 @export var item_name: String = "New Item"
@@ -66,3 +68,10 @@ func get_final_price() -> float:
 		selling_price = price
 		
 	return selling_price
+
+func get_max_selling_price() -> float:
+	var base_price : float = price
+	var tier_val : int = max(1, tier)
+	# Max margin: 25% (Tier 1) to 50% (Tier 10)
+	var max_margin : float = 0.25 + (float(tier_val) - 1.0) * (0.25 / 9.0)
+	return round(base_price * (1.0 + max_margin))

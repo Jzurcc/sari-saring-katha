@@ -9,9 +9,9 @@ Buboy: Mama told me to buy something...
 Buboy: But I forgot what it was called again!
 Buboy: Hehe!
 Buboy: But I remember what it looks like!
-Buboy: It's the one that [color=#0f6e2f][pulse]{Transaction.ItemHint}[/pulse][/color].
+Buboy: It's the one that [color=#0f6e2f]{Transaction.ItemHint}[/color].
 if {Transaction.RemainingCount} > 1:
-	Buboy: Oh, and also some [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] po!
+	Buboy: Oh, and also some [color=#0f6e2f]{Transaction.ItemWants}[/color] po!
 Buboy: Do you have those for me? Hehe!
 [end_timeline]
 
@@ -35,9 +35,9 @@ label Partial
 Buboy: Hehe!
 Buboy: Wow, thank you!
 if {Transaction.IsRiddle}:
-	Buboy: But I still need the one that [color=#0f6e2f][pulse]{Transaction.ItemHint}[/pulse][/color].
+	Buboy: But I still need the one that [color=#0f6e2f]{Transaction.ItemHint}[/color].
 if {Transaction.RemainingCount} > 0 and not {Transaction.IsRiddle}:
-	Buboy: But I still need [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] though.
+	Buboy: But I still need [color=#0f6e2f]{Transaction.ItemWants}[/color] though.
 Buboy: Hehe!
 [end_timeline]
 
@@ -71,6 +71,6 @@ label WrongItem
 Buboy: Hehe!
 Buboy: Hmm...
 Buboy: I don't think that's it!
-Buboy: I need the one that [color=#0f6e2f][pulse]{Transaction.ItemHint}[/pulse][/color].
+Buboy: I need the one that [color=#0f6e2f]{Transaction.ItemHint}[/color].
 Buboy: Hehe!
 Buboy: Try again, *Kuya*!

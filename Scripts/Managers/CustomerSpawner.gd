@@ -16,6 +16,7 @@ enum DialoguePhase {
 @export var customer_scene: PackedScene = preload("res://Scenes/Customer.tscn")
 @export var spawn_pos: NodePath
 @export var target_pos: NodePath
+@export var exit_pos: NodePath
 
 ## Fallback timeline played when a STORY/FILLER greeting DTL does not exist yet.
 ## After it plays the customer is dismissed (SOCIAL_VISIT phase) so the day advances.
@@ -48,7 +49,7 @@ func _ready() -> void:
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_dismissed) # Completion of satisfy()
 	EventBus.customer_partial_satisfaction.connect(_on_customer_partial_satisfaction)
-	EventBus.customer_rejected.connect(_on_customer_dismissed)
+	# Rejection no longer triggers dismissal (handles wrong item reaction staying at counter)
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
@@ -56,6 +57,10 @@ func _ready() -> void:
 	MarioManager.call_ended.connect(_on_mario_call_ended)
 	EventBus.nokia_opened.connect(_on_nokia_opened)
 	EventBus.nokia_closed.connect(_on_nokia_closed)
+	EventBus.closing_time_reached.connect(_on_closing_time_reached)
+	EventBus.debt_quota_met.connect(_on_debt_quota_met)
+	
+	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
 
 	await get_tree().process_frame
 
@@ -67,10 +72,10 @@ func _spawn_next_customer() -> void:
 	if is_paused or current_customer != null or _is_spawning:
 		return
 
-	# Closing time — no new customers at or after 8 PM
+	# Closing time check
 	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
-		print("[CustomerSpawner] Store is closing. Ending day.")
-		_end_day()
+		print("[CustomerSpawner] Store is closing. Spawning Mayari for collection.")
+		spawn_mayari_for_collection()
 		return
 
 	_is_spawning = true
@@ -102,7 +107,10 @@ func _spawn_next_customer() -> void:
 		return
 
 	var spawn_global = get_node(spawn_pos).global_position
+	# Randomize starting Z slightly to vary entry paths
+	spawn_global.z += randf_range(-0.5, 0.5)
 	var target_global = get_node(target_pos).global_position
+	var exit_global = get_node(exit_pos).global_position if exit_pos else spawn_global
 	var final_target = target_global
 	
 	# Calculate side offsets for dual customers
@@ -110,7 +118,7 @@ func _spawn_next_customer() -> void:
 	var side_offset = Vector3(-approach_dir.z, 0, approach_dir.x) # Left perpendicular
 	
 	if transaction.secondary_customer_data:
-		final_target = target_global + (side_offset * -0.4) # Shift Primary to Right
+		final_target = target_global + (side_offset * -0.9) # Shift Primary to Right
 	
 	# If the customer is Kuya Kap, offset him back so he doesn't hit his head on the roof.
 	if transaction.customer_data.get_clean_id() == "kuyakap":
@@ -120,7 +128,7 @@ func _spawn_next_customer() -> void:
 	current_customer = customer_scene.instantiate()
 	get_parent().add_child(current_customer)
 	current_customer.global_position = spawn_global
-	current_customer.setup(transaction, final_target)
+	current_customer.setup(transaction, final_target, exit_global)
 
 	current_customer.arrived.connect(_on_customer_arrived)
 	current_customer.clicked.connect(_on_customer_clicked)
@@ -132,12 +140,15 @@ func _spawn_next_customer() -> void:
 		guest_context.customer_data = transaction.secondary_customer_data
 		guest_context.transaction_type = TransactionContext.Type.VISIT # Guests don't buy (for now)
 		
-		var guest_target = target_global + (side_offset * 0.4) # Shift Guest to Left
+		var guest_target = target_global + (side_offset * 0.9) # Shift Guest to Left
 		
 		guest_customer = customer_scene.instantiate()
 		get_parent().add_child(guest_customer)
 		guest_customer.global_position = spawn_global
-		guest_customer.setup(guest_context, guest_target)
+		guest_customer.setup(guest_context, guest_target, exit_global)
+		
+		# Allow clicking the guest to also start the main dialogue
+		guest_customer.clicked.connect(_on_guest_clicked)
 		
 		# Guest doesn't trigger logic, they are just there for dialogue
 		print("[CUSTOMER] Guest spawned: ", transaction.secondary_customer_data.get_clean_id())
@@ -162,10 +173,13 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 		# Just play the reminder sound instead of starting dialogue
 		if customer.customer_data and customer.customer_data.dialogue_blip_sound:
 			var audio_manager = get_node_or_null("/root/AudioManager")
-			if audio_manager:
+			var char_to_play = customer.customer_data
+			if audio_manager and char_to_play.dialogue_blip_sound:
 				audio_manager.dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
-				audio_manager.dialogue_blip_player.stream = customer.customer_data.dialogue_blip_sound
+				audio_manager.dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
 				audio_manager.dialogue_blip_player.play()
+			
+			EventBus.dialogue_character_speaking.emit(char_to_play)
 
 
 var _processed_finished_customers: Array[Customer] = []
@@ -202,7 +216,13 @@ func _on_customer_finished(customer: Customer) -> void:
 	_dialogue_phase = DialoguePhase.SATISFIED
 	start_dialogue(timeline, customer, _dialogue_phase, "Satisfy")
 
-func _on_customer_dismissed(_customer: Customer) -> void:
+func _on_customer_dismissed(customer: Customer) -> void:
+	# Only process signals from customers we currently track. 
+	# This prevents "ghost" signals from previous transactions (that are still fading out)
+	# from accidentally wiping out the next customer who just started spawning.
+	if customer != current_customer and customer != guest_customer:
+		return
+
 	if is_instance_valid(guest_customer):
 		guest_customer.dismiss()
 		guest_customer = null
@@ -212,7 +232,11 @@ func _on_customer_dismissed(_customer: Customer) -> void:
 	# Check if we have a pending tier unlock now that the counter is clear
 	StoryManager.process_pending_unlock()
 	
-	await get_tree().create_timer(randf_range(5.0, 15.0)).timeout
+	var delay = randf_range(0.3, 5.0)
+	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
+		delay = 1.0 # Short delay for Mayari arrival
+		
+	await get_tree().create_timer(delay).timeout
 	_spawn_next_customer()
 
 func _on_customer_clicked(customer: Customer) -> void:
@@ -241,6 +265,9 @@ func _on_customer_clicked(customer: Customer) -> void:
 
 	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
 		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
+		var timeline_path = timeline.resource_path if timeline is Resource else timeline
+		if _is_label_in_timeline(timeline_path, "Visit"):
+			label = "Visit"
 		customer.has_been_greeted = true
 	else:
 		if not customer.has_been_greeted or _greeting_interrupted:
@@ -264,6 +291,11 @@ func _on_customer_clicked(customer: Customer) -> void:
 	print("[CUSTOMER] ─────────────────────────────────────────")
 
 	start_dialogue(timeline, customer, _dialogue_phase, label)
+
+func _on_guest_clicked(_guest: Customer) -> void:
+	# If guest is clicked, we redirect the interaction to the primary customer
+	if is_instance_valid(current_customer):
+		_on_customer_clicked(current_customer)
 
 func _on_dialogic_signal(argument: String) -> void:
 	# [signal arg="refuse_service"] fires mid-execution. Set the flag here,
@@ -292,6 +324,12 @@ func _on_dialogic_signal(argument: String) -> void:
 	elif argument == "utang_rejected":
 		EventBus.utang_rejected.emit(current_customer)
 		_pending_dismiss = true
+	elif argument == "pulse_red":
+		if is_instance_valid(current_customer):
+			current_customer.pulse_color(Color.RED)
+	elif argument == "pulse_green":
+		if is_instance_valid(current_customer):
+			current_customer.pulse_color(Color("#0f6e2f")) # Vibrant Green
 
 func _on_customer_partial_satisfaction(customer: Customer) -> void:
 	if Dialogic.current_timeline != null:
@@ -322,7 +360,7 @@ func _update_item_names(customer: Customer) -> void:
 	
 	var formatted_names = ""
 	if item_names.size() == 0:
-		formatted_names = "something"
+		formatted_names = "items"
 	elif item_names.size() == 1:
 		formatted_names = item_names[0]
 	elif item_names.size() == 2:
@@ -363,6 +401,8 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 
 	_dialogue_phase = phase
 	_current_timeline_path = timeline.resource_path if timeline is Resource else timeline
+	
+	print("[Dialogue] Starting: ", _current_timeline_path, " Phase: ", DialoguePhase.keys()[phase], " Label: ", label)
 
 	# If this exact timeline is ALREADY running (e.g., Greeting is playing),
 	# jump to the requested label (e.g., Satisfy) instead of restarting it.
@@ -455,6 +495,12 @@ func _on_dialogue_ended() -> void:
 	if _pending_dismiss:
 		_pending_dismiss = false
 		if is_instance_valid(current_customer) and current_customer.is_waiting:
+			# Dismiss guest alongside primary if present, with a slight delay
+			if is_instance_valid(guest_customer):
+				var g = guest_customer
+				guest_customer = null
+				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
+
 			# If it was a partial success, treat as satisfied (fade in place, count towards quota)
 			if _is_partial_success:
 				current_customer.satisfy()
@@ -470,6 +516,11 @@ func _on_dialogue_ended() -> void:
 	match phase:
 		DialoguePhase.SOCIAL_VISIT:
 			# Drop-in visit. Dismiss customer — _on_customer_dismissed spawns next.
+			if is_instance_valid(guest_customer):
+				var g = guest_customer
+				guest_customer = null
+				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
+
 			if is_instance_valid(current_customer) and current_customer.is_waiting:
 				current_customer.has_been_greeted = true
 				current_customer.dismiss()
@@ -477,13 +528,17 @@ func _on_dialogue_ended() -> void:
 		DialoguePhase.SATISFIED:
 			# satisfy() sets is_waiting=false and owns its own exit animation.
 			if is_instance_valid(guest_customer):
-				guest_customer.dismiss()
+				var g = guest_customer
 				guest_customer = null
+				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
 
 			if is_instance_valid(current_customer):
 				current_customer.satisfy()
 			
-			_handle_transaction_cleanup()
+			# _handle_transaction_cleanup() REMOVED. 
+			# We now rely solely on _on_customer_dismissed (connected to EventBus) 
+			# to trigger the next spawn after the exit animation finishes.
+			# This prevents the race condition where two spawns were triggered for one customer.
 
 		DialoguePhase.WRONG_ITEM:
 			# Customer reacted to the wrong item but stays at the counter.
@@ -504,10 +559,16 @@ func _handle_transaction_cleanup() -> void:
 	StoryManager.process_pending_unlock()
 	
 	# Small delay before next customer
-	await get_tree().create_timer(randf_range(5.0, 15.0)).timeout
+	var delay = randf_range(0.3, 5.0)
+	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
+		delay = 1.0 # Short delay for Mayari arrival
+		
+	await get_tree().create_timer(delay).timeout
 	_spawn_next_customer()
 
 
+
+var _label_cache: Dictionary = {}
 
 ## Helper to see if a label exists in a timeline file (.dtl)
 func _is_label_in_timeline(path: Variant, label_name: String) -> bool:
@@ -519,30 +580,81 @@ func _is_label_in_timeline(path: Variant, label_name: String) -> bool:
 	if not full_path.ends_with(".dtl"):
 		full_path += ".dtl"
 		
+	var cache_key = full_path + "::" + label_name
+	if _label_cache.has(cache_key):
+		return _label_cache[cache_key]
+		
 	if not FileAccess.file_exists(full_path):
 		# Try one more fallback if Dialogic uses local paths
 		if not full_path.begins_with("res://"):
 			full_path = "res://" + full_path
 		if not FileAccess.file_exists(full_path):
+			_label_cache[cache_key] = false
 			return false
 	
 	var file = FileAccess.open(full_path, FileAccess.READ)
-	if not file: return false
+	if not file: 
+		_label_cache[cache_key] = false
+		return false
 	
 	var content = file.get_as_text()
 	
 	# Robust label matching:
-	# - Matches "label" at start of line (after optional whitespace)
-	# - Followed by at least one whitespace
-	# - Then the exact label name
-	# - Ignores anything after (comments, etc)
 	var regex = RegEx.new()
 	regex.compile("^\\s*label\\s+" + label_name + "(\\s+|#|$)")
 	
 	for line in content.split("\n"):
 		if regex.search(line):
+			_label_cache[cache_key] = true
 			return true
+			
+	_label_cache[cache_key] = false
 	return false
+
+func _on_closing_time_reached() -> void:
+	# If time hit 8 PM and no one is at the counter, spawn Mayari immediately.
+	if current_customer == null and not _is_spawning:
+		spawn_mayari_for_collection()
+
+func spawn_mayari_for_collection() -> void:
+	if _is_spawning or current_customer != null:
+		return
+	
+	_is_spawning = true
+	
+	# Request the special collection transaction from StoryManager
+	var transaction = StoryManager.get_collection_transaction()
+	if transaction == null:
+		_is_spawning = false
+		_end_day()
+		return
+
+	print("\n[CUSTOMER] ── Incoming Debt Collection ─────────────")
+	print("  Character : Reyna Mayari")
+	print("  Type      : VISIT (Collection)")
+	print("[CUSTOMER] ─────────────────────────────────────────")
+
+	await get_tree().create_timer(1.5).timeout
+
+	var spawn_global = get_node(spawn_pos).global_position
+	var target_global = get_node(target_pos).global_position
+	
+	current_customer = customer_scene.instantiate()
+	get_parent().add_child(current_customer)
+	current_customer.global_position = spawn_global
+	current_customer.setup(transaction, target_global)
+
+	current_customer.arrived.connect(_on_customer_arrived)
+	current_customer.clicked.connect(_on_customer_clicked)
+	current_customer.satisfied.connect(_on_customer_finished)
+
+	EventBus.customer_spawned.emit(current_customer)
+	_is_spawning = false
+
+func _on_debt_quota_met(_success: bool) -> void:
+	# This is called after Mayari's dialogue finishes and she is dismissed.
+	# We can now safely end the day.
+	pass
 
 ## Emit day_ended when no more customers will come today.
 func _end_day() -> void:
@@ -560,3 +672,19 @@ func _on_nokia_opened() -> void:
 
 func _on_nokia_closed() -> void:
 	_is_nokia_open = false
+
+
+func _on_character_speaking(data: CustomerData) -> void:
+	if not data:
+		return
+		
+	# Match data to current_customer or guest_customer using stable ID
+	var target_id = data.get_clean_id()
+	
+	if current_customer and current_customer.customer_data:
+		if current_customer.customer_data.get_clean_id() == target_id:
+			current_customer.play_speak_animation()
+	
+	if guest_customer and guest_customer.customer_data:
+		if guest_customer.customer_data.get_clean_id() == target_id:
+			guest_customer.play_speak_animation()

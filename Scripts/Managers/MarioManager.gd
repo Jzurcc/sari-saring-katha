@@ -30,6 +30,7 @@ const DELIVERY_DELAY_SEC := 2.0
 # Audio
 var sfx_arrive: AudioStream = preload("res://Audio/SFX/motorcyle arrives and honks.mp3")
 var sfx_leave: AudioStream = preload("res://Audio/SFX/motorcyle leaves.mp3")
+var sfx_dial: AudioStream = preload("res://Audio/SFX/dial.wav")
 
 var _current_anchor: Node = null
 var _is_calling: bool = false
@@ -44,6 +45,9 @@ func _ready() -> void:
 		_mario_data = load(MARIO_DATA_PATH)
 	else:
 		push_warning("[MarioManager] CustomerData resource not found: " + MARIO_DATA_PATH)
+		
+	# Connect for speaking animations
+	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
 
 # ── CALL LOGIC ───────────────────────────────────────────────────────
 
@@ -73,11 +77,22 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 			success_expected = false
 	
 	print("[MarioManager] Initiating call → Label: ", label)
+	
+	if label == "Call":
+		print("[MarioManager] Playing dial sound...")
+		_play_sfx(sfx_dial)
+		var delay := randf_range(2.0, 6.0)
+		await get_tree().create_timer(delay).timeout
+		_sfx_player.stop()
+	
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
 func _on_call_dialogue_ended(success: bool) -> void:
 	print("[MarioManager] Call dialogue ended. Success: ", success)
 	_is_calling = false
+	# Revert dialogue blips to Master
+	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Master")
+	
 	if not success:
 		is_restocking_active = false
 	_current_anchor = null
@@ -130,6 +145,8 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	# Add a speech marker so the bubble floats above the tricycle
 	var marker = Marker3D.new()
 	marker.name = "SpeechMarker"
+	# Position at a fixed height of 1.3 (original tuned value)
+	# with a slight side offset of 0.4
 	marker.position = Vector3(0.4, 1.3, 0)
 	_delivery_sprite.add_child(marker)
 	
@@ -161,37 +178,50 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock), "Delivery")
 
 func _on_delivery_dialogue_ended(items: Dictionary) -> void:
-	# 1. Finalize Stock Immediately
+	# 1. Finalize Stock Immediately (Digital pool always has the total)
 	for item in items.keys():
 		InventoryManager.add_stock(item, items[item])
 	
-	# 2. Auto-Restock Physical Slots
-	# Randomly pick empty slots on compatible shelves and place items there.
-	print("[MarioManager] Commencing auto-restock sweep...")
-	var all_shelves = get_tree().get_nodes_in_group("shelf_surface")
+	# 2. Plastic Bag Delivery Logic
+	print("[MarioManager] Processing delivery bags...")
+	var marker = get_tree().root.find_child("PlasticMarker", true, false)
+	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
 	
+	var items_to_bag: Array[ItemData] = []
 	for item in items.keys():
-		var amount_ordered = items[item]
-		# Try to place as many as ordered, but respect physical shelf capacity
-		for i in range(amount_ordered):
-			var valid_options = []
-			for shelf in all_shelves:
-				if shelf.has_method("accepts_drop") and shelf.accepts_drop(item):
-					var empty_slots = shelf.get_empty_slots()
-					for slot_idx in empty_slots:
-						valid_options.append({"shelf": shelf, "slot": slot_idx})
+		# Filter: Candies and Sachets bypass bags
+		if item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
+			print("[MarioManager] Auto-stocking digital item: ", item.item_name)
+			continue
 			
-			if valid_options.is_empty():
-				break # No more room for this specific item type
-				
-			var choice = valid_options.pick_random()
-			choice.shelf.place_item_in_slot(item, choice.slot)
-			
-			# Since we placed it physically, take it out of the digital "back-of-house" stock
-			InventoryManager.take_item(item)
+		# Everything else goes into bags
+		for i in range(items[item]):
+			items_to_bag.append(item)
+	
+	# Group items into batches of 5
+	var batch_size = 5
+	for i in range(0, items_to_bag.size(), batch_size):
+		var batch = items_to_bag.slice(i, i + batch_size)
+		var bag = plastic_scene.instantiate()
+		get_tree().current_scene.add_child(bag)
+		
+		# Transfer item data to bag
+		bag.items = batch
+		
+		# Positioning at marker with slight random offset for grouping
+		if marker:
+			var offset = Vector3(
+				randf_range(-0.15, 0.15),
+				0.05, # Slight lift
+				randf_range(-0.15, 0.15)
+			)
+			bag.global_position = marker.global_position + offset
+		else:
+			push_warning("[MarioManager] PlasticMarker not found in scene! Spawning at default.")
 	
 	_refresh_containers(get_tree().root)
 	InventoryManager.save_state()
+
 	
 	# 3. Clear interaction blockers immediately so customers can be clicked 
 	# while Mario is driving off.
@@ -237,7 +267,11 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
 	Dialogic.Styles.load_style("FollowBubble")
 	
-	# 4. Start the timeline (second arg is label)
+	# 4. Set telephone bus for Mario's blips
+	# This setting is read by Dialogic's type sound module.
+	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Telephone")
+	
+	# 5. Start the timeline (second arg is label)
 	var layout = Dialogic.start(timeline_path, label)
 	
 	# Freeze game clock while dialogue is active
@@ -276,3 +310,29 @@ func _refresh_containers(_ignored_node: Node) -> void:
 	for surface in get_tree().get_nodes_in_group("shelf_surface"):
 		if surface.has_method("refresh_visibility"):
 			surface.refresh_visibility()
+
+
+func _on_character_speaking(customer: CustomerData) -> void:
+	if not _mario_data: return
+	if not _delivery_sprite or not _delivery_sprite.visible: return
+	
+	if customer == _mario_data:
+		play_speak_animation()
+
+## One-shot squash-and-stretch animation for the tricycle
+func play_speak_animation() -> void:
+	if not _delivery_sprite: return
+	
+	var base_scale = Vector3(1.5, 1.5, 1.5)
+	var speak_tween = create_tween()
+	
+	# Pulse 1
+	speak_tween.tween_property(_delivery_sprite, "scale", Vector3(base_scale.x * 1.05, base_scale.y * 0.95, base_scale.z), 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	speak_tween.tween_property(_delivery_sprite, "scale", base_scale, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# Pulse 2
+	speak_tween.tween_property(_delivery_sprite, "scale", Vector3(base_scale.x * 1.05, base_scale.y * 0.95, base_scale.z), 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	speak_tween.tween_property(_delivery_sprite, "scale", base_scale, 0.15) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

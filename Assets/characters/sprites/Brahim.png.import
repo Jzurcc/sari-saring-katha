@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://deekyovy0noe8"
-path.s3tc="res://.godot/imported/Dionisio.png-659cc9533a15115c11116a9153a820d3.s3tc.ctex"
+uid="uid://fvu6k7ii37tf"
+path.s3tc="res://.godot/imported/Brahim.png-bbe35b5ff97f02d41138e5230724b7d7.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://Assets/characters/sprites/Dionisio.png"
-dest_files=["res://.godot/imported/Dionisio.png-659cc9533a15115c11116a9153a820d3.s3tc.ctex"]
+source_file="res://Assets/characters/sprites/Brahim.png"
+dest_files=["res://.godot/imported/Brahim.png-bbe35b5ff97f02d41138e5230724b7d7.s3tc.ctex"]
 
 [params]
 

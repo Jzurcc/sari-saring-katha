@@ -101,7 +101,10 @@ func _get_max_stock_internal(id: String, day: int) -> int:
 			return 99 # Default for snacks/packs
 
 func get_capacity_limit(type: ItemData.ItemType) -> int:
-	return 36 if type == ItemData.ItemType.SHELF else 12
+	match type:
+		ItemData.ItemType.SHELF: return 36
+		ItemData.ItemType.FRIDGE: return 12
+		_: return 999 # Containers don't have a shared physical surface limit
 
 func get_count_on_shelves(type: ItemData.ItemType) -> int:
 	var total: int = 0
@@ -170,6 +173,17 @@ func save_state() -> void:
 		}
 	}
 	SaveManager.save_game(save_data)
+
+func reset_state() -> void:
+	_stock.clear()
+	# Re-initialize stock to 0 for all items
+	for item in _items:
+		_stock[item.resource_path] = 0
+		
+	customers_needed_for_delivery = 0
+	save_state()
+	print("[InventoryManager] Inventory reset for New Game.")
+
 
 func load_state() -> void:
 	var save_data = SaveManager.load_game()

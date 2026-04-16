@@ -6,8 +6,8 @@
 [ext_resource type="AudioStream" uid="uid://cqrmcgu0suu0x" path="res://Audio/DialogueBlips/Rodel.wav" id="2_7nk2y"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://bqhf8bb28mylt" path="res://Assets/characters/sprites/Rodel.png" id="5_xkoom"]
-[ext_resource type="Script" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_t70ho"]
-[ext_resource type="Script" path="res://Scripts/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_t70ho"]
+[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="gen_neutral"]
 
 [sub_resource type="Resource" id="arcdata_script"]

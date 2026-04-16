@@ -36,6 +36,12 @@ SaveManager="*res://Scripts/SaveManager.gd"
 AudioManager="*res://Scripts/Managers/AudioManager.gd"
 StoryManager="*res://Scripts/Managers/StoryManager.gd"
 MarioManager="*res://Scripts/Managers/MarioManager.gd"
+VisualEffectManager="*res://Scripts/Managers/VisualEffectManager.gd"
+PricingOverlay="*res://Scripts/UI/PricingOverlay.gd"
+
+[debug]
+
+settings/collision/visible_shapes=true
 
 [debug_draw_3d]
 
@@ -44,10 +50,10 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 [dialogic]
 
 directories/dch_directory={
+"Brahim": "res://Dialogue/Timelines/Brahim.dch",
 "Buboy": "res://Dialogue/Timelines/Buboy.dch",
 "Customer": "res://Dialogue/Timelines/Customer.dch",
 "Danilo": "res://Dialogue/Timelines/Danilo.dch",
-"Dionisio": "res://Dialogue/Timelines/Dionisio.dch",
 "KuyaKap": "res://Dialogue/Timelines/KuyaKap.dch",
 "ManangAna": "res://Dialogue/Timelines/ManangAna.dch",
 "ReynaMayari": "res://Dialogue/Timelines/ReynaMayari.dch",
@@ -59,12 +65,14 @@ directories/dch_directory={
 }
 directories/dtl_directory={
 "Buboy/Filler1": "res://Dialogue/Timelines/Buboy/Filler1.dtl",
-"Danilo/Story0": "res://Dialogue/Timelines/Danilo/Story0.dtl",
 "Filler1": "res://Dialogue/Timelines/Kuyakap/Filler1.dtl",
 "Neutral": "res://Dialogue/Timelines/Generic/Neutral.dtl",
+"Purchase": "res://Dialogue/Timelines/Generic/Purchase.dtl",
 "Story0": "res://Dialogue/Timelines/Kuyakap/Story0.dtl",
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dtl",
 "UncleMarioTutorial": "res://Dialogue/Timelines/UncleMarioTutorial.dtl",
+"Visit": "res://Dialogue/Timelines/Generic/Visit.dtl",
+"debug_dual_customer": "res://Dialogue/Timelines/debug_dual_customer.dtl",
 "mayari_collect": "res://Dialogue/Timelines/mayari_collect.dtl"
 }
 layout/style_directory={
@@ -110,15 +118,18 @@ audio/channel_defaults={
 }
 }
 variables={
-"Danilo": {
-"Trust": 0.0
-},
 "Global": {
+"AwarenessActive": 0.0,
+"HasEnoughMoney": 0.0,
+"HighPriceActive": 0.0,
 "LastCustomer": "",
 "LastItem": "",
 "LastSatisfaction": "",
 "RumorActive": false,
-"RumorType": 0.0
+"RumorType": 0.0,
+"StockStatus": "",
+"TimeOfDayPhase": "",
+"TodayQuota": 0.0
 },
 "Stats": {
 "Affinity": {},
@@ -147,7 +158,7 @@ window/stretch/aspect="expand"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/UniParticles3D/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
+enabled=PackedStringArray("res://addons/UniParticles3D/plugin.cfg", "res://addons/copy_all_errors/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
 
 [input]
 
@@ -198,3 +209,4 @@ locale/translations_pot_files=PackedStringArray("res://Dialogue/customer.dialogu
 
 rendering_device/driver.windows="d3d12"
 viewport/hdr_2d=true
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)

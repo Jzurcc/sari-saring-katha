@@ -11,9 +11,11 @@
 [ext_resource type="Script" uid="uid://deo0gxkmk2ahd" path="res://addons/sky_3d/src/Sky3D.gd" id="14_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="15_ddk6q"]
 [ext_resource type="Script" uid="uid://b4tkplvh7fq40" path="res://addons/sky_3d/src/SkyDome.gd" id="15_him8o"]
+[ext_resource type="PackedScene" uid="uid://is4naxr6ch1" path="res://Scenes/notebook.tscn" id="16_3w5yf"]
 [ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="16_fgk2h"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
 [ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
+[ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="17_re88u"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yc6xl"]
@@ -45,7 +47,7 @@ shader_parameter/moon_texture_flip_u = false
 shader_parameter/moon_texture_flip_v = false
 shader_parameter/moon_size = 0.07
 shader_parameter/atm_moon_mie_tint = Color(0.137255, 0.184314, 0.292196, 1)
-shader_parameter/atm_moon_mie_intensity = 0.4306881493330002
+shader_parameter/atm_moon_mie_intensity = 0.0695719277858734
 shader_parameter/atm_moon_partial_mie_phase = Vector3(0.36, 1.64, 1.6)
 shader_parameter/starmap_color = Color(0.709804, 0.709804, 0.709804, 0.854902)
 shader_parameter/starmap_texture = ExtResource("13_glaac")
@@ -69,8 +71,8 @@ shader_parameter/cirrus_absorption = 2.0
 shader_parameter/cirrus_sky_tint_fade = 0.5
 shader_parameter/cirrus_size = 1.0
 shader_parameter/cirrus_uv = Vector2(0.16, 0.11)
-shader_parameter/cirrus_position1 = Vector2(0.033982247, 0.033982247)
-shader_parameter/cirrus_position2 = Vector2(0.033982247, 0.033982247)
+shader_parameter/cirrus_position1 = Vector2(0.021849433, 0.021849433)
+shader_parameter/cirrus_position2 = Vector2(0.021849433, 0.021849433)
 shader_parameter/cirrus_texture = ExtResource("8_r5sjn")
 shader_parameter/cumulus_visible = true
 shader_parameter/cumulus_intensity = 0.6
@@ -80,7 +82,7 @@ shader_parameter/cumulus_absorption = 2.0
 shader_parameter/cumulus_noise_freq = 2.7
 shader_parameter/cumulus_sky_tint_fade = 0.0
 shader_parameter/cumulus_size = 0.5
-shader_parameter/cumulus_position = Vector2(40.29693, 40.29693)
+shader_parameter/cumulus_position = Vector2(0.10924849, 0.10924849)
 shader_parameter/cumulus_texture = ExtResource("9_yc6xl")
 shader_parameter/cumulus_partial_mie_phase = Vector3(0.957564, 1.042436, 0.412)
 shader_parameter/cumulus_mie_intensity = 1.0
@@ -168,8 +170,8 @@ size = Vector3(20, 17.83496, 20)
 data = ExtResource("23_7p2u3")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1069068010]
-transform = Transform3D(0.40510508, -0.09518709, -0.9093016, 0.033220783, 0.99544126, -0.08940406, 0.9136664, 0.006010329, 0.4064205, -17.964895, 4.310203, 4.8486457)
-fov = 40.0
+transform = Transform3D(0.33613023, -0.10393253, -0.9360633, 0.036114316, 0.99458385, -0.09746188, 0.94112283, -0.0010454033, 0.33806315, -17.964895, 4.1285796, 4.8486457)
+fov = 35.0
 
 [node name="FlickeringLight" type="OmniLight3D" parent="." unique_id=1015358911]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19843912, 5.0687175, 0.016890496)
@@ -209,3 +211,9 @@ data = ExtResource("14_8p0vm")
 
 [node name="Cube_001" parent="." unique_id=1452766205 instance=ExtResource("15_ddk6q")]
 transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, 0.31191707, 0.7678091, -4.009146)
+
+[node name="notebook" parent="." unique_id=961263518 instance=ExtResource("16_3w5yf")]
+transform = Transform3D(-0.017711766, 0, -0.009289424, 0, 0.02, 0, 0.009289424, 0, -0.017711766, 2.4487228, 2.193247, -1.08845)
+
+[node name="nokia" parent="." unique_id=724719617 instance=ExtResource("17_re88u")]
+transform = Transform3D(-0.00036249752, 5.488962e-11, 0.000627864, 0, -0.000724995, 6.3381064e-11, 0.00062786404, 3.169054e-11, 0.00036249746, 2.1427739, 2.2057037, -0.19757763)

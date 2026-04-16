@@ -170,12 +170,22 @@ func _on_new_game_pressed() -> void:
 	# Clear existing save for a fresh start
 	SaveManager.clear_save()
 	
+	# Reset in-memory singletons to avoid carrying over old data
+	StoryManager.reset_state()
+	InventoryManager.reset_state()
+	
+	# Reset Dialogic state (variables, history, etc.)
+	if Engine.has_singleton("Dialogic"):
+		Dialogic.VAR.reset_all()
+
+	
 	is_starting_game = true
 	buttons.hide()
 	$LeftVignette.hide()
 
 	# Immediately fade to black and transition to intro cutscene
 	SceneTransition.change_scene(target_scene)
+
 
 func _check_save_status() -> void:
 	if FileAccess.file_exists("user://save_game.json"):

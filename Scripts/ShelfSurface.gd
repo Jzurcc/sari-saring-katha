@@ -82,9 +82,12 @@ var _spawned: Array[DraggableItem] = []
 var _slot_transforms: Array[Transform3D] = []
 ## Which DraggableItem occupies each slot index. null = empty.
 var _slot_occupants: Array = []  # Array[DraggableItem?]
+var _is_loading: bool = false
 
 func _ready() -> void:
 	add_to_group("shelf_surface")
+	if surface_type == ItemData.ItemType.FRIDGE:
+		add_to_group("fridge_surfaces")
 	if Engine.is_editor_hint():
 		_update_preview()
 		return
@@ -238,6 +241,7 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	# Update _original_transform to the new slot so return_to_start()
 	# correctly snaps back to this shelf/slot if a later drag is cancelled.
 	item._original_transform = Transform3D(Basis(), target_pos)
+	item.is_transient = false # No longer transient once it has a shelf home
 
 	# Snap to slot XY immediately, then ease backward in Z (push-back onto shelf feel).
 	item.show_visuals()
@@ -245,6 +249,9 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	var tween := item.create_tween()
 	tween.tween_property(item, "position", target_pos, 0.15)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Spawn impact dust at the final snapped global position
+	VisualEffectManager.spawn_impact_dust(to_global(target_pos))
 
 	print("[ShelfSurface] '%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
 	
@@ -319,6 +326,10 @@ func _free_slot_for(item: DraggableItem) -> void:
 	var idx := _slot_occupants.find(item)
 	if idx >= 0:
 		_slot_occupants[idx] = null
+		# CRITICAL FIX: Save state immediately when an item is removed from a slot.
+		# This ensures the save file acknowledges the item is gone from the shelf.
+		save_state()
+
 
 
 ## Returns true if [param item] is allowed to be dropped onto this surface
@@ -374,7 +385,7 @@ func _update_preview() -> void:
 # --- Persistence ---
 
 func save_state() -> void:
-	if save_id == "":
+	if save_id == "" or _is_loading:
 		return
 		
 	var slot_data = []
@@ -395,6 +406,8 @@ func _load_state() -> bool:
 	if save_id == "":
 		return false
 		
+	_is_loading = true
+		
 	var save_data = SaveManager.load_game()
 	if not save_data.has("shelves") or not save_data["shelves"].has(save_id):
 		return false
@@ -414,5 +427,6 @@ func _load_state() -> bool:
 			if res is ItemData:
 				place_item_in_slot(res, i)
 				
+	_is_loading = false
 	print("[ShelfSurface] '%s' loaded state from save." % save_id)
 	return true

@@ -1,0 +1,64 @@
+label Greeting
+
+# 0. Stock Awareness - 40% chance
+if {Global.AwarenessActive}:
+	if {Global.StockStatus} == "Empty":
+		Customer: Tao po? [pause=0.3] Parang wala na kayong tinda po ah?
+	elif {Global.StockStatus} == "Low":
+		Customer: Hello po! [pause=0.3] Napansin ko lang, parang kakaunti na lang ang stock niyo ah.
+	else:
+		Customer: Hi there! [pause=0.3] Looks like you're fully stocked today!
+
+# 1. Price Sensitivity - 40% chance if set in StoryManager
+if {Global.HighPriceActive}:
+	set {PriceVar} = range(1, 4).pick_random()
+	if {PriceVar} == 1.0:
+		Customer: These prices are high!
+	elif {PriceVar} == 2.0:
+		Customer: Gosh, things are getting expensive lately.
+	else:
+		Customer: Naku, ang taas naman ng presyo niyo ngayon.
+# 1. 10 Randomized English-focused Variations
+set {Variation} = range(1, 11).pick_random()
+
+if {Variation} == 1.0:
+	Customer: Tao po! [pause=0.3] I was just passing by. Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] available?
+elif {Variation} == 2.0:
+	Customer: Hello! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Do you have those today?
+elif {Variation} == 3.0:
+	Customer: Hi! [pause=0.3] I heard you have a nice stock of [color=#0f6e2f]{Transaction.ItemWants}[/color]. Can I buy some?
+elif {Variation} == 4.0:
+	Customer: Good day! [pause=0.3] I need to pick up some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Hope you have them in stock!
+elif {Variation} == 5.0:
+	Customer: Excuse me! [pause=0.3] I'm in a bit of a rush. Can I get some [color=#0f6e2f]{Transaction.ItemWants}[/color], please?
+elif {Variation} == 6.0:
+	Customer: Hello po! [pause=0.3] I was wondering if you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] for sale?
+elif {Variation} == 7.0:
+	Customer: Hi there! [pause=0.3] Just checking if you have [color=#0f6e2f]{Transaction.ItemWants}[/color] available right now.
+elif {Variation} == 8.0:
+	Customer: Tao po! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color] to take home. Do you have any?
+elif {Variation} == 9.0:
+	Customer: Hello! [pause=0.3] I'd like to buy some [color=#0f6e2f]{Transaction.ItemWants}[/color] if they're available.
+else:
+	Customer: Hi! [pause=0.3] Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] ready for pick up?
+[end_timeline]
+
+label Talk
+Customer: I'm still waiting for the [color=#0f6e2f]{Transaction.ItemWants}[/color] po. No rush!
+- Sige, wait for a bit.
+	Customer: Sure, I'll wait here.
+	[end_timeline]
+- Sorry, we're fresh out of stock.
+	Customer: Oh... is that so? [pause=0.4] Sige po, I'll just check again tomorrow. Salamat!
+	[signal arg="refuse_service"]
+	[end_timeline]
+
+label Satisfy
+Customer: Thank you so much! [pause=0.4] This is exactly what I needed.
+Customer: Sige po, I'll head out now. Ingat!
+[end_timeline]
+
+label WrongItem
+Customer: Hmm... [pause=0.4] I don't think this is the [color=#4a6741]{Transaction.ItemWants}[/color] I asked for.
+Customer: Can you double-check please?
+[end_timeline]

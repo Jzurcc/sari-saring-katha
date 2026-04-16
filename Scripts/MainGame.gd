@@ -24,6 +24,9 @@ func _ready() -> void:
 	else:
 		push_error("[MainGame] Missing Transaction Tray in Scene")
 
+	# Setup Ambient Effects
+	VisualEffectManager.setup_ambient_dust(self)
+
 	# Connect the tray to the generic event bus instead of handling logic here
 	tray.item_placed.connect(_on_tray_item_placed)
 
@@ -45,9 +48,17 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 			
 			if is_correct:
 				EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
+				
+				# Spawn glimmer at the customer's visual center (SpeechMarker)
+				var glimmer_pos = tray.global_position + Vector3(0, 0.2, 0)
+				var marker = customer.get_node_or_null("SpeechMarker")
+				if marker:
+					glimmer_pos = marker.global_position
+				
+				VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
 				EventBus.transaction_completed.emit(item.item_data, true)
 				InventoryManager.take_item(item.item_data)
-				item.hide()
+				item.queue_free()
 				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
 				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
 				# Only trigger Satisfy if the whole order is done.

@@ -17,7 +17,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 pixel_size = 0.005
 billboard = 2
 shaded = true
-alpha_cut = 1
+alpha_cut = 0
 cast_shadow = 0
 texture = ExtResource("3_tk")
 

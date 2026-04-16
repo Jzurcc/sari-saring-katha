@@ -215,7 +215,7 @@ start_marker = NodePath("../../../Markers/Counter_Start")
 end_marker = NodePath("../../../Markers/Counter_End")
 
 [node name="Sky3D" parent="." unique_id=2078348825 instance=ExtResource("6_cysq5")]
-current_time = 15.3
+current_time = 16.0
 wind_direction = 2.35619451204804
 
 [node name="Cube_001" parent="." unique_id=1452766205 instance=ExtResource("7_7h0lc")]

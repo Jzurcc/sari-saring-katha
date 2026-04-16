@@ -1,15 +1,23 @@
 label Greeting
-# 0. Environmental Awareness (Preamble)
-if {Global.AwarenessActive}:
-	if {Global.TimeOfDayPhase} == "Morning":
-		Customer: Magandang umaga po! [pause=0.3]
-	elif {Global.TimeOfDayPhase} == "Afternoon":
-		Customer: Good afternoon po! [pause=0.3]
-	else:
-		Customer: Magandang gabi po! [pause=0.3]
 
-	if {Global.StockStatus} == "Low":
-		Customer: Naku, mukhang paubos na tinda mo ah? [pause=0.4]
+# 0. Stock Awareness - 40% chance handled by StoryManager
+if {Global.AwarenessActive}:
+	if {Global.StockStatus} == "Empty":
+		Customer: Tao po? [pause=0.3] Napansin ko lang po, parang wala na kayong tinda?
+	elif {Global.StockStatus} == "Low":
+		Customer: Hello po! [pause=0.3] Naku, parang paubos na ang stock niyo ah.
+	else:
+		Customer: Hi there! [pause=0.3] Nice to see your shelves are so full today!
+
+# 1. Price Sensitivity - 40% chance if set in StoryManager
+if {Global.HighPriceActive}:
+	set {PriceVar} = range(1, 4).pick_random()
+	if {PriceVar} == 1.0:
+		Customer: Naku, ang taas na ng presyo niyo ngayon ah?
+	elif {PriceVar} == 2.0:
+		Customer: Grabe, ang mahal na yata ng mga tinda niyo ngayon.
+	else:
+		Customer: Is it just me, or are things more expensive here today?
 
 # 1. Rumor Mill (Pasalubong) - 20% chance handled by StoryManager
 if {Global.RumorActive}:
@@ -18,31 +26,31 @@ if {Global.RumorActive}:
 		Customer: Sabi niya ang bait mo raw dito sa tindahan. [pause=0.4]
 	else:
 		Customer: Oh, I ran into {Global.LastCustomer} just a moment ago. [pause=0.3]
-		Customer: They were so happy with the [color=#0f6e2f][pulse]{Global.LastItem}[/pulse][/color] you sold them! [pause=0.5]
+		Customer: They were so happy with the [color=#0f6e2f]{Global.LastItem}[/color] you sold them! [pause=0.5]
 
 # 2. Riddle vs Normal Request
 if {Transaction.IsRiddle}:
 	Customer: I have a bit of a problem... [pause=0.4]
-	Customer: I need something that [color=#0f6e2f][pulse]{Transaction.ItemHint}[/pulse][/color].
+	Customer: I need something that [color=#0f6e2f]{Transaction.ItemHint}[/color].
 	if {Transaction.RemainingCount} > 1:
-		Customer: Oh, and also some [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] po. [pause=0.4]
+		Customer: Oh, and also some [color=#0f6e2f]{Transaction.ItemWants}[/color] po. [pause=0.4]
 	Customer: Do you have those for me?
 else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
-		Customer: Tao po! Good morning! [pause=0.3]
-		Customer: Do you have any [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] available today?
+		Customer: Tao po! Hello po! [pause=0.3]
+		Customer: Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] available today?
 	elif {Variation} == 2.0:
 		Customer: Hello po! [pause=0.3]
-		Customer: Can I buy [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color], please?
+		Customer: Can I buy [color=#0f6e2f]{Transaction.ItemWants}[/color], please?
 	else:
-		Customer: Hi there! Magandang araw. [pause=0.3]
-		Customer: I'm just looking to buy some [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] if you have some in stock.
+		Customer: Hi there! Kumusta po? [pause=0.3]
+		Customer: I'm just looking to buy some [color=#0f6e2f]{Transaction.ItemWants}[/color] if you have some in stock.
 [end_timeline]
 
 label Talk
 if {Transaction.DeliveredCount} > 0:
-	Customer: Like I said, I still need [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] po.
+	Customer: Like I said, I still need [color=#0f6e2f]{Transaction.ItemWants}[/color] po.
 	- Sige, kukunin ko na.
 		Customer: Sige po, I'll wait here.
 		[end_timeline]
@@ -51,7 +59,7 @@ if {Transaction.DeliveredCount} > 0:
 		[signal arg="partial_dismiss"]
 		[end_timeline]
 elif {Transaction.IsRiddle}:
-	Customer: Like I said, I'm looking for something that [color=#0f6e2f][pulse]{Transaction.ItemHint}[/pulse][/color].
+	Customer: Like I said, I'm looking for something that [color=#0f6e2f]{Transaction.ItemHint}[/color].
 	- Sige, sandali lang.
 		Customer: Sige po, wait muna ako rito.
 		[end_timeline]
@@ -62,17 +70,17 @@ elif {Transaction.IsRiddle}:
 else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
-		Customer: Just the [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color], please! Take your time.
+		Customer: Just the [color=#0f6e2f]{Transaction.ItemWants}[/color], please! Take your time.
 		- Sige, sandali lang.
 			Customer: Okay po, I'll be right here.
 			[end_timeline]
 		- Sorry, wala nang stock.
 			Customer: Ay, out of stock ba? Sayang.
-			Customer: That's okay, I'll just check again tomorrow. [pause=0.4] [pulse]Salamat![/pulse]
+			Customer: That's okay, I'll just check again tomorrow. [pause=0.4] Salamat!
 			[signal arg="refuse_service"]
 			[end_timeline]
 	elif {Variation} == 2.0:
-		Customer: Ay, I was asking for [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color]. Did you forget already? Haha!
+		Customer: Ay, I was asking for [color=#0f6e2f]{Transaction.ItemWants}[/color]. Did you forget already? Haha!
 		- Sige, sandali lang.
 			Customer: Sige po, no rush! I know you're busy.
 			[end_timeline]
@@ -82,11 +90,11 @@ else:
 				[signal arg="partial_dismiss"]
 			else:
 				Customer: Wala na po? Aww, okay.
-				Customer: I'll just look somewhere else then. [pause=0.4] [pulse]Bye po![/pulse]
+				Customer: I'll just look somewhere else then. [pause=0.4] Bye po!
 				[signal arg="refuse_service"]
 			[end_timeline]
 	else:
-		Customer: Still waiting on the [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] po. No rush!
+		Customer: Still waiting on the [color=#0f6e2f]{Transaction.ItemWants}[/color] po. No rush!
 		- Sige, sandali lang.
 			Customer: Sure thing! Take your time.
 			[end_timeline]
@@ -96,7 +104,7 @@ else:
 				[signal arg="partial_dismiss"]
 			else:
 				Customer: Naku, ubos na? Pa-reserve ako next time ha!
-				Customer: Sige, [pulse]salamat[/pulse] na lang po.
+				Customer: Sige, salamat na lang po.
 				[signal arg="refuse_service"]
 			[end_timeline]
 
@@ -105,19 +113,19 @@ Customer: Sige po, iyan na lang muna. [pause=0.3] Salamat pa rin sa tulong!
 [end_timeline]
 
 label Partial
-Customer: [pulse]Salamat![/pulse] [pause=0.3]
+Customer: Salamat! [pause=0.3]
 if {Transaction.IsRiddle}:
-	Customer: I still need the one that [color=#0f6e2f][pulse]{Transaction.ItemHint}[/pulse][/color].
+	Customer: I still need the one that [color=#0f6e2f]{Transaction.ItemHint}[/color].
 if {Transaction.RemainingCount} > 0 and not {Transaction.IsRiddle}:
-	Customer: I still need [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color] though.
+	Customer: I still need [color=#0f6e2f]{Transaction.ItemWants}[/color] though.
 [end_timeline]
 
 label Satisfy
 # Handle Utang (Debt) Choice - 15% chance
 if {Transaction.WantsDebt}:
-	Customer: [pulse]Maraming salamat![/pulse] [pause=0.5]
+	Customer: Maraming salamat! [pause=0.5]
 	Customer: [wave]Naku...[/wave] [pause=0.4] I just realized I forgot my wallet at home.
-	Customer: Is it okay if I take this on [color=#0f6e2f][pulse]utang[/pulse][/color] for now? [pause=0.4] Babayaran ko rin bukas, promise!
+	Customer: Is it okay if I take this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] Babayaran ko rin bukas, promise!
 	- Sige, no problem. (Accept Debt)
 		[signal arg="utang_accepted"]
 		Customer: Wow, talagang napakabait mo! [pause=0.3] Maraming salamat talaga.
@@ -129,8 +137,8 @@ if {Transaction.WantsDebt}:
 else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
-		Customer: [pulse]Maraming salamat![/pulse] You're a lifesaver.
-		Customer: Have a great day!
+		Customer: Maraming salamat! You're a lifesaver.
+		Customer: Ingat po!
 	elif {Variation} == 2.0:
 		Customer: Perfect, just what I needed.
 		Customer: Salamat po! I'll definitely come back next time.
@@ -147,11 +155,11 @@ else:
 	set {Variation} = range(1, 4).pick_random()
 	if {Variation} == 1.0:
 		Customer: Ay, I think there's a mix-up.
-		Customer: This isn't the [color=#4a6741][pulse]{Transaction.ItemWants}[/pulse][/color] I asked for!
+		Customer: This isn't the [color=#4a6741]{Transaction.ItemWants}[/color] I asked for!
 	elif {Variation} == 2.0:
 		Customer: Hmm, wait lang.
-		Customer: I asked for [color=#4a6741][pulse]{Transaction.ItemWants}[/pulse][/color], not this one po.
+		Customer: I asked for [color=#4a6741]{Transaction.ItemWants}[/color], not this one po.
 	else:
 		Customer: Naku, hindi po ito 'yun.
-		Customer: Can you double-check? I needed [color=#0f6e2f][pulse]{Transaction.ItemWants}[/pulse][/color].
+		Customer: Can you double-check? I needed [color=#0f6e2f]{Transaction.ItemWants}[/color].
 [end_timeline]

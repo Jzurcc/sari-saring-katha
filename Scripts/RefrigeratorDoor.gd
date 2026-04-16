@@ -80,3 +80,13 @@ func toggle_open() -> void:
 	_tween.tween_property(_pivot, "rotation", target_rot, 0.65) \
 		  .set_trans(Tween.TRANS_SINE) \
 		  .set_ease(Tween.EASE_IN_OUT)
+	
+	# VFX: Cold Mist
+	if is_open:
+		var fridge_surfaces = get_tree().get_nodes_in_group("fridge_surfaces")
+		for surface in fridge_surfaces:
+			if surface is ShelfSurface:
+				# Spawn mass mist along the shelf width
+				# The root is at the left edge, so center is +X*(width/2)
+				var center_pos = surface.to_global(Vector3(surface.shelf_width / 2.0, 0.1, 0.0))
+				VisualEffectManager.spawn_mass_mist(center_pos, surface.shelf_width)

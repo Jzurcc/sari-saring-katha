@@ -2,15 +2,15 @@
 
 [ext_resource type="Script" uid="uid://uhfkahoco085" path="res://Scripts/TransactionTray.gd" id="1_script"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(6, 2.767, 1)
+[sub_resource type="BoxShape3D" id="BoxShape3D_hegtq"]
+size = Vector3(1.493, 2.767, 1.735)
 
 [node name="TransactionTray" type="Area3D" unique_id=1395485855]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_script")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=319493410]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18831787, 0)
-shape = SubResource("BoxShape3D_1")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1985863428]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069244385, 0, 0)
+shape = SubResource("BoxShape3D_hegtq")
 debug_color = Color(0, 0, 0.8235294, 1)

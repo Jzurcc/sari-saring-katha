@@ -13,6 +13,9 @@ func get_clean_id() -> String:
 ## The Dialogic Character resource (.dch) for this customer
 @export var dialogic_character: DialogicCharacter
 
+## The tier at which this customer starts appearing in the game.
+@export var unlock_tier: int = 1
+
 @export_group("Story Progression")
 ## Timelines for unique story progression stages (Chapters 0-8).
 ## The game plays story_timelines[stage] when forcing a chapter interaction.
@@ -67,19 +70,27 @@ func get_filler_items(stage: int) -> Array[ItemData]:
 func get_purchase_timelines(stage: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(stage)
 	if not arc:
-		return [] as Array[DialogicTimeline]
+		return [load("res://Dialogue/Timelines/Generic/Purchase.dtl")] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
 	for tl in arc.purchase_timelines:
 		if tl is DialogicTimeline:
 			result.append(tl)
+	
+	if result.is_empty():
+		result.append(load("res://Dialogue/Timelines/Generic/Purchase.dtl"))
+		
 	return result
 
 func get_visit_timelines(stage: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(stage)
 	if not arc:
-		return [] as Array[DialogicTimeline]
+		return [load("res://Dialogue/Timelines/Generic/Visit.dtl")] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
 	for tl in arc.visit_timelines:
 		if tl is DialogicTimeline:
 			result.append(tl)
+			
+	if result.is_empty():
+		result.append(load("res://Dialogue/Timelines/Generic/Visit.dtl"))
+		
 	return result

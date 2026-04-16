@@ -1,0 +1,47 @@
+label Visit
+
+
+# 1. Randomized Cozy Variations (10 options)
+set {Variation} = range(1, 11).pick_random()
+
+if {Variation} == 1.0:
+	Customer: Wala naman akong bibilhin ngayon. [pause=0.3]
+	Customer: Napadaan lang talaga ako para mangumusta sa inyo.
+	Customer: Ingat ka rito sa tindahan ha? Ingat! [pause=0.4]
+elif {Variation} == 2.0:
+	Customer: Hello po! [pause=0.3]
+	Customer: I was just walking by and the shop looked so peaceful... [pause=0.4]
+	Customer: I'll just look around for a bit. Sige po, balik na lang ako next time!
+elif {Variation} == 3.0:
+	Customer: Hi rito! Kumusta po? [pause=0.3]
+	Customer: Mainit masyado sa labas, [pause=0.3] makikisilong muna ako sandali rito ha?
+	Customer: Ganda talaga ng aura ng tindahan mo. [pause=0.4] Salamat!
+elif {Variation} == 4.0:
+	Customer: Tao po! [pause=0.3] Makikibalita lang ako...
+	Customer: Kumusta ang benta ngayon? Mukhang busy ka ah! [pause=0.4]
+	Customer: Sige, hindi na ako mang-aabala. God bless po!
+elif {Variation} == 5.0:
+	Customer: Hey there! [pause=0.3]
+	Customer: Nakita ko si {Global.LastCustomer} kanina, [pause=0.3] sabi ko dadaan din ako rito.
+	Customer: Just checking in! See you around.
+elif {Variation} == 6.0:
+	Customer: Hello po! [pause=0.3]
+	Customer: Namiss ko lang 'yung [wave]vibe[/wave] dito sa tindahan. [pause=0.4]
+	Customer: Keep up the good work! Balik ako bukas para mamili.
+elif {Variation} == 7.0:
+	Customer: Hello! [pause=0.3]
+	Customer: May nakita akong kuting sa labas, ang cute! [pause=0.4]
+	Customer: Anyway, napadaan lang. Ingat palagi!
+elif {Variation} == 8.0:
+	Customer: Hi po! [pause=0.3]
+	Customer: Ang bango naman dito, [pause=0.3] ano 'yun? Bagong stock ba ng kape? [pause=0.4]
+	Customer: Haha, wala lang. Sige, salamat na lang!
+elif {Variation} == 9.0:
+	Customer: Tao po! [pause=0.3]
+	Customer: I just finished a big meal nearby and needed a short walk. [pause=0.4]
+	Customer: I'll see you later when I need some snacks!
+else:
+	Customer: Hi! [pause=0.3] Kumusta po? [pause=0.4]
+	Customer: Wala pa akong maisip na bibilhin eh, [pause=0.3] pero gusto ko lang bumati.
+	Customer: Ingat po!
+[end_timeline]
