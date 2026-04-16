@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dps7b8giw25g5"]
+
+[ext_resource type="Script" path="res://Scripts/PlasticDeliveryItem.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://Assets/ui/Plastic.png" id="2_plastic"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.5, 1.5, 0.2)
+
+[node name="PlasticDeliveryItem" type="Area3D"]
+script = ExtResource("1_script")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+pixel_size = 0.0025
+billboard = 2
+shaded = true
+texture = ExtResource("2_plastic")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_1")
