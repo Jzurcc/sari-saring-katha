@@ -63,9 +63,12 @@ func _physics_process(_delta: float) -> void:
 	
 	if DragManager._is_dragging:
 		# When dragging, completely ignore items so we don't highlight shelves/containers.
-		# Only allow hovering over the customer to indicate they can receive the item.
+		# Only allow hovering over the customer to indicate they can receive the item,
+		# or the trash bin for deletion.
 		if hit_customer:
 			current_hovered = hit_customer.collider
+		elif hit_item and hit_item.collider.is_in_group("trash"):
+			current_hovered = hit_item.collider
 	else:
 		# Items take priority when they are in front of the customer,
 		# but if no item is under the crosshair the customer comes through.
@@ -83,13 +86,10 @@ func _physics_process(_delta: float) -> void:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
 		if current_hovered and current_hovered.has_method("on_hover"):
-			print("[PlayerInteraction] Hovering: ", current_hovered.name)
 			current_hovered.on_hover(true)
 			# If we just hovered something and pricing mode is on, sync the UI state
 			if current_hovered.has_method("set_pricing_ui_active"):
 				current_hovered.set_pricing_ui_active(pricing_mode_active)
-		elif _last_hovered:
-			print("[PlayerInteraction] Hover cleared")
 		_last_hovered = current_hovered
 
 func _input(event: InputEvent) -> void:
@@ -111,7 +111,7 @@ func _input(event: InputEvent) -> void:
 		return
 
 	# Pricing Adjustments (Direct Price Mode)
-	if pricing_mode_active and is_instance_valid(_last_hovered) and _last_hovered is DraggableItem:
+	if pricing_mode_active and is_instance_valid(_last_hovered):
 		var delta := 0.0
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -125,27 +125,34 @@ func _input(event: InputEvent) -> void:
 				delta = -1.0
 		
 		if delta != 0.0:
-			var item: DraggableItem = _last_hovered
-			if item.item_data:
-				var base_price : float = item.item_data.price
-				var current_price : float = item.item_data.get_final_price()
-				
-				# Range Rules: 
-				# 1. Minimum: Base price.
-				# 2. Maximum: Progressive margin based on tier. 25% (Tier 1) to 50% (Tier 10).
-				var min_price : float = base_price
-				var tier : int = item.item_data.tier
-				var max_margin : float = 0.25 + (float(max(1, tier)) - 1.0) * (0.25 / 9.0)
-				var max_price : float = round(base_price * (1.0 + max_margin))
-				
-				var new_price : float = clamp(current_price + delta, min_price, max_price)
-				
-				item.item_data.selling_price = new_price
+			if _last_hovered.has_method("adjust_price"):
+				_last_hovered.adjust_price(delta)
+				get_viewport().set_input_as_handled()
+				return
+			
+			# Fallback check for pickable items
+			if is_instance_valid(_last_hovered) and _last_hovered.is_in_group("draggable_items"):
+				var item = _last_hovered
+				if item.item_data:
+					var base_price : float = item.item_data.price
+					var current_price : float = item.item_data.get_final_price()
 					
-				# Refresh all items of this type (they share the resource)
-				get_tree().call_group("draggable_items", "update_pricing_ui")
-			get_viewport().set_input_as_handled()
-			return
+					# Range Rules: 
+					# 1. Minimum: Base price.
+					# 2. Maximum: Progressive margin based on tier. 25% (Tier 1) to 50% (Tier 10).
+					var min_price : float = base_price
+					var max_price : float = item.item_data.get_max_selling_price()
+					
+					var new_price : float = clamp(current_price + delta, min_price, max_price)
+					
+					item.item_data.selling_price = new_price
+						
+					# Refresh all items of this type (they share the resource)
+					get_tree().call_group("draggable_items", "update_pricing_ui")
+					# Refresh containers (candies/sachets)
+					get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+				get_viewport().set_input_as_handled()
+				return
 
 	# Block interaction triggers if we are actively dragging/holding an item
 	if DragManager._is_dragging:
@@ -156,7 +163,7 @@ func _input(event: InputEvent) -> void:
 			if _last_hovered.has_method("on_interact"):
 				get_viewport().set_input_as_handled()
 				_last_hovered.on_interact()
-			elif _last_hovered is DraggableItem:
+			elif is_instance_valid(_last_hovered) and _last_hovered.is_in_group("draggable_items"):
 				get_viewport().set_input_as_handled()
 				_pickup_item(_last_hovered)
 

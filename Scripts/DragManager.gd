@@ -25,7 +25,7 @@ func _ready() -> void:
 	_dragged_texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_dragged_texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_dragged_texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_dragged_texture_rect.modulate = Color(0.65, 0.65, 0.7, 1.0) # Fake ambient shading so it matches the 3D physical world better
+
 	_dragged_texture_rect.hide()
 	_canvas_layer.add_child(_dragged_texture_rect)
 
@@ -48,7 +48,7 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		_dragged_texture_rect.texture = texture
 		
 		# Scale dragged UI to closely match real-world physical proportions, but scaled up to look held
-		var pixels_per_meter: float = 640.0 * 1.25
+		var pixels_per_meter: float = 960.0 * 1.5
 		var display_w: float = 128.0
 		var display_h: float = 128.0
 		if item and item.collider and item.collider.shape:
@@ -61,6 +61,13 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		# Start from slightly below for a nice jump-in animation
 		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 150)
 		_dragged_texture_rect.show()
+		
+		# Squash and stretch pop-in animation
+		_dragged_texture_rect.scale = Vector2(0.6, 1.4)
+		var tween = create_tween()
+		tween.tween_property(_dragged_texture_rect, "scale", Vector2(1.15, 0.85), 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(_dragged_texture_rect, "scale", Vector2(0.95, 1.05), 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tween.tween_property(_dragged_texture_rect, "scale", Vector2.ONE, 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	_sway_offset = Vector2.ZERO
 	_drag_velocity = Vector2.ZERO
@@ -204,6 +211,9 @@ func end_drag() -> void:
 	if result:
 		var collider: Node = result.collider
 		if collider.is_in_group("transaction_tray") and collider.has_method("receive_item"):
+			collider.receive_item(_dragged_item)
+			success = true
+		elif collider.is_in_group("trash") and collider.has_method("receive_item"):
 			collider.receive_item(_dragged_item)
 			success = true
 		elif collider is Customer:

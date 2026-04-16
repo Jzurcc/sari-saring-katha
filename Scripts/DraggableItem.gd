@@ -6,8 +6,6 @@ signal drag_ended
 
 @export var item_data: ItemData
 
-const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
-
 ## Whether this item was spawned on the fly directly into dragging.
 var is_transient: bool = false
 
@@ -16,14 +14,6 @@ var _original_transform: Transform3D = Transform3D.IDENTITY
 
 @onready var sprite: Sprite3D = $Sprite3D
 @onready var collider: CollisionShape3D = $CollisionShape3D
-
-# --- New Pricing UI Nodes (Created in code for cleaner management) ---
-var pricing_ui: Sprite3D
-var pricing_viewport: SubViewport
-var name_label: Label
-var price_label: Label
-var comparison_label: Label
-var pricing_panel: PanelContainer
 
 var is_hovered: bool = false
 var is_mouse_inside: bool = false
@@ -40,7 +30,7 @@ func _ready() -> void:
 		# Connect to global drag events so we drop if clicked elsewhere
 		# EventBus.drag_started.connect(_on_global_drag_started)
 		original_scale = scale
-		billboard_collision = true
+		billboard_collision = false
 	
 	if item_data:
 		setup(item_data)
@@ -55,6 +45,14 @@ func _ready() -> void:
 ## at the position set in the scene tree.
 func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) -> void:
 	item_data = data
+	
+	# Defensive fetch in case setup is called before _ready
+	if not sprite: sprite = get_node_or_null("Sprite3D")
+	if not collider: collider = get_node_or_null("CollisionShape3D")
+	
+	if not sprite or not collider:
+		push_error("[DraggableItem] Critical nodes missing from %s" % name)
+		return
 
 	# Apply the strategy-computed transform (position + tilt rotation)
 	transform = local_transform
@@ -63,6 +61,7 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 
 	if item_data and item_data.texture:
 		sprite.texture = item_data.texture
+
 
 		# --- Sizing ---
 		# Guard against invalid display height
@@ -121,91 +120,10 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) 
 		)
 		if collider.shape is BoxShape3D:
 			collider.shape = collider.shape.duplicate()
-			collider.shape.size = Vector3(rendered_w, rendered_h, max(0.1, rendered_w))
+			collider.shape.size = Vector3(rendered_w, rendered_h, 0.05) # Fixed thin depth
 		collider.position.y = rendered_h / 2.0
 
-	_setup_pricing_ui()
-
-
-func _setup_pricing_ui() -> void:
-	# 1. SubViewport for 2D UI rendering
-	pricing_viewport = SubViewport.new()
-	pricing_viewport.transparent_bg = true
-	# Higher resolution for sharper text
-	pricing_viewport.size = Vector2(666, 208)
-	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
-	add_child(pricing_viewport)
-
-	# 2. PanelContainer for the "Modern" look
-	pricing_panel = PanelContainer.new()
-	pricing_viewport.add_child(pricing_panel)
-	pricing_panel.size = Vector2(666, 208)
-	pricing_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	
-	var style := StyleBoxFlat.new()
-	# Glassmorphic transparency: 0.5 alpha as requested
-	style.bg_color = Color(0.082, 0.078, 0.071, 0.5) 
-	style.set_corner_radius_all(26)
-	style.content_margin_left = 16
-	style.content_margin_right = 16
-	style.content_margin_top = 10
-	style.content_margin_bottom = 10
-	pricing_panel.add_theme_stylebox_override("panel", style)
-
-	var vbox = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pricing_panel.add_child(vbox)
-
-	# 3. Label: Name
-	name_label = Label.new()
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 23)
-	name_label.add_theme_color_override("font_color", Color(1, 0.92, 0.79, 0.8)) # Slightly faded cream
-	vbox.add_child(name_label)
-
-	# 4. Label: Main Price
-	price_label = Label.new()
-	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label.add_theme_font_size_override("font_size", 47)
-	price_label.add_theme_color_override("font_color", Color(1, 0.92, 0.79)) # Warm cream
-	vbox.add_child(price_label)
-
-	# 5. Label: Comparison (Base -> Selling)
-	comparison_label = Label.new()
-	comparison_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	comparison_label.add_theme_font_size_override("font_size", 21)
-	comparison_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6)) # Greyed out
-	vbox.add_child(comparison_label)
-	
-	# Use preloaded font for all labels
-	if INDER_FONT:
-		name_label.add_theme_font_override("font", INDER_FONT)
-		price_label.add_theme_font_override("font", INDER_FONT)
-		comparison_label.add_theme_font_override("font", INDER_FONT)
-
-	# 4. Sprite3D to display the viewport in 3D space
-	pricing_ui = Sprite3D.new()
-	pricing_ui.texture = pricing_viewport.get_texture()
-	pricing_ui.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	pricing_ui.no_depth_test = true
-	pricing_ui.fixed_size = true
-	# Scale down the sprite so the high-res text is appropriate size on screen
-	pricing_ui.pixel_size = 0.001
-	pricing_ui.alpha_cut = Sprite3D.ALPHA_CUT_DISABLED
-	pricing_ui.transparent = true
-	pricing_ui.shaded = false # DISALED SHADING for proper UI transparency
-	pricing_ui.render_priority = 10
-	add_child(pricing_ui)
-	
-	pricing_ui.hide()
-
-
-func get_visual_nodes() -> Array[Node3D]:
-	var nodes = super.get_visual_nodes()
-	if pricing_ui in nodes:
-		nodes.erase(pricing_ui)
-	return nodes
+	# UI is now handled by the global PricingOverlay
 
 
 
@@ -223,33 +141,53 @@ func on_hover(hovered: bool) -> void:
 
 func set_pricing_ui_active(active: bool) -> void:
 	_pricing_mode_active = active
-	_update_label_visibility()
 	
 	# Re-trigger hover logic to immediately add/remove outline
 	# if toggled while already hovering.
 	on_hover(is_hovered)
 	
-	if active:
+	if active and is_hovered:
 		update_pricing_ui()
+	elif not active and is_hovered:
+		_update_label_visibility()
+
+func adjust_price(delta: float) -> void:
+	if not item_data: return
+	
+	var base_price : float = item_data.price
+	var current_price : float = item_data.get_final_price()
+	
+	# Range Rules: 
+	# 1. Minimum: Base price.
+	# 2. Maximum: Progressive margin based on tier. 25% (Tier 1) to 50% (Tier 10).
+	var min_price : float = base_price
+	var max_price : float = item_data.get_max_selling_price()
+	
+	var new_price : float = clamp(current_price + delta, min_price, max_price)
+	
+	item_data.selling_price = new_price
+	
+	# Refresh all items of this type (they share the resource)
+	get_tree().call_group("draggable_items", "update_pricing_ui")
+	# Also update containers if any of their item_data changed
+	get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
 
 func _update_label_visibility() -> void:
-	if pricing_ui:
-		pricing_ui.visible = is_hovered and _pricing_mode_active
+	if not _pricing_mode_active or not is_hovered:
+		# If we stop hovering while this was the active item, hide the overlay.
+		# A global check could ensure we don't hide it if another item is already hovered,
+		# but `on_hover(true)` on the new item will instantly show it again.
+		if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
+			get_node("/root/PricingOverlay").hide_ui()
+	elif _pricing_mode_active and is_hovered:
+		update_pricing_ui()
 
 func update_pricing_ui() -> void:
-	if not price_label or not item_data: return
+	if not item_data: return
+	if not is_hovered or not _pricing_mode_active: return
 	
-	var final_price = item_data.get_final_price()
-	var base_price = item_data.price
-	
-	name_label.text = item_data.item_name
-	price_label.text = "₱%.2f" % [final_price]
-	comparison_label.text = "₱%.2f → ₱%.2f" % [base_price, final_price]
-	
-	# Position at center of item height and push forward (Z = 0.1)
-	if pricing_ui:
-		pricing_ui.position.y = item_data.display_height_meters / 2.0
-		pricing_ui.position.z = 0.15 # Pushed more to the front
+	if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
+		get_node("/root/PricingOverlay").show_item(item_data, global_position)
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return
@@ -258,7 +196,8 @@ func on_interact() -> void:
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()
-	if pricing_ui: pricing_ui.hide()
+	if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
+		get_node("/root/PricingOverlay").hide_ui()
 	drag_started.emit()
 
 func _on_drag_cancelled_by_manager() -> void:
@@ -266,16 +205,15 @@ func _on_drag_cancelled_by_manager() -> void:
 	drag_ended.emit()
 
 func show_visuals() -> void:
-	sprite.show()
+	if not sprite: sprite = get_node_or_null("Sprite3D")
+	if sprite:
+		sprite.show()
+	else:
+		push_error("[DraggableItem] Cannot show visuals: Sprite3D is missing!")
 
 func return_to_start() -> void:
 	EventBus.request_sfx.emit("drop")
 	
-	if is_transient:
-		InventoryManager.return_item(item_data)
-		queue_free()
-		return
-		
 	show_visuals()
 	var tween := create_tween()
 	# Restore full local transform (position only — tilt lives on the sprite node)
