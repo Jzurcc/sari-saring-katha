@@ -18,6 +18,25 @@ var target_number: String = "62777444666"
 
 var screen_label: Label = null
 var _is_calling: bool = false
+var _is_on_side: bool = false
+
+const T9_MAP = {
+	"1": ".,!",
+	"2": "abc",
+	"3": "def",
+	"4": "ghi",
+	"5": "jkl",
+	"6": "mno",
+	"7": "pqrs",
+	"8": "tuv",
+	"9": "wxyz",
+	"0": " "
+}
+
+var _last_digit: String = ""
+var _tap_index: int = -1
+var _last_tap_time: int = 0
+var _tap_timeout_ms: int = 1000
 
 var sfx_btn_1: AudioStream = preload("res://Audio/SFX/phone_btn_1.mp3")
 var sfx_btn_2: AudioStream = preload("res://Audio/SFX/phone_btn_2.mp3")
@@ -36,13 +55,42 @@ func _ready() -> void:
 	_animate_entrance()
 
 func _animate_entrance() -> void:
-	position.y += 400
+	var nokia = get_node("Nokia")
+	var screen_size = get_viewport_rect().size
+	
+	# Center horizontally
+	var target_x = (screen_size.x - nokia.size.x * nokia.scale.x) / 2
+	nokia.position.x = target_x
+	
+	# Slide up from bottom
+	var start_y = nokia.position.y + 600
+	var final_y = nokia.position.y
+	nokia.position.y = start_y
+	
 	var tween = create_tween()
-	tween.tween_property(self, "position:y", position.y - 400, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(nokia, "position:y", final_y, 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _move_to_side() -> void:
+	if _is_on_side: return
+	_is_on_side = true
+	var nokia = get_node("Nokia")
+	var tween = create_tween()
+	# Move to the left (e.g., 80px from left)
+	tween.tween_property(nokia, "position:x", 80, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+
+func _move_to_center() -> void:
+	if not _is_on_side: return
+	_is_on_side = false
+	var nokia = get_node("Nokia")
+	var screen_size = get_viewport_rect().size
+	var target_x = (screen_size.x - nokia.size.x * nokia.scale.x) / 2
+	var tween = create_tween()
+	tween.tween_property(nokia, "position:x", target_x, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 func _animate_exit_and_free() -> void:
+	var nokia = get_node("Nokia")
 	var tween = create_tween()
-	tween.tween_property(self, "position:y", position.y + 400, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(nokia, "position:y", nokia.position.y + 600, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func(): queue_free())
 
 
@@ -93,19 +141,41 @@ func _play_button_sound(key: String) -> void:
 func _on_key_pressed(digit: String) -> void:
 	if _is_calling: return
 	_play_button_sound(digit)
+	
+	var now = Time.get_ticks_msec()
+	var letters = T9_MAP.get(digit, digit) # Fallback to digit if not in map
+	
+	# Handle multi-tap
+	if digit == _last_digit and (now - _last_tap_time) < _tap_timeout_ms:
+		# Cycle through letters
+		_tap_index = (_tap_index + 1) % letters.length()
+		# Replace last character
+		if current_input.length() > 0:
+			current_input = current_input.left(current_input.length() - 1)
+	else:
+		# New digit or timeout: start new character
+		_last_digit = digit
+		_tap_index = 0
+	
+	_last_tap_time = now
+	
 	# Max character limit of 14
 	if current_input.length() < 14:
-		current_input += digit
-		if screen_label:
-			screen_label.text = current_input
+		current_input += letters[_tap_index]
+		_update_screen()
 
 func _on_clear_pressed() -> void:
 	if _is_calling: return
 	_play_button_sound("clear")
+	_reset_t9_state()
 	if current_input.length() > 0:
 		current_input = current_input.left(current_input.length() - 1)
-		if screen_label:
-			screen_label.text = current_input
+		_update_screen()
+
+func _reset_t9_state() -> void:
+	_last_digit = ""
+	_tap_index = -1
+	_last_tap_time = 0
 
 func _on_home_pressed() -> void:
 	if _is_calling: return
@@ -115,7 +185,7 @@ func _on_home_pressed() -> void:
 func _on_enter_pressed() -> void:
 	if _is_calling: return
 	_play_button_sound("enter")
-	if current_input == target_number:
+	if current_input.to_upper() == "MARIO" or current_input == target_number:
 		_trigger_store_menu()
 
 func _on_asterisk_pressed() -> void:
@@ -129,6 +199,7 @@ func _trigger_store_menu() -> void:
 		return
 		
 	_is_calling = true
+	_move_to_side()
 	print("[NokiaUI] Triggering direct Mario call via MarioManager...")
 	
 	# Dynamically grab the marker if not explicitly assigned
@@ -148,7 +219,9 @@ func _on_mario_call_finished(success: bool) -> void:
 	print("[NokiaUI] Mario call finished. Success: ", success)
 	_is_calling = false
 	current_input = ""
+	_reset_t9_state()
 	_update_screen()
+	# The Nokia now stays on the side to make room for the RestockMenu
 	
 	if success:
 		if not store_menu:
@@ -177,5 +250,6 @@ func _update_screen() -> void:
 
 func _on_close_pressed() -> void:
 	if _is_calling: return
+	_reset_t9_state()
 	nokia_closed.emit()
 	_animate_exit_and_free()

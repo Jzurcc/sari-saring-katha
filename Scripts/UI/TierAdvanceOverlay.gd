@@ -6,9 +6,16 @@ extends CanvasLayer
 @onready var grid: GridContainer = %ItemGrid
 @onready var control: Control = $Control
 
+var sfx_player: AudioStreamPlayer
+var stream_notification = preload("res://Audio/SFX/ui_sfx_7.mp3")
+
 func _ready() -> void:
 	control.visible = false
 	EventBus.upgrade_available.connect(_on_upgrade_available)
+	
+	sfx_player = AudioStreamPlayer.new()
+	add_child(sfx_player)
+	sfx_player.stream = stream_notification
 	
 	# Apply glassmorphic transparency to match the Alt/Pricing UI
 	var style = StyleBoxFlat.new()
@@ -18,13 +25,31 @@ func _ready() -> void:
 	if panel:
 		panel.add_theme_stylebox_override("panel", style)
 
-func _on_upgrade_available(_new_tier: int, cost: float) -> void:
+func _on_upgrade_available(_new_tier: int, cost: float, items: Array[ItemData]) -> void:
 	tier_label.text = "UPGRADE AVAILABLE (₱%.2f)" % cost
 	source_label.text = "Call Uncle Mario to expand your catalog!"
 	
-	# Clear old items (grid is no longer used for notifications)
+	# Clear old items
 	for child in grid.get_children():
 		child.queue_free()
+	
+	# Add new item icons
+	for item in items:
+		var tex = TextureRect.new()
+		tex.texture = item.texture
+		tex.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.custom_minimum_size = Vector2(48, 48)
+		grid.add_child(tex)
+	
+	# Play sound
+	sfx_player.play()
+	
+	# VFX: Rank Up Fanfare (3D) spawned in front of the camera
+	var cam = get_viewport().get_camera_3d()
+	if cam:
+		var spawn_pos = cam.global_position + (-cam.global_transform.basis.z * 2.5)
+		VisualEffectManager.spawn_rank_up_fanfare(spawn_pos)
 	
 	# Position at TOP (Notification Style)
 	control.anchor_left = 0.5

@@ -89,16 +89,16 @@ var stream_sfx_kaching = preload("res://Audio/SFX/money kaching.mp3")
 var sfx_player: AudioStreamPlayer
 
 # --- Colors ---
-var COLOR_TAB_BG := Color("D4A85C")         # warm brown tab bar
-var COLOR_TAB_ACTIVE := Color("C8944A")      # darker active tab
-var COLOR_TAB_NORMAL := Color("F0E0C8")      # light inactive tab
-var COLOR_CONTENT_BG := Color("D9B876")      # warm tan content area
-var COLOR_CARD_BG := Color(1, 1, 1, 1)       # white product cards
-var COLOR_CARD_SELECTED := Color("FFF3D6")   # soft yellow when selected
-var COLOR_DETAIL_BG := Color("E8CFA0")       # slightly darker detail panel
-var COLOR_CANCEL := Color("C0544E")          # red cancel button
-var COLOR_CONFIRM := Color("5A8C5A")         # green confirm button
-var COLOR_LIST_BG := Color("F5E6CC")         # light beige list panel
+var COLOR_TAB_BG := Color("666666")         # Background gray
+var COLOR_TAB_ACTIVE := Color("7EC292")      # Nokia green active tab
+var COLOR_TAB_NORMAL := Color("BFC0BA")      # Light gray inactive tab
+var COLOR_CONTENT_BG := Color("7EC292")      # Nokia green accents
+var COLOR_CARD_BG := Color("7EC292")       # Nokia green product cards
+var COLOR_CARD_SELECTED := Color("7EC292")   # Nokia green when selected
+var COLOR_DETAIL_BG := Color("BFC0BA")       # Light gray detail panel
+var COLOR_CANCEL := Color("C0544E")          # Red cancel button
+var COLOR_CONFIRM := Color("7EC292")         # Nokia green confirm button
+var COLOR_LIST_BG := Color("BFC0BA")         # Light gray list panel
 
 func _ready() -> void:
 	sfx_player = AudioStreamPlayer.new()
@@ -122,7 +122,7 @@ func _ready() -> void:
 		_style_button(confirm_btn, COLOR_CONFIRM, Color.WHITE)
 	if add_btn:
 		add_btn.pressed.connect(_on_add_pressed)
-		_style_button(add_btn, Color("D4A85C"), Color.WHITE)
+		_style_button(add_btn, COLOR_TAB_ACTIVE, Color.WHITE)
 	if tab_scroll:
 		tab_scroll.gui_input.connect(_on_tab_scroll_input)
 	
@@ -196,7 +196,7 @@ func _build_tabs() -> void:
 		up_btn.text = "⭐ UPGRADE STORE (₱%.2f)" % StoryManager.pending_upgrade_cost
 		up_btn.custom_minimum_size = Vector2(250, 40)
 		up_btn.name = "Tab_UpgradeStore"
-		_style_button(up_btn, Color(0.84, 0.64, 0.33, 1), Color.WHITE, float(tab_font_size))
+		_style_button(up_btn, COLOR_CONFIRM, Color.WHITE, float(tab_font_size))
 		up_btn.pressed.connect(_on_upgrade_pressed)
 		tab_container.add_child(up_btn)
 
@@ -215,7 +215,7 @@ func _build_tabs() -> void:
 		if is_locked:
 			_style_button(tab_btn, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
 		else:
-			_style_button(tab_btn, COLOR_TAB_NORMAL, Color("333333"), float(tab_font_size))
+			_style_button(tab_btn, COLOR_TAB_NORMAL, Color.WHITE, float(tab_font_size))
 		
 		tab_btn.pressed.connect(_on_tab_pressed.bind(cat_key))
 		tab_container.add_child(tab_btn)
@@ -254,7 +254,7 @@ func _select_category(cat_key: String) -> void:
 			elif is_active:
 				_style_button(child, COLOR_TAB_ACTIVE, Color.WHITE, float(tab_font_size))
 			else:
-				_style_button(child, COLOR_TAB_NORMAL, Color("333333"), float(tab_font_size))
+				_style_button(child, COLOR_TAB_NORMAL, Color.WHITE, float(tab_font_size))
 	
 	_populate_grid(cat_key)
 
@@ -376,7 +376,7 @@ func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -
 		
 		var selected_style = card.get_theme_stylebox("panel") as StyleBoxFlat
 		if selected_style:
-			selected_style.border_color = Color(0.84, 0.64, 0.33, 1) # Yellow highlight
+			selected_style.border_color = COLOR_CARD_SELECTED
 
 # ========== DETAIL PANEL ==========
 func _update_detail_panel(item: ItemData) -> void:
@@ -439,7 +439,7 @@ func _update_order_list() -> void:
 	if selected_items.is_empty():
 		var empty_lbl = Label.new()
 		empty_lbl.text = "No items added yet"
-		empty_lbl.add_theme_color_override("font_color", Color("999999"))
+		empty_lbl.add_theme_color_override("font_color", Color("CCCCCC"))
 		empty_lbl.add_theme_font_size_override("font_size", 13)
 		order_list_container.add_child(empty_lbl)
 	else:
@@ -487,7 +487,7 @@ func _create_order_row(item: ItemData, count: int) -> HBoxContainer:
 	var plus_btn = Button.new()
 	plus_btn.text = "+"
 	plus_btn.custom_minimum_size = Vector2(30, 30)
-	_style_button(plus_btn, Color("5A8C5A"), Color.WHITE, 14.0)
+	_style_button(plus_btn, COLOR_CONFIRM, Color.WHITE, 14.0)
 	row.add_child(plus_btn)
 	
 	# Connect buttons — pass references so they can update each other
@@ -500,10 +500,10 @@ func _update_minus_btn_appearance(btn: Button, count: int) -> void:
 	if count <= 1:
 		# Show trash icon — pressing it will remove the item
 		btn.text = "🗑"
-		_style_button(btn, Color("C0544E"), Color.WHITE, 14.0)
+		_style_button(btn, COLOR_CANCEL, Color.WHITE, 14.0)
 	else:
 		btn.text = "-"
-		_style_button(btn, Color("D4A85C"), Color.WHITE, 14.0)
+		_style_button(btn, COLOR_TAB_ACTIVE, Color.WHITE, 14.0)
 
 func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row: HBoxContainer) -> void:
 	var count = selected_items.get(item, 0)
@@ -579,7 +579,17 @@ func _on_cancel_pressed() -> void:
 func _on_confirm_pressed() -> void:
 	if total_price <= 0:
 		return
-	_play_sfx(stream_sfx_7)
+	_play_sfx(stream_sfx_kaching)
+	
+	# Deduct the restock cost from the player's money
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	if gm_nodes.size() > 0:
+		var gm = gm_nodes[0]
+		gm.money -= total_price
+		EventBus.money_changed.emit(gm.money)
+		gm.save_state()
+		print("[RestockMenu] Restock purchased for ₱%.2f. Remaining: ₱%.2f" % [total_price, gm.money])
+	
 	catalog_purchase_confirmed.emit(total_price, selected_items)
 	_close_restock_screen()
 	# Set delivery cooldown and trigger the manager

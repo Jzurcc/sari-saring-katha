@@ -7,7 +7,7 @@ content_margin_left = 20.0
 content_margin_top = 20.0
 content_margin_right = 20.0
 content_margin_bottom = 20.0
-bg_color = Color(0.12, 0.11, 0.09, 1)
+bg_color = Color(0.4, 0.4, 0.4, 1)
 corner_radius_top_left = 11
 corner_radius_top_right = 11
 corner_radius_bottom_right = 11
@@ -20,7 +20,7 @@ content_margin_left = 16.0
 content_margin_top = 6.0
 content_margin_right = 16.0
 content_margin_bottom = 6.0
-bg_color = Color(0.85, 0.67, 0.4, 1)
+bg_color = Color(0.494, 0.761, 0.573, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -31,7 +31,7 @@ content_margin_left = 16.0
 content_margin_top = 6.0
 content_margin_right = 16.0
 content_margin_bottom = 6.0
-bg_color = Color(0.44, 0.38, 0.31, 1)
+bg_color = Color(0.749, 0.753, 0.729, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -42,14 +42,14 @@ content_margin_left = 12.0
 content_margin_top = 12.0
 content_margin_right = 12.0
 content_margin_bottom = 12.0
-bg_color = Color(0.67, 0.58, 0.44, 1)
+bg_color = Color(0.749, 0.753, 0.729, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_item_bg"]
-bg_color = Color(0.05, 0.05, 0.05, 1)
+bg_color = Color(0.494, 0.761, 0.573, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -61,14 +61,14 @@ content_margin_left = 10.0
 content_margin_top = 10.0
 content_margin_right = 10.0
 content_margin_bottom = 10.0
-bg_color = Color(0.85, 0.8, 0.67, 1)
+bg_color = Color(0.749, 0.753, 0.729, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_add_btn"]
-bg_color = Color(0.9, 0.77, 0.5, 1)
+bg_color = Color(0.494, 0.761, 0.573, 0.8)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -85,7 +85,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_order_btn"]
-bg_color = Color(0.48, 0.74, 0.44, 1)
+bg_color = Color(0.494, 0.761, 0.573, 1)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -240,14 +240,14 @@ alignment = 1
 [node name="DetailName" type="Label" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox/DetailInfo" unique_id=1579441155]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.15, 0.15, 0.15, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 22
 text = "Select a product"
 
 [node name="DetailPrice" type="Label" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox/DetailInfo" unique_id=1237781112]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.15, 0.15, 0.15, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
 
 [node name="AddBtn" type="Button" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/LeftSideVBox/DetailPanel/DetailHBox" unique_id=1091260285]
@@ -255,7 +255,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(90, 42)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_colors/font_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_add_btn")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_add_btn")
