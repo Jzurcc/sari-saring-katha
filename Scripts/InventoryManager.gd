@@ -144,6 +144,40 @@ func get_total_owned_count(type: ItemData.ItemType) -> int:
 func get_available_capacity(type: ItemData.ItemType) -> int:
 	return get_capacity_limit(type) - get_total_owned_count(type)
 
+## Returns a unique list of items currently placed on shelves or available in containers.
+func get_items_available_on_display() -> Array[ItemData]:
+	var result: Array[ItemData] = []
+	
+	# 1. Check all ShelfSurface nodes for physical items
+	var surfaces = get_tree().get_nodes_in_group("shelf_surface")
+	for s in surfaces:
+		if s is ShelfSurface:
+			for occupant in s._slot_occupants:
+				if occupant != null and is_instance_valid(occupant) and occupant.item_data:
+					if not result.has(occupant.item_data):
+						result.append(occupant.item_data)
+						
+	# 2. Check all Containers (Sachet and Candy)
+	var containers = get_tree().get_nodes_in_group("pricing_ui_containers")
+	for c in containers:
+		# Check if the container is unlocked/visible and has stock
+		if not c.visible:
+			continue
+			
+		if c is SachetContainerItem:
+			if c.sachet_item and c.current_stock > 0:
+				if not result.has(c.sachet_item):
+					result.append(c.sachet_item)
+		elif c is CandyContainerItem:
+			if c.current_stock > 0:
+				for candy in c.possible_candies:
+					if is_in_stock(candy):
+						if not result.has(candy):
+							result.append(candy)
+							
+	return result
+
+
 ## Take one item from stock. Returns false if out of stock.
 func take_item(item: ItemData) -> bool:
 	var count: int = _stock.get(item.resource_path, 0)
@@ -208,17 +242,18 @@ func load_state() -> void:
 	if save_data.has("inventory"):
 		var inv = save_data["inventory"]
 		var saved_stock = inv.get("stock", {})
-		# Merge saved stock into our initialized stock (which has all items at 0)
+		# Merge saved stock into our initialized stock (which has all items at 0).
+		# Cast to int because Godot 4's JSON parser returns all numbers as floats.
 		for path in saved_stock:
-			_stock[path] = saved_stock[path]
+			_stock[path] = int(saved_stock[path])
 			
-		customers_needed_for_delivery = inv.get("customers_needed_for_delivery", 0)
+		customers_needed_for_delivery = int(inv.get("customers_needed_for_delivery", 0))
 		print("[InventoryManager] State loaded from 'inventory' key.")
 	elif save_data.has("stock"):
 		# Fallback for old save format
 		var saved_stock = save_data["stock"]
 		for key in saved_stock.keys():
-			_stock[key] = saved_stock[key]
+			_stock[key] = int(saved_stock[key])
 		if save_data.has("customers_needed_for_delivery"):
 			customers_needed_for_delivery = int(save_data["customers_needed_for_delivery"])
 		print("[InventoryManager] State loaded from legacy keys.")
