@@ -1,0 +1,151 @@
+[gd_scene load_steps=6 format=3 uid="uid://c7v6p5u6o2x21"]
+
+[ext_resource type="Script" path="res://Scripts/UI/StoryProgressOverlay.gd" id="1_overlay"]
+[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://buk411iwdnb8k" path="res://Assets/ui/weui_arrow-filled.png" id="3_arrow"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.082, 0.078, 0.071, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.25, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_close"]
+bg_color = Color(0, 0, 0, 0)
+
+[node name="StoryProgressOverlay" type="ColorRect"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+script = ExtResource("1_overlay")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -600.0
+offset_top = -300.0
+offset_right = 600.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="PanelContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="BackButton" type="TextureButton" parent="PanelContainer/Margin/VBox/Header"]
+unique_name_in_owner = true
+modulate = Color(1, 0.92, 0.79, 1)
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+texture_normal = ExtResource("3_arrow")
+ignore_texture_size = true
+stretch_mode = 5
+flip_h = true
+
+[node name="TitleBox" type="VBoxContainer" parent="PanelContainer/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = -5
+
+[node name="Title" type="Label" parent="PanelContainer/Margin/VBox/Header/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_outline_color = Color(0.48, 0.31, 0.1, 1)
+theme_override_constants/outline_size = 6
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "STORY PROGRESS"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="PanelContainer/Margin/VBox/Header/TitleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "Character Name / Arc 1"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="PanelContainer/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_close")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_close")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_close")
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_close")
+text = " X "
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="MainView" type="Control" parent="PanelContainer/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CharacterList" type="ScrollContainer" parent="PanelContainer/Margin/VBox/MainView"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+vertical_scroll_mode = 0
+
+[node name="CardContainer" type="HBoxContainer" parent="PanelContainer/Margin/VBox/MainView/CharacterList"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 25
+alignment = 1
+
+[node name="DetailsView" type="ScrollContainer" parent="PanelContainer/Margin/VBox/MainView"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="DetailsContainer" type="VBoxContainer" parent="PanelContainer/Margin/VBox/MainView/DetailsView"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[connection signal="pressed" from="PanelContainer/Margin/VBox/Header/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="PanelContainer/Margin/VBox/Header/CloseButton" to="." method="_on_close_button_pressed"]

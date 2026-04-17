@@ -1,0 +1,142 @@
+[gd_scene format=3 uid="uid://b8h7p5u6o2x20"]
+
+[ext_resource type="Script" path="res://Scripts/UI/PauseMenu.gd" id="1_pause"]
+[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+[ext_resource type="PackedScene" uid="uid://c7v6p5u6o2x18" path="res://Scenes/UI/OptionsOverlay.tscn" id="3_options"]
+[ext_resource type="PackedScene" uid="uid://cgv6p5u6o2x19" path="res://Scenes/UI/CollectionOverlay.tscn" id="4_collection"]
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+bg_color = Color(0, 0, 0, 0)
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 100
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pause")
+
+[node name="Background" type="ColorRect" parent="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.705882)
+
+[node name="Buttons" type="VBoxContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Resume" type="Button" parent="Control/Buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "RESUME"
+
+[node name="Settings" type="Button" parent="Control/Buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "SETTINGS"
+
+[node name="Collection" type="Button" parent="Control/Buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "COLLECTION"
+
+[node name="MainMenu" type="Button" parent="Control/Buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "MAIN MENU"
+
+[node name="Exit" type="Button" parent="Control/Buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "EXIT"
+
+[node name="OptionsOverlay" parent="Control" instance=ExtResource("3_options")]
+layout_mode = 1
+
+[node name="CollectionOverlay" parent="Control" instance=ExtResource("4_collection")]
+layout_mode = 1
+
+[connection signal="pressed" from="Control/Buttons/Resume" to="Control" method="_on_resume_pressed"]
+[connection signal="pressed" from="Control/Buttons/Settings" to="Control" method="_on_settings_pressed"]
+[connection signal="pressed" from="Control/Buttons/Collection" to="Control" method="_on_collection_pressed"]
+[connection signal="pressed" from="Control/Buttons/MainMenu" to="Control" method="_on_main_menu_pressed"]
+[connection signal="pressed" from="Control/Buttons/Exit" to="Control" method="_on_exit_pressed"]
