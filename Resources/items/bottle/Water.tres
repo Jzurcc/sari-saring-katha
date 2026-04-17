@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Tubig"
 texture = ExtResource("2_tex")
-price = 8.0
+price = 7.0
 type = 1
 category = "bottle"
 tier = 2

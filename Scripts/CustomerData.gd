@@ -71,6 +71,24 @@ func get_filler_items(stage: int) -> Array[ItemData]:
 			result.append(item)
 	return result
 
+## Returns an aggregated list of filler items from the current arc and all previous arcs.
+func get_cumulative_filler_items(stage: int) -> Array[ItemData]:
+	var result: Array[ItemData] = []
+	var max_arc_idx = get_arc_index(stage)
+	
+	for i in range(max_arc_idx + 1):
+		var arc = _get_arc(i * 3) # Sample arc at the start of its stage range
+		if arc:
+			for item in arc.filler_items:
+				if item is ItemData and not result.has(item):
+					result.append(item)
+	return result
+
+
+	return result
+
+
+
 func get_purchase_timelines(stage: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(stage)
 	if not arc:

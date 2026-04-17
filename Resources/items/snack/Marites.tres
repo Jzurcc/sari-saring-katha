@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Marites Cracklin'"
 texture = ExtResource("2_tex")
-price = 16.0
+price = 20.0
 category = "snack"
 tier = 7
 item_hint = "might gossip about other people"

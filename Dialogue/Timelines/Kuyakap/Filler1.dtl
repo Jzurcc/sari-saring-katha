@@ -14,7 +14,20 @@ KuyaKap: Just [color=#0f6e2f]{Transaction.ItemWants}[/color] for now.
 	[end_timeline]
 
 label Satisfy
-KuyaKap: Perfect. Thanks.
+if {Transaction.WantsDebt}:
+	KuyaKap: Maraming salamat! [pause=0.5]
+	KuyaKap: [wave]Oh...[/wave] [pause=0.4] I just realized I forgot my wallet at home.
+	KuyaKap: Is it okay if I take this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] Babayaran ko na lang bukas ha.
+	- Sure, no problem.
+		[signal arg="utang_accepted"]
+		KuyaKap: Wow, thank you! [pause=0.3] You're the best!
+		KuyaKap: See you tomorrow!
+	- Sorry, no credit today.
+		[signal arg="utang_rejected"]
+		KuyaKap: Ah... [pause=0.4] I see. [pause=0.3] Sige, maiiwan ko muna 'to rito ha.
+		KuyaKap: Babalik ako kapag may pera na ako. [pause=0.4] Salamat pa rin!
+else:
+	KuyaKap: Perfect. Thanks.
 [end_timeline]
 
 label WrongItem

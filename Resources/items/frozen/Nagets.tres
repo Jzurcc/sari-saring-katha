@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Purified Foods Nagets"
 texture = ExtResource("2_tex")
-price = 38.0
+price = 42.0
 category = "frozen"
 tier = 6
 item_hint = "tastes like the Sarimanok"
