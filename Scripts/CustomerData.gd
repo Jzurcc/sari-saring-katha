@@ -16,6 +16,10 @@ func get_clean_id() -> String:
 ## The tier at which this customer starts appearing in the game.
 @export var unlock_tier: int = 1
 
+@export_group("Audio")
+## Volume offset for dialogue blips (e.g. 5.0 for louder, -5.0 for quieter).
+@export var dialogue_blip_volume: float = 0.0
+
 @export_group("Story Progression")
 ## Timelines for unique story progression stages (Chapters 0-8).
 ## The game plays story_timelines[stage] when forcing a chapter interaction.
