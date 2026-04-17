@@ -20,6 +20,14 @@ var _debug_show_collisions: bool = false
 var pause_menu: Control
 
 func _ready() -> void:
+	# Keep notifications accessible - Spawn the NoticeOverlay if it doesn't exist
+	if get_tree().get_nodes_in_group("notice_overlay").is_empty():
+		var notice_scene = load("res://Scenes/UI/NoticeOverlay.tscn")
+		if notice_scene:
+			var notice_instance = notice_scene.instantiate()
+			add_child(notice_instance)
+			notice_instance.add_to_group("notice_overlay")
+
 	# Ensure camera is correctly scaled to 75 as a fallback
 	await get_tree().process_frame
 	var camera = $Player/Head/Camera3D
@@ -116,6 +124,10 @@ func _input(event: InputEvent) -> void:
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
 		if pause_menu and not pause_menu.visible:
 			pause_menu.pause()
+			
+	# H key to test notifications (debug only)
+	if OS.is_debug_build() and event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.is_echo():
+		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
 
 func _process(_delta: float) -> void:
 	if not _debug_show_collisions:

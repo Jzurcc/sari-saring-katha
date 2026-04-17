@@ -20,7 +20,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_nokia_script")
-bypass_cooldown = true
 button_volume_db = 17.117999999999995
 
 [node name="RestockMenu" parent="." unique_id=1840390671 instance=ExtResource("2_store_scene")]

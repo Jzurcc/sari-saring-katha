@@ -3,17 +3,17 @@
 [ext_resource type="Script" uid="uid://dcyj5m14jty5b" path="res://Scripts/UI/TierAdvanceOverlay.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o9a2b"]
-bg_color = Color(0.08235294, 0.078431375, 0.07058824, 0.95686275)
+bg_color = Color(0.13376084, 0.1284008, 0.11768069, 0.9647059)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 
-[node name="TierAdvanceOverlay" type="CanvasLayer"]
+[node name="TierAdvanceOverlay" type="CanvasLayer" unique_id=673368087]
 layer = 5
 script = ExtResource("1_script")
 
-[node name="Control" type="Control" parent="."]
+[node name="Control" type="Control" parent="." unique_id=1063692279]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,25 +22,25 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Panel" type="PanelContainer" parent="Control"]
+[node name="Panel" type="PanelContainer" parent="Control" unique_id=1731354416]
 layout_mode = 0
 offset_right = 600.0
 offset_bottom = 40.0
 size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_o9a2b")
 
-[node name="Margin" type="MarginContainer" parent="Control/Panel"]
+[node name="Margin" type="MarginContainer" parent="Control/Panel" unique_id=744066104]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 16
 
-[node name="VBox" type="VBoxContainer" parent="Control/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Control/Panel/Margin" unique_id=803403266]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TierLabel" type="Label" parent="Control/Panel/Margin/VBox"]
+[node name="TierLabel" type="Label" parent="Control/Panel/Margin/VBox" unique_id=1094089794]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.815686, 0.270588, 1)
@@ -48,7 +48,7 @@ theme_override_font_sizes/font_size = 32
 text = "TIER 2 UNLOCKED"
 horizontal_alignment = 1
 
-[node name="SourceLabel" type="Label" parent="Control/Panel/Margin/VBox"]
+[node name="SourceLabel" type="Label" parent="Control/Panel/Margin/VBox" unique_id=1682658195]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
@@ -57,14 +57,14 @@ text = "Reached via Activity"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="HSeparator" type="HSeparator" parent="Control/Panel/Margin/VBox"]
+[node name="HSeparator" type="HSeparator" parent="Control/Panel/Margin/VBox" unique_id=1457799387]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ItemGrid" type="HFlowContainer" parent="Control/Panel/Margin/VBox"]
+[node name="ItemGrid" type="HFlowContainer" parent="Control/Panel/Margin/VBox" unique_id=1324015681]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 1
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1702536077]

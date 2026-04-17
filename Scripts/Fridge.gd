@@ -7,6 +7,27 @@ extends Area3D
 
 var is_open: bool = false
 
+func _ready() -> void:
+	if mist and mist is CPUParticles3D:
+		# Override any scene-locked properties to ensure it drifts up and stays around longer
+		mist.direction = Vector3.BACK
+		mist.spread = 90.0
+		mist.gravity = Vector3(0, 0.15, 0)
+		mist.lifetime = 4.0
+		mist.one_shot = false
+		mist.initial_velocity_min = 0.1
+		mist.initial_velocity_max = 0.4
+		mist.damping_min = 0.2
+		mist.damping_max = 0.5
+		
+		# Give it the smooth pulse/fade curve
+		var curves = Curve.new()
+		curves.add_point(Vector2(0, 0.2))
+		curves.add_point(Vector2(0.3, 1.2))
+		curves.add_point(Vector2(0.7, 1.2))
+		curves.add_point(Vector2(1, 0))
+		mist.scale_amount_curve = curves
+
 func on_interact() -> void:
 	toggle_open()
 

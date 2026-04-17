@@ -51,8 +51,7 @@ var sfx_library = {
 	"tab_switch": sfx_tab,
 	"ui_hover": sfx_hover,
 	"plastic": sfx_plastic,
-	"trash": sfx_trash
-	"error": sfx_error,
+	"trash": sfx_trash,
 	"money_decrease": sfx_money_decrease
 }
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
