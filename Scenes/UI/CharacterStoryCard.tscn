@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://c7v6p5u6o2x20"]
+[gd_scene format=3 uid="uid://c7v6p5u6o2x20"]
 
 [ext_resource type="Script" path="res://Scripts/UI/CharacterStoryCard.gd" id="1_card"]
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]

@@ -63,7 +63,7 @@ var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
 # NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
 var category_tabs: Array[String] = [
 	"upgrades", "snack", "sachet", "can", "cigarette", "candy",
-	"bottle", "pack", "frozen"
+	"beverages", "pack", "frozen goods"
 ]
 var category_labels: Dictionary = {
 	"upgrades": "Upgrades",
@@ -239,7 +239,7 @@ func _select_category(cat_key: String) -> void:
 			var child_cat = child.name.trim_prefix("Tab_").replace("_", " ")
 			var child_items = _get_items_for_category(child_cat)
 			var child_locked = child_items.size() == 0 and child_cat != "upgrades"
-			var is_active = child_cat == cat_key.replace(" ", "_")
+			var is_active = child_cat == cat_key
 			
 			if child.name == "Tab_UpgradeStore":
 				continue # Handled during _build_tabs
