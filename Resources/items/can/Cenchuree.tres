@@ -8,6 +8,7 @@ script = ExtResource("1_item")
 item_name = "Cenchuree Tuna"
 texture = ExtResource("2_tex")
 price = 14.0
+tier = 1
 category = "can"
 item_hint = "is a hundred years old"
 display_height_meters = 0.3
