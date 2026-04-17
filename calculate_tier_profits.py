@@ -26,11 +26,6 @@ for root, dirs, files in os.walk(items_dir):
             except:
                 pass
 
-# Custom items in tier 10 if not in files
-if 10 not in tier_data:
-    tier_data[10] = []
-# tier_data[10].extend([10.0, 10.0, 0.5]) # Already in files as Aryel, Mentor, Pocha
-
 print(f"{'Tier':<6} | {'Item Count':<10} | {'Sum Base Price':<16} | {'Default Daily Profit (5%)':<28} | {'Max Daily Profit (Tier Cap)':<28}")
 print("-" * 105)
 
@@ -40,10 +35,11 @@ for tier in sorted(tier_data.keys()):
     if count == 0: continue
     sum_base = sum(prices)
     avg_base = sum_base / count
-    # 16 sales
+    # 16 sales (8 customers * 2 items)
     default_profit = 16 * (avg_base * 0.05)
     
-    max_margin = 0.15 + (float(max(1, tier)) - 1.0) * (0.20 / 9.0)
+    # New Margin Logic: 30% (Tier 1) to 40% (Tier 10)
+    max_margin = 0.30 + (float(max(1, tier)) - 1.0) * (0.10 / 9.0)
     max_profit = 16 * (avg_base * max_margin)
     
     print(f"{tier:<6} | {count:<10} | {sum_base:<16.2f} | {default_profit:<28.2f} | {max_profit:<28.2f}")

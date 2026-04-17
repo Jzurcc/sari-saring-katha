@@ -169,6 +169,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Trigger the normal end of day sequence
 		_on_day_ended(day)
 
+	# 3. Debug Advance Tier (K key)
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_K and not event.echo:
+		print("[GameManager] DEBUG: Advance Tier triggered via K key")
+		StoryManager.advance_tier("Debug Keybind")
+		
+		# Clear any pending upgrades to prevent UI overlap
+		StoryManager.pending_upgrade_tier = 0
+		StoryManager.pending_upgrade_cost = 0.0
+
 ## Helper to highlight an object during the tutorial
 func _flash_outline(node: Node, duration: float) -> void:
 	if node and node.has_method("on_hover"):
