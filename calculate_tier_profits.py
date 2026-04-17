@@ -1,8 +1,9 @@
 import os
 import re
+from collections import defaultdict
 
 items_dir = r'c:\Users\John Reniel\sari-saring-katha\Resources\items'
-tier_data = {}
+tier_data = defaultdict(list)
 
 for root, dirs, files in os.walk(items_dir):
     for file in files:
@@ -20,26 +21,45 @@ for root, dirs, files in os.walk(items_dir):
                     can_be_sold = False if (sold_match and sold_match.group(1) == 'false') else True
                     
                     if can_be_sold:
-                        if tier not in tier_data:
-                            tier_data[tier] = []
                         tier_data[tier].append(price)
             except:
                 pass
 
-print(f"{'Tier':<6} | {'Item Count':<10} | {'Sum Base Price':<16} | {'Default Daily Profit (5%)':<28} | {'Max Daily Profit (Tier Cap)':<28}")
-print("-" * 105)
+# Projections based on 15 customers, averaging 2 items each = 30 sales per day
+SALES_PER_DAY = 30
+
+print("--- TIER BY TIER MAX PROFIT (If selling ONLY that tier) ---")
+print(f"{'Tier':<6} | {'Item Count':<10} | {'Sum Base':<10} | {'Max Daily Profit (30% or +P5)':<28}")
+print("-" * 65)
+
+individual_tier_results = {}
 
 for tier in sorted(tier_data.keys()):
     prices = tier_data[tier]
     count = len(prices)
     if count == 0: continue
-    sum_base = sum(prices)
-    avg_base = sum_base / count
-    # 16 sales (8 customers * 2 items)
-    default_profit = 16 * (avg_base * 0.05)
     
-    # New Margin Logic: 30% (Tier 1) to 40% (Tier 10)
-    max_margin = 0.30 + (float(max(1, tier)) - 1.0) * (0.10 / 9.0)
-    max_profit = 16 * (avg_base * max_margin)
+    tier_max_profit = 0
+    for price in prices:
+        # Profit per unit: max(30%, 5.0)
+        max_unit_profit = max(price * 0.30, 5.0)
+        # Average sale contribution
+        tier_max_profit += (SALES_PER_DAY / count) * max_unit_profit
     
-    print(f"{tier:<6} | {count:<10} | {sum_base:<16.2f} | {default_profit:<28.2f} | {max_profit:<28.2f}")
+    individual_tier_results[tier] = tier_max_profit
+    print(f"{tier:<6} | {count:<10} | {sum(prices):<10.2f} | {tier_max_profit:<28.2f}")
+
+print("\n--- CUMULATIVE AVERAGE MAX PROFIT (All tiers unlocked up to X) ---")
+print(f"{'Tier':<6} | {'Total Items':<12} | {'Avg Profit/Item':<18} | {'Total Daily Max':<18}")
+print("-" * 65)
+
+all_unlocked_prices = []
+for tier in sorted(tier_data.keys()):
+    all_unlocked_prices.extend(tier_data[tier])
+    
+    count = len(all_unlocked_prices)
+    total_unit_profit_sum = sum(max(p * 0.30, 5.0) for p in all_unlocked_prices)
+    avg_profit_per_item = total_unit_profit_sum / count
+    total_daily_max = SALES_PER_DAY * avg_profit_per_item
+    
+    print(f"{tier:<6} | {count:<12} | {avg_profit_per_item:<18.2f} | {total_daily_max:<18.2f}")
