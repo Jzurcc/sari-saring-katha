@@ -11,6 +11,8 @@ const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
 @export var sachet_item: ItemData
 @export var max_stock: int = 5
+@export var min_unlock_tier: int = 0
+@export var disable_at_tier: int = -1
 var _is_unlocked: bool = false
 var current_stock: int = 0
 
@@ -82,10 +84,18 @@ func _on_tier_advanced(_new_tier: int, _source: String) -> void:
 	_check_unlock_status()
 
 func _check_unlock_status() -> void:
-	if not sachet_item:
-		_is_unlocked = true
-	else:
-		_is_unlocked = sachet_item.tier <= StoryManager.current_tier
+	var tier = StoryManager.current_tier
+	var within_range = false
+	
+	if min_unlock_tier > 0:
+		within_range = tier >= min_unlock_tier
+	elif sachet_item:
+		within_range = sachet_item.tier <= tier
+	
+	if disable_at_tier >= 0 and tier >= disable_at_tier:
+		within_range = false
+		
+	_is_unlocked = within_range
 	
 	visible = _is_unlocked
 	process_mode = Node.PROCESS_MODE_INHERIT if _is_unlocked else Node.PROCESS_MODE_DISABLED

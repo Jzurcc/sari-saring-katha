@@ -37,7 +37,7 @@ var current_tier: int = 1
 var purchase_counter: int = 0:
 	set(value):
 		purchase_counter = value
-		if purchase_counter >= 8 and current_tier < 10:
+		if purchase_counter >= 5 and current_tier < 10:
 			_pending_tier_advance_source = "Activity"
 
 var pending_upgrade_tier: int = 0

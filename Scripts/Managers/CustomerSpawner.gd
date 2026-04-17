@@ -170,17 +170,6 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 		if GENERIC_CHAR_RES:
 			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 
-		# Just play the reminder sound instead of starting dialogue
-		if customer.customer_data and customer.customer_data.dialogue_blip_sound:
-			var audio_manager = get_node_or_null("/root/AudioManager")
-			var char_to_play = customer.customer_data
-			if audio_manager and char_to_play.dialogue_blip_sound:
-				audio_manager.dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
-				audio_manager.dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
-				audio_manager.dialogue_blip_player.play()
-			
-			EventBus.dialogue_character_speaking.emit(char_to_play)
-
 
 var _processed_finished_customers: Array[Customer] = []
 

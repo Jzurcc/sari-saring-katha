@@ -12,6 +12,11 @@ const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
 @export var possible_candies: Array[ItemData] = []
 @export var max_stock: int = 5
+## The minimum tier required to unlock this container. 
+## If 0, it falls back to checking the tier of the items in 'possible_candies'.
+@export var min_unlock_tier: int = 0
+## If >= 0, this container will automatically disable (hide) when the player reaches this tier.
+@export var disable_at_tier: int = -1
 var current_stock: int = 0
 var _is_unlocked: bool = false
 
@@ -89,14 +94,25 @@ func _on_tier_advanced(_new_tier: int, _source: String) -> void:
 	_check_unlock_status()
 
 func _check_unlock_status() -> void:
-	if possible_candies.is_empty():
-		_is_unlocked = true
-	else:
-		var min_tier = 999
+	var tier = StoryManager.current_tier
+	
+	# Visibility range check
+	var within_range = false
+	
+	if min_unlock_tier > 0:
+		within_range = (tier >= min_unlock_tier)
+	elif not possible_candies.is_empty():
+		var min_candy_tier = 999
 		for candy in possible_candies:
-			if candy.tier < min_tier:
-				min_tier = candy.tier
-		_is_unlocked = min_tier <= StoryManager.current_tier
+			if candy.tier < min_candy_tier:
+				min_candy_tier = candy.tier
+		within_range = (tier >= min_candy_tier)
+
+	# Disable guard
+	if disable_at_tier >= 0 and tier >= disable_at_tier:
+		within_range = false
+	
+	_is_unlocked = within_range
 	
 	visible = _is_unlocked
 	process_mode = Node.PROCESS_MODE_INHERIT if _is_unlocked else Node.PROCESS_MODE_DISABLED
@@ -123,16 +139,19 @@ func on_interact() -> void:
 	
 	_update_local_stock()
 
-	var available_candies: Array[ItemData] = []
+	# Build a proportional weighted pool based on current stock levels.
+	# This ensures that pulling an item is random but reflects the container's actual contents.
+	var pool: Array[ItemData] = []
 	for candy in possible_candies:
-		if InventoryManager.get_stock(candy) > 0:
-			available_candies.append(candy)
+		var s = InventoryManager.get_stock(candy)
+		for i in range(s):
+			pool.append(candy)
 
-	if available_candies.is_empty():
+	if pool.is_empty():
 		_play_error_animation()
 		return
 
-	var chosen_candy: ItemData = available_candies[randi() % available_candies.size()]
+	var chosen_candy: ItemData = pool.pick_random()
 
 	if InventoryManager.take_item(chosen_candy):
 		_update_local_stock()
@@ -147,9 +166,9 @@ func _update_local_stock() -> void:
 	current_stock = 0
 	for candy in possible_candies:
 		current_stock += InventoryManager.get_stock(candy)
-	# Also update max_stock from InventoryManager
-	if not possible_candies.is_empty():
-		max_stock = InventoryManager.get_max_stock(possible_candies[0])
+	
+	# The capacity for these candy containers is capped at 10 total.
+	max_stock = 10
 	
 	# Refresh UI if active
 	if is_instance_valid(get_node_or_null("/root/PricingOverlay")) and is_hovered and _pricing_mode_active:

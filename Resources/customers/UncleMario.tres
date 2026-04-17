@@ -23,6 +23,6 @@ character_name = "Uncle Mario"
 sprite_texture = ExtResource("4_pv788")
 dialogic_character = ExtResource("1_mario")
 story_timelines = Array[ExtResource("6_5neox")]([ExtResource("tut_timeline")])
-sprite_scale = 0.3
+sprite_scale = 0.35
 dialogue_blip_sound = SubResource("AudioStreamWAV_lpy21")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"
