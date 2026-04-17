@@ -220,4 +220,3 @@ func reset_state() -> void:
 	_reset_clock_to_morning()
 	save_state()
 	print("[GameManager] State reset to defaults for New Game.")
-

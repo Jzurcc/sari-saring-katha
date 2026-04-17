@@ -34,13 +34,15 @@ var sfx_pop_1 = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var sfx_pop_2 = preload("res://Audio/SFX/ui_sfx_15.mp3")
 var sfx_clink = preload("res://Audio/SFX/ui_sfx_3.mp3")
 var sfx_error = preload("res://Audio/SFX/ui_sfx_9.mp3")
+var sfx_money_decrease = preload("res://Audio/SFX/money_decrease.wav")
 
 var sfx_library = {
 	"money_gain": sfx_kaching,
 	"pickup": sfx_pop_1,
 	"drop": sfx_pop_2,
 	"interact": sfx_clink,
-	"error": sfx_error
+	"error": sfx_error,
+	"money_decrease": sfx_money_decrease
 }
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 var current_bgm_phase: BGMPhase = BGMPhase.NONE

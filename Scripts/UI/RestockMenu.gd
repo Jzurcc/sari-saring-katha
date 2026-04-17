@@ -196,7 +196,7 @@ func _build_tabs() -> void:
 		up_btn.text = "⭐ UPGRADE STORE (₱%.2f)" % StoryManager.pending_upgrade_cost
 		up_btn.custom_minimum_size = Vector2(250, 40)
 		up_btn.name = "Tab_UpgradeStore"
-		_style_button(up_btn, COLOR_CONFIRM, Color.WHITE, float(tab_font_size))
+		_style_button(up_btn, Color("D59F47"), Color.WHITE, float(tab_font_size))
 		up_btn.pressed.connect(_on_upgrade_pressed)
 		tab_container.add_child(up_btn)
 
@@ -249,6 +249,9 @@ func _select_category(cat_key: String) -> void:
 			var child_locked = child_items.size() == 0
 			var is_active = child_cat == cat_key.replace(" ", "_")
 			
+			if child.name == "Tab_UpgradeStore":
+				continue # Handled during _build_tabs
+				
 			if child_locked:
 				_style_button(child, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
 			elif is_active:
@@ -268,7 +271,7 @@ func _on_upgrade_pressed() -> void:
 		return
 		
 	# Deduct money immediately
-	_play_sfx(stream_sfx_kaching)
+	EventBus.request_sfx.emit("money_decrease")
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
 	if gm_nodes.size() > 0:
 		gm_nodes[0].money -= cost
@@ -579,7 +582,7 @@ func _on_cancel_pressed() -> void:
 func _on_confirm_pressed() -> void:
 	if total_price <= 0:
 		return
-	_play_sfx(stream_sfx_kaching)
+	EventBus.request_sfx.emit("money_decrease")
 	
 	# Deduct the restock cost from the player's money
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")

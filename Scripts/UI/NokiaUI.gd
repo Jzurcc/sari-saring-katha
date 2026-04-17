@@ -247,6 +247,19 @@ func _on_mario_call_finished(success: bool) -> void:
 func _update_screen() -> void:
 	if screen_label:
 		screen_label.text = current_input
+		
+		# Change color to dark green if input contains alphabetical characters
+		var has_alpha = false
+		for i in range(current_input.length()):
+			var c = current_input[i]
+			if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z"):
+				has_alpha = true
+				break
+		
+		if has_alpha:
+			screen_label.add_theme_color_override("font_color", Color("004d00")) # Dark Green
+		else:
+			screen_label.remove_theme_color_override("font_color")
 
 func _on_close_pressed() -> void:
 	if _is_calling: return
