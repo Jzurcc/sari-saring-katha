@@ -78,15 +78,7 @@ var category_labels: Dictionary = {
 
 
 
-# --- Audio Resources ---
-var stream_sfx_4 = preload("res://Audio/SFX/ui_sfx_4.mp3")
-var stream_sfx_3 = preload("res://Audio/SFX/ui_sfx_3.mp3")
-var stream_sfx_7 = preload("res://Audio/SFX/ui_sfx_7.mp3")
-var stream_sfx_9 = preload("res://Audio/SFX/ui_sfx_9.mp3")
-var stream_sfx_12 = preload("res://Audio/SFX/ui_sfx_12.mp3")
-var stream_sfx_15 = preload("res://Audio/SFX/ui_sfx_15.mp3")
-var stream_sfx_kaching = preload("res://Audio/SFX/money kaching.mp3")
-var sfx_player: AudioStreamPlayer
+
 
 # --- Colors ---
 var COLOR_TAB_BG := Color("666666")         # Background gray
@@ -99,10 +91,9 @@ var COLOR_DETAIL_BG := Color("BFC0BA")       # Light gray detail panel
 var COLOR_CANCEL := Color("C0544E")          # Red cancel button
 var COLOR_CONFIRM := Color("7EC292")         # Nokia green confirm button
 var COLOR_LIST_BG := Color("BFC0BA")         # Light gray list panel
+var COLOR_BEIGE := Color("F5F5DC")           # Light beige for upgrade
 
 func _ready() -> void:
-	sfx_player = AudioStreamPlayer.new()
-	add_child(sfx_player)
 	
 	# Debug: print which nodes were found
 	if not cancel_btn:
@@ -196,7 +187,8 @@ func _build_tabs() -> void:
 		up_btn.text = "⭐ UPGRADE STORE (₱%.2f)" % StoryManager.pending_upgrade_cost
 		up_btn.custom_minimum_size = Vector2(250, 40)
 		up_btn.name = "Tab_UpgradeStore"
-		_style_button(up_btn, COLOR_CONFIRM, Color.WHITE, float(tab_font_size))
+		# Use beige background and dark green text for the upgrade button
+		_style_button(up_btn, COLOR_BEIGE, Color("396647"), float(tab_font_size))
 		up_btn.pressed.connect(_on_upgrade_pressed)
 		tab_container.add_child(up_btn)
 
@@ -222,7 +214,7 @@ func _build_tabs() -> void:
 
 func _on_tab_pressed(cat_key: String) -> void:
 	# Always play the tab SFX
-	_play_sfx(stream_sfx_4)
+	AudioManager.play_sfx("tab_switch")
 	
 	# Block switching if the category has no unlocked items
 	var items = _get_items_for_category(cat_key)
@@ -231,12 +223,7 @@ func _on_tab_pressed(cat_key: String) -> void:
 	
 	_select_category(cat_key)
 
-func _play_sfx(stream: AudioStream) -> void:
-	if not is_instance_valid(sfx_player):
-		return
-	sfx_player.stream = stream
-	sfx_player.volume_db = sfx_volume_db
-	sfx_player.play()
+
 
 func _select_category(cat_key: String) -> void:
 	current_category = cat_key
@@ -268,7 +255,7 @@ func _on_upgrade_pressed() -> void:
 		return
 		
 	# Deduct money immediately
-	_play_sfx(stream_sfx_kaching)
+	AudioManager.play_sfx("purchase")
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
 	if gm_nodes.size() > 0:
 		gm_nodes[0].money -= cost
@@ -306,7 +293,7 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	var is_locked = !StoryManager.is_item_unlocked(item)
 	
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 1) # Black
+	style.bg_color = COLOR_CARD_BG
 	style.border_color = Color(0.15, 0.15, 0.15, 1) # Dark grey
 	style.border_width_left = 2
 	style.border_width_top = 2
@@ -363,7 +350,7 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 
 func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_play_sfx(stream_sfx_3)
+		AudioManager.play_sfx("interact")
 		currently_selected_item = item
 		_update_detail_panel(item)
 		
@@ -399,7 +386,7 @@ func _on_add_pressed() -> void:
 	if currently_selected_item == null:
 		return
 	
-	_play_sfx(stream_sfx_12)
+	AudioManager.play_sfx("pickup")
 	var item = currently_selected_item
 	var current_count = selected_items.get(item, 0)
 	
@@ -425,7 +412,7 @@ func _on_add_pressed() -> void:
 		EventBus.insufficient_funds.emit()
 		return
 	
-	_play_sfx(stream_sfx_12)
+	AudioManager.play_sfx("pickup")
 	selected_items[item] = current_count + 1
 	total_price += item.price
 	_update_order_list()
@@ -510,7 +497,7 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	if count <= 0:
 		return
 	
-	_play_sfx(stream_sfx_15)
+	AudioManager.play_sfx("drop")
 	
 	var new_count = count - 1
 	total_price -= item.price
@@ -550,7 +537,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 		EventBus.insufficient_funds.emit()
 		return
 	
-	_play_sfx(stream_sfx_12)
+	AudioManager.play_sfx("pickup")
 	var new_count = count + 1
 	selected_items[item] = new_count
 	total_price += item.price
@@ -571,7 +558,7 @@ func _close_restock_screen() -> void:
 	)
 
 func _on_cancel_pressed() -> void:
-	_play_sfx(stream_sfx_9)
+	AudioManager.play_sfx("error")
 	MarioManager.cancel_restock()
 	catalog_menu_closed.emit()
 	_close_restock_screen()
@@ -579,7 +566,7 @@ func _on_cancel_pressed() -> void:
 func _on_confirm_pressed() -> void:
 	if total_price <= 0:
 		return
-	_play_sfx(stream_sfx_kaching)
+	AudioManager.play_sfx("purchase")
 	
 	# Deduct the restock cost from the player's money
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
