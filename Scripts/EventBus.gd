@@ -24,7 +24,7 @@ signal dialogue_character_speaking(customer_data: CustomerData)
 @warning_ignore("unused_signal")
 signal transaction_started(item: ItemData)
 @warning_ignore("unused_signal")
-signal transaction_completed(item: ItemData, was_correct: bool)
+signal transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool, customer_path: String)
 
 # --- Progression ---
 @warning_ignore("unused_signal")

@@ -7,7 +7,9 @@
 script = ExtResource("1_08rbf")
 item_name = "Aryel"
 texture = ExtResource("2_owfh5")
+price = 12.0
 category = "sachet"
 tier = 10
+item_hint = "can't clean the 0.1%"
 display_height_meters = 0.5
 opaque_rect = Rect2i(137, 7, 233, 489)

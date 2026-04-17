@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Lucky 9 Carne Norte"
 texture = ExtResource("2_tex")
-price = 18.0
+price = 21.0
 category = "can"
 tier = 5
 item_hint = "will bring me good luck"

@@ -2,9 +2,9 @@ label Visit
 label CollectionIntro
 ReynaMayari: I am here to collect today's installment.
 ReynaMayari: The quota for today is {Global.TodayQuota} pesos.
-[signal arg="deduct_quota"]
-ReynaMayari: Let's see what we have in the drawer... [pause=1.0]
 
+ReynaMayari: Let's see what we have in the drawer... [pause=1.0]
+[signal arg="deduct_quota"]
 if {Global.HasEnoughMoney} == 1.0:
 	jump Success
 else:

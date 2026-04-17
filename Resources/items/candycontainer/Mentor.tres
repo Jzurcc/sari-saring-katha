@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Mentor"
 texture = ExtResource("2_tex")
-price = 0.5
+price = 1.0
 category = "candycontainer"
 tier = 10
 display_height_meters = 0.6

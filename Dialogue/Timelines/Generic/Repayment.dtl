@@ -1,0 +1,7 @@
+label Repayment
+Customer: Oh, I almost forgot.
+Customer: Here is the {Transaction.RepaymentAmount} pesos I owe you from before.
+[signal arg="repay_debt"]
+Customer: Thank you for the credit.
+[pause=0.5]
+[end_timeline]

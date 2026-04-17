@@ -11,6 +11,7 @@ enum DialoguePhase {
 	SATISFIED,    ## Correct item given — satisfy() is running its own exit animation
 	SOCIAL_VISIT, ## Drop-in visit with no purchase — dismiss when done
 	WRONG_ITEM,   ## Wrong item dropped — customer reacts but stays so player can retry
+	REPAYMENT,    ## Customer is paying back their debt before the main transaction
 }
 
 @export var customer_scene: PackedScene = preload("res://Scenes/Customer.tscn")
@@ -236,7 +237,15 @@ func _on_customer_clicked(customer: Customer) -> void:
 	# 2. Customer is being dismissed (satisfy/dismiss already called).
 	if not customer.is_waiting:
 		return
-	# 3. _dialogue_phase != NONE means a timeline just finished its async clear
+		
+	# 4. Check for Repayment Preamble (30% chance rolled in StoryManager)
+	if customer.transaction_context.is_repaying:
+		customer.transaction_context.is_repaying = false # Consume flag so it doesn't loop
+		_dialogue_phase = DialoguePhase.REPAYMENT
+		start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, _dialogue_phase)
+		return
+
+	# 5. _dialogue_phase != NONE means a timeline just finished its async clear
 	#    but timeline_ended hasn't fired yet.
 	if _dialogue_phase != DialoguePhase.NONE and _dialogue_phase != DialoguePhase.SATISFIED:
 		return
@@ -410,9 +419,6 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 	Dialogic.Styles.load_style("FollowBubble")
 	var layout = Dialogic.start(timeline, label)
 
-	# Freeze the game clock while dialogue is active
-	StoryManager.is_clock_running = false
-
 	# Anchor characters to the speech markers.
 	if layout and layout.has_method("register_character"):
 		# 1. Primary Customer
@@ -444,8 +450,6 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 
 
 func _on_dialogue_ended() -> void:
-	# Resume the game clock when dialogue ends
-	StoryManager.is_clock_running = true
 	# 1. Detect if Mario just cut in
 	if Dialogic.current_timeline != null and "UncleMario" in Dialogic.current_timeline.resource_path:
 		print("[CustomerSpawner] Mario interrupted current flow. Interruption flag set.")
@@ -474,6 +478,14 @@ func _on_dialogue_ended() -> void:
 			start_dialogue(timeline, current_customer, DialoguePhase.GREETING, "Greeting")
 		return
 		
+	# 3. Handle continuation after REPAYMENT preamble
+	if _dialogue_phase == DialoguePhase.REPAYMENT:
+		_dialogue_phase = DialoguePhase.NONE
+		if is_instance_valid(current_customer) and current_customer.is_waiting:
+			# Resimulate clicking the customer to start their actual transaction
+			_on_customer_clicked(current_customer)
+		return
+		
 	# Read and clear the phase atomically.
 	var phase := _dialogue_phase
 	_dialogue_phase = DialoguePhase.NONE
@@ -484,6 +496,11 @@ func _on_dialogue_ended() -> void:
 	if _pending_dismiss:
 		_pending_dismiss = false
 		if is_instance_valid(current_customer) and current_customer.is_waiting:
+			# If this was Mayari (collection visit), trigger the end of day after she leaves
+			var timeline = current_customer.transaction_context.timeline
+			var t_path = timeline.resource_path if timeline is Resource else timeline
+			var is_collection = t_path == "res://Dialogue/Timelines/mayari_collect.dtl"
+			
 			# Dismiss guest alongside primary if present, with a slight delay
 			if is_instance_valid(guest_customer):
 				var g = guest_customer
@@ -494,12 +511,12 @@ func _on_dialogue_ended() -> void:
 			if _is_partial_success:
 				current_customer.satisfy()
 				_is_partial_success = false
-				# We don't return here because we need current_customer = null and spawning logic below 
-				# but satisfy() owns its current_customer lifecycle. Actually, better to match SATISFIED behavior.
 				_handle_transaction_cleanup()
 				return
 			else:
 				current_customer.dismiss()
+				if is_collection:
+					_end_day()
 		return
 
 	match phase:
@@ -511,8 +528,14 @@ func _on_dialogue_ended() -> void:
 				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
 
 			if is_instance_valid(current_customer) and current_customer.is_waiting:
+				var timeline = current_customer.transaction_context.timeline
+				var t_path = timeline.resource_path if timeline is Resource else timeline
+				var is_collection = t_path == "res://Dialogue/Timelines/mayari_collect.dtl"
+				
 				current_customer.has_been_greeted = true
 				current_customer.dismiss()
+				if is_collection:
+					_end_day()
 
 		DialoguePhase.SATISFIED:
 			# satisfy() sets is_waiting=false and owns its own exit animation.

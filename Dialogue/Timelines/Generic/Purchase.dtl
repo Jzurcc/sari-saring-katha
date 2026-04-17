@@ -18,11 +18,16 @@ if {Global.HighPriceActive}:
 		Customer: Gosh, things are getting expensive lately.
 	else:
 		Customer: Naku, ang taas naman ng presyo niyo ngayon.
-# 1. 10 Randomized English-focused Variations
-set {Variation} = range(1, 11).pick_random()
-
-if {Variation} == 1.0:
-	Customer: Tao po! [pause=0.3] I was just passing by. Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] available?
+# 1. Main Request
+if {Transaction.IsRiddle}:
+	Customer: I'm looking for something that [color=#0f6e2f]{Transaction.ItemHint}[/color].
+	Customer: Do you have anything like that in stock?
+else:
+	# 10 Randomized English-focused Variations
+	set {Variation} = range(1, 11).pick_random()
+	
+	if {Variation} == 1.0:
+		Customer: Tao po! [pause=0.3] I was just passing by. Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] available?
 elif {Variation} == 2.0:
 	Customer: Hello! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Do you have those today?
 elif {Variation} == 3.0:
@@ -44,7 +49,10 @@ else:
 [end_timeline]
 
 label Talk
-Customer: I'm still waiting for the [color=#0f6e2f]{Transaction.ItemWants}[/color] po. No rush!
+if {Transaction.IsRiddle}:
+	Customer: I'm still waiting for the item that [color=#0f6e2f]{Transaction.ItemHint}[/color] po. No rush!
+else:
+	Customer: I'm still waiting for the [color=#0f6e2f]{Transaction.ItemWants}[/color] po. No rush!
 - Sige, wait for a bit.
 	Customer: Sure, I'll wait here.
 	[end_timeline]
@@ -54,11 +62,27 @@ Customer: I'm still waiting for the [color=#0f6e2f]{Transaction.ItemWants}[/colo
 	[end_timeline]
 
 label Satisfy
-Customer: Thank you so much! [pause=0.4] This is exactly what I needed.
-Customer: Sige po, I'll head out now. Ingat!
+if {Transaction.WantsDebt}:
+	Customer: Thank you so much! [pause=0.5]
+	Customer: [wave]Oh...[/wave] [pause=0.4] I just realized I forgot my wallet at home.
+	Customer: Is it okay if I take this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] I'll pay you back tomorrow, I promise!
+	- Sure, no problem.
+		[signal arg="utang_accepted"]
+		Customer: Wow, you're so kind! [pause=0.3] Thank you so much!
+		Customer: I'll see you tomorrow!
+	- Sorry, no credit today.
+		[signal arg="utang_rejected"]
+		Customer: Oh... [pause=0.4] I see. [pause=0.3] I'll just leave these here for now then.
+		Customer: I'll come back when I have my money. [pause=0.4] Thanks anyway!
+else:
+	Customer: Thank you so much! [pause=0.4] This is exactly what I needed.
+	Customer: Sige po, I'll head out now. Ingat!
 [end_timeline]
 
 label WrongItem
-Customer: Hmm... [pause=0.4] I don't think this is the [color=#4a6741]{Transaction.ItemWants}[/color] I asked for.
+if {Transaction.IsRiddle}:
+	Customer: Hmm... [pause=0.4] I don't think this [color=#0f6e2f]{Transaction.ItemHint}[/color].
+else:
+	Customer: Hmm... [pause=0.4] I don't think this is the [color=#4a6741]{Transaction.ItemWants}[/color] I asked for.
 Customer: Can you double-check please?
 [end_timeline]

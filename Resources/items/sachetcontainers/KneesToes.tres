@@ -7,8 +7,9 @@
 script = ExtResource("1_item")
 item_name = "Knees & Toes"
 texture = ExtResource("2_tex")
+price = 8.0
 category = "sachet"
 tier = 4
-item_hint = "refreshes my feet"
+item_hint = "cleans my feet"
 display_height_meters = 0.5
 opaque_rect = Rect2i(139, 5, 195, 481)

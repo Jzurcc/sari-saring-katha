@@ -18,6 +18,7 @@ const TIMELINE_PATH := "res://Dialogue/Timelines/UncleMario.dtl"
 
 var _mario_data: CustomerData = null
 var is_restocking_active: bool = false
+var is_mario_physically_present: bool = false
 
 # Delivery Positions (3D)
 const START_POS = Vector3(-15.299, 3.206, 20.0)
@@ -125,6 +126,7 @@ func trigger_sample_delivery(tier: int) -> void:
 
 func start_delivery(items_to_restock: Dictionary) -> void:
 	print("[MarioManager] Starting delivery sequence...")
+	is_mario_physically_present = true
 	await get_tree().create_timer(DELIVERY_DELAY_SEC).timeout
 	
 	# 1. Setup Tricycle
@@ -188,7 +190,16 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
 	
 	var items_to_bag: Array[ItemData] = []
+	var upgrade_delivered := false
+	var target_tier := 1
+
 	for item in items.keys():
+		if item.get_meta("is_upgrade", false):
+			upgrade_delivered = true
+			target_tier = item.get_meta("target_tier", 1)
+			print("[MarioManager] Upgrade detected in delivery! Target Tier: ", target_tier)
+			continue
+
 		# Filter: Candies and Sachets bypass bags
 		if item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
 			print("[MarioManager] Auto-stocking digital item: ", item.item_name)
@@ -197,6 +208,15 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 		# Everything else goes into bags
 		for i in range(items[item]):
 			items_to_bag.append(item)
+	
+	# Handle Tier Advancement and Samples
+	if upgrade_delivered:
+		StoryManager.advance_tier("Mario Delivery")
+		var all_items = InventoryManager.get_all_items()
+		for i in all_items:
+			if i.tier == target_tier and i.can_be_sold:
+				print("[MarioManager] Gifting sample of: ", i.item_name)
+				InventoryManager.add_stock(i, 2)
 	
 	# Group items into batches of 5
 	var batch_size = 5
@@ -238,6 +258,7 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	# 5. Cleanup
 	_delivery_sprite.queue_free()
 	_delivery_sprite = null
+	is_mario_physically_present = false
 	delivery_finished.emit()
 
 # ── INTERNAL HELPERS ────────────────────────────────────────────────
@@ -273,9 +294,6 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 	
 	# 5. Start the timeline (second arg is label)
 	var layout = Dialogic.start(timeline_path, label)
-	
-	# Freeze game clock while dialogue is active
-	StoryManager.is_clock_running = false
 	
 	print("[MarioManager]   Layout: ", str(layout.name) if layout else "NULL")
 	

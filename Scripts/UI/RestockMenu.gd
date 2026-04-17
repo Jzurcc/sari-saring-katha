@@ -62,10 +62,11 @@ var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
 # Category display names and their internal keys (must match category = "..." in .tres files)
 # NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
 var category_tabs: Array[String] = [
-	"snack", "can", "cigarette", "candy",
-	"beverages", "pack", "frozen goods"
+	"upgrades", "snack", "sachet", "can", "cigarette", "candy",
+	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
+	"upgrades": "Upgrades",
 	"snack": "Snack",
 	"sachet": "Sachets",
 	"can": "Can",
@@ -159,6 +160,10 @@ func open_menu() -> void:
 func _build_category_cache() -> void:
 	_category_cache.clear()
 	for item in InventoryManager.get_all_items():
+		# Filter out sachet containers from the sachet category
+		if item.category == "sachet" and item.type == ItemData.ItemType.SACHET_CONTAINER:
+			continue
+			
 		if not _category_cache.has(item.category):
 			var empty: Array[ItemData] = []
 			_category_cache[item.category] = empty
@@ -196,7 +201,7 @@ func _build_tabs() -> void:
 	# Category tabs — always show ALL categories, dim the locked ones
 	for cat_key in category_tabs:
 		var items = _get_items_for_category(cat_key)
-		var is_locked = items.size() == 0
+		var is_locked = items.size() == 0 and cat_key != "upgrades"
 		
 		var tab_btn = Button.new()
 		tab_btn.text = category_labels.get(cat_key, cat_key.capitalize())
@@ -218,7 +223,7 @@ func _on_tab_pressed(cat_key: String) -> void:
 	
 	# Block switching if the category has no unlocked items
 	var items = _get_items_for_category(cat_key)
-	if items.size() == 0:
+	if items.size() == 0 and cat_key != "upgrades":
 		return
 	
 	_select_category(cat_key)
@@ -233,8 +238,8 @@ func _select_category(cat_key: String) -> void:
 		if child is Button and child.name.begins_with("Tab_"):
 			var child_cat = child.name.trim_prefix("Tab_").replace("_", " ")
 			var child_items = _get_items_for_category(child_cat)
-			var child_locked = child_items.size() == 0
-			var is_active = child_cat == cat_key
+			var child_locked = child_items.size() == 0 and child_cat != "upgrades"
+			var is_active = child_cat == cat_key.replace(" ", "_")
 			
 			if child.name == "Tab_UpgradeStore":
 				continue # Handled during _build_tabs
@@ -294,10 +299,28 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	var card = PanelContainer.new()
 	card.custom_minimum_size = card_size
 	
-	var is_locked = !StoryManager.is_item_unlocked(item)
+	var is_locked = false
+	var is_upgrade = item.get_meta("is_upgrade", false)
+	var target_tier = item.get_meta("target_tier", 1)
+	
+	if is_upgrade:
+		if target_tier <= StoryManager.current_tier:
+			# Already owned
+			is_locked = false
+		elif target_tier == StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier:
+			# Available for purchase
+			is_locked = false
+		else:
+			# Either stacked (unlocked but not next) or fully locked (silhouette)
+			is_locked = target_tier > StoryManager.max_unlocked_tier
+	else:
+		is_locked = !StoryManager.is_item_unlocked(item)
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = COLOR_CARD_BG
+	if is_upgrade and target_tier <= StoryManager.current_tier:
+		style.bg_color = Color(0.2, 0.4, 0.2, 0.6) # Dimmed green for owned upgrades
+	
 	style.border_color = Color(0.15, 0.15, 0.15, 1) # Dark grey
 	style.border_width_left = 2
 	style.border_width_top = 2
@@ -325,14 +348,39 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	# Item icon
 	var icon = TextureRect.new()
 	icon.custom_minimum_size = card_icon_size
-	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if item.texture:
 		icon.texture = item.texture
 	
+	var is_stacked = is_upgrade and target_tier > StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier
+	
 	if is_locked:
 		icon.modulate = Color(0, 0, 0, 1) # Silhouette
 		card.modulate = Color(0.6, 0.6, 0.6, 0.8) # Dimmed card
+	elif is_stacked:
+		icon.modulate = Color(0.3, 0.3, 0.3, 0.5) # Grayed out
+		card.modulate = Color(0.5, 0.5, 0.5, 0.7) # Dimmed card
+	
+	# Add Label for Tiers
+	if is_upgrade:
+		var tier_lbl = Label.new()
+		tier_lbl.text = "TIER %d" % target_tier
+		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tier_lbl.add_theme_font_size_override("font_size", 11)
+		if target_tier <= StoryManager.current_tier:
+			tier_lbl.text = "OWNED"
+			tier_lbl.add_theme_color_override("font_color", Color.YELLOW)
+		elif target_tier == StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier:
+			tier_lbl.text = "AVAILABLE"
+			tier_lbl.add_theme_color_override("font_color", Color.WHITE)
+		elif is_stacked:
+			tier_lbl.text = "UNLOCKED"
+			tier_lbl.add_theme_color_override("font_color", Color.LIGHT_GRAY)
+		else:
+			tier_lbl.text = "LOCKED"
+			tier_lbl.add_theme_color_override("font_color", Color.DARK_GRAY)
+		vbox.add_child(tier_lbl)
 	
 	vbox.add_child(icon)
 	card.add_child(vbox)
@@ -346,7 +394,11 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	tw.tween_property(vbox, "rotation_degrees", sway_angle, duration / 2.0).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(vbox, "rotation_degrees", -sway_angle, duration / 2.0).set_trans(Tween.TRANS_SINE)
 	
-	if is_locked:
+	if is_locked or is_stacked:
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	elif is_upgrade and target_tier <= StoryManager.current_tier:
+		# Already owned upgrades are unclickable
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
 	else:
@@ -398,7 +450,21 @@ func _on_add_pressed() -> void:
 	var item = currently_selected_item
 	var current_count = selected_items.get(item, 0)
 	
-	# Dynamic item limit (Pocha, Mentor, Sachets, etc.)
+	# Individual item limit
+	var is_upgrade = item.get_meta("is_upgrade", false)
+	var target_tier = item.get_meta("target_tier", 1)
+	
+	if is_upgrade:
+		if target_tier <= StoryManager.current_tier:
+			AudioManager.play_sfx("error")
+			return # Already owned
+		if target_tier != StoryManager.pending_upgrade_tier:
+			AudioManager.play_sfx("error")
+			return # Future upgrade
+		if current_count >= 1:
+			AudioManager.play_sfx("error")
+			return # Can only buy one upgrade at a time
+	
 	var item_limit = InventoryManager.get_max_stock(item)
 	if current_count + 1 > item_limit:
 		print("[RestockMenu] BLOCKED: Individual limit for ", item.item_name, " reached (max ", item_limit, ")")
@@ -407,13 +473,16 @@ func _on_add_pressed() -> void:
 	
 	# Global shop capacity limit (On-Shelf + Inventory + Basket <= 36 or 12)
 	var available = InventoryManager.get_available_capacity(item.type)
+	if is_upgrade: available = 999 # Upgrades don't take shelf space
 	var in_basket = 0
 	for k in selected_items.keys():
 		if k.type == item.type:
 			in_basket += selected_items[k]
 			
 	if in_basket + 1 > available:
+		print("[RestockMenu] CANNOT ADD: Shelf/Fridge is too full! Available: ", available, " In Basket: ", in_basket)
 		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
+		AudioManager.play_sfx("error")
 		return
 	
 	var money = _get_money()
@@ -447,6 +516,10 @@ func _update_order_list() -> void:
 			order_list_container.add_child(row)
 			
 	_update_total_amount_ui()
+	
+	# Disable confirm button if unaffordable or empty
+	var money = _get_money()
+	confirm_btn.disabled = (total_price <= 0) or (total_price > money)
 	
 	# Keep header static — total shown separately at confirm
 	list_header.text = "Order List"
@@ -539,6 +612,9 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	var count = selected_items.get(item, 0)
 	
 	# Individual item limit
+	var is_upgrade = item.get_meta("is_upgrade", false)
+	if is_upgrade: return # Upgrades limited to 1
+	
 	var item_limit = InventoryManager.get_max_stock(item)
 	if count + 1 > item_limit:
 		AudioManager.play_sfx("error")
@@ -553,6 +629,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	
 	if in_basket + 1 > available:
 		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
+		AudioManager.play_sfx("error")
 		return
 		
 	var money = _get_money()
@@ -581,7 +658,7 @@ func _close_restock_screen() -> void:
 	)
 
 func _on_cancel_pressed() -> void:
-	AudioManager.play_sfx("error")
+	AudioManager.play_sfx("drop")
 	MarioManager.cancel_restock()
 	catalog_menu_closed.emit()
 	_close_restock_screen()
@@ -597,6 +674,10 @@ func _on_confirm_pressed() -> void:
 		print("[RestockMenu] No items ordered. Canceling.")
 		_on_cancel_pressed()
 		return
+	var money = _get_money()
+	if total_price > money:
+		EventBus.insufficient_funds.emit()
+		return
 		
 	AudioManager.play_sfx("purchase")
 	EventBus.request_sfx.emit("money_decrease")
@@ -605,10 +686,9 @@ func _on_confirm_pressed() -> void:
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
 	if gm_nodes.size() > 0:
 		var gm = gm_nodes[0]
-		gm.money -= total_price
-		EventBus.money_changed.emit(gm.money)
-		gm.save_state()
-		print("[RestockMenu] Restock purchased for ₱%.2f. Remaining: ₱%.2f" % [total_price, gm.money])
+		if gm.has_method("deduct_money"):
+			gm.deduct_money(total_price)
+			print("[RestockMenu] Restock purchased for ₱%.2f. Remaining: ₱%.2f" % [total_price, gm.money])
 	
 	catalog_purchase_confirmed.emit(total_price, actual_items)
 	_close_restock_screen()
@@ -622,6 +702,12 @@ func _get_money() -> float:
 
 # ========== HELPERS ==========
 func _get_items_for_category(cat_key: String) -> Array[ItemData]:
+	if cat_key == "upgrades":
+		var upgrades: Array[ItemData] = []
+		for t in range(2, 11): # Tiers 2 through 10
+			upgrades.append(StoryManager.get_tier_upgrade_item(t))
+		return upgrades
+		
 	if _category_cache.has(cat_key):
 		return _category_cache[cat_key]
 	var empty: Array[ItemData] = []
@@ -648,7 +734,13 @@ func _style_button(btn: Button, bg_color: Color, font_color: Color, font_size: f
 	pressed_style.bg_color = bg_color.darkened(0.1)
 	btn.add_theme_stylebox_override("pressed", pressed_style)
 	
+	var disabled_style = style.duplicate()
+	disabled_style.bg_color = bg_color.darkened(0.5)
+	disabled_style.bg_color.a = 0.6
+	btn.add_theme_stylebox_override("disabled", disabled_style)
+	
 	btn.add_theme_color_override("font_color", font_color)
 	btn.add_theme_color_override("font_hover_color", font_color)
 	btn.add_theme_color_override("font_pressed_color", font_color)
+	btn.add_theme_color_override("font_disabled_color", font_color.darkened(0.4))
 	btn.add_theme_font_size_override("font_size", int(font_size))

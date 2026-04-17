@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Mema Sardines"
 texture = ExtResource("2_tex")
-price = 18.0
+price = 21.0
 category = "can"
 tier = 5
 item_hint = "ranks number one"

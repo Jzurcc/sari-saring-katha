@@ -1,0 +1,104 @@
+[gd_scene format=3 uid="uid://cgv6p5u6o2x2a"]
+
+[ext_resource type="Script" path="res://Scripts/UI/CollectionOverlay.gd" id="1_collection"]
+[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="options_panel"]
+bg_color = Color(0.082, 0.078, 0.071, 0.91)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+bg_color = Color(0, 0, 0, 0)
+
+[node name="CollectionOverlay" type="ColorRect"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08235, 0.07843, 0.07059, 0.5)
+script = ExtResource("1_collection")
+
+[node name="CollectionPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -300.0
+offset_right = 500.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("options_panel")
+
+[node name="Margin" type="MarginContainer" parent="CollectionPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 32
+
+[node name="VBox" type="VBoxContainer" parent="CollectionPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Header" type="HBoxContainer" parent="CollectionPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="SpacerLeft" type="Control" parent="CollectionPanel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="CollectionPanel/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "COLLECTION"
+horizontal_alignment = 1
+
+[node name="SpacerRight" type="Control" parent="CollectionPanel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CloseButton" type="Button" parent="CollectionPanel/Margin/VBox/Header/SpacerRight"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_bottom = 31.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_normal")
+theme_override_styles/disabled = SubResource("btn_normal")
+theme_override_styles/focus = SubResource("btn_normal")
+text = "X"
+
+[node name="Scroll" type="ScrollContainer" parent="CollectionPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Grid" type="GridContainer" parent="CollectionPanel/Margin/VBox/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 6
+
+[connection signal="pressed" from="CollectionPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="close"]

@@ -66,8 +66,8 @@ directories/dch_directory={
 directories/dtl_directory={
 "Buboy/Filler1": "res://Dialogue/Timelines/Buboy/Filler1.dtl",
 "Filler1": "res://Dialogue/Timelines/Kuyakap/Filler1.dtl",
-"Neutral": "res://Dialogue/Timelines/Generic/Neutral.dtl",
 "Purchase": "res://Dialogue/Timelines/Generic/Purchase.dtl",
+"Repayment": "res://Dialogue/Timelines/Generic/Repayment.dtl",
 "Story0": "res://Dialogue/Timelines/Kuyakap/Story0.dtl",
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dtl",
 "UncleMarioTutorial": "res://Dialogue/Timelines/UncleMarioTutorial.dtl",

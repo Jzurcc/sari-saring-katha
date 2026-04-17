@@ -140,11 +140,9 @@ func _input(event: InputEvent) -> void:
 					
 					# Range Rules: 
 					# 1. Minimum: Base price.
-					# 2. Maximum: Progressive margin based on tier. 30% (Tier 1) to 40% (Tier 10).
+					# 2. Maximum: Stable 30% margin, or base + ₱5.00 for cheaper items.
 					var min_price : float = base_price
-					var tier : int = item.item_data.tier
-					var max_margin : float = 0.30 + (float(max(1, tier)) - 1.0) * (0.10 / 9.0)
-					var max_price : float = round(base_price * (1.0 + max_margin))
+					var max_price : float = max(round(base_price * 1.30), base_price + 5.0)
 					
 					var new_price : float = clamp(current_price + delta, min_price, max_price)
 					

@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Kopimo"
 texture = ExtResource("2_x04ad")
-type = 3
 category = "sachet"
 tier = 7
+item_hint = "isn't my cofee"
 metadata/_custom_type_script = "uid://dhbe82ueyiql5"

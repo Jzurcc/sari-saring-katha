@@ -84,3 +84,37 @@ func change_scene(path: String) -> void:
 	# Unblock input
 	eyelid_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	eyelid_bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func blink_and_blackout() -> void:
+	# Block input
+	eyelid_top.mouse_filter = Control.MOUSE_FILTER_STOP
+	eyelid_bottom.mouse_filter = Control.MOUSE_FILTER_STOP
+	
+	var tween = create_tween()
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.set_parallel(true)
+	
+	# Single heavy closure (reusing the logic from change_scene)
+	tween.tween_property(eyelid_top, "anchor_bottom", 1.1, 0.4)
+	tween.tween_property(eyelid_bottom, "anchor_top", -0.1, 0.4)
+	
+	await tween.finished
+
+func open_eyes() -> void:
+	var tween = create_tween()
+	tween.set_trans(Tween.TRANS_QUART)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_parallel(true)
+	
+	tween.tween_property(eyelid_top, "anchor_bottom", 0.0, 1.2)
+	tween.tween_property(eyelid_bottom, "anchor_top", 1.0, 1.2)
+	
+	await tween.finished
+	
+	# Unblock input
+	eyelid_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	eyelid_bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func transition_to_scene(path: String) -> void:
+	await change_scene(path)
