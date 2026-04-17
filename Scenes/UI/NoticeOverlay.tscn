@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://b1q2ur3e1hrua"]
+
+[ext_resource type="Script" uid="uid://cn5sn12fdwnsh" path="res://Scripts/UI/NoticeOverlay.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_notice"]
+content_margin_left = 30.0
+content_margin_top = 15.0
+content_margin_right = 30.0
+content_margin_bottom = 15.0
+bg_color = Color(0.133333, 0.129412, 0.117647, 0.964706)
+border_color = Color(1, 0.815686, 0.270588, 0.5)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="NoticeOverlay" type="CanvasLayer" unique_id=2141717722]
+layer = 100
+script = ExtResource("1_script")
+
+[node name="Control" type="Control" parent="." unique_id=1210610955]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Control" unique_id=2124300697]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -118.0
+offset_right = 382.0
+offset_bottom = 130.0
+grow_horizontal = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_notice")
+
+[node name="VBox" type="VBoxContainer" parent="Control/Panel" unique_id=820127096]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Control/Panel/VBox" unique_id=304897178]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.815686, 0.270588, 1)
+theme_override_font_sizes/font_size = 32
+text = "Shelf is full!"
+horizontal_alignment = 1
+
+[node name="MessageLabel" type="Label" parent="Control/Panel/VBox" unique_id=133205810]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "Can't add any more stock."
+horizontal_alignment = 1
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=2108355591]

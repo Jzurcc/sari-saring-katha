@@ -8,6 +8,7 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 
 var items: Array[ItemData] = []
 var is_fading_in: bool = true
+var base_scale: Vector3 = Vector3.ONE
 
 @onready var sprite: Sprite3D = $Sprite3D
 
@@ -15,8 +16,10 @@ func _ready() -> void:
 	super._ready()
 	# Billboard settings
 	billboard_collision = true
+	add_to_group("delivery_bag")
 	
 	if sprite:
+		base_scale = sprite.scale
 		# Ground the sprite: pin the texture bottom to the node origin
 		if sprite.texture:
 			sprite.offset.y = sprite.texture.get_height() / 2.0
@@ -75,6 +78,35 @@ func on_interact() -> void:
 	# Visual feedback/Cleanup
 	if items.is_empty():
 		_fade_out_and_destroy()
+	else:
+		_refresh_visuals()
+
+func receive_item(drag_item: DraggableItem) -> void:
+	if items.size() >= 5:
+		return # Bag is full
+		
+	items.push_back(drag_item.item_data)
+	
+	# Restore digital stock since it was likely taken out (or just general logic consistency)
+	InventoryManager.return_item(drag_item.item_data)
+	
+	# Visual feedback: tween the item into the bag
+	var target_pos = global_position + Vector3(0, 0.1, 0)
+	var tween = create_tween()
+	tween.tween_property(drag_item, "global_position", target_pos, 0.2).set_trans(Tween.TRANS_CUBIC)
+	tween.parallel().tween_property(drag_item.sprite, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(drag_item.queue_free)
+	
+	if EventBus.has_signal("request_sfx"):
+		EventBus.request_sfx.emit("plastic")
+	
+	_refresh_visuals()
+
+func _refresh_visuals() -> void:
+	# Add a little squash juice relative to the original base_scale to show it received/lost something
+	var tw = create_tween()
+	sprite.scale = base_scale * Vector3(1.2, 0.8, 1.2)
+	tw.tween_property(sprite, "scale", base_scale, 0.3).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 func _fade_out_and_destroy() -> void:
 	var tween = create_tween()

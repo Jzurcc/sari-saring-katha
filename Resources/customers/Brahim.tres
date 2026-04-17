@@ -1,21 +1,16 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://cg2whm07ew0u4"]
 
-[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="1_h0x5s"]
 [ext_resource type="Script" path="res://Scripts/ArcData.gd" id="1_h0x5s"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="2_euh2b"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_5iw5y"]
 [ext_resource type="Resource" uid="uid://wo1yufc6pirt" path="res://Dialogue/Timelines/Generic/Neutral.dtl" id="4_cmicr"]
-[ext_resource type="Resource" uid="uid://bnry88xcmcbac" path="res://Dialogue/Timelines/Brahim.dch" id="5_8rogq"]
-[ext_resource type="AudioStream" uid="uid://dilg88qhh1swl" path="res://Audio/DialogueBlips/Brahim.wav" id="6_e6vk5"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="7_poydn"]
 [ext_resource type="Texture2D" uid="uid://fvu6k7ii37tf" path="res://Assets/characters/sprites/Brahim.png" id="8_sw35w"]
 [ext_resource type="Script" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_u5mhi"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("1_h0x5s")
-filler_items = Array[Resource("res://Scripts/ItemData.gd")]([])
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("4_cmicr")])
-visit_timelines = Array[ExtResource("3_5iw5y")]([])
 
 [sub_resource type="Resource" id="Resource_7dcyb"]
 metadata/__load_path__ = "res://Dialogue/Timelines/Dionisio.dch"
@@ -27,13 +22,9 @@ metadata/__load_path__ = "res://Audio/DialogueBlips/Dionisio.wav"
 script = ExtResource("7_poydn")
 character_name = "Brahim"
 sprite_texture = ExtResource("8_sw35w")
-dialogic_character = ExtResource("5_8rogq")
-unlock_tier = 1
-dialogue_blip_volume = 8.0
 dialogic_character = SubResource("Resource_7dcyb")
+dialogue_blip_volume = 8.0
 character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arcdata_script")])
 sprite_scale = 0.8
-dialogue_blip_sound = ExtResource("6_e6vk5")
-metadata/_custom_type_script = "res://Scripts/CustomerData.gd"
 dialogue_blip_sound = SubResource("Resource_nfu4x")
 metadata/_custom_type_script = "uid://b7rtu6knii7es"

@@ -109,52 +109,59 @@ func _create_glimmer_particles(area_size: Vector3) -> CPUParticles3D:
 	
 	return p
 
-func spawn_cold_mist(pos: Vector3) -> void:
+func spawn_cold_mist(pos: Vector3) -> CPUParticles3D:
 	var p = CPUParticles3D.new()
 	add_child(p)
 	p.global_position = pos
 	
 	p.amount = 12
-	p.one_shot = true
-	p.explosiveness = 0.6
-	p.lifetime = 1.5
+	p.one_shot = false
+	p.explosiveness = 0.4
+	p.lifetime = 4.0
 	p.mesh = QuadMesh.new()
-	p.mesh.size = Vector2(0.4, 0.4)
+	p.mesh.size = Vector2(0.6, 0.6)
 	
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_texture = MIST_TEXTURE
-	mat.albedo_color = Color(0.8, 0.9, 1.0, 0.4) # Cool blue-white
+	mat.albedo_color = Color(0.8, 0.9, 1.0, 0.15) # Cool blue-white, lesser opacity
 	mat.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
 	mat.billboard_mode = StandardMaterial3D.BILLBOARD_PARTICLES
 	p.mesh.material = mat
 	
-	p.direction = Vector3.DOWN
-	p.spread = 30.0
-	p.gravity = Vector3(0, -0.4, 0) # Fall down
-	p.initial_velocity_min = 0.2
-	p.initial_velocity_max = 0.5
+	# Puffs outward gently towards the player and drifts up
+	p.direction = Vector3.BACK
+	p.spread = 90.0
+	p.gravity = Vector3(0, 0.15, 0) # Ascend gently
+	p.initial_velocity_min = 0.1
+	p.initial_velocity_max = 0.4
+	p.damping_min = 0.2
+	p.damping_max = 0.5
 	
 	var curves = Curve.new()
 	curves.add_point(Vector2(0, 0.2))
-	curves.add_point(Vector2(0.2, 1.0))
+	curves.add_point(Vector2(0.3, 1.2))
+	curves.add_point(Vector2(0.7, 1.2))
 	curves.add_point(Vector2(1, 0))
 	p.scale_amount_curve = curves
 	
 	p.emitting = true
-	get_tree().create_timer(3.0).timeout.connect(p.queue_free)
+	return p
 
-func spawn_mass_mist(pos: Vector3, width: float) -> void:
+func spawn_mass_mist(pos: Vector3, width: float) -> Array[CPUParticles3D]:
 	# Spawns a series of mist bursts across the specified width
 	var burst_count = int(width / 0.4) + 1
 	var step = width / burst_count
 	var start_x = pos.x - (width / 2.0)
+	var particles: Array[CPUParticles3D] = []
 	
 	for i in range(burst_count):
 		var burst_pos = Vector3(start_x + (i * step), pos.y, pos.z)
 		# Add a tiny bit of random drift so it doesn't look like a perfect grid
 		burst_pos += Vector3(randf_range(-0.1, 0.1), 0, randf_range(-0.1, 0.1))
-		spawn_cold_mist(burst_pos)
+		particles.append(spawn_cold_mist(burst_pos))
+	
+	return particles
 
 func spawn_heart_burst(pos: Vector3) -> void:
 	var p = CPUParticles3D.new()

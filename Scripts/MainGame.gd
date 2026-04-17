@@ -18,6 +18,14 @@ var _debug_show_collisions: bool = false
 ]
 
 func _ready() -> void:
+	# Keep notifications accessible - Spawn the NoticeOverlay if it doesn't exist
+	if get_tree().get_nodes_in_group("notice_overlay").is_empty():
+		var notice_scene = load("res://Scenes/UI/NoticeOverlay.tscn")
+		if notice_scene:
+			var notice_instance = notice_scene.instantiate()
+			add_child(notice_instance)
+			notice_instance.add_to_group("notice_overlay")
+
 	# Ensure camera is correctly scaled to 75 as a fallback
 	await get_tree().process_frame
 	var camera = $Player/Head/Camera3D
@@ -103,6 +111,10 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.is_echo():
 		_debug_show_collisions = !_debug_show_collisions
 		DebugDraw2D.set_text("Collision Debug", "ON" if _debug_show_collisions else "OFF")
+	
+	# H key to test notifications (debug only)
+	if OS.is_debug_build() and event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.is_echo():
+		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
 
 func _process(_delta: float) -> void:
 	if not _debug_show_collisions:

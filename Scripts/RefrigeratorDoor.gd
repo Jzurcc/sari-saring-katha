@@ -25,6 +25,7 @@ var is_open: bool = false
 var _tween: Tween
 var _outline_mat: ShaderMaterial
 var _pivot: Node3D
+var _active_mists: Array[CPUParticles3D] = []
 
 # ================================================================================
 func _ready() -> void:
@@ -89,4 +90,12 @@ func toggle_open() -> void:
 				# Spawn mass mist along the shelf width
 				# The root is at the left edge, so center is +X*(width/2)
 				var center_pos = surface.to_global(Vector3(surface.shelf_width / 2.0, 0.1, 0.0))
-				VisualEffectManager.spawn_mass_mist(center_pos, surface.shelf_width)
+				var mists = VisualEffectManager.spawn_mass_mist(center_pos, surface.shelf_width)
+				_active_mists.append_array(mists)
+	else:
+		# Close door behavior -> stop emitting and then clean up
+		for p in _active_mists:
+			if is_instance_valid(p):
+				p.emitting = false
+				get_tree().create_timer(5.0).timeout.connect(p.queue_free)
+		_active_mists.clear()

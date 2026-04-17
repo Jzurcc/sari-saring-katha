@@ -178,9 +178,9 @@ func decrement_cooldown() -> void:
 		customers_needed_for_delivery -= 1
 		save_state()
 
-## Set the post-order delivery cooldown (randomised 3–5 customers).
+## Set the post-order delivery cooldown (randomised 2-3 customers).
 func start_delivery_cooldown() -> void:
-	customers_needed_for_delivery = randi() % 3 + 3
+	customers_needed_for_delivery = randi() % 2 + 2
 	save_state()
 
 func save_state() -> void:

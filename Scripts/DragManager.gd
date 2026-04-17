@@ -228,6 +228,10 @@ func end_drag() -> void:
 			if shelf_surface and shelf_surface.has_method("receive_item"):
 				shelf_surface.receive_item(_dragged_item, result.position)
 				success = true
+		elif collider.is_in_group("delivery_bag"):
+			if collider.has_method("receive_item"):
+				collider.receive_item(_dragged_item)
+				success = true
 
 	EventBus.drag_ended.emit(_dragged_item, success)
 

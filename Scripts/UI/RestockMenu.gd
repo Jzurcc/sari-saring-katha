@@ -86,7 +86,7 @@ var COLOR_TAB_ACTIVE := Color("7EC292")      # Nokia green active tab
 var COLOR_TAB_NORMAL := Color("BFC0BA")      # Light gray inactive tab
 var COLOR_CONTENT_BG := Color("7EC292")      # Nokia green accents
 var COLOR_CARD_BG := Color("7EC292")       # Nokia green product cards
-var COLOR_CARD_SELECTED := Color("7EC292")   # Nokia green when selected
+var COLOR_CARD_SELECTED := Color("D59F47")   # Gold highlight when selected
 var COLOR_DETAIL_BG := Color("BFC0BA")       # Light gray detail panel
 var COLOR_CANCEL := Color("C0544E")          # Red cancel button
 var COLOR_CONFIRM := Color("7EC292")         # Nokia green confirm button
@@ -313,6 +313,10 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	style.content_margin_bottom = 4
 	card.add_theme_stylebox_override("panel", style)
 	
+	# Fix for "white stroke" — disable focus border
+	card.focus_mode = Control.FOCUS_NONE
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	# Set pivot to the center of the card for the sway animation
@@ -397,6 +401,8 @@ func _on_add_pressed() -> void:
 	# Dynamic item limit (Pocha, Mentor, Sachets, etc.)
 	var item_limit = InventoryManager.get_max_stock(item)
 	if current_count + 1 > item_limit:
+		print("[RestockMenu] BLOCKED: Individual limit for ", item.item_name, " reached (max ", item_limit, ")")
+		AudioManager.play_sfx("error")
 		return
 	
 	# Global shop capacity limit (On-Shelf + Inventory + Basket <= 36 or 12)
@@ -407,8 +413,7 @@ func _on_add_pressed() -> void:
 			in_basket += selected_items[k]
 			
 	if in_basket + 1 > available:
-		# Maybe show a notification or tip about shelf space
-		print("[RestockMenu] CANNOT ADD: Shelf/Fridge is too full! Available: ", available, " In Basket: ", in_basket)
+		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
 		return
 	
 	var money = _get_money()
@@ -441,11 +446,23 @@ func _update_order_list() -> void:
 			var row = _create_order_row(item, count)
 			order_list_container.add_child(row)
 			
-	total_amount_label.text = "₱%.2f" % total_price
+	_update_total_amount_ui()
 	
 	# Keep header static — total shown separately at confirm
 	list_header.text = "Order List"
 	list_header.add_theme_font_size_override("font_size", list_header_font_size)
+
+func _update_total_amount_ui() -> void:
+	total_amount_label.text = "₱%.2f" % total_price
+	if not confirm_btn: return
+	
+	if total_price <= 0:
+		confirm_btn.disabled = true
+		_style_button(confirm_btn, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT)
+	else:
+		confirm_btn.disabled = false
+		_style_button(confirm_btn, COLOR_CONFIRM, Color.WHITE)
+
 
 func _create_order_row(item: ItemData, count: int) -> HBoxContainer:
 	var row = HBoxContainer.new()
@@ -516,7 +533,7 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	selected_items[item] = new_count
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
-	total_amount_label.text = "₱%.2f" % total_price
+	_update_total_amount_ui()
 
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
 	var count = selected_items.get(item, 0)
@@ -524,6 +541,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	# Individual item limit
 	var item_limit = InventoryManager.get_max_stock(item)
 	if count + 1 > item_limit:
+		AudioManager.play_sfx("error")
 		return
 		
 	# Global capacity limit
@@ -534,6 +552,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 			in_basket += selected_items[k]
 	
 	if in_basket + 1 > available:
+		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
 		return
 		
 	var money = _get_money()
@@ -547,7 +566,7 @@ func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> vo
 	total_price += item.price
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
-	total_amount_label.text = "₱%.2f" % total_price
+	_update_total_amount_ui()
 
 # ========== ACTIONS ==========
 func _close_restock_screen() -> void:
@@ -568,8 +587,17 @@ func _on_cancel_pressed() -> void:
 	_close_restock_screen()
 
 func _on_confirm_pressed() -> void:
-	if total_price <= 0:
+	# Check if the user has actually ordered items
+	var actual_items: Dictionary = {}
+	for item in selected_items:
+		if selected_items[item] > 0:
+			actual_items[item] = selected_items[item]
+			
+	if actual_items.is_empty() or total_price <= 0:
+		print("[RestockMenu] No items ordered. Canceling.")
+		_on_cancel_pressed()
 		return
+		
 	AudioManager.play_sfx("purchase")
 	EventBus.request_sfx.emit("money_decrease")
 	
@@ -582,11 +610,11 @@ func _on_confirm_pressed() -> void:
 		gm.save_state()
 		print("[RestockMenu] Restock purchased for ₱%.2f. Remaining: ₱%.2f" % [total_price, gm.money])
 	
-	catalog_purchase_confirmed.emit(total_price, selected_items)
+	catalog_purchase_confirmed.emit(total_price, actual_items)
 	_close_restock_screen()
-	# Set delivery cooldown and trigger the manager
+	# Set delivery cooldown and trigger the manager ONLY if items were ordered
 	InventoryManager.start_delivery_cooldown()
-	MarioManager.start_delivery(selected_items)
+	MarioManager.start_delivery(actual_items)
 
 func _get_money() -> float:
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")

@@ -211,9 +211,9 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 		# Positioning at marker with slight random offset for grouping
 		if marker:
 			var offset = Vector3(
-				randf_range(-0.15, 0.15),
+				randf_range(-0.6, 0.6),
 				0.05, # Slight lift
-				randf_range(-0.15, 0.15)
+				randf_range(-0.6, 0.6)
 			)
 			bag.global_position = marker.global_position + offset
 		else:

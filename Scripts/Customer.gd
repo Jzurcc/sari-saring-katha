@@ -251,6 +251,7 @@ func dismiss() -> void:
 	is_waiting = false
 	_is_resolving = true
 	_clear_outline()
+	InventoryManager.decrement_cooldown()
 
 	# Point toward the custom exit marker and let _process handle the walk
 	target_position = _exit_position
