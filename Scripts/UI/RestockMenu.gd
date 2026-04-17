@@ -189,7 +189,6 @@ func _build_tabs() -> void:
 		up_btn.name = "Tab_UpgradeStore"
 		# Use beige background and dark green text for the upgrade button
 		_style_button(up_btn, COLOR_BEIGE, Color("396647"), float(tab_font_size))
-		_style_button(up_btn, Color("D59F47"), Color.WHITE, float(tab_font_size))
 		up_btn.pressed.connect(_on_upgrade_pressed)
 		tab_container.add_child(up_btn)
 
