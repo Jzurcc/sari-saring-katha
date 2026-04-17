@@ -91,6 +91,10 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 
 		# Ensure the root node stays at unit scale.
 		self.scale = Vector3.ONE
+		
+		# If this is Uncle Mario (Tutorial), mark him present to block phone calls
+		if char_data and char_data.get_clean_id() == "unclemario":
+			MarioManager.is_mario_physically_present = true
 
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
@@ -233,6 +237,9 @@ func satisfy() -> void:
 	
 	await exit_tween.finished
 	
+	if customer_data and customer_data.get_clean_id() == "unclemario":
+		MarioManager.is_mario_physically_present = false
+		
 	# Emit completion signal only once FULLY resolved (gone from the scene)
 	EventBus.customer_satisfied.emit(self)
 	queue_free()
@@ -261,6 +268,10 @@ func dismiss() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	await exit_tween.finished
+	
+	if customer_data and customer_data.get_clean_id() == "unclemario":
+		MarioManager.is_mario_physically_present = false
+		
 	EventBus.customer_dismissed.emit(self)
 	queue_free()
 

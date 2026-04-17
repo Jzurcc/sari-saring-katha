@@ -44,13 +44,21 @@ func get_visual_nodes() -> Array[Node3D]:
 
 func on_hover(is_hovered: bool) -> void:
 	if is_hovered:
-		_apply_outline(default_outline_color)
+		var color = default_outline_color
+		if MarioManager.is_mario_physically_present:
+			color = Color.RED
+		_apply_outline(color)
 	else:
 		_remove_outline()
 
 func on_interact() -> void:
 	if Dialogic.current_timeline != null:
 		return # Block call while someone is already talking
+		
+	if MarioManager.is_mario_physically_present:
+		print("[Nokia] Blocked: Uncle Mario is physically present.")
+		AudioManager.play_sfx("error")
+		return
 		
 	if nokia_ui_scene:
 		var ui := nokia_ui_scene.instantiate()

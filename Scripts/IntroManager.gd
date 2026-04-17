@@ -9,6 +9,8 @@ extends Node
 @onready var subtitle_label = $CanvasLayer/SubtitleContainer/SubtitleLabel
 @onready var indicator = $CanvasLayer/IndicatorLabel
 @onready var skip_button = %SkipButton
+@export var characters_per_second: float = 25.0
+
 
 signal player_clicked
 var waiting_for_input: bool = false
@@ -98,9 +100,8 @@ func _on_skip_pressed():
 
 func _finish_cutscene():
 	print("Transitions finished. Moving to game!")
-	var transition_manager = get_node_or_null("/root/SceneTransitionManager")
-	if transition_manager:
-		transition_manager.transition_to_scene(next_scene_path)
+	if SceneTransition:
+		SceneTransition.transition_to_scene(next_scene_path)
 	else:
 		var err = get_tree().change_scene_to_file(next_scene_path)
 		if err != OK:
@@ -126,7 +127,9 @@ func play_sequence(sequence: CutsceneSequence):
 	for pan in pans:
 		total_duration += pan.duration
 		
-	var text_duration = max(1.0, total_duration - 1.5)
+	var text_duration = sequence.subtitle_text.length() / characters_per_second
+	if text_duration < 1.0: text_duration = 1.0
+
 	
 	# 1. Start Text Typing Concurrently
 	var text_tween = create_tween()
