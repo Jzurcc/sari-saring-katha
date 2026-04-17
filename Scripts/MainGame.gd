@@ -9,6 +9,8 @@ extends Node3D
 
 var _debug_show_collisions: bool = false
 @onready var tray: TransactionTray
+@onready var pause_menu_scene: PackedScene = preload("res://Scenes/UI/PauseMenu.tscn")
+var pause_menu: Control
 
 func _ready() -> void:
 	# Ensure camera is correctly scaled to 75 as a fallback
@@ -29,6 +31,10 @@ func _ready() -> void:
 
 	# Connect the tray to the generic event bus instead of handling logic here
 	tray.item_placed.connect(_on_tray_item_placed)
+	
+	# Instantiate Pause menu
+	pause_menu = pause_menu_scene.instantiate().get_node("Control")
+	add_child(pause_menu.get_parent()) # Add the CanvasLayer
 
 func _on_tray_item_placed(item: DraggableItem) -> void:
 	# Check if we have an active customer
@@ -56,7 +62,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					glimmer_pos = marker.global_position
 				
 				VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
-				EventBus.transaction_completed.emit(item.item_data, true)
+				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
+				EventBus.transaction_completed.emit(item.item_data, true, context.wants_debt, c_path)
 				InventoryManager.take_item(item.item_data)
 				item.queue_free()
 				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
@@ -70,7 +77,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					spawner.start_dialogue(context.timeline, customer, phase, label)
 				item = null  # prevent return_to_start below from running on a hidden node
 			else:
-				EventBus.transaction_completed.emit(item.item_data, false)
+				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
+				EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
 				# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
 				if context and context.timeline and spawner:
 					spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
@@ -88,6 +96,11 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.is_echo():
 		_debug_show_collisions = !_debug_show_collisions
 		DebugDraw2D.set_text("Collision Debug", "ON" if _debug_show_collisions else "OFF")
+	
+	# Escape toggles pause menu
+	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
+		if pause_menu and not pause_menu.visible:
+			pause_menu.pause()
 
 func _process(_delta: float) -> void:
 	if not _debug_show_collisions:

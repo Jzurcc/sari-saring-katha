@@ -2,18 +2,10 @@ extends Control
 
 @onready var buttons = $Buttons
 
-# Settings UI node references
-@onready var slider_master  : HSlider       = $OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/Master/Slider
-@onready var slider_bgm     : HSlider       = $OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/BGM/Slider
-@onready var slider_sfx     : HSlider       = $OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/SFX/Slider
-@onready var mute_toggle    : TextureButton = $OptionsOverlay/OptionsPanel/Margin/VBox/MuteBackground/Toggle
-@onready var display_label  : Label         = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/Label
-@onready var left_arrow     : TextureRect   = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/LeftArrow
-@onready var right_arrow    : TextureRect   = $OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/RightArrow
-
-# Collection UI node references
-@onready var collection_overlay : ColorRect = $CollectionOverlay
-@onready var collection_grid    : GridContainer = %Grid
+# Standalone UI components
+@onready var options_overlay    : Control = $OptionsOverlay
+@onready var collection_overlay : Control = $CollectionOverlay
+@onready var story_overlay      : Control = $StoryProgressOverlay
 
 var target_scene = "res://Scenes/IntroCutscene.tscn"
 var original_styles = {}
@@ -27,7 +19,6 @@ var cam_origin_rot: Vector3
 var cam_origin_pos: Vector3
 var is_starting_game: bool = false
 var settings_open: bool = false
-var _is_fullscreen: bool = false
 var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
@@ -47,8 +38,15 @@ func _ready() -> void:
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "SFX"
 	add_child(_ui_player)
-	$OptionsOverlay.hide()
-	$CollectionOverlay.hide()
+	options_overlay.hide()
+	collection_overlay.hide()
+	if has_node("StoryProgressOverlay"):
+		story_overlay.hide()
+	
+	options_overlay.closed.connect(_on_options_closed)
+	collection_overlay.closed.connect(_on_collection_closed)
+	if has_node("StoryProgressOverlay"):
+		story_overlay.closed.connect(_on_story_progress_closed)
 
 	if has_node("TitleScreen3D/Camera3D"):
 		cam = $TitleScreen3D/Camera3D
@@ -62,34 +60,6 @@ func _ready() -> void:
 	_check_save_status()
 	buttons.get_node("NewGame").grab_focus()
 
-	# Set slider defaults from @export values
-	slider_master.set_value_no_signal(default_master_volume)
-	slider_bgm.set_value_no_signal(default_bgm_volume)
-	slider_sfx.set_value_no_signal(default_sfx_volume)
-
-	# Connect slider signals — value_changed for audio, drag_ended for confirm sound
-	slider_master.value_changed.connect(_on_master_changed)
-	slider_bgm.value_changed.connect(_on_bgm_changed)
-	slider_sfx.value_changed.connect(_on_sfx_changed)
-	slider_master.drag_ended.connect(func(_vc: bool): _play_confirm())
-	slider_bgm.drag_ended.connect(func(_vc: bool): _play_confirm())
-	slider_sfx.drag_ended.connect(func(_vc: bool): _play_confirm())
-
-	# Mute toggle sound (ui_sfx_4)
-	mute_toggle.toggled.connect(func(pressed: bool):
-		_play_click()
-		if has_node("/root/AudioManager"):
-			AudioManager.update_mute_in_background(pressed)
-	)
-
-	# Ensure Music and SFX buses exist (creates them routed to Master if missing)
-	_ensure_audio_buses()
-
-	# Load saved settings and apply them
-	_load_settings()
-
-	# Sync display label to current actual window mode
-	_sync_display_label()
 
 
 # ─── UI Sound helpers ─────────────────────────────────────────────────────────
@@ -188,7 +158,10 @@ func _on_new_game_pressed() -> void:
 
 
 func _check_save_status() -> void:
-	if FileAccess.file_exists("user://save_game.json"):
+	# Check if we have an actual non-empty save state, rather than just checking
+	# for file existence (which could be an empty {} file).
+	var save_data = SaveManager.load_game()
+	if not save_data.is_empty():
 		_create_continue_button()
 
 func _create_continue_button() -> void:
@@ -216,6 +189,7 @@ func _on_continue_pressed() -> void:
 	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
 
 func _on_exit_pressed() -> void:
+	SaveManager.force_save()
 	get_tree().quit()
 
 
@@ -223,175 +197,36 @@ func _on_exit_pressed() -> void:
 
 func _on_options_pressed() -> void:
 	settings_open = true
-	$OptionsOverlay.show()
-	buttons.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for child in buttons.get_children():
-		if child is Control:
-			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	options_overlay.open()
+	_update_menu_interaction(false)
 
-func _on_options_close_pressed() -> void:
-	_play_confirm()   # ui_sfx_9 on X close
+func _on_options_closed() -> void:
 	settings_open = false
-	$OptionsOverlay.hide()
-	buttons.mouse_filter = Control.MOUSE_FILTER_STOP
-	for child in buttons.get_children():
-		if child is Control:
-			child.mouse_filter = Control.MOUSE_FILTER_STOP
-	_save_settings()
+	_update_menu_interaction(true)
 
 
 # ─── Collection overlay ───────────────────────────────────────────────────────
 
 func _on_collection_pressed() -> void:
 	_play_click()
-	collection_overlay.show()
-	_populate_collection()
-	buttons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	collection_overlay.open()
+	_update_menu_interaction(false)
+
+func _on_collection_closed() -> void:
+	_update_menu_interaction(true)
+
+func _on_story_progress_pressed() -> void:
+	_play_click()
+	if story_overlay:
+		story_overlay.open()
+		_update_menu_interaction(false)
+
+func _on_story_progress_closed() -> void:
+	_update_menu_interaction(true)
+
+func _update_menu_interaction(enabled: bool) -> void:
+	var mode = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+	buttons.mouse_filter = mode
 	for child in buttons.get_children():
 		if child is Control:
-			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-func _on_collection_close_pressed() -> void:
-	_play_confirm()
-	collection_overlay.hide()
-	buttons.mouse_filter = Control.MOUSE_FILTER_STOP
-	for child in buttons.get_children():
-		if child is Control:
-			child.mouse_filter = Control.MOUSE_FILTER_STOP
-
-func _populate_collection() -> void:
-	# Clear existing items
-	for child in collection_grid.get_children():
-		child.queue_free()
-	
-	# Load item cards
-	var ItemCardScript = load("res://Scripts/UI/CollectionItemCard.gd")
-	var all_items = InventoryManager.get_all_items()
-	
-	for item in all_items:
-		if not item.can_be_sold:
-			continue
-			
-		var card = PanelContainer.new()
-		card.set_script(ItemCardScript)
-		collection_grid.add_child(card)
-		
-		var unlocked = StoryManager.is_item_unlocked(item)
-		card.setup(item, unlocked)
-
-
-# ─── Audio bus setup ─────────────────────────────────────────────────────────
-
-func _ensure_audio_buses() -> void:
-	# Godot always has Master at index 0.
-	# Create Music and SFX buses routed to Master if they don't already exist.
-	if AudioServer.get_bus_index("Music") < 0:
-		AudioServer.add_bus()
-		var idx: int = AudioServer.get_bus_count() - 1
-		AudioServer.set_bus_name(idx, "Music")
-		AudioServer.set_bus_send(idx, "Master")
-	if AudioServer.get_bus_index("SFX") < 0:
-		AudioServer.add_bus()
-		var idx: int = AudioServer.get_bus_count() - 1
-		AudioServer.set_bus_name(idx, "SFX")
-		AudioServer.set_bus_send(idx, "Master")
-
-
-# ─── Volume sliders ───────────────────────────────────────────────────────────
-
-func _on_master_changed(value: float) -> void:
-	# Master affects ALL audio — including Music and SFX routed through it
-	var idx: int = AudioServer.get_bus_index("Master")
-	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
-	AudioServer.set_bus_mute(idx, value <= 0.0)
-	if has_node("/root/AudioManager"):
-		AudioManager.update_master_muted_by_user(value <= 0.0)
-
-func _on_bgm_changed(value: float) -> void:
-	# Music bus — only soundtracks, not SFX
-	var idx: int = AudioServer.get_bus_index("Music")
-	if idx < 0:
-		return
-	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
-	AudioServer.set_bus_mute(idx, value <= 0.0)
-
-func _on_sfx_changed(value: float) -> void:
-	# SFX bus — only sound effects, not music
-	var idx: int = AudioServer.get_bus_index("SFX")
-	if idx < 0:
-		return
-	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
-	AudioServer.set_bus_mute(idx, value <= 0.0)
-
-
-
-
-
-# ─── Display mode toggle ─────────────────────────────────────────────────────────
-
-func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton \
-			and event.button_index == MOUSE_BUTTON_LEFT \
-			and event.pressed):
-		return
-
-	_play_click()   # ui_sfx_4
-
-	_is_fullscreen = not _is_fullscreen
-	if _is_fullscreen:
-		# Borderless Fullscreen: Standard modern fullscreen mode
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		# Windowed: standard floating window
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-
-	_sync_display_label()
-
-func _sync_display_label() -> void:
-	display_label.text  = "Full Screen" if _is_fullscreen else "Windowed Mode"
-	# Flip arrows: if Windowed, show Right arrow to go to Fullscreen. If Fullscreen, show Left arrow to go back.
-	left_arrow.visible  = _is_fullscreen
-	right_arrow.visible = not _is_fullscreen
-
-
-# ─── Settings persistence ─────────────────────────────────────────────────────
-
-func _save_settings() -> void:
-	var cfg = ConfigFile.new()
-	cfg.set_value("audio", "master", slider_master.value)
-	cfg.set_value("audio", "bgm",    slider_bgm.value)
-	cfg.set_value("audio", "sfx",    slider_sfx.value)
-	cfg.set_value("accessibility", "mute_in_background", mute_toggle.button_pressed)
-	cfg.set_value("display", "fullscreen", _is_fullscreen)
-	cfg.save(SETTINGS_PATH)
-
-func _load_settings() -> void:
-	var cfg = ConfigFile.new()
-	if cfg.load(SETTINGS_PATH) != OK:
-		# First launch — push slider defaults to AudioServer
-		_on_master_changed(slider_master.value)
-		_on_bgm_changed(slider_bgm.value)
-		_on_sfx_changed(slider_sfx.value)
-		return
-
-	# Audio volumes — fall back to @export defaults if no saved value
-	var master_val : float = cfg.get_value("audio", "master", default_master_volume)
-	var bgm_val    : float = cfg.get_value("audio", "bgm",    default_bgm_volume)
-	var sfx_val    : float = cfg.get_value("audio", "sfx",    default_sfx_volume)
-	slider_master.set_value_no_signal(master_val)
-	slider_bgm.set_value_no_signal(bgm_val)
-	slider_sfx.set_value_no_signal(sfx_val)
-	_on_master_changed(master_val)
-	_on_bgm_changed(bgm_val)
-	_on_sfx_changed(sfx_val)
-
-	# Accessibility
-	mute_toggle.button_pressed = cfg.get_value("accessibility", "mute_in_background", false)
-
-	# Display mode — restore internal state flag and apply
-	var want_fs : bool = cfg.get_value("display", "fullscreen", false)
-	_is_fullscreen = want_fs
-	if want_fs:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
-	else:
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+			child.mouse_filter = mode

@@ -9,6 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://pwx1mc3jejjo" path="res://Assets/ui/grabber.png" id="icon_grabber"]
 [ext_resource type="Texture2D" uid="uid://bhc76jwyeq11p" path="res://Assets/ui/carbon_checkbox.png" id="icon_unchecked"]
 [ext_resource type="PackedScene" uid="uid://dyxtw4qitbahn" path="res://Scenes/TitleScreen3D.tscn" id="title_screen_scene"]
+[ext_resource type="PackedScene" uid="uid://c7v6p5u6o2x18" path="res://Scenes/UI/OptionsOverlay.tscn" id="options_overlay"]
+[ext_resource type="PackedScene" uid="uid://cgv6p5u6o2x19" path="res://Scenes/UI/CollectionOverlay.tscn" id="collection_overlay"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/StoryProgressOverlay.tscn" id="story_progress_overlay"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 bg_color = Color(0, 0, 0, 0)
@@ -150,6 +153,23 @@ theme_override_styles/focus = SubResource("btn_hover")
 text = "COLLECTION"
 alignment = 0
 
+[node name="StoryProgress" type="Button" parent="Buttons" unique_id=3026154124]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("4_ghw46")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "STORY PROGRESS"
+alignment = 0
+
 [node name="Exit" type="Button" parent="Buttons" unique_id=1080384476]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
@@ -167,351 +187,14 @@ theme_override_styles/focus = SubResource("btn_hover")
 text = "EXIT"
 alignment = 0
 
-[node name="OptionsOverlay" type="ColorRect" parent="." unique_id=411923813]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.08235, 0.07843, 0.07059, 0.5)
+[node name="OptionsOverlay" parent="." instance=ExtResource("options_overlay")]
+unique_id = 411923813
 
-[node name="OptionsPanel" type="PanelContainer" parent="OptionsOverlay" unique_id=1131837405]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -450.0
-offset_top = -263.0
-offset_right = 350.0
-offset_bottom = 263.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("options_panel")
+[node name="CollectionOverlay" parent="." instance=ExtResource("collection_overlay")]
+unique_id = 1357924680
 
-[node name="Margin" type="MarginContainer" parent="OptionsOverlay/OptionsPanel" unique_id=1605294656]
-layout_mode = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 32
-
-[node name="VBox" type="VBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin" unique_id=1205510783]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Header" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=1240899006]
-layout_mode = 2
-
-[node name="SpacerLeft" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox/Header" unique_id=573086414]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Title" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/Header" unique_id=1401809012]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 36
-text = "SETTINGS"
-horizontal_alignment = 1
-
-[node name="SpacerRight" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox/Header" unique_id=86532774]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CloseButton" type="Button" parent="OptionsOverlay/OptionsPanel/Margin/VBox/Header/SpacerRight" unique_id=1223843375]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -24.0
-offset_bottom = 31.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("btn_normal")
-theme_override_styles/pressed = SubResource("btn_normal")
-theme_override_styles/hover = SubResource("btn_normal")
-theme_override_styles/disabled = SubResource("btn_normal")
-theme_override_styles/focus = SubResource("btn_normal")
-text = "X"
-
-[node name="AudioLabel" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=139601938]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 24
-text = "Audio Controls"
-
-[node name="AudioVBox" type="VBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=455935126]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Master" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox" unique_id=355190477]
-layout_mode = 2
-
-[node name="Spacer" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/Master" unique_id=1399179687]
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-
-[node name="Label" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/Master" unique_id=780010156]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 20
-text = "Master Volume"
-
-[node name="Slider" type="HSlider" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/Master" unique_id=1579369030]
-custom_minimum_size = Vector2(300, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_icons/grabber = ExtResource("icon_grabber")
-theme_override_icons/grabber_highlight = ExtResource("icon_grabber")
-theme_override_styles/slider = SubResource("slider_bg")
-theme_override_styles/grabber_area = SubResource("slider_fill")
-theme_override_styles/grabber_area_highlight = SubResource("slider_fill")
-max_value = 1.0
-step = 0.05
-value = 0.8
-
-[node name="BGM" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox" unique_id=353375949]
-layout_mode = 2
-
-[node name="Spacer" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/BGM" unique_id=29415560]
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-
-[node name="Label" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/BGM" unique_id=1936300644]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 20
-text = "Music (BGM)"
-
-[node name="Slider" type="HSlider" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/BGM" unique_id=332169947]
-custom_minimum_size = Vector2(300, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_icons/grabber = ExtResource("icon_grabber")
-theme_override_icons/grabber_highlight = ExtResource("icon_grabber")
-theme_override_styles/slider = SubResource("slider_bg")
-theme_override_styles/grabber_area = SubResource("slider_fill")
-theme_override_styles/grabber_area_highlight = SubResource("slider_fill")
-max_value = 1.0
-step = 0.05
-value = 0.6
-
-[node name="SFX" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox" unique_id=915524519]
-layout_mode = 2
-
-[node name="Spacer" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/SFX" unique_id=1061094148]
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-
-[node name="Label" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/SFX" unique_id=1896448818]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 20
-text = "SFX"
-
-[node name="Slider" type="HSlider" parent="OptionsOverlay/OptionsPanel/Margin/VBox/AudioVBox/SFX" unique_id=1807561620]
-custom_minimum_size = Vector2(300, 0)
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_icons/grabber = ExtResource("icon_grabber")
-theme_override_icons/grabber_highlight = ExtResource("icon_grabber")
-theme_override_styles/slider = SubResource("slider_bg")
-theme_override_styles/grabber_area = SubResource("slider_fill")
-theme_override_styles/grabber_area_highlight = SubResource("slider_fill")
-max_value = 1.0
-step = 0.05
-value = 0.9
-
-[node name="SpacerMid" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=947514599]
-custom_minimum_size = Vector2(0, 10)
-layout_mode = 2
-
-[node name="AccessLabel" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=495417355]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 24
-text = "Accessibility"
-
-[node name="MuteBackground" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=847172243]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Spacer" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox/MuteBackground" unique_id=1625060644]
-custom_minimum_size = Vector2(24, 0)
-layout_mode = 2
-
-[node name="Toggle" type="TextureButton" parent="OptionsOverlay/OptionsPanel/Margin/VBox/MuteBackground" unique_id=1288161538]
-custom_minimum_size = Vector2(40, 40)
-layout_mode = 2
-size_flags_vertical = 4
-toggle_mode = true
-texture_normal = ExtResource("icon_unchecked")
-texture_pressed = ExtResource("icon_checked")
-ignore_texture_size = true
-stretch_mode = 0
-
-[node name="Label" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/MuteBackground" unique_id=1902105896]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 20
-text = "Mute in Background"
-
-[node name="SpacerMid2" type="Control" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=551708245]
-custom_minimum_size = Vector2(0, 10)
-layout_mode = 2
-
-[node name="DisplayOptions" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox" unique_id=604343966]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions" unique_id=1667879287]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 24
-text = "Display Options"
-
-[node name="WindowModePanel" type="PanelContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions" unique_id=374305507]
-layout_mode = 2
-theme_override_styles/panel = SubResource("display_btn")
-
-[node name="HBox" type="HBoxContainer" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel" unique_id=261088212]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="LeftArrow" type="TextureRect" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox" unique_id=124506822]
-visible = false
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-texture = ExtResource("icon_arrow")
-expand_mode = 1
-stretch_mode = 5
-flip_h = true
-
-[node name="Label" type="Label" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox" unique_id=233976551]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 20
-text = "Windowed Mode"
-horizontal_alignment = 1
-
-[node name="RightArrow" type="TextureRect" parent="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox" unique_id=1571325793]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-texture = ExtResource("icon_arrow")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="CollectionOverlay" type="ColorRect" parent="." unique_id=1357924680]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.08235, 0.07843, 0.07059, 0.5)
-
-[node name="CollectionPanel" type="PanelContainer" parent="CollectionOverlay" unique_id=1029384756]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -500.0
-offset_top = -300.0
-offset_right = 500.0
-offset_bottom = 300.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("options_panel")
-
-[node name="Margin" type="MarginContainer" parent="CollectionOverlay/CollectionPanel" unique_id=194756382]
-layout_mode = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 40
-theme_override_constants/margin_bottom = 32
-
-[node name="VBox" type="VBoxContainer" parent="CollectionOverlay/CollectionPanel/Margin" unique_id=1738495021]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Header" type="HBoxContainer" parent="CollectionOverlay/CollectionPanel/Margin/VBox" unique_id=1029384757]
-layout_mode = 2
-
-[node name="SpacerLeft" type="Control" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header" unique_id=1029384758]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Title" type="Label" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header" unique_id=1029384759]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
-theme_override_constants/outline_size = 5
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 36
-text = "COLLECTION"
-horizontal_alignment = 1
-
-[node name="SpacerRight" type="Control" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header" unique_id=1029384760]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CloseButton" type="Button" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Header/SpacerRight" unique_id=1029384761]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -24.0
-offset_bottom = 31.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("btn_normal")
-theme_override_styles/pressed = SubResource("btn_normal")
-theme_override_styles/hover = SubResource("btn_normal")
-theme_override_styles/disabled = SubResource("btn_normal")
-theme_override_styles/focus = SubResource("btn_normal")
-text = "X"
-
-[node name="Scroll" type="ScrollContainer" parent="CollectionOverlay/CollectionPanel/Margin/VBox" unique_id=1029384762]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="Grid" type="GridContainer" parent="CollectionOverlay/CollectionPanel/Margin/VBox/Scroll" unique_id=1029384763]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 20
-theme_override_constants/v_separation = 20
-columns = 6
+[node name="StoryProgressOverlay" parent="." instance=ExtResource("story_progress_overlay")]
+unique_id = 2357924681
 
 [node name="Cube_001" parent="." unique_id=1452766205 instance=ExtResource("5_df05h")]
 transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, 0.31191707, 0.7678091, -4.009146)
@@ -519,7 +202,5 @@ transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 
 [connection signal="pressed" from="Buttons/NewGame" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="Buttons/Options" to="." method="_on_options_pressed"]
 [connection signal="pressed" from="Buttons/Collection" to="." method="_on_collection_pressed"]
+[connection signal="pressed" from="Buttons/StoryProgress" to="." method="_on_story_progress_pressed"]
 [connection signal="pressed" from="Buttons/Exit" to="." method="_on_exit_pressed"]
-[connection signal="pressed" from="OptionsOverlay/OptionsPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_options_close_pressed"]
-[connection signal="gui_input" from="OptionsOverlay/OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel" to="." method="_on_window_mode_panel_gui_input"]
-[connection signal="pressed" from="CollectionOverlay/CollectionPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="_on_collection_close_pressed"]
