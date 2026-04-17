@@ -85,20 +85,38 @@ func is_in_stock(item: ItemData) -> bool:
 ## Returns the dynamic max stock for a specific item based on unlocked containers/day.
 func get_max_stock(item: ItemData) -> int:
 	var id: String = item.get_clean_id()
-	var day: int = StoryManager.day
-	return _get_max_stock_internal(id, day)
+	var tier: int = StoryManager.current_tier
+	
+	# Shared Limit logic for Mix Container era
+	if tier < 10:
+		if id == "pocha":
+			var mentor = _get_item_by_id("mentor")
+			var mentor_stock = get_stock(mentor) if mentor else 0
+			return clampi(10 - mentor_stock, 0, 10)
+		if id == "mentor":
+			var pocha = _get_item_by_id("pocha")
+			var pocha_stock = get_stock(pocha) if pocha else 0
+			return clampi(10 - pocha_stock, 0, 10)
+
+	return _get_max_stock_internal(id, StoryManager.day)
 
 func _get_max_stock_internal(id: String, day: int) -> int:
 	# Progression logic
 	match id:
 		"pocha", "mentor":
-			return 10 if day >= 5 else 5
+			return 10 if StoryManager.current_tier >= 10 else 5
 		"chubs":
 			return 5 # Always 5 once unlocked (Day 7+)
 		"aryel", "ariel", "kneestoes", "kopimo": 
 			return 5
 		_:
 			return 99 # Default for snacks/packs
+
+func _get_item_by_id(target_id: String) -> ItemData:
+	for item in _items:
+		if item.get_clean_id() == target_id:
+			return item
+	return null
 
 func get_capacity_limit(type: ItemData.ItemType) -> int:
 	match type:
