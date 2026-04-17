@@ -9,6 +9,13 @@ extends Node3D
 
 var _debug_show_collisions: bool = false
 @onready var tray: TransactionTray
+
+@onready var street_lights: Array[Light3D] = [
+	$FlickeringLight/SpotLight3D2,
+	$FlickeringLight/OmniLight3D,
+	$FlickeringLight/OmniLight3D2,
+	$FlickeringLight/OmniLight3D3
+]
 @onready var pause_menu_scene: PackedScene = preload("res://Scenes/UI/PauseMenu.tscn")
 var pause_menu: Control
 
@@ -31,6 +38,14 @@ func _ready() -> void:
 
 	# Connect the tray to the generic event bus instead of handling logic here
 	tray.item_placed.connect(_on_tray_item_placed)
+	
+	# Street Lights Time Sync
+	var tod = get_tree().root.find_child("TimeOfDay", true, false)
+	if tod:
+		if not tod.time_changed.is_connected(_on_time_changed):
+			tod.time_changed.connect(_on_time_changed)
+		# Initial check
+		_on_time_changed(tod.get("current_time") if "current_time" in tod else 0.0)
 	
 	# Instantiate Pause menu
 	pause_menu = pause_menu_scene.instantiate().get_node("Control")
@@ -151,3 +166,12 @@ func _draw_all_collision_shapes(node: Node) -> void:
 
 	for child in node.get_children():
 		_draw_all_collision_shapes(child)
+
+func _on_time_changed(hour: float) -> void:
+	# Street lights turn on at 6 PM (18:00) and off at 8 PM (20:00)
+	var should_be_on = hour >= 18.0 and hour < 20.5
+	
+	for light in street_lights:
+		if is_instance_valid(light) and light.visible != should_be_on:
+			light.visible = should_be_on
+			# print("[MainGame] Street Light %s toggled: %s" % [light.name, should_be_on])

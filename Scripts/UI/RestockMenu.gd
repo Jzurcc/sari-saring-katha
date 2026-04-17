@@ -186,6 +186,19 @@ func _build_tabs() -> void:
 	for child in tab_container.get_children():
 		child.queue_free()
 	
+	# Priority Tab: Upgrade Banner if available
+	if StoryManager.pending_upgrade_tier > 0:
+		var up_btn = Button.new()
+		up_btn.text = "⭐ UPGRADE STORE (₱%.2f)" % StoryManager.pending_upgrade_cost
+		up_btn.custom_minimum_size = Vector2(250, 40)
+		up_btn.name = "Tab_UpgradeStore"
+		# Use beige background and dark green text for the upgrade button
+		_style_button(up_btn, COLOR_BEIGE, Color("396647"), float(tab_font_size))
+		_style_button(up_btn, Color("D59F47"), Color.WHITE, float(tab_font_size))
+		up_btn.pressed.connect(_on_upgrade_pressed)
+		tab_container.add_child(up_btn)
+
+	
 	# Category tabs — always show ALL categories, dim the locked ones
 	for cat_key in category_tabs:
 		var items = _get_items_for_category(cat_key)
@@ -229,6 +242,9 @@ func _select_category(cat_key: String) -> void:
 			var child_locked = child_items.size() == 0 and child_cat != "upgrades"
 			var is_active = child_cat == cat_key.replace(" ", "_")
 			
+			if child.name == "Tab_UpgradeStore":
+				continue # Handled during _build_tabs
+				
 			if child_locked:
 				_style_button(child, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
 			elif is_active:
@@ -240,7 +256,33 @@ func _select_category(cat_key: String) -> void:
 
 # ========== UPGRADE LOGIC ==========
 func _on_upgrade_pressed() -> void:
-	pass
+	var cost = StoryManager.pending_upgrade_cost
+	var money = _get_money()
+	
+	if cost > money:
+		EventBus.insufficient_funds.emit()
+		return
+		
+	# Deduct money immediately
+	AudioManager.play_sfx("purchase")
+	EventBus.request_sfx.emit("money_decrease")
+	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
+	if gm_nodes.size() > 0:
+		gm_nodes[0].money -= cost
+		EventBus.money_changed.emit(gm_nodes[0].money)
+		
+	# Complete the advance
+	StoryManager.advance_tier("Mario Upgrade")
+	
+	# Clear pending state
+	StoryManager.pending_upgrade_tier = 0
+	StoryManager.pending_upgrade_cost = 0.0
+	StoryManager.purchase_counter = 0 # reset counter just in case
+	
+	# Rebuild Tabs and Grid
+	_build_tabs()
+	if category_tabs.size() > 0:
+		_select_category(category_tabs[0])
 
 # ========== PRODUCT GRID ==========
 func _populate_grid(cat_key: String) -> void:
@@ -614,6 +656,7 @@ func _on_confirm_pressed() -> void:
 		return
 		
 	AudioManager.play_sfx("purchase")
+	EventBus.request_sfx.emit("money_decrease")
 	
 	# Deduct the restock cost from the player's money
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")

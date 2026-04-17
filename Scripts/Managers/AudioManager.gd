@@ -39,6 +39,7 @@ var sfx_tab = preload("res://Audio/SFX/ui_sfx_4.mp3")
 var sfx_hover = preload("res://Audio/SFX/ui_sfx_7.mp3")
 var sfx_plastic = preload("res://Audio/SFX/plastic.mp3")
 var sfx_trash = preload("res://Audio/SFX/trash.mp3")
+var sfx_money_decrease = preload("res://Audio/SFX/money_decrease.wav")
 
 var sfx_library = {
 	"money_gain": sfx_kaching,
@@ -51,6 +52,8 @@ var sfx_library = {
 	"ui_hover": sfx_hover,
 	"plastic": sfx_plastic,
 	"trash": sfx_trash
+	"error": sfx_error,
+	"money_decrease": sfx_money_decrease
 }
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 var current_bgm_phase: BGMPhase = BGMPhase.NONE

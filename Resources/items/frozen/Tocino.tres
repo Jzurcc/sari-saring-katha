@@ -1,14 +1,15 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://nbmk858t133b"]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
-[ext_resource type="Texture2D" uid="uid://3k85sg5vntcx" path="res://Assets/items/icons/30_frozen_tocino.png" id="2_tex"]
+[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/30_frozen_tocino.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_item")
 item_name = "Pampanga's Good Tocino"
 texture = ExtResource("2_tex")
 price = 55.0
-category = "frozen"
+type = 1
+category = "frozen goods"
 tier = 9
 item_hint = "has an old lady in it"
 display_height_meters = 0.6

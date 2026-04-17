@@ -131,6 +131,7 @@ variables={
 "TimeOfDayPhase": "",
 "TodayQuota": 0.0
 },
+"PriceVar": 0.0,
 "Stats": {
 "Affinity": {},
 "Debt": {},

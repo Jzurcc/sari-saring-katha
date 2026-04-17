@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://bvyf7fpa7a1"
-path="res://.godot/imported/money_gain.wav-26aa418d0be377dc8d63e179186f29bd.sample"
+path="res://.godot/imported/money_decrease.wav-9c0858f2898743306992073e96f78e26.sample"
 
 [deps]
 
-source_file="res://Audio/SFX/money_gain.wav"
-dest_files=["res://.godot/imported/money_gain.wav-26aa418d0be377dc8d63e179186f29bd.sample"]
+source_file="res://Audio/SFX/money_decrease.wav"
+dest_files=["res://.godot/imported/money_decrease.wav-9c0858f2898743306992073e96f78e26.sample"]
 
 [params]
 
