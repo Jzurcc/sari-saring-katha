@@ -214,6 +214,33 @@ func show_visuals() -> void:
 func return_to_start() -> void:
 	EventBus.request_sfx.emit("drop")
 	
+	if is_transient:
+		# Restore digital stock
+		InventoryManager.return_item(item_data)
+		
+		# Return animation + cleanup
+		show_visuals()
+		var tween := create_tween()
+		tween.set_parallel(true)
+		
+		# Move back to container
+		tween.tween_property(self, "global_position", _original_transform.origin, 0.3)\
+				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		
+		# Fade out
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.25).set_delay(0.05)
+		
+		# Squash and Stretch
+		var base_sprite_scale = Vector3.ONE
+		sprite.scale = base_sprite_scale * Vector3(1.15, 0.85, 1.15) # Squashed starting point
+		tween.tween_property(sprite, "scale", base_sprite_scale, 0.3)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		
+		tween.set_parallel(false)
+		tween.tween_callback(queue_free)
+		return
+
+	# Standard shelf item behavior
 	show_visuals()
 	var tween := create_tween()
 	# Restore full local transform (position only — tilt lives on the sprite node)

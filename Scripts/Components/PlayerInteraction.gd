@@ -73,9 +73,10 @@ func _physics_process(_delta: float) -> void:
 		# Items take priority when they are in front of the customer,
 		# but if no item is under the crosshair the customer comes through.
 		if hit_item and hit_customer:
-			var d_item     := ray_origin.distance_squared_to(hit_item.position)
-			var d_customer := ray_origin.distance_squared_to(hit_customer.position)
-			current_hovered = hit_item.collider if d_item <= d_customer else hit_customer.collider
+			# Items and containers take hard priority over customers.
+			# This ensures smaller interactables on the counter remain reachable
+			# even if a customer's large collision box overlaps them.
+			current_hovered = hit_item.collider
 		elif hit_item:
 			current_hovered = hit_item.collider
 		elif hit_customer:
@@ -139,9 +140,11 @@ func _input(event: InputEvent) -> void:
 					
 					# Range Rules: 
 					# 1. Minimum: Base price.
-					# 2. Maximum: Progressive margin based on tier. 25% (Tier 1) to 50% (Tier 10).
+					# 2. Maximum: Progressive margin based on tier. 30% (Tier 1) to 40% (Tier 10).
 					var min_price : float = base_price
-					var max_price : float = item.item_data.get_max_selling_price()
+					var tier : int = item.item_data.tier
+					var max_margin : float = 0.30 + (float(max(1, tier)) - 1.0) * (0.10 / 9.0)
+					var max_price : float = round(base_price * (1.0 + max_margin))
 					
 					var new_price : float = clamp(current_price + delta, min_price, max_price)
 					
