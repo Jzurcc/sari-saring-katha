@@ -322,6 +322,26 @@ func get_next_transaction() -> TransactionContext:
 		return debug_t
 	# --------------------------
 
+	# --- BRAHIM INJECTION ---
+	var brahim_path := "res://Resources/customers/Brahim.tres"
+	var brahim_tut_path := "brahim_day1_spawned"
+	var brahim_spawned = character_story_states.get(brahim_tut_path, 0)
+	if day == 1 and debug_dual_stage == 1 and brahim_spawned == 0:
+		var brahim_data = preload("res://Resources/customers/Brahim.tres")
+		var brahim_t = TransactionContext.new()
+		brahim_t.customer_data = brahim_data
+		
+		# Build regular transaction context (Purchase/Visit)
+		_build_transaction_context(brahim_t, brahim_data)
+		
+		# Flag so it doesn't repeat
+		character_story_states[brahim_tut_path] = 1
+		
+		print("[STORY] Spawning Brahim after Dual Customer injection")
+		return brahim_t
+	# --------------------------
+
+
 	if available_characters.is_empty():
 		return null
 
