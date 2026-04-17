@@ -21,6 +21,8 @@ var is_placeholder: bool = false
 var is_riddle: bool = false
 var riddle_item: ItemData = null
 var wants_debt: bool = false
+var is_repaying: bool = false
+var repayment_amount: float = 0.0
 var rumor_active: bool = false
 var rumor_type: float = 0.0
 
