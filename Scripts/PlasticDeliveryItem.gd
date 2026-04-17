@@ -69,6 +69,9 @@ func on_interact() -> void:
 	
 	DragManager.start_drag(drag_item, item_data.texture)
 	
+	if EventBus.has_signal("request_sfx"):
+		EventBus.request_sfx.emit("plastic")
+	
 	# Visual feedback/Cleanup
 	if items.is_empty():
 		_fade_out_and_destroy()

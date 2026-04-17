@@ -10,6 +10,7 @@ var ambience_base: AudioStreamPlayer
 var ambience_night: AudioStreamPlayer
 
 var base_volume_db: float = -6.0 # Roughly 50% linear volume
+const FADE_DURATION: float = 1.0
 
 var audio_boring_day = preload("res://Audio/Soundtracks/A Boring Day.mp3")
 var audio_fantastic_idea = preload("res://Audio/Soundtracks/Fantastic Idea.mp3")
@@ -34,13 +35,22 @@ var sfx_pop_1 = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var sfx_pop_2 = preload("res://Audio/SFX/ui_sfx_15.mp3")
 var sfx_clink = preload("res://Audio/SFX/ui_sfx_3.mp3")
 var sfx_error = preload("res://Audio/SFX/ui_sfx_9.mp3")
+var sfx_tab = preload("res://Audio/SFX/ui_sfx_4.mp3")
+var sfx_hover = preload("res://Audio/SFX/ui_sfx_7.mp3")
+var sfx_plastic = preload("res://Audio/SFX/plastic.mp3")
+var sfx_trash = preload("res://Audio/SFX/trash.mp3")
 
 var sfx_library = {
 	"money_gain": sfx_kaching,
+	"purchase": sfx_kaching,
 	"pickup": sfx_pop_1,
 	"drop": sfx_pop_2,
 	"interact": sfx_clink,
-	"error": sfx_error
+	"error": sfx_error,
+	"tab_switch": sfx_tab,
+	"ui_hover": sfx_hover,
+	"plastic": sfx_plastic,
+	"trash": sfx_trash
 }
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 var current_bgm_phase: BGMPhase = BGMPhase.NONE
@@ -53,6 +63,7 @@ var afternoon_playlist_index: int = 0
 var afternoon_playlist: Array = []
 
 func _ready() -> void:
+	randomize()
 	name = "AudioManager"
 	
 	bgm_player = AudioStreamPlayer.new()
@@ -224,8 +235,8 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 	var is_first_play = not bgm_player.playing
 	
 	if not is_first_play:
-		bgm_transition_tween.tween_property(bgm_player, "volume_db", -80.0, 2.0).set_ease(Tween.EASE_OUT)
-		bgm_transition_tween.tween_interval(2.0)
+		bgm_transition_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
+		bgm_transition_tween.tween_interval(FADE_DURATION)
 		bgm_transition_tween.tween_callback(func(): bgm_player.stop())
 		
 	bgm_transition_tween.tween_callback(func():
@@ -247,7 +258,7 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 			bgm_player.volume_db = -80.0
 			bgm_player.play()
 			bgm_transition_tween = create_tween()
-			bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, 2.0).set_ease(Tween.EASE_IN)
+			bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
 	)
 
 func _on_bgm_finished() -> void:
@@ -283,16 +294,16 @@ func play_character_theme(theme_stream: AudioStream) -> void:
 	theme_player.play()
 	
 	crossfade_tween = create_tween()
-	crossfade_tween.tween_property(bgm_player, "volume_db", -80.0, 1.5).set_ease(Tween.EASE_OUT)
-	crossfade_tween.parallel().tween_property(theme_player, "volume_db", base_volume_db, 1.5).set_ease(Tween.EASE_IN)
+	crossfade_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
+	crossfade_tween.parallel().tween_property(theme_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
 
 func stop_character_theme() -> void:
 	if crossfade_tween and crossfade_tween.is_valid():
 		crossfade_tween.kill()
 		
 	crossfade_tween = create_tween()
-	crossfade_tween.tween_property(bgm_player, "volume_db", base_volume_db, 2.0).set_ease(Tween.EASE_IN)
-	crossfade_tween.parallel().tween_property(theme_player, "volume_db", -80.0, 2.0).set_ease(Tween.EASE_OUT)
+	crossfade_tween.tween_property(bgm_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
+	crossfade_tween.parallel().tween_property(theme_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
 	crossfade_tween.tween_callback(func(): theme_player.stop())
 
 func _on_ambience_night_finished() -> void:
@@ -311,24 +322,33 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 			return
 
 		var char_to_play: CustomerData = null
-		var char_path = info.character.resource_path
-
-		# Case A: Information matches a specific character's .dch (Story/Filler)
-		for c in story_mgr.available_characters:
-			if c.dialogic_character and c.dialogic_character.resource_path == char_path:
-				char_to_play = c
-				break
+		var char_path: String = info.character.resource_path
 		
-		# Case B: Information matches our generic Customer.dch (Generic/Social)
-		# We match by display_name which was patched in CustomerSpawner.
-		if char_to_play == null and char_path.ends_with("Customer.dch"):
+		# --- STRATEGY 1: Priority check for the active customer from CustomerSpawner ---
+		# This is the most reliable way as CustomerSpawner knows exactly who is at the counter.
+		var spawner_nodes = get_tree().get_nodes_in_group("customer_spawner")
+		if not spawner_nodes.is_empty():
+			var spawner = spawner_nodes[0]
+			if spawner.current_customer and spawner.current_customer.customer_data:
+				# If the display name matches the active customer, use their data regardless of paths.
+				if spawner.current_customer.customer_data.character_name == info.character.display_name:
+					char_to_play = spawner.current_customer.customer_data
+		
+		# --- STRATEGY 2: Match by specific .dch resource path (Story/Filler characters) ---
+		if char_to_play == null:
+			for c in story_mgr.available_characters:
+				if c.dialogic_character and c.dialogic_character.resource_path == char_path:
+					char_to_play = c
+					break
+		
+		# --- STRATEGY 3: Match generic "Customer" by display_name fallback ---
+		if char_to_play == null and (char_path.ends_with("Customer.dch") or char_path == ""):
 			for c in story_mgr.available_characters:
 				if c.character_name == info.character.display_name:
 					char_to_play = c
 					break
 		
-		
-		# Case C: Information matches Uncle Mario's .dch (which is outside standard available_characters)
+		# --- STRATEGY 4: Match Uncle Mario (outside available_characters) ---
 		if char_to_play == null:
 			var mario_manager = get_node_or_null("/root/MarioManager")
 			if mario_manager and mario_manager.get("_mario_data"):
@@ -336,10 +356,13 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 				if m_data and m_data.dialogic_character and m_data.dialogic_character.resource_path == char_path:
 					char_to_play = m_data
 
+		# --- PLAY AUDIO ---
 		if char_to_play:
 			if char_to_play.dialogue_blip_sound:
 				dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
 				dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
+				# Apply base volume (SFX bus) + the character's unique offset
+				dialogue_blip_player.volume_db = char_to_play.dialogue_blip_volume
 				dialogue_blip_player.play()
 			
 			EventBus.dialogue_character_speaking.emit(char_to_play)
