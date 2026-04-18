@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://2fj6ybr65o4w"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://cuqksepunimm1"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_4e7ft"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/ReynaMayari.dch" id="1_w2e88"]
-[ext_resource type="AudioStream" path="res://Audio/DialogueBlips/ReynaMayari.wav" id="2_1p4eh"]
-[ext_resource type="Script" path="res://Scripts/CustomerData.gd" id="2_e2ncc"]
-[ext_resource type="Script" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
-[ext_resource type="Texture2D" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
-[ext_resource type="Script" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_b7yu0"]
-[ext_resource type="Script" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_4e7ft"]
+[ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/ReynaMayari.dch" id="1_w2e88"]
+[ext_resource type="AudioStream" uid="uid://cuyl4xi7b1i1v" path="res://Audio/DialogueBlips/ReynaMayari.wav" id="2_1p4eh"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_e2ncc"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
+[ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_b7yu0"]
+[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
@@ -19,7 +19,8 @@ script = ExtResource("2_e2ncc")
 character_name = "Reyna Mayari"
 sprite_texture = ExtResource("5_uua7o")
 dialogic_character = ExtResource("1_w2e88")
-unlock_tier = 3
+unlock_tier = 99
+dialogue_blip_volume = -6.0
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.5
 dialogue_blip_sound = ExtResource("2_1p4eh")

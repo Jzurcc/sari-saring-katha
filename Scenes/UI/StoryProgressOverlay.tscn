@@ -81,7 +81,7 @@ theme_override_colors/font_outline_color = Color(0.48, 0.31, 0.1, 1)
 theme_override_constants/outline_size = 6
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 36
-text = "STORY PROGRESS"
+text = "CHARACTERS"
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="PanelContainer/Margin/VBox/Header/TitleBox"]

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://d4jnw03hx3nfe"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://r07agffs7urm"]
 
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="1_cst"]
 [ext_resource type="AudioStream" uid="uid://cd6kcxidbnq0c" path="res://Audio/DialogueBlips/KuyaKap.wav" id="1_g8i5g"]
@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="6_jf5g1"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
-[ext_resource type="Resource" uid="uid://bf1p1jymgfmpb" path="res://Dialogue/Timelines/Kuyakap/Story0.dtl" id="story0"]
+[ext_resource type="Resource" uid="uid://cryfeh7jrdxrq" path="res://Dialogue/Timelines/Kuyakap/Chapter0.dtl" id="story0"]
 
 [resource]
 script = ExtResource("1_cst")

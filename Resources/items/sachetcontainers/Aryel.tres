@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_08rbf")
+type = 3
 item_name = "Aryel"
 texture = ExtResource("2_owfh5")
 price = 12.0

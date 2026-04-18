@@ -4,7 +4,7 @@
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
 
 [node name="SleepOverlay" type="CanvasLayer"]
-layer = 100
+layer = 150
 script = ExtResource("1_sleep")
 
 [node name="Content" type="Control" parent="."]
