@@ -6,8 +6,10 @@ extends WorldInteractor
 
 var _meshes: Array[MeshInstance3D] = []
 var _nokia_root: Node = null  # Kept so we can hide/show the 3D model
+var _is_ui_open: bool = false
 
 func _ready() -> void:
+	add_to_group("nokia_phone")
 	super._ready()
 	# Nokia outline needs to be thicker since the model is small/detailed
 	outline_width = 96.0
@@ -52,6 +54,9 @@ func on_hover(is_hovered: bool) -> void:
 		_remove_outline()
 
 func on_interact() -> void:
+	if _is_ui_open:
+		return
+
 	if Dialogic.current_timeline != null:
 		return # Block call while someone is already talking
 		
@@ -61,6 +66,7 @@ func on_interact() -> void:
 		return
 		
 	if nokia_ui_scene:
+		_is_ui_open = true
 		var ui := nokia_ui_scene.instantiate()
 		# Pass the 3D anchor to the NokiaUI before adding to tree
 		if phone_anchor:
@@ -77,11 +83,13 @@ func on_interact() -> void:
 		push_error("[Nokia3D] Missing Nokia UI Scene in the Inspector!")
 
 func _on_nokia_ui_closed() -> void:
+	_is_ui_open = false
 	# Restore first-person input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	EventBus.nokia_closed.emit()
 
 func _on_nokia_ui_closed_with_parent(ui: Node) -> void:
+	_is_ui_open = false
 	# Free the dynamically instantiated Nokia UI
 	if is_instance_valid(ui):
 		ui.queue_free()

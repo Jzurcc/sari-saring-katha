@@ -29,6 +29,7 @@ func receive_item(item: DraggableItem) -> void:
 		EventBus.request_sfx.emit("trash")
 	
 	# 4. Cleanup
+	item.notify_placed()
 	item.queue_free()
 
 func _play_trash_animation() -> void:

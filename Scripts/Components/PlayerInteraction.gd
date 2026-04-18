@@ -17,7 +17,13 @@ var pricing_mode_active: bool = false
 
 var _q_items: PhysicsRayQueryParameters3D
 var _q_customer: PhysicsRayQueryParameters3D
+var _q_gaze: PhysicsRayQueryParameters3D
 var _last_hovered: Node = null
+
+# Tutorial Gaze Tracking
+var active_gaze_target_id: String = ""
+var active_gaze_group: String = ""
+var _gaze_timer: float = 0.0
 
 func _ready() -> void:
 	# Ensure interaction_range is valid
@@ -27,7 +33,13 @@ func _ready() -> void:
 	_q_items = PhysicsRayQueryParameters3D.new()
 	_q_items.collide_with_areas = true
 	_q_items.collide_with_bodies = false
-	_q_items.collision_mask = LAYER_ITEMS
+	_q_items.collision_mask = LAYER_ITEMS # Layer 1 only again
+	
+	_q_gaze = PhysicsRayQueryParameters3D.new()
+	_q_gaze.collide_with_areas = true
+	_q_gaze.collide_with_bodies = true
+	# Gaze targets can be Layer 1 (Items) or Layer 2 (Drop Zones/Surfaces)
+	_q_gaze.collision_mask = LAYER_ITEMS | 2
 
 	_q_customer = PhysicsRayQueryParameters3D.new()
 	_q_customer.collide_with_areas = true
@@ -35,9 +47,15 @@ func _ready() -> void:
 	_q_customer.collision_mask = LAYER_CUSTOMERS
 
 func _physics_process(_delta: float) -> void:
-	# While dialogue is open or mouse is free — clear hover and exit.
-	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED \
-			or Dialogic.current_timeline != null:
+	# While dialogue is open, we still allow raycasting if the mouse is captured
+	# (so players can see the pricing UI/hover outlines).
+	# However, we block it if the mouse is free (mouse mode != captured).
+	var is_in_timeline = Dialogic.current_timeline != null
+	var gm = get_tree().get_first_node_in_group("game_manager")
+	var is_tutorial_task = gm and gm.is_tutorial_task_active
+	var is_mario_tutorial = is_in_timeline and "UncleMarioTutorial" in Dialogic.current_timeline.resource_path
+
+	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
 			_last_hovered.on_hover(false)
 			_last_hovered = null
@@ -57,6 +75,13 @@ func _physics_process(_delta: float) -> void:
 	_q_customer.from = ray_origin
 	_q_customer.to = ray_end
 	var hit_customer = get_world_3d().direct_space_state.intersect_ray(_q_customer)
+
+	# --- Raycast 3: tutorial gaze only (layer 1 | 2) ---
+	var hit_gaze = {}
+	if active_gaze_target_id != "":
+		_q_gaze.from = ray_origin
+		_q_gaze.to = ray_end
+		hit_gaze = get_world_3d().direct_space_state.intersect_ray(_q_gaze)
 
 	# Resolve which target is "closer" to the camera.
 	var current_hovered: Node = null
@@ -93,14 +118,72 @@ func _physics_process(_delta: float) -> void:
 				current_hovered.set_pricing_ui_active(pricing_mode_active)
 		_last_hovered = current_hovered
 
+	# --- Tutorial Gaze Detection ---
+	if active_gaze_target_id != "" and not hit_gaze.is_empty():
+		var hit_node = hit_gaze.collider
+		var is_match = _is_in_group_recursive(hit_node, active_gaze_group, 5)
+		
+		if is_match:
+			_gaze_timer += _delta
+			if _gaze_timer >= 0.5: # Half a second of consistent focus
+				print("[PlayerInteraction] Gaze target reached: ", active_gaze_target_id)
+				EventBus.target_gazed.emit(active_gaze_target_id)
+				active_gaze_target_id = "" # Auto-clear after detection
+		else:
+			_gaze_timer = 0.0
+	else:
+		_gaze_timer = 0.0
+
+func _is_in_group_recursive(node: Node, group_name: String, max_depth: int) -> bool:
+	if not node or max_depth < 0:
+		return false
+	if node.is_in_group(group_name):
+		return true
+		
+	# Fallback for environment collision shapes in the final store scene
+	# This allows looking at physical models that might not have the specific groups applied.
+	var lower_name = node.name.to_lower()
+	match group_name:
+		"shelf_surface":
+			if "shelf" in lower_name: return true
+		"fridge_surfaces":
+			if "fridge" in lower_name or "cube_001" in lower_name or "refrigerator" in lower_name: return true
+		"nokia_phone":
+			if "nokia" in lower_name or "phone" in lower_name: return true
+		"notebook_item":
+			if "notebook" in lower_name: return true
+			
+	return _is_in_group_recursive(node.get_parent(), group_name, max_depth - 1)
+
+
+func setup_gaze_task(target_id: String, group_name: String) -> void:
+	active_gaze_target_id = target_id
+	active_gaze_group = group_name
+	_gaze_timer = 0.0
+	print("[PlayerInteraction] Setup gaze task: ", target_id, " (group: ", group_name, ")")
+
+
+func clear_gaze_task() -> void:
+	active_gaze_target_id = ""
+	active_gaze_group = ""
+	_gaze_timer = 0.0
+
 func _input(event: InputEvent) -> void:
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		return
-	# Block all world interaction while dialogue is open.
-	if Dialogic.current_timeline != null:
-		return
+	# Block world interaction triggers while dialogue is open,
+	# unless we are currently in the tutorial or a tutorial task.
+	var is_in_timeline = Dialogic.current_timeline != null
+	var gm = get_tree().get_first_node_in_group("game_manager")
+	var is_tutorial_task = gm and gm.is_tutorial_task_active
+	var is_mario_tutorial = is_in_timeline and "UncleMarioTutorial" in Dialogic.current_timeline.resource_path
 	
-	# Pricing Mode Toggle (Alt)
+	# Chapters are blocked if in timeline, UNLESS it's the mario tutorial OR an active task.
+	var allow_interaction = not is_in_timeline or is_tutorial_task or is_mario_tutorial
+	
+	# This block only applies to the actions BELOW it (Alt toggle is now moved ABOVE)
+	
+	# Pricing Mode Toggle (Alt) - Always allowed regardless of dialogue
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ALT and not event.echo:
 		pricing_mode_active = !pricing_mode_active
 		EventBus.pricing_mode_changed.emit(pricing_mode_active)
@@ -109,6 +192,9 @@ func _input(event: InputEvent) -> void:
 		# Update currently hovered item immediately
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("set_pricing_ui_active"):
 			_last_hovered.set_pricing_ui_active(pricing_mode_active)
+		return
+
+	if not allow_interaction:
 		return
 
 	# Pricing Adjustments (Direct Price Mode)
@@ -146,6 +232,9 @@ func _input(event: InputEvent) -> void:
 					
 					var new_price : float = clamp(current_price + delta, min_price, max_price)
 					
+					if new_price > current_price:
+						EventBus.price_increased.emit(item.item_data)
+					
 					item.item_data.selling_price = new_price
 						
 					# Refresh all items of this type (they share the resource)
@@ -165,6 +254,9 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				_last_hovered.on_interact()
 			elif is_instance_valid(_last_hovered) and _last_hovered.is_in_group("draggable_items"):
+				if gm and gm.is_blocking_pickup:
+					print("[PlayerInteraction] Pickup blocked by tutorial state.")
+					return
 				get_viewport().set_input_as_handled()
 				_pickup_item(_last_hovered)
 

@@ -231,16 +231,15 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 		# Positioning at marker with slight random offset for grouping
 		if marker:
 			var offset = Vector3(
-				randf_range(-0.6, 0.6),
+				randf_range(-1.1, 1.1),
 				0.05, # Slight lift
-				randf_range(-0.6, 0.6)
+				randf_range(-1.1, 1.1)
 			)
 			bag.global_position = marker.global_position + offset
 		else:
 			push_warning("[MarioManager] PlasticMarker not found in scene! Spawning at default.")
 	
 	_refresh_containers(get_tree().root)
-	InventoryManager.save_state()
 
 	
 	# 3. Clear interaction blockers immediately so customers can be clicked 

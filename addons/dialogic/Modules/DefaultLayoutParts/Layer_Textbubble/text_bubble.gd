@@ -102,12 +102,14 @@ func _process(delta:float) -> void:
 				if cam.is_position_behind((node_to_point_at as Node3D).global_position):
 					in_view = false
 				else:
+					var original_projected = cam.unproject_position((node_to_point_at as Node3D).global_position)
 					var margin := 200.0
 					var rect := get_viewport_rect().grow(margin)
-					if not rect.has_point(base_position):
+					if not rect.has_point(original_projected):
 						in_view = false
 						
-		var target_alpha := 1.0 if in_view else 0.0
+		# Fading disabled as requested, but code structure kept
+		var target_alpha := 1.0 # 1.0 if in_view else 0.0
 		var fade_speed := 8.0 if in_view else 20.0
 		modulate.a = move_toward(modulate.a, target_alpha, delta * fade_speed)
 
@@ -253,8 +255,27 @@ func add_choice_container(node:Container, alignment:=FlowContainer.ALIGNMENT_BEG
 func get_speaker_canvas_position() -> Vector2:
 	if is_instance_valid(node_to_point_at):
 		if node_to_point_at is Node3D:
-			base_position = get_viewport().get_camera_3d().unproject_position(
-				(node_to_point_at as Node3D).global_position)
+			var cam: Camera3D = get_viewport().get_camera_3d()
+			if cam:
+				var original_pos_3d = (node_to_point_at as Node3D).global_position
+				base_position = cam.unproject_position(original_pos_3d)
+				
+				# Check if the original node is out of view
+				var in_view := true
+				if cam.is_position_behind(original_pos_3d):
+					in_view = false
+				else:
+					var margin := 200.0
+					var rect := get_viewport_rect().grow(margin)
+					if not rect.has_point(base_position):
+						in_view = false
+						
+				# Fallback to the camera's speech marker if out of view
+				if not in_view:
+					var fallback_marker = cam.get_node_or_null("CameraSpeechMarker3D")
+					if fallback_marker:
+						base_position = cam.unproject_position(fallback_marker.global_position)
+						
 		if node_to_point_at is CanvasItem:
 			base_position = (node_to_point_at as CanvasItem).get_global_transform_with_canvas().origin
 	return base_position
