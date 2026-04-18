@@ -73,8 +73,8 @@ void fragment() {
 	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2( px.x, -px.y)));
 	max_a = max(max_a, safe_alpha(albedo_texture, UV + vec2(-px.x, -px.y)));
 
-	if (max_a > 0.01) {
-		ALBEDO = outline_color.rgb;
+	if (max_a > 0.5) {
+		ALBEDO = outline_color.rgb * 0.9;
 		ALPHA  = outline_color.a;
 		ROUGHNESS = 1.0;
 		SPECULAR = 0.0;
