@@ -21,11 +21,11 @@ func get_clean_id() -> String:
 @export var dialogue_blip_volume: float = 0.0
 
 @export_group("Story Progression")
-## Timelines for unique story progression stages (Chapters 0-8).
-## The game plays story_timelines[stage] when forcing a chapter interaction.
+## Timelines for unique story progression chapters (Chapters 0-8).
+## The game plays story_timelines[chapter] when forcing a chapter interaction.
 @export var story_timelines: Array[DialogicTimeline] = []
 
-## Optional prerequisites for each story stage. 
+## Optional prerequisites for each story chapter. 
 ## Index matches story_timelines index. If empty or null at an index, no requirements.
 @export var story_prerequisites: Array[StoryPrerequisiteGroup] = []
 
@@ -36,6 +36,10 @@ func get_clean_id() -> String:
 ## Multiplier applied to the 3D sprite scale.
 @export var sprite_scale: float = 1.0
 
+## Vertical ratio for the speech bubble position relative to total height (0.0 to 1.0).
+## 0.75 is the default standard for most characters.
+@export var speech_marker_height_ratio: float = 0.75
+
 ## The sound played once per dialogue text bubble (e.g., KuyaKap's blip)
 @export var dialogue_blip_sound: AudioStream
 
@@ -44,16 +48,16 @@ func get_clean_id() -> String:
 # directly so fallback logic is always applied.
 # ---------------------------------------------------------------------------
 
-## Returns the 0-based arc index for a given story stage (floor(stage / 3)).
-func get_arc_index(stage: int) -> int:
-	return floori(float(stage) / 3.0)
+## Returns the 0-based arc index for a given story chapter (floor(chapter / 3)).
+func get_arc_index(chapter: int) -> int:
+	return floori(float(chapter) / 3.0)
 
-## Returns the ArcData that applies to this stage, falling back toward Arc 0
+## Returns the ArcData that applies to this chapter, falling back toward Arc 0
 ## if the target arc hasn't been filled in yet.
-func _get_arc(stage: int) -> ArcData:
+func _get_arc(chapter: int) -> ArcData:
 	if character_arcs.is_empty():
 		return null
-	var idx: int = mini(get_arc_index(stage), character_arcs.size() - 1)
+	var idx: int = mini(get_arc_index(chapter), character_arcs.size() - 1)
 	# Walk backward until we find a non-null entry
 	while idx >= 0:
 		if character_arcs[idx] != null:
@@ -61,8 +65,8 @@ func _get_arc(stage: int) -> ArcData:
 		idx -= 1
 	return null
 
-func get_filler_items(stage: int) -> Array[ItemData]:
-	var arc := _get_arc(stage)
+func get_filler_items(chapter: int) -> Array[ItemData]:
+	var arc := _get_arc(chapter)
 	if not arc:
 		return [] as Array[ItemData]
 	var result: Array[ItemData] = []
@@ -72,12 +76,12 @@ func get_filler_items(stage: int) -> Array[ItemData]:
 	return result
 
 ## Returns an aggregated list of filler items from the current arc and all previous arcs.
-func get_cumulative_filler_items(stage: int) -> Array[ItemData]:
+func get_cumulative_filler_items(chapter: int) -> Array[ItemData]:
 	var result: Array[ItemData] = []
-	var max_arc_idx = get_arc_index(stage)
+	var max_arc_idx = get_arc_index(chapter)
 	
 	for i in range(max_arc_idx + 1):
-		var arc = _get_arc(i * 3) # Sample arc at the start of its stage range
+		var arc = _get_arc(i * 3) # Sample arc at the start of its chapter range
 		if arc:
 			for item in arc.filler_items:
 				if item is ItemData and not result.has(item):
@@ -85,12 +89,8 @@ func get_cumulative_filler_items(stage: int) -> Array[ItemData]:
 	return result
 
 
-	return result
-
-
-
-func get_purchase_timelines(stage: int) -> Array[DialogicTimeline]:
-	var arc := _get_arc(stage)
+func get_purchase_timelines(chapter: int) -> Array[DialogicTimeline]:
+	var arc := _get_arc(chapter)
 	if not arc:
 		return [load("res://Dialogue/Timelines/Generic/Purchase.dtl")] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
@@ -103,8 +103,8 @@ func get_purchase_timelines(stage: int) -> Array[DialogicTimeline]:
 		
 	return result
 
-func get_visit_timelines(stage: int) -> Array[DialogicTimeline]:
-	var arc := _get_arc(stage)
+func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
+	var arc := _get_arc(chapter)
 	if not arc:
 		return [load("res://Dialogue/Timelines/Generic/Visit.dtl")] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []

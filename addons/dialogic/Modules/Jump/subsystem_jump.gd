@@ -74,12 +74,21 @@ func jump_to_label(label:String) -> void:
 			break
 		if event is DialogicLabelEvent and event.name == label:
 			break
+	print("[DialogicJump] Jumping to label: '", label, "' -> New Index: ", idx)
 	dialogic.current_event_idx = idx-1
 	jumped_to_label.emit({'timeline':dialogic.current_timeline, 'label':label})
 
 
 func push_to_jump_stack() -> void:
-	dialogic.current_state_info['jump_stack'].push_back({'timeline':dialogic.current_timeline, 'index':dialogic.current_event_idx, 'label':dialogic.current_timeline_events[dialogic.current_event_idx].label_name})
+	if dialogic.current_event_idx < 0 or dialogic.current_event_idx >= dialogic.current_timeline_events.size():
+		print("[Dialogic] Warning: push_to_jump_stack called with invalid index %d" % dialogic.current_event_idx)
+		return
+		
+	var event: Resource = dialogic.current_timeline_events[dialogic.current_event_idx]
+	var label_name := ""
+	if event.has_method("get") and event.get("label_name") != null:
+		label_name = event.get("label_name")
+	dialogic.current_state_info['jump_stack'].push_back({'timeline':dialogic.current_timeline, 'index':dialogic.current_event_idx, 'label':label_name})
 
 
 func resume_from_last_jump() -> void:

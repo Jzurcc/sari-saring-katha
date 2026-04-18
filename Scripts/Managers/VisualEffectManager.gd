@@ -124,7 +124,7 @@ func spawn_cold_mist(pos: Vector3) -> CPUParticles3D:
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_texture = MIST_TEXTURE
-	mat.albedo_color = Color(0.8, 0.9, 1.0, 0.15) # Cool blue-white, lesser opacity
+	mat.albedo_color = Color(0.8, 0.9, 1.0, 0.0) # Start transparent for fade-in
 	mat.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
 	mat.billboard_mode = StandardMaterial3D.BILLBOARD_PARTICLES
 	p.mesh.material = mat

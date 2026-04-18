@@ -9,8 +9,10 @@ var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
 var _ui_player   : AudioStreamPlayer
 
 var _original_music_db: float = 0.0
-const DUCK_AMOUNT: float = -12.0
-const FADE_DURATION: float = 0.3
+const DUCK_AMOUNT: float = -6.0 # Subtler ducking
+const MUFFLE_CUTOFF: float = 1500.0 # Muffled frequency
+const NORMAL_CUTOFF: float = 20500.0 # Full range frequency
+const FADE_DURATION: float = 0.4
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -40,6 +42,7 @@ func pause() -> void:
 		Dialogic.paused = true
 	
 	_duck_audio(true)
+	_play_confirm()
 	
 	# Focus first button
 	buttons.get_node("Resume").grab_focus()
@@ -87,6 +90,11 @@ func _on_main_menu_pressed() -> void:
 	else:
 		get_tree().change_scene_to_file("res://Scenes/MainMenu.tscn")
 
+func _on_save_game_pressed() -> void:
+	_play_confirm()
+	SaveManager.force_save()
+	EventBus.show_notification.emit("Game Saved", "Your progress has been saved.", "ui_sfx_9")
+
 func _on_exit_pressed() -> void:
 	_play_confirm()
 	get_tree().quit()
@@ -102,13 +110,18 @@ func _duck_audio(enable: bool) -> void:
 	var music_idx = AudioServer.get_bus_index("Music")
 	if music_idx < 0: return
 	
-	# Find Amplify effect (we added it as index 0 in default_bus_layout.tres)
-	var effect = AudioServer.get_bus_effect(music_idx, 0)
-	if not effect is AudioEffectAmplify: return
+	# Effects: index 0 = Amplify, index 1 = LowPass
+	var amp = AudioServer.get_bus_effect(music_idx, 0)
+	var lpf = AudioServer.get_bus_effect(music_idx, 1)
 	
-	var target_db = DUCK_AMOUNT if enable else 0.0
-	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) # Run even while paused
-	tween.tween_property(effect, "volume_db", target_db, FADE_DURATION)
+	var target_amp = DUCK_AMOUNT if enable else 0.0
+	var target_lpf = MUFFLE_CUTOFF if enable else NORMAL_CUTOFF
+	
+	var tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	if amp is AudioEffectAmplify:
+		tween.tween_property(amp, "volume_db", target_amp, FADE_DURATION)
+	if lpf is AudioEffectLowPassFilter:
+		tween.tween_property(lpf, "cutoff_hz", target_lpf, FADE_DURATION)
 
 func _play_click() -> void:
 	_ui_player.stream = _sfx_click
@@ -119,13 +132,14 @@ func _play_confirm() -> void:
 	_ui_player.play()
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed):
+	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)):
 		if visible:
+			get_viewport().set_input_as_handled()
 			if options_overlay.visible:
 				options_overlay.close()
 			elif collection_overlay.visible:
 				collection_overlay.close()
 			else:
+				_play_confirm() # Play sfx_9 when resuming via Escape
 				resume()
-		# We don't handle opening here, because the PauseMenu might not be in the tree or active.
-		# Opening will be handled by MainGame.
+		# Opening handled by MainGame.

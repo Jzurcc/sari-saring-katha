@@ -49,3 +49,10 @@ func fade_out() -> void:
 	fade.tween_property(content, "modulate:a", 0.0, 0.8)
 	await fade.finished
 	hide()
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("dialogic_default_action") or event.is_action_pressed("ui_accept"):
+		if _can_advance:
+			_can_advance = false
+			completed.emit()
+			get_viewport().set_input_as_handled()

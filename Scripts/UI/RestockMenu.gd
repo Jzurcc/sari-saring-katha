@@ -368,18 +368,17 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 		tier_lbl.text = "TIER %d" % target_tier
 		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tier_lbl.add_theme_font_size_override("font_size", 11)
+		tier_lbl.add_theme_color_override("font_color", Color.WHITE)
 		if target_tier <= StoryManager.current_tier:
 			tier_lbl.text = "OWNED"
-			tier_lbl.add_theme_color_override("font_color", Color.YELLOW)
 		elif target_tier == StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier:
-			tier_lbl.text = "AVAILABLE"
-			tier_lbl.add_theme_color_override("font_color", Color.WHITE)
+			tier_lbl.text = "TIER %d" % target_tier
 		elif is_stacked:
 			tier_lbl.text = "UNLOCKED"
-			tier_lbl.add_theme_color_override("font_color", Color.LIGHT_GRAY)
 		else:
 			tier_lbl.text = "LOCKED"
-			tier_lbl.add_theme_color_override("font_color", Color.DARK_GRAY)
+		# Boost label modulate to compensate for the dimmed card parent so text stays white
+		tier_lbl.modulate = Color(1.8, 1.8, 1.8, 1.0)
 		vbox.add_child(tier_lbl)
 	
 	vbox.add_child(icon)
@@ -664,6 +663,8 @@ func _on_cancel_pressed() -> void:
 	_close_restock_screen()
 
 func _on_confirm_pressed() -> void:
+	if confirm_btn:
+		confirm_btn.disabled = true
 	# Check if the user has actually ordered items
 	var actual_items: Dictionary = {}
 	for item in selected_items:
@@ -673,10 +674,14 @@ func _on_confirm_pressed() -> void:
 	if actual_items.is_empty() or total_price <= 0:
 		print("[RestockMenu] No items ordered. Canceling.")
 		_on_cancel_pressed()
+		if confirm_btn:
+			confirm_btn.disabled = false
 		return
 	var money = _get_money()
 	if total_price > money:
 		EventBus.insufficient_funds.emit()
+		if confirm_btn:
+			confirm_btn.disabled = false
 		return
 		
 	AudioManager.play_sfx("purchase")

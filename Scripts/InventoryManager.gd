@@ -1,5 +1,7 @@
 extends Node
 
+var save_id: String = "inventory_manager"
+
 ## Tracks item stock counts across the game.
 ## Key: ItemData.resource_path → Value: current stock count.
 
@@ -18,6 +20,7 @@ var _stock: Dictionary = {}
 var _items: Array[ItemData] = []
 
 func _ready() -> void:
+	add_to_group("persist")
 	initialize()
 
 ## Load all ItemData resources from subfolders and set initial stock.
@@ -40,7 +43,6 @@ func initialize() -> void:
 		subdir = base_dir.get_next()
 	base_dir.list_dir_end()
 	
-	load_state()
 	
 	# Sort items alphabetically for deterministic display order across platforms.
 	_items.sort_custom(func(a: ItemData, b: ItemData): return a.item_name.naturalnocasecmp_to(b.item_name) < 0)
@@ -100,7 +102,7 @@ func get_max_stock(item: ItemData) -> int:
 
 	return _get_max_stock_internal(id, StoryManager.day)
 
-func _get_max_stock_internal(id: String, day: int) -> int:
+func _get_max_stock_internal(id: String, _day: int) -> int:
 	# Progression logic
 	match id:
 		"pocha", "mentor":
@@ -115,6 +117,12 @@ func _get_max_stock_internal(id: String, day: int) -> int:
 func _get_item_by_id(target_id: String) -> ItemData:
 	for item in _items:
 		if item.get_clean_id() == target_id:
+			return item
+	return null
+
+func _get_item_by_path(path: String) -> ItemData:
+	for item in _items:
+		if item.resource_path == path:
 			return item
 	return null
 
@@ -184,14 +192,12 @@ func take_item(item: ItemData) -> bool:
 	if count <= 0:
 		return false
 	_stock[item.resource_path] = count - 1
-	save_state()
 	return true
 
 ## Add stock back (e.g. when a drag is cancelled).
 func return_item(item: ItemData) -> void:
 	var count: int = _stock.get(item.resource_path, 0)
 	_stock[item.resource_path] = mini(count + 1, get_max_stock(item))
-	save_state()
 
 ## Restock an item to a specific count (capped at get_max_stock).
 func restock_item(item: ItemData, count: int = -1) -> void:
@@ -199,61 +205,60 @@ func restock_item(item: ItemData, count: int = -1) -> void:
 	if count < 0:
 		count = limit
 	_stock[item.resource_path] = mini(count, limit)
-	save_state()
 
 ## Add a delta amount of stock (e.g. ordered quantity), capped at get_max_stock.
 func add_stock(item: ItemData, amount: int) -> void:
 	var current: int = _stock.get(item.resource_path, 0) as int
 	_stock[item.resource_path] = mini(current + amount, get_max_stock(item))
-	save_state()
 
 func decrement_cooldown() -> void:
 	if customers_needed_for_delivery > 0:
 		customers_needed_for_delivery -= 1
-		save_state()
 
 ## Set the post-order delivery cooldown (randomised 2-3 customers).
 func start_delivery_cooldown() -> void:
 	customers_needed_for_delivery = randi() % 2 + 2
-	save_state()
 
-func save_state() -> void:
-	var save_data = {
-		"inventory": {
-			"stock": _stock,
-			"customers_needed_for_delivery": customers_needed_for_delivery
-		}
+# ─── Persistence ──────────────────────────────────────────────────────────────
+
+func get_save_id() -> String:
+	return "inventory"
+
+func get_save_data() -> Dictionary:
+	var prices := {}
+	for item in _items:
+		prices[item.resource_path] = item.selling_price
+		
+	return {
+		"stock": _stock.duplicate(),
+		"delivery_cooldown": customers_needed_for_delivery,
+		"prices": prices,
 	}
-	SaveManager.save_game(save_data)
+
+func load_save_data(data: Dictionary) -> void:
+	var saved_stock: Dictionary = data.get("stock", {})
+	# Merge saved stock into our initialized _stock dict.
+	# Only apply values for items we actually know about (forward compat).
+	for path in saved_stock.keys():
+		if _stock.has(path):
+			_stock[path] = int(saved_stock[path])
+			
+	# Restore custom prices
+	var saved_prices: Dictionary = data.get("prices", {})
+	for path in saved_prices.keys():
+		var item = _get_item_by_path(path)
+		if item:
+			item.selling_price = float(saved_prices[path])
+			
+	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
+	print("[InventoryManager] State loaded. %d items tracked, %d custom prices restored." % [_stock.size(), saved_prices.size()])
 
 func reset_state() -> void:
 	_stock.clear()
-	# Re-initialize stock to 0 for all items
+	# Re-initialize stock to 0 for all items and reset prices
 	for item in _items:
 		_stock[item.resource_path] = 0
+		item.selling_price = 0.0 # Resets to default on next get_final_price call
 		
 	customers_needed_for_delivery = 0
-	save_state()
-	print("[InventoryManager] Inventory reset for New Game.")
-
-
-func load_state() -> void:
-	var save_data = SaveManager.load_game()
-	if save_data.has("inventory"):
-		var inv = save_data["inventory"]
-		var saved_stock = inv.get("stock", {})
-		# Merge saved stock into our initialized stock (which has all items at 0).
-		# Cast to int because Godot 4's JSON parser returns all numbers as floats.
-		for path in saved_stock:
-			_stock[path] = int(saved_stock[path])
-			
-		customers_needed_for_delivery = int(inv.get("customers_needed_for_delivery", 0))
-		print("[InventoryManager] State loaded from 'inventory' key.")
-	elif save_data.has("stock"):
-		# Fallback for old save format
-		var saved_stock = save_data["stock"]
-		for key in saved_stock.keys():
-			_stock[key] = int(saved_stock[key])
-		if save_data.has("customers_needed_for_delivery"):
-			customers_needed_for_delivery = int(save_data["customers_needed_for_delivery"])
-		print("[InventoryManager] State loaded from legacy keys.")
+	print("[InventoryManager] Inventory reset for New Game. Prices cleared.")

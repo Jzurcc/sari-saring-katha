@@ -48,6 +48,7 @@ func _ready() -> void:
 	add_child(eyelid_bottom)
 
 func change_scene(path: String) -> void:
+	print("[DEBUG] SceneTransition.change_scene(%s) START" % path)
 	# Block input during transition
 	eyelid_top.mouse_filter = Control.MOUSE_FILTER_STOP
 	eyelid_bottom.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -64,11 +65,15 @@ func change_scene(path: String) -> void:
 	
 	await tween.finished
 	
+	print("[DEBUG] SceneTransition: Calling get_tree().change_scene_to_file(%s)" % path)
 	# Change scene
-	get_tree().change_scene_to_file(path)
+	var err = get_tree().change_scene_to_file(path)
+	print("[DEBUG] SceneTransition: change_scene_to_file returned %s" % str(err))
 	
 	# Wait for scene to load, settle, and provide requested blackout duration
+	print("[DEBUG] SceneTransition: Waiting 1 second...")
 	await get_tree().create_timer(1).timeout
+	print("[DEBUG] SceneTransition: Wait over, opening eyes...")
 	
 	# Smooth open
 	tween = create_tween()

@@ -3,12 +3,17 @@ extends ColorRect
 signal closed
 
 @onready var collection_grid : GridContainer = %Grid
+@onready var detail_overlay : Control = %DetailOverlay
+@onready var detail_image : TextureRect = %DetailImage
+@onready var detail_name : Label = %DetailName
+@onready var detail_info : Label = %DetailInfo
 
 func _ready() -> void:
-	pass
+	_hide_details()
 
 func open() -> void:
 	show()
+	_hide_details()
 	_populate_collection()
 
 func close() -> void:
@@ -28,9 +33,27 @@ func _populate_collection() -> void:
 		if not item.can_be_sold:
 			continue
 			
-		var card = PanelContainer.new()
+		var card = Button.new()
 		card.set_script(ItemCardScript)
 		collection_grid.add_child(card)
 		
 		var unlocked = StoryManager.is_item_unlocked(item)
 		card.setup(item, unlocked)
+		
+		if unlocked:
+			card.item_pressed.connect(_show_details)
+
+func _show_details(item: ItemData) -> void:
+	detail_image.texture = item.texture
+	detail_name.text = item.item_name.to_upper()
+	detail_info.text = "Category: %s  |  Tier: %d" % [item.category.capitalize(), item.tier]
+	
+	detail_overlay.show()
+	
+	# Fade in effect
+	detail_overlay.modulate.a = 0
+	var tween = create_tween()
+	tween.tween_property(detail_overlay, "modulate:a", 1.0, 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+func _hide_details() -> void:
+	detail_overlay.hide()

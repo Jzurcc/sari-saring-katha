@@ -85,9 +85,32 @@ var _slot_occupants: Array = []  # Array[DraggableItem?]
 var _is_loading: bool = false
 
 func _ready() -> void:
+	# 1. Auto-generate save_id if empty based on hierarchy
+	if save_id == "":
+		save_id = "shelf_" + get_parent().name + "_" + name
+		print("[ShelfSurface] Auto-generated save_id: ", save_id)
+		
+	# 2. Join persistence groups
 	add_to_group("shelf_surface")
+	add_to_group("persist")
 	if surface_type == ItemData.ItemType.FRIDGE:
 		add_to_group("fridge_surfaces")
+		
+	# Propagate groups to parent body to ensure gaze raycast (which hits bodies) 
+	# correctly identifies the physical shelf/fridge as part of the tutorial targets.
+	if get_parent() is CollisionObject3D:
+		get_parent().add_to_group("shelf_surface")
+		if surface_type == ItemData.ItemType.FRIDGE:
+			get_parent().add_to_group("fridge_surfaces")
+
+	# Validate required config before proceeding
+	if shelf_width <= 0.0:
+		push_error("[ShelfSurface] '%s': shelf_width must be > 0. Got: %f" % [name, shelf_width])
+		return
+	if not layout_strategy:
+		push_error("[ShelfSurface] '%s': No layout_strategy assigned." % name)
+		return
+
 	if Engine.is_editor_hint():
 		_update_preview()
 		return
@@ -99,15 +122,6 @@ func _ready() -> void:
 
 	_create_drop_zone()
 	
-	# Auto-generate save_id if empty based on hierarchy
-	if save_id == "":
-		save_id = "shelf_" + get_parent().name + "_" + name
-		print("[ShelfSurface] Auto-generated save_id: ", save_id)
-
-	# Validate required config before proceeding
-	if shelf_width <= 0.0:
-		push_error("[ShelfSurface] '%s': shelf_width must be > 0. Got: %f" % [name, shelf_width])
-		return
 	if not layout_strategy:
 		push_error("[ShelfSurface] '%s': No layout_strategy assigned." % name)
 		return
@@ -117,11 +131,11 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	
-	if not Engine.is_editor_hint() and save_id != "":
-		if not _load_state():
-			populate()
-	else:
-		populate()
+	# Always populate with Inspector defaults first.
+	# If a save file exists, SaveManager.request_load() will call load_save_data()
+	# which clears and rebuilds from saved state. This removes the timing race
+	# that caused empty shelves when a stray save existed before full game load.
+	populate()
 
 
 ## Create a thin Area3D covering the shelf surface so DragManager's
@@ -235,6 +249,7 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	# Occupy the slot.
 	_slot_occupants[target_idx] = item
 	item.set_meta("slot_index", target_idx)
+	item.notify_placed()
 
 	var target_pos := _slot_transforms[target_idx].origin
 
@@ -254,9 +269,6 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	VisualEffectManager.spawn_impact_dust(to_global(target_pos))
 
 	print("[ShelfSurface] '%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
-	
-	if save_id != "":
-		save_state()
 
 
 ## Returns an array of indices for all currently unoccupied slots.
@@ -326,9 +338,6 @@ func _free_slot_for(item: DraggableItem) -> void:
 	var idx := _slot_occupants.find(item)
 	if idx >= 0:
 		_slot_occupants[idx] = null
-		# CRITICAL FIX: Save state immediately when an item is removed from a slot.
-		# This ensures the save file acknowledges the item is gone from the shelf.
-		save_state()
 
 
 
@@ -384,49 +393,54 @@ func _update_preview() -> void:
 
 # --- Persistence ---
 
-func save_state() -> void:
-	if save_id == "" or _is_loading:
+func get_save_id() -> String:
+	return save_id
+
+func get_save_data() -> Dictionary:
+	var slots := []
+	for i in range(_slot_occupants.size()):
+		var occupant = _slot_occupants[i]
+		if occupant != null and is_instance_valid(occupant) and occupant.item_data:
+			slots.append({"slot": i, "item_path": occupant.item_data.resource_path})
+	return {"slots": slots}
+
+func load_save_data(data: Dictionary) -> void:
+	if data.is_empty():
 		return
 		
-	var slot_data = []
-	for d in _slot_occupants:
-		if d != null and is_instance_valid(d) and d.item_data:
-			slot_data.append(d.item_data.resource_path)
-		else:
-			slot_data.append("")
-			
-	var save_data = {
-		"shelves": {
-			save_id: slot_data
-		}
-	}
-	SaveManager.save_game(save_data)
-
-func _load_state() -> bool:
-	if save_id == "":
-		return false
-		
+	print("[ShelfSurface] '%s' applying save data: %s" % [save_id, data.keys()])
 	_is_loading = true
-		
-	var save_data = SaveManager.load_game()
-	if not save_data.has("shelves") or not save_data["shelves"].has(save_id):
-		return false
-		
-	var slot_data = save_data["shelves"][save_id]
-	
 	_clear()
+	
+	# Rebuild slot transforms
+	if not layout_strategy:
+		_is_loading = false
+		return
 	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
 	_slot_occupants.clear()
 	_slot_occupants.resize(_slot_transforms.size())
 	_slot_occupants.fill(null)
 	
-	for i in range(min(slot_data.size(), _slot_transforms.size())):
-		var path = slot_data[i]
-		if path != "":
-			var res = load(path)
-			if res is ItemData:
-				place_item_in_slot(res, i)
-				
+	var slots_data: Array = data.get("slots", [])
+	var placed := 0
+	for entry in slots_data:
+		var slot_idx: int = entry.get("slot", -1)
+		var item_path: String = entry.get("item_path", "")
+		
+		# Guard: slot index must be within current shelf bounds
+		if slot_idx < 0 or slot_idx >= _slot_transforms.size():
+			push_warning("[ShelfSurface] '%s': Skipping slot %d — out of bounds (max %d)" % [name, slot_idx, _slot_transforms.size() - 1])
+			continue
+		
+		# Guard: resource must exist
+		if not ResourceLoader.exists(item_path):
+			push_warning("[ShelfSurface] '%s': Skipping slot %d — resource not found: %s" % [name, slot_idx, item_path])
+			continue
+		
+		var item_res = load(item_path) as ItemData
+		if item_res:
+			place_item_in_slot(item_res, slot_idx)
+			placed += 1
+	
 	_is_loading = false
-	print("[ShelfSurface] '%s' loaded state from save." % save_id)
-	return true
+	print("[ShelfSurface] '%s' loaded %d/%d saved items" % [name, placed, slots_data.size()])

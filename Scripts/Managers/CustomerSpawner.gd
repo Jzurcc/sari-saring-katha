@@ -46,6 +46,7 @@ var _dialogue_phase: DialoguePhase = DialoguePhase.NONE
 var _current_timeline_path: String = "" # Track the timeline started by this spawner
 
 func _ready() -> void:
+	print("[DEBUG] CustomerSpawner._ready() START")
 	add_to_group("customer_spawner")
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_dismissed) # Completion of satisfy()
@@ -62,15 +63,16 @@ func _ready() -> void:
 	EventBus.debt_quota_met.connect(_on_debt_quota_met)
 	
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
-
-	await get_tree().process_frame
+	print("[DEBUG] CustomerSpawner._ready() END")
 
 func _on_day_started(_day: int) -> void:
-	print("[CustomerSpawner] Day starts — customers will spawn until 8 PM.")
+	print("[DEBUG] CustomerSpawner._on_day_started() Day starts — customers will spawn until 8 PM.")
 	_spawn_next_customer()
 
 func _spawn_next_customer() -> void:
+	print("[DEBUG] CustomerSpawner._spawn_next_customer() CALLED. is_paused=%s, current_customer=%s, _is_spawning=%s" % [is_paused, current_customer != null, _is_spawning])
 	if is_paused or current_customer != null or _is_spawning:
+		print("[DEBUG] CustomerSpawner: Aborting spawn due to state.")
 		return
 
 	# Closing time check
@@ -166,6 +168,10 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 		EventBus.customer_arrived.emit(customer)
 		
 		_update_item_names(customer)
+		
+		# Trigger a single blip and animation on arrival to signal they are ready
+		if customer.customer_data:
+			AudioManager.play_dialogue_blip(customer.customer_data)
 		
 		# Patch the generic character resource so "Customer:" lines show the right name and play sounds.
 		if GENERIC_CHAR_RES:
@@ -266,7 +272,6 @@ func _on_customer_clicked(customer: Customer) -> void:
 		var timeline_path = timeline.resource_path if timeline is Resource else timeline
 		if _is_label_in_timeline(timeline_path, "Visit"):
 			label = "Visit"
-		customer.has_been_greeted = true
 	else:
 		if not customer.has_been_greeted or _greeting_interrupted:
 			var timeline_path = timeline.resource_path if timeline is Resource else timeline
@@ -276,7 +281,6 @@ func _on_customer_clicked(customer: Customer) -> void:
 				label = "Greeting"
 			_dialogue_phase = DialoguePhase.GREETING
 			_greeting_interrupted = false  # Consume the flag
-			customer.has_been_greeted = true
 		else:
 			label = "Talk"
 			_dialogue_phase = DialoguePhase.TALK
@@ -314,7 +318,7 @@ func _on_dialogic_signal(argument: String) -> void:
 				_pending_dismiss = true
 		else:
 			_pending_dismiss = true
-	elif argument == "partial_dismiss":
+	elif argument == "partial_dismiss" or argument == "story_success":
 		_is_partial_success = true
 		_pending_dismiss = true
 	elif argument == "utang_accepted":
@@ -451,7 +455,7 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 
 func _on_dialogue_ended() -> void:
 	# 1. Detect if Mario just cut in
-	if Dialogic.current_timeline != null and "UncleMario" in Dialogic.current_timeline.resource_path:
+	if Dialogic.current_timeline != null and "UncleMario.dtl" in Dialogic.current_timeline.resource_path:
 		print("[CustomerSpawner] Mario interrupted current flow. Interruption flag set.")
 		if _dialogue_phase == DialoguePhase.GREETING:
 			_greeting_interrupted = true
@@ -496,10 +500,6 @@ func _on_dialogue_ended() -> void:
 	if _pending_dismiss:
 		_pending_dismiss = false
 		if is_instance_valid(current_customer) and current_customer.is_waiting:
-			# If this was Mayari (collection visit), trigger the end of day after she leaves
-			var timeline = current_customer.transaction_context.timeline
-			var t_path = timeline.resource_path if timeline is Resource else timeline
-			var is_collection = t_path == "res://Dialogue/Timelines/mayari_collect.dtl"
 			
 			# Dismiss guest alongside primary if present, with a slight delay
 			if is_instance_valid(guest_customer):
@@ -511,12 +511,9 @@ func _on_dialogue_ended() -> void:
 			if _is_partial_success:
 				current_customer.satisfy()
 				_is_partial_success = false
-				_handle_transaction_cleanup()
 				return
 			else:
 				current_customer.dismiss()
-				if is_collection:
-					_end_day()
 		return
 
 	match phase:
@@ -528,14 +525,8 @@ func _on_dialogue_ended() -> void:
 				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
 
 			if is_instance_valid(current_customer) and current_customer.is_waiting:
-				var timeline = current_customer.transaction_context.timeline
-				var t_path = timeline.resource_path if timeline is Resource else timeline
-				var is_collection = t_path == "res://Dialogue/Timelines/mayari_collect.dtl"
-				
 				current_customer.has_been_greeted = true
 				current_customer.dismiss()
-				if is_collection:
-					_end_day()
 
 		DialoguePhase.SATISFIED:
 			# satisfy() sets is_waiting=false and owns its own exit animation.
@@ -562,21 +553,6 @@ func _on_dialogue_ended() -> void:
 			if phase == DialoguePhase.GREETING and is_instance_valid(current_customer):
 				current_customer.has_been_greeted = true
 			pass
-
-func _handle_transaction_cleanup() -> void:
-	current_customer = null
-	_is_partial_success = false
-	
-	# Check if we have a pending tier unlock now that the counter is clear
-	StoryManager.process_pending_unlock()
-	
-	# Small delay before next customer
-	var delay = randf_range(0.3, 5.0)
-	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
-		delay = 1.0 # Short delay for Mayari arrival
-		
-	await get_tree().create_timer(delay).timeout
-	_spawn_next_customer()
 
 
 

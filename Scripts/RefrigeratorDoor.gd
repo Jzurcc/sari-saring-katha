@@ -1,6 +1,6 @@
 ## RefrigeratorDoor.gd
 ## Root script for the refrigerator door mesh (MeshInstance3D).
-## Interaction is driven by PlayerInteraction's center-screen raycast which
+## Chapter is driven by PlayerInteraction's center-screen raycast which
 ## calls on_hover() / on_interact() on the Area3D child. The Area3D forwards
 ## those calls here via FridgeDoorInteractor.gd.
 ##
@@ -29,6 +29,7 @@ var _active_mists: Array[CPUParticles3D] = []
 
 # ================================================================================
 func _ready() -> void:
+	add_to_group("fridge_surfaces")
 	_resolve_pivot()
 	_build_outline_material()
 
@@ -82,20 +83,35 @@ func toggle_open() -> void:
 		  .set_trans(Tween.TRANS_SINE) \
 		  .set_ease(Tween.EASE_IN_OUT)
 	
+	if is_open:
+		EventBus.refrigerator_opened.emit()
+	
 	# VFX: Cold Mist
 	if is_open:
 		var fridge_surfaces = get_tree().get_nodes_in_group("fridge_surfaces")
 		for surface in fridge_surfaces:
 			if surface is ShelfSurface:
-				# Spawn mass mist along the shelf width
-				# The root is at the left edge, so center is +X*(width/2)
 				var center_pos = surface.to_global(Vector3(surface.shelf_width / 2.0, 0.1, 0.0))
 				var mists = VisualEffectManager.spawn_mass_mist(center_pos, surface.shelf_width)
 				_active_mists.append_array(mists)
+				
+				# Fade in each mist
+				for p in mists:
+					if is_instance_valid(p) and p.mesh and p.mesh.material:
+						var fade_tween = create_tween()
+						fade_tween.tween_property(p.mesh.material, "albedo_color:a", 0.15, 1.0)
 	else:
-		# Close door behavior -> stop emitting and then clean up
+		# Close door behavior -> fade out, then stop emitting and clean up
 		for p in _active_mists:
-			if is_instance_valid(p):
-				p.emitting = false
-				get_tree().create_timer(5.0).timeout.connect(p.queue_free)
+			if is_instance_valid(p) and p.mesh and p.mesh.material:
+				var fade_out = create_tween()
+				fade_out.tween_property(p.mesh.material, "albedo_color:a", 0.0, 1.0)
+				fade_out.finished.connect(func():
+					if is_instance_valid(p):
+						p.emitting = false
+						# Wait for existing particles to die naturally (lifetime is 4s)
+						get_tree().create_timer(4.0).timeout.connect(func():
+							if is_instance_valid(p): p.queue_free()
+						)
+				)
 		_active_mists.clear()

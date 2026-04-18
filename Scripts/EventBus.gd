@@ -28,6 +28,8 @@ signal transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool
 
 # --- Progression ---
 @warning_ignore("unused_signal")
+signal world_save_requested()
+@warning_ignore("unused_signal")
 signal day_ended(day_number: int)
 @warning_ignore("unused_signal")
 signal day_started(day_number: int)
@@ -47,6 +49,8 @@ signal money_changed(new_amount: float)
 signal insufficient_funds()
 @warning_ignore("unused_signal")
 signal pricing_mode_changed(is_active: bool)
+@warning_ignore("unused_signal")
+signal price_increased(item_data: ItemData)
 @warning_ignore("unused_signal")
 signal utang_accepted(customer: Customer)
 @warning_ignore("unused_signal")
@@ -72,4 +76,15 @@ signal request_camera_shake(intensity: float, duration: float)
 @warning_ignore("unused_signal")
 signal request_sfx(sfx_name: String)
 @warning_ignore("unused_signal")
+signal music_title_changed(title: String)
+
+
+# --- Tutorial & Guidance ---
+@warning_ignore("unused_signal")
+signal refrigerator_opened()
+@warning_ignore("unused_signal")
+signal helper_prompt_requested(text: String, is_active: bool)
+@warning_ignore("unused_signal")
 signal show_notification(message: String, sub_message: String, sfx_to_play: String)
+@warning_ignore("unused_signal")
+signal target_gazed(target_id: String)

@@ -71,11 +71,12 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 		# Scale only the visuals and the speech marker.
 		body_sprite.scale = Vector3.ONE * char_data.sprite_scale
 		
-		# Position the SpeechMarker 25% above the middle (75% total height).
+		# Position the SpeechMarker relative to the character's height and data ratio.
 		var speech_marker = get_node_or_null("SpeechMarker")
 		if speech_marker and char_data.sprite_texture:
 			var full_height_y = char_data.sprite_texture.get_height() * body_sprite.pixel_size
-			speech_marker.position.y = (full_height_y * 0.75) * char_data.sprite_scale
+			var ratio = char_data.speech_marker_height_ratio
+			speech_marker.position.y = (full_height_y * ratio) * char_data.sprite_scale
 
 		# Adjust the collision shape so it tightly fits the customer's sprite boundaries.
 		var collision_shape = get_node_or_null("CollisionShape3D")
@@ -173,43 +174,71 @@ func check_item(item: ItemData) -> bool:
 	if _is_resolving:
 		return false
 		
+	# --- Special Case: Uncle Mario Tutorial ---
+	# He is set as a VISIT type during the tutorial to bypass regular greeting logic,
+	# but we need him to accept an item to finish the tutorial properly.
+	if customer_data and customer_data.get_clean_id() == "unclemario":
+		var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
+		if gm and gm.is_tutorial_task_active:
+			if gm.current_tutorial_task_id in ["allow_sale_early", "wait_for_sale"]:
+				if transaction_context and transaction_context.fulfill_item(item):
+					_on_item_accepted(item)
+					
+					# Complete the task
+					gm._on_tutorial_task_completed()
+					return true
+			return false
+
+	# Visiting customers should never receive items — silent red outline.
+	if transaction_context and transaction_context.transaction_type == TransactionContext.Type.VISIT:
+		reject()
+		return false
+		
+	# Purchase customers must be greeted before they accept items — silent red pulse.
+	if not has_been_greeted:
+		reject()
+		return false
+
 	if item == null or transaction_context == null:
 		reject()
 		return false
 
 	if transaction_context.fulfill_item(item):
-		pulse_color(Color("#88d698")) # Soft Light Green
-		
-		# Excited Pop (Squash and Stretch)
-		if body_sprite:
-			var pop_tween = create_tween()
-			var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
-			# Stretch up
-			pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.9, base_scale.y * 1.2, base_scale.z), 0.1) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-			# Squash down
-			pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.1, base_scale.y * 0.9, base_scale.z), 0.1) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			# Settle
-			pop_tween.tween_property(body_sprite, "scale", base_scale, 0.1) \
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-		
-		# If this was a riddle and we just solved the riddle item, clear the riddle flag
-		if transaction_context.is_riddle and item == transaction_context.riddle_item:
-			transaction_context.is_riddle = false
-		
-		if transaction_context.desired_items.is_empty():
-			# Trigger the Goodbye/Satisfy dialogue flow in Spawner
-			satisfied.emit(self)
-		else:
-			# Partial fulfillment: Update naming and stay at the counter.
-			# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
-			if EventBus.has_signal("customer_partial_satisfaction"):
-				EventBus.customer_partial_satisfaction.emit(self)
+		_on_item_accepted(item)
 		return true
 	else:
 		reject()
 		return false
+
+func _on_item_accepted(item: ItemData) -> void:
+	pulse_color(Color("#88d698")) # Soft Light Green
+	
+	# Excited Pop (Squash and Stretch)
+	if body_sprite:
+		var pop_tween = create_tween()
+		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
+		# Squash down (matching talk timing)
+		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.1, base_scale.y * 0.9, base_scale.z), 0.15) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# Snap up with overshoot
+		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.95, base_scale.y * 1.05, base_scale.z), 0.12) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# Settle
+		pop_tween.tween_property(body_sprite, "scale", base_scale, 0.12) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	
+	# If this was a riddle and we just solved the riddle item, clear the riddle flag
+	if transaction_context.is_riddle and item == transaction_context.riddle_item:
+		transaction_context.is_riddle = false
+	
+	if transaction_context.desired_items.is_empty():
+		# Trigger the Goodbye/Satisfy dialogue flow in Spawner
+		satisfied.emit(self)
+	else:
+		# Partial fulfillment: Update naming and stay at the counter.
+		# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
+		if EventBus.has_signal("customer_partial_satisfaction"):
+			EventBus.customer_partial_satisfaction.emit(self)
 
 func pulse_color(color: Color, duration: float = 0.5) -> void:
 	if body_sprite == null: return
@@ -247,10 +276,19 @@ func satisfy() -> void:
 
 func reject() -> void:
 	_is_resolving = true
-	pulse_color(Color.RED, 0.6)
-	await get_tree().create_timer(0.6).timeout
+	EventBus.request_sfx.emit("error")
+	
+	if _outline_material and body_sprite:
+		body_sprite.material_overlay = _outline_material
+		_outline_material.set_shader_parameter("outline_color", Color.RED)
+		
+	await get_tree().create_timer(0.3).timeout
+	
+	if _outline_material:
+		_outline_material.set_shader_parameter("outline_color", Color.WHITE)
+		
 	_is_resolving = false
-	# Rejection signal removed to prevent premature dismissal on wrong item.
+	_update_outline()
 
 ## Called by CustomerSpawner after the player chooses "Refuse service".
 ## Plays a brief leaving animation then notifies the EventBus.
@@ -283,7 +321,7 @@ func on_hover(hovered: bool) -> void:
 	_update_outline()
 
 func _update_outline() -> void:
-	if is_hovered and is_waiting and not _is_resolving:
+	if is_hovered and is_waiting:
 		if _outline_material == null and body_sprite and body_sprite.texture:
 			_outline_material = ShaderMaterial.new()
 			_outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")

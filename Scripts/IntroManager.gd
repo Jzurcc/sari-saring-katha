@@ -16,6 +16,8 @@ signal player_clicked
 var waiting_for_input: bool = false
 var fast_forwarding: bool = false
 var _is_skipping: bool = false
+var _skip_fade_tween: Tween
+var _is_mouse_over_skip: bool = false
 
 func _ready():
 	fade_rect.color = Color(0, 0, 0, 1) # Start fully black
@@ -29,6 +31,17 @@ func _ready():
 		
 	if skip_button:
 		skip_button.pressed.connect(_on_skip_pressed)
+		var skip_area = skip_button.get_parent() as Control
+		if skip_area:
+			skip_area.mouse_filter = Control.MOUSE_FILTER_STOP
+			skip_area.mouse_entered.connect(_on_skip_mouse_entered)
+			skip_area.mouse_exited.connect(_on_skip_mouse_exited)
+		
+		# Also catch hover on the button itself
+		skip_button.mouse_entered.connect(_on_skip_mouse_entered)
+		skip_button.mouse_exited.connect(_on_skip_mouse_exited)
+		
+		_fade_out_skip_button()
 		
 	play_all_sequences()
 
@@ -40,6 +53,7 @@ func _input(event):
 		else:
 			fast_forwarding = true
 	elif event.is_action_pressed("ui_accept"):
+		_show_skip_button()
 		if waiting_for_input:
 			waiting_for_input = false
 			player_clicked.emit()
@@ -71,6 +85,31 @@ func play_all_sequences():
 			
 	if not _is_skipping:
 		_finish_cutscene()
+
+func _fade_out_skip_button():
+	if not skip_button or _is_mouse_over_skip: return
+	if _skip_fade_tween: _skip_fade_tween.kill()
+	_skip_fade_tween = create_tween()
+	_skip_fade_tween.tween_interval(1.5)
+	_skip_fade_tween.tween_property(skip_button, "modulate:a", 0.0, 0.5)
+	_skip_fade_tween.tween_callback(skip_button.hide)
+
+func _show_skip_button():
+	if not skip_button or _is_skipping: return
+	skip_button.show()
+	if _skip_fade_tween: _skip_fade_tween.kill()
+	_skip_fade_tween = create_tween()
+	_skip_fade_tween.tween_property(skip_button, "modulate:a", 1.0, 0.2)
+	if not _is_mouse_over_skip:
+		_skip_fade_tween.tween_callback(_fade_out_skip_button)
+
+func _on_skip_mouse_entered():
+	_is_mouse_over_skip = true
+	_show_skip_button()
+
+func _on_skip_mouse_exited():
+	_is_mouse_over_skip = false
+	_fade_out_skip_button()
 
 func _on_skip_pressed():
 	if _is_skipping: return

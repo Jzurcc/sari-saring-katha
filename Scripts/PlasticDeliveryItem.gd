@@ -9,6 +9,7 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 var items: Array[ItemData] = []
 var is_fading_in: bool = true
 var base_scale: Vector3 = Vector3.ONE
+var in_flight_count: int = 0
 
 @onready var sprite: Sprite3D = $Sprite3D
 
@@ -34,6 +35,11 @@ func _ready() -> void:
 			shape_copy.size = Vector3(sprite_w, sprite_h, shape_copy.size.z)
 			col.shape = shape_copy
 			col.position.y = shape_copy.size.y / 2.0
+
+		# Randomize scale just a little bit from the base
+		var random_scale_factor = randf_range(0.9, 1.1)
+		sprite.scale = base_scale * random_scale_factor
+		base_scale = sprite.scale
 
 		sprite.modulate.a = 0.0
 		var tween = create_tween()
@@ -62,23 +68,22 @@ func on_interact() -> void:
 	get_tree().current_scene.add_child(drag_item)
 	
 	# Setup the drag
-	drag_item.setup(item_data, global_transform)
+	drag_item.setup(item_data, global_transform, self)
 	drag_item.is_transient = true # It shouldn't persist if dropped in mid-air
 	drag_item.sprite.hide() # Hide base sprite as DragManager provides a cursor sprite
 	
 	# Subtract from digital stock immediately when taken out 
 	# (Since add_stock was already called in MarioManager)
 	InventoryManager.take_item(item_data)
+	in_flight_count += 1
 	
 	DragManager.start_drag(drag_item, item_data.texture)
 	
 	if EventBus.has_signal("request_sfx"):
 		EventBus.request_sfx.emit("plastic")
 	
-	# Visual feedback/Cleanup
-	if items.is_empty():
-		_fade_out_and_destroy()
-	else:
+	# Visual feedback
+	if not items.is_empty():
 		_refresh_visuals()
 
 func receive_item(drag_item: DraggableItem) -> void:
@@ -100,7 +105,14 @@ func receive_item(drag_item: DraggableItem) -> void:
 	if EventBus.has_signal("request_sfx"):
 		EventBus.request_sfx.emit("plastic")
 	
+	in_flight_count -= 1
 	_refresh_visuals()
+
+## Called when an item from this bag is successfully placed in a shelf or given to a customer.
+func notify_item_placed(_item: DraggableItem) -> void:
+	in_flight_count -= 1
+	if items.is_empty() and in_flight_count <= 0:
+		_fade_out_and_destroy()
 
 func _refresh_visuals() -> void:
 	# Add a little squash juice relative to the original base_scale to show it received/lost something

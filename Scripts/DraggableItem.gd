@@ -9,6 +9,9 @@ signal drag_ended
 ## Whether this item was spawned on the fly directly into dragging.
 var is_transient: bool = false
 
+## The plastic bag this item was taken from, if any.
+var source_bag: PlasticDeliveryItem = null
+
 ## Full local transform at spawn time — used to tween item back to its slot.
 var _original_transform: Transform3D = Transform3D.IDENTITY
 
@@ -43,7 +46,8 @@ func _ready() -> void:
 ## [LayoutStrategy]. Defaults to [constant Transform3D.IDENTITY] so that
 ## items configured directly in the Inspector (without a ShelfSurface) stay
 ## at the position set in the scene tree.
-func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY) -> void:
+func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, in_source_bag: PlasticDeliveryItem = null) -> void:
+	source_bag = in_source_bag
 	item_data = data
 	
 	# Defensive fetch in case setup is called before _ready
@@ -167,6 +171,9 @@ func adjust_price(delta: float) -> void:
 	
 	item_data.selling_price = new_price
 	
+	if new_price > current_price:
+		EventBus.price_increased.emit(item_data)
+	
 	# Refresh all items of this type (they share the resource)
 	get_tree().call_group("draggable_items", "update_pricing_ui")
 	# Also update containers if any of their item_data changed
@@ -210,6 +217,13 @@ func show_visuals() -> void:
 		sprite.show()
 	else:
 		push_error("[DraggableItem] Cannot show visuals: Sprite3D is missing!")
+
+## Notify the source bag (if any) that this item has been placed correctly.
+func notify_placed() -> void:
+	if source_bag and is_instance_valid(source_bag):
+		if source_bag.has_method("notify_item_placed"):
+			source_bag.notify_item_placed(self)
+		source_bag = null # Only notify once
 
 func return_to_start() -> void:
 	EventBus.request_sfx.emit("drop")
