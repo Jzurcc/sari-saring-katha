@@ -43,10 +43,54 @@ extends CharacterBody3D
 			if body:
 				body.scale = Vector3.ONE * val
 				if marker and body.texture:
-					var base_middle_y = (body.texture.get_height() / 2.0) * body.pixel_size
-					marker.position.y = base_middle_y * val
+					var full_height_y = body.texture.get_height() * body.pixel_size
+					var ratio = customer.customer_data.speech_marker_height_ratio if customer.customer_data else 0.75
+					marker.position.y = (full_height_y * ratio) * val
 					
-			print("[DEBUG-SCALE] Character: ", customer.customer_data.get_clean_id(), " | New Visual Scale: ", val)
+			if customer.customer_data:
+				customer.customer_data.sprite_scale = val
+				if not _is_syncing_debug:
+					ResourceSaver.save(customer.customer_data, customer.customer_data.resource_path)
+					print("[DEBUG-SCALE] Character: ", customer.customer_data.get_clean_id(), " | Saved Resource Scale: ", val)
+
+## Adjust this value in the Remote Inspector to change and save the active customer's dialogue volume.
+@export var debug_customer_volume: float = 0.0:
+	set(val):
+		debug_customer_volume = val
+		if not is_inside_tree():
+			return
+		var spawner = get_tree().get_first_node_in_group("customer_spawner")
+		if spawner and is_instance_valid(spawner.current_customer):
+			var customer = spawner.current_customer
+			if customer.customer_data:
+				customer.customer_data.dialogue_blip_volume = val
+				if not _is_syncing_debug:
+					ResourceSaver.save(customer.customer_data, customer.customer_data.resource_path)
+					print("[DEBUG-VOLUME] Character: ", customer.customer_data.get_clean_id(), " | Saved Dialogue Blip Volume: ", val)
+				if AudioManager:
+					AudioManager.play_dialogue_blip(customer.customer_data)
+
+## Adjust this value in the Remote Inspector to change and save the active customer's speech marker position.
+@export var debug_customer_marker_ratio: float = 0.75:
+	set(val):
+		debug_customer_marker_ratio = val
+		if not is_inside_tree():
+			return
+		var spawner = get_tree().get_first_node_in_group("customer_spawner")
+		if spawner and is_instance_valid(spawner.current_customer):
+			var customer = spawner.current_customer
+			var marker = customer.get_node_or_null("SpeechMarker")
+			var body = customer.get_node_or_null("Body")
+			
+			if customer.customer_data:
+				customer.customer_data.speech_marker_height_ratio = val
+				if not _is_syncing_debug:
+					ResourceSaver.save(customer.customer_data, customer.customer_data.resource_path)
+					print("[DEBUG-RATIO] Character: ", customer.customer_data.get_clean_id(), " | Saved Speech Marker Ratio: ", val)
+				
+				if body and body.texture and marker:
+					var full_height_y = body.texture.get_height() * body.pixel_size
+					marker.position.y = (full_height_y * val) * customer.customer_data.sprite_scale
 
 var _t_bob: float = 0.0
 var _pitch: float = 0.0
@@ -63,6 +107,8 @@ var _stand_capsule_height: float = 0.0
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
+var _is_syncing_debug: bool = false
+
 func _ready() -> void:
 	if use_free_camera:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -73,6 +119,19 @@ func _ready() -> void:
 	if collision_shape and collision_shape.shape is CapsuleShape3D:
 		_stand_capsule_height = collision_shape.shape.height
 	EventBus.request_camera_shake.connect(_on_camera_shake)
+	EventBus.customer_spawned.connect(_on_customer_spawned_for_debug)
+
+func _on_customer_spawned_for_debug(customer: Customer) -> void:
+	if customer and customer.customer_data:
+		_is_syncing_debug = true
+		# Setting these triggered physical updates (visually) but the flag prevents redundant saves to disk
+		debug_customer_scale = customer.customer_data.sprite_scale
+		debug_customer_volume = customer.customer_data.dialogue_blip_volume
+		debug_customer_marker_ratio = customer.customer_data.speech_marker_height_ratio
+		_is_syncing_debug = false
+		
+		# Force the Godot property inspector to refresh its display
+		notify_property_list_changed()
 
 func _on_camera_shake(intensity: float, duration: float) -> void:
 	if intensity > _shake_intensity * (_shake_timer / max(_shake_duration, 0.01)):
@@ -176,7 +235,7 @@ func face_pos(target_world_pos: Vector3, duration: float = 0.4) -> Signal:
 	var yaw_diff = fposmod(target_yaw - _yaw + PI, TAU) - PI
 	target_yaw = _yaw + yaw_diff
 
-	var tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "_yaw", target_yaw, duration)
 	tween.tween_property(self, "_pitch", target_pitch, duration)
 	
