@@ -1,0 +1,31 @@
+label Greeting
+[Character]: [Scene-specific story dialogue.]
+[Character]: [Ask for item dynamically using {Transaction.ItemWants} or {Transaction.ItemWantsBest}]
+- [player accepts request dialogue]
+	[Character]: [Character nods / accepts waiting]
+[end_timeline]
+label Talk
+[Character]: [Restates what they are waiting for, using {Transaction.ItemWants}]
+- Coming right up.
+	[Character]: [Reaction]
+	[end_timeline]
+- Sorry, we're out of stock.
+	[Character]: [Lore-appropriate exit line]
+	[signal arg="refuse_service"]
+	[end_timeline]
+label Satisfy
+if {Transaction.WantsDebt}:
+	[Character]: [Debt dialogue]
+	- Of course.
+		[signal arg="utang_accepted"]
+		[Character]: Salamat! [More story dialogue reacting to getting the item...]
+	- Take Away Items
+		[signal arg="utang_rejected"]
+		[Character]: Oh... Next time then.
+else:
+	[Character]: [More story dialogue reacting to getting the item or thanking the player...]
+[end_timeline]
+label WrongItem
+[Character]: [in-character dialogue telling the player it's the wrong item]
+[Character]: [reiterating {Transaction.ItemWants} or {Transaction.ItemWantsBest} in-character]
+[end_timeline]

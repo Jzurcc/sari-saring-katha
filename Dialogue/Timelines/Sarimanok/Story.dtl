@@ -1,0 +1,142 @@
+label Greeting
+if {Transaction.Chapter} == 0.0:
+	# Chapter 1: The Stare (Visit)
+	Sarimanok: [shake]BA-KAAWK!![/shake]
+	[signal arg="story_success"]
+	[end_timeline]
+elif {Transaction.Chapter} == 1.0:
+	# Chapter 2: The Judgment (Visit)
+	Sarimanok: [shake]Ba-kawk![/shake]
+	[signal arg="story_success"]
+	[end_timeline]
+elif {Transaction.Chapter} == 2.0:
+	# Chapter 3: The Annoyance (Visit)
+	Sarimanok: [shake]Ba-kawk! Ba-kawk![/shake]
+	[signal arg="story_success"]
+	[end_timeline]
+elif {Transaction.Chapter} == 3.0:
+	# Chapter 4: The Scrutiny (Visit)
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares intently, judging your establishment)[/color][/wave]
+	[signal arg="story_success"]
+	[end_timeline]
+elif {Transaction.Chapter} == 4.0:
+	# Chapter 5: The Theft (Purchase)
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (The bird spits a mouthful of damp, dirty coins onto your clean counter)[/color][/wave]
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It points a sharp beak directly toward the {Transaction.ItemWants})[/color][/wave]
+	- ...You want that?
+		Sarimanok: [shake]Ba-kawk![/shake]
+	[end_timeline]
+elif {Transaction.Chapter} == 5.0:
+	# Chapter 6: The Audit (Purchase)
+	Sarimanok: [shake]Ba-kawk! Ba-kawk! Ba-kawk![/shake][input][wave][color=#145263] (It drops a crisp blue bill and gestures at the {Transaction.ItemWants})[/color][/wave]
+	- Are you sure you're not a thief?
+		Sarimanok: [shake]BA-KAAWK!![/shake]
+	[end_timeline]
+elif {Transaction.Chapter} == 6.0:
+	# Chapter 7: The Clearing of the Throat (Purchase - Gentleman Reveal)
+	Sarimanok: [shake]Ba-kawk![/shake] ...ahem.
+	Sarimanok: My most profound apologies, proprietor. I had something dreadfully stuck in my throat for the past few weeks.
+	Sarimanok: It is utterly uncivilized to communicate via screeching. Ba-kawk.
+	Sarimanok: I must say, your inventory management has improved substantially. Might I procure your finest {Transaction.ItemWants}, please?
+	- You... you can talk?!
+		Sarimanok: Indeed. I presumed that was profoundly evident by this point.
+	[end_timeline]
+elif {Transaction.Chapter} == 7.0:
+	# Chapter 8: The Macroeconomics (Purchase)
+	Sarimanok: Ba-kawk! [input] Splendid evening to you, my good proprietor. Simply resplendent.
+	Sarimanok: I would be delighted to partake in your exquisite {Transaction.ItemWants}.
+	- Coming right up, sir.
+		Sarimanok: Tell me, what are your thoughts on the macroeconomic climate of Karimlan?
+		Sarimanok: The fluctuating interest rates of the Pale Queen's quotas must put a ghastly strain on your overhead. Very resilient of you to weather the storm. Ba-kawk!
+	[end_timeline]
+elif {Transaction.Chapter} == 8.0:
+	# Chapter 9: The Calling Card (Visit)
+	Sarimanok: Ba-kawk! [input] Alas, I must take my leave of your charming establishment today.
+	Sarimanok: The stock market awaits no avian, as they say. Do keep up the marvelous work.
+	Sarimanok: I have left my card, should you ever wish to discuss a franchise opportunity. Ba-kawk![input][wave][color=#145263] (He walks away from the counter, leaving behind a dazzling, golden feather on the ledger)[/color][/wave]
+	[signal arg="story_success"]
+	[end_timeline]
+
+label Talk
+if {Transaction.Chapter} == 4.0:
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It screeches angrily, impatient for its {Transaction.ItemWants})[/color][/wave]
+	- Finding it!
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It taps a foot rhythmically)[/color][/wave]
+		[end_timeline]
+	- Out of stock! Shoo!
+		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It flaps its wings furiously and flies out)[/color][/wave]
+		[signal arg="refuse_service"]
+		[end_timeline]
+elif {Transaction.Chapter} == 5.0:
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It continues analyzing your ledger, waiting for the {Transaction.ItemWants})[/color][/wave]
+	- Almost done!
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It turns a page with its beak)[/color][/wave]
+		[end_timeline]
+	- Bad news, we're out of stock.
+		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It squawks angrily, tears a corner of the ledger page, and flies off)[/color][/wave]
+		[signal arg="refuse_service"]
+		[end_timeline]
+elif {Transaction.Chapter} == 6.0:
+	Sarimanok: I await the {Transaction.ItemWants} with bated breath. Do make haste.
+	- Give me a moment.
+		Sarimanok: Time is capital, my friend. Ba-kawk!
+		[end_timeline]
+	- I regret to inform you we are out of stock.
+		Sarimanok: A tragic flaw in your supply chain. Farewell for now.
+		[signal arg="refuse_service"]
+		[end_timeline]
+elif {Transaction.Chapter} == 7.0:
+	Sarimanok: I am still quite eager for my {Transaction.ItemWants}. Do not let the macroeconomic pressures distract you.
+	- Still looking...
+		Sarimanok: Do try to optimize your retrieval process.
+		[end_timeline]
+	- Supply chain issues. I'm completely out.
+		Sarimanok: Pity. I shall take my investments elsewhere. Good evening.
+		[signal arg="refuse_service"]
+		[end_timeline]
+else:
+	Sarimanok: ...
+	[end_timeline]
+
+label Satisfy
+if {Transaction.WantsDebt}:
+	# Sarimanok is highly capitalist, he wouldn't ask for debt. If he does, it's a corporate loan!
+	if {Transaction.Chapter} < 6.0:
+		Sarimanok: [shake]Ba-kawk!![/shake][input][wave][color=#145263] (It spreads a wing and points to a makeshift IOU note drawn in dirt)[/color][/wave]
+		- Fine, but you owe me.
+			[signal arg="utang_accepted"]
+			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It snatches the item and flies off)[/color][/wave]
+		- Absolutely not. No bird credit.
+			[signal arg="utang_rejected"]
+			Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It screams furiously and hops away)[/color][/wave]
+	else:
+		Sarimanok: Would you be amenable to a short-term line of credit, pending my Q4 dividends?
+		- I suppose a gentleman is good for it.
+			[signal arg="utang_accepted"]
+			Sarimanok: Splendid. My accountants shall wire the funds anon.
+		- No credit lines approved today, sorry.
+			[signal arg="utang_rejected"]
+			Sarimanok: A stringent fiscal policy! Respectable, but inconvenient. Good day to you.
+else:
+	if {Transaction.Chapter} == 4.0:
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It snaps the item up in its beak and flies out the door without a second glance)[/color][/wave]
+	elif {Transaction.Chapter} == 5.0:
+		Sarimanok: [shake]Ba-kawk.[/shake][input][wave][color=#145263] (It nods respectfully at your transaction speed, closes the ledger, and departs)[/color][/wave]
+	elif {Transaction.Chapter} == 6.0:
+		Sarimanok: A most efficient transaction! My compliments to the proprietor. [shake]Ba-kawk![/shake]
+	elif {Transaction.Chapter} == 7.0:
+		Sarimanok: Delightful. I shall pen a resplendent review in the Karimlan Financial Times. Good day!
+[end_timeline]
+
+label WrongItem
+if {Transaction.Chapter} == 4.0:
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It aggressively pecks the wrong item, sliding it back and demanding the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.Chapter} == 5.0:
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It points at an entry in the ledger with its beak, glaring until you find the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.Chapter} == 6.0:
+	Sarimanok: Ah, a minor clerical error. I specified the {Transaction.ItemWants}. Precision is key! Ba-kawk!
+elif {Transaction.Chapter} == 7.0:
+	Sarimanok: I believe there has been a mix-up in your inventory tracking. The {Transaction.ItemWants} was the request.
+else:
+	Sarimanok: [shake]Ba-kawk![/shake]
+[end_timeline]

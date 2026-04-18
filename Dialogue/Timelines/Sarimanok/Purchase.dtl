@@ -1,0 +1,101 @@
+label Greeting
+if {Transaction.CurrentArc} == 1.0:
+	[random option]
+		Sarimanok: [shake]BA-KAAWK!![/shake][input][wave][color=#145263] (It flaps its wings aggressively, demanding the {Transaction.ItemWants})[/color][/wave]
+	[random option]
+		Sarimanok: [shake]BA-KAWK! BA-KAWK![/shake][input][wave][color=#145263] (It pecks the counter loudly until you look at the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.CurrentArc} == 2.0:
+	[random option]
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares unblinkingly at you, then at the {Transaction.ItemWants})[/color][/wave]
+	[random option]
+		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It sighs in a bird-like way, indicating the {Transaction.ItemWants} with a wing)[/color][/wave]
+elif {Transaction.CurrentArc} == 3.0:
+	[random option]
+		Sarimanok: Good day to you. Might I procure your finest {Transaction.ItemWants}?
+	[random option]
+		Sarimanok: Ba-kawk! A pleasure to see you. I am in need of some {Transaction.ItemWants} for my associates.
+- Yes, I'll get it.
+	Sarimanok: [shake]Ba-kawk![/shake]
+[end_timeline]
+
+
+label Talk
+if {Transaction.CurrentArc} == 1.0:
+	[random option]
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It taps its talons rhythmically while waiting for the {Transaction.ItemWants})[/color][/wave]
+	[random option]
+		Sarimanok: [shake]Ba-kawk?[/shake][input][wave][color=#145263] (It tilts its head, checking if you've forgotten the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.CurrentArc} == 2.0:
+	[random option]
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares upside down, intensely monitoring your retrieval of the {Transaction.ItemWants})[/color][/wave]
+	[random option]
+		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It continues judging your inventory as you fetch the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.CurrentArc} == 3.0:
+	[random option]
+		Sarimanok: Time is capital, my friend. Is the {Transaction.ItemWants} ready?
+	[random option]
+		Sarimanok: Do try to optimize your retrieval process. I await the {Transaction.ItemWants}.
+- Coming right up.
+	Sarimanok: [shake]Ba-kawk![/shake]
+	[end_timeline]
+- Sorry, out of stock.
+	Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It leaves in an apparent huff)[/color][/wave]
+	[signal arg="refuse_service"]
+	[end_timeline]
+
+
+label Satisfy
+if {Transaction.WantsDebt}:
+	# Sarimanok is highly capitalist, he wouldn't ask for debt. If he does, it's a corporate loan!
+	if {Transaction.CurrentArc} < 3.0:
+		Sarimanok: [shake]Ba-kawk!![/shake][input][wave][color=#145263] (It indicates a makeshift IOU note drawn in dirt)[/color][/wave]
+		- Fine, but you owe me.
+			[signal arg="utang_accepted"]
+			Sarimanok: [shake]Ba-kawk![/shake]
+		- Absolutely not. No bird credit.
+			[signal arg="utang_rejected"]
+			Sarimanok: [shake]BA-KAWK!![/shake]
+	else:
+		Sarimanok: Would you be amenable to a short-term line of credit, pending my Q4 dividends?
+		- I suppose a gentleman is good for it.
+			[signal arg="utang_accepted"]
+			Sarimanok: Splendid. My accountants shall wire the funds anon.
+		- No credit lines approved today, sorry.
+			[signal arg="utang_rejected"]
+			Sarimanok: A stringent fiscal policy! Respectable, but inconvenient. Good day to you.
+else:
+	if {Transaction.CurrentArc} == 1.0:
+		[random option]
+			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It snatches the item and flies off immediately)[/color][/wave]
+		[random option]
+			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It drops the coins and disappears out the door)[/color][/wave]
+	elif {Transaction.CurrentArc} == 2.0:
+		[random option]
+			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It chugs the item instantly and struts out with a satisfied look)[/color][/wave]
+		[random option]
+			Sarimanok: [shake]Ba-kawk.[/shake][input][wave][color=#145263] (It nods respectfully at your service and departs)[/color][/wave]
+	elif {Transaction.CurrentArc} == 3.0:
+		[random option]
+			Sarimanok: A most efficient transaction! My compliments to the proprietor. [shake]Ba-kawk![/shake]
+		[random option]
+			Sarimanok: Delightful. I shall pen a resplendent review in the local journals. Good day!
+[end_timeline]
+
+
+label WrongItem
+if {Transaction.CurrentArc} == 1.0:
+	[random option]
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It aggressively pecks the wrong item, demanding the {Transaction.ItemWants})[/color][/wave]
+	[random option]
+		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It shakes its head furiously, pointing instead at the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.CurrentArc} == 2.0:
+	[random option]
+		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It sighs heavily, staring pointedly at the {Transaction.ItemWants})[/color][/wave]
+	[random option]
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It flick the wrong item aside and waits for the {Transaction.ItemWants})[/color][/wave]
+elif {Transaction.CurrentArc} == 3.0:
+	[random option]
+		Sarimanok: Ah, a minor clerical error. I specified the {Transaction.ItemWants}. 
+	[random option]
+		Sarimanok: Precision is key in retail, my good friend! I require the {Transaction.ItemWants}.
+[end_timeline]

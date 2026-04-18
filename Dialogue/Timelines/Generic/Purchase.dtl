@@ -28,24 +28,24 @@ else:
 	
 	if {Variation} == 1.0:
 		Customer: Tao po! [pause=0.3] I was just passing by. Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] available?
-elif {Variation} == 2.0:
-	Customer: Hello! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Do you have those today?
-elif {Variation} == 3.0:
-	Customer: Hi! [pause=0.3] I heard you have a nice stock of [color=#0f6e2f]{Transaction.ItemWants}[/color]. Can I buy some?
-elif {Variation} == 4.0:
-	Customer: Good day! [pause=0.3] I need to pick up some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Hope you have them in stock!
-elif {Variation} == 5.0:
-	Customer: Excuse me! [pause=0.3] I'm in a bit of a rush. Can I get some [color=#0f6e2f]{Transaction.ItemWants}[/color], please?
-elif {Variation} == 6.0:
-	Customer: Hello po! [pause=0.3] I was wondering if you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] for sale?
-elif {Variation} == 7.0:
-	Customer: Hi there! [pause=0.3] Just checking if you have [color=#0f6e2f]{Transaction.ItemWants}[/color] available right now.
-elif {Variation} == 8.0:
-	Customer: Tao po! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color] to take home. Do you have any?
-elif {Variation} == 9.0:
-	Customer: Hello! [pause=0.3] I'd like to buy some [color=#0f6e2f]{Transaction.ItemWants}[/color] if they're available.
-else:
-	Customer: Hi! [pause=0.3] Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] ready for pick up?
+	elif {Variation} == 2.0:
+		Customer: Hello! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Do you have those today?
+	elif {Variation} == 3.0:
+		Customer: Hi! [pause=0.3] I heard you have a nice stock of [color=#0f6e2f]{Transaction.ItemWants}[/color]. Can I buy some?
+	elif {Variation} == 4.0:
+		Customer: Good day! [pause=0.3] I need to pick up some [color=#0f6e2f]{Transaction.ItemWants}[/color]. Hope you have them in stock!
+	elif {Variation} == 5.0:
+		Customer: Excuse me! [pause=0.3] I'm in a bit of a rush. Can I get some [color=#0f6e2f]{Transaction.ItemWants}[/color], please?
+	elif {Variation} == 6.0:
+		Customer: Hello po! [pause=0.3] I was wondering if you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] for sale?
+	elif {Variation} == 7.0:
+		Customer: Hi there! [pause=0.3] Just checking if you have [color=#0f6e2f]{Transaction.ItemWants}[/color] available right now.
+	elif {Variation} == 8.0:
+		Customer: Tao po! [pause=0.3] I'm looking for some [color=#0f6e2f]{Transaction.ItemWants}[/color] to take home. Do you have any?
+	elif {Variation} == 9.0:
+		Customer: Hello! [pause=0.3] I'd like to buy some [color=#0f6e2f]{Transaction.ItemWants}[/color] if they're available.
+	else:
+		Customer: Hi! [pause=0.3] Do you have any [color=#0f6e2f]{Transaction.ItemWants}[/color] ready for pick up?
 [end_timeline]
 
 label Talk
