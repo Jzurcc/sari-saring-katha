@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://c7v6p5u6o2x21"]
+[gd_scene format=3 uid="uid://c7v6p5u6o2x21"]
 
 [ext_resource type="Script" path="res://Scripts/UI/StoryProgressOverlay.gd" id="1_overlay"]
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
