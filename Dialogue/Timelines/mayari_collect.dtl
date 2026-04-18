@@ -14,6 +14,9 @@ label Success
 ReynaMayari: I see you've been working hard. [pause=0.4]
 ReynaMayari: The installment has been collected. 
 ReynaMayari: Keep this up, and your grandmother's debt will be a memory in no time. [pause=0.5]
+if {Global.QuotaDay} == 2.0:
+	ReynaMayari: Actually, I've been meaning to check what your store offers.
+	ReynaMayari: I think I will see what you have here tomorrow. [pause=0.5]
 ReynaMayari: Until tomorrow. [pause=0.3]
 [end_timeline]
 
