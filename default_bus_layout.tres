@@ -1,4 +1,4 @@
-[gd_resource type="AudioBusLayout" load_steps=5 format=3 uid="uid://b3scee0b03k1u"]
+[gd_resource type="AudioBusLayout" format=3 uid="uid://b3scee0b03k1u"]
 
 [sub_resource type="AudioEffectHighPassFilter" id="AudioEffectHighPassFilter_telephone"]
 resource_name = "HighPassFilter"
@@ -10,7 +10,10 @@ cutoff_hz = 3000.0
 
 [sub_resource type="AudioEffectAmplify" id="AudioEffectAmplify_ducking"]
 resource_name = "Amplify"
-volume_db = 0.0
+
+[sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_muffled"]
+resource_name = "LowPassFilter"
+cutoff_hz = 20500.0
 
 [resource]
 bus/1/name = &"Telephone"
@@ -31,6 +34,8 @@ bus/2/volume_db = 0.0
 bus/2/send = &"Master"
 bus/2/effect/0/effect = SubResource("AudioEffectAmplify_ducking")
 bus/2/effect/0/enabled = true
+bus/2/effect/1/effect = SubResource("AudioEffectLowPassFilter_muffled")
+bus/2/effect/1/enabled = true
 bus/3/name = &"SFX"
 bus/3/solo = false
 bus/3/mute = false

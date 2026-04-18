@@ -57,9 +57,16 @@ func _ready() -> void:
 	for btn in buttons.get_children():
 		if btn is Button:
 			_register_button(btn)
-	_check_save_status()
-	buttons.get_node("NewGame").grab_focus()
-
+	# Show Continue only if a save file exists
+	var continue_btn = buttons.get_node_or_null("Continue")
+	if continue_btn:
+		continue_btn.visible = SaveManager.has_save()
+		if SaveManager.has_save():
+			continue_btn.grab_focus()
+		else:
+			buttons.get_node("NewGame").grab_focus()
+	else:
+		buttons.get_node("NewGame").grab_focus()
 
 
 # ─── UI Sound helpers ─────────────────────────────────────────────────────────
@@ -157,39 +164,15 @@ func _on_new_game_pressed() -> void:
 	SceneTransition.change_scene(target_scene)
 
 
-func _check_save_status() -> void:
-	# Check if we have an actual non-empty save state, rather than just checking
-	# for file existence (which could be an empty {} file).
-	var save_data = SaveManager.load_game()
-	if not save_data.is_empty():
-		_create_continue_button()
-
-func _create_continue_button() -> void:
-	var new_game_btn = buttons.get_node("NewGame")
-	var continue_btn = new_game_btn.duplicate()
-	continue_btn.name = "ContinueGame"
-	continue_btn.text = "CONTINUE"
-	buttons.add_child(continue_btn)
-	buttons.move_child(continue_btn, 0)
-	
-	# Connect signals and register for hover effects
-	_register_button(continue_btn)
-	continue_btn.pressed.connect(_on_continue_pressed)
-	
-	# Grab focus if save exists
-	continue_btn.grab_focus()
-
 func _on_continue_pressed() -> void:
-	# Just start the game; managers will load from the existing save automatically
+	if not SaveManager.has_save():
+		return
 	is_starting_game = true
 	buttons.hide()
 	$LeftVignette.hide()
-	
-	# Skip intro and go straight to the game
 	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
 
 func _on_exit_pressed() -> void:
-	SaveManager.force_save()
 	get_tree().quit()
 
 

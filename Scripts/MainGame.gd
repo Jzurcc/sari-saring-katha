@@ -20,8 +20,10 @@ var _debug_show_collisions: bool = false
 var pause_menu: Control
 
 func _ready() -> void:
+	print("[DEBUG] MainGame._ready() START")
 	# Keep notifications accessible - Spawn the NoticeOverlay if it doesn't exist
 	if get_tree().get_nodes_in_group("notice_overlay").is_empty():
+		print("[DEBUG] MainGame: Spawning NoticeOverlay")
 		var notice_scene = load("res://Scenes/UI/NoticeOverlay.tscn")
 		if notice_scene:
 			var notice_instance = notice_scene.instantiate()
@@ -29,7 +31,9 @@ func _ready() -> void:
 			notice_instance.add_to_group("notice_overlay")
 
 	# Ensure camera is correctly scaled to 75 as a fallback
+	print("[DEBUG] MainGame: Yielding frame for camera set")
 	await get_tree().process_frame
+	print("[DEBUG] MainGame: Frame yielded")
 	var camera = $Player/Head/Camera3D
 	if camera and camera.fov != 75:
 		camera.fov = 75.0
@@ -56,8 +60,10 @@ func _ready() -> void:
 		_on_time_changed(tod.get("current_time") if "current_time" in tod else 0.0)
 	
 	# Instantiate Pause menu
+	print("[DEBUG] MainGame: Instantiating pause menu")
 	pause_menu = pause_menu_scene.instantiate().get_node("Control")
 	add_child(pause_menu.get_parent()) # Add the CanvasLayer
+	print("[DEBUG] MainGame._ready() END")
 
 func _on_tray_item_placed(item: DraggableItem) -> void:
 	# Check if we have an active customer
@@ -88,6 +94,7 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
 				EventBus.transaction_completed.emit(item.item_data, true, context.wants_debt, c_path)
 				InventoryManager.take_item(item.item_data)
+				item.notify_placed()
 				item.queue_free()
 				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
 				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
@@ -101,10 +108,27 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				item = null  # prevent return_to_start below from running on a hidden node
 			else:
 				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
-				EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
-				# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
-				if context and context.timeline and spawner:
-					spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
+				
+				# Special Tutorial Suppression: If Uncle Mario is blocking items, don't play "Wrong Item" reaction.
+				var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
+				var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
+				var is_tut_block = gm and gm.is_tutorial_task_active and gm.current_tutorial_task_id != "wait_for_sale"
+				
+				if is_mario and is_tut_block:
+					# Just skip feedback, item will return to shelf automatically at end of function
+					print("[MainGame] Suppressing WrongItem feedback for Mario during tutorial.")
+				else:
+					EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
+					# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
+					if context and context.timeline and spawner:
+						spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
+				
+				# Keep item in hand
+				if DragManager and item.sprite and item.sprite.texture:
+					# Ensure it doesn't try to animate returning or anything
+					DragManager.call_deferred("start_drag", item, item.sprite.texture)
+				
+				item = null # Preempt return_to_start
 			
 	if not handled:
 		print("[MainGame] No customer waiting, dropping item")
@@ -123,6 +147,7 @@ func _input(event: InputEvent) -> void:
 	# Escape toggles pause menu
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
 		if pause_menu and not pause_menu.visible:
+			get_viewport().set_input_as_handled()
 			pause_menu.pause()
 			
 	# H key to test notifications (debug only)

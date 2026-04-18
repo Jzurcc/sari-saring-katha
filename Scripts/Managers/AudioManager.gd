@@ -10,7 +10,27 @@ var ambience_base: AudioStreamPlayer
 var ambience_night: AudioStreamPlayer
 
 var base_volume_db: float = -6.0 # Roughly 50% linear volume
-const FADE_DURATION: float = 1.0
+const FADE_DURATION: float = 1.5
+
+func fade_out_everything(duration: float = FADE_DURATION) -> void:
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(bgm_player, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(theme_player, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ambience_base, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ambience_night, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
+	
+	await tween.finished
+	bgm_player.stop()
+	theme_player.stop()
+	ambience_base.stop()
+	ambience_night.stop()
+	
+	# Reset volumes for future play calls (they usually set their own volume anyway)
+	bgm_player.volume_db = base_volume_db
+	theme_player.volume_db = -80.0
+	ambience_base.volume_db = 2.0
+	ambience_night.volume_db = -7.1
 
 var audio_boring_day = preload("res://Audio/Soundtracks/A Boring Day.mp3")
 var audio_fantastic_idea = preload("res://Audio/Soundtracks/Fantastic Idea.mp3")
@@ -18,10 +38,30 @@ var audio_not_me = preload("res://Audio/Soundtracks/Not ME.mp3")
 var audio_sleepy = preload("res://Audio/Soundtracks/Sleepy.mp3")
 var audio_laughing_horse = preload("res://Audio/Soundtracks/Laughing Horse.mp3")
 var audio_autumn_wind = preload("res://Audio/Soundtracks/an Autumn Wind.mp3")
+var audio_brunch = preload("res://Audio/Soundtracks/Brunch.wav")
+var audio_brunch_ii = preload("res://Audio/Soundtracks/Brunch II.wav")
+var audio_kids_room = preload("res://Audio/Soundtracks/Kid's Room.wav")
+var audio_hermit_crab = preload("res://Audio/Soundtracks/Adventure of a Hermit Crab.wav")
+var audio_naptime = preload("res://Audio/Soundtracks/Naptime.wav")
 
 var character_themes: Dictionary = {
 	# "KuyaKap": audio_laughing_horse
 }
+
+@onready var _song_titles: Dictionary = {
+	audio_boring_day: "A Boring Day",
+	audio_fantastic_idea: "Fantastic Idea",
+	audio_not_me: "Not ME",
+	audio_sleepy: "Sleepy",
+	audio_laughing_horse: "Laughing Horse",
+	audio_autumn_wind: "An Autumn Wind",
+	audio_brunch: "Brunch",
+	audio_brunch_ii: "Brunch II",
+	audio_kids_room: "Kid's Room",
+	audio_hermit_crab: "Adventure of a Hermit Crab",
+	audio_naptime: "Naptime"
+}
+
 
 var dialogue_blip_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
@@ -61,12 +101,16 @@ var time_of_day_node: Node = null
 var _scene_check_timer: float = 0.0
 var _is_in_intro_or_menu: bool = true
 
-var afternoon_playlist_index: int = 0
-var afternoon_playlist: Array = []
+var _active_playlist: Array = []
+var _playlist_index: int = 0
+var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	randomize()
+	_rng.randomize()
+
 	name = "AudioManager"
+	process_mode = PROCESS_MODE_ALWAYS
 	
 	bgm_player = AudioStreamPlayer.new()
 	bgm_player.bus = "Music"
@@ -85,7 +129,7 @@ func _ready() -> void:
 	
 	ambience_night = AudioStreamPlayer.new()
 	ambience_night.bus = "Master"
-	ambience_night.volume_db = -4.0
+	ambience_night.volume_db = -7.1
 	add_child(ambience_night)
 	
 	dialogue_blip_player = AudioStreamPlayer.new()
@@ -95,8 +139,6 @@ func _ready() -> void:
 	sfx_player = AudioStreamPlayer.new()
 	sfx_player.bus = "SFX"
 	add_child(sfx_player)
-	
-	afternoon_playlist = [audio_fantastic_idea, audio_not_me]
 	
 	bgm_player.finished.connect(_on_bgm_finished)
 	theme_player.finished.connect(_on_theme_finished)
@@ -112,12 +154,10 @@ func _ready() -> void:
 	ambience_base.stream = audio_calming_morning
 	ambience_base.play(randf_range(0.0, ambience_base.stream.get_length()))
 	
-	# Start Title Screen music
-	bgm_player.stream = audio_autumn_wind
-	bgm_player.volume_db = base_volume_db
-	bgm_player.play()
-	
 	_load_audio_settings()
+	
+	# Initial entry into Menu phase
+	_change_bgm_phase(BGMPhase.NONE)
 	
 	# Cache TimeOfDay once scene is settled
 	await get_tree().process_frame
@@ -144,11 +184,7 @@ func _process(delta: float) -> void:
 
 	if _is_in_intro_or_menu:
 		if current_bgm_phase != BGMPhase.NONE:
-			current_bgm_phase = BGMPhase.NONE
-		# Ensure Autumn Wind is playing if we are in intro/menu
-		if bgm_player.stream != audio_autumn_wind:
-			bgm_player.stream = audio_autumn_wind
-			bgm_player.play()
+			_change_bgm_phase(BGMPhase.NONE)
 		return
 		
 	if is_instance_valid(time_of_day_node):
@@ -230,6 +266,32 @@ var bgm_transition_tween: Tween
 func _change_bgm_phase(phase: BGMPhase) -> void:
 	current_bgm_phase = phase
 	
+	# Populate Playlist Pools
+	var pool = []
+	match phase:
+		BGMPhase.NONE: # Main Menu / Intro
+			pool = [audio_brunch, audio_autumn_wind]
+		BGMPhase.MORNING:
+			pool = [audio_boring_day, audio_brunch_ii, audio_kids_room]
+		BGMPhase.AFTERNOON:
+			pool = [audio_fantastic_idea, audio_not_me, audio_hermit_crab]
+		BGMPhase.DUSK:
+			pool = [audio_sleepy, audio_naptime]
+	
+	if pool.is_empty(): return
+	
+	# Apply Shuffling Rules
+	if phase == BGMPhase.NONE:
+		# Just alternate starting with Brunch from the top
+		_active_playlist = pool
+	else:
+		# True shuffle for everything else
+		_active_playlist = pool
+		_shuffle_playlist(_active_playlist)
+	
+	_playlist_index = 0
+
+	
 	if bgm_transition_tween and bgm_transition_tween.is_valid():
 		bgm_transition_tween.kill()
 		
@@ -238,18 +300,10 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 	
 	if not is_first_play:
 		bgm_transition_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
-		bgm_transition_tween.tween_interval(FADE_DURATION)
 		bgm_transition_tween.tween_callback(func(): bgm_player.stop())
 		
 	bgm_transition_tween.tween_callback(func():
-		if phase == BGMPhase.MORNING:
-			bgm_player.stream = audio_boring_day
-		elif phase == BGMPhase.AFTERNOON:
-			afternoon_playlist.shuffle()
-			afternoon_playlist_index = 0
-			bgm_player.stream = afternoon_playlist[afternoon_playlist_index]
-		elif phase == BGMPhase.DUSK:
-			bgm_player.stream = audio_sleepy
+		bgm_player.stream = _active_playlist[_playlist_index]
 			
 		var target_vol = -80.0 if theme_player.playing else base_volume_db
 		
@@ -261,20 +315,47 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 			bgm_player.play()
 			bgm_transition_tween = create_tween()
 			bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
+		
+		_emit_music_change(bgm_player.stream)
 	)
 
+
+
 func _on_bgm_finished() -> void:
-	if current_bgm_phase == BGMPhase.AFTERNOON:
-		afternoon_playlist_index += 1
-		if afternoon_playlist_index >= afternoon_playlist.size():
-			afternoon_playlist.shuffle()
-			afternoon_playlist_index = 0
-		
-		bgm_player.stream = afternoon_playlist[afternoon_playlist_index]
-		bgm_player.play()
-	else:
-		# For Morning string and Dusk tracks, simply replay when finished
-		bgm_player.play()
+	var last_song = _active_playlist[_playlist_index]
+	_playlist_index += 1
+	
+	if _playlist_index >= _active_playlist.size():
+		# Reshuffle on loop (maintaining phase rules)
+		if current_bgm_phase == BGMPhase.NONE:
+			# Main menu just alternates (already set up as [Brunch, Autumn Wind])
+			_playlist_index = 0
+		else:
+			# Non-menu phases get a fresh shuffle that avoids immediate repeats
+			_shuffle_playlist(_active_playlist)
+			# If the first song of the new shuffle is the same as the last one played...
+			if _active_playlist.size() > 1 and _active_playlist[0] == last_song:
+				# Swap it with another random element skip the first one
+				var swap_idx = _rng.randi_range(1, _active_playlist.size() - 1)
+				var tmp = _active_playlist[0]
+				_active_playlist[0] = _active_playlist[swap_idx]
+				_active_playlist[swap_idx] = tmp
+			
+			_playlist_index = 0
+	
+	bgm_player.stream = _active_playlist[_playlist_index]
+	bgm_player.play()
+	_emit_music_change(bgm_player.stream)
+
+func _shuffle_playlist(playlist: Array) -> void:
+	# Fisher-Yates shuffle using our dedicated RNG
+	for i in range(playlist.size() - 1, 0, -1):
+		var j = _rng.randi_range(0, i)
+		var tmp = playlist[i]
+		playlist[i] = playlist[j]
+		playlist[j] = tmp
+
+
 
 func _on_theme_finished() -> void:
 	theme_player.play()
@@ -298,6 +379,9 @@ func play_character_theme(theme_stream: AudioStream) -> void:
 	crossfade_tween = create_tween()
 	crossfade_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
 	crossfade_tween.parallel().tween_property(theme_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
+	
+	_emit_music_change(theme_player.stream)
+
 
 func stop_character_theme() -> void:
 	if crossfade_tween and crossfade_tween.is_valid():
@@ -307,6 +391,9 @@ func stop_character_theme() -> void:
 	crossfade_tween.tween_property(bgm_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
 	crossfade_tween.parallel().tween_property(theme_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
 	crossfade_tween.tween_callback(func(): theme_player.stop())
+	
+	_emit_music_change(bgm_player.stream)
+
 
 func _on_ambience_night_finished() -> void:
 	if current_bgm_phase == BGMPhase.DUSK:
@@ -333,7 +420,8 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 			var spawner = spawner_nodes[0]
 			if spawner.current_customer and spawner.current_customer.customer_data:
 				# If the display name matches the active customer, use their data regardless of paths.
-				if spawner.current_customer.customer_data.character_name == info.character.display_name:
+				# Also match if the name is "???" (undiscovered character).
+				if spawner.current_customer.customer_data.character_name == info.character.display_name or info.character.display_name == "???":
 					char_to_play = spawner.current_customer.customer_data
 		
 		# --- STRATEGY 2: Match by specific .dch resource path (Story/Filler characters) ---
@@ -360,11 +448,31 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 
 		# --- PLAY AUDIO ---
 		if char_to_play:
-			if char_to_play.dialogue_blip_sound:
-				dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
-				dialogue_blip_player.stream = char_to_play.dialogue_blip_sound
-				# Apply base volume (SFX bus) + the character's unique offset
-				dialogue_blip_player.volume_db = char_to_play.dialogue_blip_volume
-				dialogue_blip_player.play()
-			
-			EventBus.dialogue_character_speaking.emit(char_to_play)
+			play_dialogue_blip(char_to_play)
+
+## Plays a character blip sound and emits the speaking signal for animations.
+## Can be called externally (e.g. by CustomerSpawner on arrival).
+func play_dialogue_blip(char_data: CustomerData) -> void:
+	if char_data:
+		if char_data.dialogue_blip_sound:
+			dialogue_blip_player.pitch_scale = randf_range(0.95, 1.105)
+			dialogue_blip_player.stream = char_data.dialogue_blip_sound
+			# Apply the character's unique volume offset
+			dialogue_blip_player.volume_db = char_data.dialogue_blip_volume
+			dialogue_blip_player.play()
+		
+		# Notify system that character is "speaking" (triggers pulse animation)
+		EventBus.dialogue_character_speaking.emit(char_data)
+
+func _emit_music_change(stream: AudioStream) -> void:
+	if not stream: return
+	
+	var title = "Unknown Track"
+	if _song_titles.has(stream):
+		title = _song_titles[stream]
+	else:
+		# Fallback: try to get title from filename if not in dict
+		var path = stream.resource_path
+		title = path.get_file().get_basename().capitalize()
+	
+	EventBus.music_title_changed.emit(title)

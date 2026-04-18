@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://f13o88nahdqn"
+path="res://.godot/imported/Adventure of a Hermit Crab.wav-e73197fe776df282010f56fb8c518c06.sample"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Adventure of a Hermit Crab.wav"
+dest_files=["res://.godot/imported/Adventure of a Hermit Crab.wav-e73197fe776df282010f56fb8c518c06.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
