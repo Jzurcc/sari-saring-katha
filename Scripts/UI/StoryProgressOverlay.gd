@@ -2,7 +2,7 @@ extends ColorRect
 
 signal closed
 
-enum View { CHARACTERS, ARCS, INTERACTIONS }
+enum View { CHARACTERS, ARCS, CHAPTERS }
 
 @onready var char_list_view: Control = %CharacterList
 @onready var details_view: Control = %DetailsView
@@ -42,8 +42,8 @@ func _update_ui() -> void:
 		View.CHARACTERS:
 			subtitle_label.text = "Select a character to view their story"
 		View.ARCS:
-			subtitle_label.text = _selected_character.character_name.to_upper() + " / ARCS"
-		View.INTERACTIONS:
+			subtitle_label.text = _selected_character.character_name.to_upper() + " / CHAPTERS"
+		View.CHAPTERS:
 			subtitle_label.text = _selected_character.character_name.to_upper() + " / ARC " + str(_selected_arc + 1)
 
 func _populate_characters() -> void:
@@ -52,20 +52,17 @@ func _populate_characters() -> void:
 	
 	if not StoryManager: return
 	
-	var save_data = SaveManager.load_game()
-	var is_no_save = save_data.is_empty()
-	
 	var characters = StoryManager.available_characters.duplicate()
 	characters.sort_custom(func(a,b): return a.unlock_tier < b.unlock_tier)
 	
-	var current_tier = StoryManager.current_tier
+	var _current_tier = StoryManager.current_tier
 	
 	for data in characters:
 		if not data: continue
 		var card = character_card_scene.instantiate()
 		card_container.add_child(card)
 		
-		var is_locked = is_no_save or (data.unlock_tier > current_tier)
+		var is_locked = not StoryManager.encountered_characters.has(data.resource_path)
 		card.setup(data, is_locked)
 		
 		if not card.disabled:
@@ -95,38 +92,44 @@ func _populate_arcs() -> void:
 
 func _on_arc_selected(arc_idx: int) -> void:
 	_selected_arc = arc_idx
-	_navigate_to(View.INTERACTIONS)
-	_populate_interactions()
+	_navigate_to(View.CHAPTERS)
+	_populate_chapters()
 
-func _populate_interactions() -> void:
+func _populate_chapters() -> void:
 	_clear_details()
 	
 	var story_states = StoryManager.character_story_states
 	var current_progress = story_states.get(_selected_character.resource_path, 0)
 	
-	# 3 interactions per arc
+	# 3 chapters per arc
 	for i in range(3):
-		var interaction_idx = (_selected_arc * 3) + i
+		var chapter_idx = (_selected_arc * 3) + i
 		var btn = list_button_scene.instantiate()
 		details_container.add_child(btn)
 		
-		var is_locked = current_progress < interaction_idx
-		var is_completed = current_progress > interaction_idx
+		var is_locked = current_progress < chapter_idx
+		var is_completed = current_progress > chapter_idx
 		
-		var interaction_name = "Interaction " + str(interaction_idx + 1)
+		var chapter_display_name = "Chapter " + str(chapter_idx + 1)
 		
 		# Try to pull actual name from timeline if available
-		if interaction_idx < _selected_character.story_timelines.size():
-			var timeline = _selected_character.story_timelines[interaction_idx]
+		if chapter_idx < _selected_character.story_timelines.size():
+			var timeline = _selected_character.story_timelines[chapter_idx]
 			if timeline:
 				var raw_name = timeline.resource_path.get_file().get_basename()
-				# Clean up names like Story0, Story1 into something nicer or just use them
-				if raw_name.begins_with("Story") or raw_name.begins_with("Chapter"):
-					interaction_name = raw_name # Or add logic to make it "Story 0"
+				
+				# Use RegEx to convert "Story0" to "Story 1" or "Chapter0" to "Chapter 1"
+				var regex = RegEx.new()
+				regex.compile("(Story|Chapter)(\\d+)")
+				var result = regex.search(raw_name)
+				if result:
+					var prefix = result.get_string(1)
+					var num = result.get_string(2).to_int()
+					chapter_display_name = prefix + " " + str(num + 1)
 				else:
-					interaction_name = raw_name.capitalize()
+					chapter_display_name = raw_name.capitalize()
 		
-		btn.setup(interaction_name, is_locked, is_completed)
+		btn.setup(chapter_display_name, is_locked, is_completed)
 
 func _navigate_to(new_view: View) -> void:
 	_history.append(_current_view)
@@ -143,7 +146,8 @@ func _on_back_button_pressed() -> void:
 		_populate_characters()
 	elif _current_view == View.ARCS:
 		_populate_arcs()
-		
+	elif _current_view == View.CHAPTERS:
+		_populate_chapters()
 	_update_ui()
 
 func _clear_details() -> void:

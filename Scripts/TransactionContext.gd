@@ -9,6 +9,8 @@ var secondary_customer_data: CustomerData = null
 
 ## List of valid items that the customer would accept. Can be empty for visit only.
 var desired_items: Array[ItemData] = []
+var requested_category: String = ""
+var best_item_name: String = ""
 var original_count: int = 0
 
 ## Ticks from 0 (5 AM) to 15 (8 PM, moving towards 9 PM).

@@ -3,11 +3,10 @@ extends Button
 @onready var label: Label = $Margin/HBox/Label
 @onready var status_icon: TextureRect = $Margin/HBox/StatusIcon
 
-var _item_index: int = -1
 var _is_locked: bool = false
 
-func setup(text: String, is_locked: bool, is_completed: bool) -> void:
-	label.text = text
+func setup(p_text: String, is_locked: bool, is_completed: bool) -> void:
+	label.text = p_text
 	_is_locked = is_locked
 	disabled = is_locked
 	

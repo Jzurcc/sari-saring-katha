@@ -1,5 +1,7 @@
 extends Node
 
+var save_id: String = "story_manager"
+
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
@@ -15,6 +17,7 @@ var _last_focus_character_path: String = ""
 var todays_story_counts: Dictionary = {}
 
 var character_story_states: Dictionary = {}
+var encountered_characters: Dictionary = {}
 var is_clock_running: bool = false:
 	set(value):
 		is_clock_running = value
@@ -36,6 +39,10 @@ var last_story_advancer_path: String = ""
 var _first_customer_of_day: bool = true
 
 var _char_lookup: Dictionary = {}   # resource_path -> CustomerData
+
+## DEBUG: Set to true to cycle Sarimanok through STORY -> PURCHASE -> VISIT each spawn.
+var DEBUG_SARIMANOK_ONLY: bool = true
+var _debug_sarimanok_cycle: int = 0  # 0=STORY, 1=PURCHASE, 2=VISIT
 
 # --- Tier Progression ---
 var current_tier: int = 1
@@ -85,30 +92,11 @@ var _time_of_day_node: Node = null
 ]
 
 func _ready() -> void:
+	print("[DEBUG] StoryManager._ready() START")
+	add_to_group("persist")
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_satisfied)
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
-	
-	# Load progression state
-	var save_data = SaveManager.load_game()
-	if save_data.has("progression"):
-		var p = save_data["progression"]
-		# Cast to correct types — JSON parser returns all numbers as floats.
-		current_tier = int(p.get("current_tier", 1))
-		max_unlocked_tier = int(p.get("max_unlocked_tier", current_tier))
-		purchase_counter = int(p.get("purchase_counter", 0))
-		pending_upgrade_tier = int(p.get("pending_upgrade_tier", 0))
-		pending_upgrade_cost = float(p.get("pending_upgrade_cost", 0.0))
-		global_story_cooldown = int(p.get("global_story_cooldown", 0))
-		last_story_advancer_path = p.get("last_story_advancer_path", "")
-		_current_display_time = float(p.get("current_display_time", 16.0)) # Default to 4 PM if missing
-		if p.has("character_story_states"):
-			character_story_states = p["character_story_states"]
-		todays_focus_character_path = p.get("todays_focus_character_path", "")
-		_last_focus_character_path = p.get("_last_focus_character_path", "")
-		todays_story_counts = p.get("todays_story_counts", {})
-		customer_debts = p.get("customer_debts", {})
-
 	
 	_ensure_tod_node()
 	if _time_of_day_node and not _time_of_day_node.time_changed.is_connected(_on_tod_time_changed):
@@ -120,18 +108,11 @@ func _ready() -> void:
 			_char_lookup[c.resource_path] = c
 	
 	randomize()
+	print("[DEBUG] StoryManager._ready() END")
 	
-var _last_saved_hour: int = -1
-
 func _on_tod_time_changed(t: float) -> void:
 	_current_display_time = t
 	
-	# Only save when the integer hour changes (e.g. 17.99 -> 18.00)
-	var current_hour = int(t)
-	if current_hour != _last_saved_hour:
-		_last_saved_hour = current_hour
-		_save_progression()
-		
 	# End of day check
 	if _current_display_time >= CLOSING_HOUR and is_clock_running:
 		is_clock_running = false
@@ -140,6 +121,7 @@ func _on_tod_time_changed(t: float) -> void:
 		EventBus.closing_time_reached.emit()
 
 func _on_day_started(new_day: int) -> void:
+	print("[DEBUG] StoryManager._on_day_started(%d) CALLED" % new_day)
 	day = new_day
 	has_mayari_visited = false
 	_first_customer_of_day = true
@@ -242,24 +224,56 @@ func process_pending_unlock() -> void:
 		_save_progression()
 
 func _save_progression() -> void:
-	var current_save = SaveManager.load_game()
-	current_save["progression"] = {
+	SaveManager.force_save()
+
+# ── Persistence ──────────────────────────────────────────────────────────
+
+func get_save_id() -> String:
+	return "progression"
+
+func get_save_data() -> Dictionary:
+	return {
+		"day": day,
 		"current_tier": current_tier,
 		"max_unlocked_tier": max_unlocked_tier,
 		"purchase_counter": purchase_counter,
-		"pending_upgrade_tier": pending_upgrade_tier,
-		"pending_upgrade_cost": pending_upgrade_cost,
+		"character_story_states": character_story_states.duplicate(),
+		"encountered_characters": encountered_characters.duplicate(),
+		"customer_debts": customer_debts.duplicate(),
 		"global_story_cooldown": global_story_cooldown,
 		"last_story_advancer_path": last_story_advancer_path,
-		"character_story_states": character_story_states,
-		"current_display_time": _current_display_time,
 		"todays_focus_character_path": todays_focus_character_path,
-		"_last_focus_character_path": _last_focus_character_path,
-		"todays_story_counts": todays_story_counts,
-		"customer_debts": customer_debts
+		"pending_upgrade_tier": pending_upgrade_tier,
+		"pending_upgrade_cost": pending_upgrade_cost,
+		"has_mayari_visited": has_mayari_visited,
+		"current_display_time": _current_display_time,
 	}
 
-	SaveManager.save_game(current_save)
+func load_save_data(data: Dictionary) -> void:
+	day = data.get("day", 1)
+	current_tier = data.get("current_tier", 1)
+	max_unlocked_tier = data.get("max_unlocked_tier", 1)
+	purchase_counter = data.get("purchase_counter", 0)
+	character_story_states = data.get("character_story_states", {})
+	
+	encountered_characters = data.get("encountered_characters", {})
+	for path in character_story_states.keys():
+		encountered_characters[path] = true
+		
+	customer_debts = data.get("customer_debts", {})
+	global_story_cooldown = data.get("global_story_cooldown", 0)
+	last_story_advancer_path = data.get("last_story_advancer_path", "")
+	todays_focus_character_path = data.get("todays_focus_character_path", "")
+	pending_upgrade_tier = data.get("pending_upgrade_tier", 0)
+	pending_upgrade_cost = data.get("pending_upgrade_cost", 0.0)
+	has_mayari_visited = data.get("has_mayari_visited", false)
+	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
+	
+	_ensure_tod_node()
+	_apply_display_time(_current_display_time)
+	
+	print("[StoryManager] State loaded. Tier %d, Day %d, Time %.2f, Characters tracked: %d" % [current_tier, day, _current_display_time, character_story_states.size()])
+
 
 func reset_state() -> void:
 	day = 1
@@ -270,14 +284,15 @@ func reset_state() -> void:
 	global_story_cooldown = 0
 	last_story_advancer_path = ""
 	character_story_states = {}
+	encountered_characters = {}
 	todays_focus_character_path = ""
 	_last_focus_character_path = ""
 	todays_story_counts = {}
 	customer_debts = {}
 	_current_display_time = DAY_START_HOUR
 
-	_save_progression()
-	print("[StoryManager] Progression reset for New Game.")
+	SaveManager.delete_save()
+	print("[StoryManager] Progression reset for New Game. Save file deleted.")
 
 
 ## Ask the StoryManager for the next customer's context.
@@ -285,8 +300,8 @@ func reset_state() -> void:
 func get_next_transaction() -> TransactionContext:
 	# --- TUTORIAL INJECTION ---
 	var tutorial_path := "res://Resources/customers/UncleMario.tres"
-	var tutorial_stage = character_story_states.get(tutorial_path, 0)
-	if day == 1 and tutorial_stage == 0:
+	var tutorial_chapter = character_story_states.get(tutorial_path, 0)
+	if day == 1 and tutorial_chapter == 0:
 		var tutorial_char_data = preload("res://Resources/customers/UncleMario.tres")
 		var tutorial_t = TransactionContext.new()
 		tutorial_t.customer_data = tutorial_char_data
@@ -296,37 +311,21 @@ func get_next_transaction() -> TransactionContext:
 		tutorial_t.transaction_type = TransactionContext.Type.VISIT
 		tutorial_t.timeline = tutorial_char_data.story_timelines[0]
 		
-		# Flag it so it doesn't repeat
-		character_story_states[tutorial_path] = 1
+		# Specifically require Anoba for the tutorial task
+		var anoba = preload("res://Resources/items/snack/Anoba.tres")
+		tutorial_t.desired_items.append(anoba)
+		
+		# We don't advance the tutorial_chapter here anymore. 
+		# It will be advanced in _on_customer_satisfied to ensure it actually happened.
 		
 		print("[STORY] Spawning Uncle Mario Tutorial")
 		return tutorial_t
 	# --------------------------
 
-	# --- DEBUG DUAL CUSTOMER INJECTION ---
-	var debug_dual_path := "debug_dual_encounter"
-	var debug_dual_stage = character_story_states.get(debug_dual_path, 0)
-	if day == 1 and tutorial_stage == 1 and debug_dual_stage == 0:
-		var primary_data = preload("res://Resources/customers/KuyaKap.tres")
-		var secondary_data = preload("res://Resources/customers/ManangAna.tres")
-		
-		var debug_t = TransactionContext.new()
-		debug_t.customer_data = primary_data
-		debug_t.secondary_customer_data = secondary_data
-		debug_t.transaction_type = TransactionContext.Type.VISIT
-		debug_t.timeline = "res://Dialogue/Timelines/debug_dual_customer.dtl"
-		
-		character_story_states[debug_dual_path] = 1
-		
-		print("[STORY] Spawning Debug Dual Customer Encounter (Kuya Kap & Manang Ana)")
-		return debug_t
-	# --------------------------
-
 	# --- BRAHIM INJECTION ---
-	var brahim_path := "res://Resources/customers/Brahim.tres"
 	var brahim_tut_path := "brahim_day1_spawned"
 	var brahim_spawned = character_story_states.get(brahim_tut_path, 0)
-	if day == 1 and debug_dual_stage == 1 and brahim_spawned == 0:
+	if day == 1 and tutorial_chapter >= 1 and brahim_spawned == 0:
 		var brahim_data = preload("res://Resources/customers/Brahim.tres")
 		var brahim_t = TransactionContext.new()
 		brahim_t.customer_data = brahim_data
@@ -336,8 +335,38 @@ func get_next_transaction() -> TransactionContext:
 		
 		# Flag so it doesn't repeat
 		character_story_states[brahim_tut_path] = 1
+		encountered_characters[brahim_data.resource_path] = true
 		
-		print("[STORY] Spawning Brahim after Dual Customer injection")
+		# Sync Dialogic variables so the Greeting dialogue can display properly
+		# (normally done at the end of get_next_transaction, but we return early here)
+		Dialogic.VAR.set_variable("Global.RumorActive", 0.0)
+		Dialogic.VAR.set_variable("Global.RumorType", 0.0)
+		Dialogic.VAR.set_variable("Global.AwarenessActive", 0.0)
+		Dialogic.VAR.set_variable("Global.HighPriceActive", 0.0)
+		Dialogic.VAR.set_variable("Global.StockStatus", "Normal")
+		Dialogic.VAR.set_variable("Transaction.WantsDebt", 0.0)
+		Dialogic.VAR.set_variable("Transaction.IsRepaying", 0.0)
+		Dialogic.VAR.set_variable("Transaction.RepaymentAmount", 0.0)
+		Dialogic.VAR.set_variable("Transaction.IsRiddle", 0.0)
+		Dialogic.VAR.set_variable("Transaction.CustomerName", brahim_data.character_name)
+		# Build item name string for the dialogue
+		var item_names: Array[String] = []
+		for item in brahim_t.desired_items:
+			item_names.append(item.item_name)
+		var formatted_names = ""
+		if item_names.size() == 1:
+			formatted_names = item_names[0]
+		elif item_names.size() == 2:
+			formatted_names = item_names[0] + " and " + item_names[1]
+		elif item_names.size() > 2:
+			var last = item_names.pop_back()
+			formatted_names = ", ".join(item_names) + ", and " + last
+		Dialogic.VAR.set_variable("Transaction.ItemWants", formatted_names)
+		var b_chapter = character_story_states.get(brahim_data.resource_path, 0)
+		Dialogic.VAR.set_variable("Transaction.CurrentArc", brahim_data.get_arc_index(b_chapter) + 1)
+		_first_customer_of_day = false
+		
+		print("[STORY] Spawning Brahim after Dual Customer injection (ItemWants: %s)" % formatted_names)
 		return brahim_t
 	# --------------------------
 
@@ -358,19 +387,19 @@ func get_next_transaction() -> TransactionContext:
 			# Skip if it was the last character to avoid back-to-back spawns
 			if c.resource_path == _last_character_path: continue
 			
-			var c_stage = character_story_states.get(c.resource_path, 0)
-			var daily_count = todays_story_counts.get(c.resource_path, 0)
+			var c_chapter = character_story_states.get(c.resource_path, 0)
+			var _daily_count = todays_story_counts.get(c.resource_path, 0)
 			
-			# Needs to have a story timeline available, pass prerequisites, AND be under daily limit (3)
-			if c_stage < c.story_timelines.size() and _is_story_chapter_available(c, c_stage) and daily_count < 3:
+			# Needs to have a story timeline available and pass prerequisites
+			if c_chapter < c.story_timelines.size() and _is_story_chapter_available(c, c_chapter):
 				story_candidates.append(c)
 		
-		# Deadlock Check: If we have stages available but NO candidates passed prerequisites
+		# Deadlock Check: If we have chapters available but NO candidates passed prerequisites
 		if story_candidates.is_empty():
 			var blocked_story_exists = false
 			for c in available_characters:
-				var c_stage = character_story_states.get(c.resource_path, 0)
-				if c_stage < c.story_timelines.size():
+				var c_chapter = character_story_states.get(c.resource_path, 0)
+				if c_chapter < c.story_timelines.size():
 					blocked_story_exists = true
 					break
 			if blocked_story_exists:
@@ -402,8 +431,8 @@ func get_next_transaction() -> TransactionContext:
 			var fallback_story_candidates: Array[CustomerData] = []
 			for c in unlocked:
 				if c.resource_path == _last_character_path: continue
-				var c_stage = character_story_states.get(c.resource_path, 0)
-				if c_stage < c.story_timelines.size() and _is_story_chapter_available(c, c_stage):
+				var c_chapter = character_story_states.get(c.resource_path, 0)
+				if c_chapter < c.story_timelines.size() and _is_story_chapter_available(c, c_chapter):
 					fallback_story_candidates.append(c)
 			
 			if not fallback_story_candidates.is_empty():
@@ -417,6 +446,43 @@ func get_next_transaction() -> TransactionContext:
 		var possible_chars = unlocked.filter(func(c): return c.resource_path != _last_character_path)
 		if possible_chars.is_empty(): possible_chars = unlocked # Fallback
 		char_data = possible_chars.pick_random()
+
+	# DEBUG: Cycle Sarimanok through STORY -> PURCHASE -> VISIT when flag is set.
+	if DEBUG_SARIMANOK_ONLY:
+		const SARIMANOK_PATH := "res://Resources/customers/Sarimanok.tres"
+		var smk: CustomerData = _char_lookup.get(SARIMANOK_PATH)
+		if smk:
+			char_data = smk
+			force_story = false  # we'll set type manually below
+			var cycle_names := ["STORY", "PURCHASE", "VISIT"]
+			print("[DEBUG] Sarimanok cycle %d (%s)" % [_debug_sarimanok_cycle, cycle_names[_debug_sarimanok_cycle]])
+			
+			_last_character_path = char_data.resource_path
+			var t_dbg = TransactionContext.new()
+			t_dbg.customer_data = char_data
+			var smk_chapter = character_story_states.get(SARIMANOK_PATH, 0)
+			
+			match _debug_sarimanok_cycle:
+				0: # STORY
+					t_dbg.transaction_type = TransactionContext.Type.STORY
+					t_dbg.timeline = smk.story_timelines[smk_chapter] if smk_chapter < smk.story_timelines.size() else smk.story_timelines[0]
+				1: # PURCHASE
+					t_dbg.transaction_type = TransactionContext.Type.PURCHASE
+					var pool = smk.get_purchase_timelines(smk_chapter)
+					t_dbg.timeline = pool.pick_random() if not pool.is_empty() else "res://Dialogue/Timelines/Generic/Purchase.dtl"
+					_build_transaction_context(t_dbg, smk, false)  # populates desired_items
+				2: # VISIT
+					t_dbg.transaction_type = TransactionContext.Type.VISIT
+					var pool = smk.get_visit_timelines(smk_chapter)
+					t_dbg.timeline = pool.pick_random() if not pool.is_empty() else "res://Dialogue/Timelines/Generic/Visit.dtl"
+			
+			_debug_sarimanok_cycle = (_debug_sarimanok_cycle + 1) % 3
+			
+			# Sync Dialogic vars the same way the normal path does
+			Dialogic.VAR.set_variable("Transaction.CustomerName", smk.character_name)
+			Dialogic.VAR.set_variable("Transaction.Chapter", float(smk_chapter))
+			Dialogic.VAR.set_variable("Transaction.CurrentArc", smk.get_arc_index(smk_chapter) + 1)
+			return t_dbg
 
 	_last_character_path = char_data.resource_path
 	
@@ -491,7 +557,13 @@ func get_next_transaction() -> TransactionContext:
 		var main_item = t.desired_items[0]
 		if main_item.item_hint != "" and riddle_roll < riddle_chance:
 			t.is_riddle = true
+			t.riddle_item = main_item
 			Dialogic.VAR.set_variable("Transaction.ItemHint", main_item.item_hint)
+			
+			# Special rule: Riddles can only be for a single item.
+			if t.desired_items.size() > 1:
+				print("[StoryManager] Riddle rolled for multi-item request. Trimming to 1 item.")
+				t.desired_items = [main_item]
 	
 	# 3. Sync to Dialogic Variables
 	Dialogic.VAR.set_variable("Global.RumorActive", 1.0 if t.rumor_active else 0.0)
@@ -500,10 +572,12 @@ func get_next_transaction() -> TransactionContext:
 	Dialogic.VAR.set_variable("Transaction.IsRepaying", 1.0 if t.is_repaying else 0.0)
 	Dialogic.VAR.set_variable("Transaction.RepaymentAmount", t.repayment_amount)
 	Dialogic.VAR.set_variable("Transaction.IsRiddle", 1.0 if t.is_riddle else 0.0)
+	Dialogic.VAR.set_variable("Transaction.ItemWantsBest", t.best_item_name)
 
 	
-	var stage = character_story_states.get(t.customer_data.resource_path, 0)
-	Dialogic.VAR.set_variable("Transaction.CurrentArc", t.customer_data.get_arc_index(stage) + 1)
+	var chapter = character_story_states.get(t.customer_data.resource_path, 0)
+	Dialogic.VAR.set_variable("Transaction.CurrentArc", t.customer_data.get_arc_index(chapter) + 1)
+	Dialogic.VAR.set_variable("Transaction.Chapter", float(chapter))
 
 	print("\n[STORY] --- Transaction Attributes ---")
 	print("  Rumor : ", t.rumor_active, " (Roll: ", rumor_roll, " < ", rumor_chance, ")")
@@ -512,12 +586,16 @@ func get_next_transaction() -> TransactionContext:
 	print("  Repay : ", t.is_repaying, " (Roll: ", repay_roll, " < 0.30, Owed: ", current_debt, ")")
 
 
-	print("\n[STORY] --- Transaction Setup ---")
-	print("[STORY] Spawning: ", t.customer_data.get_clean_id(), " (Type: ", TransactionContext.Type.keys()[t.transaction_type], ")")
-	print("[STORY] Rumor Roll: ", rumor_roll, " (Target < 0.20) -> ", t.rumor_active)
-	print("[STORY] Riddle State: ", t.is_riddle) # Riddle chance check remains in _build since it needs items
 	print("[STORY] Debt Roll:  ", debt_roll, " (Target < 0.15) -> ", t.wants_debt)
+	print("[STORY] Riddle State: ", t.is_riddle) # Riddle chance check remains in _build since it needs items
 
+	# Track the initial count for progress UI
+	t.original_count = t.desired_items.size()
+	
+	if t.customer_data and not encountered_characters.has(t.customer_data.resource_path):
+		encountered_characters[t.customer_data.resource_path] = true
+		_save_progression()
+	
 	return t
 
 ## Returns a special transaction for Reyna Mayari's end-of-day debt collection.
@@ -540,6 +618,7 @@ func get_collection_transaction() -> TransactionContext:
 	t.timeline = "res://Dialogue/Timelines/mayari_collect.dtl"
 	
 	has_mayari_visited = true
+	encountered_characters[data.resource_path] = true
 	return t
 
 func record_debt(customer_path: String, amount: float) -> void:
@@ -576,6 +655,12 @@ func _ensure_tod_node() -> void:
 			if not _time_of_day_node.time_changed.is_connected(_on_tod_time_changed):
 				_time_of_day_node.time_changed.connect(_on_tod_time_changed)
 
+func complete_tutorial() -> void:
+	var tutorial_path := "res://Resources/customers/UncleMario.tres"
+	character_story_states[tutorial_path] = 1
+	_save_progression()
+	print("[StoryManager] Uncle Mario tutorial marked as complete (Manually).")
+
 func _get_character_data(path_or_id: String) -> CustomerData:
 	if path_or_id.to_lower() == "unclemariotutorial":
 		return preload("res://Resources/customers/UncleMario.tres")
@@ -600,12 +685,12 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 
 	# 2. Choose Transaction Type
 	var path = data.resource_path
-	var stage = character_story_states.get(path, 0)
+	var chapter = character_story_states.get(path, 0)
 	
-	# If this is their first visit (stage 0) OR the system forced a story chapter
-	if (stage == 0 or force_story) and stage < data.story_timelines.size():
+	# If this is their first visit (chapter 0) OR the system forced a story chapter
+	if (chapter == 0 or force_story) and chapter < data.story_timelines.size():
 		t.transaction_type = TransactionContext.Type.STORY
-		t.timeline = data.story_timelines[stage]
+		t.timeline = data.story_timelines[chapter]
 	else:
 		# Generic flow selection: use the exported visit_chance (default 20%)
 		# Force a purchase if it is the first regular customer of the day.
@@ -615,8 +700,12 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 		else:
 			is_purchase = randf() < (1.0 - visit_chance)
 			
-		var purchase_pool = data.get_purchase_timelines(stage)
-		var visit_pool = data.get_visit_timelines(stage)
+		if data.get_clean_id() == "sarimanok" and chapter <= 3.0:
+			is_purchase = false
+			print("[StoryManager] Sarimanok is in Early Arc (Chapter <= 3.0). Forcing VISIT.")
+			
+		var purchase_pool = data.get_purchase_timelines(chapter)
+		var visit_pool = data.get_visit_timelines(chapter)
 		
 		if is_purchase and not purchase_pool.is_empty():
 			t.transaction_type = TransactionContext.Type.PURCHASE
@@ -635,6 +724,16 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 
 	# 2. Assign Desired Items (unless it's a social visit)
 	if t.transaction_type != TransactionContext.Type.VISIT:
+		# If a category was requested, resolve to the best item in that category
+		if t.requested_category != "":
+			var best = get_best_item_for_category(t.requested_category)
+			if best:
+				t.desired_items.append(best)
+				t.best_item_name = best.item_name
+				print("[StoryManager] Category request: %s -> Best item: %s" % [t.requested_category, t.best_item_name])
+			else:
+				push_warning("[StoryManager] Requested category '%s' found no valid items!" % t.requested_category)
+
 		var pool: Array[ItemData] = []
 		
 		# --- 60/40 Item Selection Logic ---
@@ -655,20 +754,21 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			else:
 				print("[StoryManager] Selection Mode: CUMULATIVE TIER (60% roll)")
 				
-			# Cumulative Tier Pool = All items in game where tier <= current_tier
-			for item in InventoryManager.get_all_items():
-				if is_item_unlocked(item) and item.can_be_sold:
-					pool.append(item)
+				for item in InventoryManager.get_all_items():
+					if is_item_unlocked(item) and item.can_be_sold:
+						pool.append(item)
 
 		# Multi-item request logic based on Tier
-		var item_count = _get_item_count_for_tier(current_tier)
-		for i in range(item_count):
-			if not pool.is_empty():
-				t.desired_items.append(pool.pick_random())
-			else:
-				var fallback = _pick_random_orderable_item()
-				if fallback:
-					t.desired_items.append(fallback)
+		# Skip if we already fulfilled via requested_category
+		if t.requested_category == "":
+			var item_count = _get_item_count_for_tier(current_tier)
+			for i in range(item_count):
+				if not pool.is_empty():
+					t.desired_items.append(pool.pick_random())
+				else:
+					var fallback = _pick_random_orderable_item()
+					if fallback:
+						t.desired_items.append(fallback)
 		
 		# Safety: If we still have no items, convert to a visit
 		if t.desired_items.is_empty():
@@ -742,7 +842,14 @@ func _on_customer_satisfied(customer) -> void:
 	# Increment purchase counter for activity-based progression
 	if customer.transaction_context and customer.transaction_context.transaction_type != TransactionContext.Type.VISIT:
 		purchase_counter += 1
-		_save_progression() # Save intermediate progress
+		
+	# Tutorial Persistence: If this was Uncle Mario, mark the tutorial as complete now.
+	if customer.customer_data and customer.customer_data.get_clean_id() == "unclemario":
+		var tutorial_path := "res://Resources/customers/UncleMario.tres"
+		character_story_states[tutorial_path] = 1
+		encountered_characters[tutorial_path] = true
+		_save_progression()
+		print("[StoryManager] Uncle Mario tutorial successfully completed and saved.")
 
 func _on_customer_dismissed(customer) -> void:
 	# Update LastCustomer even if they left dissatisfied so rumors stay current
@@ -750,7 +857,6 @@ func _on_customer_dismissed(customer) -> void:
 	Dialogic.VAR.set_variable("Global.LastSatisfaction", "Unhappy")
 	
 	_process_story_cooldown(customer)
-	_save_progression()
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer.transaction_context:
@@ -771,15 +877,28 @@ func _process_story_cooldown(customer) -> void:
 		
 	if customer.transaction_context.transaction_type == TransactionContext.Type.STORY:
 		var path = customer.transaction_context.customer_data.resource_path
-		var stage = character_story_states.get(path, 0)
-		character_story_states[path] = stage + 1
-		print("[StoryManager] Advanced story for ", path.get_file(), " to stage ", stage + 1)
+		var chapter = character_story_states.get(path, 0)
+		character_story_states[path] = chapter + 1
+		print("[StoryManager] Advanced story for ", path.get_file(), " to chapter ", chapter + 1)
 		
-		# Track daily story count for one-arc-per-day limit
+		# Track daily story count
 		var current_count = todays_story_counts.get(path, 0)
 		todays_story_counts[path] = current_count + 1
-		print("[StoryManager] Character ", path.get_file().get_basename(), " now at ", todays_story_counts[path], "/3 story interactions today.")
+		print("[StoryManager] Character ", path.get_file().get_basename(), " now at ", todays_story_counts[path], " story interactions today.")
 		
+		# If the focus character reaches 3 story interactions in a day, randomize to a new focus character
+		if todays_story_counts[path] >= 3 and path == todays_focus_character_path:
+			print("[StoryManager] Focus character ", path.get_file().get_basename(), " has reached 3 story interactions. Randomizing new focus character.")
+			var unlocked = _get_unlocked_characters()
+			var possible_focus = unlocked.filter(func(c): return c.resource_path != todays_focus_character_path)
+			if possible_focus.is_empty():
+				possible_focus = unlocked
+			
+			if not possible_focus.is_empty():
+				var focus_char = possible_focus.pick_random()
+				todays_focus_character_path = focus_char.resource_path
+				print("[StoryManager] New focus character is: ", todays_focus_character_path.get_file().get_basename())
+
 		# Story advanced — set cooldown and mark them
 		last_story_advancer_path = path
 		global_story_cooldown = randi_range(2, 4)
@@ -794,14 +913,13 @@ func _process_story_cooldown(customer) -> void:
 		if global_story_cooldown > 0:
 			global_story_cooldown -= 1
 			print("[StoryManager] Generic transaction (", TransactionContext.Type.keys()[customer.transaction_context.transaction_type], ") completed. Cooldown remains: ", global_story_cooldown)
-			_save_progression()
 
-func _is_story_chapter_available(customer: CustomerData, stage: int) -> bool:
+func _is_story_chapter_available(customer: CustomerData, chapter: int) -> bool:
 	# If no prerequisites defined or array index doesn't exist, assume available
-	if stage >= customer.story_prerequisites.size() or customer.story_prerequisites[stage] == null:
+	if chapter >= customer.story_prerequisites.size() or customer.story_prerequisites[chapter] == null:
 		return true
 		
-	return customer.story_prerequisites[stage].is_met(self)
+	return customer.story_prerequisites[chapter].is_met(self)
 
 func _get_high_pricing_ratio() -> float:
 	var im = get_node_or_null("/root/InventoryManager")
@@ -820,7 +938,31 @@ func _get_high_pricing_ratio() -> float:
 
 func _get_unlocked_characters() -> Array[CustomerData]:
 	var unlocked: Array[CustomerData] = []
+	var gm = get_tree().get_first_node_in_group("game_manager")
+	var current_quota_day = gm.quota_day if gm else 1
+	
 	for c in available_characters:
-		if c and c.unlock_tier <= current_tier:
+		if not c:
+			continue
+			
+		# Day 1 special rule: Mario is NOT a regular customer, he's a tutorial character.
+		if day == 1 and c.get_clean_id() == "unclemario":
+			continue
+			
+		if c.get_clean_id() == "reynamayari":
+			if current_quota_day > 2:
+				unlocked.append(c)
+		elif c.unlock_tier <= current_tier:
 			unlocked.append(c)
+			
 	return unlocked
+
+func get_best_item_for_category(cat: String) -> ItemData:
+	var best_item: ItemData = null
+	var max_tier = -1
+	for item in InventoryManager.get_all_items():
+		if item.category == cat and item.tier <= current_tier and item.can_be_sold:
+			if item.tier > max_tier:
+				max_tier = item.tier
+				best_item = item
+	return best_item
