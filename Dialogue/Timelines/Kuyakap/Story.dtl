@@ -30,7 +30,7 @@ elif {Transaction_Chapter} == 1.0:
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "Almost"
-	KuyaKap: Good evening. [pause=0.6] The usual {Transaction_ItemWants} for me, apo.
+	KuyaKap: Good day. [pause=0.6] The usual {Transaction_ItemWants} for me, apo.
 	KuyaKap: [pause=1.2] ...
 	KuyaKap: Those candies... [pause=0.4] They're quite bright today, aren't they?
 	- Kuya, do you want some candy too?

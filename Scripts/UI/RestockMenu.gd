@@ -62,13 +62,13 @@ var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
 # Category display names and their internal keys (must match category = "..." in .tres files)
 # NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
 var category_tabs: Array[String] = [
-	"upgrades", "snack", "sachet", "can", "cigarette", "candy",
+	"upgrades", "snack", "sachets", "can", "cigarette", "candy",
 	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
 	"upgrades": "Upgrades",
 	"snack": "Snack",
-	"sachet": "Sachet",
+	"sachets": "Sachet",
 	"can": "Can",
 	"candy": "Candy",
 	"cigarette": "Cigarette",
@@ -171,14 +171,19 @@ func open_menu() -> void:
 func _build_category_cache() -> void:
 	_category_cache.clear()
 	for item in InventoryManager.get_all_items():
-		# Filter out sachet containers from the sachet category
-		if item.category == "sachet" and item.type == ItemData.ItemType.SACHET_CONTAINER:
-			continue
+		var cat = item.category
+		
+		# Map singular 'sachet' to plural 'sachets' for the UI identifier
+		if cat == "sachet":
+			# Explicitly filter out sachet containers (props) from the purchase catalog
+			if "/sachetcontainers/" in item.resource_path:
+				continue
+			cat = "sachets"
 			
-		if not _category_cache.has(item.category):
+		if not _category_cache.has(cat):
 			var empty: Array[ItemData] = []
-			_category_cache[item.category] = empty
-		_category_cache[item.category].append(item)
+			_category_cache[cat] = empty
+		_category_cache[cat].append(item)
 
 func _animate_entrance() -> void:
 	# Slide in from bottom
