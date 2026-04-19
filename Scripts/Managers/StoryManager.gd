@@ -8,7 +8,7 @@ var save_id: String = "story_manager"
 const DAY_START_HOUR := 5.0
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 ## 1 in-game hour = 30 real seconds.
-const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 30.0
+const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 35.0
 
 var day: int = 1
 

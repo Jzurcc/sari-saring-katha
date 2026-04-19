@@ -22,6 +22,7 @@ var _base_sprite_y: float = 0.0
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var _exit_position: Vector3 = Vector3.ZERO
+var _delayed_target: Vector3 = Vector3.ZERO
 var _walk_timer: float = 0.0
 var _last_pos: Vector3 = Vector3.ZERO
 
@@ -39,12 +40,7 @@ func _ready() -> void:
 
 # [REMOVED] _on_input_event moved to on_interact() to prevent double-firing with PlayerInteraction.
 
-func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3.ZERO) -> void:
-	# Entrance Fade In
-	if body_sprite:
-		body_sprite.modulate.a = 0.0
-		create_tween().tween_property(body_sprite, "modulate:a", 1.0, 0.5)
-	
+func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3.ZERO, delayed_arrival: bool = false) -> void:
 	# Capture spawn position now — global_position is already set by CustomerSpawner.
 	_spawn_position = global_position
 	# If no specific exit is provided, return to spawn by default
@@ -53,7 +49,19 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 	transaction_context = context
 	if transaction_context:
 		customer_data = transaction_context.customer_data
-	target_position = target
+		
+	if delayed_arrival:
+		_delayed_target = target
+		target_position = _spawn_position
+		if body_sprite:
+			body_sprite.modulate.a = 0.0 # Invisible until triggered
+	else:
+		target_position = target
+		# Entrance Fade In
+		if body_sprite:
+			body_sprite.modulate.a = 0.0
+			create_tween().tween_property(body_sprite, "modulate:a", 1.0, 0.5)
+
 	_last_pos = global_position
 
 	# Apply the character's sprite texture and scale from their CustomerData resource.
@@ -98,15 +106,25 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 			MarioManager.is_mario_physically_present = true
 
 
+## Forces a delayed customer to start their arrival sequence.
+func trigger_arrival() -> void:
+	if _delayed_target != Vector3.ZERO:
+		target_position = _delayed_target
+		_delayed_target = Vector3.ZERO
+		if body_sprite:
+			create_tween().tween_property(body_sprite, "modulate:a", 1.0, 0.5)
+
+
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
 ## Only responds when waiting at the counter and not mid-animation.
 func on_interact() -> void:
 	if is_waiting and not _is_resolving:
-		# Don't trigger if already in dialogue
-		if Dialogic.current_timeline != null:
+		# Don't trigger if already in dialogue, unless it's paused (e.g. tutorial tasks)
+		if Dialogic.current_timeline != null and not Dialogic.paused:
 			return
 			
 		clicked.emit(self)
+		EventBus.customer_clicked.emit(self)
 
 func _process(delta: float) -> void:
 	# Skip movement and arrival while waiting at the counter OR while a
@@ -167,6 +185,10 @@ func arrived_at_counter() -> void:
 		landing_tween.tween_property(body_sprite, "scale", base_scale, 0.1) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 			
+			
+	if customer_data:
+		AudioManager.play_dialogue_blip(customer_data)
+		
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
@@ -189,19 +211,31 @@ func check_item(item: ItemData) -> bool:
 					return true
 			return false
 
-	# Visiting customers should never receive items — silent red outline.
-	if transaction_context and transaction_context.transaction_type == TransactionContext.Type.VISIT:
-		reject()
-		return false
+	# Visiting customers (including Visit-type story chapters) should never receive items — silent red outline.
+	if transaction_context:
+		if transaction_context.transaction_type == TransactionContext.Type.VISIT:
+			reject()
+			return false
+		if transaction_context.is_visit_story:
+			reject()
+			return false
 		
 	# Purchase customers must be greeted before they accept items — silent red pulse.
 	if not has_been_greeted:
-		reject()
+		# Special case for Mario: if MainGame handles the early start, don't pulse here.
+		if not (customer_data and customer_data.get_clean_id() == "unclemario"):
+			reject()
 		return false
 
 	if item == null or transaction_context == null:
 		reject()
 		return false
+
+	# Story fallback: If this is a STORY but the dev forgot to populate items (and it's not a visit-story), accept anything.
+	if transaction_context.transaction_type == TransactionContext.Type.STORY and transaction_context.desired_items.is_empty():
+		print("[Customer] STORY type with empty wants detected. Accepting any item as 'gift'.")
+		_on_item_accepted(item)
+		return true
 
 	if transaction_context.fulfill_item(item):
 		_on_item_accepted(item)

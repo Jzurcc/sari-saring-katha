@@ -21,13 +21,35 @@ func get_clean_id() -> String:
 @export var dialogue_blip_volume: float = 0.0
 
 @export_group("Story Progression")
-## Timelines for unique story progression chapters (Chapters 0-8).
-## The game plays story_timelines[chapter] when forcing a chapter interaction.
-@export var story_timelines: Array[DialogicTimeline] = []
+## The single timeline file that handles all story chapters for this character.
+@export var story_timeline: DialogicTimeline
+
+## The total number of story chapters (episodes) available in this character's story_timeline. 
+## Set to 0 if the character has no main story arc.
+@export var max_story_chapters: int = 0
 
 ## Optional prerequisites for each story chapter. 
 ## Index matches story_timelines index. If empty or null at an index, no requirements.
 @export var story_prerequisites: Array[StoryPrerequisiteGroup] = []
+
+## Per-chapter item overrides for story visits. Index = chapter number (0–8).
+## Each ChapterItems entry holds an Array[ItemData] the customer will request that chapter.
+## If the array is shorter than max_story_chapters, or the entry at the current
+## chapter index is null/empty, the system falls back to the normal random item shuffle.
+@export var chapter_request_items: Array = []
+
+## Returns the pinned ChapterItems for a given story chapter, or null
+## if that chapter should use the normal random shuffle.
+func get_chapter_request(chapter: int) -> ChapterItems:
+	if chapter_request_items.is_empty() or chapter >= chapter_request_items.size():
+		return null
+	var entry = chapter_request_items[chapter]
+	if not (entry is ChapterItems) or entry.items.is_empty():
+		return null
+	return entry
+
+
+
 
 ## Per-arc generic assets. Index 0 = Arc 1 (chapters 0-2), 1 = Arc 2 (3-5), 2 = Arc 3 (6-8).
 ## Add or remove entries here to support any number of arcs — no code changes needed.
