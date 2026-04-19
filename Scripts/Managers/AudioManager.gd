@@ -10,7 +10,7 @@ var ambience_base: AudioStreamPlayer
 var ambience_night: AudioStreamPlayer
 
 var base_volume_db: float = -6.0 # Roughly 50% linear volume
-const FADE_DURATION: float = 1.5
+const FADE_DURATION: float = 0.5
 
 func fade_out_everything(duration: float = FADE_DURATION) -> void:
 	var tween = create_tween()
