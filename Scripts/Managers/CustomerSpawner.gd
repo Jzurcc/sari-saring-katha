@@ -148,7 +148,7 @@ func _spawn_next_customer() -> void:
 		guest_customer = customer_scene.instantiate()
 		get_parent().add_child(guest_customer)
 		guest_customer.global_position = spawn_global
-		guest_customer.setup(guest_context, guest_target, exit_global)
+		guest_customer.setup(guest_context, guest_target, exit_global, transaction.guest_spawns_later)
 		
 		# Allow clicking the guest to also start the main dialogue
 		guest_customer.clicked.connect(_on_guest_clicked)
@@ -169,9 +169,7 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 		
 		_update_item_names(customer)
 		
-		# Trigger a single blip and animation on arrival to signal they are ready
-		if customer.customer_data:
-			AudioManager.play_dialogue_blip(customer.customer_data)
+
 		
 		# Patch the generic character resource so "Customer:" lines show the right name and play sounds.
 		if GENERIC_CHAR_RES:
@@ -199,7 +197,7 @@ func _on_customer_finished(customer: Customer) -> void:
 		
 		if active_path == target_path:
 			var label := "Satisfy"
-			if _is_label_in_timeline(target_path, label):
+			if StoryManager.is_label_in_timeline(target_path, label):
 				print("[CustomerSpawner] Jumping to Satisfy label mid-timeline.")
 				Dialogic.Jump.jump_to_label(label)
 				_dialogue_phase = DialoguePhase.SATISFIED
@@ -248,7 +246,16 @@ func _on_customer_clicked(customer: Customer) -> void:
 	if customer.transaction_context.is_repaying:
 		customer.transaction_context.is_repaying = false # Consume flag so it doesn't loop
 		_dialogue_phase = DialoguePhase.REPAYMENT
-		start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, _dialogue_phase)
+		
+		# Dynamic Repayment: Check if the character has a custom "Repayment" label in their timeline
+		var timeline = customer.transaction_context.timeline
+		var timeline_path = timeline.resource_path if timeline is Resource else timeline
+		if StoryManager.is_label_in_timeline(timeline_path, "Repayment"):
+			print("[CustomerSpawner] Found custom Repayment label. Using: ", timeline_path)
+			start_dialogue(timeline, customer, _dialogue_phase, "Repayment")
+		else:
+			print("[CustomerSpawner] No custom Repayment label. Falling back to Generic/Repayment.dtl")
+			start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, _dialogue_phase)
 		return
 
 	# 5. _dialogue_phase != NONE means a timeline just finished its async clear
@@ -270,12 +277,12 @@ func _on_customer_clicked(customer: Customer) -> void:
 	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
 		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
 		var timeline_path = timeline.resource_path if timeline is Resource else timeline
-		if _is_label_in_timeline(timeline_path, "Visit"):
-			label = "Visit"
+		if StoryManager.is_label_in_timeline(timeline_path, "Greeting"):
+			label = "Greeting"
 	else:
 		if not customer.has_been_greeted or _greeting_interrupted:
 			var timeline_path = timeline.resource_path if timeline is Resource else timeline
-			if Dialogic.VAR.get_variable("Global.RumorActive") and _is_label_in_timeline(timeline_path, "Rumor"):
+			if Dialogic.VAR.get_variable("Global_RumorActive") and StoryManager.is_label_in_timeline(timeline_path, "Rumor"):
 				label = "Rumor"
 			else:
 				label = "Greeting"
@@ -305,13 +312,13 @@ func _on_dialogic_signal(argument: String) -> void:
 	if argument == "refuse_service":
 		# Partial success check: if items were delivered, redirect to a partial completion path.
 		# We attempt to jump to PartialDismiss or Satisfy labels.
-		var delivered = Dialogic.VAR.get_variable("Transaction.DeliveredCount")
+		var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
 		if delivered > 0:
 			_is_partial_success = true
 			# Try to jump to a specific partial success label, fallback to Satisfy
-			if _is_label_in_timeline(_current_timeline_path, "PartialDismiss"):
+			if StoryManager.is_label_in_timeline(_current_timeline_path, "PartialDismiss"):
 				Dialogic.Jump.jump_to_label("PartialDismiss")
-			elif _is_label_in_timeline(_current_timeline_path, "Satisfy"):
+			elif StoryManager.is_label_in_timeline(_current_timeline_path, "Satisfy"):
 				Dialogic.Jump.jump_to_label("Satisfy")
 			else:
 				# If neither exists, just mark for dismissal but with success flag
@@ -332,6 +339,33 @@ func _on_dialogic_signal(argument: String) -> void:
 	elif argument == "pulse_green":
 		if is_instance_valid(current_customer):
 			current_customer.pulse_color(Color("#0f6e2f")) # Vibrant Green
+	elif argument == "setup_debt":
+		if is_instance_valid(current_customer) and current_customer.transaction_context:
+			current_customer.transaction_context.wants_debt = true
+			StoryManager._set_dvar("Transaction_WantsDebt", 1.0)
+			print("[CustomerSpawner] Forcing DEBT state via signal.")
+	elif argument == "setup_repay_full":
+		if is_instance_valid(current_customer) and current_customer.transaction_context:
+			var path = current_customer.customer_data.resource_path
+			var debt = StoryManager.customer_debts.get(path, 0.0)
+			current_customer.transaction_context.is_repaying = true
+			current_customer.transaction_context.repayment_amount = debt
+			StoryManager._set_dvar("Transaction_IsRepaying", 1.0)
+			StoryManager._set_dvar("Transaction_RepaymentAmount", debt)
+			print("[CustomerSpawner] Forcing FULL REPAYMENT state via signal: ", debt)
+	elif argument == "setup_repay_half":
+		if is_instance_valid(current_customer) and current_customer.transaction_context:
+			var path = current_customer.customer_data.resource_path
+			var debt = StoryManager.customer_debts.get(path, 0.0)
+			var half = floor(debt / 2.0)
+			current_customer.transaction_context.is_repaying = true
+			current_customer.transaction_context.repayment_amount = half
+			StoryManager._set_dvar("Transaction_IsRepaying", 1.0)
+			StoryManager._set_dvar("Transaction_RepaymentAmount", half)
+			print("[CustomerSpawner] Forcing HALF REPAYMENT state via signal: ", half)
+	elif argument == "spawn_guest":
+		if is_instance_valid(guest_customer) and guest_customer.has_method("trigger_arrival"):
+			guest_customer.trigger_arrival()
 
 func _on_customer_partial_satisfaction(customer: Customer) -> void:
 	if Dialogic.current_timeline != null:
@@ -377,23 +411,23 @@ func _update_item_names(customer: Customer) -> void:
 	var data = customer.customer_data
 	InventoryManager.current_character_name = data.character_name if data.character_name != "" else data.get_clean_id()
 
-	# 3. Update Dialogic Variables
-	Dialogic.VAR.set_variable("Transaction.CustomerName", InventoryManager.current_character_name)
-	Dialogic.VAR.set_variable("Transaction.ItemWants", InventoryManager.current_item_name)
+	# 3. Update Dialogic Variables — Sync safely via StoryManager helper
+	StoryManager._set_dvar("Transaction_CustomerName", InventoryManager.current_character_name)
+	StoryManager._set_dvar("Transaction_ItemWants", InventoryManager.current_item_name)
 	
 	# 4. Sync Delivered/Remaining Counts
 	if customer.transaction_context:
-		var total = customer.transaction_context.original_count
-		var remaining = customer.transaction_context.desired_items.size()
-		Dialogic.VAR.set_variable("Transaction.DeliveredCount", total - remaining)
-		Dialogic.VAR.set_variable("Transaction.RemainingCount", remaining)
+		var total_cnt = customer.transaction_context.original_count
+		var remain_cnt = customer.transaction_context.desired_items.size()
+		StoryManager._set_dvar("Transaction_DeliveredCount", total_cnt - remain_cnt)
+		StoryManager._set_dvar("Transaction_RemainingCount", remain_cnt)
 	
 	# 5. Patch Generic Character Resource
 	if GENERIC_CHAR_RES:
 		GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 
 ## Shared helper — sets style, starts the timeline, and registers the bubble anchor.
-func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase = DialoguePhase.NONE, label: String = "") -> void:
+func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = DialoguePhase.NONE, label: String = "") -> void:
 	# Never start a dialogue if one is playing, if the path is empty,
 	# or if the customer is being dismissed.
 	if (timeline == null or (timeline is String and timeline.is_empty())) or Dialogic.current_timeline != null:
@@ -410,7 +444,7 @@ func start_dialogue(timeline: Variant, customer: Customer, phase: DialoguePhase 
 	# jump to the requested label (e.g., Satisfy) instead of restarting it.
 	if Dialogic.current_timeline != null:
 		if Dialogic.current_timeline.resource_path == _current_timeline_path:
-			if label != "" and _is_label_in_timeline(_current_timeline_path, label):
+			if label != "" and StoryManager.is_label_in_timeline(_current_timeline_path, label):
 				print("[CustomerSpawner] Jumping directly to label: ", label)
 				Dialogic.Jump.jump_to_label(label)
 				return
@@ -556,48 +590,6 @@ func _on_dialogue_ended() -> void:
 
 
 
-var _label_cache: Dictionary = {}
-
-## Helper to see if a label exists in a timeline file (.dtl)
-func _is_label_in_timeline(path: Variant, label_name: String) -> bool:
-	if typeof(path) != TYPE_STRING or path == "":
-		return false
-	
-	# Normalize path and handle missing .dtl extension
-	var full_path = path
-	if not full_path.ends_with(".dtl"):
-		full_path += ".dtl"
-		
-	var cache_key = full_path + "::" + label_name
-	if _label_cache.has(cache_key):
-		return _label_cache[cache_key]
-		
-	if not FileAccess.file_exists(full_path):
-		# Try one more fallback if Dialogic uses local paths
-		if not full_path.begins_with("res://"):
-			full_path = "res://" + full_path
-		if not FileAccess.file_exists(full_path):
-			_label_cache[cache_key] = false
-			return false
-	
-	var file = FileAccess.open(full_path, FileAccess.READ)
-	if not file: 
-		_label_cache[cache_key] = false
-		return false
-	
-	var content = file.get_as_text()
-	
-	# Robust label matching:
-	var regex = RegEx.new()
-	regex.compile("^\\s*label\\s+" + label_name + "(\\s+|#|$)")
-	
-	for line in content.split("\n"):
-		if regex.search(line):
-			_label_cache[cache_key] = true
-			return true
-			
-	_label_cache[cache_key] = false
-	return false
 
 func _on_closing_time_reached() -> void:
 	# If time hit 8 PM and no one is at the counter, spawn Mayari immediately.

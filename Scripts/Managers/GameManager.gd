@@ -112,6 +112,7 @@ func deduct_money(amount: float) -> bool:
 	if money >= amount:
 		money -= amount
 		EventBus.money_changed.emit(money)
+		EventBus.request_sfx.emit("money_decrease")
 		print("[GameManager] Spent %.2f. Remaining: %.2f" % [amount, money])
 		return true
 	else:
@@ -162,20 +163,51 @@ func _on_dialogic_signal(argument: String) -> void:
 		var quota := _pending_quota
 		var was_successful := deduct_money(quota)
 		
+		# Keep the variable synced in case any other system reads it
+		StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
+		
 		if was_successful:
 			quota_day += 1 # Only increase the quota demand if the player paid
 			print("[GameManager] Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
+			
+			var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
+			
+			# First successful collection gets the shop-visit hint line
+			if quota_day == 2 and StoryManager.is_label_in_timeline(timeline_path, "SuccessFirst"):
+				Dialogic.Jump.jump_to_label("SuccessFirst")
+			elif StoryManager.is_label_in_timeline(timeline_path, "Success"):
+				Dialogic.Jump.jump_to_label("Success")
+			else:
+				print("[GameManager] Success labels missing in current timeline. Ending dialogue safely.")
+				Dialogic.end_timeline()
 		else:
-			print("[GameManager] Quota FAILED! Only had %.2f / %.2f (quota: %.2f). Quota Day remains at: %d" % [money, quota, quota, quota_day])
+			print("[GameManager] Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
+			
+			var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
+			if StoryManager.is_label_in_timeline(timeline_path, "Angry"):
+				Dialogic.Jump.jump_to_label("Angry")
+			else:
+				print("[GameManager] Angry labels missing in current timeline. Ending dialogue safely.")
+				Dialogic.end_timeline()
 		
 		EventBus.debt_quota_met.emit(was_successful)
 	
 	# --- Tutorial: Skip path cleans up any dangling task ---
 	elif argument == "refuse_service":
+		# If this is Uncle Mario leaving on Day 1, mark the tutorial as complete automatically.
+		# This prevents a loop if the player skips or finishes without the specific success signal.
+		if day == 1 and _is_mario_tutorial_active():
+			StoryManager.complete_tutorial()
 		cancel_tutorial_tasks()
-	elif argument == "tutorial_skipped":
+	elif argument == "tutorial_skipped" or argument == "tutorial_completed":
 		StoryManager.complete_tutorial()
 		cancel_tutorial_tasks()
+		
+		# If it's already 8 PM, skip Mayari and end the day
+		if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
+			print("[GameManager] Tutorial ended at 8 PM. Skipping Mayari and ending day.")
+			StoryManager.has_mayari_visited = true
+			EventBus.day_ended.emit(day)
 	
 	# --- Interactive Tutorial Tasks ---
 	elif argument == "allow_sale_early":
@@ -186,8 +218,11 @@ func _on_dialogic_signal(argument: String) -> void:
 		_start_tutorial_task("wait_for_fridge", "Click the handle to open the Refrigerator.", EventBus.refrigerator_opened)
 		
 	elif argument == "wait_for_pricing":
-		is_blocking_pickup = true
+		is_blocking_pickup = false
 		_start_tutorial_task("wait_for_pricing", "Press ALT to toggle Pricing Mode.", EventBus.pricing_mode_changed)
+		
+	elif argument == "wait_for_pricing_tutorial":
+		_start_tutorial_task_timed(3.0, "Adjust each item's price using scroll wheel.")
 		
 	elif argument == "wait_for_price_increase" or argument == "wait_for_profit_increase":
 		_start_tutorial_task("wait_for_price_increase", "Use Mouse Wheel / Click to increase the price.", EventBus.price_increased)
@@ -200,19 +235,19 @@ func _on_dialogic_signal(argument: String) -> void:
 		_start_tutorial_task("wait_for_sale", "Drag the item onto Uncle Mario to sell it.", EventBus.transaction_completed)
 	
 	elif argument == "wait_look_at_fridge":
-		_start_tutorial_task_timer("wait_look_at_fridge", "Look at the Refrigerator.", 2.0)
+		_start_tutorial_task_timed(3.0, "Look at the Refrigerator.")
 		
 	elif argument == "wait_look_at_shelf":
-		_start_tutorial_task_timer("wait_look_at_shelf", "Look at the shelves on your left.", 2.0)
+		_start_tutorial_task_timed(3.0, "Look at the shelves on your left.")
 
 	elif argument == "wait_look_at_phone":
-		_start_tutorial_task_timer("wait_look_at_phone", "Look at the Phone.", 2.0)
+		_start_tutorial_task_timed(3.0, "Look at the Phone.")
 
 	elif argument == "wait_look_at_notebook":
-		_start_tutorial_task_timer("wait_look_at_notebook", "Look at the Notebook.", 2.0)
+		_start_tutorial_task_timed(3.0, "Look at the Notebook.")
 
 	elif argument == "repay_debt":
-		var amount = Dialogic.VAR.get_variable("Transaction.RepaymentAmount")
+		var amount = Dialogic.VAR.get_variable("Transaction_RepaymentAmount")
 		money += amount
 		EventBus.money_changed.emit(money)
 		
@@ -232,9 +267,9 @@ func _on_closing_time_reached() -> void:
 	_pending_quota = get_quota_for_day(quota_day)
 	var was_successful = money >= _pending_quota
 	
-	Dialogic.VAR.set_variable("Global.TodayQuota", _pending_quota)
-	Dialogic.VAR.set_variable("Global.HasEnoughMoney", 1.0 if was_successful else 0.0)
-	Dialogic.VAR.set_variable("Global.QuotaDay", float(quota_day))
+	StoryManager._set_dvar("Global_TodayQuota", _pending_quota)
+	StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
+	StoryManager._set_dvar("Global_QuotaDay", float(quota_day))
 	
 	print("[GameManager] Store Closed. Pre-calculated Quota (Day %d): %.2f, Success: %s" % [
 		quota_day, _pending_quota, was_successful
@@ -250,32 +285,25 @@ func _input(event: InputEvent) -> void:
 			return
 
 	# 2. Block Dialogue Advancement during Tutorial Tasks or Pause
-	# This prevents Space/Enter from "punching through" tutorial wait-states
+	# Note: We no longer consume the click here because it blocks world interaction.
+	# The PlayerInteraction script now handles tutorial-safe clicks.
 	if is_tutorial_task_active or Dialogic.paused:
-		if event.is_action_pressed("dialogic_default_action") or event.is_action_pressed("ui_accept"):
+		if event.is_action_pressed("ui_accept"):
 			get_viewport().set_input_as_handled()
 			return
+	
+	if event is InputEventMouseButton and event.pressed:
+		pass
 
 	# 3. Debug Jump to Evening (L key)
-	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:
-		print("[GameManager] DEBUG: Jump to 7:30 PM triggered via L key")
-		
-		var tod = get_tree().root.find_child("TimeOfDay", true, false)
-		if tod and tod.has_method("set_time"):
-			tod.set_time(19, 30, 0)
+	# if event is InputEventKey and event.pressed and event.keycode == KEY_L and not event.echo:
+	# 	print("[GameManager] DEBUG: Jump to 7:30 PM triggered via L key")
+	# 	var tod = get_tree().root.find_child("TimeOfDay", true, false)
+	# 	if tod and tod.has_method("set_time"):
+	# 		tod.set_time(19, 30, 0)
 
-	# 3. Debug Advance Tier (K key)
-	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_K and not event.echo:
-		var next_tier = StoryManager.current_tier + 1
-		if next_tier <= 10:
-			if StoryManager.max_unlocked_tier < next_tier:
-				StoryManager.max_unlocked_tier = next_tier
-			
-			var cost = StoryManager.get_upgrade_cost(next_tier)
-			money += cost
-			EventBus.money_changed.emit(money)
-			EventBus.show_notification.emit("UPGRADE UNLOCKED!", "You now have enough money to upgrade to Tier %d." % next_tier, "")
-			print("[GameManager] DEBUG: Gave money and unlocked Tier %d" % next_tier)
+	# 4. Debug Advance Tier (K key)
+	# (Disabled for export)
 
 
 ## Helper to highlight an object during the tutorial
@@ -304,31 +332,24 @@ func _start_tutorial_task(task_id: String, prompt: String, completion_signal: Si
 	if not _current_task_signal.is_connected(_on_tutorial_task_completed):
 		_current_task_signal.connect(_on_tutorial_task_completed)
 
-func _start_tutorial_task_gaze(task_id: String, prompt: String, target_id: String, group_name: String) -> void:
-	var interaction = get_tree().get_first_node_in_group("player_interaction")
-	if interaction and interaction.has_method("setup_gaze_task"):
-		interaction.setup_gaze_task(target_id, group_name)
-	
-	_start_tutorial_task(task_id, prompt, EventBus.target_gazed)
-
-func _start_tutorial_task_timer(task_id: String, prompt: String, duration: float) -> void:
+func _start_tutorial_task_timed(duration: float, prompt: String) -> void:
 	is_tutorial_task_active = true
-	current_tutorial_task_id = task_id
 	Dialogic.paused = true
-	
-	# Hide standard dialogue window to show the prompt clearly
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	var layout = Dialogic.Styles.get_layout_node()
 	if layout: layout.hide()
 	
 	EventBus.helper_prompt_requested.emit(prompt, true)
-	_current_task_signal = Signal() # Clear any previous signal
 	
-	# Wait for the duration
 	await get_tree().create_timer(duration).timeout
 	
-	# Only complete if this task is still the active one (prevent race conditions)
-	if current_tutorial_task_id == task_id:
-		_on_tutorial_task_completed()
+	is_tutorial_task_active = false
+	is_blocking_pickup = false # Clear pickup block after timed tasks
+	Dialogic.paused = false
+	if layout: layout.show()
+	EventBus.helper_prompt_requested.emit("", false)
+	# Explicitly ensure the cursor remains captured so the player can keep looking around
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _on_tutorial_task_completed(arg1=null, _b=null, _c=null, _d=null) -> void:
 	# For gaze tasks, verify the target matches
@@ -343,6 +364,7 @@ func _on_tutorial_task_completed(arg1=null, _b=null, _c=null, _d=null) -> void:
 	
 	is_tutorial_task_active = false
 	current_tutorial_task_id = ""
+	is_blocking_pickup = false # Clear blocking state when a task is done
 	EventBus.helper_prompt_requested.emit("", false)
 	
 	# Small delay before resuming for juice
@@ -371,9 +393,8 @@ func cancel_tutorial_tasks() -> void:
 		if MarioManager.has_method("cancel_restock"):
 			MarioManager.cancel_restock()
 	
-	# 3. Disconnect the task completion signal if connected
-	if _current_task_signal and _current_task_signal.is_connected(_on_tutorial_task_completed):
-		_current_task_signal.disconnect(_on_tutorial_task_completed)
+	# 3. Disconnect the task
+	_cancel_tutorial_signal_connection()
 	
 	is_tutorial_task_active = false
 	current_tutorial_task_id = ""
@@ -422,12 +443,22 @@ func get_save_data() -> Dictionary:
 		"money": money,
 		"day": day,
 		"quota_day": quota_day,
+		"pending_quota": _pending_quota,
 	}
 
 func load_save_data(data: Dictionary) -> void:
 	money = data.get("money", starting_money)
 	day = data.get("day", 1)
 	quota_day = data.get("quota_day", 1)
+	_pending_quota = data.get("pending_quota", 0.0)
+	
+	# RE-SYNC: Ensure Dialogic variables match these loaded values immediately
+	StoryManager._set_dvar("Global_TodayQuota", _pending_quota)
+	StoryManager._set_dvar("Global_QuotaDay", float(quota_day))
+	
+	# Re-calculate HasEnoughMoney for the UI/Timeline if we loaded at closing time
+	var has_enough = money >= _pending_quota
+	StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if has_enough else 0.0)
 	
 	EventBus.money_changed.emit(money)
 	# day_started is now explicitly emitted in _ready() after load finishes
@@ -439,3 +470,22 @@ func reset_state() -> void:
 	quota_day = 1
 	_reset_clock_to_morning()
 	print("[GameManager] State reset to defaults for New Game.")
+
+
+func _cancel_tutorial_signal_connection() -> void:
+	if _current_task_signal and _current_task_signal.is_connected(_on_tutorial_task_completed):
+		_current_task_signal.disconnect(_on_tutorial_task_completed)
+
+
+## Returns true if the currently active Dialogic timeline is the Uncle Mario tutorial.
+func _is_mario_tutorial_active() -> bool:
+	var tl = Dialogic.current_timeline
+	if tl == null:
+		return false
+	
+	if typeof(tl) == TYPE_STRING:
+		return tl.to_lower().contains("unclemario")
+	elif "resource_path" in tl:
+		return tl.resource_path.to_lower().contains("unclemario")
+	
+	return false

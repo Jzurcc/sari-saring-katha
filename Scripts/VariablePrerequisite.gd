@@ -3,7 +3,7 @@ extends StoryPrerequisite
 
 ## Requires a specific Dialogic variable to have a specific value.
 
-## The full path to the variable (e.g. "Global.Money" or "Buboy.Trust").
+## The full path to the variable (e.g. "Global_Money" or "Buboy.Trust").
 @export var variable_name: String
 ## The required value to compare against.
 @export var required_value: String

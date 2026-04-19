@@ -42,6 +42,8 @@ func _ready() -> void:
 	_sfx_player = AudioStreamPlayer.new()
 	add_child(_sfx_player)
 	
+	add_to_group("persist")
+	
 	if ResourceLoader.exists(MARIO_DATA_PATH):
 		_mario_data = load(MARIO_DATA_PATH)
 	else:
@@ -79,12 +81,13 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	
 	print("[MarioManager] Initiating call → Label: ", label)
 	
-	if label == "Call":
-		print("[MarioManager] Playing dial sound...")
-		_play_sfx(sfx_dial)
-		var delay := randf_range(2.0, 6.0)
-		await get_tree().create_timer(delay).timeout
-		_sfx_player.stop()
+	# All calls now feature the ringing/dial delay for realism
+	print("[MarioManager] Playing dial sound...")
+	_play_sfx(sfx_dial)
+	
+	var delay := randf_range(2.0, 4.0)
+	await get_tree().create_timer(delay).timeout
+	_sfx_player.stop()
 	
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
@@ -196,12 +199,12 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	for item in items.keys():
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
-			target_tier = item.get_meta("target_tier", 1)
+			target_tier = max(target_tier, item.get_meta("target_tier", 1))
 			print("[MarioManager] Upgrade detected in delivery! Target Tier: ", target_tier)
 			continue
 
 		# Filter: Candies and Sachets bypass bags
-		if item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
+		if item.category == "candy" or item.category == "sachet" or item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
 			print("[MarioManager] Auto-stocking digital item: ", item.item_name)
 			continue
 			
@@ -211,12 +214,22 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:
-		StoryManager.advance_tier("Mario Delivery")
-		var all_items = InventoryManager.get_all_items()
-		for i in all_items:
-			if i.tier == target_tier and i.can_be_sold:
-				print("[MarioManager] Gifting sample of: ", i.item_name)
-				InventoryManager.add_stock(i, 2)
+		var start_tier = StoryManager.current_tier
+		while StoryManager.current_tier < target_tier:
+			StoryManager.advance_tier("Mario Delivery")
+			var new_tier = StoryManager.current_tier
+			print("[MarioManager] Processing unlocked samples for NEW Tier: ", new_tier)
+			
+			var all_items = InventoryManager.get_all_items()
+			for i in all_items:
+				if i.tier == new_tier and i.can_be_sold:
+					print("[MarioManager] Unpacking 2 samples of: ", i.item_name)
+					InventoryManager.add_stock(i, 2)
+					
+					if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
+						# Samples go into bags (2 units each)
+						items_to_bag.append(i)
+						items_to_bag.append(i)
 	
 	# Group items into batches of 5
 	var batch_size = 5
@@ -261,6 +274,64 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	delivery_finished.emit()
 
 # ── INTERNAL HELPERS ────────────────────────────────────────────────
+
+# ── SAVE / LOAD LOGIC ────────────────────────────────────────────────
+
+func get_save_data() -> Dictionary:
+	var bags_data = []
+	for bag in get_tree().get_nodes_in_group("delivery_bag"):
+		var item_paths = []
+		for item in bag.items:
+			item_paths.append(item.resource_path)
+			
+		bags_data.append({
+			"pos_x": bag.global_position.x,
+			"pos_y": bag.global_position.y,
+			"pos_z": bag.global_position.z,
+			"items": item_paths
+		})
+		
+	return {
+		"bags": bags_data
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	if not data.has("bags"):
+		return
+		
+	# Security check: Ignore loads if we're in the MainMenu
+	if get_tree().current_scene.name != "MainGame":
+		return
+		
+	# Clear whatever dummy bags currently exist to prevent dupes.
+	for old_bag in get_tree().get_nodes_in_group("delivery_bag"):
+		old_bag.queue_free()
+		
+	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
+	for b_data in data["bags"]:
+		var new_bag = plastic_scene.instantiate()
+		get_tree().current_scene.add_child(new_bag)
+		
+		new_bag.global_position = Vector3(
+			b_data.get("pos_x", 0.0),
+			b_data.get("pos_y", 0.0),
+			b_data.get("pos_z", 0.0)
+		)
+		
+		var restored_items: Array[ItemData] = []
+		for path in b_data.get("items", []):
+			if ResourceLoader.exists(path):
+				restored_items.append(load(path))
+				
+		new_bag.items = restored_items
+		# Wait for scene tree to process the added node before skipping fade
+		new_bag.set_deferred("is_fading_in", false)
+		
+		# Optional: Quick visuals pulse
+		if new_bag.has_method("_refresh_visuals"):
+			new_bag.call_deferred("_refresh_visuals")
+
+
 
 ## Starts a Dialogic timeline with the FollowBubble style.
 ## Mirrors the WORKING pattern from CustomerSpawner._start_dialogue:
@@ -320,6 +391,7 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 
 func _play_sfx(stream: AudioStream) -> void:
 	_sfx_player.stream = stream
+	_sfx_player.volume_db = -9.0
 	_sfx_player.play()
 
 func _refresh_containers(_ignored_node: Node) -> void:
@@ -327,6 +399,10 @@ func _refresh_containers(_ignored_node: Node) -> void:
 	for surface in get_tree().get_nodes_in_group("shelf_surface"):
 		if surface.has_method("refresh_visibility"):
 			surface.refresh_visibility()
+			
+	for container in get_tree().get_nodes_in_group("pricing_ui_containers"):
+		if container.has_method("refresh_stock"):
+			container.refresh_stock()
 
 
 func _on_character_speaking(customer: CustomerData) -> void:

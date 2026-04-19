@@ -18,6 +18,8 @@ signal customer_rejected(customer: Customer)
 signal customer_dismissed(customer: Customer)
 @warning_ignore("unused_signal")
 signal dialogue_character_speaking(customer_data: CustomerData)
+@warning_ignore("unused_signal")
+signal customer_clicked(customer: Customer)
 
 
 # --- Transactions ---
@@ -86,5 +88,7 @@ signal refrigerator_opened()
 signal helper_prompt_requested(text: String, is_active: bool)
 @warning_ignore("unused_signal")
 signal show_notification(message: String, sub_message: String, sfx_to_play: String)
+@warning_ignore("unused_signal")
+signal restock_catalog_refresh()
 @warning_ignore("unused_signal")
 signal target_gazed(target_id: String)
