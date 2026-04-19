@@ -17,7 +17,7 @@ enum ItemType {
 ## If false, customers will never ask for this item (e.g. for containers/props).
 @export var can_be_sold: bool = true
 @export var type: ItemType = ItemType.SHELF
-@export_enum("snacks", "sachet", "canned goods", "candy", "cigarette", "beverages", "instant noodles", "frozen goods") var category: String = "snacks"
+@export_enum("snack", "sachet", "can", "candy", "cigarette", "bottle", "pack", "frozen") var category: String = "snack"
 @export var tier: int = 1
 @export var item_hint: String = ""
 
@@ -74,4 +74,10 @@ func get_max_selling_price() -> float:
 	var tier_val : int = max(1, tier)
 	# Max margin: 25% (Tier 1) to 50% (Tier 10)
 	var max_margin : float = 0.25 + (float(tier_val) - 1.0) * (0.25 / 9.0)
-	return round(base_price * (1.0 + max_margin))
+	var max_p : float = base_price * (1.0 + max_margin)
+	
+	# Rule: If potential max <= 10, add 3 pesos
+	if max_p <= 10.0:
+		max_p += 3.0
+		
+	return snapped(max_p, 0.5)
