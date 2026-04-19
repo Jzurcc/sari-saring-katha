@@ -8,6 +8,7 @@ script = ExtResource("1_lphjf")
 item_name = "Aryel"
 texture = ExtResource("2_tyir5")
 price = 12.0
+type = 3
 category = "sachet"
 tier = 10
 item_hint = "can't clean the 0.1%"

@@ -1,17 +1,13 @@
-[gd_resource type="Resource" script_class="ItemData" format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://bi83omfmoown"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id = "1_item"]
-[ext_resource type="Texture2D" path="res://Assets/items/icons/5_snack_patos.png" id = "2_tex"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" uid="uid://es0alcyyfhpy" path="res://Assets/items/icons/5_snack_patos.png" id="2_tex"]
 
 [resource]
-id = "patos"
-tier = 1
 script = ExtResource("1_item")
 item_name = "Patos"
 texture = ExtResource("2_tex")
 price = 9.0
-markup = 3.0
-category = "snack"
 item_hint = "is cheesy"
 display_height_meters = 0.6
 opaque_rect = Rect2i(78, 11, 335, 471)

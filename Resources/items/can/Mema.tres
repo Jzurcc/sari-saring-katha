@@ -11,5 +11,5 @@ price = 21.0
 category = "can"
 tier = 5
 item_hint = "ranks number one"
-display_height_meters = 0.47
+display_height_meters = 0.35
 opaque_rect = Rect2i(102, 15, 291, 458)

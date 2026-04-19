@@ -11,5 +11,5 @@ price = 21.0
 category = "can"
 tier = 5
 item_hint = "will bring me good luck"
-display_height_meters = 0.47
+display_height_meters = 0.35
 opaque_rect = Rect2i(104, 17, 303, 475)

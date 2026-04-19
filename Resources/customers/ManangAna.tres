@@ -8,11 +8,13 @@
 [ext_resource type="Texture2D" uid="uid://dxyx405jevl77" path="res://Assets/characters/sprites/ManangAna.png" id="5_4587l"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_2nawl"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
 
 [resource]
 script = ExtResource("2_m676v")

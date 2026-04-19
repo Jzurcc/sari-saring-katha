@@ -12,5 +12,5 @@ type = 2
 category = "candy"
 tier = 2
 item_hint = "can teach me "
-display_height_meters = 0.4
+display_height_meters = 0.35
 opaque_rect = Rect2i(11, 67, 466, 357)

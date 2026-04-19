@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://Assets/items/icons/37_special_tk_bandana.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Woven Travel Bandana"
+texture = ExtResource("2_tex")
+price = 0.0
+selling_price = 0.0
+can_be_sold = true
+category = "snack"
+tier = 3
+item_hint = "A souvenir from T.K.'s travels."
+display_height_meters = 0.2
+opaque_rect = Rect2i(0, 0, 256, 256)

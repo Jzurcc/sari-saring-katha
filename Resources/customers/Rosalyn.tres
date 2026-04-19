@@ -8,17 +8,22 @@
 [ext_resource type="Texture2D" uid="uid://bnah6st44t36f" path="res://Assets/characters/sprites/Rosalyn.png" id="5_8o33b"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_8o33b"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Rosalyn/Purchase.dtl" id="ros_purchase"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Rosalyn/Visit.dtl" id="ros_visit"]
+[ext_resource type="Resource" uid="uid://bnumeiduxs8n1" path="res://Dialogue/Timelines/Rosalyn/Story.dtl" id="story_timeline"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_visit")])
 
 [resource]
 script = ExtResource("4_vx57o")
 character_name = "Rosalyn"
 sprite_texture = ExtResource("5_8o33b")
 dialogic_character = ExtResource("1_epene")
+story_timeline = ExtResource("story_timeline")
+max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_r53lf")

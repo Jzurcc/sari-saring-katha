@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://dbg_debt_customer"]
+
+[ext_resource type="AudioStream" uid="uid://cuyl4xi7b1i1v" path="res://Audio/DialogueBlips/ReynaMayari.wav" id="1_blip"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_script"]
+[ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/Customer.dch" id="3_dch"]
+[ext_resource type="Resource" uid="uid://debug_debt_timeline" path="res://Dialogue/Timelines/Generic/debug_debt_system.dtl" id="4_timeline"]
+[ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_img"]
+
+[resource]
+script = ExtResource("2_script")
+character_name = "Debt Debugger"
+sprite_texture = ExtResource("5_img")
+dialogic_character = ExtResource("3_dch")
+story_timeline = ExtResource("4_timeline")
+max_story_chapters = 1
+sprite_scale = 0.43
+dialogue_blip_sound = ExtResource("1_blip")

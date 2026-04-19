@@ -8,6 +8,7 @@ script = ExtResource("1_item")
 item_name = "Knees and Toes"
 texture = ExtResource("2_vm0x7")
 price = 8.0
+type = 3
 category = "sachet"
 tier = 4
 item_hint = "cleans my feet"

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://cuqksepunimm1"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://bhoa02e77866v"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_4e7ft"]
 [ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/ReynaMayari.dch" id="1_w2e88"]
@@ -8,11 +8,14 @@
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_b7yu0"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="purchase_dtl"]
+[ext_resource type="Resource" uid="uid://chi8ndhwuhd3c" path="res://Dialogue/Timelines/ReynaMayari/Story.dtl" id="story_dtl"]
+[ext_resource type="Resource" uid="uid://c5ftr0ohic643" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="visit_dtl"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
 
 [resource]
 script = ExtResource("2_e2ncc")
@@ -21,7 +24,8 @@ sprite_texture = ExtResource("5_uua7o")
 dialogic_character = ExtResource("1_w2e88")
 unlock_tier = 99
 dialogue_blip_volume = -6.0
+story_timeline = ExtResource("story_dtl")
+max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
-sprite_scale = 0.5
+sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("2_1p4eh")
-metadata/_custom_type_script = "res://Scripts/CustomerData.gd"

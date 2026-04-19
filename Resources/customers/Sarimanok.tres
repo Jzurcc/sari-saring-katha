@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://cqemb5aipsbht"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://dqdowab7ddq3f"]
 
 [ext_resource type="Resource" uid="uid://bhl7nyuop4wn5" path="res://Dialogue/Timelines/Sarimanok.dch" id="1_ia7rp"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_qjaua"]
@@ -8,11 +8,14 @@
 [ext_resource type="Texture2D" uid="uid://wcnibayq5f8k" path="res://Assets/characters/sprites/Sarimanok.png" id="7_sprite"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="8_arcdata"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_lh0g4"]
-[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Resource" uid="uid://c2s7pfyxbggpr" path="res://Dialogue/Timelines/Sarimanok/Purchase.dtl" id="smk_purchase"]
+[ext_resource type="Resource" uid="uid://br147rott8bhs" path="res://Dialogue/Timelines/Sarimanok/Story.dtl" id="smk_story"]
+[ext_resource type="Resource" uid="uid://dlcphfad8n24f" path="res://Dialogue/Timelines/Sarimanok/Visit.dtl" id="smk_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("8_arcdata")
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_visit")])
 
 [resource]
 script = ExtResource("2_362fa")
@@ -20,7 +23,9 @@ character_name = "Sarimanok"
 sprite_texture = ExtResource("7_sprite")
 dialogic_character = ExtResource("1_ia7rp")
 unlock_tier = 2
+dialogue_blip_volume = -6.0
+story_timeline = ExtResource("smk_story")
+max_story_chapters = 9
 character_arcs = Array[ExtResource("8_arcdata")]([SubResource("arcdata_script")])
 sprite_scale = 0.3
 dialogue_blip_sound = ExtResource("2_eiccw")
-metadata/_custom_type_script = "res://Scripts/CustomerData.gd"

@@ -1,18 +1,21 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://btpkpjvi4h2xs"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://bf5n6iyiujbwl"]
 
 [ext_resource type="Resource" uid="uid://cegjg31uitlcf" path="res://Dialogue/Timelines/TK.dch" id="1_6cmda"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_iwd4p"]
 [ext_resource type="AudioStream" uid="uid://1pvsjry1o4fe" path="res://Audio/DialogueBlips/TK.wav" id="2_0aich"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_lhygj"]
-[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
+[ext_resource type="Resource" uid="uid://dp26h4886jwi7" path="res://Dialogue/Timelines/TK/Story.dtl" id="4_timeline"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="4_timeline_script"]
 [ext_resource type="Texture2D" uid="uid://dkniinpqcxqbj" path="res://Assets/characters/sprites/TK.png" id="5_0aich"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_ap20c"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Resource" uid="uid://cax2d71h231r" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
+[ext_resource type="Resource" uid="uid://6i4302636r17" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
+visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
 
 [resource]
 script = ExtResource("2_lhygj")
@@ -20,7 +23,9 @@ character_name = "T.K."
 sprite_texture = ExtResource("5_0aich")
 dialogic_character = ExtResource("1_6cmda")
 unlock_tier = 3
+dialogue_blip_volume = -5.0
+story_timeline = ExtResource("4_timeline")
+max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("2_0aich")
-metadata/_custom_type_script = "res://Scripts/CustomerData.gd"

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://bdaec46806lti"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://dgqlotcmv4xee"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_ftdyi"]
 [ext_resource type="Resource" uid="uid://ckx12ugj7m8oc" path="res://Dialogue/Timelines/Buboy.dch" id="1_x7l5d"]
@@ -8,17 +8,21 @@
 [ext_resource type="Texture2D" uid="uid://b2klfrum7thsh" path="res://Assets/characters/sprites/Buboy.png" id="5_mx7nj"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_pwffr"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://dhbcatud3wpvb" path="res://Dialogue/Timelines/Generic/Purchase.dtl" id="gen_neutral"]
+[ext_resource type="Resource" uid="uid://chirwjrehoxjg" path="res://Dialogue/Timelines/Buboy/Purchase.dtl" id="buboy_purchase"]
+[ext_resource type="Resource" uid="uid://c3sj15wq5i3pc" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("gen_neutral")])
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_purchase")])
 
 [resource]
 script = ExtResource("2_voalc")
 character_name = "Buboy"
 sprite_texture = ExtResource("5_mx7nj")
 dialogic_character = ExtResource("1_x7l5d")
+dialogue_blip_volume = -7.0
+story_timeline = ExtResource("story_timeline")
+max_story_chapters = 10
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_siajg")
