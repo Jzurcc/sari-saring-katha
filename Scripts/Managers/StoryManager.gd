@@ -8,7 +8,7 @@ var save_id: String = "story_manager"
 const DAY_START_HOUR := 5.0
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 ## 1 in-game hour = 30 real seconds.
-const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 35.0
+const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 45.0
 
 var day: int = 1
 
@@ -24,7 +24,7 @@ var is_clock_running: bool = false:
 	set(value):
 		is_clock_running = value
 		_ensure_tod_node()
-		if _time_of_day_node:
+		if _time_of_day_node and not (get_tree().current_scene and get_tree().current_scene.name == "MainMenu"):
 			_time_of_day_node.game_time_enabled = is_clock_running
 
 var _last_character_path: String = ""
@@ -53,6 +53,7 @@ var _debug_sarimanok_cycle: int = 0  # 0=STORY, 1=PURCHASE, 2=VISIT
 # --- Tier Progression ---
 var current_tier: int = 1
 var max_unlocked_tier: int = 1
+var _last_tier_unlocked_notification: int = 0
 var purchase_counter: int = 0:
 	set(value):
 		purchase_counter = value
@@ -60,7 +61,7 @@ var purchase_counter: int = 0:
 			if max_unlocked_tier < 10:
 				max_unlocked_tier += 1
 				_pending_tier_advance_source = "Activity"
-				EventBus.show_notification.emit("Store Upgrade!", "New items unlocked at Tier %d." % max_unlocked_tier, "")
+				_last_tier_unlocked_notification = max_unlocked_tier
 			purchase_counter = 0
 
 var pending_upgrade_tier: int = 0
@@ -286,20 +287,25 @@ func get_representative_item_for_tier(target_tier: int) -> ItemData:
 
 func process_pending_unlock() -> void:
 	if _pending_tier_advance_source != "":
-		# Queue the upgrade for purchase instead of auto-unlocking
+		# Always offer the NEXT sequential upgrade for purchase
 		pending_upgrade_tier = current_tier + 1
 		pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
 		
-		# Collect items being unlocked in this tier
+		# But the notification highlights the specific tier that was JUST unlocked
+		var notify_tier = _last_tier_unlocked_notification if _last_tier_unlocked_notification > 0 else pending_upgrade_tier
+		
+		# Collect items belonging specifically to the newly unlocked tier
 		var new_items: Array[ItemData] = []
 		for item in InventoryManager.get_all_items():
-			if item.tier == pending_upgrade_tier:
+			if item.tier == notify_tier:
 				new_items.append(item)
 		
 		_pending_tier_advance_source = ""
+		_last_tier_unlocked_notification = 0 # Reset after notification
 		
-		# Notify the player to call Uncle Mario
-		EventBus.upgrade_available.emit(pending_upgrade_tier, pending_upgrade_cost, new_items)
+		# Notify the player. We show the items for notify_tier, 
+		# but the cost is for the NEXT purchaseable upgrade (pending_upgrade_tier).
+		EventBus.upgrade_available.emit(notify_tier, pending_upgrade_cost, new_items)
 		_save_progression()
 
 func _save_progression() -> void:
@@ -359,7 +365,8 @@ func load_save_data(data: Dictionary) -> void:
 	is_clock_running = data.get("is_clock_running", false)
 	
 	_ensure_tod_node()
-	_apply_display_time(_current_display_time)
+	if get_tree().current_scene and get_tree().current_scene.name != "MainMenu":
+		_apply_display_time(_current_display_time)
 	
 	print("[StoryManager] State loaded. Tier %d, Day %d, Time %.2f, Characters tracked: %d" % [current_tier, day, _current_display_time, character_story_states.size()])
 
@@ -927,6 +934,11 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 		else:
 			is_purchase = randf() < (1.0 - visit_chance)
 			
+		# Danilo Overdrive: Should only have VISIT timelines if story isn't finished.
+		if is_purchase and data.get_clean_id() == "danilo" and chapter < data.max_story_chapters:
+			print("[StoryManager] Danilo story incomplete (%d/%d). Overriding PURCHASE to VISIT." % [chapter, data.max_story_chapters])
+			is_purchase = false
+			
 
 		var purchase_pool = data.get_purchase_timelines(chapter)
 		var visit_pool = data.get_visit_timelines(chapter)
@@ -1110,6 +1122,10 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 						print("[StoryManager] STORY chapter had empty item pool. Fallback item used: ", any_item.item_name)
 					else:
 						print("[StoryManager] STORY chapter: no fallback items found. Story dialogue will handle it.")
+			
+			# SYNC: Ensure the built item list (overrides/fallbacks) is pushed to Dialogic DVars
+			_update_transaction_item_string(t)
+			print("[StoryManager] Dynamic items synced via override/fallback for %s: %s" % [data.character_name, Transaction_ItemWants])
 
 
 
@@ -1200,6 +1216,12 @@ func _set_last_customer_info(customer: Customer) -> void:
 		var display_name = data.character_name if data.character_name != "" else data.get_clean_id()
 			
 		_set_dvar("Global_LastCustomer", display_name)
+		
+		# Mark as encountered so they leave the Priority 0 "Forced First Encounter" list
+		var path = data.resource_path
+		if not encountered_characters.has(path):
+			encountered_characters[path] = true
+			print("[StoryManager] Character marked as ENCOUNTERED: ", data.get_clean_id())
 		
 		# Save specific item for rumors if applicable
 		if not customer.transaction_context.desired_items.is_empty():
@@ -1358,19 +1380,22 @@ func get_any_item_for_category(cat: String) -> ItemData:
 		if item.category in mapped_categories and item.tier <= current_tier and item.can_be_sold:
 			pool.append(item)
 	
-	return pool.pick_random() if not pool.is_empty() else null
+	var item = pool.pick_random() if not pool.is_empty() else null
+	if not item:
+		print("[StoryManager] Category Search FAILURE: '%s' (Mapped: %s) yielded 0 items at Tier %d." % [cat, mapped_categories, current_tier])
+	return item
 
 func _get_mapped_categories(cat: String) -> Array[String]:
 	var c = cat.to_lower()
 	match c:
 		"drinks", "beverage": return ["bottle"]
-		"cigars": return ["cigarette"]
+		"cigars", "cigarette", "cigarettes": return ["cigarette"]
 		"candies": return ["candy"]
 		"snacks": return ["snack"]
 		"sachets": return ["sachet"]
 		"packs", "noodles": return ["pack"]
 		"frozen": return ["frozen"]
-		"cans": return ["can"]
+		"cans", "cannedgoods": return ["can"]
 	
 	# Fallback: if it's not a keyword, check if it's an item name
 	for item in InventoryManager.get_all_items():
