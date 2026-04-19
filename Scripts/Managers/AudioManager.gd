@@ -238,6 +238,8 @@ func _process(delta: float) -> void:
 					time_of_day_node = scene.find_child("TimeOfDay", true, false)
 
 	if _is_in_intro_or_menu:
+		# Only re-trigger NONE phase if we actually just changed scenes
+		# (prevents the 1-second polling loop from causing a fade-out/fade-in glitch)
 		if current_bgm_phase != BGMPhase.NONE:
 			_change_bgm_phase(BGMPhase.NONE)
 		return
@@ -378,17 +380,14 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		
 	bgm_transition_tween.tween_callback(func():
 		bgm_player.stream = _active_playlist[_playlist_index]
-			
+		
 		var target_vol = -80.0 if theme_player.playing else base_volume_db
 		
-		if is_first_play:
-			bgm_player.volume_db = target_vol
-			bgm_player.play()
-		else:
-			bgm_player.volume_db = -80.0
-			bgm_player.play()
-			bgm_transition_tween = create_tween()
-			bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
+		# Always start silent and fade in — whether first play or a phase crossfade
+		bgm_player.volume_db = -80.0
+		bgm_player.play()
+		bgm_transition_tween = create_tween()
+		bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
 		
 		_emit_music_change(bgm_player.stream)
 	)
