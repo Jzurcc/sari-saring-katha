@@ -22,7 +22,6 @@ UncleMario: Anyway, do you need help with how things are done here? Or are you r
 	UncleMario: Now where was I? 
 	UncleMario: Ah!
 	UncleMario: Over to your right is the Refrigerator. In this heat, people will be dying for a cold soda.
-	[signal arg="wait_look_at_fridge"]
 	UncleMario: Go on, try opening it. Just click the handle.
 	[signal arg="wait_for_fridge"]
 	UncleMario: You can put all sorts of frozen goods here. Do be sure to close it after though, or else the cold will run free!

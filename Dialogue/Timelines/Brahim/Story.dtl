@@ -1,16 +1,16 @@
 label Greeting
 # [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0:
-	Brahim: Good evening. [pause=0.3] I'm trying to remember a specific brand of biscuits... blue tin, square-cut. 
-	Brahim: My lola used to keep them in a jar by the window. 
-	- The Argentita?
-		Brahim: That sounds right. [pause=0.4] I spent ten years teaching at UC in Baguio. I never forgot a student's ID number.
-		Brahim: But here, the humidity seems to cause intermittent packet loss. A total cache miss for childhood memories.
+	Brahim: Good evening. [pause=0.3] I'm trying to remember a specific brand of product...
+	Brahim: I could use some right about now.
+	- Maybe a nice relaxing snack?
 	- Maybe it's just the change of pace.
-		Brahim: "High-latency life," I call it. Gov. Pack Road was always at 100% CPU usage.
-		Brahim: Down here, the system is quiet. Almost too quiet. 
-	Brahim: I'll take a tin of those, if you have them. I'm helping my Lolo with a ritual near the creek tonight.
-	Brahim: [pause=0.3] Apparently, even spirits appreciate a good biscuit during the breaks.
+	Brahim: That sounds right. 
+	Brahim: I come from the University of Cordilleras, Baguio, you see.
+	Brahim: The humidity here seems to cause intermittent packet loss. A total cache miss for childhood memories.
+	Brahim: In Karimlan, the system is quiet. Almost too quiet. 
+	Brahim: Anyway, I'll take {Transaction_ItemWants}. I'm helping my Lolo with a ritual near the creek tonight.
+	Brahim: [pause=0.3] Apparently, even spirits appreciate a good snack during the breaks.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1:
