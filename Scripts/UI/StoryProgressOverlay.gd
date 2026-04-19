@@ -79,15 +79,23 @@ func _populate_arcs() -> void:
 	var story_states = StoryManager.character_story_states
 	var current_progress = story_states.get(_selected_character.resource_path, 0)
 	
-	# Usually 3 arcs
-	for i in range(3):
+	var arc_count = ceil(_selected_character.max_story_chapters / 3.0)
+	if arc_count == 0: arc_count = 3 # Default minimum arcs if story exists
+	
+	for i in range(arc_count):
 		var btn = list_button_scene.instantiate()
 		details_container.add_child(btn)
 		
 		var is_locked = floori(current_progress / 3.0) < i
 		var is_completed = floori(current_progress / 3.0) > i
 		
-		btn.setup("ARC " + str(i + 1), is_locked, is_completed)
+		var arc_display_name = "ARC " + str(i + 1)
+		if is_locked:
+			arc_display_name = "???"
+		elif i < _selected_character.arc_names.size() and _selected_character.arc_names[i] != "":
+			arc_display_name = _selected_character.arc_names[i]
+		
+		btn.setup(arc_display_name, is_locked, is_completed)
 		btn.pressed.connect(_on_arc_selected.bind(i))
 
 func _on_arc_selected(arc_idx: int) -> void:
@@ -101,9 +109,15 @@ func _populate_chapters() -> void:
 	var story_states = StoryManager.character_story_states
 	var current_progress = story_states.get(_selected_character.resource_path, 0)
 	
-	# 3 chapters per arc
-	for i in range(3):
+	# Calculate how many chapters in this arc
+	# Usually 3, but the last arc might have fewer (or use max_story_chapters)
+	var chapters_in_arc = 3
+	
+	for i in range(chapters_in_arc):
 		var chapter_idx = (_selected_arc * 3) + i
+		if chapter_idx >= _selected_character.max_story_chapters:
+			break
+			
 		var btn = list_button_scene.instantiate()
 		details_container.add_child(btn)
 		
@@ -111,6 +125,11 @@ func _populate_chapters() -> void:
 		var is_completed = current_progress > chapter_idx
 		
 		var chapter_display_name = "Chapter " + str(chapter_idx + 1)
+		if is_locked:
+			chapter_display_name = "???"
+		elif chapter_idx < _selected_character.chapter_names.size() and _selected_character.chapter_names[chapter_idx] != "":
+			chapter_display_name = _selected_character.chapter_names[chapter_idx]
+		
 		btn.setup(chapter_display_name, is_locked, is_completed)
 
 func _navigate_to(new_view: View) -> void:

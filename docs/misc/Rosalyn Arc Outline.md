@@ -81,7 +81,7 @@ To finally buy something. She's been thinking about why it went wrong last time 
 She arrives with more visible determination. She's thought about this.
 
 **Key Beat:**
-> *"Good evening. I'm sorry about before. I've been... I've been practicing."*
+> *"Good day. I'm sorry about before. I've been... I've been practicing."*
 > *(She places her hands on the counter with great concentration, then looks at them, surprised they stayed).*
 > *"Oh. Good. Okay. I would like to buy— um. I have coins. They're in my pocket. Except."*
 > *(She looks up, genuinely embarrassed.)*
@@ -110,7 +110,7 @@ To demonstrate that she prepared, and to prove — mostly to herself — that sh
 She buys [HighestDrink], cold. The act of holding the bottle successfully is a small quiet triumph.
 
 **Key Beat:**
-> *"Good evening. I would like [HighestDrink], please. Cold, if you have it."*
+> *"Good day. I would like [HighestDrink], please. Cold, if you have it."*
 > *(She places her coins on the counter — a little too carefully, watching them with intense focus, and then exhales when they stay put.)*
 > *"I figured something out. Cold things are... easier. To hold onto. I think — and I realize this sounds strange — I think the cold gives me something to concentrate on, and the concentrating is what keeps me... present."*
 > *(She accepts the bottle, holds it with both hands, and there is a brief pause while she just appreciates that it worked.)*
@@ -173,7 +173,7 @@ To say things out loud to a person who can hear her. Not necessarily to be under
 
 **Key Beat:**
 > *(She approaches the counter slowly, as if she's considered whether this was a good idea all the way from the street.)*
-> *"Good evening. I don't have any coins tonight. I just wanted to say—"*
+> *"Good day. I don't have any coins tonight. I just wanted to say—"*
 > *(She pauses, collecting herself.)*
 > *"Out there, it's very quiet. Cars pass through me and I can't hear them. Two cats walked through me today, which is fine, I've adjusted to that. One of them stopped and looked at me for a moment, though. Just looked. I thought that was... nice."*
 > *(She gives a small, careful smile — the kind that acknowledges how strange this sounds.)*
@@ -237,7 +237,7 @@ To buy one specific thing, and to feel it, and to be here for a moment without a
 She speaks a little more slowly. The fidgeting is gone.
 
 **Key Beat:**
-> *"Good evening. Could I have one of the menthol candies, please?"*
+> *"Good day. Could I have one of the menthol candies, please?"*
 > *(She pays carefully. She takes the candy. She holds it, not eating it, just — holds it.)*
 > *(A moment of quiet.)*
 > *"Thank you."*

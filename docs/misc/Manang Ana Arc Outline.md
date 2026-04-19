@@ -148,7 +148,7 @@ The product she needs is basic, cheap sustenance—[HighestNoodle] noodles.
 >
 > *"Thank you. Salamat talaga. I won't forget this."*
 
-**Information Out:** The loan mechanic triggers. The player actively participates in saving her evening.
+**Information Out:** The loan mechanic triggers. The player actively participates in saving her day.
 
 ---
 
@@ -218,7 +218,7 @@ She takes a deep, shaky breath before speaking. The silence between her words is
 She wants to slowly reclaim her dignity. She pays off half of her remaining debt in one go.
 
 **Key Beat:**
-> *"Good evening, anak! The karinderya had a massive catering order today, and the boss actually gave me a cut of the tips."*
+> *"Good day, anak! The karinderya had a massive catering order today, and the boss actually gave me a cut of the tips."*
 > *(She slaps down a crisp bill onto the counter, looking proud).*
 > *"Keep the change and put it toward my tab. Jusko, I feel like I can finally breathe a little. Their wings are healing nicely, by the way."*
 

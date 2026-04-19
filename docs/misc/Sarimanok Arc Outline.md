@@ -48,6 +48,7 @@ No transactions at first.       He steals snacks.              He requests fine 
 **Scene Beat:** First meeting. He appears at the counter. He does not buy anything.
 
 **Information to Communicate:**
+
 * He is a bird.
 * He is very loud.
 
@@ -66,6 +67,7 @@ To assert dominance over this new retail establishment.
 **Scene Beat:** He returns. He still refuses to act like a normal customer.
 
 **Information to Communicate:**
+
 * He seems to be judging the player.
 
 **Character Filter — What He Wants:**
@@ -86,6 +88,7 @@ He tilts his head upside down to look at the player.
 **Scene Beat:** He finally takes an item, establishing that he is at least part of the store's economy.
 
 **Information to Communicate:**
+
 * He pays, but barely.
 
 **Character Filter — What He Wants:**
@@ -111,6 +114,7 @@ A snack, but he refuses to ask nicely.
 **Scene Beat:** He causes a mess entirely on purpose to get what he wants.
 
 **Information to Communicate:**
+
 * He is impatient.
 
 **Character Filter — What He Wants:**
@@ -127,6 +131,7 @@ A beverage. Immediately.
 **Scene Beat:** He acts exhausted by the player's lack of efficiency.
 
 **Information to Communicate:**
+
 * He thinks he is better than you.
 
 **Character Filter — What He Wants:**
@@ -143,6 +148,7 @@ To run his errand without having to deal with "human incompetence."
 **Scene Beat:** The climax of the "Bird" phase. He closely inspects the store's finances.
 
 **Information to Communicate:**
+
 * He is analyzing the shop's success.
 
 **Character Filter — What He Wants:**
@@ -167,6 +173,7 @@ To review your Q3 earnings.
 **Scene Beat:** The great reveal. He finally speaks.
 
 **Information to Communicate:**
+
 * He can talk.
 * He sounds like a wealthy 1980s socialite.
 
@@ -188,13 +195,14 @@ He adjusts imaginary cuffs on his wings.
 **Scene Beat:** He drops casual, high-society conversation as if the first six interactions never happened.
 
 **Information to Communicate:**
+
 * He is a businessman.
 
 **Character Filter — What He Wants:**
 To discuss the local economy over a fine good.
 
 **Key Beat:**
-> *"Ba-kawk! Splendid evening to you, my good man/woman. Simply resplendent."* *(He politely waits for you to fetch a `[HighestCoffee]`).*
+> *"Ba-kawk! Splendid day to you, my good man/woman. Simply resplendent."* *(He politely waits for you to fetch a `[HighestCoffee]`).*
 > *"Ba-kawk! Tell me, what are your thoughts on the macroeconomic climate of Karimlan? The fluctuating interest rates of the Pale Queen's quotas must put a ghastly strain on your overhead. Very resilient of you to weather the storm. Ba-kawk!"*
 
 ---
@@ -204,6 +212,7 @@ To discuss the local economy over a fine good.
 **Scene Beat:** The epilogue. He bids the player farewell to attend to his portfolio.
 
 **Information to Communicate:**
+
 * He is leaving.
 * He leaves his collectible.
 
