@@ -1,6 +1,6 @@
 label Greeting
 if {Transaction_GreetingVar} <= 50:
-	Brahim: Good evening. I'm checking the local inventory for a specific instance.
+	Brahim: Good day. I'm checking the local inventory for a specific instance.
 else:
 	Brahim: Hello. The environment variables in Karimlan are quite high today. I need to stabilize.
 [end_timeline]

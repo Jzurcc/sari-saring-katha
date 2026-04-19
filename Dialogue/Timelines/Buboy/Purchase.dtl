@@ -1,11 +1,11 @@
 label Greeting
 # [signal arg="refresh_desires"]
 Buboy: Hehe! [pause=1.0]
-Buboy: Stay there, *Damulag*!
+Buboy: Stay there, [i]Damulag[/i]!
 Buboy: Don't eat the grass here, okay?
-Buboy: *Manang* might get mad!
+Buboy: They might get mad!
 Buboy: Hehe!
-Buboy: Hi *Kuya*!
+Buboy: Hello po!
 Buboy: Mama told me to buy something...
 Buboy: But I forgot what it was called again!
 Buboy: Hehe!
@@ -206,20 +206,20 @@ else:
 	Buboy: Umm...
 	Buboy: I forgot how to describe this one exactly.
 	Buboy: Mama told me while I was thinking about my kite.
-	Buboy: Hehe. Sorry *Kuya*!
+	Buboy: Hehe. Sorry po!
 	Buboy: It's... something from the store!
 [end_timeline]
 
 label Talk
 Buboy: Hehe!
-Buboy: *Damulag* is getting sleepy waiting outside!
+Buboy: [i]Damulag[/i] is getting sleepy waiting outside!
 Buboy: Okay okay! Let me say it again!
 jump Riddle
 
 label Partial
 # [signal arg="refresh_desires"]
 Buboy: Hehe!
-Buboy: Wow, thank you *Kuya*!
+Buboy: Wow, thank you po!
 if {Transaction_RemainingCount} > 0:
 	Buboy: But I still need one more thing!
 	Buboy: Let me describe it again!
@@ -238,25 +238,25 @@ if {Transaction_WantsDebt}:
 	- Okay
 		Player: That's fine, Buboy. Tell your Mama.
 		[signal arg="utang_accepted"]
-		Buboy: Hehe! You're the best, *Kuya*!
-		Buboy: Let's go, *Damulag*!
+		Buboy: Hehe! You're the best, po!
+		Buboy: Let's go, [i]Damulag[/i]!
 	- No
 		Player: Sorry Buboy, I need the coins now.
 		[signal arg="utang_rejected"]
 		Buboy: Aww...
-		Buboy: Okay *Kuya*... I'll be back!
+		Buboy: Okay po... I'll be back!
 else:
 	Buboy: Hehe!
 	Buboy: Perfect!
 	Buboy: Mama will be so happy!
-	Buboy: Thank you, *Kuya*!
+	Buboy: Thank you, po!
 	Buboy: Hehe!
-	Buboy: Come on, *Damulag*! Let's go home!
+	Buboy: Come on, [i]Damulag[/i]! Let's go home!
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
 Buboy: Hehe!
-Buboy: Hmm... That's not it, *Kuya*!
+Buboy: Hmm... That's not it, po!
 Buboy: Let me say it again!
 jump Riddle
