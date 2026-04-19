@@ -8,6 +8,7 @@
 
 
 .claude/
+.agents/
 
 # Godot-specific ignores
 .import/
