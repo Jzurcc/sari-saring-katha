@@ -103,7 +103,8 @@ directories/dtl_directory={
 "debug_debt_system": "res://Dialogue/Timelines/Generic/debug_debt_system.dtl",
 "debug_dual_customer": "res://Dialogue/Timelines/debug_dual_customer.dtl",
 "mayari_collect": "res://Dialogue/Timelines/mayari_collect.dtl",
-"test": "res://docs/misc/test.dtl"
+"test": "res://docs/misc/test.dtl",
+"unclemariobackup": "res://Dialogue/Timelines/unclemariobackup.dtl"
 }
 layout/style_directory={
 "BubbleDialogue": "res://Assets/Dialogue/BubbleDialogue.tres",
