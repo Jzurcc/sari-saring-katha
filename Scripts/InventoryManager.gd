@@ -47,8 +47,16 @@ func initialize() -> void:
 	# Sort items alphabetically for deterministic display order across platforms.
 	_items.sort_custom(func(a: ItemData, b: ItemData): return a.item_name.naturalnocasecmp_to(b.item_name) < 0)
 	print("[InventoryManager] Loaded ", _items.size(), " items")
+	
+	# Debug Category Report
+	var cat_counts = {}
+	for item in _items:
+		var cat = item.category
+		cat_counts[cat] = cat_counts.get(cat, 0) + 1
+	print("[InventoryManager] Category Report: ", cat_counts)
 
 func _load_folder(folder_path: String) -> void:
+	print("[InventoryManager] Scanning folder: ", folder_path)
 	var dir: DirAccess = DirAccess.open(folder_path)
 	if not dir:
 		return

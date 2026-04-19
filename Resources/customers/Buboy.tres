@@ -10,10 +10,12 @@
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://chirwjrehoxjg" path="res://Dialogue/Timelines/Buboy/Purchase.dtl" id="buboy_purchase"]
 [ext_resource type="Resource" uid="uid://c3sj15wq5i3pc" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
+[ext_resource type="Resource" uid="uid://c5xtxtkwciuu5" path="res://Dialogue/Timelines/Buboy/Visit.dtl" id="buboy_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_visit")])
 
 [resource]
 script = ExtResource("2_voalc")

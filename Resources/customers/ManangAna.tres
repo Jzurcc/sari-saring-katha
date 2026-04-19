@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://bpb60ibkybakm" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
 [ext_resource type="Resource" uid="uid://dw2evopysv3yc" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
+[ext_resource type="Resource" uid="uid://dc1yt6iiwlltd" path="res://Dialogue/Timelines/ManangAna/Story.dtl" id="mana_story"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
@@ -21,6 +22,8 @@ script = ExtResource("2_m676v")
 character_name = "Manang Ana"
 sprite_texture = ExtResource("5_4587l")
 dialogic_character = ExtResource("1_m676v")
+story_timeline = ExtResource("mana_story")
+max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.35
 dialogue_blip_sound = ExtResource("2_n8hjk")
