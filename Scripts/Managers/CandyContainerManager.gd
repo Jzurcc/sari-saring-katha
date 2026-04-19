@@ -22,7 +22,7 @@ extends Node
 func _ready() -> void:
 	EventBus.day_started.connect(_on_day_started)
 	# Hide all containers initially; _on_day_started will show the right ones.
-	_hide_all()
+	# _hide_all() # Legacy logic disabled: containers manage themselves via StoryManager tiers now.
 
 func _hide_all() -> void:
 	_set_container_active(mix_container, false)

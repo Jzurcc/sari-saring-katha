@@ -25,6 +25,10 @@ var active_gaze_target_id: String = ""
 var active_gaze_group: String = ""
 var _gaze_timer: float = 0.0
 
+# Scroll sensitivity accumulator (taking more scroll notches per 0.50 increment)
+var _scroll_event_count: int = 0
+const SCROLL_THRESHOLD: int = 3
+
 func _ready() -> void:
 	# Ensure interaction_range is valid
 	if interaction_range <= 0.0:
@@ -53,7 +57,7 @@ func _physics_process(_delta: float) -> void:
 	var is_in_timeline = Dialogic.current_timeline != null
 	var gm = get_tree().get_first_node_in_group("game_manager")
 	var is_tutorial_task = gm and gm.is_tutorial_task_active
-	var is_mario_tutorial = is_in_timeline and "UncleMarioTutorial" in Dialogic.current_timeline.resource_path
+	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
@@ -78,10 +82,6 @@ func _physics_process(_delta: float) -> void:
 
 	# --- Raycast 3: tutorial gaze only (layer 1 | 2) ---
 	var hit_gaze = {}
-	if active_gaze_target_id != "":
-		_q_gaze.from = ray_origin
-		_q_gaze.to = ray_end
-		hit_gaze = get_world_3d().direct_space_state.intersect_ray(_q_gaze)
 
 	# Resolve which target is "closer" to the camera.
 	var current_hovered: Node = null
@@ -118,21 +118,8 @@ func _physics_process(_delta: float) -> void:
 				current_hovered.set_pricing_ui_active(pricing_mode_active)
 		_last_hovered = current_hovered
 
-	# --- Tutorial Gaze Detection ---
-	if active_gaze_target_id != "" and not hit_gaze.is_empty():
-		var hit_node = hit_gaze.collider
-		var is_match = _is_in_group_recursive(hit_node, active_gaze_group, 5)
-		
-		if is_match:
-			_gaze_timer += _delta
-			if _gaze_timer >= 0.5: # Half a second of consistent focus
-				print("[PlayerInteraction] Gaze target reached: ", active_gaze_target_id)
-				EventBus.target_gazed.emit(active_gaze_target_id)
-				active_gaze_target_id = "" # Auto-clear after detection
-		else:
-			_gaze_timer = 0.0
-	else:
-		_gaze_timer = 0.0
+	# --- Removed Tutorial Gaze Detection ---
+	# The gaze tutorial is now simply a 2-second automated wait from GameManager.
 
 func _is_in_group_recursive(node: Node, group_name: String, max_depth: int) -> bool:
 	if not node or max_depth < 0:
@@ -176,12 +163,26 @@ func _input(event: InputEvent) -> void:
 	var is_in_timeline = Dialogic.current_timeline != null
 	var gm = get_tree().get_first_node_in_group("game_manager")
 	var is_tutorial_task = gm and gm.is_tutorial_task_active
-	var is_mario_tutorial = is_in_timeline and "UncleMarioTutorial" in Dialogic.current_timeline.resource_path
+	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 	
-	# Chapters are blocked if in timeline, UNLESS it's the mario tutorial OR an active task.
-	var allow_interaction = not is_in_timeline or is_tutorial_task or is_mario_tutorial
+	# Detect if Dialogic UI is actually visible
+	var is_dialogue_ui_visible = false
+	var layout = Dialogic.Styles.get_layout_node()
+	if is_instance_valid(layout) and layout.visible:
+		is_dialogue_ui_visible = true
 	
-	# This block only applies to the actions BELOW it (Alt toggle is now moved ABOVE)
+	# NEW: Interaction rules - Fully permissive for Mario tutorial as requested
+	var allow_interaction = false
+	if not is_in_timeline or not is_dialogue_ui_visible:
+		allow_interaction = true
+	elif is_tutorial_task or is_mario_tutorial:
+		allow_interaction = true
+	
+	if not allow_interaction:
+		return
+	
+	if event is InputEventMouseButton and event.pressed:
+		pass
 	
 	# Pricing Mode Toggle (Alt) - Always allowed regardless of dialogue
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ALT and not event.echo:
@@ -202,63 +203,113 @@ func _input(event: InputEvent) -> void:
 		var delta := 0.0
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				delta = 1.0 # 1 Peso
+				delta = 0.5 # 0.5 Peso
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				delta = -1.0 # -1 Peso
-		elif event is InputEventKey:
+				delta = -0.5 # -0.5 Peso
+		elif event is InputEventKey and event.pressed and not event.echo:
 			if event.keycode == KEY_PERIOD:
-				delta = 1.0
+				delta = 0.5
 			elif event.keycode == KEY_COMMA:
-				delta = -1.0
+				delta = -0.5
 		
 		if delta != 0.0:
-			if _last_hovered.has_method("adjust_price"):
-				_last_hovered.adjust_price(delta)
-				get_viewport().set_input_as_handled()
-				return
+			var trigger_adj = false
 			
-			# Fallback check for pickable items
-			if is_instance_valid(_last_hovered) and _last_hovered.is_in_group("draggable_items"):
-				var item = _last_hovered
-				if item.item_data:
-					var base_price : float = item.item_data.price
-					var current_price : float = item.item_data.get_final_price()
-					
-					# Range Rules: 
-					# 1. Minimum: Base price.
-					# 2. Maximum: Stable 30% margin, or base + ₱5.00 for cheaper items.
-					var min_price : float = base_price
-					var max_price : float = max(round(base_price * 1.30), base_price + 5.0)
-					
-					var new_price : float = clamp(current_price + delta, min_price, max_price)
-					
-					if new_price > current_price:
-						EventBus.price_increased.emit(item.item_data)
-					
-					item.item_data.selling_price = new_price
+			if event is InputEventMouseButton:
+				_scroll_event_count += 1
+				if _scroll_event_count >= SCROLL_THRESHOLD:
+					trigger_adj = true
+					_scroll_event_count = 0
+			else:
+				# Keyboard adjustments (, and .) trigger immediately
+				trigger_adj = true
+				_scroll_event_count = 0
+				
+			if trigger_adj:
+				EventBus.request_sfx.emit("price_change")
+				if _last_hovered.has_method("adjust_price"):
+					_last_hovered.adjust_price(delta)
+					get_viewport().set_input_as_handled()
+					return
+				
+				# Check parent if it's an Area3D (standard for our items)
+				var target = _last_hovered
+				if target is Area3D:
+					var p = target.get_parent()
+					if p and (p.has_method("adjust_price") or p.is_in_group("draggable_items")):
+						target = p
+				
+				if target.has_method("adjust_price"):
+					target.adjust_price(delta)
+					get_viewport().set_input_as_handled()
+					return
+				
+				if target.is_in_group("draggable_items"):
+					var item = target
+					if item.item_data:
+						# ... (logic remains same)
+						var base_price : float = item.item_data.price
+						var current_price : float = item.item_data.get_final_price()
+						var min_price : float = base_price
+						var max_price : float = item.item_data.get_max_selling_price()
+						var new_price : float = clamp(current_price + delta, min_price, max_price)
 						
-					# Refresh all items of this type (they share the resource)
-					get_tree().call_group("draggable_items", "update_pricing_ui")
-					# Refresh containers (candies/sachets)
-					get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
-				get_viewport().set_input_as_handled()
-				return
+						if new_price > current_price:
+							EventBus.price_increased.emit(item.item_data)
+						item.item_data.selling_price = new_price
+						get_tree().call_group("draggable_items", "update_pricing_ui")
+						get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+					get_viewport().set_input_as_handled()
+					return
+		else:
+			pass
 
 	# Block interaction triggers if we are actively dragging/holding an item
 	if DragManager._is_dragging:
+		if event is InputEventMouseButton and event.pressed:
+			print("[PI-DEBUG] Click ignored: Already dragging.")
 		return
 
+	if event is InputEventMouseButton and event.pressed:
+		pass
+
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if is_instance_valid(_last_hovered):
-			if _last_hovered.has_method("on_interact"):
+		var target = _last_hovered
+		if is_instance_valid(target):
+			# Check parent if direct collision didn't have the methods
+			if not target.has_method("on_interact") and not target.is_in_group("draggable_items"):
+				var p = target.get_parent()
+				if p and (p.has_method("on_interact") or p.is_in_group("draggable_items")):
+					target = p
+					# print("[PI-DEBUG] Switching target to parent: ", target.name)
+					pass
+					
+			if target.has_method("on_interact"):
 				get_viewport().set_input_as_handled()
-				_last_hovered.on_interact()
-			elif is_instance_valid(_last_hovered) and _last_hovered.is_in_group("draggable_items"):
+				target.on_interact()
+			elif target.is_in_group("draggable_items"):
 				if gm and gm.is_blocking_pickup:
-					print("[PlayerInteraction] Pickup blocked by tutorial state.")
 					return
 				get_viewport().set_input_as_handled()
-				_pickup_item(_last_hovered)
+				_pickup_item(target)
+			else:
+				print("[PI-DEBUG] Left click on valid hovered object, but no interact/drag method: ", target.name, " (Original: ", _last_hovered.name, ")")
+		else:
+			print("[PI-DEBUG] Left click, but _last_hovered is null/invalid")
+
+## Returns true if the currently active Dialogic timeline is the Uncle Mario tutorial.
+## Safe to call even when current_timeline is a String (Dialogic sometimes stores it that way).
+func _is_mario_tutorial_active() -> bool:
+	var tl = Dialogic.current_timeline
+	if tl == null:
+		return false
+	var res = false
+	if typeof(tl) == TYPE_STRING:
+		res = tl.to_lower().contains("unclemario")
+	elif "resource_path" in tl:
+		res = tl.resource_path.to_lower().contains("unclemario")
+	
+	return res
 
 func _pickup_item(item: DraggableItem) -> void:
 	DragManager.start_drag(item, item.sprite.texture)

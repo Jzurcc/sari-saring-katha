@@ -85,6 +85,9 @@ func toggle_open() -> void:
 	
 	if is_open:
 		EventBus.refrigerator_opened.emit()
+		EventBus.request_sfx.emit("refrigerator_open")
+	else:
+		EventBus.request_sfx.emit("refrigerator_close")
 	
 	# VFX: Cold Mist
 	if is_open:
@@ -99,7 +102,7 @@ func toggle_open() -> void:
 				for p in mists:
 					if is_instance_valid(p) and p.mesh and p.mesh.material:
 						var fade_tween = create_tween()
-						fade_tween.tween_property(p.mesh.material, "albedo_color:a", 0.15, 1.0)
+						fade_tween.tween_property(p.mesh.material, "albedo_color:a", 0.07, 1.0)
 	else:
 		# Close door behavior -> fade out, then stop emitting and clean up
 		for p in _active_mists:

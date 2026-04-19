@@ -20,6 +20,7 @@ func _ready() -> void:
 	add_to_group("delivery_bag")
 	
 	if sprite:
+		sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		base_scale = sprite.scale
 		# Ground the sprite: pin the texture bottom to the node origin
 		if sprite.texture:
@@ -50,7 +51,7 @@ func _ready() -> void:
 func _apply_outline(color: Color) -> void:
 	super._apply_outline(color)
 	if _outline_mat:
-		_outline_mat.set_shader_parameter("fixed_y_billboard", true)
+		_outline_mat.set_shader_parameter("fixed_y_billboard", false)
 
 func on_interact() -> void:
 	if is_fading_in or DragManager._is_dragging:

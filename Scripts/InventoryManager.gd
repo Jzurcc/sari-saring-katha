@@ -89,16 +89,18 @@ func get_max_stock(item: ItemData) -> int:
 	var id: String = item.get_clean_id()
 	var tier: int = StoryManager.current_tier
 	
-	# Shared Limit logic for Mix Container era
+	# Shared Limit logic for Mix Container era (pre-Tier 10)
+	# Mentor and Pocha share a physical bowl with a capacity of 10 total.
 	if tier < 10:
-		if id == "pocha":
-			var mentor = _get_item_by_id("mentor")
-			var mentor_stock = get_stock(mentor) if mentor else 0
-			return clampi(10 - mentor_stock, 0, 10)
-		if id == "mentor":
-			var pocha = _get_item_by_id("pocha")
-			var pocha_stock = get_stock(pocha) if pocha else 0
-			return clampi(10 - pocha_stock, 0, 10)
+		if id == "pocha" or id == "mentor":
+			var sibling_id = "mentor" if id == "pocha" else "pocha"
+			var sibling = _get_item_by_id(sibling_id)
+			var sibling_stock = get_stock(sibling) if sibling else 0
+			# Total cap is 10, but individual items are also capped at 5 
+			# to encourage mixing until the upgrade.
+			# Wait, no, user says they want 4 of one. Let's allow full flexibility 
+			# within the 10 limit.
+			return clampi(10 - sibling_stock, 0, 10)
 
 	return _get_max_stock_internal(id, StoryManager.day)
 
@@ -215,9 +217,13 @@ func decrement_cooldown() -> void:
 	if customers_needed_for_delivery > 0:
 		customers_needed_for_delivery -= 1
 
-## Set the post-order delivery cooldown (randomised 2-3 customers).
+## Set the post-order delivery cooldown (defaults to 2 customers, configurable via Player debug).
 func start_delivery_cooldown() -> void:
-	customers_needed_for_delivery = randi() % 2 + 2
+	var player = get_tree().get_first_node_in_group("player")
+	if player and "debug_delivery_cooldown" in player:
+		customers_needed_for_delivery = player.debug_delivery_cooldown
+	else:
+		customers_needed_for_delivery = 2
 
 # ─── Persistence ──────────────────────────────────────────────────────────────
 

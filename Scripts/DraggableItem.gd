@@ -229,29 +229,15 @@ func return_to_start() -> void:
 	EventBus.request_sfx.emit("drop")
 	
 	if is_transient:
-		# Restore digital stock
+		if source_bag and is_instance_valid(source_bag):
+			source_bag.receive_item(self)
+			return
+
+		# Restore digital stock (fallback if no source bag)
 		InventoryManager.return_item(item_data)
 		
-		# Return animation + cleanup
-		show_visuals()
-		var tween := create_tween()
-		tween.set_parallel(true)
-		
-		# Move back to container
-		tween.tween_property(self, "global_position", _original_transform.origin, 0.3)\
-				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		
-		# Fade out
-		tween.tween_property(sprite, "modulate:a", 0.0, 0.25).set_delay(0.05)
-		
-		# Squash and Stretch
-		var base_sprite_scale = Vector3.ONE
-		sprite.scale = base_sprite_scale * Vector3(1.15, 0.85, 1.15) # Squashed starting point
-		tween.tween_property(sprite, "scale", base_sprite_scale, 0.3)\
-				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-		
-		tween.set_parallel(false)
-		tween.tween_callback(queue_free)
+		# Now use the standardized disappear animation instead of sliding back
+		play_disappear_animation()
 		return
 
 	# Standard shelf item behavior
@@ -267,3 +253,38 @@ func return_to_start() -> void:
 	var scale_tween = create_tween()
 	scale_tween.tween_property(sprite, "scale", base_sprite_scale * Vector3(0.9, 1.1, 0.9), 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	scale_tween.tween_property(sprite, "scale", base_sprite_scale, 0.15).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+
+## Standard animation for "letting go" or trashing an item.
+func play_disappear_animation() -> void:
+	show_visuals()
+	var tween = create_tween()
+	tween.set_parallel(true)
+	
+	# Shrink to zero quickly
+	tween.tween_property(sprite, "scale", Vector3.ZERO, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	# Fade out
+	tween.tween_property(sprite, "modulate:a", 0.0, 0.15)
+	
+	tween.set_parallel(false)
+	tween.tween_callback(queue_free)
+
+## Emphasized "give" animation for successful sales.
+func play_give_animation() -> void:
+	show_visuals()
+	var tween = create_tween()
+	
+	# Small initial pop UP and squash
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "position:y", sprite.position.y + 0.1, 0.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "scale", Vector3(1.2, 0.8, 1.2), 0.1).set_trans(Tween.TRANS_SINE)
+	
+	tween.set_parallel(false)
+	
+	# Then shrink away
+	var shrink_tween = create_tween()
+	shrink_tween.set_parallel(true)
+	shrink_tween.tween_property(sprite, "scale", Vector3.ZERO, 0.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	shrink_tween.tween_property(sprite, "modulate:a", 0.0, 0.15)
+	
+	shrink_tween.set_parallel(false)
+	shrink_tween.tween_callback(queue_free)

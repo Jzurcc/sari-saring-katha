@@ -16,6 +16,9 @@ const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 var _is_unlocked: bool = false
 var current_stock: int = 0
 
+func refresh_stock() -> void:
+	_update_local_stock()
+
 
 
 var is_hovered: bool = false
@@ -30,11 +33,14 @@ func _ready() -> void:
 	billboard_collision = true
 	
 	EventBus.tier_advanced.connect(_on_tier_advanced)
+	EventBus.day_started.connect(_on_day_started)
 	_check_unlock_status()
 	_update_local_stock()
 	# UI is now handled by the global PricingOverlay
 
-
+func _on_day_started(_day: int) -> void:
+	_check_unlock_status()
+	_update_local_stock()
 
 func set_pricing_ui_active(active: bool) -> void:
 	_pricing_mode_active = active
@@ -53,9 +59,7 @@ func adjust_price(delta: float) -> void:
 	var current_price : float = sachet_item.get_final_price()
 	
 	var min_price : float = base_price
-	var tier : int = sachet_item.tier
-	var max_margin : float = 0.25 + (float(max(1, tier)) - 1.0) * (0.25 / 9.0)
-	var max_price : float = round(base_price * (1.0 + max_margin))
+	var max_price : float = sachet_item.get_max_selling_price()
 	
 	var new_price : float = clamp(current_price + delta, min_price, max_price)
 	

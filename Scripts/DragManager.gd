@@ -4,6 +4,7 @@ var _is_dragging: bool = false
 var _dragged_item: DraggableItem = null
 var _dragged_texture_rect: TextureRect = null
 var _canvas_layer: CanvasLayer = null
+var _drag_start_frame: int = -1
 
 # For future sway mechanics
 var _sway_offset: Vector2 = Vector2.ZERO
@@ -43,6 +44,7 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 
 	_is_dragging = true
 	_dragged_item = item
+	_drag_start_frame = Engine.get_frames_drawn()
 
 	if texture:
 		_dragged_texture_rect.texture = texture
@@ -171,18 +173,12 @@ func _input(event: InputEvent) -> void:
 		_sway_offset -= event.relative * 0.4
 		
 	elif event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			# Toggle grab when mouse is fully locked (true FPS crosshair mode)
-			# Revert to classic hold-to-drag when cursor is visible
-			var cursor_locked := Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
-			if cursor_locked:
-				if event.pressed:
-					get_viewport().set_input_as_handled()
-					end_drag()
-			else:
-				if not event.pressed:
-					get_viewport().set_input_as_handled()
-					end_drag()
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			# Only end the drag if this isn't the same press that started it.
+			# Using Engine.get_frames_drawn() ensures we ignore the pick-up frame.
+			if Engine.get_frames_drawn() > _drag_start_frame:
+				get_viewport().set_input_as_handled()
+				end_drag()
 
 func end_drag() -> void:
 	if not _is_dragging:

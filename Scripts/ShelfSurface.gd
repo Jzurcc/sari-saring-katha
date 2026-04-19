@@ -181,6 +181,12 @@ func populate() -> void:
 		if not item.texture:
 			push_warning("[ShelfSurface] '%s': Skipping '%s' — no texture." % [name, item.item_name])
 			continue
+		
+		# Guard: Only allow items that match this surface's type (SHELF vs FRIDGE vs etc)
+		if item.type != surface_type:
+			push_warning("[ShelfSurface] '%s': Skipping '%s' — type mismatch (Item: %d, Surface: %d)." % [name, item.item_name, item.type, surface_type])
+			continue
+			
 		spawn_list.append(item)
 
 	if spawn_list.is_empty():
