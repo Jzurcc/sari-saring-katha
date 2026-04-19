@@ -56,7 +56,7 @@ func setup(data: ItemData, unlocked: bool) -> void:
 	
 	# Texture mapping
 	texture_rect.custom_minimum_size = Vector2(120, 120)
-	texture_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	texture_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_rect.texture = item_data.texture
 	texture_rect.pivot_offset = Vector2(60, 60) # Center for rotation

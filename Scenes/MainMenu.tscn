@@ -168,11 +168,29 @@ text = "EXIT"
 alignment = 0
 
 [node name="OptionsOverlay" parent="." unique_id=413020143 instance=ExtResource("options_overlay")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="CollectionOverlay" parent="." unique_id=662282016 instance=ExtResource("collection_overlay")]
 visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="StoryProgressOverlay" parent="." unique_id=309426670 instance=ExtResource("story_progress_overlay")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Cube_001" parent="." unique_id=1452766205 instance=ExtResource("5_df05h")]
 transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, 0.31191707, 0.7678091, -4.009146)

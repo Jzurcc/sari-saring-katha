@@ -15,10 +15,12 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="Sari-Saring Katha"
-config/version="v1.0"
+config/description="A cozy, point-and-click first-person sari-sari store simulator set in the remote Philippine town of Karimlan."
+config/version="0.9"
 run/main_scene="uid://b46bhnivkyc61"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="uid://bev8adkrkd4qd"
+config/windows_native_icon="res://Assets/ui/Icon.ico"
 
 [audio]
 
@@ -195,7 +197,6 @@ window/size/viewport_width=1600
 window/size/viewport_height=900
 window/size/mode=3
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
 
 [editor_plugins]
 

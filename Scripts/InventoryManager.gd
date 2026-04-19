@@ -63,12 +63,15 @@ func _load_folder(folder_path: String) -> void:
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
 	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var res: Resource = load(folder_path + "/" + file_name)
-			if res is ItemData:
-				_items.append(res)
-				# Initial stock is now 0 by default; items must be ordered or delivered.
-				_stock[res.resource_path] = 0
+		if not dir.current_is_dir():
+			if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
+				# In exported builds, .tres files are often remapped. 
+				# We strip the .remap suffix if present so load() can find the binary resource.
+				var res_path = folder_path + "/" + file_name.trim_suffix(".remap")
+				var res: Resource = load(res_path)
+				if res is ItemData:
+					_items.append(res)
+					_stock[res.resource_path] = 0
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
