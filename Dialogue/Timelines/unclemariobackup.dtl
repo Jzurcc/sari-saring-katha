@@ -1,7 +1,7 @@
-﻿UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving, ah?
+UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving, ah?
 UncleMario: Looking at you stand behind that counter...[pause=1] the memories just comes flooding back.
 UncleMario: Your [i]Lola[/i] will definitely be overjoyed to see you now.
-UncleMario: Anyway, do you need help with how things are done here? Or are you ready to run this place on your own?
+UncleMario: Anyway, do you need help with how things are done here? Or are you ready to run this place on your own?  Use the scroll wheel or arrow up and down to decide.
 - Help me out, Uncle
 	UncleMario: [i][wave]Mabuti.[/wave][/i] Listen closely, kid.
 	UncleMario: First, get used to looking around. Familiarize yourself with the shelves on your left so you don't take forever looking for things.
@@ -9,12 +9,11 @@ UncleMario: Anyway, do you need help with how things are done here? Or are you r
 	UncleMario: Good. Now, your [i]Lola[/i] always said, "you need to know your prices!"
 	UncleMario: Press [i]ALT[/i] to toggle your pricing lens. It helps you see how much we're charging.
 	[signal arg="wait_for_pricing"]
-	UncleMario: There. You can see the item's base and selling price now, as well as the margin percentage. Useful, 'di ba?
-	UncleMario: Try using your mouse scroll wheel or the `,` and `.` to adjust the price of that item. 
+	UncleMario: There. You can see the item's base and selling price now. Useful, 'di ba?
+	UncleMario: Try using your mouse scroll wheel or the `,` and `.` to adjust the price of that item.
 	UncleMario: Be careful though, as high margins may not sit with other customers. Try to find a balance, ah?
 	UncleMario: If you want to earn more, target customers who buy high tier items, as they are more willing to buy those even at a higher margin percentage!
-	UncleMario: Now, why don't you try editing the price of Anoba? Don't forget that for every new item!
-	UncleMario: I'm actually quite hungry myself! Sell one of those [color=#0f6e2f]Anoba[/color] to me!
+	UncleMario: Now, why don't you pick up one of those [color=#0f6e2f]Anoba[/color]? I'm actually quite hungry myself!
 	[signal arg="wait_for_pickup"]
 	UncleMario: Just drag the item directly onto me to complete the sale.
 	[signal arg="wait_for_sale"]
@@ -22,7 +21,6 @@ UncleMario: Anyway, do you need help with how things are done here? Or are you r
 	UncleMario: Now where was I? 
 	UncleMario: Ah!
 	UncleMario: Over to your right is the Refrigerator. In this heat, people will be dying for a cold soda.
-	[signal arg="wait_look_at_fridge"]
 	UncleMario: Go on, try opening it. Just click the handle.
 	[signal arg="wait_for_fridge"]
 	UncleMario: You can put all sorts of frozen goods here. Do be sure to close it after though, or else the cold will run free!
@@ -30,16 +28,17 @@ UncleMario: Anyway, do you need help with how things are done here? Or are you r
 	UncleMario: As you serve more customers, higher tier items will be unlocked in the market. Fill your store with all sorts of products, ah!
 	UncleMario: When you buy a new tier, it comes with 2 of each new unlocked items. Keep upgrading your store, anak.
 	UncleMario: And if you're running out of stock, just use the phone behind you and dial in my name, [i]"Mario"[/i]!
-	UncleMario: Alternatively, you can press the asterisk (*) button as a shortcut. 
-	[signal arg="wait_look_at_phone"]
+	UncleMario: Alternatively, you can press the asterisk (*) button as a shortcut.  
+	UncleMario: I'll try to answer as soon as I can... [input] as long as I'm not resting, that is!
 	UncleMario: Oh, and I almost forgot! 
 	UncleMario: Some customers would like to loan as well, and if you accept, their names will be put into that notebook near the phone.
-	[signal arg="wait_look_at_notebook"]
 	jump SuccessOutro
-- "[Skip Tutorial] I know the drill."
+- [Skip Tutorial] I know the drill.
 	jump SkipOutro
 
 label Satisfy
+label WrongItem
+label Restock
 label SuccessOutro
 UncleMario: Well, that's all!
 UncleMario: I'm going to have my coffee and pandesal now.
@@ -51,5 +50,6 @@ UncleMario: If you're that confident, I'll leave you to it. Just don't burn the 
 jump Outro
 
 label Outro
+UncleMario: If you need a break, hit the Escape button to open the Pause Menu.
 UncleMario: Good luck today. Don't work too hard, [i]anak[/i]. See you around!
 [signal arg="refuse_service"]
