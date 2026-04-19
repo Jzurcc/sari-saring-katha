@@ -171,7 +171,15 @@ else:
 label Talk
 ReynaMayari: [pause=0.3] I require [color=#0f6e2f]{Transaction_ItemWants}[/color].
 ReynaMayari: Do not make the Queen of Biringan stand and wait.
-[end_timeline]
+- Grant me a reprieve, Your Majesty.
+	ReynaMayari: [pause=0.3] Very well. You have one centennial hour... or however long it takes mortals to find a snack.
+	[end_timeline]
+- I have failed my Queen. We are out of stock.
+	ReynaMayari: [pause=0.4] Truly? [pause=0.3] A tragedy. I shall inform the silver courts of this shortage. [pause=0.3] Good day, mortal!
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Satisfy
 ReynaMayari: The Moon acknowledges your effort. [pause=0.3] ...You may carry on.

@@ -174,6 +174,7 @@ func _on_continue_pressed() -> void:
 	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
 
 func _on_exit_pressed() -> void:
+	SaveManager.force_save()
 	get_tree().quit()
 
 

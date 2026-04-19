@@ -11,7 +11,15 @@ if {Transaction_TalkVar} <= 50:
 	TK: Hook me up with a {Transaction_ItemWants}? [pause=0.4] I need to rehydrate before my battery hits 1%.
 else:
 	TK: Give me your best {Transaction_ItemWants}. [pause=0.5] Aesthetic doesn't mean much if the explorer is starving, right?
-[end_timeline]
+- Just a sec, fam.
+	TK: Bet. I'll just check my notifications while I wait.
+	[end_timeline]
+- Sorry, TK, we're fresh out of stock.
+	TK: Oof. [pause=0.4] Major L for the vlog. [pause=0.3] Sige, I'll try the next village. Stay fresh!
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Partial
 TK: Bet. [pause=0.3] Still waiting on that {Transaction_ItemWants} though, don't leave me hanging!

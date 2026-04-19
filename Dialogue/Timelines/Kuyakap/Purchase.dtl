@@ -12,7 +12,6 @@ KuyaKap: Just my [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're read
 - Sorry, I can't get that right now.
 	KuyaKap: Ah, is that so? [pause=0.4] That's alright, apo. [pause=0.3] Some things are worth waiting for, I suppose.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
 
 label Partial

@@ -6,6 +6,7 @@ if {Transaction_Chapter} == 0.0:
 	Rodel: It is like breathing crushed coral. Or ground glass.
 	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
 	Rodel: Your terrestrial sun is a relentless predator, and my fluid-reserves are shallow.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
@@ -18,6 +19,7 @@ elif {Transaction_Chapter} == 1.0:
 	- The Salted Nuts are much more satisfying.
 		Rodel: The fruit of the soil, bathed in the essence of the ocean. [pause=0.4] A strange alchemy. I will study its texture.
 	Rodel: I will take the {Transaction_ItemWants} then. My thank-currents to you.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
@@ -27,6 +29,7 @@ elif {Transaction_Chapter} == 2.0:
 	Rodel: If Nerissa saw this, she would call the Great Kraken to reclaim this building. [pause=0.3] My wife is... protective of her subjects.
 	Rodel: I must consume a {Transaction_ItemWants} to wash the sight from my memory. 
 	Rodel: This land is truly a realm of paradoxes. You love the sea, yet you keep it in cans.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
@@ -35,6 +38,7 @@ elif {Transaction_Chapter} == 3.0:
 	Rodel: My search for Nerissa has been long. [pause=0.6] The rogue current that pulled her from our trench was unnatural—tainted by the surface-waste.
 	Rodel: She was always too curious about the light from above. [pause=0.5] Now the light is all I have of her.
 	Rodel: Give me your most potent {Transaction_ItemWants}. I must keep my heart moist for the search ahead.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
@@ -46,6 +50,7 @@ elif {Transaction_Chapter} == 4.0:
 	- The Mangrove Delta is much more humid.
 		Rodel: The roots and the silt. It smells of the old world. [pause=0.4] I may find her shadows among the salt-trees.
 	Rodel: I will take a {Transaction_ItemWants} to fuel my journey. [pause=0.3] May the current be steady.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
@@ -54,6 +59,7 @@ elif {Transaction_Chapter} == 5.0:
 	Rodel: The land does not hold onto memories of the sea. It absorbs them. [pause=0.4] It devours them. 
 	Rodel: She is not in Karimlan. [pause=0.7] My hope is beginning to evaporate. 
 	Rodel: I need a {Transaction_ItemWants} to endure this drought of the soul.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 6.0:
@@ -62,6 +68,7 @@ elif {Transaction_Chapter} == 6.0:
 	Rodel: I will take a {Transaction_ItemWants}. 
 	Rodel: I have learned that your dry-fuel provides a slow, steady burn that the Abyssal delicacies lack.
 	Rodel: It takes strength to live in the fire. [pause=0.3] I respect your species for that, Ambassador.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7.0:
@@ -74,6 +81,7 @@ elif {Transaction_Chapter} == 7.0:
 	- Don't give up. The eternal watch is nobler.
 		Rodel: Then I shall become a creature of the wind and the dust. [pause=0.6] If I never find her, I will at least die where she was last seen.
 	Rodel: I require a final {Transaction_ItemWants} for the road.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 8.0:
@@ -102,5 +110,5 @@ Rodel: Refreshing. [pause=0.6] My Thank-currents to you, Ambassador.
 [end_timeline]
 
 label WrongItem
-Rodel: This will not stabilize my hdyro-stasis. [pause=0.4] I require the {Transaction_ItemWants}. 
+Rodel: This will not stabilize my hydro-stasis. [pause=0.4] I require the {Transaction_ItemWants}. 
 [end_timeline]

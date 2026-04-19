@@ -10,7 +10,15 @@ if {Transaction_TalkVar} <= 50:
 	Brahim: I'm requesting an instance of {Transaction_ItemWants}.
 else:
 	Brahim: My current process requires a {Transaction_ItemWants} to reach a stable state.
-[end_timeline]
+- Proceed with stand-by.
+	Brahim: Understood. Process state: IDLE.
+	[end_timeline]
+- Terminate request.
+	Brahim: Connection terminated. I'll search for another node.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Partial
 Brahim: Validated. Next instance in the queue: {Transaction_ItemWants}.

@@ -213,6 +213,15 @@ else:
 label Talk
 Buboy: Hehe!
 Buboy: [i]Damulag[/i] is getting sleepy waiting outside!
+- Don't go yet, I'm almost done!
+	Buboy: Okay po! Hehe!
+	[end_timeline]
+- Sorry, Buboy, we're fresh out of stock.
+	Buboy: Aww... [pause=0.4] Okay po. [pause=0.3] Mama will be a little sad.
+	Buboy: Bye po! Hehe!
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
 Buboy: Okay okay! Let me say it again!
 jump Riddle
 

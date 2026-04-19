@@ -37,6 +37,7 @@ var _current_anchor: Node = null
 var _is_calling: bool = false
 var _delivery_sprite: Sprite3D = null
 var _sfx_player: AudioStreamPlayer
+var _cached_bags_data: Array = []
 
 func _ready() -> void:
 	_sfx_player = AudioStreamPlayer.new()
@@ -49,8 +50,12 @@ func _ready() -> void:
 	else:
 		push_warning("[MarioManager] CustomerData resource not found: " + MARIO_DATA_PATH)
 		
+	
 	# Connect for speaking animations
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
+	
+	# Restore bags when the game session actually begins
+	EventBus.day_started.connect(_on_day_started)
 
 # ── CALL LOGIC ───────────────────────────────────────────────────────
 
@@ -273,42 +278,26 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	is_mario_physically_present = false
 	delivery_finished.emit()
 
-# ── INTERNAL HELPERS ────────────────────────────────────────────────
+func _on_day_started(_day: int) -> void:
+	_check_and_spawn_bags()
 
-# ── SAVE / LOAD LOGIC ────────────────────────────────────────────────
-
-func get_save_data() -> Dictionary:
-	var bags_data = []
-	for bag in get_tree().get_nodes_in_group("delivery_bag"):
-		var item_paths = []
-		for item in bag.items:
-			item_paths.append(item.resource_path)
-			
-		bags_data.append({
-			"pos_x": bag.global_position.x,
-			"pos_y": bag.global_position.y,
-			"pos_z": bag.global_position.z,
-			"items": item_paths
-		})
-		
-	return {
-		"bags": bags_data
-	}
-
-func load_save_data(data: Dictionary) -> void:
-	if not data.has("bags"):
+func _check_and_spawn_bags() -> void:
+	if _cached_bags_data.is_empty():
 		return
 		
-	# Security check: Ignore loads if we're in the MainMenu
+	# Security check: Only spawn if we're in the MainGame scene
 	if get_tree().current_scene.name != "MainGame":
+		print("[MarioManager] Postponing bag spawn — not in MainGame (Current: %s)" % get_tree().current_scene.name)
 		return
 		
+	print("[MarioManager] Spawning %d cached bags..." % _cached_bags_data.size())
+	
 	# Clear whatever dummy bags currently exist to prevent dupes.
 	for old_bag in get_tree().get_nodes_in_group("delivery_bag"):
 		old_bag.queue_free()
 		
 	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
-	for b_data in data["bags"]:
+	for b_data in _cached_bags_data:
 		var new_bag = plastic_scene.instantiate()
 		get_tree().current_scene.add_child(new_bag)
 		
@@ -330,6 +319,51 @@ func load_save_data(data: Dictionary) -> void:
 		# Optional: Quick visuals pulse
 		if new_bag.has_method("_refresh_visuals"):
 			new_bag.call_deferred("_refresh_visuals")
+			
+	# Clear cache once spawned
+	_cached_bags_data.clear()
+
+# ── INTERNAL HELPERS ────────────────────────────────────────────────
+
+# ── SAVE / LOAD LOGIC ────────────────────────────────────────────────
+
+func get_save_data() -> Dictionary:
+	var bags_data = []
+	for bag in get_tree().get_nodes_in_group("delivery_bag"):
+		var item_paths = []
+		for item in bag.items:
+			item_paths.append(item.resource_path)
+			
+		bags_data.append({
+			"pos_x": bag.global_position.x,
+			"pos_y": bag.global_position.y,
+			"pos_z": bag.global_position.z,
+			"items": item_paths
+		})
+	
+	# If no bags are in the tree, fallback to our cached data so we don't 
+	# overwrite the save file with an empty list if SaveManager.force_save()
+	# is called while in the Main Menu or a transition.
+	if bags_data.is_empty() and not _cached_bags_data.is_empty():
+		print("[MarioManager] get_save_data: No bags in tree, returning %d cached entries." % _cached_bags_data.size())
+		return { "bags": _cached_bags_data }
+		
+	return {
+		"bags": bags_data
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	if not data.has("bags"):
+		return
+		
+	_cached_bags_data = data["bags"]
+	print("[MarioManager] Received %d bags in load_save_data. Cached for spawning." % _cached_bags_data.size())
+	
+	# Try spawning immediately if the scene is already ready
+	_check_and_spawn_bags()
+		
+	# Clear whatever dummy bags currently exist to prevent dupes.
+	# (LOGIC MOVED TO _check_and_spawn_bags)
 
 
 

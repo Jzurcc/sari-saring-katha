@@ -274,7 +274,10 @@ color = Color(1, 1, 1, 0.784313)
 
 [node name="HelperPrompt" parent="CanvasLayer" unique_id=1277665076 instance=ExtResource("65_helper_ui")]
 
-[node name="SaveIndicator" type="Control" parent="CanvasLayer" unique_id=314159265]
+[node name="SaveOverlay" type="CanvasLayer" parent="." unique_id=314159267]
+layer = 110
+
+[node name="SaveIndicator" type="Control" parent="SaveOverlay" unique_id=314159265]
 layout_mode = 3
 anchors_preset = 3
 anchor_left = 1.0
@@ -289,7 +292,7 @@ grow_horizontal = 0
 grow_vertical = 0
 script = ExtResource("save_scr")
 
-[node name="Label" type="Label" parent="CanvasLayer/SaveIndicator" unique_id=314159266]
+[node name="Label" type="Label" parent="SaveOverlay/SaveIndicator" unique_id=314159266]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -299,9 +302,10 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.6)
 theme_override_fonts/font = ExtResource("5_eeqno")
 theme_override_font_sizes/font_size = 18
-text = "Progress Saved..."
+text = "Saved Progress"
 horizontal_alignment = 2
 vertical_alignment = 2
+
 
 [node name="NowPlayingIndicator" type="Control" parent="CanvasLayer" unique_id=42424242]
 layout_mode = 3

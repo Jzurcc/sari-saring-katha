@@ -52,18 +52,19 @@ func _populate_characters() -> void:
 	
 	if not StoryManager: return
 	
-	var characters = StoryManager.available_characters.duplicate()
+	var characters = StoryManager.available_characters.filter(func(c): return c != null)
 	characters.sort_custom(func(a,b): return a.unlock_tier < b.unlock_tier)
 	
 	var _current_tier = StoryManager.current_tier
 	
 	for data in characters:
 		if not data: continue
+		
+		var is_encountered = StoryManager.encountered_characters.has(data.resource_path)
+		
 		var card = character_card_scene.instantiate()
 		card_container.add_child(card)
-		
-		var is_locked = not StoryManager.encountered_characters.has(data.resource_path)
-		card.setup(data, is_locked)
+		card.setup(data, not is_encountered)
 		
 		if not card.disabled:
 			card.pressed.connect(_on_character_selected.bind(data))

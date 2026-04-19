@@ -396,7 +396,8 @@ func _update_item_names(customer: Customer) -> void:
 	
 	var formatted_names = ""
 	if item_names.size() == 0:
-		formatted_names = "items"
+		formatted_names = "something" # Better than "items" if we ever hit this fallback
+		print("[CustomerSpawner] WARNING: Transaction has zero items! Char: %s" % InventoryManager.current_character_name)
 	elif item_names.size() == 1:
 		formatted_names = item_names[0]
 	elif item_names.size() == 2:
@@ -582,8 +583,15 @@ func _on_dialogue_ended() -> void:
 			# Player can either give the correct item or refuse service next time.
 			pass
 
-		DialoguePhase.GREETING, DialoguePhase.TALK, DialoguePhase.NONE:
-			# Customer is at the counter waiting for their item. Player must act.
+		DialoguePhase.GREETING:
+			# If a story encounter was just an intro/greeting and it ends, 
+			# we might need to satisfy it if it's a visit-only chapter.
+			if is_instance_valid(current_customer) and current_customer.transaction_context:
+				var t = current_customer.transaction_context
+				if t.transaction_type == TransactionContext.Type.STORY and t.is_visit_story:
+					print("[CustomerSpawner] Fallback Satisfaction for VISIT-STORY.")
+					current_customer.satisfy()
+					return
 			if phase == DialoguePhase.GREETING and is_instance_valid(current_customer):
 				current_customer.has_been_greeted = true
 			pass

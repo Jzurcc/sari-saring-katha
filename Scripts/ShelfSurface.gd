@@ -83,6 +83,7 @@ var _slot_transforms: Array[Transform3D] = []
 ## Which DraggableItem occupies each slot index. null = empty.
 var _slot_occupants: Array = []  # Array[DraggableItem?]
 var _is_loading: bool = false
+var _data_was_loaded: bool = false
 
 func _ready() -> void:
 	# 1. Auto-generate save_id if empty based on hierarchy
@@ -131,11 +132,14 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	
-	# Always populate with Inspector defaults first.
+	# Always populate with Inspector defaults first, BUT ONLY if no save data was loaded.
 	# If a save file exists, SaveManager.request_load() will call load_save_data()
 	# which clears and rebuilds from saved state. This removes the timing race
 	# that caused empty shelves when a stray save existed before full game load.
-	populate()
+	if not _data_was_loaded:
+		populate()
+	else:
+		print("[ShelfSurface] '%s' skipping populate() because data was already loaded." % save_id)
 
 
 ## Create a thin Area3D covering the shelf surface so DragManager's
@@ -416,6 +420,7 @@ func load_save_data(data: Dictionary) -> void:
 		
 	print("[ShelfSurface] '%s' applying save data: %s" % [save_id, data.keys()])
 	_is_loading = true
+	_data_was_loaded = true
 	_clear()
 	
 	# Rebuild slot transforms

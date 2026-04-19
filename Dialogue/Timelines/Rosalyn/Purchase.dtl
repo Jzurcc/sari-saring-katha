@@ -11,7 +11,15 @@ if {Transaction_TalkVar} <= 50:
 	Rosalyn: I would like a {Transaction_ItemWants}... [pause=0.4] if that's okay.
 else:
 	Rosalyn: Could you spare a {Transaction_ItemWants}? [pause=0.6] I... I think I can hold it.
-[end_timeline]
+- Just a moment, I'm finding it.
+	Rosalyn: Oh... um... [pause=0.4] okay. I can wait. I have... [pause=0.3] plenty of time.
+	[end_timeline]
+- Sorry, Rosalyn, we're fresh out of stock.
+	Rosalyn: Oh... [pause=0.4] I see. [pause=0.3] I'm sorry for asking. Goodbye.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Partial
 Rosalyn: Thank you... [pause=0.4] um... [pause=0.3] I still need a {Transaction_ItemWants} as well.

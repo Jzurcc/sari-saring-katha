@@ -32,6 +32,7 @@ elif {Transaction_Chapter} == 2.0:
 	Rosalyn: It's resting in my hands now. [pause=0.5] Still solid. 
 	Rosalyn: I know that's unusual. I'm sorry. But it works. 
 	Rosalyn: I'm quite pleased about this, actually. [pause=0.4] Thank you.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
@@ -44,6 +45,7 @@ elif {Transaction_Chapter} == 3.0:
 	Rosalyn: It's fine. I'll take a cold {Transaction_ItemWants} instead. I know that works.
 	Rosalyn: My hand feels... nothing. [pause=0.5] Just the shape of the bottle.
 	Rosalyn: Maybe next Tuesday. [pause=0.4] Sorry for taking up your time.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
@@ -79,6 +81,7 @@ elif {Transaction_Chapter} == 6.0:
 	Rosalyn: I was never afraid of this store. I want you to know that. 
 	Rosalyn: It's very warm in here. The light is very... present. I always felt it from the road.
 	Rosalyn: Thank you.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7.0:

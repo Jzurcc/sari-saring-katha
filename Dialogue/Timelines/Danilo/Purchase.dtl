@@ -11,7 +11,15 @@ if {Transaction_TalkVar} <= 50:
 	Danilo: Give me a {Transaction_ItemWants}. I need to see if it's as good as they say.
 else:
 	Danilo: No rush, boss. I'm just here for a {Transaction_ItemWants}. I've got all the time in the world to watch.
-[end_timeline]
+- Coming right up.
+	Danilo: Sige, boss. No hurry.
+	[end_timeline]
+- Sorry, Danilo, we're fresh out of stock.
+	Danilo: Ah, sayang. Next time then. [pause=0.4] I'll go check the other store down the road. Peace!
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Partial
 Danilo: Nice one, boss. Still missing the {Transaction_ItemWants} though. Hit me.

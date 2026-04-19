@@ -4,15 +4,23 @@ if {Transaction_GreetingVar} <= 50:
 	Rodel: Greetings, Keeper of the Dry Shelves. I find the atmosphere here remarkably abrasive today.
 else:
 	Rodel: Ambassador. Your terrestrial sun is behaving like a relentless predator. My fluid-reserves are low.
+	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
 [end_timeline]
 
 label Talk
 if {Transaction_TalkVar} <= 50:
 	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
 else:
-[end_timeline]
 	Rodel: I must acquire a {Transaction_ItemWants}. [pause=0.4] This land-fuel is necessary for my continued search.
-[end_timeline]
+- Stand by, Rodel.
+	Rodel: Understood. Maintaining position. Efficiency check: optimal.
+	[end_timeline]
+- Sorry, Rodel, we're fresh out of stock.
+	Rodel: A critical error. My search must be re-routed. [pause=0.4] Farewell, Ambassador.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Partial
 Rodel: Acceptable. I still require a {Transaction_ItemWants} to complete this module.

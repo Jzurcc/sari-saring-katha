@@ -20,7 +20,7 @@ const END_OF_DAY_QUOTES = [
 
 @onready var sleep_overlay_scene = preload("res://Scenes/UI/SleepOverlay.tscn")
 
-@export var starting_money: float = 200.0
+@export var starting_money: float = 350.0
 var money: float = 0.0
 var day: int = 1
 var quota_day: int = 1
@@ -34,7 +34,7 @@ var current_tutorial_task_id := ""
 
 # --- Debt System (Dynamic) ---
 func get_quota_for_day(q_day: int) -> float:
-	return 50.0 + (q_day - 1) * 25.0
+	return 25.0 + (q_day - 1) * 15.0
 
 func _ready() -> void:
 	print("[GameManager] _ready() START")

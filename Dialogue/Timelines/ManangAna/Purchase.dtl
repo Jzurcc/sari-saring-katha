@@ -24,7 +24,16 @@ if {Transaction_TalkVar} <= 50:
 	ManangAna: I need [color=#0f6e2f]{Transaction_ItemWants}[/color], anak. The kids are going to start eating the furniture if I don't get home soon.
 else:
 	ManangAna: Just some [color=#0f6e2f]{Transaction_ItemWants}[/color] for me today. Let's make it quick... the laundry isn't going to wash itself.
-[end_timeline]
+- Coming right up, Manang.
+	ManangAna: Sige, bilisan mo lang ha.
+	[end_timeline]
+- Sorry, Manang Ana, we're fresh out of stock.
+	ManangAna: Ay, ganoon ba? Sayang naman. [pause=0.4] Sige, I'll just check if we have any leftovers in the fridge.
+	ManangAna: Mag-iingat ka dito, anak.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Partial
 ManangAna: Salamat, anak. Pakisama na rin ang [color=#0f6e2f]{Transaction_ItemWants}[/color] ha.

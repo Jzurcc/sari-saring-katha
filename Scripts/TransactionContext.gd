@@ -31,6 +31,7 @@ var repayment_amount: float = 0.0
 var rumor_active: bool = false
 var rumor_type: float = 0.0
 var is_visit_story: bool = false
+var story_advanced: bool = false
 
 func _is_match(item: ItemData, desired: ItemData) -> bool:
 	if item == desired:

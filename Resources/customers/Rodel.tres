@@ -28,4 +28,5 @@ story_timeline = ExtResource("11_hxk1p")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.4
+speech_marker_height_ratio = 0.55
 dialogue_blip_sound = ExtResource("2_7nk2y")

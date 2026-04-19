@@ -179,10 +179,11 @@ elif {Transaction_Chapter} == 8.0:
 		Danilo: Ay. I checked all my pockets and I'm a bit short. Utang muna for the first one?
 		- Fine. One time lang.
 			[signal arg="utang_accepted"]
-			Danilo: I'll have it next time. And boss — I know exactly when you'll be here.
+			Danilo: I'll have the next time. And boss — I know exactly when you'll be here.
 		- You can see everything and you still forgot your coins?
 			[signal arg="utang_rejected"]
 			Danilo: Fair. I'll be back.
+	[signal arg="story_success"]
 	[end_timeline]
 
 label Talk

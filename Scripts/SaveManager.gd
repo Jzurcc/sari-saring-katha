@@ -13,8 +13,13 @@ extends Node
 ##   E) Story chapter completed (called from StoryManager)
 ##   G) Manual Pause Menu button
 
-const SAVE_PATH := "user://save_game.json"
-const TMP_PATH  := "user://save_game.tmp"
+const SAVE_FILE   := "save_game.json"
+const BACKUP_FILE := "save_game_backup.json"
+const TMP_FILE    := "save_game.tmp"
+
+const SAVE_PATH   := "user://" + SAVE_FILE
+const BACKUP_PATH := "user://" + BACKUP_FILE
+const TMP_PATH    := "user://" + TMP_FILE
 
 ## How many customer departures between auto-saves.
 const CUSTOMERS_PER_SAVE := 2
@@ -34,6 +39,12 @@ func _ready() -> void:
 	# B) Customer departures (any outcome)
 	EventBus.customer_satisfied.connect(_on_customer_left)
 	EventBus.customer_dismissed.connect(_on_customer_left)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		if _is_in_game():
+			force_save()
 
 
 # ── Trigger Handlers ──────────────────────────────────────────────────────
@@ -79,7 +90,13 @@ func force_save() -> void:
 	var master_save := _read_from_disk()
 	var new_keys := []
 
-	# 2. Gather data from all persist-group nodes in current scene
+	# 2. Add metadata
+	var meta = master_save.get("_meta", {})
+	meta["last_save_time"] = Time.get_datetime_string_from_system()
+	meta["version"] = ProjectSettings.get_setting("application/config/version", "0.9")
+	master_save["_meta"] = meta
+
+	# 3. Gather data from all persist-group nodes in current scene
 	var persist_nodes = get_tree().get_nodes_in_group("persist")
 	print("[SaveManager] Saving... Merging data from %d active 'persist' nodes." % persist_nodes.size())
 	
@@ -94,13 +111,13 @@ func force_save() -> void:
 			if sid == "":
 				push_error("[SaveManager] Node '%s' (path: %s) has an empty save_id! Skipping." % [node.name, node.get_path()])
 				continue
-				
+			
 			master_save[sid] = node.get_save_data()
 			new_keys.append(sid)
 		else:
 			print("  [SaveManager] Skipped (no get_save_data): ", node.name)
 
-	# 3. Write back the combined dictionary
+	# 4. Write back the combined dictionary
 	var success := _write_to_disk(master_save)
 
 	_is_saving = false
@@ -113,17 +130,20 @@ func force_save() -> void:
 		push_error("[SaveManager] Save failed — disk write error!")
 
 
-## Deletes the save file from disk. Used for New Game resets.
+## Deletes all save-related files from disk. Primarily used for New Game / Resets.
 func delete_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		var err = DirAccess.remove_absolute(SAVE_PATH)
-		if err == OK:
-			print("[SaveManager] Save file deleted successfully.")
-		else:
-			push_error("[SaveManager] Failed to delete save file: ", err)
+	var files_to_nuke = [SAVE_PATH, BACKUP_PATH, TMP_PATH]
 	
-	if FileAccess.file_exists(TMP_PATH):
-		DirAccess.remove_absolute(TMP_PATH)
+	for path in files_to_nuke:
+		if FileAccess.file_exists(path):
+			var err = DirAccess.remove_absolute(path)
+			if err == OK:
+				print("[SaveManager] Deleted: ", path)
+			else:
+				push_error("[SaveManager] Failed to delete %s: error %d" % [path, err])
+	
+	_customer_leave_counter = 0
+	print("[SaveManager] All save data cleared.")
 
 
 ## Loads save data and distributes it to all persist-group nodes.
@@ -161,77 +181,104 @@ func request_load() -> void:
 	print("[SaveManager] Game loaded successfully. Keys: ", master_save.keys())
 
 
-## Returns true if a save file exists on disk.
+## Returns true if a save file or backup exists on disk.
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
 
 
-## Deletes the save file (used by "New Game").
+## Alias for delete_save to maintain compatibility with legacy triggers.
 func clear_save() -> void:
-	var dir := DirAccess.open("user://")
-	if dir:
-		if dir.file_exists("save_game.json"):
-			dir.remove("save_game.json")
-		if dir.file_exists("save_game.tmp"):
-			dir.remove("save_game.tmp")
-	_customer_leave_counter = 0
-	print("[SaveManager] Save file cleared.")
+	delete_save()
 
 
 # ── Disk I/O ──────────────────────────────────────────────────────────────
 
-## Writes the master dictionary to disk using atomic tmp-swap.
-## Returns true on success.
+## Writes the master dictionary to disk using a strict Verified Atomic Swap pattern.
+## Logic: Write TMP -> Verify TMP -> Rotate Old to Backup -> Swap TMP to Main.
 func _write_to_disk(data: Dictionary) -> bool:
 	var json_string := JSON.stringify(data, "\t")
+	if json_string.is_empty():
+		push_error("[SaveManager] Serialization failed! Refusing to write empty data.")
+		return false
 
 	# Step 1: Write to temporary file
 	var file := FileAccess.open(TMP_PATH, FileAccess.WRITE)
 	if not file:
-		push_error("[SaveManager] Cannot open tmp file for writing: %s" % FileAccess.get_open_error())
+		push_error("[SaveManager] Cannot open TMP for writing: %s (Error: %s)" % [TMP_PATH, error_string(FileAccess.get_open_error())])
 		return false
 
 	file.store_string(json_string)
+	file.flush()
 	file.close()
 
-	# Step 2: Atomic rename via DirAccess with relative paths
-	# NOTE: DirAccess.rename_absolute() does NOT work with user:// virtual paths.
-	# We must open the directory and use relative filenames instead.
-	var dir := DirAccess.open("user://")
-	if not dir:
-		push_error("[SaveManager] Cannot open user:// directory for rename.")
+	# Step 2: VERIFICATION - Ensure the TMP file is valid before we touch the real save
+	var verify_data = _attempt_read(TMP_PATH)
+	if verify_data.is_empty():
+		push_error("[SaveManager] VERIFICATION FAILED! The written TMP file is unreadable. Aborting save swap to protect existing data.")
 		return false
 
-	var err := dir.rename("save_game.tmp", "save_game.json")
-	if err != OK:
-		push_error("[SaveManager] Failed to rename tmp to save: error %d" % err)
+	# Step 3: Atomic Swap / Rotation
+	var dir := DirAccess.open("user://")
+	if not dir:
+		push_error("[SaveManager] Internal Error: Could not access user:// directory.")
+		return false
+	
+	# a) Move current save to backup (if it exists)
+	if dir.file_exists(SAVE_FILE):
+		# Remove old backup first if it exists (required on some OS for rename)
+		if dir.file_exists(BACKUP_FILE):
+			dir.remove(BACKUP_FILE)
+		
+		var err_bak = dir.rename(SAVE_FILE, BACKUP_FILE)
+		if err_bak != OK:
+			push_warning("[SaveManager] Could not rotate Main to Backup (Error: %s). Proceeding anyway..." % error_string(err_bak))
+
+	# b) Rename TMP to Main
+	var err_final = dir.rename(TMP_FILE, SAVE_FILE)
+	if err_final != OK:
+		push_error("[SaveManager] FATAL: Failed to swap TMP to Main (Error: %s). Your save might be stuck as .tmp!" % error_string(err_final))
 		return false
 
 	return true
 
 
 ## Reads and parses the save file from disk.
+## Automatically attempts backup recovery if the main file fails.
 ## Returns an empty Dictionary on failure.
 func _read_from_disk() -> Dictionary:
-	if not FileAccess.file_exists(SAVE_PATH):
+	var data := _attempt_read(SAVE_PATH)
+	if not data.is_empty():
+		return data
+		
+	# Fallback to backup
+	print("[SaveManager] Main save failed or missing. Attempting backup recovery...")
+	data = _attempt_read(BACKUP_PATH)
+	if not data.is_empty():
+		print("[SaveManager] BACKUP RECOVERY SUCCESSFUL.")
+		return data
+		
+	return {}
+
+func _attempt_read(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
 		return {}
 
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[SaveManager] Cannot open save file for reading: %s" % FileAccess.get_open_error())
+		push_error("[SaveManager] Cannot open file at %s: %s" % [path, FileAccess.get_open_error()])
 		return {}
 
 	var json_string := file.get_as_text()
 	file.close()
 
 	if json_string.strip_edges().is_empty():
-		push_warning("[SaveManager] Save file is empty.")
+		push_warning("[SaveManager] File at %s is empty." % path)
 		return {}
 
 	var json := JSON.new()
 	var parse_result := json.parse(json_string)
 	if parse_result != OK:
-		push_error("[SaveManager] JSON parse failed at line %d: %s" % [json.get_error_line(), json.get_error_message()])
+		push_error("[SaveManager] JSON parse failed for %s: %s" % [path, json.get_error_message()])
 		return {}
 
 	if json.data is Dictionary:

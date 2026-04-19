@@ -5,7 +5,7 @@ var save_id: String = "story_manager"
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
-const DAY_START_HOUR := 5.0
+const DAY_START_HOUR := 16.89
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 ## 1 in-game hour = 30 real seconds.
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
@@ -24,8 +24,9 @@ var is_clock_running: bool = false:
 	set(value):
 		is_clock_running = value
 		_ensure_tod_node()
-		if _time_of_day_node and not (get_tree().current_scene and get_tree().current_scene.name == "MainMenu"):
-			_time_of_day_node.game_time_enabled = is_clock_running
+		if _time_of_day_node:
+			var in_menu = get_tree().current_scene and get_tree().current_scene.name == "MainMenu"
+			_time_of_day_node.game_time_enabled = is_clock_running and not in_menu
 
 var _last_character_path: String = ""
 var _pending_tier_advance_source: String = ""
@@ -142,7 +143,7 @@ func _set_dvar(path: String, value) -> void:
 	# No else: we silent the error if it doesn't exist
 
 ## Float representation of the currently displayed in-game hour (0–24).
-var _current_display_time: float = 16.0
+var _current_display_time: float = 16.89
 ## Cached reference to the TimeOfDay node (searched once on first use).
 var _time_of_day_node: Node = null
 
@@ -253,7 +254,7 @@ func advance_tier(source: String = "Manual") -> void:
 	EventBus.tier_advanced.emit(current_tier, source)
 
 func get_upgrade_cost(target_tier: int) -> float:
-	return 100.0 + float(target_tier - 2) * 25.0
+	return 60.0 + float(target_tier - 2) * 20.0
 
 ## Returns a virtual ItemData representating a store upgrade for a specific tier.
 func get_tier_upgrade_item(target_tier: int) -> ItemData:
@@ -317,6 +318,14 @@ func get_save_id() -> String:
 	return "progression"
 
 func get_save_data() -> Dictionary:
+	# Robustness: Explicitly sync time from the sky system before returning save data
+	# if we are in the game. This avoids stale time if we haven't received a signal lately.
+	_ensure_tod_node()
+	if is_instance_valid(_time_of_day_node) and _time_of_day_node.has_method("get"):
+		var tod_time = _time_of_day_node.get("current_time")
+		if tod_time != null:
+			_current_display_time = tod_time
+	
 	return {
 		"day": day,
 		"current_tier": current_tier,
@@ -348,8 +357,12 @@ func load_save_data(data: Dictionary) -> void:
 	customer_story_branches = data.get("customer_story_branches", {})
 	
 	encountered_characters = data.get("encountered_characters", {})
+	
+	# Migration/Reliability: Ensure anyone with story progress is also marked as encountered.
+	# This recovers characters who might have been missed during a save ID migration.
 	for path in character_story_states.keys():
-		encountered_characters[path] = true
+		if path.begins_with("res://"):
+			encountered_characters[path] = true
 		
 	customer_debts = data.get("customer_debts", {})
 	global_story_cooldown = data.get("global_story_cooldown", 0)
@@ -364,11 +377,21 @@ func load_save_data(data: Dictionary) -> void:
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
 	is_clock_running = data.get("is_clock_running", false)
 	
+	# Apply loaded state to the sky system
 	_ensure_tod_node()
-	if get_tree().current_scene and get_tree().current_scene.name != "MainMenu":
+	if is_instance_valid(_time_of_day_node):
 		_apply_display_time(_current_display_time)
+		_time_of_day_node.game_time_enabled = is_clock_running
+	else:
+		# If MainGame is still loading, wait a frame and retry once
+		get_tree().process_frame.connect(func():
+			_ensure_tod_node()
+			if is_instance_valid(_time_of_day_node):
+				_apply_display_time(_current_display_time)
+				_time_of_day_node.game_time_enabled = is_clock_running
+		, CONNECT_ONE_SHOT)
 	
-	print("[StoryManager] State loaded. Tier %d, Day %d, Time %.2f, Characters tracked: %d" % [current_tier, day, _current_display_time, character_story_states.size()])
+	print("[StoryManager] State loaded. Tier %d, Day %d, Time %.2f" % [current_tier, day, _current_display_time])
 
 
 func reset_state() -> void:
@@ -455,11 +478,14 @@ func get_next_transaction() -> TransactionContext:
 	
 	# Priority 0: Forced First-Time Encounters (Ignores Cooldown)
 	var unlocked = _get_unlocked_characters()
-	var new_characters = unlocked.filter(func(c): return not encountered_characters.has(c.resource_path))
-	# Only includes those who actually HAVE a story chapter 0 available
-	new_characters = new_characters.filter(func(c): 
+	var new_characters = unlocked.filter(func(c): 
 		var c_ch = character_story_states.get(c.resource_path, 0)
-		return c_ch < c.max_story_chapters and c.story_timeline != null and _is_story_chapter_available(c, c_ch)
+		# NEW: Check c_ch == 0 in addition to encountered_characters as a safeguard against resets.
+		# EXCEPTION: Reyna Mayari never triggers story during the day, even for first encounter.
+		return (not encountered_characters.has(c.resource_path) or c_ch == 0) \
+			and c_ch < c.max_story_chapters and c.story_timeline != null \
+			and _is_story_chapter_available(c, c_ch) \
+			and c.get_clean_id() != "reynamayari"
 	)
 	
 	if not new_characters.is_empty():
@@ -475,6 +501,8 @@ func get_next_transaction() -> TransactionContext:
 			if c.resource_path == last_story_advancer_path: continue
 			# Skip if it was the last character to avoid back-to-back spawns
 			if c.resource_path == _last_character_path: continue
+			# EXCEPTION: Reyna Mayari story only happens at night via special collection.
+			if c.get_clean_id() == "reynamayari": continue
 			
 			var c_chapter = character_story_states.get(c.resource_path, 0)
 			var _daily_count = todays_story_counts.get(c.resource_path, 0)
@@ -516,12 +544,8 @@ func get_next_transaction() -> TransactionContext:
 			
 			if not fallback_story_candidates.is_empty():
 				char_data = fallback_story_candidates.pick_random()
-				# FILTER: Reyna Mayari story only happens at night.
-				if char_data.get_clean_id() == "reynamayari":
-					char_data = null
-				else:
-					force_story = true
-					print("[StoryManager] Cooldown 0: Soft-lock override. Forcing story for: ", char_data.get_clean_id())
+				force_story = true
+				print("[StoryManager] Cooldown 0: Soft-lock override. Forcing story for: ", char_data.get_clean_id())
 
 	# Priority 2: Generic flow if no story is forced, or cooldown is active
 	if not char_data:
@@ -836,6 +860,12 @@ func _process(_delta: float) -> void:
 func _apply_display_time(t: float) -> void:
 	if not _time_of_day_node:
 		return
+	
+	# Guard: The main menu should have its own constant lighting (16.89).
+	# Do not overwrite the main menu background with loaded game time or resets.
+	if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
+		return
+
 	var h: int = int(t)
 	var m: int = int((t - h) * 60.0)
 	_time_of_day_node.set_time(h, m, 0)
@@ -880,20 +910,27 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 	var chapter = character_story_states.get(path, 0)
 	
 	# If this is their first visit (chapter 0) OR the system forced a story chapter
-	if (chapter == 0 or force_story) and chapter < data.max_story_chapters and data.story_timeline != null:
+	# NEW: Always force story if a chapter is pending (unless it's Reyna Mayari during the day)
+	# This prevents characters from getting "stuck" in generic visit loops.
+	var story_pending = chapter < data.max_story_chapters and data.story_timeline != null
+	var is_mayari = data.get_clean_id() == "reynamayari"
+	
+	if (chapter == 0 or force_story or story_pending) and story_pending and not is_mayari:
 		t.transaction_type = TransactionContext.Type.STORY
 		t.timeline = data.story_timeline
 	else:
 		# Generic flow selection: use the exported visit_chance (default 20%)
 		# Force a purchase if it is the first regular customer of the day.
+		# NOTE: Reyna Mayari falls here during the day even if she has pending story.
 		var is_purchase = true
 		if _first_customer_of_day:
-			print("[StoryManager] First customer of the day. Forcing PURCHASE.")
+			print("[StoryManager] First regular customer of the day. Forcing PURCHASE.")
 		else:
 			is_purchase = randf() < (1.0 - visit_chance)
-			
+
 		# Danilo Overdrive: Should only have VISIT timelines if story isn't finished.
-		if is_purchase and data.get_clean_id() == "danilo" and chapter < data.max_story_chapters:
+		# FIX: Danilo's Chapter 8 (index 8) is a PURCHASE finale, allow it to remain PURCHASE.
+		if is_purchase and data.get_clean_id() == "danilo" and chapter < data.max_story_chapters - 1:
 			print("[StoryManager] Danilo story incomplete (%d/%d). Overriding PURCHASE to VISIT." % [chapter, data.max_story_chapters])
 			is_purchase = false
 			
@@ -919,17 +956,22 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 	# 2.5 Identify "Visit-only" Story Chapters
 	if t.transaction_type == TransactionContext.Type.STORY:
 		var id = data.get_clean_id()
-		if id == "sarimanok" and chapter <= 3.0:
+		var i_chapter = int(chapter)
+		if id == "sarimanok" and i_chapter <= 3:
 			t.is_visit_story = true
-		elif id == "danilo" and chapter <= 8.0: # Chapter 9 is the first purchase
+		elif id == "danilo" and i_chapter <= 8: # Chapter 9 is the first purchase
 			t.is_visit_story = true
-		elif id == "manangana" and chapter == 7.0: # Chapter 8 "Cleared" is a visit
+		elif id == "manangana" and i_chapter == 7: # Chapter 8 "Cleared" is a visit
 			t.is_visit_story = true
-		elif id == "buboy" and chapter == 0.0: # Chapter 1 "Pinoy Henyo" is a visit
+		elif id == "buboy" and i_chapter == 0: # Chapter 1 "Pinoy Henyo" is a visit
+			t.is_visit_story = true
+		elif id == "rosalyn" and i_chapter in [0, 1, 4, 5, 7, 8]:
+			t.is_visit_story = true
+		elif id == "rodel" and i_chapter == 8:
 			t.is_visit_story = true
 		
 		if t.is_visit_story:
-			print("[StoryManager] Marked STORY as VISIT-ONLY for %s (Chapter %d)" % [id, chapter])
+			print("[StoryManager] Marked STORY as VISIT-ONLY for %s (Chapter %d)" % [id, i_chapter])
 	
 	# 2.6 Dynamic Requested Category Overrides
 	var id = data.get_clean_id()
@@ -975,7 +1017,6 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			2, 3: t.requested_category = "bottle" # Ch 3 & 4
 			6: t.requested_category = "candy" # Ch 7
 			_: 
-				t.transaction_type = TransactionContext.Type.VISIT
 				t.is_visit_story = true
 	elif id == "rodel":
 		# Rodel's 9-chapter aquatic foreigner arc
@@ -984,7 +1025,6 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			1, 4: t.requested_category = "snack"
 			6: t.requested_category = "frozen"
 			8: 
-				t.transaction_type = TransactionContext.Type.VISIT
 				t.is_visit_story = true
 	elif id == "brahim":
 		match int(chapter):
@@ -1082,14 +1122,15 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 					print("[StoryManager] Selection Mode: CUMULATIVE TIER (60% roll)")
 					
 				for item in InventoryManager.get_all_items():
-					if is_item_unlocked(item) and item.can_be_sold:
+					# Selection Pool now includes current_tier + 1 to encourage upgrades
+					if item.tier <= current_tier + 1 and item.can_be_sold:
 						pool.append(item)
 
 			# --- Fill Remaining Target Item Slots ---
 			var remaining_items = target_item_count - t.desired_items.size()
 			for i in range(remaining_items):
 				if not pool.is_empty():
-					var item = pool.pick_random()
+					var item = _pick_weighted_item(pool)
 					if t.upgrade_to_best_tier:
 						var best = get_best_item_for_category(item.category, item)
 						if best: item = best
@@ -1102,25 +1143,27 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 							if best: fallback = best
 						t.desired_items.append(fallback)
 			
-			# Safety: distinguish between PURCHASE (convert to visit) and STORY (keep chapter, try fallback item)
+			# Safety Fallback: If no items were found (due to category Tier mismatch or invalid pinned data)
+			if t.desired_items.is_empty() and t.transaction_type != TransactionContext.Type.VISIT:
+				print("[StoryManager] WARNING: No items found for transaction %s. Attempting global fallback." % data.character_name)
+				var fallback = _pick_random_orderable_item()
+				if fallback:
+					t.desired_items.append(fallback)
+					print("[StoryManager] Global fallback assigned: ", fallback.item_name)
+
+			# Final type safety check
 			if t.desired_items.is_empty():
 				if t.transaction_type == TransactionContext.Type.PURCHASE:
 					print("[StoryManager] Critical: No items found for purchase. Converting to VISIT for: ", data.character_name)
 					t.transaction_type = TransactionContext.Type.VISIT
 					t.timeline = "res://Dialogue/Timelines/Generic/Visit.dtl"
 				elif t.transaction_type == TransactionContext.Type.STORY:
-					# Story purchase chapters still need an item — try any unlocked fallback.
-					# Visit-type story chapters (e.g. chapters 0-3) are fine with empty items.
-					var any_item = _pick_random_orderable_item()
-					if any_item:
-						t.desired_items.append(any_item)
-						print("[StoryManager] STORY chapter had empty item pool. Fallback item used: ", any_item.item_name)
-					else:
-						print("[StoryManager] STORY chapter: no fallback items found. Story dialogue will handle it.")
+					# Some story chapters are purely talk, but if they use {Transaction_ItemWants} we need a fallback
+					push_warning("[StoryManager] STORY transaction for %s has NO items. This might be intentional or a tier-lock issue." % data.character_name)
 			
 			# SYNC: Ensure the built item list (overrides/fallbacks) is pushed to Dialogic DVars
 			_update_transaction_item_string(t)
-			print("[StoryManager] Dynamic items synced via override/fallback for %s: %s" % [data.character_name, Transaction_ItemWants])
+			print("[StoryManager] Final check for %s: Type=%s, Items=[%s]" % [data.character_name, Transaction_Chapter, Transaction_ItemWants])
 
 
 
@@ -1227,9 +1270,13 @@ func _set_last_customer_info(customer: Customer) -> void:
 func _process_story_cooldown(customer) -> void:
 	if not customer.transaction_context:
 		return
+	
+	var t = customer.transaction_context
+	if t.story_advanced:
+		return # Already advanced this visit
 		
-	if customer.transaction_context.transaction_type == TransactionContext.Type.STORY:
-		var path = customer.transaction_context.customer_data.resource_path
+	if t.transaction_type == TransactionContext.Type.STORY or t.is_visit_story:
+		var path = t.customer_data.resource_path
 		
 		# EXCEPTION: Reyna Mayari only advances if the collection was successful.
 		if path.contains("ReynaMayari"):
@@ -1260,6 +1307,7 @@ func _process_story_cooldown(customer) -> void:
 				print("[StoryManager] New focus character is: ", todays_focus_character_path.get_file().get_basename())
 
 		# Story advanced — set cooldown and mark them
+		t.story_advanced = true
 		last_story_advancer_path = path
 		global_story_cooldown = randi_range(1, 3)
 		
@@ -1351,13 +1399,13 @@ func get_best_item_for_category(cat: String, current_item: ItemData = null) -> I
 	var mapped_categories = _get_mapped_categories(cat)
 	var max_tier = -1
 	for item in InventoryManager.get_all_items():
-		if item.category in mapped_categories and item.tier <= current_tier and item.can_be_sold:
+		if item.category in mapped_categories and item.tier <= current_tier + 1 and item.can_be_sold:
 			if item.tier > max_tier:
 				max_tier = item.tier
 	
 	if max_tier == -1: return null
 	
-	# Optimization: If the current item is already at the peak unlocked tier, don't reroll it.
+	# Optimization: If the current item is already at the peak available tier, don't reroll it.
 	if current_item and current_item.tier == max_tier and current_item.category in mapped_categories:
 		return current_item
 	
@@ -1372,13 +1420,47 @@ func get_any_item_for_category(cat: String) -> ItemData:
 	var mapped_categories = _get_mapped_categories(cat)
 	var pool: Array[ItemData] = []
 	for item in InventoryManager.get_all_items():
-		if item.category in mapped_categories and item.tier <= current_tier and item.can_be_sold:
+		if item.category in mapped_categories and item.tier <= current_tier + 1 and item.can_be_sold:
 			pool.append(item)
 	
-	var item = pool.pick_random() if not pool.is_empty() else null
+	var item = _pick_weighted_item(pool) if not pool.is_empty() else null
 	if not item:
 		print("[StoryManager] Category Search FAILURE: '%s' (Mapped: %s) yielded 0 items at Tier %d." % [cat, mapped_categories, current_tier])
 	return item
+
+## Picks an item from the pool with weight proportional to its tier.
+## Tiers <= current: Exponential (1, 2, 4, 8...).
+## Tier == current + 1: Penalty weight (typically matching current_tier - 1).
+func _pick_weighted_item(pool: Array[ItemData]) -> ItemData:
+	if pool.is_empty():
+		return null
+		
+	var total_weight: float = 0.0
+	var weights: Array[float] = []
+	
+	for item in pool:
+		var weight: float = 0.0
+		if item.tier <= current_tier:
+			# Normal exponential weight: 2^(tier-1)
+			weight = pow(2.0, float(item.tier - 1))
+		else:
+			# Next Tier Penalty: make it as common as the tier below current_max
+			# e.g. If Current=2, Tier 3 gets weight of Tier 1 (1.0)
+			weight = pow(2.0, float(current_tier - 2)) 
+		
+		weights.append(weight)
+		total_weight += weight
+		
+	var roll = randf() * total_weight
+	var cursor = 0.0
+	for i in range(pool.size()):
+		cursor += weights[i]
+		if roll <= cursor:
+			var item = pool[i]
+			# print("[StoryManager] Weighted Selection: Tier %d item picked (%s). NextTier=%s" % [item.tier, item.item_name, "Yes" if item.tier > current_tier else "No"])
+			return item
+			
+	return pool.pick_random() # Absolute fallback
 
 func _get_mapped_categories(cat: String) -> Array[String]:
 	var c = cat.to_lower()
@@ -1435,11 +1517,27 @@ func _on_dialogic_signal(argument: String) -> void:
 	elif argument == "story_success":
 		# Manual story advancement signal
 		var customer = _get_current_customer()
+		
+		# NEW: Robust lookup — if spawner customer is null or doesn't match current speaker, 
+		# we try to find the character by Dialogic's active character if possible, 
+		# but for now we'll just check if the current customer exists.
 		if customer:
-			print("[StoryManager] Received 'story_success' signal. (Type: STORY handled in cooldown)")
-			# Note: _process_story_cooldown usually handles Type.STORY. 
-		# This signal can be used for extra validation or for VISIT chapters.
-			pass
+			print("[StoryManager] Direct Advance: 'story_success' signal received for ", customer.customer_data.character_name)
+			_process_story_cooldown(customer)
+			_save_progression()
+		else:
+			# Fallback for characters NOT in a spawner (e.g. static scene characters)
+			# We'll use the most recently built transaction if it matches a story chapter.
+			if last_story_advancer_path != "":
+				var chapter = character_story_states.get(last_story_advancer_path, 0)
+				character_story_states[last_story_advancer_path] = chapter + 1
+				print("[StoryManager] Direct Advance (Fallback): No active customer node, using last_story_advancer_path: ", last_story_advancer_path)
+				
+				# Ensure Dialogic sees the new chapter immediately for the next timeline run
+				Transaction_Chapter = float(chapter + 1)
+				_set_dvar("Transaction_Chapter", Transaction_Chapter)
+				
+				_save_progression()
 
 
 func refresh_desires() -> void:

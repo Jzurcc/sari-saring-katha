@@ -21,7 +21,16 @@ elif {Transaction_TalkVar} <= 66:
 	ReynaMayari: The Queen of the Silver Spires demands {Transaction_ItemWants}. [pause=0.3] Do you have the spicy kind?
 else:
 	ReynaMayari: The transition of goods must proceed. Provide the {Transaction_ItemWants}.
-[end_timeline]
+- Grant me a reprieve, Your Majesty.
+	ReynaMayari: Very well. You have one centennial hour to produce the {Transaction_ItemWants}. [pause=0.4] Or, failing that, a few minutes.
+	[end_timeline]
+- I have failed my Queen. We are out of stock.
+	ReynaMayari: [shake rate=20 level=10]What?![/shake] [pause=0.4] Truly? 
+	ReynaMayari: A tragedy. I shall inform the silver courts of this shortage. [pause=0.3] Good day, mortal!
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
 
 label Satisfy
 if {Transaction_SatisfyVar} <= 50:

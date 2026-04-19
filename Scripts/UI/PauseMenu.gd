@@ -100,8 +100,10 @@ func _on_main_menu_pressed() -> void:
 			Dialogic.end_timeline()
 			
 	if has_node("/root/SceneTransition"):
+		SaveManager.force_save()
 		SceneTransition.change_scene("res://Scenes/MainMenu.tscn")
 	else:
+		SaveManager.force_save()
 		get_tree().change_scene_to_file("res://Scenes/MainMenu.tscn")
 
 func _on_save_game_pressed() -> void:
@@ -110,6 +112,7 @@ func _on_save_game_pressed() -> void:
 
 func _on_exit_pressed() -> void:
 	_play_confirm()
+	SaveManager.force_save()
 	get_tree().quit()
 
 func _update_menu_interaction(enabled: bool) -> void:
