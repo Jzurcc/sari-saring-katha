@@ -1,0 +1,29 @@
+label Greeting
+# [signal arg="refresh_desires"]
+Customer: Hello! This is a debug test for the debt system.
+Customer: I want some [color=#0f6e2f]{Transaction_ItemWants}[/color].
+if {Transaction_WantsDebt}:
+	Customer: Oh! I forgot my wallet. Can I get these on utang?
+	- Sure, pay me later.
+		[signal arg="utang_accepted"]
+		Customer: Thanks! I'll be back another time to pay.
+	- No, cash only today.
+		[signal arg="utang_rejected"]
+		Customer: Aww, okay. I'll come back when I have money.
+[end_timeline]
+
+label Talk
+Customer: Still waiting for that {Transaction_ItemWants}!
+[end_timeline]
+
+label Satisfy
+Customer: This was a successful debt test!
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+Customer: Hey! I'm here to repay my {Transaction_RepaymentAmount} pesos.
+Customer: Here you go. [signal arg="repay_debt"]
+Customer: Debt cleared!
+[signal arg="story_success"]
+[end_timeline]

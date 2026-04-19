@@ -1,0 +1,44 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_GreetingVar} <= 50:
+	ManangAna: [pause=0.6] Jusko, what a long day at the karinderya. Good evening, anak.
+else:
+	ManangAna: Good evening. My feet are just... they think they're made of lead tonight.
+
+if {Transaction_WantsDebt}:
+	ManangAna: [pause=1.0] ...
+	ManangAna: Anak... I... I didn't bring any change today. I'm sorry. 
+	ManangAna: I don't get my pay until Friday. Can I pay you next time for these? I promise I'll put it on my tab.
+	- Of course, Manang.
+		[signal arg="utang_accepted"]
+		ManangAna: [pause=0.5] Thank you. Salamat talaga. I won't forget this. 
+	- I'm sorry, I can't do credit.
+		[signal arg="utang_rejected"]
+		ManangAna: [pause=0.4] Ah. I understand. Business is business. I'll just see what's left in the garden.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	ManangAna: I need a {Transaction_ItemWants}, anak. The kids are going to start eating the furniture if I don't get home soon.
+else:
+[end_timeline]
+	ManangAna: Just some {Transaction_ItemWants} for me today. Let's make it quick... the laundry isn't going to wash itself.
+[end_timeline]
+
+label Partial
+ManangAna: Salamat, anak. Pakisama na rin ang {Transaction_ItemWants} ha.
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	ManangAna: [pause=0.4] Salamat, anak. You're a lifesaver.
+else:
+	ManangAna: Sige, I'll see you tomorrow. Make sure you're eating properly, ha? You look thin.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	ManangAna: Um... [pause=0.4] I don't think this is the {Transaction_ItemWants}, anak. 
+else:
+	ManangAna: Susmaryosep... [pause=0.4] I think my eyes are as tired as my feet. This isn't the right one.
+[end_timeline]

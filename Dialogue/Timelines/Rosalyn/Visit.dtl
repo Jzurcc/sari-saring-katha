@@ -1,0 +1,8 @@
+label Greeting
+if {Transaction_VisitVar} <= 50:
+	Rosalyn: Your lights... [pause=0.6] they're very bright tonight.
+	Rosalyn: I like to just... sit near them for a while. If that's okay. [pause=0.5] It makes the road feel... less empty.
+else:
+	Rosalyn: I saw a cat outside... it looked at me. [pause=0.8]
+	Rosalyn: Most things don't look. [pause=0.4] Thank you for... um... keeping the door open.
+[end_timeline]

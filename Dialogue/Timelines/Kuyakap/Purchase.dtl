@@ -1,20 +1,26 @@
 label Greeting
-KuyaKap: Oh hello.[pause=0.5].[pause=0.5].[pause=0.5] Can you get me [color=#0f6e2f]{Transaction.ItemWants}[/color]? Just what I need today.
+[signal arg="refresh_desires"]
+KuyaKap: Oh hello.[pause=0.5].[pause=0.5].[pause=0.5] Can you get me [color=#0f6e2f]{Transaction_ItemWants}[/color]? Just what I need today.
 - Will do!
 [end_timeline]
 
 label Talk
-KuyaKap: Just [color=#0f6e2f]{Transaction.ItemWants}[/color] for now.
+KuyaKap: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for now.
 - Alright, one moment.
 	KuyaKap: Sige sige.
 	[end_timeline]
 - Sorry, I can't get that right now.
 	KuyaKap: Ah, ganon ba? [pause=0.4] No worries.
 	[signal arg="refuse_service"]
+	[signal arg="story_success"]
 	[end_timeline]
 
+label Partial
+KuyaKap: Sige, salamat. Yung [color=#0f6e2f]{Transaction_ItemWants}[/color] na lang ang kulang ko.
+[end_timeline]
+
 label Satisfy
-if {Transaction.WantsDebt}:
+if {Transaction_WantsDebt}:
 	KuyaKap: Maraming salamat! [pause=0.5]
 	KuyaKap: [wave]Oh...[/wave] [pause=0.4] I just realized I forgot my wallet at home.
 	KuyaKap: Is it okay if I take this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] Babayaran ko na lang bukas ha.
@@ -28,14 +34,16 @@ if {Transaction.WantsDebt}:
 		KuyaKap: Babalik ako kapag may pera na ako. [pause=0.4] Salamat pa rin!
 else:
 	KuyaKap: Perfect. Thanks.
+[signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-KuyaKap: Hindi 'yan yung hinihingi ko ah. [color=#0f6e2f]{Transaction.ItemWants}[/color] nga.
+KuyaKap: Hindi 'yan yung hinihingi ko ah. [color=#0f6e2f]{Transaction_ItemWants}[/color] nga.
 - Ah sorry, sandali lang.
 	KuyaKap: Sige, mag-aabang na lang ako.
 	[end_timeline]
 - Sorry, wala kaming stock nun.
 	KuyaKap: Ganon? Sige na lang.
 	[signal arg="refuse_service"]
+	[signal arg="story_success"]
 	[end_timeline]

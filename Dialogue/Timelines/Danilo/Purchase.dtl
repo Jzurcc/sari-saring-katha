@@ -1,0 +1,33 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_GreetingVar} <= 50:
+	Danilo: Uy, boss. Nice day today, 'no? Busy queue. [pause=0.4] I was thinking of actually buying something for a change.
+else:
+	Danilo: Psst. Boss. High-quality inventory today, 'no? I've been watching the stock levels... figured I'd snag something.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	Danilo: Give me a {Transaction_ItemWants}. I need to see if it's as good as they say.
+else:
+	Danilo: No rush, boss. I'm just here for a {Transaction_ItemWants}. I've got all the time in the world to watch.
+[end_timeline]
+
+label Partial
+Danilo: Nice one, boss. Still missing the {Transaction_ItemWants} though. Hit me.
+[end_timeline]
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	Danilo: Salamat, boss. [pause=0.4] See you on the high ground!
+else:
+	Danilo: Perfect. Exact change. [pause=0.5] I'll tell the guys at the tricycle stand you're doing a great job.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	Danilo: Uh... boss? That's not the {Transaction_ItemWants}. My eyes might be many, but they're not wrong.
+else:
+	Danilo: Ha! Careful, boss. You might be tired. This isn't the {Transaction_ItemWants}.
+[end_timeline]

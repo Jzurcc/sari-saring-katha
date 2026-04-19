@@ -1,0 +1,8 @@
+label Greeting
+if {Transaction_VisitVar} <= 50:
+	KuyaKap: Just passing by to see how the neighborhood is breathing, apo.
+	KuyaKap: Looks like things are quiet for now. [pause=0.4] Keep up the good work. People notice when the lights stay on.
+else:
+	KuyaKap: Hoho! I was just talking to some of the guys at the tricycle stand.
+	KuyaKap: They say the new face at the sari-sari store is a good one. [pause=0.5] I told them I already knew that. [pause=0.3] Stay strong, anak.
+[end_timeline]

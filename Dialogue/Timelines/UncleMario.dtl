@@ -5,7 +5,7 @@ if {Variation} == 1.0:
 elif {Variation} == 2.0:
 	UncleMario: Uy, [i]anak[/i]! Stock running low already? [pause=0.4] Don't worry, Uncle's got you covered. What do you need today?
 else:
-	UncleMario: Hello? [pause=0.6] [shake rate=20 level=10]*hawn*[/shake]... [pause=0.4] Oh, it's you. I was just about to have my second coffee. Tell me what you need so I can get moving.
+	UncleMario: Hello? [pause=0.8] [shake rate=20 level=10]Yawn...[/shake] [pause=0.7] Oh, hello anak. I was just about to have my second coffee. Tell me what you need so I can get moving.
 
 [end_timeline]
 
@@ -22,9 +22,9 @@ else:
 label CallRest
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Look, I just delivered to you recently... I'm still resting! Call back after you've served some more customers!
+	UncleMario: Anak, I just delivered to you recently... I'm still resting! Call back after you've served some more customers!
 elif {Variation} == 2.0:
-	UncleMario: Pang-ilan na 'to? I'm currently having my merienda. Give me a few more minutes to breathe, sige?
+	UncleMario: Pang-ilan na 'to? I'm currently having my merienda. Give me a few more minutes to breathe, anak.
 else:
 	UncleMario: Wait lang, I'm refilling my own stomach right now. Serve more customers while I recharge my tricycle's gas and my own energy!
 [end_timeline]
@@ -32,9 +32,9 @@ else:
 label Delivery
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Here are the items you requested! I put the items on their respective places... Close the shop soon so you can rest.
+	UncleMario: Here are the items you requested! I put the items where you can find them!
 elif {Variation} == 2.0:
 	UncleMario: Delivery is here! Everything's stocked up. Stay alert, okay? The night is still young, but don't overwork.
 else:
-	UncleMario: Alright, here's your order. I've placed them where they belong. [pause=0.5] Don't work too hard, [i]anak[/i]. See you around!
+	UncleMario: Alright, here's your order. I've placed the bags near the door. [pause=0.5] Don't work too hard, [i]anak[/i]. See you around!
 [end_timeline]

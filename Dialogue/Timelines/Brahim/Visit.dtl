@@ -1,0 +1,8 @@
+label Greeting
+if {Transaction_VisitVar} <= 50:
+	Brahim: Just observing the background processes of the town. The ambiance today has a very low-latency vibe.
+	Brahim: It's peaceful. Almost like a clean install of reality.
+else:
+	Brahim: Scanning the environment. The sunlight filtration through your storefront is visually pleasing. 
+	Brahim: It's a stable build, Karimlan. I'm glad I migrated my data here.
+[end_timeline]

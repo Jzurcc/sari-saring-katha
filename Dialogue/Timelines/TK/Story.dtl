@@ -1,0 +1,149 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_Chapter} == 0.0:
+	# Chapter 1: The Arrival
+	TK: [shake]Neigh[/shake]... whew. 
+	TK: Hold on, let me just... [pause=0.6] stop the recording.
+	TK: Almost got it... [pause=0.3] There.
+	TK: Phew! This humidity is no joke, man. Total vibe killer for the vlog.
+	TK: Name's T.K.—Tikbalang Kamera. I’m scouting for my next viral spot, but man, I think I took a wrong turn at that Balete tree back there. 
+	TK: I mean—it was a *scenic route*, totally intentional for the B-roll.
+	TK: Anyway, you got anything cold to drink? My throat feels like I swallowed a bunch of dry grass.
+	- Welcome to Karimlan, T.K.
+		TK: Thanks, fam. Love the rustic aesthetic you got going here. Very 'authentic'.
+	- You look a bit lost.
+		TK: Lost? Me? [pause=0.4] Nah, just exploring the spatial possibilities of the neighborhood. [pause=0.3] But yeah, a map wouldn't hurt.
+	TK: Just give me your best {Transaction_ItemWants}. I need to rehydrate before I head back out.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 1.0:
+	# Chapter 2: The Plan (Scouting Arc 1)
+	TK: Yo! I’m back. The last drink really saved my life.
+	TK: I’m planning my first big 'Karimlan Hidden Gems' feature. My followers are going to eat this up.
+	TK: But I’m torn, you know? My hooves are telling me one thing, but the algorithm is telling me another.
+	TK: Should I hit the [b]Whispering Falls[/b] for that ASMR content, or the [b]Ancestral Pine Forest[/b] for those moody, cinematic shots?
+	- Go for the Whispering Falls.
+		set {Transaction_Branch} = 0.0
+		TK: The Falls? [pause=0.4] Fresh. I can already see the 'Pure Nature' title card. [pause=0.3] Hope my camera is as waterproof as they say!
+	- Try the Ancestral Pine Forest.
+		set {Transaction_Branch} = 1.0
+		TK: The Pine Forest? Oh, like [b]Baguio, the City of Pines[/b]! [pause=0.5] I’ve heard the vibes there are immaculate. [pause=0.3] Solid choice.
+	TK: I’ll need some {Transaction_ItemWants} for the trek. Hiking makes me way more snacky than a Tikbalang should be.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 2.0:
+	# Chapter 3: Arc 1 Recount
+	TK: [shake]Neigh!![/shake] Man, you wouldn't believe the day I had.
+	if {Transaction_Branch} == 0.0:
+		TK: Those Whispering Falls? They don't just whisper, they *gossip*. [pause=0.4] I swear I heard the water telling me my tripod was crooked.
+		TK: But the footage? IMMACULATE. The way the light hits the mist... literal gold.
+	else:
+		TK: That Pine Forest was something else. [pause=0.5] It really felt like a slice of Baguio hidden right here in Karimlan.
+		TK: I almost got lost—I mean, I found an *unexplored shortcut*—but the fog was so thick it felt like walking through clouds.
+	TK: I’m starving, though. High-effort vlogging burns through calories like a forest fire. 
+	TK: You got a {Transaction_ItemWants} for a hungry traveler? 
+	[end_timeline]
+
+elif {Transaction_Chapter} == 3.0:
+	# Chapter 4: Burnout
+	TK: Hey... [pause=0.8] sorry, feeling a bit heavy today. Low battery vibes, you know?
+	TK: Just the usual {Transaction_ItemWants} for me today.
+	- Everything okay, T.K.?
+		TK: I don't know, fam. [pause=0.4] The latest video only got like... three likes. And one was from my mom.
+		TK: Maybe people are bored of the 'Travel Tikbalang' thing. I was thinking of rebranding. [pause=0.3] 'Gaming Horse'? 'Cooking with Hooves'?
+	- Don't let the numbers get to you.
+		TK: Easy for you to say. You have a physical shop. [pause=0.4] If someone likes your stuff, they actually buy it. [pause=0.3] In my world, it feels like I’m shouting into a bottomless pit.
+	TK: I just need to wash the burnout away. [pause=0.4] Give me a second, let me just... [pause=0.5] stare at the ceiling for a bit.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 4.0:
+	# Chapter 5: Arc 2 Scouting
+	TK: Alright, I’m over the slump. [pause=0.4] New strategy: Deeper lore.
+	TK: People want the spooky stuff. The real 'Unsolved Karimlan' vibes.
+	TK: I found two leads. There’s the [b]Moonlight Cove[/b], where the sand supposedly glows at midnight...
+	TK: Or the [b]Forgotten Church Ruins[/b], which are totally overgrown and definitely haunted.
+	- Moonlight Cove sounds beautiful.
+		set {Transaction_Branch} = 0.0
+		TK: Right? [pause=0.4] Glow-in-the-dark sand is total thumbnail bait. [pause=0.3] I’ll see if I can catch a few spirits on camera while I’m at it.
+	- Go for the Church Ruins. 
+		set {Transaction_Branch} = 1.0
+		TK: Spooky. [pause=0.5] I like it. Ancient pillars, trailing vines... [pause=0.4] Very 'Dark Academia'. My followers will be shivering.
+	TK: Hook me up with some {Transaction_ItemWants}? Exploration is 10% skill and 90% having enough snacks.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6: Arc 2 Recount
+	if {Transaction_Branch} == 0.0:
+		TK: The Cove was... [pause=0.6] weird. The sand *was* glowing, but every time I looked through the viewfinder, it dimmed.
+		TK: It’s like the place didn't want to be recorded. [pause=0.4] I ended up just sitting there, watching the waves. [pause=0.3] Without the camera.
+	else:
+		TK: Those ruins... man. [pause=0.7] I found a bell tower that wasn't on the map. I climbed up, and for a second, I could see the whole valley.
+		TK: It was so quiet. [pause=0.5] I forgot to even turn my mic on. [pause=0.4] Just... taking it in.
+	TK: I’m starting to think the best parts of this place are the ones that don't fit on a screen.
+	TK: Anyway, I’m drained. [pause=0.4] Need a {Transaction_ItemWants} to get my energy back.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 6.0:
+	# Chapter 7: The Realization
+	TK: [shake]Neigh[/shake]... [pause=0.5] You know, I used to think my job was to show people the world.
+	TK: But lately, I feel like I’m just showing them a tiny, edited window.
+	TK: Back in the day, Tikbalangs used to lead people through the forest. Some said we played tricks, but the old stories say we were guides.
+	TK: Maybe I've been so focused on the 'vlogger' part that I forgot the 'Tikbalang' part.
+	- You're a great guide, T.K.
+		TK: You think so? [pause=0.4] I mean, I *did* help that one delivery guy find the shortcut last week... [pause=0.3] even if I called it a 'scenic deviation'.
+	- It's never too late to pivot.
+		TK: True that. [pause=0.4] Legacy over likes, right?
+	TK: Just give me some {Transaction_ItemWants}. I have some thinking to do. [pause=0.5] And some walking.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 7.0:
+	# Chapter 8: The Choice
+	TK: I’ve made a decision. [pause=0.6] I’m deleting the channel.
+	TK: Whew. [pause=0.3] Actually, saying it out loud... it feels a lot better. Scarier, but better.
+	TK: I’m done with the 'Kamera'. I just want to be T.K. the Guide. 
+	TK: But the question is—where? Do I set up my 'base camp' here in Karimlan and help the locals...
+	TK: Or do I keep wandering, finding the routes that no one has mapped yet?
+	- We could use a guide like you here.
+		set {Transaction_Branch} = 0.0
+		TK: Really? [pause=0.4] You know, I actually like the vibes here. [pause=0.3] Plus, someone’s gotta keep an eye on these 'scenic routes'.
+	- The world is big, T.K. Keep exploring.
+		set {Transaction_Branch} = 1.0
+		TK: Yeah... [pause=0.5] There’s still so much I haven't seen. [pause=0.4] The horizon is calling, and my hooves are getting itchy.
+	TK: One last drink for the road? [pause=0.3] Or just to celebrate the new chapter. [pause=0.4] Highest {Transaction_ItemWants}, please.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 8.0:
+	# Chapter 9: The Final Step
+	if {Transaction_Branch} == 0.0:
+		TK: Yo! Dropped by before I start helping Kuya Kap with the neighborhood watch. 
+		TK: I figured since I live here now, I should actually contribute, you know? [pause=0.4] Turns out, I’m really good at finding people who get lost near the Balete tree.
+		TK: Funny how that works.
+	else:
+		TK: My bags are by the door. The boat leaves in an hour. [pause=0.6] Dropped in to say goodbye.
+		TK: No camera this time. Just me, the wind, and whatever is over that next hill.
+		TK: I’ll send you a postcard. [pause=0.3] A physical one. No pixels.
+	TK: Hey, before I go... [pause=0.5] I wanted you to have this. 
+	TK: Hang on... [pause=0.4] let me just find it in my gear. Ah... here.
+	TK: It’s seen a lot of miles. Helped me keep my head cool when things got rough. [pause=0.4] Reminded me where I was going when I got turned around.
+	TK: Thanks for being my 'base camp', fam. 
+	TK: One last {Transaction_ItemWants} for the memories?
+	[end_timeline]
+
+label Talk
+TK: No rush, fam. I’m just... soaking in the atmosphere. Capturing it in my mind, not the SD card. Just give me the {Transaction_ItemWants} any time.
+- Finding it!
+	[end_timeline]
+- Sorry, out of stock.
+	TK: Oh, bummer. [pause=0.4] It’s all good. I’ll just check back later.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
+label Satisfy
+TK: Perfect! This is exactly what I needed. [pause=0.4] Peace and hydration, man. Literal goals.
+[signal arg="story_success"]
+[end_timeline]
+
+label WrongItem
+TK: Uh, that’s not really my vibe today, fam. I’m looking for the {Transaction_ItemWants}.
+[end_timeline]

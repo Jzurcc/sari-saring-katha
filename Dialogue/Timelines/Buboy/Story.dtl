@@ -1,0 +1,397 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_Chapter} == 0.0:
+	# Chapter 1: "The Memory Game" (Debut Visit — no purchase)
+	Buboy: Hihi!
+	Buboy: Mama told me to run here quick.
+	Buboy: Run like a racing car!
+	Buboy: Vroom!
+	Buboy: But...
+	Buboy: I kind of forgot what she told me to buy.
+	Buboy: Hehe!
+	Buboy: Umm...
+	Buboy: Umm... think, think, think!
+	Buboy: Let me think...
+	Buboy: Let's play a game while I think!
+	- Bagay (Thing)?
+	Buboy: 'Di ko alam!
+	- Tao (Human)?
+	Buboy: I don't know!
+	- Hayop (Animal)?
+	Buboy: Hmm... Wala man ako maisip!
+	Buboy: Aww... [pause=1.0] I still can't remember.
+	- Really??
+	- How forgetful are you, huh?
+	Buboy: Hehe!
+	Buboy: I'll go back to Mama and ask again.
+	Buboy: Bye po!
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 1.0:
+	# Chapter 2: "The First Task"
+	Buboy: Hihi!
+	Buboy: I remembered this time!
+	Buboy: Well... almost!
+	Buboy: Mama told me THREE TIMES before I left the house.
+	Buboy: Three times! And I said it in my head the whole run here!
+	Buboy: Hah... hah... hah...
+	Buboy: Okay! I still kind of remember what it looks like!
+	Buboy: Let me tell you...
+	jump Riddle
+
+elif {Transaction_Chapter} == 2.0:
+	# Chapter 3: "The Big Neighbor"
+	Buboy: Hehe!
+	Buboy: Kuya Kap was watching us play earlier!
+	Buboy: He's SO tall...
+	Buboy: He just reaches up and gets our ball from the roof!
+	Buboy: We don't even have to ask!
+	Buboy: Hihi!
+	Buboy: Oh! Oh! I almost forgot!
+	Buboy: Mama will be MAD if I'm too slow!
+	Buboy: Hah... hah... she needs something today!
+	Buboy: Okay, I remember what it looks like...
+	jump Riddle
+
+elif {Transaction_Chapter} == 3.0:
+	# Chapter 4: "The Smell of Smoke"
+	Buboy: Look at me! Hehe!
+	Buboy: Mud everywhere.
+	Buboy: I was playing in the mud again.
+	Buboy: Mama says I smell like 'outside'.
+	Buboy: Kuya Kap always smells like weird smoke...
+	Buboy: And I smell like mud!
+	Buboy: Hihi! We're a good pair!
+	Buboy: Anyway...
+	Buboy: Mama needs something for washing clothes today.
+	Buboy: I remember what it is! Let me describe it!
+	jump Riddle
+
+elif {Transaction_Chapter} == 4.0:
+	# Chapter 5: "The Direct Question"
+	Buboy: [pause=0.8] I told Kuya Kap last Sunday...
+	Buboy: 'If that smoke stick makes you cough...'
+	Buboy: 'Why don't you just throw the whole box away?'
+	Buboy: He didn't answer.
+	Buboy: He just patted my head.
+	Buboy: Adults are so strange. Hihi!
+	Buboy: Opo! Mama needs something for merienda!
+	Buboy: I have a few pesos left over from school!
+	Buboy: Um... what does it look like...
+	jump Riddle
+
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6: "Where is He?"
+	Buboy: Kuya Kap hasn't been sitting outside lately.
+	Buboy: His chair is just there... empty.
+	Buboy: The street is so quiet!
+	Buboy: Hihi!
+	Buboy: Maybe he's playing hide and seek?
+	Buboy: Is he under here? Nope! Hehe!
+	Buboy: Oh!
+	Buboy: Mama needs something for cooking today.
+	Buboy: She needs... um... I think I can describe it!
+	jump Riddle
+
+elif {Transaction_Chapter} == 6.0:
+	# Chapter 7: "The Idea"
+	Buboy: Hihi!
+	Buboy: I saw Kuya Kap with his shiny white rock today.
+	Buboy: He looked really sad looking at it.
+	Buboy: So I told him...
+	Buboy: 'Mama says if you don't need something anymore...'
+	Buboy: 'You should give it to a nice person!'
+	Buboy: Like you! I think you're nice!
+	Buboy: Hihi!
+	Buboy: Oh no...
+	Buboy: MAMA WILL SCOLD ME FOR BEING SLOW!
+	Buboy: Quick! She needs something to drink today!
+	Buboy: Um um um...
+	jump Riddle
+
+elif {Transaction_Chapter} == 7.0:
+	# Chapter 8: "The Secret"
+	Buboy: Guess what! Guess WHAT!
+	Buboy: Hihi!
+	Buboy: Kuya Kap doesn't have his white box anymore!
+	Buboy: He gave me his shiny stone...
+	Buboy: But I told him I was too small for it.
+	Buboy: Hehe!
+	Buboy: So today he asked me what my favorite sweet is!
+	Buboy: And NOW Mama is sending me to buy it!
+	Buboy: Hihi!
+	Buboy: Okay! Let me think how to describe it!
+	jump Riddle
+
+elif {Transaction_Chapter} == 8.0:
+	# Chapter 9: "No More Smoke"
+	Buboy: Kuya Kap helped us fix our kite today!
+	Buboy: And he didn't smell like weird smoke!
+	Buboy: He smelled like STRAWBERRY!
+	Buboy: Just like a giant kid!
+	Buboy: Hihi!
+	Buboy: Umm...
+	Buboy: Mama wrote what to buy on a paper.
+	Buboy: But I lost the paper.
+	Buboy: Hehe!
+	Buboy: Okay I'll describe it! I remember a little!
+	jump Riddle
+
+elif {Transaction_Chapter} == 9.0:
+	# Chapter 10: "The Masterpiece"
+	Buboy: I don't have a guessing game today.
+	Buboy: I know EXACTLY what I want.
+	Buboy: One {Transaction_ItemWants}, please!
+	Buboy: Look!
+	Buboy: This is for you! See?
+	Buboy: I made this in school!
+	Buboy: That's me...
+	Buboy: And that huge one is Kuya Kap!
+	Buboy: And that box is your store!
+	Buboy: You helped him smell like strawberries, right?
+	Buboy: Hihi!
+	Buboy: Bye!
+	[signal arg="unlock_collectible" value="BuboysMasterpiece"]
+	[end_timeline]
+
+[end_timeline]
+
+label Riddle
+# Buboy describes the item based on {Transaction_ItemWants}.
+# These are funny child-style "utos" — never mentioning the item name directly.
+if {Transaction_ItemWants} == "Argentita Corned Beef":
+	Buboy: The heavy round tin!
+	Buboy: There's a lady on the picture — like a fancy serious tita!
+	Buboy: Mama opens it with this spinning wheel thing...
+	Buboy: It goes RRRRRRRR until the top falls off!
+	Buboy: The beefy tita tin! You know it?!
+
+elif {Transaction_ItemWants} == "Cenchuree Tuna":
+	Buboy: The flat flat tin! Not the tall one! The FLAT flat one!
+	Buboy: It smells like the fish section in the market!
+	Buboy: Like really really REALLY like the sea!
+	Buboy: Mama always fans herself when she opens it.
+	Buboy: Hihi! The flat fish one!
+
+elif {Transaction_ItemWants} == "Scam":
+	Buboy: The rectangle can!
+	Buboy: The long squarish one!
+	Buboy: You open the lid and there's pink meat inside!
+	Buboy: You slice it flat and fry it in a pan!
+	Buboy: I like it when the edges get a little brown! Hihi!
+
+elif {Transaction_ItemWants} == "Lucky9":
+	Buboy: The can with the number on it!
+	Buboy: NINE! Lucky nine!
+	Buboy: Mama says nine is lucky!
+	Buboy: So it's the lucky can!
+	Buboy: With a nine! That one!
+
+elif {Transaction_ItemWants} == "Mema":
+	Buboy: Um...
+	Buboy: Mama just said a word and I said "hah?"
+	Buboy: And she said just go get it!
+	Buboy: I think it's a can.
+	Buboy: [pause=0.4] Sorry that's all I know. Hehe.
+
+elif {Transaction_ItemWants} == "Anoba":
+	Buboy: The flat crunchy things stacked on each other!
+	Buboy: Like a little tower of crackers you can eat!
+	Buboy: They break SO easily!
+	Buboy: I dropped them once. [pause=0.4] Mama was NOT happy.
+	Buboy: But I still ate all the broken pieces! Hihi!
+
+elif {Transaction_ItemWants} == "Patos":
+	Buboy: Oh! I think I know it!
+	Buboy: Pato! Duck! The bag has a duck on it maybe!
+	Buboy: And after eating them your fingers go super yellow!
+	Buboy: Then you lick your fingers and it tastes like cheese!
+	Buboy: Hihi! That one! The duck yellow one!
+
+elif {Transaction_ItemWants} == "Ding Dong Dantes":
+	Buboy: The noisy bag with all the mixed things inside!
+	Buboy: Small round ones! And flat ones! All together!
+	Buboy: When you shake it it goes TATATATATA!
+	Buboy: I like shaking it before opening.
+	Buboy: Mama says stop. But it's so fun! Hehe!
+
+elif {Transaction_ItemWants} == "Marites Cracklin'":
+	Buboy: The one that goes CRUNCH CRUNCH CRUNCH in your mouth!
+	Buboy: Like stepping on dried leaves! But LOUDER!
+	Buboy: And it's from the pig's...
+	Buboy: [pause=0.6] Mama says don't think about where it comes from.
+	Buboy: So I don't! I just eat it! Hihi!
+
+elif {Transaction_ItemWants} == "Ngarag-Ya":
+	Buboy: You know when Mama is cooking adobo?
+	Buboy: And the WHOLE house smells so good?
+	Buboy: It's the small snack bag that smells like THAT!
+	Buboy: Like adobo! But in a tiny bag!
+	Buboy: Weird and super yummy! Hehe!
+
+elif {Transaction_ItemWants} == "Champyon":
+	Buboy: Um...
+	Buboy: The small white sticks inside a box.
+	Buboy: The ones that make smoke when adults use them.
+	Buboy: I am NOT allowed to touch them. Mama said.
+	Buboy: [pause=0.4] Papa still sends me to get them anyway. Hihi.
+
+elif {Transaction_ItemWants} == "Marboro":
+	Buboy: The RED box!
+	Buboy: With the small white sticks inside!
+	Buboy: NOT the blue box! The RED one!
+	Buboy: There's another smoke box but this one is RED!
+	Buboy: You know! The red smoke box!
+
+elif {Transaction_ItemWants} == "Kokaloka":
+	Buboy: Ohhhh the dark bubbly drink!
+	Buboy: Not water! The DARK colored one!
+	Buboy: In a bottle! And when you open it — PSHHHHH!
+	Buboy: And the bubbles jump up into your NOSE!
+	Buboy: And I sneeze every single time! Hihi!
+
+elif {Transaction_ItemWants} == "Water":
+	Buboy: Just water po!
+	Buboy: The clear bottle!
+	Buboy: With water inside!
+	Buboy: Normal water! For drinking!
+	Buboy: That's it! It's just water! Hihi!
+
+elif {Transaction_ItemWants} == "Gin":
+	Buboy: Um...
+	Buboy: The tall bottle with the clear strong drink.
+	Buboy: It smells like cleaning water but for drinking?
+	Buboy: Papa needs it.
+	Buboy: [pause=0.6] Mama doesn't know he asked me.
+	Buboy: Please don't tell her po. Hehe.
+
+elif {Transaction_ItemWants} == "Chubs":
+	Buboy: The soft little chewy ones!
+	Buboy: Like tiny edible pillows!
+	Buboy: They come in different colors!
+	Buboy: I once tried to save some for later.
+	Buboy: [pause=0.4] I ate them all in two minutes. Hehe.
+
+elif {Transaction_ItemWants} == "Mentor":
+	Buboy: The long plastic roll!
+	Buboy: With round flat things inside!
+	Buboy: You push them out one by one — pop! pop! pop!
+	Buboy: And your tongue feels cold after!
+	Buboy: Like a tiny cold circle! Hihi!
+
+elif {Transaction_ItemWants} == "Pocha":
+	Buboy: Small candy in a pack!
+	Buboy: Chewy ones! Or hard? I always forget which!
+	Buboy: But it's sweet and good!
+	Buboy: Mama lets me get one for myself sometimes!
+	Buboy: Hihi! That one!
+
+elif {Transaction_ItemWants} == "Pampanga's Good Tocino":
+	Buboy: The sweet sweet pink meat in the cold box!
+	Buboy: When Mama fries it the WHOLE street can smell it!
+	Buboy: I stand right next to the pan and just breathe!
+	Buboy: It smells like candy but it's MEAT!
+	Buboy: Sweet meat! In the cold section! Hihi!
+
+elif {Transaction_ItemWants} == "Purified Foods Tender Juicy":
+	Buboy: The long pink sausage!
+	Buboy: In a pack! There's a bunch of them!
+	Buboy: Mama boils them for soup!
+	Buboy: Or fries them until the edges get a little burnt!
+	Buboy: I LOVE the burnt edges! Hehe!
+
+elif {Transaction_ItemWants} == "Hotdog":
+	Buboy: The long pink sausage!
+	Buboy: In a pack! There's a bunch of them!
+	Buboy: For soup or frying!
+	Buboy: I like the burnt edges! Hehe!
+
+elif {Transaction_ItemWants} == "Borgir":
+	Buboy: The frozen flat round thing!
+	Buboy: From the cold cold section!
+	Buboy: You fry it in a pan!
+	Buboy: Like making your own burger at home!
+	Buboy: Is that one here? Hihi!
+
+elif {Transaction_ItemWants} == "Nagets":
+	Buboy: The small frozen chicken pieces!
+	Buboy: Small! And round! And frozen!
+	Buboy: You fry them and they go CRUNCH!
+	Buboy: I can eat like TEN of them! No wait — twelve!
+	Buboy: Hihi! That one!
+
+elif {Transaction_ItemWants} == "Aryel":
+	Buboy: The tiny packet that smells SO clean!
+	Buboy: Like the cleanest smell in the whole world!
+	Buboy: Mama mixes it in water for washing the clothes!
+	Buboy: I tried making bubbles with it for fun once.
+	Buboy: [pause=0.5] My eyes hurt so bad. Hehe. Don't do that.
+
+elif {Transaction_ItemWants} == "Knees and Toes":
+	Buboy: The small packet for washing in the bathroom!
+	Buboy: Is it for feet? Or hair? Or both?!
+	Buboy: The name sounds like a children's song!
+	Buboy: Knees and... [pause=0.4] Hihi I forget the rest.
+	Buboy: The small bath packet! That one!
+
+elif {Transaction_ItemWants} == "Kopimo":
+	Buboy: The small brown packet!
+	Buboy: You mix it in hot water and it turns dark brown!
+	Buboy: Papa drinks it every single morning!
+	Buboy: I tried it once.
+	Buboy: [pause=0.7] Very very bitter.
+	Buboy: I don't understand why adults like it. Hehe!
+
+elif {Transaction_ItemWants} == "Dadi Chicken na Chicken":
+	Buboy: The flat bag with the dried noodle BRICK inside!
+	Buboy: It looks like a hard brick but it's food!
+	Buboy: There's a chicken on the bag!
+	Buboy: You pour hot water and it becomes noodles!
+	Buboy: Like MAGIC! Hihi!
+
+elif {Transaction_ItemWants} == "Pantit Canton":
+	Buboy: The yellow noodle bag!
+	Buboy: Not the soupy one! The thick yellow kind!
+	Buboy: You fry it with oil in a pan!
+	Buboy: There's a tiny sour packet inside!
+	Buboy: Mama adds calamansi. I add MORE calamansi! Hihi!
+
+else:
+	Buboy: Umm...
+	Buboy: I kind of forgot how to describe this one exactly.
+	Buboy: Mama was telling me but I was thinking about my kite.
+	Buboy: Hehe. Sorry po!
+	Buboy: It's... something from the store! Hihi.
+[end_timeline]
+
+label Talk
+if {Transaction_Chapter} == 0.0:
+	Buboy: Hihi! Vroom vroom!
+	[end_timeline]
+if {Transaction_Chapter} == 9.0:
+	Buboy: Hihi! Come on Kuya!
+	Buboy: I need one {Transaction_ItemWants} please!
+	[end_timeline]
+Buboy: Hihi!
+Buboy: Are you still looking?
+Buboy: Okay okay! Let me say it again!
+jump Riddle
+
+label Satisfy
+if {Transaction_WantsDebt}:
+	Buboy: Salamat!
+	Buboy: I'll tell Mama!
+	Buboy: Hihi!
+	Buboy: Bye!
+else:
+	Buboy: Salamat!
+	Buboy: I'm running away now!
+	Buboy: Bye!
+[signal arg="story_success"]
+[end_timeline]
+
+label WrongItem
+Buboy: No no no! Hehe!
+Buboy: That's not it! Let me describe it again!
+jump Riddle

@@ -1,20 +1,21 @@
-label Visit
+label Greeting
 label CollectionIntro
 ReynaMayari: I am here to collect today's installment.
-ReynaMayari: The quota for today is {Global.TodayQuota} pesos.
+ReynaMayari: The quota for today is {Global_TodayQuota} pesos.
+
 
 ReynaMayari: Let's see what we have in the drawer... [pause=1.0]
 [signal arg="deduct_quota"]
-if {Global.HasEnoughMoney} == 1.0:
+if {Global_HasEnoughMoney} == 1.0:
 	jump Success
 else:
 	jump Angry
 
 label Success
 ReynaMayari: I see you've been working hard. [pause=0.4]
-ReynaMayari: The installment has been collected. 
+ReynaMayari: The installment has been collected.
 ReynaMayari: Keep this up, and your grandmother's debt will be a memory in no time. [pause=0.5]
-if {Global.QuotaDay} == 2.0:
+if {Global_QuotaDay} == 2.0:
 	ReynaMayari: Actually, I've been meaning to check what your store offers.
 	ReynaMayari: I think I will see what you have here tomorrow. [pause=0.5]
 ReynaMayari: Until tomorrow. [pause=0.3]

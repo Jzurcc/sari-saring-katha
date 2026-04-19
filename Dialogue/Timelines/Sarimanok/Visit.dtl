@@ -1,18 +1,18 @@
-label Visit
-if {Transaction.CurrentArc} == 1.0:
-	[random option]
+label Greeting
+if {Transaction_CurrentArc} == 1.0:
+	if {Transaction_VisitVar} < 50:
 		Sarimanok: [shake]BA-KAAWK!![/shake]
-	[random option]
+	else:
 		Sarimanok: [shake]BA-KAWK! BA-KAWK![/shake]
-elif {Transaction.CurrentArc} == 2.0:
-	[random option]
+elif {Transaction_CurrentArc} == 2.0:
+	if {Transaction_VisitVar} < 50:
 		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares intensely at your clean counter before flapping away)[/color][/wave]
-	[random option]
+	else:
 		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It looks at you upside down, judging your shopkeeping posture before departing)[/color][/wave]
-elif {Transaction.CurrentArc} == 3.0:
-	[random option]
+elif {Transaction_CurrentArc} == 3.0:
+	if {Transaction_VisitVar} < 50:
 		Sarimanok: Simply stopping by to check on the local retail climate. Carry on, proprietor.
-	[random option]
+	else:
 		Sarimanok: Delightful weather for a stroll through the barangay, wouldn't you agree? Ba-kawk!
 
 [signal arg="story_success"]

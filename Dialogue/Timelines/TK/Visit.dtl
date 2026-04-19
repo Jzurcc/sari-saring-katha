@@ -1,0 +1,8 @@
+label Greeting
+if {Transaction_VisitVar} <= 50:
+	TK: Just captured some insane B-roll of the Balete tree. [pause=0.4] 
+	TK: Literal gold. I think the neighborhood spirits are finally ready for their close-up. Catch you in the comments, fam!
+else:
+	TK: scouting out a new 'Hidden Spot' near the river. [pause=0.6] 
+	TK: The lighting is peak right now. [pause=0.3] You have a good heart for keeping this base camp open. Stay peak!
+[end_timeline]

@@ -1,0 +1,32 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_GreetingVar} <= 50:
+	Rosalyn: Hello... [pause=0.6] um... [pause=0.3] could I...
+else:
+	Rosalyn: Good evening... [pause=0.5] I... I have coins today.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	Rosalyn: I would like a {Transaction_ItemWants}... [pause=0.4] if that's okay.
+else:
+	Rosalyn: Could you spare a {Transaction_ItemWants}? [pause=0.6] I... I think I can hold it.
+[end_timeline]
+
+label Partial
+Rosalyn: Thank you... [pause=0.4] um... [pause=0.3] I still need a {Transaction_ItemWants} as well.
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	Rosalyn: Oh... [pause=0.4] thank you. It's... it's very solid.
+else:
+	Rosalyn: I have it. [pause=0.5] It's... it's warm. [pause=0.3] Thank you.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	Rosalyn: Oh... [pause=0.4] I don't think this is it. [pause=0.3] I'm sorry.
+else:
+	Rosalyn: Um... [pause=0.5] this isn't quite what I... um... [pause=0.4] practice for.
+[end_timeline]

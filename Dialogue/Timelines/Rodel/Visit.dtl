@@ -1,0 +1,8 @@
+label Greeting
+if {Transaction_VisitVar} <= 50:
+	Rodel: The air today... [pause=0.6] it feels like ground glass in my gills. [pause=0.4] 
+	Rodel: I miss the crushing silence of the Abyssal Court. There, the world is... [pause=0.3] supportive. [pause=0.4] Here, it is merely heavy.
+else:
+	Rodel: Ambassador. I was just observing your concrete rivers. 
+	Rodel: They flow with such violence and yet... they contain no life. [pause=0.6] A strange preference. [pause=0.4] Be well in your stone fortress.
+[end_timeline]

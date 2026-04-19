@@ -1,0 +1,106 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_Chapter} == 0.0:
+	# Chapter 1: The Atmosphere of Sand
+	Rodel: Greetings, Keeper of the Dry Shelves. [pause=0.5] I find the atmosphere here remarkably... [pause=0.4] abrasive. 
+	Rodel: It is like breathing crushed coral. Or ground glass.
+	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
+	Rodel: Your terrestrial sun is a relentless predator, and my fluid-reserves are shallow.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 1.0:
+	# Chapter 2: The Choice of Salt
+	Rodel: I find myself longing for the brine of the Abyssal Courts. [pause=0.5] My skin is becoming brittle in this vapor-less realm.
+	Rodel: Tell me, Ambassador. Which of these land-crunches mimics the sea's depth? 
+	Rodel: The [b]Sea-Salt Chips[/b], thin like a shell, or the [b]Salted Nuts[/b], with the density of a trench-stone?
+	- The Sea-Salt Chips are a classic.
+		Rodel: A fine choice. A tribute to the waking tide. [pause=0.4] I shall attempt to consume this... thin, crispy hull.
+	- The Salted Nuts are much more satisfying.
+		Rodel: The fruit of the soil, bathed in the essence of the ocean. [pause=0.4] A strange alchemy. I will study its texture.
+	Rodel: I will take the {Transaction_ItemWants} then. My thank-currents to you.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 2.0:
+	# Chapter 3: The Metal Coffins
+	Rodel: I am... [pause=0.5] disturbed by these metal cylinders on your shelf. 
+	Rodel: You have trapped the Silver-Swimmers in iron coffins? [pause=0.4] Without the grace of a final current?
+	Rodel: If Nerissa saw this, she would call the Great Kraken to reclaim this building. [pause=0.3] My wife is... protective of her subjects.
+	Rodel: I must consume a {Transaction_ItemWants} to wash the sight from my memory. 
+	Rodel: This land is truly a realm of paradoxes. You love the sea, yet you keep it in cans.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 3.0:
+	# Chapter 4: The Cracking Shield
+	Rodel: The humidity is failing me. [pause=0.5] I can feel the 'Drying' taking hold of my collarbone. [pause=0.4] It is... deeply uncomfortable.
+	Rodel: My search for Nerissa has been long. [pause=0.6] The rogue current that pulled her from our trench was unnatural—tainted by the surface-waste.
+	Rodel: She was always too curious about the light from above. [pause=0.5] Now the light is all I have of her.
+	Rodel: Give me your most potent {Transaction_ItemWants}. I must keep my heart moist for the search ahead.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 4.0:
+	# Chapter 5: The Forked Tide
+	Rodel: The resonance of my shell is muffled by your concrete rivers. [pause=0.4] I cannot hear her song over the roar of your motor-carriages.
+	Rodel: My chart is a mess of dry ink. [pause=0.5] Should I follow the high current toward the Coastal Cliffs, or descend into the humid Mangrove Delta?
+	- The Coastal Cliffs have a clear view.
+		Rodel: The heights? [pause=0.4] High pressure and thin air. A challenge, but the view of the horizon may prove strategic.
+	- The Mangrove Delta is much more humid.
+		Rodel: The roots and the silt. It smells of the old world. [pause=0.4] I may find her shadows among the salt-trees.
+	Rodel: I will take a {Transaction_ItemWants} to fuel my journey. [pause=0.3] May the current be steady.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6: Echo of Emptiness
+	Rodel: I have searched the peaks and the silt, the wind and the mud. [pause=0.6] No trail, no scent, no song.
+	Rodel: The land does not hold onto memories of the sea. It absorbs them. [pause=0.4] It devours them. 
+	Rodel: She is not in Karimlan. [pause=0.7] My hope is beginning to evaporate. 
+	Rodel: I need a {Transaction_ItemWants} to endure this drought of the soul.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 6.0:
+	# Chapter 7: The Terrestrial Rations
+	Rodel: The lake in the next valley is my next checkpoint. [pause=0.5] It is a long trek across the sun-scorched earth.
+	Rodel: I will take a {Transaction_ItemWants}. 
+	Rodel: I have learned that your dry-fuel provides a slow, steady burn that the Abyssal delicacies lack.
+	Rodel: It takes strength to live in the fire. [pause=0.3] I respect your species for that, Ambassador.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 7.0:
+	# Chapter 8: Ambassador's Choice
+	Rodel: My gills are closing, Ambassador. [pause=0.5] I am becoming more of the soil each day. 
+	Rodel: My search for Nerissa... [pause=0.6] it has changed the fluid in my veins. 
+	Rodel: Should I return to the crushing comfort of the trenches, or should I walk until my last scale falls to the dust?
+	- You should return home. Safety first.
+		Rodel: Safety. [pause=0.7] The weight of the world on my shoulders once more. Perhaps that is where I belong.
+	- Don't give up. The eternal watch is nobler.
+		Rodel: Then I shall become a creature of the wind and the dust. [pause=0.6] If I never find her, I will at least die where she was last seen.
+	Rodel: I require a final {Transaction_ItemWants} for the road.
+	[end_timeline]
+
+elif {Transaction_Chapter} == 8.0:
+	# Chapter 9: The Rains of Farewell
+	# (Visit Only)
+	Rodel: Listen. [pause=0.5] The sky is weeping. [pause=0.4] It knows I am departing.
+	Rodel: I have chosen my final course. [pause=0.5] Thank you for the stillness, Ambassador.
+	Rodel: Take this. A Tear of the Kataw. [pause=0.7] It reminds the water that you are a friend. 
+	Rodel: May your shores always be moist. [pause=0.5] Goodbye.
+	[signal arg="story_success"]
+	[end_timeline]
+
+label Talk
+Rodel: Ambassador. I am monitoring the evaporation rate. [pause=0.4] It is currently... high. I need {Transaction_ItemWants}.
+- Coming right up!
+	[end_timeline]
+- Sorry, we are out of stock.
+	Rodel: Then my stasis will have to wait. [pause=0.4] I shall return when the moisture levels are replenished.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
+label Satisfy
+Rodel: Refreshing. [pause=0.6] My Thank-currents to you, Ambassador.
+[signal arg="story_success"]
+[end_timeline]
+
+label WrongItem
+Rodel: This will not stabilize my hdyro-stasis. [pause=0.4] I require the {Transaction_ItemWants}. 
+[end_timeline]

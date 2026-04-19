@@ -1,0 +1,32 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_GreetingVar} <= 50:
+	TK: Yo, fam! This heat is a total vibe killer for the vlog. I need to cool down.
+else:
+	TK: Hey! Just got back from scouting some 'Hidden Gems'. Immaculate views, but man, I'm drained.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	TK: Hook me up with a {Transaction_ItemWants}? [pause=0.4] I need to rehydrate before my battery hits 1%.
+else:
+	TK: Give me your best {Transaction_ItemWants}. [pause=0.5] Aesthetic doesn't mean much if the explorer is starving, right?
+[end_timeline]
+
+label Partial
+TK: Bet. [pause=0.3] Still waiting on that {Transaction_ItemWants} though, don't leave me hanging!
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	TK: Based. [pause=0.4] This is going straight into the 'Essential Gear' highlight.
+else:
+	TK: Phew! [pause=0.5] Feeling the energy again. Thanks for the restock, fam.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	TK: Uh, fam? This isn't on the script. I was looking for the {Transaction_ItemWants}.
+else:
+	TK: Wrong vibe, man. [pause=0.4] This isn't the {Transaction_ItemWants} I dropped the pin for.
+[end_timeline]

@@ -1,0 +1,28 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_GreetingVar} <= 50:
+	ReynaMayari: The moonlight guided me to your threshold, child of the soil. Do not keep me waiting.
+else:
+	ReynaMayari: Your shelves are well-lit, mortal. I trust they contain the essence of that which I seek.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	ReynaMayari: I require a {Transaction_ItemWants}. Present it to me with due haste.
+else:
+	ReynaMayari: The transition of goods must proceed. I seek the {Transaction_ItemWants} from your inventory.
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	ReynaMayari: [pause=0.4] It is acceptable. Your service remains adequate under the eternal sun.
+else:
+	ReynaMayari: The Moon acknowledges your tribute. May your shadows remain light this night.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	ReynaMayari: This is an insult to the Biringan grace. This is not the {Transaction_ItemWants}.
+else:
+	ReynaMayari: Your vision is clouded, mortal. I requested a {Transaction_ItemWants}, not this shallow offering.
+[end_timeline]

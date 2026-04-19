@@ -1,0 +1,31 @@
+label Greeting
+if {Transaction_GreetingVar} <= 50:
+	Brahim: Good evening. I'm checking the local inventory for a specific instance.
+else:
+	Brahim: Hello. The environment variables in Karimlan are quite high today. I need to stabilize.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	Brahim: I'm requesting an instance of {Transaction_ItemWants}.
+else:
+	Brahim: My current process requires a {Transaction_ItemWants} to reach a stable state.
+[end_timeline]
+
+label Partial
+Brahim: Validated. Next instance in the queue: {Transaction_ItemWants}.
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	Brahim: Transaction committed. The data is validated. Salamat.
+else:
+	Brahim: High throughput vibes detected. My internal build feels much more stable now.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	Brahim: A logical mismatch, I'm afraid. This item doesn't fit the current query.
+else:
+	Brahim: 404 Error. Object not found in this transaction. Let's try to re-re-sync.
+[end_timeline]

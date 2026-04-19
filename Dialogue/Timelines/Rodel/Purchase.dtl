@@ -1,0 +1,33 @@
+label Greeting
+# [signal arg="refresh_desires"]
+if {Transaction_GreetingVar} <= 50:
+	Rodel: Greetings, Keeper of the Dry Shelves. I find the atmosphere here remarkably abrasive today.
+else:
+	Rodel: Ambassador. Your terrestrial sun is behaving like a relentless predator. My fluid-reserves are low.
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
+else:
+[end_timeline]
+	Rodel: I must acquire a {Transaction_ItemWants}. [pause=0.4] This land-fuel is necessary for my continued search.
+[end_timeline]
+
+label Partial
+Rodel: Acceptable. I still require a {Transaction_ItemWants} to complete this module.
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	Rodel: Excellent. [pause=0.4] A successful exchange. My thank-currents to you, Ambassador.
+else:
+	Rodel: My hydro-stasis is stabilized for now. [pause=0.5] May the tides of your commerce remain high.
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	Rodel: This is... [pause=0.5] incorrect. This item lacks the necessary properties for a {Transaction_ItemWants}.
+else:
+	Rodel: I believe there has been a desync in our communication. This is not the {Transaction_ItemWants} I requested.
+[end_timeline]

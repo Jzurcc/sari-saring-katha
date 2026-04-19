@@ -1,0 +1,220 @@
+label Greeting
+if {Transaction_Chapter} == 0.0:
+	# Chapter 1: "The Free Real Estate"
+	# He just settles in without being asked. First meeting.
+	Danilo: Uy, boss. Nice setup you have here. Good shade. Good view of the road.
+	- Can I get you something?
+		Danilo: Ah, nah. Just hanging. I like a store like this — you can see everything from here. Good spot.
+	- ...Who are you?
+		Danilo: Ha! Fair question. Danilo. I live nearby. I walk past good spots. This is a good spot.
+	- Sure, make yourself at home.
+		Danilo: Sige! That's the spirit.
+	Danilo: Have you seen that horse vlogger lately? [color=#8B6855]I keep seeing him walk past the same mango tree — four times in one day.[/color] Needs a better map, that one.
+	Danilo: Anyway. I won't buy anything, boss. Just good shade here. Don't mind me.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 1.0:
+	# Chapter 2: "The Cough"
+	# All three options converge to the same gossip. The framing shifts slightly per choice.
+	Danilo: Psst. Have you seen Kap lately? He's looking a bit gray, 'no?
+	- Now that you mention it, yeah.
+		Danilo: Yeah.
+	- He seemed fine when he came by.
+		Danilo: Mm. People can look fine.
+	- Why, did something happen?
+		Danilo: Nothing official. Just something I noticed.
+	Danilo: [color=#8B6855]I saw him sitting on his porch at past three in the morning last Tuesday. Just holding a cigarette pack. Not even smoking it — just holding it.[/color]
+	Danilo: He thinks nobody notices him when it's dark.
+	- Has he done that before?
+		Danilo: Probably. Just the first time I noticed him doing it and looking that tired.
+	- That's... kind of sad.
+		Danilo: Yeah. Yeah, it is.
+	Danilo: Just between you and me, ah? You should check on him. He'll appreciate it even if he won't say so.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 2.0:
+	# Chapter 3: "The Midnight Flight"
+	Danilo: Is Ana okay? She's been buying a lot from you lately, 'no?
+	- She seems fine. Why?
+		Danilo: Just checking.
+	- Yeah, she has been. What about it?
+		Danilo: Nothing bad. Just noticed is all.
+	- I don't really track my customers like that.
+		Danilo: Ha! Fair. I do, though.
+	Danilo: [color=#8B6855]I was on the roof last night and I saw two of her kids flying back from the next province.[/color] Wing coordination — terrible. They clipped a power line on the way down.
+	Danilo: Typical teenagers. Can't even fly straight.
+	- Wait, flying?
+		Danilo: Flying. Yeah.
+		Danilo: Anyway — someone should tell them to stay lower over the barangay when they're coming home late. People are sleeping.
+	- That's... not something I can do anything about.
+		Danilo: No, but you know now. Good to know these things, 'no?
+		Danilo: Someone should still tell them about the low-flying rule.
+	Danilo: Anyway. She's fine, I think. Just wanted to check if you noticed anything on your end.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 3.0:
+	# Chapter 4: "The Private Conversation"
+	# Buboy and Kap are neighbors, not relatives.
+	Danilo: Kids are brutal, 'no?
+	- What happened?
+		Danilo: Nothing bad. Just heavy.
+	- Someone give you trouble?
+		Danilo: Nah, not me. Just something I saw out in the barangay.
+	- You okay, Danilo?
+		Danilo: Ha. [pause=0.4] Yeah. Just... it's a heavy week. You'll hear what I mean.
+	Danilo: [color=#8B6855]I was watching Buboy and Kap talk in Kap's yard on Sunday afternoon. Kap was trying to hide a cigarette behind his back, and Buboy — you know how kids just say things — he asked him flat out, "Manong, why don't you just throw the box away?"[/color]
+	Danilo: Kap's whole face just sank when he heard that.
+	- Buboy probably didn't mean anything by it.
+		Danilo: Exactly. That's what makes it land harder.
+	- Is Kap okay?
+		Danilo: He will be. He usually is. But those moments stay with you, 'no?
+	Danilo: Hard to watch. Anyway. Just a heavy week for this barangay. Carry on, boss.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 4.0:
+	# Chapter 5: "The Highway"
+	Danilo: That pale girl who comes here sometimes. Rosalyn, right?
+	- You know her?
+		Danilo: A little.
+	- How do you know about her?
+		Danilo: I notice people who come here regularly. Part of how I am.
+	- Why are you asking?
+		Danilo: No reason, really. Just wanted to make sure someone was looking out for her.
+	Danilo: [color=#8B6855]I see her on the old highway before she walks here. Every night, same spot — she just stands there and the cars go right through her and she looks confused every time.[/color]
+	Danilo: Like she keeps expecting something to feel solid and it never does.
+	- That sounds lonely.
+		Danilo: It is. But she found her way here, which helps.
+	- Should we do something about that?
+		Danilo: You already are. Just letting her come in, letting her be somewhere — that's doing something.
+	Danilo: Whatever you're doing for her — keep doing it. She needed somewhere to land.
+	Danilo: For the record, I don't pity her. I just notice things. That one I notice a lot.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6: "Too Bright"
+	# The slip is in "as many as I do." He catches himself and pivots to "insomnia."
+	# Two choice points: once at the start, once after the slip.
+	Danilo: Sakit sa ulo today, boss. Bad headache.
+	- Too much coffee?
+		Danilo: Ha. Something like that.
+	- You should sit down or something.
+		Danilo: Ay, nah. Sitting doesn't help. I've tried. It's a different kind of tired.
+	- Since when?
+		Danilo: Always, technically. [pause=0.4] Ignore that.
+	Danilo: Sometimes I just wish I could close my eyes and actually sleep. Not just rest — really sleep.
+	Danilo: But when you have... [pause=0.5] as many as I do... there's always one that stays open. Always watching something.
+	Danilo: ...insomnia. That's what I'm saying. Bad insomnia. Too much coffee for sure.
+	- "As many as you have"?
+		Danilo: Eyes. I meant — it's a. [pause=0.4] It's an expression. Anyway.
+	- You okay?
+		Danilo: Ha, yeah. Carry on. Don't mind me.
+	- ...You don't even sell anything, Danilo.
+		Danilo: I was worth a shot. Carry on.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 6.0:
+	# Chapter 7: "The Pale Ledger"
+	# No "Uy, boss." He walks in and goes straight to it. That shift is the tell.
+	Danilo: She's been coming around. The Queen from Biringan.
+	- You know about her?
+		Danilo: I know about everyone, boss.
+	- How do you know that name?
+		Danilo: [pause=0.4] I've been here a long time.
+	- Yeah. She's not easy to deal with.
+		Danilo: No. She's not.
+	Danilo: [color=#8B6855]I watch her leave here with that ledger every time she visits. I've been watching her do it since before you came back to this store.[/color]
+	Danilo: That a heavy thing your Lola left you. A lot of people would have cracked under it by now.
+	- I don't really have a choice.
+		Danilo: You always have a choice. You're just making the right one, over and over. That's not the same thing.
+	- Some days are harder than others.
+		Danilo: I know. I've seen the harder ones.
+	Danilo: But I've been watching you. And you're not cracking.
+	Danilo: This town holds together better with you here. I just wanted someone to say that out loud, since nobody else probably will.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 7.0:
+	# Chapter 8: "The Daligmata" — the reveal
+	# Three player entry points, all lead to his explanation, each with a slightly different tone.
+	Danilo: You figured it out a while ago, right? Why I know about the highway. Why I know about the roof. Why I know about Kap's porch on a Tuesday night at 3 AM.
+	- I had a theory.
+		Danilo: I'm a Daligmata. Guardian creatures — my kind are built to watch. Over sickness, over lost things, over the things people are too tired to notice themselves.
+		Danilo: Most mortals hate us when they find out, because we see everything. Including the things you'd rather keep private.
+		Danilo: But all I ever see in Karimlan are tired people trying their best.
+		Danilo: And you — giving them somewhere to rest. That's the whole job, boss. You've been doing it without even knowing it was a job.
+	- I wasn't going to bring it up.
+		Danilo: Ha. Smart. Neither was I, for a while.
+		Danilo: But I'm tired of pretending my sources are normal. And you've earned the explanation by now.
+		Danilo: I'm a Daligmata. Guardian creatures — built to watch. Over sickness, over lost things, over the things people miss.
+		Danilo: You've been doing my job for me, boss. I needed you to know that.
+	- I had a lot of theories.
+		Danilo: Smart. I'm a Daligmata. Guardian creature. Many eyes. Occupational hazard — like I said.
+		Danilo: You've been doing my job for me this whole time. I just wanted you to know that.
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 8.0:
+	# Chapter 9: "The First Purchase" — Arc Finale
+	# Three player reactions, all converge to the same shared conclusion.
+	Danilo: Uy, boss.
+	Danilo: Give me a {Transaction_ItemWants}.
+	# [signal arg="refresh_desires"]
+	- ...You're actually buying something?
+		Danilo: Oo. First time, right?
+	- What took you so long?
+		Danilo: Ha! I had things to watch. But everyone's more or less okay now. So. First time.
+	- Finally.
+		Danilo: Ha! Yeah. Finally. Seemed right that it should be once things were sorted out, 'no?
+	Danilo: Kap is still working on the cigarettes. Rosalyn found somewhere to land. Ana's kids are flying straighter.
+	Danilo: I don't need to watch so closely anymore.
+	Danilo: Here. Keep the sunglasses. For when you need to see things clearly.
+	Danilo: See you around, boss.
+	if {Transaction_WantsDebt}:
+		Danilo: Ay. I checked all my pockets and I'm a bit short. Utang muna for the first one?
+		- Fine. One time lang.
+			[signal arg="utang_accepted"]
+			Danilo: I'll have it next time. And boss — I know exactly when you'll be here.
+		- You can see everything and you still forgot your coins?
+			[signal arg="utang_rejected"]
+			Danilo: Fair. I'll be back.
+	[end_timeline]
+
+label Talk
+if {Transaction_Chapter} == 8.0:
+	Danilo: No rush. I've got nowhere to be today. Once you're ready, pass the {Transaction_ItemWants}, yeah?
+	- Coming right up.
+		[end_timeline]
+	- Sorry, out of stock.
+		Danilo: Ah, sayang. Next time then.
+		Danilo: Doesn't change anything I said.
+		[signal arg="refuse_service"]
+		[signal arg="story_success"]
+		[end_timeline]
+else:
+	# Visit chapters should not reach Talk — dismiss cleanly.
+	Danilo: Sige. Carry on.
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
+label Satisfy
+if {Transaction_WantsDebt}:
+	Danilo: Salamat, boss. I'll have the change tomorrow.
+else:
+	if {Transaction_Chapter} == 8.0:
+		Danilo: Salamat, boss. This is the life.
+[signal arg="story_success"]
+[end_timeline]
+
+label WrongItem
+if {Transaction_Chapter} == 8.0:
+	Danilo: That's not the {Transaction_ItemWants}, boss. But points for the effort.
+else:
+	Danilo: Hmm.
+[end_timeline]
