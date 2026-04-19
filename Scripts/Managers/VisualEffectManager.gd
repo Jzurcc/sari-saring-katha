@@ -114,12 +114,22 @@ func spawn_cold_mist(pos: Vector3) -> CPUParticles3D:
 	add_child(p)
 	p.global_position = pos
 	
-	p.amount = 12
+	p.amount = 6
 	p.one_shot = false
 	p.explosiveness = 0.4
 	p.lifetime = 4.0
 	p.mesh = QuadMesh.new()
 	p.mesh.size = Vector2(0.6, 0.6)
+	
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	p.emission_box_extents = Vector3(0.1, 0.15, 0.2)
+	
+	var gradient = Gradient.new()
+	gradient.set_color(0, Color(1, 1, 1, 0.0))
+	gradient.set_color(1, Color(1, 1, 1, 0.0))
+	gradient.add_point(0.2, Color(1, 1, 1, 1.0))
+	gradient.add_point(0.7, Color(1, 1, 1, 1.0))
+	p.color_ramp = gradient
 	
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
@@ -150,9 +160,10 @@ func spawn_cold_mist(pos: Vector3) -> CPUParticles3D:
 
 func spawn_mass_mist(pos: Vector3, width: float) -> Array[CPUParticles3D]:
 	# Spawns a series of mist bursts across the specified width
-	var burst_count = int(width / 0.4) + 1
-	var step = width / burst_count
-	var start_x = pos.x - (width / 2.0)
+	var reduced_width = width * 0.7 # closer to center
+	var burst_count = max(int(reduced_width / 0.5), 1)
+	var step = reduced_width / burst_count
+	var start_x = pos.x - (reduced_width / 2.0)
 	var particles: Array[CPUParticles3D] = []
 	
 	for i in range(burst_count):

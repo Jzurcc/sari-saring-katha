@@ -30,7 +30,8 @@ func fade_out_everything(duration: float = FADE_DURATION) -> void:
 	bgm_player.volume_db = base_volume_db
 	theme_player.volume_db = -80.0
 	ambience_base.volume_db = 2.0
-	ambience_night.volume_db = -7.1
+	ambience_night.volume_db = -13.1
+
 
 var audio_boring_day = preload("res://Audio/Soundtracks/A Boring Day.mp3")
 var audio_fantastic_idea = preload("res://Audio/Soundtracks/Fantastic Idea.mp3")
@@ -64,7 +65,9 @@ var character_themes: Dictionary = {
 
 
 var dialogue_blip_player: AudioStreamPlayer
-var sfx_player: AudioStreamPlayer
+var sfx_players: Array[AudioStreamPlayer] = []
+var _next_sfx_player_idx: int = 0
+const SFX_POOL_SIZE: int = 8
 
 var audio_calming_morning = preload("res://Audio/SFX/Calming Morning Sounds.mp3")
 var audio_night_crickets = preload("res://Audio/SFX/Sounds of Night Crickets.mp3")
@@ -80,6 +83,9 @@ var sfx_hover = preload("res://Audio/SFX/ui_sfx_7.mp3")
 var sfx_plastic = preload("res://Audio/SFX/plastic.mp3")
 var sfx_trash = preload("res://Audio/SFX/trash.mp3")
 var sfx_money_decrease = preload("res://Audio/SFX/money_decrease.wav")
+var sfx_fridge_open = preload("res://Audio/SFX/refrigerator_open.mp3")
+var sfx_fridge_close = preload("res://Audio/SFX/refrigerator_close.mp3")
+var sfx_fridge_hum = preload("res://Audio/SFX/refrigerator.mp3")
 
 var sfx_library = {
 	"money_gain": sfx_kaching,
@@ -92,24 +98,44 @@ var sfx_library = {
 	"ui_hover": sfx_hover,
 	"plastic": sfx_plastic,
 	"trash": sfx_trash,
-	"money_decrease": sfx_money_decrease
+	"money_decrease": sfx_money_decrease,
+	"refrigerator_open": sfx_fridge_open,
+	"refrigerator_close": sfx_fridge_close,
+	"price_change": sfx_error
+}
+
+var sfx_volume_offsets = {
+	"money_gain": -6.0,
+	"purchase": -6.0,
+	"tab_switch": -6.0,
+	"interact": -6.0,
+	"pickup": -6.0,
+	"drop": -6.0,
+	"error": -6.0,
+	"ui_hover": -6.0,
+	"refrigerator_open": -3.0,
+	"refrigerator_close": -3.0,
+	"price_change": -6.0
 }
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
+var fridge_hum_player: AudioStreamPlayer
 var current_bgm_phase: BGMPhase = BGMPhase.NONE
 
 var time_of_day_node: Node = null
 var _scene_check_timer: float = 0.0
 var _is_in_intro_or_menu: bool = true
+var _last_scene_name: String = ""
 
 var _active_playlist: Array = []
 var _playlist_index: int = 0
-var _rng := RandomNumberGenerator.new()
+var _last_emitted_title: String = ""
+
 
 func _ready() -> void:
 	randomize()
-	_rng.randomize()
 
 	name = "AudioManager"
+
 	process_mode = PROCESS_MODE_ALWAYS
 	
 	bgm_player = AudioStreamPlayer.new()
@@ -129,16 +155,28 @@ func _ready() -> void:
 	
 	ambience_night = AudioStreamPlayer.new()
 	ambience_night.bus = "Master"
-	ambience_night.volume_db = -7.1
+	ambience_night.volume_db = -13.1
 	add_child(ambience_night)
+
 	
 	dialogue_blip_player = AudioStreamPlayer.new()
-	dialogue_blip_player.bus = "SFX"
+	dialogue_blip_player.bus = "Voices"
 	add_child(dialogue_blip_player)
 	
-	sfx_player = AudioStreamPlayer.new()
-	sfx_player.bus = "SFX"
-	add_child(sfx_player)
+	for i in range(SFX_POOL_SIZE):
+		var p = AudioStreamPlayer.new()
+		p.bus = "SFX"
+		add_child(p)
+		sfx_players.append(p)
+	
+	fridge_hum_player = AudioStreamPlayer.new()
+	fridge_hum_player.bus = "SFX"
+	fridge_hum_player.stream = sfx_fridge_hum
+	fridge_hum_player.volume_db = -9.0
+	add_child(fridge_hum_player)
+	
+	# Connect loop for hum
+	fridge_hum_player.finished.connect(func(): if fridge_hum_player.stream: fridge_hum_player.play())
 	
 	bgm_player.finished.connect(_on_bgm_finished)
 	theme_player.finished.connect(_on_theme_finished)
@@ -166,9 +204,19 @@ func _ready() -> void:
 
 func play_sfx(sfx_name: String) -> void:
 	if sfx_library.has(sfx_name):
-		sfx_player.stream = sfx_library[sfx_name]
-		sfx_player.pitch_scale = randf_range(0.9, 1.1)
-		sfx_player.play()
+		var p = sfx_players[_next_sfx_player_idx]
+		_next_sfx_player_idx = (_next_sfx_player_idx + 1) % SFX_POOL_SIZE
+		
+		p.stream = sfx_library[sfx_name]
+		p.pitch_scale = randf_range(0.9, 1.1)
+		
+		# Apply volume offset if defined, otherwise reset to 0
+		if sfx_volume_offsets.has(sfx_name):
+			p.volume_db = sfx_volume_offsets[sfx_name]
+		else:
+			p.volume_db = 0.0
+			
+		p.play()
 
 func _process(delta: float) -> void:
 	_scene_check_timer += delta
@@ -177,6 +225,13 @@ func _process(delta: float) -> void:
 		var scene = get_tree().current_scene
 		if scene:
 			_is_in_intro_or_menu = scene.name in ["MainMenu", "IntroCutscene"] or scene.has_method("play_all_sequences")
+			
+			# Force phase update if scene name changed while in intro/menu
+			if _last_scene_name != scene.name:
+				_last_scene_name = scene.name
+				if _is_in_intro_or_menu:
+					_change_bgm_phase(BGMPhase.NONE)
+
 			if not _is_in_intro_or_menu and not is_instance_valid(time_of_day_node):
 				time_of_day_node = scene.get_node_or_null("World/TimeOfDay")
 				if not time_of_day_node:
@@ -218,6 +273,12 @@ func _load_audio_settings() -> void:
 		if s_idx >= 0:
 			AudioServer.set_bus_volume_db(s_idx, linear_to_db(sfx_val) if sfx_val > 0.0 else -80.0)
 			AudioServer.set_bus_mute(s_idx, sfx_val <= 0.0)
+		
+		var v_val : float = cfg.get_value("audio", "voices", 0.9)
+		var v_idx = AudioServer.get_bus_index("Voices")
+		if v_idx >= 0:
+			AudioServer.set_bus_volume_db(v_idx, linear_to_db(v_val) if v_val > 0.0 else -80.0)
+			AudioServer.set_bus_mute(v_idx, v_val <= 0.0)
 		
 		mute_in_background = cfg.get_value("accessibility", "mute_in_background", false)
 
@@ -270,7 +331,11 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 	var pool = []
 	match phase:
 		BGMPhase.NONE: # Main Menu / Intro
-			pool = [audio_brunch, audio_autumn_wind]
+			var scene = get_tree().current_scene
+			if scene and scene.name == "MainMenu":
+				pool = [audio_brunch, audio_autumn_wind]
+			else:
+				pool = [audio_autumn_wind]
 		BGMPhase.MORNING:
 			pool = [audio_boring_day, audio_brunch_ii, audio_kids_room]
 		BGMPhase.AFTERNOON:
@@ -286,11 +351,20 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		_active_playlist = pool
 	else:
 		# True shuffle for everything else
-		_active_playlist = pool
-		_shuffle_playlist(_active_playlist)
-	
+		var original_first = pool[0]
+		_active_playlist = pool.duplicate()
+		_active_playlist.shuffle()
+		
+		# Force the first starting song to NOT be the first one declared in the pool to guarantee it feels random
+		if _active_playlist[0] == original_first and _active_playlist.size() > 1:
+			var swap_idx = (randi() % (_active_playlist.size() - 1)) + 1
+			var tmp = _active_playlist[0]
+			_active_playlist[0] = _active_playlist[swap_idx]
+			_active_playlist[swap_idx] = tmp
+			
 	_playlist_index = 0
 
+	_update_fridge_hum(phase)
 	
 	if bgm_transition_tween and bgm_transition_tween.is_valid():
 		bgm_transition_tween.kill()
@@ -319,6 +393,17 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		_emit_music_change(bgm_player.stream)
 	)
 
+func _update_fridge_hum(phase: BGMPhase) -> void:
+	if not fridge_hum_player: return
+	
+	# Play always except in the menu/intro
+	var should_play = (phase != BGMPhase.NONE)
+	
+	if should_play and not fridge_hum_player.playing:
+		fridge_hum_player.play()
+	elif not should_play and fridge_hum_player.playing:
+		fridge_hum_player.stop()
+
 
 
 func _on_bgm_finished() -> void:
@@ -336,8 +421,9 @@ func _on_bgm_finished() -> void:
 			# If the first song of the new shuffle is the same as the last one played...
 			if _active_playlist.size() > 1 and _active_playlist[0] == last_song:
 				# Swap it with another random element skip the first one
-				var swap_idx = _rng.randi_range(1, _active_playlist.size() - 1)
+				var swap_idx = (randi() % (_active_playlist.size() - 1)) + 1
 				var tmp = _active_playlist[0]
+
 				_active_playlist[0] = _active_playlist[swap_idx]
 				_active_playlist[swap_idx] = tmp
 			
@@ -348,12 +434,7 @@ func _on_bgm_finished() -> void:
 	_emit_music_change(bgm_player.stream)
 
 func _shuffle_playlist(playlist: Array) -> void:
-	# Fisher-Yates shuffle using our dedicated RNG
-	for i in range(playlist.size() - 1, 0, -1):
-		var j = _rng.randi_range(0, i)
-		var tmp = playlist[i]
-		playlist[i] = playlist[j]
-		playlist[j] = tmp
+	playlist.shuffle()
 
 
 
@@ -384,6 +465,9 @@ func play_character_theme(theme_stream: AudioStream) -> void:
 
 
 func stop_character_theme() -> void:
+	if not theme_player.playing:
+		return
+		
 	if crossfade_tween and crossfade_tween.is_valid():
 		crossfade_tween.kill()
 		
@@ -475,4 +559,8 @@ func _emit_music_change(stream: AudioStream) -> void:
 		var path = stream.resource_path
 		title = path.get_file().get_basename().capitalize()
 	
+	if title == _last_emitted_title:
+		return
+		
+	_last_emitted_title = title
 	EventBus.music_title_changed.emit(title)
