@@ -46,7 +46,7 @@ elif {Transaction_Chapter} == 6.0:
 	[end_timeline]
 elif {Transaction_Chapter} == 7.0:
 	# Chapter 8: The Macroeconomics (Purchase)
-	Sarimanok: Ba-kawk! [input] Splendid evening to you, my good proprietor. Simply resplendent.
+	Sarimanok: Ba-kawk! [input] Splendid day to you, my good proprietor. Simply resplendent.
 	Sarimanok: I would be delighted to partake in your exquisite {Transaction_ItemWants}.
 	# [signal arg="refresh_desires"]
 	- Coming right up, sir.
@@ -122,7 +122,7 @@ elif {Transaction_Chapter} == 7.0:
 		Sarimanok: Do try to optimize your retrieval process.
 		[end_timeline]
 	- Supply chain issues. I'm completely out.
-		Sarimanok: Pity. I shall take my investments elsewhere. Good evening.
+		Sarimanok: Pity. I shall take my investments elsewhere. Good day.
 		[signal arg="refuse_service"]
 		[signal arg="story_success"]
 		[end_timeline]

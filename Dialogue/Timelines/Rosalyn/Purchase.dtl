@@ -3,7 +3,7 @@ label Greeting
 if {Transaction_GreetingVar} <= 50:
 	Rosalyn: Hello... [pause=0.6] um... [pause=0.3] could I...
 else:
-	Rosalyn: Good evening... [pause=0.5] I... I have coins today.
+	Rosalyn: Good day... [pause=0.5] I... I have coins today.
 [end_timeline]
 
 label Talk

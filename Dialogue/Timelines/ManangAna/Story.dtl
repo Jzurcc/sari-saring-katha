@@ -11,7 +11,7 @@ if {Transaction_Chapter} == 0.0:
 	- You smell like adobo, Manang!
 		ManangAna: [pause=0.5] Hehe! That's the smell of hard work and secret spices, anak. [pause=0.3] It makes me hungry too, but I have to save the best cuts for the kids. Maybe I'll bring you some one of these days.
 	ManangAna: Let's see... twenty... forty... sixty. Every centimo is here.
-	ManangAna: Three cans of {Transaction_ItemWants}, anak. Let's make this quick... my feet are starting to think they're made of lead.
+	ManangAna: [color=#0f6e2f]{Transaction_ItemWants}[/color], anak. Let's make this quick... my feet are starting to think they're made of lead.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
@@ -22,14 +22,14 @@ elif {Transaction_Chapter} == 1.0:
 	- Eight? I thought you said four.
 		ManangAna: [pause=0.5] That's how it feels when they're all over the place, anak! [pause=0.3] You'll see one day. Raising a family is a geometry problem I never asked to solve.
 	- Teenagers are hungry, I guess.
-		ManangAna: [pause=0.4] Hungry? They are black holes with hair. [pause=0.5] Anyway, just the big boxes of {Transaction_ItemWants} today.
+		ManangAna: [pause=0.4] Hungry? They are black holes with hair. [pause=0.5] Anyway, just the big boxes of [color=#0f6e2f]{Transaction_ItemWants}[/color] today.
 	- How do you do it all, Manang?
 		ManangAna: [pause=0.6] One deep breath at a time, anak. [pause=0.4] And a lot of coffee. [pause=0.3] You just keep moving because if you stop, the laundry starts to win.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "Friends with Kap"
-	ManangAna: [pause=0.6] I need the strongest {Transaction_ItemWants} you have, anak. Just anything to keep me awake.
+	ManangAna: [pause=0.6] I need the strongest [color=#0f6e2f]{Transaction_ItemWants}[/color] you have, anak. Just anything to keep me awake.
 	ManangAna: I just saw Kap outside... still leaning against that post. That man is too kind for his own good. Sometimes I worry he’s going to turn into a statue if he stands there any longer.
 	- He seems very peaceful.
 		ManangAna: [pause=0.4] Peaceful... or just tired. We've all been around a long time. 
@@ -47,7 +47,7 @@ elif {Transaction_Chapter} == 3.0:
 	ManangAna: Anak... I... I didn't bring any change today. I'm sorry. 
 	ManangAna: The kids had a big... ah, 'flight' last night. They came back absolutely starving this morning.
 	ManangAna: [pause=0.6] I don't get my pay from the karinderya until Friday. I... [pause=0.4] sorry for not looking you in the eye, anak. 
-	ManangAna: Can I pay you next time? Just for some {Transaction_ItemWants}. I promise I'll put it on my tab.
+	ManangAna: Can I pay you next time? Just for some [color=#0f6e2f]{Transaction_ItemWants}[/color]. I promise I'll put it on my tab.
 	- Of course, Manang. Don't worry.
 		[signal arg="utang_accepted"]
 		ManangAna: [pause=0.5] Thank you. Salamat talaga. [pause=0.4] I won't forget this. 
@@ -88,7 +88,7 @@ elif {Transaction_Chapter} == 5.0:
 elif {Transaction_Chapter} == 6.0:
 	# Chapter 7: "A Deep Breath"
 	[signal arg="setup_repay_half"]
-	ManangAna: [pause=0.6] Good evening, anak! The karinderya had a massive catering order today, and the boss actually gave me a cut of the tips.
+	ManangAna: [pause=0.6] Good day, anak! The karinderya had a massive catering order today, and the boss actually gave me a cut of the tips.
 	ManangAna: Look at this! A real one-hundred bill. I haven't seen one of these in weeks.
 	ManangAna: Keep the change and put it toward my tab. Jusko, I feel like I can finally breathe a little.
 	- I'm glad to hear that, Manang.
@@ -115,7 +115,7 @@ elif {Transaction_Chapter} == 7.0:
 
 elif {Transaction_Chapter} == 8.0:
 	# Chapter 9: "The Feast"
-	ManangAna: [pause=0.6] No cheap sardines today, anak. Give me the {Transaction_ItemWants} and the best {Transaction_ItemWants} you have.
+	ManangAna: [pause=0.6] No cheap sardines today, anak. Give me the best [color=#0f6e2f]{Transaction_ItemWants}[/color] you have.
 	ManangAna: Here. I brought this for you. Special pork adobo from the karinderya. Eat it while it's warm.
 	ManangAna: I made sure to save the best cuts for you.
 	- This smells amazing! Thank you!
@@ -128,7 +128,7 @@ elif {Transaction_Chapter} == 8.0:
 	[end_timeline]
 
 label Talk
-ManangAna: [pause=0.4] No rush, anak. I spend half my life waiting for rice to steam... I can wait for the {Transaction_ItemWants}.
+ManangAna: [pause=0.4] No rush, anak. I spend half my life waiting for rice to steam... I can wait for the [color=#0f6e2f]{Transaction_ItemWants}[/color].
 - Almost there.
 	ManangAna: Sige.
 	[end_timeline]
@@ -147,5 +147,5 @@ else:
 [end_timeline]
 
 label WrongItem
-ManangAna: [pause=0.4] Susmaryosep, anak... my eyes might be tired, but I know that’s not a {Transaction_ItemWants}. 
+ManangAna: [pause=0.4] Susmaryosep, anak... my eyes might be tired, but I know that’s not a [color=#0f6e2f]{Transaction_ItemWants}[/color]. 
 [end_timeline]

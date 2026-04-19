@@ -1,49 +1,49 @@
 label Greeting
 [signal arg="refresh_desires"]
-KuyaKap: Oh hello.[pause=0.5].[pause=0.5].[pause=0.5] Can you get me [color=#0f6e2f]{Transaction_ItemWants}[/color]? Just what I need today.
-- Will do!
+KuyaKap: Magandang gabi, apo. [pause=0.4] Keeping up with the routine. Could you get me [color=#0f6e2f]{Transaction_ItemWants}[/color]? 
+- Right away, Kuya.
 [end_timeline]
 
 label Talk
-KuyaKap: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for now.
+KuyaKap: Just my [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're ready, apo. [pause=0.4] No rush.
 - Alright, one moment.
-	KuyaKap: Sige sige.
+	KuyaKap: Take your time.
 	[end_timeline]
 - Sorry, I can't get that right now.
-	KuyaKap: Ah, ganon ba? [pause=0.4] No worries.
+	KuyaKap: Ah, is that so? [pause=0.4] That's alright, apo. [pause=0.3] Some things are worth waiting for, I suppose.
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]
 
 label Partial
-KuyaKap: Sige, salamat. Yung [color=#0f6e2f]{Transaction_ItemWants}[/color] na lang ang kulang ko.
+KuyaKap: Salamat. [pause=0.4] Just waiting on the [color=#0f6e2f]{Transaction_ItemWants}[/color] to complete the set. 
 [end_timeline]
 
 label Satisfy
 if {Transaction_WantsDebt}:
-	KuyaKap: Maraming salamat! [pause=0.5]
-	KuyaKap: [wave]Oh...[/wave] [pause=0.4] I just realized I forgot my wallet at home.
-	KuyaKap: Is it okay if I take this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] Babayaran ko na lang bukas ha.
-	- Sure, no problem.
+	KuyaKap: Salamat talaga, apo. [pause=0.5]
+	KuyaKap: [pause=0.4] ...Ah. [pause=0.4] My pockets feel a bit light today. [pause=0.3] I think I left my coins at home.
+	KuyaKap: Would it be alright if I put this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] I'll settle it with you tomorrow, promise.
+	- Sure, Kuya. Take care.
 		[signal arg="utang_accepted"]
-		KuyaKap: Wow, thank you! [pause=0.3] You're the best!
-		KuyaKap: See you tomorrow!
-	- Sorry, no credit today.
+		KuyaKap: Salamat. [pause=0.4] You're a kind soul, just like your Lola. 
+		KuyaKap: See you tomorrow, apo.
+	- Sorry, I can't do credit right now.
 		[signal arg="utang_rejected"]
-		KuyaKap: Ah... [pause=0.4] I see. [pause=0.3] Sige, maiiwan ko muna 'to rito ha.
-		KuyaKap: Babalik ako kapag may pera na ako. [pause=0.4] Salamat pa rin!
+		KuyaKap: Hehe. I understand, apo. [pause=0.4] A business must stay a business after all.
+		KuyaKap: I'll just come back when I have the change. [pause=0.4] Mag-iingat ka!
 else:
-	KuyaKap: Perfect. Thanks.
+	KuyaKap: Salamat, apo. [pause=0.4] You really have your Lola's touch with keeping this place alive.
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-KuyaKap: Hindi 'yan yung hinihingi ko ah. [color=#0f6e2f]{Transaction_ItemWants}[/color] nga.
-- Ah sorry, sandali lang.
-	KuyaKap: Sige, mag-aabang na lang ako.
+KuyaKap: Hmm. [pause=0.4] I don't think this is my [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+- Oh, sorry about that! Let me fix it.
+	KuyaKap: Hehe. Don't worry. [pause=0.3] I'm not going anywhere.
 	[end_timeline]
-- Sorry, wala kaming stock nun.
-	KuyaKap: Ganon? Sige na lang.
+- Sorry, we're actually all out.
+	KuyaKap: Ah, is that it? [pause=0.4] That's alright, apo. [pause=0.4] We'll just try again tomorrow.
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]

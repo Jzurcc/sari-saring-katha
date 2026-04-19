@@ -1,7 +1,7 @@
 label Greeting
 # [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0:
-	Brahim: Good evening. [pause=0.3] I'm trying to remember a specific brand of product...
+	Brahim: Good day. [pause=0.3] I'm trying to remember a specific brand of product...
 	Brahim: I could use some right about now.
 	- Maybe a nice relaxing snack?
 	- Maybe it's just the change of pace.

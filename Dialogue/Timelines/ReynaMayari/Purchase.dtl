@@ -1,28 +1,38 @@
 label Greeting
 # [signal arg="refresh_desires"]
-if {Transaction_GreetingVar} <= 50:
-	ReynaMayari: The moonlight guided me to your threshold, child of the soil. Do not keep me waiting.
+if {Transaction_Chapter} >= 8.0:
+	if {Transaction_GreetingVar} <= 50:
+		ReynaMayari: Good day, mortal. I have returned... for another inspection. [pause=0.5] Yes, an inspection of your sweet inventory.
+	else:
+		ReynaMayari: The shadows are quiet tonight. [pause=0.4] Which gives me ample time to peruse your colorful earthly provisions.
 else:
-	ReynaMayari: Your shelves are well-lit, mortal. I trust they contain the essence of that which I seek.
+	if {Transaction_GreetingVar} <= 33:
+		ReynaMayari: The moonlight guided me to your threshold, mortal. [pause=0.4] Do not keep me waiting.
+	elif {Transaction_GreetingVar} <= 66:
+		ReynaMayari: I am here for official Biringan business... [pause=0.5] And perhaps a snack. Let us proceed.
+	else:
+		ReynaMayari: Your shelves are well-lit, child of the soil. [pause=0.4] *Ahem.* Oh look, the colorful wrappers are displayed prominently today.
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
+if {Transaction_TalkVar} <= 33:
 	ReynaMayari: I require a {Transaction_ItemWants}. Present it to me with due haste.
+elif {Transaction_TalkVar} <= 66:
+	ReynaMayari: The Queen of the Silver Spires demands {Transaction_ItemWants}. [pause=0.3] Do you have the spicy kind?
 else:
-	ReynaMayari: The transition of goods must proceed. I seek the {Transaction_ItemWants} from your inventory.
+	ReynaMayari: The transition of goods must proceed. Provide the {Transaction_ItemWants}.
 [end_timeline]
 
 label Satisfy
 if {Transaction_SatisfyVar} <= 50:
 	ReynaMayari: [pause=0.4] It is acceptable. Your service remains adequate under the eternal sun.
 else:
-	ReynaMayari: The Moon acknowledges your tribute. May your shadows remain light this night.
+	ReynaMayari: The Moon acknowledges your tribute. [pause=0.4] This will pair perfectly with my eternal solitude.
 [end_timeline]
 
 label WrongItem
 if {Transaction_WrongItemVar} <= 50:
-	ReynaMayari: This is an insult to the Biringan grace. This is not the {Transaction_ItemWants}.
+	ReynaMayari: This is an insult to Biringan's grace! This is not the {Transaction_ItemWants}.
 else:
-	ReynaMayari: Your vision is clouded, mortal. I requested a {Transaction_ItemWants}, not this shallow offering.
+	ReynaMayari: Your vision is clouded, mortal. I requested a {Transaction_ItemWants}, not this shallow offering. [pause=0.4] ...wait, can I still eat it? No! No nevermind, bring the right one!
 [end_timeline]
