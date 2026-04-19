@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="22_7p2u3"]
 [ext_resource type="Script" uid="uid://c1unyvepheci4" path="res://Scripts/FridgeLayoutStrategy.gd" id="23_fgk2h"]
 [ext_resource type="Resource" uid="uid://dphi3ws2617ql" path="res://Resources/items/snack/Anoba.tres" id="24_d7jqg"]
-[ext_resource type="Resource" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
+[ext_resource type="Resource" uid="uid://bi83omfmoown" path="res://Resources/items/snack/Patos.tres" id="25_yh2yp"]
 [ext_resource type="Texture2D" uid="uid://mox63gbxnb4w" path="res://Assets/items/icons/21_candycontainer_mix.png" id="26_yy0n7"]
 [ext_resource type="Texture2D" uid="uid://cve6tmu4xcna1" path="res://Assets/items/icons/20_candycontainer_chubs.png" id="27_0wdc3"]
 [ext_resource type="Texture2D" uid="uid://bf27xwxax7q4s" path="res://Assets/items/icons/18_candycontainer_mentor.png" id="28_w42fa"]
@@ -43,6 +43,7 @@
 [ext_resource type="PackedScene" uid="uid://is4naxr6ch1" path="res://Scenes/notebook.tscn" id="59_m7vhu"]
 [ext_resource type="Texture2D" uid="uid://bwqts2yr2cm8m" path="res://Assets/ui/trash.png" id="61_32bjv"]
 [ext_resource type="PackedScene" uid="uid://c6xk4y8u7j1k2" path="res://Scenes/UI/HelperPrompt.tscn" id="65_helper_ui"]
+[ext_resource type="PackedScene" uid="uid://vxg5jhle4otv" path="res://Scenes/Calendar.tscn" id="67_y6hl6"]
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
@@ -132,14 +133,17 @@ size = Vector3(0.45751953, 0.26831055, 0.5484009)
 [sub_resource type="BoxShape3D" id="BoxShape3D_ni4m0"]
 size = Vector3(1.2250977, 1.4875488, 0.5532837)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_ptfdn"]
+size = Vector3(1.6877441, 2.1987305, 0.6505127)
+
 [node name="MainGame" type="Node3D" unique_id=572606432]
 script = ExtResource("1_script")
 
 [node name="Player" type="CharacterBody3D" parent="." unique_id=-1541147005 groups=["player"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.596, 2.9326215, -0.05)
 script = ExtResource("fps_scr")
-debug_customer_scale = 0.35
-debug_customer_volume = -6.0
+debug_customer_scale = 0.43
+debug_customer_volume = -5.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player" unique_id=1498308492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.64331055, 0)
@@ -304,10 +308,10 @@ layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = -50.0
-offset_right = 400.0
-offset_bottom = -20.0
+offset_left = 30.0
+offset_top = -60.0
+offset_right = 1030.0
+offset_bottom = -30.0
 grow_vertical = 0
 script = ExtResource("nowplaying_scr")
 
@@ -330,12 +334,14 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.6
 [node name="FlickeringLight" type="OmniLight3D" parent="." unique_id=132296177]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.19843912, 5.0687175, 0.016890496)
 light_color = Color(1, 0.85, 0.55, 1)
+light_energy = 1.25
 light_indirect_energy = 1.63
 light_volumetric_fog_energy = 1.471
 light_specular = 0.978
 shadow_enabled = true
-omni_range = 7.607585
+omni_range = 8.326
 script = ExtResource("17_r5sjn")
+base_energy = 1.25
 flicker_amount = 0.065
 flicker_rate = 0.03
 glitch_chance = 0.015
@@ -346,38 +352,6 @@ light_color = Color(1, 0.8509804, 0.54901963, 1)
 shadow_enabled = true
 spot_range = 16.923424
 spot_angle = 30.256962
-
-[node name="SpotLight3D2" type="SpotLight3D" parent="FlickeringLight" unique_id=1679869229]
-transform = Transform3D(2.0324111e-09, -0.9989185, -0.04649624, -4.366411e-08, -0.04649624, 0.9989185, -1, 3.7747583e-15, -4.3711385e-08, -11.579468, 4.0317264, -6.892048)
-visible = false
-light_color = Color(1, 0.8509804, 0.54901963, 1)
-light_energy = 1.225
-light_indirect_energy = 1.321
-light_volumetric_fog_energy = 1.393
-shadow_enabled = true
-spot_range = 16.923424
-spot_angle = 30.256962
-
-[node name="OmniLight3D" type="OmniLight3D" parent="FlickeringLight" unique_id=852467461]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.300093, 2.5651379, 0)
-visible = false
-light_color = Color(0.99999994, 0.93764275, 0.81532156, 1)
-light_energy = 1.679
-omni_range = 16.923
-
-[node name="OmniLight3D2" type="OmniLight3D" parent="FlickeringLight" unique_id=381758584]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.35557, 2.5651379, 32.093006)
-visible = false
-light_color = Color(0.99999994, 0.93764275, 0.81532156, 1)
-light_energy = 1.679
-omni_range = 16.923
-
-[node name="OmniLight3D3" type="OmniLight3D" parent="FlickeringLight" unique_id=968970129]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52.089745, 2.9180808, -16.03161)
-visible = false
-light_color = Color(0.99999994, 0.93764275, 0.81532156, 1)
-light_energy = 1.679
-omni_range = 16.923
 
 [node name="GameManager" type="Node" parent="." unique_id=1750367744]
 script = ExtResource("gm_scr")
@@ -399,7 +373,7 @@ chubs_container = NodePath("../CandyContainer_Chubs")
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
-current_time = 19.55
+current_time = 20.2
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
@@ -411,7 +385,7 @@ transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 
 [node name="ShelfSurface" type="Node3D" parent="." unique_id=685570783]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 4.0375986, 4.019844)
 script = ExtResource("11_ktwve")
-items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), ExtResource("25_yh2yp"), ExtResource("24_d7jqg"), ExtResource("25_yh2yp"), ExtResource("25_yh2yp")])
+items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), null, ExtResource("25_yh2yp"), ExtResource("24_d7jqg"), ExtResource("24_d7jqg"), ExtResource("25_yh2yp")])
 shelf_width = 2.535
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
@@ -449,33 +423,33 @@ layout_strategy = SubResource("Resource_r5sjn")
 save_id = "shelf_MainGame_ShelfSurface4"
 
 [node name="FridgeSurface1" type="Node3D" parent="." unique_id=1039361648]
-transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.55696297, 0.7388933, -4.0581837)
+transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.48561525, 0.7388933, -4.0581837)
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("beverages", "frozen goods")
+allowed_categories = PackedStringArray("bottle", "frozen")
 rejected_categories = PackedStringArray()
 surface_type = 1
 layout_strategy = SubResource("Resource_7p2u3")
 save_id = "shelf_MainGame_FridgeSurface1"
 
 [node name="FridgeSurface2" type="Node3D" parent="." unique_id=1610165251]
-transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.55696297, 1.9580834, -4.0581837)
+transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.48561525, 1.9580834, -4.0581837)
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("beverages", "frozen goods")
+allowed_categories = PackedStringArray("frozen", "bottle")
 rejected_categories = PackedStringArray()
 surface_type = 1
 layout_strategy = SubResource("Resource_him8o")
 save_id = "shelf_MainGame_FridgeSurface2"
 
-[node name="Node3D" type="Node3D" parent="FridgeSurface2" unique_id=1480081814]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0597875, 0)
+[node name="FridgeSurface3" type="Node3D" parent="." unique_id=1480081814]
+transform = Transform3D(1, 0, 1.7484555e-07, 0, 1, 0, -1.7484555e-07, 0, 1, -0.48561525, 3.017871, -4.0581837)
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([null, null, null, null])
 shelf_width = 1.645
-allowed_categories = PackedStringArray("beverages", "frozen goods")
+allowed_categories = PackedStringArray("bottle", "frozen")
 rejected_categories = PackedStringArray()
 surface_type = 1
 layout_strategy = SubResource("Resource_fgk2h")
@@ -494,6 +468,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03137207, -0.064819336, 0)
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mix" unique_id=290924169]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.1296196)
 cast_shadow = 0
 billboard = 1
 shaded = true
@@ -501,7 +476,7 @@ alpha_cut = 1
 texture = ExtResource("26_yy0n7")
 
 [node name="CandyContainer_Chubs" type="Area3D" parent="." unique_id=1977615064]
-transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.224358, 3.4277682, 2.3739066)
+transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, -4.224358, 3.4277682, 1.9787197)
 visible = false
 script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_chubs")])
@@ -511,6 +486,7 @@ min_unlock_tier = 7
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Chubs" unique_id=1977615066]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5334625)
 cast_shadow = 0
 billboard = 1
 shaded = true
@@ -528,6 +504,7 @@ min_unlock_tier = 10
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mentor" unique_id=394685187]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.6620235)
 cast_shadow = 0
 billboard = 1
 shaded = true
@@ -545,6 +522,7 @@ min_unlock_tier = 10
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Pocha" unique_id=82948428]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.6620235)
 cast_shadow = 0
 billboard = 1
 shaded = true
@@ -643,11 +621,10 @@ size = Vector3(19.682861, 23.465332, 17.533234)
 data = ExtResource("46_uvjf7")
 
 [node name="SachetContainerItem" type="Area3D" parent="." unique_id=1273543074]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1811247, 4.4734435, -1.9526131)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1811247, 4.4237165, -1.8683959)
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("47_50m7d")
-min_unlock_tier = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem" unique_id=746439960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
@@ -660,11 +637,10 @@ shaded = true
 texture = ExtResource("46_hfiw1")
 
 [node name="SachetContainerItem2" type="Area3D" parent="." unique_id=512007667]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.2335424, 4.4853764, 2.3366644)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1645947, 4.518205, 2.447767)
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("49_1u2qj")
-min_unlock_tier = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem2" unique_id=1366571915]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
@@ -677,14 +653,13 @@ shaded = true
 texture = ExtResource("47_hfiw1")
 
 [node name="SachetContainerItem3" type="Area3D" parent="." unique_id=1536702727]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0922375, 4.5312266, -2.462047)
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("51_hnhmk")
-min_unlock_tier = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem3" unique_id=1432288744]
 transform = Transform3D(0.20468557, 0.011357678, -1.4201085e-11, -0.011357678, 0.20468557, -4.9913773e-10, -1.3541168e-11, 4.991555e-10, 0.205, -0.11953378, 0.08510351, 0.02798462)
-visible = false
 shape = SubResource("BoxShape3D_dhbwi")
 
 [node name="Sprite3D" type="Sprite3D" parent="SachetContainerItem3" unique_id=1613783674]
@@ -696,7 +671,7 @@ texture = ExtResource("48_d7jqg")
 [node name="TierAdvanceOverlay" parent="." unique_id=510000000 instance=ExtResource("51_tier_overlay")]
 
 [node name="PlasticMarker" type="Marker3D" parent="." unique_id=2123381481]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.97715116, 0.9105438, 4.409237)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9908627, 0.9105438, 2.585338)
 
 [node name="notebook" parent="." unique_id=961263518 instance=ExtResource("59_m7vhu")]
 transform = Transform3D(-0.017711766, 0, -0.009289424, 0, 0.02, 0, 0.009289424, 0, -0.017711766, 2.4487228, 2.193247, -1.08845)
@@ -722,3 +697,47 @@ texture = ExtResource("61_32bjv")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="TrashInteractable" unique_id=1652016983]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11254883, 0.20617676, -0.053863525)
 shape = SubResource("BoxShape3D_ni4m0")
+
+[node name="OutsideSpotLight3D" type="SpotLight3D" parent="." unique_id=1679869229]
+transform = Transform3D(2.0324111e-09, -0.9989185, -0.04649624, -4.366411e-08, -0.04649624, 0.9989185, -1, 3.7747583e-15, -4.3711385e-08, -11.777906, 9.100444, -6.8751574)
+visible = false
+light_color = Color(1, 0.8509804, 0.54901963, 1)
+light_energy = 1.225
+light_indirect_energy = 1.321
+light_volumetric_fog_energy = 1.393
+shadow_enabled = true
+spot_range = 16.923424
+spot_angle = 30.256962
+
+[node name="OutsideOmniLight3D" type="OmniLight3D" parent="." unique_id=852467461]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.498531, 7.6338553, 0.016890496)
+visible = false
+light_color = Color(0.99999994, 0.93764275, 0.81532156, 1)
+light_energy = 0.6
+shadow_enabled = true
+omni_range = 16.923
+
+[node name="OutsideOmniLight3D2" type="OmniLight3D" parent="." unique_id=381758584]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.554008, 7.6338553, 32.109898)
+visible = false
+light_color = Color(0.99999994, 0.93764275, 0.81532156, 1)
+light_energy = 0.6
+shadow_enabled = true
+omni_range = 16.923
+
+[node name="OutsideOmniLight3D3" type="OmniLight3D" parent="." unique_id=968970129]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52.288185, 7.9867983, -16.01472)
+visible = false
+light_color = Color(0.99999994, 0.93764275, 0.81532156, 1)
+light_energy = 0.6
+shadow_enabled = true
+omni_range = 16.923
+
+[node name="Calendar" parent="." unique_id=418982499 instance=ExtResource("67_y6hl6")]
+transform = Transform3D(0.033346135, -3.3714652e-08, 0.77449477, -1.0132097, -3.76951e-09, 0.02548969, 3.4778733e-09, -0.7749143, -3.382039e-08, -1.886975, 3.6841087, -4.6021547)
+
+[node name="CalendarInteractable" type="Area3D" parent="." unique_id=598540840]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CalendarInteractable" unique_id=173636890]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9007449, 3.6493435, -4.8787627)
+shape = SubResource("BoxShape3D_ptfdn")

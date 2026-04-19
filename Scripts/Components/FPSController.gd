@@ -3,16 +3,9 @@ extends CharacterBody3D
 @export var use_free_camera: bool = true
 @export var walk_speed: float = 5.0
 @export var sprint_speed: float = 8.0
-@export var crouch_speed: float = 2.5
 @export var movement_acceleration: float = 40.0
 @export var movement_friction: float = 30.0
 @export var mouse_sensitivity: float = 0.002
-
-@export_group("Crouch")
-@export var stand_head_y: float = 0.7       ## Head Y position when standing (matches scene default)
-@export var crouch_head_y: float = 0.2      ## Head Y position when crouching (0.5 drop from stand)
-@export var crouch_transition_speed: float = 10.0  ## Lerp speed for the crouch motion
-@export var crouch_capsule_height: float = 1.6   ## CapsuleShape3D height while crouching (standing height is read from the shape at startup)
 
 @export_group("Head Bobbing")
 @export var bob_frequency: float = 2.0
@@ -67,8 +60,8 @@ extends CharacterBody3D
 				if not _is_syncing_debug:
 					ResourceSaver.save(customer.customer_data, customer.customer_data.resource_path)
 					print("[DEBUG-VOLUME] Character: ", customer.customer_data.get_clean_id(), " | Saved Dialogue Blip Volume: ", val)
-				if AudioManager:
-					AudioManager.play_dialogue_blip(customer.customer_data)
+#				if AudioManager:
+#					AudioManager.play_dialogue_blip(customer.customer_data)
 
 ## Adjust this value in the Remote Inspector to change and save the active customer's speech marker position.
 @export var debug_customer_marker_ratio: float = 0.75:
@@ -92,6 +85,9 @@ extends CharacterBody3D
 					var full_height_y = body.texture.get_height() * body.pixel_size
 					marker.position.y = (full_height_y * val) * customer.customer_data.sprite_scale
 
+## The number of customers that must be served before Mario can be called again. Set to 0 to disable.
+@export var debug_delivery_cooldown: int = 2
+
 var _t_bob: float = 0.0
 var _pitch: float = 0.0
 var _yaw: float = 0.0
@@ -100,14 +96,16 @@ var _shake_intensity: float = 0.0
 var _shake_duration: float = 0.0
 var _shake_timer: float = 0.0
 
-var _is_crouching: bool = false
-var _stand_capsule_height: float = 0.0
-
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
 var _is_syncing_debug: bool = false
+var _default_head_y: float
+var _default_col_height: float = 0.0
+var _default_col_y: float
+var _is_crouching: bool = false
+var _crouch_tween: Tween
 
 func _ready() -> void:
 	if use_free_camera:
@@ -115,11 +113,14 @@ func _ready() -> void:
 		_pitch = camera.rotation.x
 		_yaw = head.rotation.y
 		camera.fov = base_fov
-	# Cache the standing capsule height from the scene so we can lerp back to it
-	if collision_shape and collision_shape.shape is CapsuleShape3D:
-		_stand_capsule_height = collision_shape.shape.height
 	EventBus.request_camera_shake.connect(_on_camera_shake)
 	EventBus.customer_spawned.connect(_on_customer_spawned_for_debug)
+	
+	_default_head_y = head.position.y
+	if collision_shape and collision_shape.shape and "height" in collision_shape.shape:
+		collision_shape.shape = collision_shape.shape.duplicate()
+		_default_col_height = collision_shape.shape.height
+		_default_col_y = collision_shape.position.y
 
 func _on_customer_spawned_for_debug(customer: Customer) -> void:
 	if customer and customer.customer_data:
@@ -166,20 +167,27 @@ func _physics_process(delta: float) -> void:
 		right = right.normalized()
 		
 		var direction = (right * input_dir.x + forward * (-input_dir.y)).normalized()
-		# --- Crouch ---
-		var was_crouching = _is_crouching
-		_is_crouching = Input.is_key_pressed(KEY_CTRL)
+		var current_speed = sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed
 		
-		# Snap the capsule size immediately on state change — physics doesn't need to animate.
-		# Only the head/camera lerps for smooth visual feel. This keeps both directions symmetric.
-		if collision_shape and collision_shape.shape is CapsuleShape3D and _stand_capsule_height > 0.0:
-			if _is_crouching != was_crouching:
-				collision_shape.shape.height = crouch_capsule_height if _is_crouching else _stand_capsule_height
+		# Crouch Tween Logic
+		var wants_to_crouch = Input.is_key_pressed(KEY_CTRL)
+		if wants_to_crouch != _is_crouching:
+			_is_crouching = wants_to_crouch
+			if _crouch_tween:
+				_crouch_tween.kill()
+			_crouch_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			
+			var target_head_y = _default_head_y - 0.6 if _is_crouching else _default_head_y
+			_crouch_tween.tween_property(head, "position:y", target_head_y, 0.2)
+			
+			if _default_col_height > 0.0:
+				var target_col_h = _default_col_height - 0.6 if _is_crouching else _default_col_height
+				var target_col_y = _default_col_y - 0.3 if _is_crouching else _default_col_y
+				_crouch_tween.tween_property(collision_shape.shape, "height", target_col_h, 0.2)
+				_crouch_tween.tween_property(collision_shape, "position:y", target_col_y, 0.2)
 		
-		var target_head_y = crouch_head_y if _is_crouching else stand_head_y
-		head.position.y = lerp(head.position.y, target_head_y, crouch_transition_speed * delta)
-		
-		var current_speed = crouch_speed if _is_crouching else (sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed)
+		if _is_crouching:
+			current_speed = walk_speed * 0.5
 		
 		if direction:
 			velocity.x = move_toward(velocity.x, direction.x * current_speed, movement_acceleration * delta)

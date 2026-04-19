@@ -11,10 +11,10 @@ var _debug_show_collisions: bool = false
 @onready var tray: TransactionTray
 
 @onready var street_lights: Array[Light3D] = [
-	$FlickeringLight/SpotLight3D2,
-	$FlickeringLight/OmniLight3D,
-	$FlickeringLight/OmniLight3D2,
-	$FlickeringLight/OmniLight3D3
+	$OutsideSpotLight3D,
+	$OutsideOmniLight3D,
+	$OutsideOmniLight3D2,
+	$OutsideOmniLight3D3
 ]
 @onready var pause_menu_scene: PackedScene = preload("res://Scenes/UI/PauseMenu.tscn")
 var pause_menu: Control
@@ -95,7 +95,7 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				EventBus.transaction_completed.emit(item.item_data, true, context.wants_debt, c_path)
 				InventoryManager.take_item(item.item_data)
 				item.notify_placed()
-				item.queue_free()
+				item.play_give_animation()
 				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
 				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
 				# Only trigger Satisfy if the whole order is done.
@@ -109,23 +109,27 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 			else:
 				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
 				
-				# Special Tutorial Suppression: If Uncle Mario is blocking items, don't play "Wrong Item" reaction.
+				# Special Tutorial Handling: If Uncle Mario is blocking items, or hasn't started yet.
 				var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
 				var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
 				var is_tut_block = gm and gm.is_tutorial_task_active and gm.current_tutorial_task_id != "wait_for_sale"
 				
-				if is_mario and is_tut_block:
-					# Just skip feedback, item will return to shelf automatically at end of function
-					print("[MainGame] Suppressing WrongItem feedback for Mario during tutorial.")
+				if is_mario:
+					if is_tut_block:
+						# Just skip feedback, item will return to shelf automatically at end of function
+						print("[MainGame] Suppressing WrongItem feedback for Mario during tutorial.")
+					elif not gm or not gm.is_tutorial_task_active:
+						# If they haven't even greeted him yet (no task active), treat this as a "Greeting" trigger
+						print("[MainGame] Early Mario interaction detected. Triggering tutorial greeting.")
+						spawner._on_customer_clicked(customer)
 				else:
 					EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
 					# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
 					if context and context.timeline and spawner:
 						spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
 				
-				# Keep item in hand
+				# Keep item in hand so it doesn't just vanish or jump
 				if DragManager and item.sprite and item.sprite.texture:
-					# Ensure it doesn't try to animate returning or anything
 					DragManager.call_deferred("start_drag", item, item.sprite.texture)
 				
 				item = null # Preempt return_to_start
@@ -140,9 +144,9 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 
 func _input(event: InputEvent) -> void:
 	# F1 toggles collision shape debug visualization
-	if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.is_echo():
-		_debug_show_collisions = !_debug_show_collisions
-		DebugDraw2D.set_text("Collision Debug", "ON" if _debug_show_collisions else "OFF")
+	# if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.is_echo():
+	# 	_debug_show_collisions = !_debug_show_collisions
+	# 	DebugDraw2D.set_text("Collision Debug", "ON" if _debug_show_collisions else "OFF")
 	
 	# Escape toggles pause menu
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
@@ -151,8 +155,8 @@ func _input(event: InputEvent) -> void:
 			pause_menu.pause()
 			
 	# H key to test notifications (debug only)
-	if OS.is_debug_build() and event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.is_echo():
-		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
+	# if event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.is_echo():
+	# 	EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
 
 func _process(_delta: float) -> void:
 	if not _debug_show_collisions:

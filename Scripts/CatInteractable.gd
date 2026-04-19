@@ -20,6 +20,7 @@ func on_interact() -> void:
 	temp_player.bus = &"SFX"
 	temp_player.stream = random_meow
 	temp_player.pitch_scale = randf_range(0.9, 1.1)
+	temp_player.volume_db = -12.0
 	# Copy spatial settings if needed, but defaults are usually fine for Area3D children
 	temp_player.play()
 	

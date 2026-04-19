@@ -30,7 +30,11 @@ func receive_item(item: DraggableItem) -> void:
 	
 	# 4. Cleanup
 	item.notify_placed()
-	item.queue_free()
+	item.play_disappear_animation()
+
+func on_interact() -> void:
+	if EventBus.has_signal("request_sfx"):
+		EventBus.request_sfx.emit("trash")
 
 func _play_trash_animation() -> void:
 	var visuals = get_visual_nodes()

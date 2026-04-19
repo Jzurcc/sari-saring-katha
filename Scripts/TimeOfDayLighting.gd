@@ -6,6 +6,7 @@
 ##
 extends Node
 
+@export var environmental_omni_light: OmniLight3D = null
 @export var keyframes: Array[LightingKeyframe] = []
 
 # Reference to parent Environment for postprocessing updates
@@ -13,7 +14,7 @@ var _environment: Environment = null
 var _sky_material: Material = null
 var _sun_light: DirectionalLight3D = null
 var _moon_light: DirectionalLight3D = null
-var _omni_light: OmniLight3D = null
+var _exterior_lights: Array[Light3D] = []
 var _night_light: DirectionalLight3D = null
 var _time_of_day: Node = null
 
@@ -46,11 +47,19 @@ func _ready() -> void:
 	_moon_light = get_parent().get_node_or_null("MoonLight")
 	_night_light = get_parent().get_node_or_null("NightLight")
 
+	# Target specific outdoor lights as requested
 	var store_node = get_parent().get_parent()
 	if store_node:
-		var lights = store_node.find_children("*", "OmniLight3D")
-		if lights.size() > 0:
-			_omni_light = lights[0]
+		var target_names = ["OutsideSpotLight3D", "OutsideOmniLight3D", "OutsideOmniLight3D2", "OutsideOmniLight3D3"]
+		for light_name in target_names:
+			var light = store_node.get_node_or_null(light_name)
+			if light is Light3D:
+				_exterior_lights.append(light)
+			else:
+				# Also try finding it recursively if it's deeper in the tree
+				var found = store_node.find_child(light_name, true, false)
+				if found is Light3D:
+					_exterior_lights.append(found)
 
 	if keyframes.is_empty():
 		push_error("[TimeOfDayLighting] Keyframes array empty! Lighting system will not function correctly. Ensure keyframes are assigned in the Inspector.")
@@ -170,5 +179,6 @@ func _update_all_systems() -> void:
 
 	if _sun_light: _sun_light.light_energy = lerp(f.light_sun_energy, t.light_sun_energy, factor)
 	if _moon_light: _moon_light.light_energy = lerp(f.light_moon_energy, t.light_moon_energy, factor)
-	if _omni_light: _omni_light.light_energy = lerp(f.light_omni_energy, t.light_omni_energy, factor)
+	for light in _exterior_lights:
+		light.light_energy = lerp(f.light_omni_energy, t.light_omni_energy, factor)
 	if _night_light: _night_light.light_energy = lerp(f.light_night_energy, t.light_night_energy, factor)
