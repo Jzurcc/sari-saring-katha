@@ -55,6 +55,14 @@ func get_chapter_request(chapter: int) -> ChapterItems:
 ## Add or remove entries here to support any number of arcs — no code changes needed.
 @export var character_arcs: Array[ArcData] = []
 
+@export_group("Narrative UI")
+## Names for the narrative arcs (e.g. index 0 = ARC 1).
+@export var arc_names: Array[String] = []
+
+## Names for the individual story chapters (0-indexed).
+@export var chapter_names: Array[String] = []
+
+
 ## Multiplier applied to the 3D sprite scale.
 @export var sprite_scale: float = 1.0
 

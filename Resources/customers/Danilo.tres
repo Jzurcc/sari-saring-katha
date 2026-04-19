@@ -27,4 +27,3 @@ max_story_chapters = 9
 character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_data")])
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_wav")
-metadata/_custom_type_script = "res://Scripts/CustomerData.gd"

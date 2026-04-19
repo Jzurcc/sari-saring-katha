@@ -1,10 +1,22 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://dbg_debt_customer"]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://by7pyjh232wt2"]
 
+[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="1_8pid7"]
 [ext_resource type="AudioStream" uid="uid://cuyl4xi7b1i1v" path="res://Audio/DialogueBlips/ReynaMayari.wav" id="1_blip"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="2_sbqgq"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_script"]
-[ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/Customer.dch" id="3_dch"]
-[ext_resource type="Resource" uid="uid://debug_debt_timeline" path="res://Dialogue/Timelines/Generic/debug_debt_system.dtl" id="4_timeline"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_aryar"]
+[ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/ReynaMayari.dch" id="3_dch"]
+[ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="4_nkqv3"]
+[ext_resource type="Resource" uid="uid://b38x4h78s2xbu" path="res://Dialogue/Timelines/Generic/debug_debt_system.dtl" id="4_timeline"]
+[ext_resource type="Resource" uid="uid://c5ftr0ohic643" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="5_bunqy"]
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_img"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="10_54nu8"]
+
+[sub_resource type="Resource" id="Resource_jm54j"]
+script = ExtResource("1_8pid7")
+purchase_timelines = Array[ExtResource("3_aryar")]([ExtResource("4_nkqv3")])
+visit_timelines = Array[ExtResource("3_aryar")]([ExtResource("5_bunqy")])
+metadata/_custom_type_script = "uid://7ydt3eudwtio"
 
 [resource]
 script = ExtResource("2_script")
@@ -13,5 +25,6 @@ sprite_texture = ExtResource("5_img")
 dialogic_character = ExtResource("3_dch")
 story_timeline = ExtResource("4_timeline")
 max_story_chapters = 1
+character_arcs = Array[ExtResource("1_8pid7")]([SubResource("Resource_jm54j")])
 sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("1_blip")

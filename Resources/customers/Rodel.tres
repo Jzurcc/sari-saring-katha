@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://bqhf8bb28mylt" path="res://Assets/characters/sprites/Rodel.png" id="5_xkoom"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_t70ho"]
+[ext_resource type="Resource" uid="uid://dwi4bgdufy8s8" path="res://Dialogue/Timelines/Rodel/Story.dtl" id="11_hxk1p"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://dp41iwukbcg12" path="res://Dialogue/Timelines/Rodel/Purchase.dtl" id="rodel_purchase"]
 [ext_resource type="Resource" uid="uid://b5rduauht166t" path="res://Dialogue/Timelines/Rodel/Visit.dtl" id="rodel_visit"]
@@ -23,6 +24,7 @@ sprite_texture = ExtResource("5_xkoom")
 dialogic_character = ExtResource("1_eplk6")
 unlock_tier = 2
 dialogue_blip_volume = -4.0
+story_timeline = ExtResource("11_hxk1p")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 sprite_scale = 0.4
