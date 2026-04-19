@@ -146,6 +146,6 @@ func _load_settings() -> void:
 	_on_sfx_changed(sfx_val)
 	_on_voices_changed(voices_val)
 	mute_toggle.button_pressed = cfg.get_value("accessibility", "mute_in_background", false)
-	var want_fs : bool = cfg.get_value("display", "fullscreen", false)
+	var want_fs : bool = cfg.get_value("display", "fullscreen", true)
 	_is_fullscreen = want_fs
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if want_fs else DisplayServer.WINDOW_MODE_WINDOWED)
