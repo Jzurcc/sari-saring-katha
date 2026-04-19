@@ -14,6 +14,8 @@ const MUFFLE_CUTOFF: float = 1500.0 # Muffled frequency
 const NORMAL_CUTOFF: float = 20500.0 # Full range frequency
 const FADE_DURATION: float = 0.4
 
+var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
+
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
 	
@@ -33,6 +35,7 @@ func _ready() -> void:
 func pause() -> void:
 	show()
 	get_tree().paused = true
+	_previous_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
 	if has_node("/root/StoryManager"):
@@ -50,7 +53,7 @@ func pause() -> void:
 func resume() -> void:
 	hide()
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = _previous_mouse_mode
 	
 	if has_node("/root/StoryManager"):
 		StoryManager.is_clock_running = true
@@ -85,6 +88,17 @@ func _on_collection_closed() -> void:
 func _on_main_menu_pressed() -> void:
 	_play_confirm()
 	get_tree().paused = false
+	
+	_duck_audio(false)
+	
+	if has_node("/root/StoryManager"):
+		StoryManager.is_clock_running = true
+		
+	if has_node("/root/Dialogic"):
+		Dialogic.paused = false
+		if Dialogic.current_timeline != null:
+			Dialogic.end_timeline()
+			
 	if has_node("/root/SceneTransition"):
 		SceneTransition.change_scene("res://Scenes/MainMenu.tscn")
 	else:
@@ -93,7 +107,6 @@ func _on_main_menu_pressed() -> void:
 func _on_save_game_pressed() -> void:
 	_play_confirm()
 	SaveManager.force_save()
-	EventBus.show_notification.emit("Game Saved", "Your progress has been saved.", "ui_sfx_9")
 
 func _on_exit_pressed() -> void:
 	_play_confirm()

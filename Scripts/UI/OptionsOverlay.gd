@@ -6,6 +6,7 @@ signal closed
 @onready var slider_master  : HSlider       = $OptionsPanel/Margin/VBox/AudioVBox/Master/Slider
 @onready var slider_bgm     : HSlider       = $OptionsPanel/Margin/VBox/AudioVBox/BGM/Slider
 @onready var slider_sfx     : HSlider       = $OptionsPanel/Margin/VBox/AudioVBox/SFX/Slider
+@onready var slider_voices  : HSlider       = $OptionsPanel/Margin/VBox/AudioVBox/Voices/Slider
 @onready var mute_toggle    : TextureButton = $OptionsPanel/Margin/VBox/MuteBackground/Toggle
 @onready var display_label  : Label         = $OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/Label
 @onready var left_arrow     : TextureRect   = $OptionsPanel/Margin/VBox/DisplayOptions/WindowModePanel/HBox/LeftArrow
@@ -14,6 +15,7 @@ signal closed
 @export var default_master_volume : float = 0.8
 @export var default_bgm_volume    : float = 0.6
 @export var default_sfx_volume    : float = 0.9
+@export var default_voices_volume : float = 0.9
 
 var _is_fullscreen: bool = false
 const SETTINGS_PATH = "user://settings.cfg"
@@ -33,14 +35,17 @@ func _ready() -> void:
 	slider_master.set_value_no_signal(default_master_volume)
 	slider_bgm.set_value_no_signal(default_bgm_volume)
 	slider_sfx.set_value_no_signal(default_sfx_volume)
+	slider_voices.set_value_no_signal(default_voices_volume)
 
 	# Connect slider signals
 	slider_master.value_changed.connect(_on_master_changed)
 	slider_bgm.value_changed.connect(_on_bgm_changed)
 	slider_sfx.value_changed.connect(_on_sfx_changed)
+	slider_voices.value_changed.connect(_on_voices_changed)
 	slider_master.drag_ended.connect(func(_vc: bool): _play_confirm())
 	slider_bgm.drag_ended.connect(func(_vc: bool): _play_confirm())
 	slider_sfx.drag_ended.connect(func(_vc: bool): _play_confirm())
+	slider_voices.drag_ended.connect(func(_vc: bool): _play_confirm())
 
 	mute_toggle.toggled.connect(func(pressed: bool):
 		_play_click()
@@ -88,6 +93,12 @@ func _on_sfx_changed(value: float) -> void:
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
 	AudioServer.set_bus_mute(idx, value <= 0.0)
 
+func _on_voices_changed(value: float) -> void:
+	var idx: int = AudioServer.get_bus_index("Voices")
+	if idx < 0: return
+	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
+	AudioServer.set_bus_mute(idx, value <= 0.0)
+
 func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed):
 		return
@@ -109,6 +120,7 @@ func _save_settings() -> void:
 	cfg.set_value("audio", "master", slider_master.value)
 	cfg.set_value("audio", "bgm",    slider_bgm.value)
 	cfg.set_value("audio", "sfx",    slider_sfx.value)
+	cfg.set_value("audio", "voices", slider_voices.value)
 	cfg.set_value("accessibility", "mute_in_background", mute_toggle.button_pressed)
 	cfg.set_value("display", "fullscreen", _is_fullscreen)
 	cfg.save(SETTINGS_PATH)
@@ -119,16 +131,20 @@ func _load_settings() -> void:
 		_on_master_changed(slider_master.value)
 		_on_bgm_changed(slider_bgm.value)
 		_on_sfx_changed(slider_sfx.value)
+		_on_voices_changed(slider_voices.value)
 		return
 	var master_val : float = cfg.get_value("audio", "master", default_master_volume)
 	var bgm_val    : float = cfg.get_value("audio", "bgm",    default_bgm_volume)
 	var sfx_val    : float = cfg.get_value("audio", "sfx",    default_sfx_volume)
+	var voices_val : float = cfg.get_value("audio", "voices", default_voices_volume)
 	slider_master.set_value_no_signal(master_val)
 	slider_bgm.set_value_no_signal(bgm_val)
 	slider_sfx.set_value_no_signal(sfx_val)
+	slider_voices.set_value_no_signal(voices_val)
 	_on_master_changed(master_val)
 	_on_bgm_changed(bgm_val)
 	_on_sfx_changed(sfx_val)
+	_on_voices_changed(voices_val)
 	mute_toggle.button_pressed = cfg.get_value("accessibility", "mute_in_background", false)
 	var want_fs : bool = cfg.get_value("display", "fullscreen", false)
 	_is_fullscreen = want_fs

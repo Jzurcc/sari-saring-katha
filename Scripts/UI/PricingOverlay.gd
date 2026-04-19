@@ -90,9 +90,12 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	var final_price = item_data.get_final_price()
 	var base_price = item_data.price
 
+	var added_price = final_price - base_price
+	var margin_pct = (added_price / base_price) * 100.0 if base_price > 0 else 0.0
+
 	name_label.text = custom_name if custom_name != "" else item_data.item_name
 	price_label.text = "₱%.2f" % [final_price]
-	comparison_label.text = "₱%.2f → ₱%.2f" % [base_price, final_price]
+	comparison_label.text = "+₱%.2f (%.0f%%)" % [added_price, margin_pct]
 	
 	if stock_text != "":
 		stock_label.text = stock_text

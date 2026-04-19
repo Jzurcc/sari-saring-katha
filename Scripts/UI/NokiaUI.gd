@@ -11,7 +11,7 @@ var target_number: String = "62777444666"
 ## DEV: Tick this in the Inspector to skip Uncle Mario's cooldown for testing.
 @export var bypass_cooldown: bool = false
 
-@export_range(-80.0, 24.0) var button_volume_db: float = 0.0
+@export_range(-80.0, 24.0) var button_volume_db: float = -9.0
 
 ## 3D marker in MainGame where Uncle Mario's speech bubble anchors.
 @export var phone_anchor: Node3D

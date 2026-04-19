@@ -19,14 +19,15 @@ func _ready() -> void:
 	# The Panel's background color is now controlled purely via the Godot Editor Theme Overrides.
 
 func _input(event: InputEvent) -> void:
-	if OS.is_debug_build() and event is InputEventKey and event.pressed and event.keycode == KEY_J and not event.echo:
-		print("[TierAdvanceOverlay] DEBUG: Triggering test notification...")
-		var test_items: Array[ItemData] = [
-			preload("res://Resources/items/bottle/Water.tres"),
-			preload("res://Resources/items/frozen/Nagets.tres"),
-			preload("res://Resources/items/frozen/Tocino.tres")
-		]
-		_on_upgrade_available(2, 250.0, test_items)
+	# if event is InputEventKey and event.pressed and event.keycode == KEY_J and not event.echo:
+	# 	print("[TierAdvanceOverlay] DEBUG: Triggering test notification...")
+	# 	var test_items: Array[ItemData] = [
+	# 		preload("res://Resources/items/bottle/Water.tres"),
+	# 		preload("res://Resources/items/frozen/Nagets.tres"),
+	# 		preload("res://Resources/items/frozen/Tocino.tres")
+	# 	]
+	# 	_on_upgrade_available(2, 250.0, test_items)
+	pass
 
 func _on_upgrade_available(_new_tier: int, cost: float, items: Array[ItemData]) -> void:
 	tier_label.text = "UPGRADE AVAILABLE (₱%.2f)" % cost

@@ -63,18 +63,18 @@ var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
 # NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
 var category_tabs: Array[String] = [
 	"upgrades", "snack", "sachet", "can", "cigarette", "candy",
-	"beverages", "pack", "frozen goods"
+	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
 	"upgrades": "Upgrades",
 	"snack": "Snack",
-	"sachet": "Sachets",
+	"sachet": "Sachet",
 	"can": "Can",
 	"candy": "Candy",
 	"cigarette": "Cigarette",
 	"pack": "Noodles",
-	"frozen goods": "Frozen",
-	"beverages": "Beverages"
+	"frozen": "Frozen",
+	"bottle": "Beverage"
 }
 
 
@@ -93,6 +93,7 @@ var COLOR_CANCEL := Color("C0544E")          # Red cancel button
 var COLOR_CONFIRM := Color("7EC292")         # Nokia green confirm button
 var COLOR_LIST_BG := Color("BFC0BA")         # Light gray list panel
 var COLOR_BEIGE := Color("F5F5DC")           # Light beige for upgrade
+var COLOR_DARK_BG := Color("151412")         # Dark background black
 
 func _ready() -> void:
 	
@@ -114,15 +115,25 @@ func _ready() -> void:
 		_style_button(confirm_btn, COLOR_CONFIRM, Color.WHITE)
 	if add_btn:
 		add_btn.pressed.connect(_on_add_pressed)
-		_style_button(add_btn, COLOR_TAB_ACTIVE, Color.WHITE)
+		_style_button(add_btn, COLOR_DARK_BG, Color.WHITE)
 	if tab_scroll:
 		tab_scroll.gui_input.connect(_on_tab_scroll_input)
+	
+	EventBus.restock_catalog_refresh.connect(_on_catalog_refresh_requested)
 	
 	var close_btn_node = get_node_or_null("%CloseBtn")
 	if close_btn_node:
 		close_btn_node.pressed.connect(_on_cancel_pressed)
 	
 	hide()
+
+func _on_catalog_refresh_requested() -> void:
+	# If the menu is open, we need to rebuild the grid to show new unlocks
+	if is_visible_in_tree():
+		print("[RestockMenu] Refreshing catalog UI...")
+		_build_category_cache()
+		_build_tabs()
+		_select_category(current_category)
 
 # Drag-to-scroll handler for the tab bar
 func _on_tab_scroll_input(event: InputEvent) -> void:
@@ -186,18 +197,6 @@ func _build_tabs() -> void:
 	for child in tab_container.get_children():
 		child.queue_free()
 	
-	# Priority Tab: Upgrade Banner if available
-	if StoryManager.pending_upgrade_tier > 0:
-		var up_btn = Button.new()
-		up_btn.text = "⭐ UPGRADE STORE (₱%.2f)" % StoryManager.pending_upgrade_cost
-		up_btn.custom_minimum_size = Vector2(250, 40)
-		up_btn.name = "Tab_UpgradeStore"
-		# Use beige background and dark green text for the upgrade button
-		_style_button(up_btn, COLOR_BEIGE, Color("396647"), float(tab_font_size))
-		up_btn.pressed.connect(_on_upgrade_pressed)
-		tab_container.add_child(up_btn)
-
-	
 	# Category tabs — always show ALL categories, dim the locked ones
 	for cat_key in category_tabs:
 		var items = _get_items_for_category(cat_key)
@@ -241,9 +240,6 @@ func _select_category(cat_key: String) -> void:
 			var child_locked = child_items.size() == 0 and child_cat != "upgrades"
 			var is_active = child_cat == cat_key
 			
-			if child.name == "Tab_UpgradeStore":
-				continue # Handled during _build_tabs
-				
 			if child_locked:
 				_style_button(child, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
 			elif is_active:
@@ -252,36 +248,6 @@ func _select_category(cat_key: String) -> void:
 				_style_button(child, COLOR_TAB_NORMAL, Color.WHITE, float(tab_font_size))
 	
 	_populate_grid(cat_key)
-
-# ========== UPGRADE LOGIC ==========
-func _on_upgrade_pressed() -> void:
-	var cost = StoryManager.pending_upgrade_cost
-	var money = _get_money()
-	
-	if cost > money:
-		EventBus.insufficient_funds.emit()
-		return
-		
-	# Deduct money immediately
-	AudioManager.play_sfx("purchase")
-	EventBus.request_sfx.emit("money_decrease")
-	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
-	if gm_nodes.size() > 0:
-		gm_nodes[0].money -= cost
-		EventBus.money_changed.emit(gm_nodes[0].money)
-		
-	# Complete the advance
-	StoryManager.advance_tier("Mario Upgrade")
-	
-	# Clear pending state
-	StoryManager.pending_upgrade_tier = 0
-	StoryManager.pending_upgrade_cost = 0.0
-	StoryManager.purchase_counter = 0 # reset counter just in case
-	
-	# Rebuild Tabs and Grid
-	_build_tabs()
-	if category_tabs.size() > 0:
-		_select_category(category_tabs[0])
 
 # ========== PRODUCT GRID ==========
 func _populate_grid(cat_key: String) -> void:
@@ -298,27 +264,24 @@ func _populate_grid(cat_key: String) -> void:
 func _create_product_card(item: ItemData) -> PanelContainer:
 	var card = PanelContainer.new()
 	card.custom_minimum_size = card_size
-	
-	var is_locked = false
+	var is_locked: bool = false
+	var is_stacked: bool = false
 	var is_upgrade = item.get_meta("is_upgrade", false)
-	var target_tier = item.get_meta("target_tier", 1)
 	
 	if is_upgrade:
-		if target_tier <= StoryManager.current_tier:
-			# Already owned
-			is_locked = false
-		elif target_tier == StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier:
-			# Available for purchase
-			is_locked = false
-		else:
-			# Either stacked (unlocked but not next) or fully locked (silhouette)
-			is_locked = target_tier > StoryManager.max_unlocked_tier
+		var target_tier = item.get_meta("target_tier", 1)
+		is_locked = target_tier > StoryManager.max_unlocked_tier
+		is_stacked = target_tier > StoryManager.pending_upgrade_tier and target_tier <= StoryManager.max_unlocked_tier
 	else:
-		is_locked = !StoryManager.is_item_unlocked(item)
+		is_locked = false # Regular items use stock visibility
+	
+	# Regular item locking based on current tier
+	if not is_upgrade and item.tier > StoryManager.current_tier:
+		is_locked = true
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = COLOR_CARD_BG
-	if is_upgrade and target_tier <= StoryManager.current_tier:
+	if is_upgrade and item.get_meta("target_tier", 1) <= StoryManager.current_tier:
 		style.bg_color = Color(0.2, 0.4, 0.2, 0.6) # Dimmed green for owned upgrades
 	
 	style.border_color = Color(0.15, 0.15, 0.15, 1) # Dark grey
@@ -353,8 +316,6 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	if item.texture:
 		icon.texture = item.texture
 	
-	var is_stacked = is_upgrade and target_tier > StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier
-	
 	if is_locked:
 		icon.modulate = Color(0, 0, 0, 1) # Silhouette
 		card.modulate = Color(0.6, 0.6, 0.6, 0.8) # Dimmed card
@@ -364,19 +325,23 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	
 	# Add Label for Tiers
 	if is_upgrade:
+		var target_tier = item.get_meta("target_tier", 1)
 		var tier_lbl = Label.new()
 		tier_lbl.text = "TIER %d" % target_tier
 		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tier_lbl.add_theme_font_size_override("font_size", 11)
 		tier_lbl.add_theme_color_override("font_color", Color.WHITE)
+		
+		var prereq_met = _is_upgrade_prerequisite_met(target_tier)
+		
+		# User requested change: If prerequisite met (either owned or in basket), show actual name/sprite
 		if target_tier <= StoryManager.current_tier:
 			tier_lbl.text = "OWNED"
-		elif target_tier == StoryManager.current_tier + 1 and target_tier <= StoryManager.max_unlocked_tier:
+		elif prereq_met:
 			tier_lbl.text = "TIER %d" % target_tier
-		elif is_stacked:
-			tier_lbl.text = "UNLOCKED"
 		else:
-			tier_lbl.text = "LOCKED"
+			tier_lbl.text = "UNLOCKED"
+			
 		# Boost label modulate to compensate for the dimmed card parent so text stays white
 		tier_lbl.modulate = Color(1.8, 1.8, 1.8, 1.0)
 		vbox.add_child(tier_lbl)
@@ -384,6 +349,40 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	vbox.add_child(icon)
 	card.add_child(vbox)
 	
+	# Visibility logic based on whether prerequisite is met
+	if is_upgrade:
+		var target_tier = item.get_meta("target_tier", 1)
+		var prereq_met = _is_upgrade_prerequisite_met(target_tier)
+		var owned = target_tier <= StoryManager.current_tier
+		
+		if owned:
+			icon.modulate = Color(1, 1, 1, 0.4) # Faded green for owned
+			card.modulate = Color(0.8, 1, 0.8, 0.6)
+			card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		elif prereq_met:
+			# Fully visible and clickable
+			icon.modulate = Color(1, 1, 1, 1)
+			card.modulate = Color(1, 1, 1, 1)
+			card.gui_input.connect(_on_card_clicked.bind(item, card))
+			card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		else:
+			# Staged but prerequisite not met yet — silhouette
+			icon.modulate = Color(0, 0, 0, 1) # Silhouette
+			card.modulate = Color(0.6, 0.6, 0.6, 0.8) # Dimmed
+			card.mouse_filter = Control.MOUSE_FILTER_PASS 
+			card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+	else:
+		# Regular item logic
+		if is_locked:
+			icon.modulate = Color(0, 0, 0, 1)
+			card.modulate = Color(0.6, 0.6, 0.6, 0.8)
+			card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		else:
+			icon.modulate = Color(1, 1, 1, 1)
+			card.modulate = Color(1, 1, 1, 1)
+			card.gui_input.connect(_on_card_clicked.bind(item, card))
+			card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
 	# IDLE ANIMATION: Subtle Swaying
 	var tw = card.create_tween().set_loops()
 	var duration = randf_range(2.5, 4.5) # Different speeds
@@ -393,19 +392,26 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	tw.tween_property(vbox, "rotation_degrees", sway_angle, duration / 2.0).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(vbox, "rotation_degrees", -sway_angle, duration / 2.0).set_trans(Tween.TRANS_SINE)
 	
-	if is_locked or is_stacked:
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
-	elif is_upgrade and target_tier <= StoryManager.current_tier:
-		# Already owned upgrades are unclickable
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
-	else:
-		# Make the whole card clickable via gui_input
-		card.gui_input.connect(_on_card_clicked.bind(item, card))
-		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	
 	return card
+
+func _is_upgrade_prerequisite_met(target_tier: int) -> bool:
+	if target_tier <= StoryManager.current_tier + 1:
+		# The immediate next tier is always "staged-ready"
+		# Actually, StoryManager.pending_upgrade_tier handles this usually
+		if target_tier == StoryManager.pending_upgrade_tier:
+			return true
+		# Fallback: if pending_upgrade_tier is 0 (not processed yet), but it's current+1
+		if StoryManager.pending_upgrade_tier == 0 and target_tier == StoryManager.current_tier + 1:
+			return true
+	
+	# Check if predecessor is in basket
+	for basket_item in selected_items.keys():
+		if basket_item.get_meta("is_upgrade", false):
+			var upg_tier = basket_item.get_meta("target_tier", 1)
+			if upg_tier == target_tier - 1:
+				return true
+				
+	return false
 
 func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -445,54 +451,108 @@ func _on_add_pressed() -> void:
 	if currently_selected_item == null:
 		return
 	
-	AudioManager.play_sfx("pickup")
 	var item = currently_selected_item
-	var current_count = selected_items.get(item, 0)
 	
-	# Individual item limit
+	# Initial basic checks for upgrades
 	var is_upgrade = item.get_meta("is_upgrade", false)
-	var target_tier = item.get_meta("target_tier", 1)
 	
 	if is_upgrade:
-		if target_tier <= StoryManager.current_tier:
+		var target_tier = item.get_meta("target_tier", 1)
+		
+		# Robust Duplicate Check
+		var already_in_basket = false
+		for basket_item in selected_items.keys():
+			if basket_item.get_meta("is_upgrade", false) and basket_item.get_meta("target_tier", 1) == target_tier:
+				already_in_basket = true
+				break
+				
+		if already_in_basket:
+			EventBus.show_notification.emit("Already in Basket", "You only need one package for Tier %d per order." % target_tier, "error")
 			AudioManager.play_sfx("error")
-			return # Already owned
-		if target_tier != StoryManager.pending_upgrade_tier:
+			return
+		
+		if target_tier > StoryManager.max_unlocked_tier:
+			EventBus.show_notification.emit("Upgrade Locked", "Continue serving customers to unlock this.", "error")
 			AudioManager.play_sfx("error")
-			return # Future upgrade
-		if current_count >= 1:
+			return
+
+		if not _is_upgrade_prerequisite_met(target_tier):
+			EventBus.show_notification.emit("Sequence Error", "You must add Tier %d first!" % (target_tier - 1), "error")
 			AudioManager.play_sfx("error")
-			return # Can only buy one upgrade at a time
-	
-	var item_limit = InventoryManager.get_max_stock(item)
-	if current_count + 1 > item_limit:
-		print("[RestockMenu] BLOCKED: Individual limit for ", item.item_name, " reached (max ", item_limit, ")")
-		AudioManager.play_sfx("error")
+			return
+
+	if selected_items.get(item, 0) >= 99: 
+		EventBus.show_notification.emit("Limit Reached", "Order limit for this item reached.", "error")
 		return
-	
-	# Global shop capacity limit (On-Shelf + Inventory + Basket <= 36 or 12)
-	var available = InventoryManager.get_available_capacity(item.type)
-	if is_upgrade: available = 999 # Upgrades don't take shelf space
-	var in_basket = 0
-	for k in selected_items.keys():
-		if k.type == item.type:
-			in_basket += selected_items[k]
-			
-	if in_basket + 1 > available:
-		print("[RestockMenu] CANNOT ADD: Shelf/Fridge is too full! Available: ", available, " In Basket: ", in_basket)
-		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
-		AudioManager.play_sfx("error")
-		return
-	
+
 	var money = _get_money()
 	if total_price + item.price > money:
 		EventBus.insufficient_funds.emit()
 		return
+
+	# Simulate the basket after addition
+	var proposed_basket = selected_items.duplicate()
+	proposed_basket[item] = proposed_basket.get(item, 0) + 1
 	
+	# Flatten the basket into actual item counts
+	var effective_counts = {}
+	var effective_types = {}
+	
+	for k in proposed_basket.keys():
+		var count = proposed_basket[k]
+		if k.get_meta("is_upgrade", false):
+			var upg_tier = k.get_meta("target_tier", 1)
+			for i in InventoryManager.get_all_items():
+				if i.tier == upg_tier and i.can_be_sold:
+					effective_counts[i] = effective_counts.get(i, 0) + (count * 2)
+					effective_types[i.type] = effective_types.get(i.type, 0) + (count * 2)
+		else:
+			effective_counts[k] = effective_counts.get(k, 0) + count
+			effective_types[k.type] = effective_types.get(k.type, 0) + count
+
+	# Validate individual item limits
+	for eff_item in effective_counts.keys():
+		var count = effective_counts[eff_item]
+		var limit = InventoryManager.get_max_stock(eff_item)
+		if count > limit:
+			print("[RestockMenu] BLOCKED: Individual limit for ", eff_item.item_name, " would be exceeded.")
+			EventBus.show_notification.emit("Stock Limit Reached!", "Not enough space for " + eff_item.item_name, "")
+			AudioManager.play_sfx("error")
+			return
+
+	# [SPECIAL CASE] Validate shared candy container limit (Mentor + Pocha) pre-Tier 10
+	if StoryManager.current_tier < 10:
+		var bowl_sum = 0
+		for eff_item in effective_counts.keys():
+			var id = eff_item.get_clean_id()
+			if id == "mentor" or id == "pocha":
+				bowl_sum += (effective_counts[eff_item] + InventoryManager.get_stock(eff_item))
+		
+		if bowl_sum > 10:
+			print("[RestockMenu] BLOCKED: Shared bowl limit (Mentor + Pocha) would be exceeded. (", bowl_sum, "/10)")
+			EventBus.show_notification.emit("Bowl is full!", "Mentor + Pocha cannot exceed 10 total.", "")
+			AudioManager.play_sfx("error")
+			return
+
+	# Validate global capacities
+	for eff_type in effective_types.keys():
+		var count = effective_types[eff_type]
+		var available = InventoryManager.get_available_capacity(eff_type)
+		if count > available:
+			print("[RestockMenu] CANNOT ADD: Capacity for type ", eff_type, " would be exceeded.")
+			EventBus.show_notification.emit("Shelf is full!", "Not enough physical space.", "")
+			AudioManager.play_sfx("error")
+			return
+
+	# If we pass all validation, accept the item
 	AudioManager.play_sfx("pickup")
-	selected_items[item] = current_count + 1
+	selected_items[item] = proposed_basket[item]
 	total_price += item.price
 	_update_order_list()
+	
+	# If an upgrade was added, refresh grid to show next tiers
+	if is_upgrade:
+		_populate_grid(current_category)
 
 # ========== ORDER LIST ==========
 func _update_order_list() -> void:
@@ -593,16 +653,38 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row:
 	AudioManager.play_sfx("drop")
 	
 	var new_count = count - 1
-	total_price -= item.price
+	var is_upgrade = item.get_meta("is_upgrade", false)
 	
-	if new_count <= 0:
-		# Remove the item entirely and destroy the row
+	if is_upgrade or new_count <= 0:
+		# For upgrades, we remove entirely (count is always 1)
+		# For regular items, we remove when count hits zero
+		
+		# Cascading removal for upgrades
+		if is_upgrade:
+			var removed_tier = item.get_meta("target_tier", 1)
+			var to_remove: Array[ItemData] = []
+			
+			for basket_item in selected_items.keys():
+				if basket_item.get_meta("is_upgrade", false):
+					var upg_tier = basket_item.get_meta("target_tier", 1)
+					if upg_tier > removed_tier:
+						to_remove.append(basket_item)
+			
+			for rip in to_remove:
+				total_price -= rip.price
+				selected_items.erase(rip)
+				print("[RestockMenu] Cascading removal: Tier ", rip.get_meta("target_tier"), " removed because Tier ", removed_tier, " was removed.")
+		
+		total_price -= item.price
 		selected_items.erase(item)
-		row.queue_free()
 		_update_order_list()
+		
+		if is_upgrade:
+			_populate_grid(current_category)
 		return
 	
 	selected_items[item] = new_count
+	total_price -= item.price
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
 	_update_total_amount_ui()
@@ -685,7 +767,6 @@ func _on_confirm_pressed() -> void:
 		return
 		
 	AudioManager.play_sfx("purchase")
-	EventBus.request_sfx.emit("money_decrease")
 	
 	# Deduct the restock cost from the player's money
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")

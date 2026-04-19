@@ -8,11 +8,24 @@ extends CanvasLayer
 func _ready() -> void:
 	print("[NoticeOverlay] Ready and listening for notifications...")
 	control.visible = false
+	
+	# Create a default style for the "Toast" look
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.85) # Semi-transparent black
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(20)
+	style.shadow_size = 8
+	style.shadow_color = Color(0, 0, 0, 0.3)
+	panel.add_theme_stylebox_override("panel", style)
+	
 	EventBus.show_notification.connect(_on_show_notification)
 
-func _on_show_notification(title: String, message: String, _sfx_name: String = "") -> void:
+func _on_show_notification(title: String, message: String, sfx_name: String = "") -> void:
 	title_label.text = title
 	message_label.text = message
+	
+	if sfx_name != "":
+		AudioManager.play_sfx(sfx_name)
 	
 	_animate_in()
 

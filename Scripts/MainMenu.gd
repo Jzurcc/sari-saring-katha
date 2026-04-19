@@ -63,6 +63,7 @@ func _ready() -> void:
 		continue_btn.visible = SaveManager.has_save()
 		if SaveManager.has_save():
 			continue_btn.grab_focus()
+			SaveManager.request_load()
 		else:
 			buttons.get_node("NewGame").grab_focus()
 	else:

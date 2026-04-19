@@ -68,7 +68,7 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_add_btn"]
-bg_color = Color(0.494, 0.761, 0.573, 0.8)
+bg_color = Color(0.08235294, 0.078431375, 0.07058824, 1)
 corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
@@ -170,7 +170,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_tab_inactive")
-text = "Sachets"
+text = "Sachet"
 
 [node name="TabCanned" type="Label" parent="Background/MainVBox/HeaderHBox/TabScroll/TabBar" unique_id=1427762772]
 layout_mode = 2

@@ -216,6 +216,34 @@ max_value = 1.0
 step = 0.05
 value = 0.9
 
+[node name="Voices" type="HBoxContainer" parent="OptionsPanel/Margin/VBox/AudioVBox"]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="OptionsPanel/Margin/VBox/AudioVBox/Voices"]
+custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="OptionsPanel/Margin/VBox/AudioVBox/Voices"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "Customer Voice"
+
+[node name="Slider" type="HSlider" parent="OptionsPanel/Margin/VBox/AudioVBox/Voices"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_icons/grabber = ExtResource("3_grabber")
+theme_override_icons/grabber_highlight = ExtResource("3_grabber")
+theme_override_styles/slider = SubResource("slider_bg")
+theme_override_styles/grabber_area = SubResource("slider_fill")
+theme_override_styles/grabber_area_highlight = SubResource("slider_fill")
+max_value = 1.0
+step = 0.05
+value = 0.9
+
 [node name="SpacerMid" type="Control" parent="OptionsPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2

@@ -44,7 +44,7 @@ func setup(data: ItemData, unlocked: bool) -> void:
 	style_pressed.bg_color = Color(0.1, 0.09, 0.08, 0.9)
 	add_theme_stylebox_override("pressed", style_pressed)
 	
-	custom_minimum_size = Vector2(180, 220)
+	custom_minimum_size = Vector2(160, 200)
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	
 	var vbox = VBoxContainer.new()
@@ -55,11 +55,11 @@ func setup(data: ItemData, unlocked: bool) -> void:
 	add_child(vbox)
 	
 	# Texture mapping
-	texture_rect.custom_minimum_size = Vector2(140, 140)
+	texture_rect.custom_minimum_size = Vector2(120, 120)
 	texture_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	texture_rect.texture = item_data.texture
-	texture_rect.pivot_offset = Vector2(70, 70) # Center for rotation
+	texture_rect.pivot_offset = Vector2(60, 60) # Center for rotation
 	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	if not is_unlocked:
@@ -70,7 +70,7 @@ func setup(data: ItemData, unlocked: bool) -> void:
 	# Name label
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", 16)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if is_unlocked:
 		name_label.text = item_data.item_name

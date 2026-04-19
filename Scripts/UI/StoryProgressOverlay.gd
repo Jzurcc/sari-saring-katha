@@ -111,24 +111,6 @@ func _populate_chapters() -> void:
 		var is_completed = current_progress > chapter_idx
 		
 		var chapter_display_name = "Chapter " + str(chapter_idx + 1)
-		
-		# Try to pull actual name from timeline if available
-		if chapter_idx < _selected_character.story_timelines.size():
-			var timeline = _selected_character.story_timelines[chapter_idx]
-			if timeline:
-				var raw_name = timeline.resource_path.get_file().get_basename()
-				
-				# Use RegEx to convert "Story0" to "Story 1" or "Chapter0" to "Chapter 1"
-				var regex = RegEx.new()
-				regex.compile("(Story|Chapter)(\\d+)")
-				var result = regex.search(raw_name)
-				if result:
-					var prefix = result.get_string(1)
-					var num = result.get_string(2).to_int()
-					chapter_display_name = prefix + " " + str(num + 1)
-				else:
-					chapter_display_name = raw_name.capitalize()
-		
 		btn.setup(chapter_display_name, is_locked, is_completed)
 
 func _navigate_to(new_view: View) -> void:
