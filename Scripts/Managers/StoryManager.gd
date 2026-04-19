@@ -8,7 +8,7 @@ var save_id: String = "story_manager"
 const DAY_START_HOUR := 5.0
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 ## 1 in-game hour = 30 real seconds.
-const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 45.0
+const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 
 var day: int = 1
 
@@ -374,6 +374,7 @@ func load_save_data(data: Dictionary) -> void:
 func reset_state() -> void:
 	day = 1
 	current_tier = 1
+	max_unlocked_tier = 1
 	purchase_counter = 0
 	pending_upgrade_tier = 0
 	pending_upgrade_cost = 0.0
@@ -385,7 +386,13 @@ func reset_state() -> void:
 	_last_focus_character_path = ""
 	todays_story_counts = {}
 	customer_debts = {}
+	has_mayari_visited = false
+	is_mayari_debt_active = true
+	is_mayari_met = false
+	last_mayari_collection_successful = true
 	_current_display_time = DAY_START_HOUR
+	_last_tier_unlocked_notification = 0
+	_pending_tier_advance_source = ""
 
 	SaveManager.delete_save()
 	print("[StoryManager] Progression reset for New Game. Save file deleted.")
@@ -418,74 +425,25 @@ func get_next_transaction() -> TransactionContext:
 		return tutorial_t
 	# --------------------------
 
-	# --- BRAHIM INJECTION ---
-	var brahim_tut_path := "brahim_day1_spawned"
-	var brahim_spawned = character_story_states.get(brahim_tut_path, 0)
-	if day == 1 and tutorial_chapter >= 1 and brahim_spawned == 0:
-		var brahim_data = preload("res://Resources/customers/Brahim.tres")
-		var brahim_t = TransactionContext.new()
-		brahim_t.customer_data = brahim_data
+	# --- KUYA KAP INJECTION ---
+	var kuyakap_tut_path := "kuyakap_day1_spawned"
+	var kuyakap_spawned = character_story_states.get(kuyakap_tut_path, 0)
+	if day == 1 and tutorial_chapter >= 1 and kuyakap_spawned == 0:
+		var kuyakap_data = preload("res://Resources/customers/KuyaKap.tres")
+		var kuyakap_t = TransactionContext.new()
+		kuyakap_t.customer_data = kuyakap_data
 		
-		# Build regular transaction context (Purchase/Visit)
-		_build_transaction_context(brahim_t, brahim_data)
+		# Build story transaction context
+		_build_transaction_context(kuyakap_t, kuyakap_data, true)
 		
 		# Flag so it doesn't repeat
-		character_story_states[brahim_tut_path] = 1
-		encountered_characters[brahim_data.resource_path] = true
+		character_story_states[kuyakap_tut_path] = 1
+		encountered_characters[kuyakap_data.resource_path] = true
 		
-		var b_chapter = character_story_states.get(brahim_data.resource_path, 0)
-		
-		# Sync Mirror Properties
-		Transaction_CustomerName = brahim_data.character_name
-		Transaction_WantsDebt = false
-		Transaction_IsRepaying = false
-		Transaction_RepaymentAmount = 0.0
-		Transaction_IsRiddle = false
-		Transaction_CurrentArc = brahim_data.get_arc_index(b_chapter) + 1
-		Transaction_Chapter = float(b_chapter)
-		Transaction_Branch = customer_story_branches.get(brahim_data.resource_path, 0.0)
-		Transaction_DeliveredCount = 0
-		Transaction_RemainingCount = brahim_t.desired_items.size()
-
-		# Sync Dialogic variables
-		_set_dvar("Global_RumorActive", 0.0)
-		_set_dvar("Global_RumorType", 0.0)
-		_set_dvar("Global_AwarenessActive", 0.0)
-		_set_dvar("Global_HasEnoughMoney", 0.0)
-		_set_dvar("Global_HighPriceActive", 0.0)
-		_set_dvar("Global_LastCustomer", "")
-		_set_dvar("Global_LastItem", "")
-		_set_dvar("Global_LastSatisfaction", "")
-		_set_dvar("Global_QuotaDay", 1.0)
-		_set_dvar("Global_RumorActive", false)
-		_set_dvar("Global_RumorType", 0.0)
-		_set_dvar("Global_StockStatus", "")
-		_set_dvar("Global_TimeOfDayPhase", "")
-		_set_dvar("Global_TodayQuota", 0.0)
-		_set_dvar("Transaction_RepaymentAmount", 0.0)
-		_set_dvar("Transaction_IsRiddle", 0.0)
-		_set_dvar("Transaction_CustomerName", Transaction_CustomerName)
-		
-		# Build item name string for the dialogue
-		var item_names: Array[String] = []
-		for item in brahim_t.desired_items:
-			item_names.append(item.item_name)
-		var formatted_names = _join_names(item_names)
-		
-		Transaction_ItemWants = formatted_names
-		_set_dvar("Transaction_ItemWants", formatted_names)
-		_set_dvar("Transaction_CurrentArc", float(Transaction_CurrentArc))
-		_set_dvar("Transaction_Chapter", Transaction_Chapter)
-		_set_dvar("Transaction_Branch", Transaction_Branch)
-		_set_dvar("Transaction_WantsDebt", 1.0 if Transaction_WantsDebt else 0.0)
-		_set_dvar("Transaction_IsRepaying", 1.0 if Transaction_IsRepaying else 0.0)
-		_set_dvar("Transaction_IsRiddle", 1.0 if Transaction_IsRiddle else 0.0)
-		_set_dvar("Transaction_DeliveredCount", 0.0)
-		_set_dvar("Transaction_RemainingCount", float(brahim_t.desired_items.size()))
 		_first_customer_of_day = false
 		
-		print("[STORY] Spawning Brahim after Dual Customer injection (ItemWants: %s)" % formatted_names)
-		return brahim_t
+		print("[STORY] Spawning Kuya Kap after Tutorial (Story Chapter 0)")
+		return kuyakap_t
 	# --------------------------
 
 
@@ -977,48 +935,75 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 	var id = data.get_clean_id()
 	if id == "kuyakap":
 		if chapter == 7.0: # Chapter 8 "Not Today"
-			t.requested_category = "Drinks"
+			t.requested_category = "bottle"
 		elif chapter >= 8.0: # Chapter 9 "Candy" and beyond
-			t.requested_category = "Candies"
+			t.requested_category = "candy"
 		else:
-			t.requested_category = "Cigars"
+			t.requested_category = "cigarette"
+	elif id == "manangana":
+		match int(chapter):
+			0: t.requested_category = "pack"
+			1, 6: t.requested_category = "can"
+			2: t.requested_category = "bottle"
+			3: t.requested_category = "pack"
+			4, 5: t.requested_category = "sachet"
+			8: t.requested_category = "pack"
+			_: t.requested_category = "pack"
 	elif id == "danilo":
-		t.requested_category = "Snacks"
+		t.requested_category = "snack"
 	elif id == "buboy":
 		# Shifted categories for Buboy's 10-chapter arc
 		match int(chapter):
-			1: t.requested_category = "CannedGoods"    # Sardines
-			2: t.requested_category = "Snacks"         # Red bag duck
-			3: t.requested_category = "Detergents"     # Soap
-			4: t.requested_category = "Snacks"         # Green packet nuts
-			5: t.requested_category = "Meals"          # Red circle meat
-			6: t.requested_category = "Drinks"         # Dark drink burp
-			7: t.requested_category = "Candies"        # Honey sweet
-			8: t.requested_category = "Snacks"         # Pig skin crunchy
-			9: t.requested_category = "Meals"          # Masterpiece
+			1: t.requested_category = "can"       # Sardines
+			2: t.requested_category = "snack"     # Red bag duck
+			3: t.requested_category = "sachet"    # Soap/Detergents mapped to sachet
+			4: t.requested_category = "snack"     # Green packet nuts
+			5: t.requested_category = "pack"      # Meals mapped to pack
+			6: t.requested_category = "bottle"    # Dark drink burp
+			7: t.requested_category = "candy"     # Honey sweet
+			8: t.requested_category = "snack"     # Pig skin crunchy
+			9: t.requested_category = "pack"      # Masterpiece mapped to pack
 	elif id == "tk":
 		# T.K.'s 9-chapter travel vlogger arc
 		match int(chapter):
-			0, 3, 7: t.requested_category = "Drinks"
-			1, 4, 6: t.requested_category = "Snacks"
-			2, 5, 8: t.requested_category = "Meals"
+			0, 3, 7: t.requested_category = "bottle"
+			1, 4, 6: t.requested_category = "snack"
+			2, 5, 8: t.requested_category = "pack"
 	elif id == "rosalyn":
 		# Rosalyn's 9-chapter wandering spirit arc
 		match int(chapter):
-			2, 3: t.requested_category = "Drinks" # Ch 3 & 4
-			6: t.requested_category = "Candies" # Ch 7
+			2, 3: t.requested_category = "bottle" # Ch 3 & 4
+			6: t.requested_category = "candy" # Ch 7
 			_: 
 				t.transaction_type = TransactionContext.Type.VISIT
 				t.is_visit_story = true
 	elif id == "rodel":
 		# Rodel's 9-chapter aquatic foreigner arc
 		match int(chapter):
-			0, 2, 3, 5, 7: t.requested_category = "Drinks"
-			1, 4: t.requested_category = "Snacks"
-			6: t.requested_category = "Meals"
+			0, 2, 3, 5, 7: t.requested_category = "bottle"
+			1, 4: t.requested_category = "snack"
+			6: t.requested_category = "frozen"
 			8: 
 				t.transaction_type = TransactionContext.Type.VISIT
 				t.is_visit_story = true
+	elif id == "brahim":
+		match int(chapter):
+			0, 3, 6: t.requested_category = "frozen"
+			1, 4: t.requested_category = "can"
+			2, 5, 8: t.requested_category = "pack"
+			7: t.requested_category = "candy"
+	elif id == "sarimanok":
+		# Only chapters 4+ are purchases
+		match int(chapter):
+			4, 6: t.requested_category = "snack"
+			5: t.requested_category = "pack"
+			7, 8: t.requested_category = "can"
+	elif id == "reynamayari":
+		match int(chapter):
+			0, 2, 4: t.requested_category = "cigarette"
+			1, 5, 7: t.requested_category = "bottle"
+			3, 6: t.requested_category = "candy"
+			8: t.requested_category = "sachet"
 	# Note: dual-customer (guest) injection is now configured via CustomerData.secondary_customer_data
 	# rather than being hardcoded per character here.
 
@@ -1055,6 +1040,17 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			_update_transaction_item_string(t)
 			print("[StoryManager] Chapter %d items used for %s: %s" % [chapter, data.character_name, Transaction_ItemWants])
 		else:
+			# --- 50% Unpredictability for Regular Purchases ---
+			if t.transaction_type == TransactionContext.Type.PURCHASE and t.requested_category != "":
+				if randf() > 0.5:
+					print("[StoryManager] 50% Unpredictability Triggered for %s: Ignoring %s." % [data.character_name, t.requested_category])
+					t.requested_category = ""
+
+			# --- Determine How Many Items to Fetch ---
+			var target_item_count = 1
+			if t.transaction_type == TransactionContext.Type.PURCHASE:
+				target_item_count = _get_item_count_for_tier(current_tier)
+
 			# --- Priority 2: Requested category override (per-character hardcoded or runtime) ---
 			if t.requested_category != "":
 				var item = get_any_item_for_category(t.requested_category)
@@ -1063,11 +1059,11 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 					t.best_item_name = item.item_name
 					print("[StoryManager] Category request: %s -> Item: %s" % [t.requested_category, t.best_item_name])
 				else:
-					push_warning("[StoryManager] Requested category '%s' found no valid items!" % t.requested_category)
+					push_warning("[StoryManager] Requested category '%s' found no valid items! Reshuffling to generic items." % t.requested_category)
+					t.requested_category = ""
 
+			# --- Build the 60/40 Generic Pool ---
 			var pool: Array[ItemData] = []
-			
-			# --- 60/40 Item Selection Logic ---
 			var selection_roll = randf()
 			
 			if selection_roll < 0.4:
@@ -1085,27 +1081,26 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 				else:
 					print("[StoryManager] Selection Mode: CUMULATIVE TIER (60% roll)")
 					
-					for item in InventoryManager.get_all_items():
-						if is_item_unlocked(item) and item.can_be_sold:
-							pool.append(item)
+				for item in InventoryManager.get_all_items():
+					if is_item_unlocked(item) and item.can_be_sold:
+						pool.append(item)
 
-			# Multi-item request logic based on Tier
-			# Skip if we already fulfilled via requested_category
-			if t.requested_category == "":
-				var item_count = _get_item_count_for_tier(current_tier)
-				for i in range(item_count):
-					if not pool.is_empty():
-						var item = pool.pick_random()
-						# Static Upgrade: If the flag is set during build, choose the best variant immediately
+			# --- Fill Remaining Target Item Slots ---
+			var remaining_items = target_item_count - t.desired_items.size()
+			for i in range(remaining_items):
+				if not pool.is_empty():
+					var item = pool.pick_random()
+					if t.upgrade_to_best_tier:
+						var best = get_best_item_for_category(item.category, item)
+						if best: item = best
+					t.desired_items.append(item)
+				else:
+					var fallback = _pick_random_orderable_item()
+					if fallback:
 						if t.upgrade_to_best_tier:
-							item = get_best_item_for_category(item.category, item)
-						t.desired_items.append(item)
-					else:
-						var fallback = _pick_random_orderable_item()
-						if fallback:
-							if t.upgrade_to_best_tier:
-								fallback = get_best_item_for_category(fallback.category, fallback)
-							t.desired_items.append(fallback)
+							var best = get_best_item_for_category(fallback.category, fallback)
+							if best: fallback = best
+						t.desired_items.append(fallback)
 			
 			# Safety: distinguish between PURCHASE (convert to visit) and STORY (keep chapter, try fallback item)
 			if t.desired_items.is_empty():
@@ -1388,14 +1383,14 @@ func get_any_item_for_category(cat: String) -> ItemData:
 func _get_mapped_categories(cat: String) -> Array[String]:
 	var c = cat.to_lower()
 	match c:
-		"drinks", "beverage": return ["bottle"]
-		"cigars", "cigarette", "cigarettes": return ["cigarette"]
-		"candies": return ["candy"]
-		"snacks": return ["snack"]
-		"sachets": return ["sachet"]
-		"packs", "noodles": return ["pack"]
+		"bottle", "drinks", "beverage": return ["bottle"]
+		"cigarette", "cigars", "cigarettes": return ["cigarette"]
+		"candy", "candies": return ["candy"]
+		"snack", "snacks": return ["snack"]
+		"sachet", "sachets": return ["sachet"]
+		"pack", "packs", "noodles": return ["pack"]
 		"frozen": return ["frozen"]
-		"cans", "cannedgoods": return ["can"]
+		"can", "cans", "cannedgoods": return ["can"]
 	
 	# Fallback: if it's not a keyword, check if it's an item name
 	for item in InventoryManager.get_all_items():
