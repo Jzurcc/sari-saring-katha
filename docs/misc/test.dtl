@@ -1,31 +1,74 @@
 label Greeting
-[Character]: [Scene-specific story dialogue.]
-[Character]: [Ask for item dynamically using {Transaction.ItemWants} or {Transaction.ItemWantsBest}]
-- [player accepts request dialogue]
-	[Character]: [Character nods / accepts waiting]
+if {Transaction_CurrentArc} == 1.0:
+	[random option]
+		[Character]: Hello! May I buy {Transaction_ItemWants}?
+	[random option]
+		[Character]: Pabili po! Do you have {Transaction_ItemWants}?
+	[random option]
+		[Character]: Hey there. {Transaction_ItemWants} please.
+elif {Transaction_CurrentArc} == 2.0:
+	[random option]
+		[Character]: [Warmer] Nice to see you again! {Transaction_ItemWants} for me.
+	[random option]
+		[Character]: [Warmer] I always come back here. {Transaction_ItemWants}?
+	[random option]
+		[Character]: [Warmer] Usual spot! Have any {Transaction_ItemWants}?
+elif {Transaction_CurrentArc} == 3.0:
+	[random option]
+		[Character]: [Very friendly] The usual savior! Can I grab {Transaction_ItemWants}?
+	[random option]
+		[Character]: [Very friendly] What's new today? Actually, just hook me up with {Transaction_ItemWants}.
+	[random option]
+		[Character]: [Very friendly] It's so nice seeing you. {Transaction_ItemWants} when you get a sec.
+- Sure thing, finding it now.
+	[Character]: Salamat!
 [end_timeline]
 label Talk
-[Character]: [Restates what they are waiting for, using {Transaction.ItemWants}]
-- Coming right up.
-	[Character]: [Reaction]
+[Character]: Just casually waiting for my {Transaction_ItemWants}. 
+- Just a second.
+	[Character]: Take your time.
 	[end_timeline]
-- Sorry, we're out of stock.
-	[Character]: [Lore-appropriate exit line]
+- Oh no, out of stock.
+	[Character]: Ah, too bad. See you around!
 	[signal arg="refuse_service"]
 	[end_timeline]
 label Satisfy
-if {Transaction.WantsDebt}:
-	[Character]: [Debt dialogue]
-	- Of course.
+if {Transaction_WantsDebt}:
+	[Character]: Pasensya na, can I put this on my tab?
+	- Yes.
 		[signal arg="utang_accepted"]
-		[Character]: Salamat! [More story dialogue reacting to getting the item...]
-	- Take Away Items
+		[Character]: Thank you!
+	- No.
 		[signal arg="utang_rejected"]
-		[Character]: Oh... Next time then.
+		[Character]: Ah, my bad. Nevermind then!
 else:
-	[Character]: [More story dialogue reacting to getting the item or thanking the player...]
+	if {Transaction_CurrentArc} == 1.0:
+		[random option]
+			[Character]: Thank you.
+		[random option]
+			[Character]: Exactly what I needed.
+		[random option]
+			[Character]: Awesome, salamat!
+	elif {Transaction_CurrentArc} == 2.0:
+		[random option]
+			[Character]: You guys are the best.
+		[random option]
+			[Character]: Thanks so much!
+		[random option]
+			[Character]: Perfect as always.
+	elif {Transaction_CurrentArc} == 3.0:
+		[random option]
+			[Character]: Literal lifesaver!
+		[random option]
+			[Character]: See you tomorrow!
+		[random option]
+			[Character]: A true treasure. Thanks!
 [end_timeline]
 label WrongItem
-[Character]: [in-character dialogue telling the player it's the wrong item]
-[Character]: [reiterating {Transaction.ItemWants} or {Transaction.ItemWantsBest} in-character]
+[random option]
+	[Character]: Haha, wrong item friend. Looking for {Transaction_ItemWants}.
+[random option]
+	[Character]: Close! But I need {Transaction_ItemWants}.
+[random option]
+	[Character]: Oops, think you mixed it up! I wanted {Transaction_ItemWants}.
 [end_timeline]
