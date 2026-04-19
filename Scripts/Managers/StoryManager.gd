@@ -1125,6 +1125,14 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 					# Selection Pool now includes current_tier + 1 to encourage upgrades
 					if item.tier <= current_tier + 1 and item.can_be_sold:
 						pool.append(item)
+						
+				# Build the desired items list using selection pool
+				for i in range(target_item_count):
+					var picked = _pick_weighted_item(pool)
+					if picked:
+						t.desired_items.append(picked)
+						if picked.tier > current_tier:
+							t.is_next_tier_request = true
 
 			# --- Fill Remaining Target Item Slots ---
 			var remaining_items = target_item_count - t.desired_items.size()
@@ -1641,6 +1649,7 @@ func _update_transaction_item_string(t: TransactionContext) -> void:
 	var formatted_names = _join_names(item_names)
 	Transaction_ItemWants = formatted_names
 	_set_dvar("Transaction_ItemWants", formatted_names)
+	_set_dvar("Transaction_IsNextTier", t.is_next_tier_request)
 	
 	Transaction_HighestItemWants = highest_item_name
 	_set_dvar("Transaction_HighestItemWants", highest_item_name)
