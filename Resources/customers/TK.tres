@@ -9,8 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://dkniinpqcxqbj" path="res://Assets/characters/sprites/TK.png" id="5_0aich"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_ap20c"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://cax2d71h231r" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
-[ext_resource type="Resource" uid="uid://6i4302636r17" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
+[ext_resource type="Resource" uid="uid://bkxgcd1fe4pf" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
+[ext_resource type="Resource" uid="uid://crmfh6krc8b5c" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")

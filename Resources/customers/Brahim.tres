@@ -9,8 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://fvu6k7ii37tf" path="res://Assets/characters/sprites/Brahim.png" id="8_sw35w"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_u5mhi"]
 [ext_resource type="Resource" uid="uid://deblnveoir8f0" path="res://Dialogue/Timelines/Brahim/Story.dtl" id="10_story"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/Brahim/Purchase.dtl" id="brahim_purchase"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/Brahim/Visit.dtl" id="brahim_visit"]
+[ext_resource type="Resource" uid="uid://d2bs58pcxejrb" path="res://Dialogue/Timelines/Brahim/Purchase.dtl" id="brahim_purchase"]
+[ext_resource type="Resource" uid="uid://dgxmsapgmuqq3" path="res://Dialogue/Timelines/Brahim/Visit.dtl" id="brahim_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("1_h0x5s")

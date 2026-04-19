@@ -8,8 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://dxyx405jevl77" path="res://Assets/characters/sprites/ManangAna.png" id="5_4587l"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_2nawl"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
+[ext_resource type="Resource" uid="uid://bpb60ibkybakm" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
+[ext_resource type="Resource" uid="uid://dw2evopysv3yc" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
