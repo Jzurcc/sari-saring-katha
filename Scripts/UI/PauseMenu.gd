@@ -3,9 +3,11 @@ extends Control
 @onready var buttons = $Buttons
 @onready var options_overlay    : Control = $OptionsOverlay
 @onready var collection_overlay : Control = $CollectionOverlay
+@onready var story_overlay      : Control = $StoryProgressOverlay
 
 var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
 var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
+var _sfx_hover   : AudioStream = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var _ui_player   : AudioStreamPlayer
 
 var _original_music_db: float = 0.0
@@ -28,6 +30,12 @@ func _ready() -> void:
 	
 	options_overlay.closed.connect(_on_options_closed)
 	collection_overlay.closed.connect(_on_collection_closed)
+	story_overlay.closed.connect(_on_characters_closed)
+	
+	for btn in buttons.get_children():
+		if btn is Button:
+			btn.mouse_entered.connect(_play_hover)
+			btn.focus_entered.connect(_play_hover)
 	
 	# Initial state
 	hide()
@@ -85,6 +93,15 @@ func _on_collection_closed() -> void:
 	_update_menu_interaction(true)
 	buttons.get_node("Collection").grab_focus()
 
+func _on_characters_pressed() -> void:
+	_play_click()
+	story_overlay.open()
+	_update_menu_interaction(false)
+
+func _on_characters_closed() -> void:
+	_update_menu_interaction(true)
+	buttons.get_node("Characters").grab_focus()
+
 func _on_main_menu_pressed() -> void:
 	_play_confirm()
 	get_tree().paused = false
@@ -112,7 +129,7 @@ func _on_save_game_pressed() -> void:
 
 func _on_exit_pressed() -> void:
 	_play_confirm()
-	SaveManager.force_save()
+	SaveManager.force_save() # This now internally respects the debug_skip_save flag.
 	get_tree().quit()
 
 func _update_menu_interaction(enabled: bool) -> void:
@@ -147,6 +164,10 @@ func _play_confirm() -> void:
 	_ui_player.stream = _sfx_confirm
 	_ui_player.play()
 
+func _play_hover() -> void:
+	_ui_player.stream = _sfx_hover
+	_ui_player.play()
+
 func _input(event: InputEvent) -> void:
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)):
 		if visible:
@@ -155,6 +176,8 @@ func _input(event: InputEvent) -> void:
 				options_overlay.close()
 			elif collection_overlay.visible:
 				collection_overlay.close()
+			elif story_overlay.visible:
+				story_overlay.close()
 			else:
 				_play_confirm() # Play sfx_9 when resuming via Escape
 				resume()

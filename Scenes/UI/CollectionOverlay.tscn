@@ -177,4 +177,4 @@ theme_override_font_sizes/font_size = 32
 text = "CLOSE"
 
 [connection signal="pressed" from="CollectionPanel/Margin/VBox/Header/SpacerRight/CloseButton" to="." method="close"]
-[connection signal="pressed" from="DetailOverlay/DetailPanel/Margin/VBox/DetailClose" to="." method="_hide_details"]
+[connection signal="pressed" from="DetailOverlay/DetailPanel/Margin/VBox/DetailClose" to="." method="_on_detail_close_pressed"]

@@ -15,6 +15,13 @@ elif {Transaction_CurrentArc} == 3.0:
 		Sarimanok: Good day to you. Might I procure your finest {Transaction_ItemWants}?
 	else:
 		Sarimanok: Ba-kawk! A pleasure to see you. I am in need of some {Transaction_ItemWants} for my associates.
+
+if {Global_HighPriceActive}:
+	if {Transaction_CurrentArc} == 3.0:
+		Sarimanok: Expensive? Cheap? To a bird of gold, these are but earthly trifles... [pause=0.4] but my human friends might not agree.
+	else:
+		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It seems very offended by the price!)[/color][/wave]
+
 - Yes, I'll get it.
 	Sarimanok: [shake]Ba-kawk![/shake]
 [end_timeline]

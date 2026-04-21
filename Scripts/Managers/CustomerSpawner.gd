@@ -44,10 +44,12 @@ var is_paused: bool = false:
 			_spawn_next_customer()
 var _dialogue_phase: DialoguePhase = DialoguePhase.NONE
 var _current_timeline_path: String = "" # Track the timeline started by this spawner
+var _last_dialogue_frame: int = -1 # Frame-based protection against double-starting dialogue
 
 func _ready() -> void:
 	print("[DEBUG] CustomerSpawner._ready() START")
 	add_to_group("customer_spawner")
+	add_to_group("persist")
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_dismissed) # Completion of satisfy()
 	EventBus.customer_partial_satisfaction.connect(_on_customer_partial_satisfaction)
@@ -104,24 +106,11 @@ func _spawn_next_customer() -> void:
 
 	await get_tree().create_timer(2.0).timeout
 
-	if not spawn_pos or not target_pos:
-		push_error("[CustomerSpawner] spawn_pos or target_pos is not set!")
-		_is_spawning = false
-		return
-
-	var spawn_global = get_node(spawn_pos).global_position
-	# Randomize starting Z slightly to vary entry paths
-	spawn_global.z += randf_range(-0.5, 0.5)
-	var target_global = get_node(target_pos).global_position
-	var exit_global = get_node(exit_pos).global_position if exit_pos else spawn_global
-	var final_target = target_global
-	
-	# Calculate side offsets for dual customers
-	var approach_dir = (target_global - spawn_global).normalized()
-	var side_offset = Vector3(-approach_dir.z, 0, approach_dir.x) # Left perpendicular
-	
-	if transaction.secondary_customer_data:
-		final_target = target_global + (side_offset * -0.9) # Shift Primary to Right
+	var pos_data = _calculate_positions(transaction.secondary_customer_data != null)
+	var spawn_global = pos_data.spawn_pos
+	var target_global = pos_data.target_pos
+	var exit_global = pos_data.exit_pos
+	var final_target = pos_data.primary_target
 	
 	# If the customer is Kuya Kap, offset him back so he doesn't hit his head on the roof.
 	if transaction.customer_data.get_clean_id() == "kuyakap":
@@ -143,7 +132,7 @@ func _spawn_next_customer() -> void:
 		guest_context.customer_data = transaction.secondary_customer_data
 		guest_context.transaction_type = TransactionContext.Type.VISIT # Guests don't buy (for now)
 		
-		var guest_target = target_global + (side_offset * 0.9) # Shift Guest to Left
+		var guest_target = pos_data.guest_target
 		
 		guest_customer = customer_scene.instantiate()
 		get_parent().add_child(guest_customer)
@@ -158,6 +147,33 @@ func _spawn_next_customer() -> void:
 
 	EventBus.customer_spawned.emit(current_customer)
 	_is_spawning = false
+
+func _calculate_positions(has_guest: bool) -> Dictionary:
+	if not spawn_pos or not target_pos:
+		return {}
+
+	var spawn_global = get_node(spawn_pos).global_position
+	# Note: We don't randomize Z here to keep it deterministic during load
+	var target_global = get_node(target_pos).global_position
+	var exit_global = get_node(exit_pos).global_position if exit_pos else spawn_global
+	
+	var approach_dir = (target_global - spawn_global).normalized()
+	var side_offset = Vector3(-approach_dir.z, 0, approach_dir.x) # Left perpendicular
+	
+	var primary_target = target_global
+	var guest_target = target_global
+	
+	if has_guest:
+		primary_target = target_global + (side_offset * -0.9) # Shift Primary to Right
+		guest_target = target_global + (side_offset * 0.9) # Shift Guest to Left
+		
+	return {
+		"spawn_pos": spawn_global,
+		"target_pos": target_global,
+		"exit_pos": exit_global,
+		"primary_target": primary_target,
+		"guest_target": guest_target
+	}
 
 func _on_customer_arrived(customer: Customer) -> void:
 	_handle_customer_logic(customer, true)
@@ -307,11 +323,11 @@ func _on_guest_clicked(_guest: Customer) -> void:
 		_on_customer_clicked(current_customer)
 
 func _on_dialogic_signal(argument: String) -> void:
-	# [signal arg="refuse_service"] fires mid-execution. Set the flag here,
-	# act on it ONLY after timeline_ended fires (never during signal_event).
 	if argument == "refuse_service":
-		# Partial success check: if items were delivered, redirect to a partial completion path.
-		# We attempt to jump to PartialDismiss or Satisfy labels.
+		# [signal arg="refuse_service"] should ALWAYS dismiss the customer.
+		_pending_dismiss = true
+		
+		# If items were already delivered, treat as a partial completion.
 		var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
 		if delivered > 0:
 			_is_partial_success = true
@@ -396,8 +412,24 @@ func _update_item_names(customer: Customer) -> void:
 	
 	var formatted_names = ""
 	if item_names.size() == 0:
-		formatted_names = "something" # Better than "items" if we ever hit this fallback
-		print("[CustomerSpawner] WARNING: Transaction has zero items! Char: %s" % InventoryManager.current_character_name)
+		# DO NOT overwrite Transaction_ItemWants with "something".
+		# For visit-story chapters, desired_items is intentionally empty.
+		# StoryManager already set the correct value (or the fallback random item)
+		# in get_next_transaction() — stomping it here causes the "something" bug.
+		print("[CustomerSpawner] NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % InventoryManager.current_character_name)
+		# Still update character name and counts, but leave Transaction_ItemWants alone.
+		var data = customer.customer_data
+		InventoryManager.current_character_name = data.character_name if data.character_name != "" else data.get_clean_id()
+		InventoryManager.current_item_name = ""
+		StoryManager._set_dvar("Transaction_CustomerName", InventoryManager.current_character_name)
+		if customer.transaction_context:
+			var total_cnt = customer.transaction_context.original_count
+			var remain_cnt = customer.transaction_context.desired_items.size()
+			StoryManager._set_dvar("Transaction_DeliveredCount", total_cnt - remain_cnt)
+			StoryManager._set_dvar("Transaction_RemainingCount", remain_cnt)
+		if GENERIC_CHAR_RES:
+			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
+		return
 	elif item_names.size() == 1:
 		formatted_names = item_names[0]
 	elif item_names.size() == 2:
@@ -429,34 +461,52 @@ func _update_item_names(customer: Customer) -> void:
 
 ## Shared helper — sets style, starts the timeline, and registers the bubble anchor.
 func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = DialoguePhase.NONE, label: String = "") -> void:
-	# Never start a dialogue if one is playing, if the path is empty,
-	# or if the customer is being dismissed.
-	if (timeline == null or (timeline is String and timeline.is_empty())) or Dialogic.current_timeline != null:
+	# Never start a dialogue if the timeline is empty or if the customer is gone.
+	if (timeline == null or (timeline is String and timeline.is_empty())):
 		return
 	if not is_instance_valid(customer) or not customer.is_waiting:
 		return
+		
+	# PROTECTION: Prevent "Double-Start" race conditions within the target frame.
+	# This happens if both Customer.gd and MainGame.gd trigger start_dialogue simultaneously.
+	if Engine.get_frames_drawn() == _last_dialogue_frame:
+		print("[CustomerSpawner] REJECTED: start_dialogue already called in this frame. Latching to previous call.")
+		return
+	_last_dialogue_frame = Engine.get_frames_drawn()
 
 	_dialogue_phase = phase
 	_current_timeline_path = timeline.resource_path if timeline is Resource else timeline
 	
-	print("[Dialogue] Starting: ", _current_timeline_path, " Phase: ", DialoguePhase.keys()[phase], " Label: ", label)
+	# LABEL SAFETY: If a specific label (like 'Partial') is requested but missing from the timeline,
+	# fallback to 'Satisfy' or start at the beginning to avoid silent Dialogic crashes.
+	var final_label = label
+	if final_label != "":
+		var exists = StoryManager.is_label_in_timeline(_current_timeline_path, final_label)
+		if not exists:
+			print("[CustomerSpawner] WARNING: Label '%s' missing in %s." % [final_label, _current_timeline_path])
+			if final_label == "Partial":
+				final_label = "Satisfy" # Best fallback for multi-item orders
+				print("[CustomerSpawner] Falling back to: Satisfy")
+			elif final_label == "Satisfy":
+				final_label = "" # Final fallback: start from beginning
+				print("[CustomerSpawner] Falling back to start of timeline.")
 
-	# If this exact timeline is ALREADY running (e.g., Greeting is playing),
-	# jump to the requested label (e.g., Satisfy) instead of restarting it.
+	print("[Dialogue] Starting: ", _current_timeline_path, " Phase: ", DialoguePhase.keys()[phase], " Label: ", final_label)
+
+	# If a different timeline is running, end it first to prioritize this one.
+	# We REMOVED the early return for Dialogic.current_timeline != null to allow 
+	# item-giving to interrupt greetings or idle talk.
 	if Dialogic.current_timeline != null:
-		if Dialogic.current_timeline.resource_path == _current_timeline_path:
-			if label != "" and StoryManager.is_label_in_timeline(_current_timeline_path, label):
-				print("[CustomerSpawner] Jumping directly to label: ", label)
-				Dialogic.Jump.jump_to_label(label)
-				return
-		else:
-			# If a DIFFERENT timeline is running (e.g., Uncle Mario), end it first
-			# to prioritize the customer's reaction to the delivery.
-			print("[CustomerSpawner] Ending current timeline to play: ", _current_timeline_path)
+		if Dialogic.current_timeline.resource_path != _current_timeline_path:
+			print("[CustomerSpawner] Ending current timeline to play priority: ", _current_timeline_path)
 			Dialogic.end_timeline()
+		elif final_label != "":
+			print("[CustomerSpawner] Jumping directly to label: ", final_label)
+			Dialogic.Jump.jump_to_label(final_label)
+			return
 
 	Dialogic.Styles.load_style("FollowBubble")
-	var layout = Dialogic.start(timeline, label)
+	var layout = Dialogic.start(timeline, final_label)
 
 	# Anchor characters to the speech markers.
 	if layout and layout.has_method("register_character"):
@@ -534,21 +584,22 @@ func _on_dialogue_ended() -> void:
 	# Always takes priority — dismiss the customer regardless of which phase just ended.
 	if _pending_dismiss:
 		_pending_dismiss = false
-		if is_instance_valid(current_customer) and current_customer.is_waiting:
-			
+		if is_instance_valid(current_customer):
 			# Dismiss guest alongside primary if present, with a slight delay
 			if is_instance_valid(guest_customer):
 				var g = guest_customer
 				guest_customer = null
 				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
 
-			# If it was a partial success, treat as satisfied (fade in place, count towards quota)
-			if _is_partial_success:
+			# Final decision: Satisfy (happy/partial) vs Dismiss (canceled/failure)
+			# We use satisfy() if items were traded OR if we explicitly marked it as a partial success.
+			var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
+			if _is_partial_success or (delivered != null and delivered > 0):
 				current_customer.satisfy()
-				_is_partial_success = false
-				return
 			else:
 				current_customer.dismiss()
+				
+			_is_partial_success = false
 		return
 
 	match phase:
@@ -660,6 +711,86 @@ func _on_nokia_opened() -> void:
 
 func _on_nokia_closed() -> void:
 	_is_nokia_open = false
+
+
+# ── Persistence ──────────────────────────────────────────────────────────────
+
+func get_save_id() -> String:
+	return "customer_spawner"
+
+func get_save_data() -> Dictionary:
+	var data := {
+		"dialogue_phase": _dialogue_phase,
+		"greeting_interrupted": _greeting_interrupted,
+	}
+	
+	if is_instance_valid(current_customer) and current_customer.transaction_context:
+		data["current_customer"] = current_customer.transaction_context.to_dict()
+		data["current_greeted"] = current_customer.has_been_greeted
+		
+	if is_instance_valid(guest_customer) and guest_customer.transaction_context:
+		data["guest_customer"] = guest_customer.transaction_context.to_dict()
+		data["guest_greeted"] = guest_customer.has_been_greeted
+		
+	return data
+
+func load_save_data(data: Dictionary) -> void:
+	_dialogue_phase = data.get("dialogue_phase", DialoguePhase.NONE) as DialoguePhase
+	_greeting_interrupted = data.get("greeting_interrupted", false)
+	
+	if data.has("current_customer"):
+		var ctx_data = data["current_customer"]
+		var ctx = TransactionContext.from_dict(ctx_data)
+		var has_guest = data.has("guest_customer")
+		
+		var pos_data = _calculate_positions(has_guest)
+		if not pos_data.is_empty():
+			current_customer = customer_scene.instantiate()
+			get_parent().add_child(current_customer)
+			
+			# Jump to target position immediately
+			current_customer.global_position = pos_data.primary_target
+			
+			# If the customer is Kuya Kap, offset him back so he doesn't hit his head on the roof.
+			var final_target = pos_data.primary_target
+			if ctx.customer_data and ctx.customer_data.get_clean_id() == "kuyakap":
+				var dir_back = (pos_data.spawn_pos - pos_data.target_pos).normalized()
+				final_target += (dir_back * 0.7)
+				current_customer.global_position = final_target
+
+			current_customer.setup(ctx, final_target, pos_data.exit_pos)
+			current_customer.has_been_greeted = data.get("current_greeted", false)
+			
+			# Force "arrived" state instantly
+			if current_customer.has_method("_on_target_reached"):
+				current_customer.call("_on_target_reached")
+			
+			current_customer.arrived.connect(_on_customer_arrived)
+			current_customer.clicked.connect(_on_customer_clicked)
+			current_customer.satisfied.connect(_on_customer_finished)
+			
+			EventBus.customer_spawned.emit(current_customer)
+			print("[CustomerSpawner] Restored current customer: ", ctx.customer_data.get_clean_id() if ctx.customer_data else "Unknown")
+
+	if data.has("guest_customer"):
+		var g_ctx_data = data["guest_customer"]
+		var g_ctx = TransactionContext.from_dict(g_ctx_data)
+		
+		var pos_data = _calculate_positions(true)
+		if not pos_data.is_empty():
+			guest_customer = customer_scene.instantiate()
+			get_parent().add_child(guest_customer)
+			guest_customer.global_position = pos_data.guest_target
+			
+			guest_customer.setup(g_ctx, pos_data.guest_target, pos_data.exit_pos, g_ctx.guest_spawns_later)
+			guest_customer.has_been_greeted = data.get("guest_greeted", false)
+			
+			# Force "arrived" state instantly
+			if guest_customer.has_method("_on_target_reached"):
+				guest_customer.call("_on_target_reached")
+				
+			guest_customer.clicked.connect(_on_guest_clicked)
+			print("[CustomerSpawner] Restored guest customer: ", g_ctx.customer_data.get_clean_id() if g_ctx.customer_data else "Unknown")
 
 
 func _on_character_speaking(data: CustomerData) -> void:

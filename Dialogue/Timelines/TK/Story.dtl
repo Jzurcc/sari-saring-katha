@@ -1,5 +1,5 @@
 label Greeting
-# [signal arg="refresh_desires"]
+[signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: The Arrival
 	TK: [shake]Neigh[/shake]... whew. 

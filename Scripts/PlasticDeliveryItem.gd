@@ -58,7 +58,7 @@ func on_interact() -> void:
 		return
 		
 	if items.is_empty():
-		queue_free()
+		_fade_out_and_destroy()
 		return
 		
 	# Pop the last item
@@ -109,7 +109,6 @@ func receive_item(drag_item: DraggableItem) -> void:
 	in_flight_count -= 1
 	_refresh_visuals()
 
-## Called when an item from this bag is successfully placed in a shelf or given to a customer.
 func notify_item_placed(_item: DraggableItem) -> void:
 	in_flight_count -= 1
 	if items.is_empty() and in_flight_count <= 0:
@@ -122,6 +121,18 @@ func _refresh_visuals() -> void:
 	tw.tween_property(sprite, "scale", base_scale, 0.3).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 func _fade_out_and_destroy() -> void:
+	if is_fading_in: 
+		return
+	is_fading_in = true
+	
 	var tween = create_tween()
-	tween.tween_property(sprite, "modulate:a", 0.0, 0.3)
+	
+	# 1. Quick Squash (Anticipation)
+	tween.tween_property(sprite, "scale", base_scale * Vector3(1.4, 0.5, 1.4), 0.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	
+	# 2. Stretch and Exit
+	# Pop upwards by stretching vertically while shrinking to zero
+	tween.tween_property(sprite, "scale", Vector3(0.0, base_scale.y * 2.0, 0.0), 0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(sprite, "modulate:a", 0.0, 0.2)
+	
 	tween.tween_callback(queue_free)

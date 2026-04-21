@@ -105,7 +105,9 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				
 				if context and context.timeline and spawner:
 					spawner.start_dialogue(context.timeline, customer, phase, label)
-				item = null  # prevent return_to_start below from running on a hidden node
+				
+				# SUCCESS: Nullify item reference as it is being consumed/removed.
+				item = null 
 			else:
 				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
 				
@@ -128,11 +130,9 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					if context and context.timeline and spawner:
 						spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
 				
-				# Keep item in hand so it doesn't just vanish or jump
-				if DragManager and item.sprite and item.sprite.texture:
-					DragManager.call_deferred("start_drag", item, item.sprite.texture)
-				
-				item = null # Preempt return_to_start
+				# FIX: Removed item = null and start_drag here.
+				# This allows the 'if item:' check at the bottom of _on_tray_item_placed
+				# to correctly return the item to the shelf instead of leaving it in the void.
 			
 	if not handled:
 		print("[MainGame] No customer waiting, dropping item")

@@ -1,5 +1,5 @@
 label Greeting
-# [signal arg="refresh_desires"]
+[signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0:
 	Brahim: Good day. [pause=0.3] I'm trying to remember a specific brand of product...
 	Brahim: I could use some right about now.
@@ -34,7 +34,7 @@ elif {Transaction_Chapter} == 2:
 		Brahim: You don't get a logs file. You just get a sudden rustle in the leaves that means "accepted."
 	- You seem more at peace with it today.
 		Brahim: I'm learning to value the silence between queries.
-	Brahim: Just a sachet of coffee, please. The strong kind. I have 40 pages of oral tradition to transcribe.
+	Brahim: Just a {Transaction_ItemWants}, please. I have 40 pages of oral tradition to transcribe.
 	Brahim: Lolo calls it his "spirit-song." I'm calling it 'KarimlanDB v1.0'.
 	[end_timeline]
 

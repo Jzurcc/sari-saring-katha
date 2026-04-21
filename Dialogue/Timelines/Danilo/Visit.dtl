@@ -1,8 +1,16 @@
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	Danilo: Psst. Boss. Have you seen that vlogger lately?
-	Danilo: [color=#8B6855]I saw him walking past the same mango tree four times today.[/color] Needs a better map, that one. [pause=0.4] Anyway, carry on. I'm just watching.
+if {Global_RumorActive}:
+	if {Global_RumorType} == 0.0:
+		Danilo: Psst. Boss. I saw {Global_LastCustomer} walking past the tricycle stand just now. [pause=0.3] Looking a bit tired, 'no?
+	else:
+		Danilo: Uy, boss. {Global_LastCustomer} bought that {Global_LastItem}? [pause=0.3] Interesting choice. I've been watching that item on the shelf for a while.
+	[pause=0.4]
+	Danilo: Anyway... just staying focused. Don't mind me.
 else:
-	Danilo: Uy, boss. You know, people are talking about the new lights in here. 
-	Danilo: [color=#8B6855]They say it looks like a sanctuary from the main road.[/color] I think they're right. [pause=0.5] Stay focused, boss. I'm looking out for ya.
+	if {Transaction_VisitVar} <= 50:
+		Danilo: Psst. Boss. Have you seen that vlogger lately?
+		Danilo: [color=#8B6855]I saw him walking past the same mango tree four times today.[/color] Needs a better map, that one. [pause=0.4] Anyway, carry on. I'm just watching.
+	else:
+		Danilo: Uy, boss. You know, people are talking about the new lights in here. 
+		Danilo: [color=#8B6855]They say it looks like a sanctuary from the main road.[/color] I think they're right. [pause=0.5] Stay focused, boss. I'm looking out for ya.
 [end_timeline]

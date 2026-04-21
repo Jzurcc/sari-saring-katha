@@ -4,6 +4,10 @@ if {Transaction_GreetingVar} <= 50:
 	TK: Yo, fam! This heat is a total vibe killer for the vlog. I need to cool down.
 else:
 	TK: Hey! Just got back from scouting some 'Hidden Gems'. Immaculate views, but man, I'm drained.
+
+if {Global_HighPriceActive}:
+	TK: Whoa, premium prices for a premium sari-sari experience? [pause=0.4] I'll have to mention this in the vlog... if I can afford it!
+
 [end_timeline]
 
 label Talk

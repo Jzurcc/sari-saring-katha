@@ -22,11 +22,11 @@ else:
 label CallRest
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Anak, I just delivered to you recently... I'm still resting! Call back after you've served some more customers!
+	UncleMario: Anak, I just delivered to you recently... I'm still resting! Serve {Mario_RestCount} more customer(s) first!
 elif {Variation} == 2.0:
-	UncleMario: Pang-ilan na 'to? I'm currently having my merienda. Give me a few more minutes to breathe, anak.
+	UncleMario: Pang-ilan na 'to? I'm currently having my merienda. Give me a few more minutes to breathe, anak. Serve {Mario_RestCount} more person(s) while I eat.
 else:
-	UncleMario: Wait lang, I'm refilling my own stomach right now. Serve more customers while I recharge my tricycle's gas and my own energy!
+	UncleMario: Wait lang, I'm recharging. Serve {Mario_RestCount} more customer(s) while I prep my tricycle and my own energy!
 [end_timeline]
 
 label Delivery

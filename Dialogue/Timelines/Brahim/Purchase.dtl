@@ -3,6 +3,10 @@ if {Transaction_GreetingVar} <= 50:
 	Brahim: Good day. I'm checking the local inventory for a specific instance.
 else:
 	Brahim: Hello. The environment variables in Karimlan are quite high today. I need to stabilize.
+
+if {Global_HighPriceActive}:
+	Brahim: Ang mahal naman... [pause=0.3] Isang araw na ulam na rin ang presyo nito.
+
 [end_timeline]
 
 label Talk

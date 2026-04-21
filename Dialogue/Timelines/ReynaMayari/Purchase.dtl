@@ -12,6 +12,10 @@ else:
 		ReynaMayari: I am here for official Biringan business... [pause=0.5] And perhaps a snack. Let us proceed.
 	else:
 		ReynaMayari: Your shelves are well-lit, child of the soil. [pause=0.4] *Ahem.* Oh look, the colorful wrappers are displayed prominently today.
+
+if {Global_HighPriceActive}:
+	ReynaMayari: The value you place on these items is... [pause=0.4] ambitious. I trust the quality justifies it.
+
 [end_timeline]
 
 label Talk

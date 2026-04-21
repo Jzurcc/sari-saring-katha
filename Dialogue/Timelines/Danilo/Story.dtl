@@ -183,7 +183,6 @@ elif {Transaction_Chapter} == 8.0:
 		- You can see everything and you still forgot your coins?
 			[signal arg="utang_rejected"]
 			Danilo: Fair. I'll be back.
-	[signal arg="story_success"]
 	[end_timeline]
 
 label Talk

@@ -1,6 +1,9 @@
 label Greeting
 [signal arg="refresh_desires"]
-KuyaKap: Magandang gabi, apo. [pause=0.4] Keeping up with the routine. Could you get me [color=#0f6e2f]{Transaction_ItemWants}[/color]? 
+KuyaKap: Magandang gabi, apo. [pause=0.4]
+if {Global_HighPriceActive}:
+	KuyaKap: Hala, apo. Parang medyo masakit ata sa bulsa 'to ngayon ah? [pause=0.3] Tumataas na talaga presyo ng bilihin.
+KuyaKap: Keeping up with the routine. Could you get me [color=#0f6e2f]{Transaction_ItemWants}[/color]?
 - Right away, Kuya.
 [end_timeline]
 

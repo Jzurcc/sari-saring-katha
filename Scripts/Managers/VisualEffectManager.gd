@@ -74,12 +74,12 @@ func _create_glimmer_particles(area_size: Vector3) -> CPUParticles3D:
 	p.explosiveness = 0.8
 	p.lifetime = 1.6
 	p.mesh = QuadMesh.new()
-	p.mesh.size = Vector2(0.25, 0.25)
+	p.mesh.size = Vector2(0.4, 0.4)
 	
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_texture = STAR_TEXTURE
-	mat.albedo_color = Color(1.0, 0.95, 0.6, 1.0) # Bright pale yellow
+	mat.albedo_color = Color(1.2, 1.1, 0.5, 1.0) # Over-bright yellow for better bloom
 	mat.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
 	mat.billboard_mode = StandardMaterial3D.BILLBOARD_PARTICLES
 	# Additive blending for extra glow

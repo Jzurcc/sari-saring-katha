@@ -77,12 +77,10 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		success_expected = false
 	# 2. Rest check: if Mario is still on cooldown
 	elif InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
-		# If an upgrade is pending, Mario wants that franchise money! Bypass rest.
-		if StoryManager.pending_upgrade_tier > 0:
-			print("[MarioManager] Upgrade pending — bypassing rest cooldown.")
-		else:
-			label = "CallRest"
-			success_expected = false
+		# Update Dialogic variable for the restock dialogue to show remaining customers
+		Dialogic.VAR.set_variable("Mario_RestCount", InventoryManager.customers_needed_for_delivery)
+		label = "CallRest"
+		success_expected = false
 	
 	print("[MarioManager] Initiating call → Label: ", label)
 	
@@ -180,10 +178,6 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	# 3. Delivery Dialogue
 	_current_anchor = _delivery_sprite
 	
-	# Automatically face the tricycle as dialogue begins.
-	var player = get_tree().get_first_node_in_group("player")
-	if player and player.has_method("face_node"):
-		player.face_node(_delivery_sprite)
 		
 	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock), "Delivery")
 

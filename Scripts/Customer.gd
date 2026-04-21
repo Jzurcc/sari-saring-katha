@@ -192,8 +192,10 @@ func arrived_at_counter() -> void:
 	arrived.emit(self)
 
 func check_item(item: ItemData) -> bool:
-	# Ignore new drops while a satisfaction/rejection animation is playing.
-	if _is_resolving:
+	# NEW: Ensure customer is settled at the counter before accepting items.
+	# This prevents race conditions where items are given while the customer is walking,
+	# cause the Spawner's is_waiting check to reject the dialogue start.
+	if not is_waiting or _is_resolving:
 		return false
 		
 	# --- Special Case: Uncle Mario Tutorial ---
@@ -245,29 +247,32 @@ func check_item(item: ItemData) -> bool:
 		return false
 
 func _on_item_accepted(item: ItemData) -> void:
-	pulse_color(Color("#88d698")) # Soft Light Green
+	# VISUAL: Stronger green pulse for success
+	pulse_color(Color("#9CFFB0"), 0.6) 
 	
-	# Excited Pop (Squash and Stretch)
+	# Excited Pop (Exaggerated Squash and Stretch)
 	if body_sprite:
 		var pop_tween = create_tween()
 		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
-		# Squash down (matching talk timing)
-		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.1, base_scale.y * 0.9, base_scale.z), 0.15) \
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		# Snap up with overshoot
-		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.95, base_scale.y * 1.05, base_scale.z), 0.12) \
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		# Squash down
+		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.25, base_scale.y * 0.75, base_scale.z), 0.1) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		# Snap up (Stretch)
+		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.8, base_scale.y * 1.3, base_scale.z), 0.12) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		# Settle
-		pop_tween.tween_property(body_sprite, "scale", base_scale, 0.12) \
-			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		pop_tween.tween_property(body_sprite, "scale", base_scale, 0.3) \
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	
 	# If this was a riddle and we just solved the riddle item, clear the riddle flag
 	if transaction_context.is_riddle and item == transaction_context.riddle_item:
 		transaction_context.is_riddle = false
 	
 	if transaction_context.desired_items.is_empty():
-		# Trigger the Goodbye/Satisfy dialogue flow in Spawner
-		satisfied.emit(self)
+		# REDUNDANT: We no longer emit 'satisfied' here because MainGame.gd
+		# is now the sole authority for triggering the success dialogue.
+		# This prevents the "Double-Start" race condition in Dialogic.
+		pass
 	else:
 		# Partial fulfillment: Update naming and stay at the counter.
 		# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
@@ -277,9 +282,15 @@ func _on_item_accepted(item: ItemData) -> void:
 func pulse_color(color: Color, duration: float = 0.5) -> void:
 	if body_sprite == null: return
 	var tween = create_tween()
-	tween.tween_property(body_sprite, "modulate", color, duration * 0.4) \
+	# Boost overall brightness for the pulse
+	var target_color = color
+	target_color.r = clamp(target_color.r * 1.2, 0, 1)
+	target_color.g = clamp(target_color.g * 1.2, 0, 1)
+	target_color.b = clamp(target_color.b * 1.2, 0, 1)
+	
+	tween.tween_property(body_sprite, "modulate", target_color, duration * 0.3) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(body_sprite, "modulate", Color.WHITE, duration * 0.6) \
+	tween.tween_property(body_sprite, "modulate", Color.WHITE, duration * 0.7) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func satisfy() -> void:

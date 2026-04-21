@@ -1,9 +1,21 @@
 label Greeting
 # [signal arg="refresh_desires"]
-if {Transaction_GreetingVar} <= 50:
-	Danilo: Uy, boss. Nice day today, 'no? Busy queue. [pause=0.4] I was thinking of actually buying something for a change.
+if {Global_RumorActive}:
+	if {Global_RumorType} == 0.0:
+		Danilo: Psst. Boss. {Global_LastCustomer} just left? They looked... [pause=0.3] interesting.
+	else:
+		Danilo: Uy, boss. I saw {Global_LastCustomer} walking away with that {Global_LastItem}. Good choice on your part.
+	[pause=0.4]
+	Danilo: Anyway, I've been watching the stock levels... figured I'd snag something for myself for a change.
 else:
-	Danilo: Psst. Boss. High-quality inventory today, 'no? I've been watching the stock levels... figured I'd snag something.
+	if {Transaction_GreetingVar} <= 50:
+		Danilo: Uy, boss. Nice day today, 'no? Busy queue. [pause=0.4] I was thinking of actually buying something for a change.
+	else:
+		Danilo: Psst. Boss. High-quality inventory today, 'no? I've been watching the stock levels... figured I'd snag something.
+
+if {Global_HighPriceActive}:
+	Danilo: Medyo mataas ata ang markup natin ngayon ah? [pause=0.3] Sige lang, para naman sa ikauunlad ng tindahan niyo.
+
 [end_timeline]
 
 label Talk

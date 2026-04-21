@@ -5,6 +5,10 @@ if {Transaction_GreetingVar} <= 50:
 else:
 	Rodel: Ambassador. Your terrestrial sun is behaving like a relentless predator. My fluid-reserves are low.
 	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
+
+if {Global_HighPriceActive}:
+	Rodel: This... this is quite steep for a local shop, don't you think? [pause=0.3] I expected more competitive pricing.
+
 [end_timeline]
 
 label Talk

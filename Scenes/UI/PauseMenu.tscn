@@ -4,6 +4,7 @@
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
 [ext_resource type="PackedScene" uid="uid://c7v6p5u6o2x18" path="res://Scenes/UI/OptionsOverlay.tscn" id="3_options"]
 [ext_resource type="PackedScene" uid="uid://cgv6p5u6o2x19" path="res://Scenes/UI/CollectionOverlay.tscn" id="4_collection"]
+[ext_resource type="PackedScene" uid="uid://c7v6p5u6o2x21" path="res://Scenes/UI/StoryProgressOverlay.tscn" id="5_story"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 bg_color = Color(0, 0, 0, 0)
@@ -113,6 +114,22 @@ theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/focus = SubResource("btn_hover")
 text = "MAIN MENU"
 
+[node name="Characters" type="Button" parent="Control/Buttons"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 52
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "CHARACTERS"
+
 [node name="SaveGame" type="Button" parent="Control/Buttons"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
@@ -151,9 +168,13 @@ layout_mode = 1
 [node name="CollectionOverlay" parent="Control" instance=ExtResource("4_collection")]
 layout_mode = 1
 
+[node name="StoryProgressOverlay" parent="Control" instance=ExtResource("5_story")]
+layout_mode = 1
+
 [connection signal="pressed" from="Control/Buttons/Resume" to="Control" method="_on_resume_pressed"]
 [connection signal="pressed" from="Control/Buttons/Settings" to="Control" method="_on_settings_pressed"]
 [connection signal="pressed" from="Control/Buttons/Collection" to="Control" method="_on_collection_pressed"]
+[connection signal="pressed" from="Control/Buttons/Characters" to="Control" method="_on_characters_pressed"]
 [connection signal="pressed" from="Control/Buttons/MainMenu" to="Control" method="_on_main_menu_pressed"]
 [connection signal="pressed" from="Control/Buttons/SaveGame" to="Control" method="_on_save_game_pressed"]
 [connection signal="pressed" from="Control/Buttons/Exit" to="Control" method="_on_exit_pressed"]

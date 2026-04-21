@@ -1,5 +1,5 @@
 label Greeting
-# [signal arg="refresh_desires"]
+[signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The New Face"
 	KuyaKap: [pause=0.8] Oh... so the rumors were true. A fresh pair of eyes behind the counter.
@@ -150,7 +150,7 @@ KuyaKap: [pause=0.4] No rush, apo. Take your time. I'll wait for the {Transactio
 	KuyaKap: Sige.
 	[end_timeline]
 - Sorry, out of stock.
-	KuyaKap: Hehe. That's alright. Just trying out my luck.
+	KuyaKap: Ah... gano'n ba? Sige apo, I'll come back next time.
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]

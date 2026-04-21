@@ -160,105 +160,105 @@ elif {Transaction_Chapter} == 9.0:
 label Riddle
 # Buboy describes the item based on {Transaction_ItemWants}.
 # These are funny child-style "utos" — never mentioning the item name directly.
-if {Transaction_ItemWants} == "Argentita Corned Beef":
+if {Transaction_ItemWantsID} == "argentita":
 	Buboy: The heavy round tin!
 	Buboy: There's a lady on the picture — like a fancy serious tita!
 	Buboy: Mama opens it with this spinning wheel thing...
 	Buboy: It goes RRRRRRRR until the top falls off!
 	Buboy: The beefy tita tin! You know it?!
 
-elif {Transaction_ItemWants} == "Cenchuree Tuna":
+elif {Transaction_ItemWantsID} == "cenchuree":
 	Buboy: The flat flat tin! Not the tall one! The FLAT flat one!
 	Buboy: It smells like the fish section in the market!
 	Buboy: Like really really REALLY like the sea!
 	Buboy: Mama always fans herself when she opens it.
 	Buboy: Hihi! The flat fish one!
 
-elif {Transaction_ItemWants} == "Scam":
+elif {Transaction_ItemWantsID} == "scam":
 	Buboy: The rectangle can!
 	Buboy: The long squarish one!
 	Buboy: You open the lid and there's pink meat inside!
 	Buboy: You slice it flat and fry it in a pan!
 	Buboy: I like it when the edges get a little brown! Hihi!
 
-elif {Transaction_ItemWants} == "Lucky9":
+elif {Transaction_ItemWantsID} == "lucky9":
 	Buboy: The can with the number on it!
 	Buboy: NINE! Lucky nine!
 	Buboy: Mama says nine is lucky!
 	Buboy: So it's the lucky can!
 	Buboy: With a nine! That one!
 
-elif {Transaction_ItemWants} == "Mema":
+elif {Transaction_ItemWantsID} == "mema":
 	Buboy: Um...
 	Buboy: Mama just said a word and I said "hah?"
 	Buboy: And she said just go get it!
 	Buboy: I think it's a can.
 	Buboy: [pause=0.4] Sorry that's all I know. Hehe.
 
-elif {Transaction_ItemWants} == "Anoba":
+elif {Transaction_ItemWantsID} == "anoba":
 	Buboy: The flat crunchy things stacked on each other!
 	Buboy: Like a little tower of crackers you can eat!
 	Buboy: They break SO easily!
 	Buboy: I dropped them once. [pause=0.4] Mama was NOT happy.
 	Buboy: But I still ate all the broken pieces! Hihi!
 
-elif {Transaction_ItemWants} == "Patos":
+elif {Transaction_ItemWantsID} == "patos":
 	Buboy: Oh! I think I know it!
 	Buboy: Pato! Duck! The bag has a duck on it maybe!
 	Buboy: And after eating them your fingers go super yellow!
 	Buboy: Then you lick your fingers and it tastes like cheese!
 	Buboy: Hihi! That one! The duck yellow one!
 
-elif {Transaction_ItemWants} == "Ding Dong Dantes":
+elif {Transaction_ItemWantsID} == "dantes":
 	Buboy: The noisy bag with all the mixed things inside!
 	Buboy: Small round ones! And flat ones! All together!
 	Buboy: When you shake it it goes TATATATATA!
 	Buboy: I like shaking it before opening.
 	Buboy: Mama says stop. But it's so fun! Hehe!
 
-elif {Transaction_ItemWants} == "Marites Cracklin'":
+elif {Transaction_ItemWantsID} == "marites":
 	Buboy: The one that goes CRUNCH CRUNCH CRUNCH in your mouth!
 	Buboy: Like stepping on dried leaves! But LOUDER!
 	Buboy: And it's from the pig's...
 	Buboy: [pause=0.6] Mama says don't think about where it comes from.
 	Buboy: So I don't! I just eat it! Hihi!
 
-elif {Transaction_ItemWants} == "Ngarag-Ya":
+elif {Transaction_ItemWantsID} == "ngaragya":
 	Buboy: You know when Mama is cooking adobo?
 	Buboy: And the WHOLE house smells so good?
 	Buboy: It's the small snack bag that smells like THAT!
 	Buboy: Like adobo! But in a tiny bag!
 	Buboy: Weird and super yummy! Hehe!
 
-elif {Transaction_ItemWants} == "Champyon":
+elif {Transaction_ItemWantsID} == "champyon":
 	Buboy: Um...
 	Buboy: The small white sticks inside a box.
 	Buboy: The ones that make smoke when adults use them.
 	Buboy: I am NOT allowed to touch them. Mama said.
 	Buboy: [pause=0.4] Papa still sends me to get them anyway. Hihi.
 
-elif {Transaction_ItemWants} == "Marboro":
+elif {Transaction_ItemWantsID} == "marboro":
 	Buboy: The RED box!
 	Buboy: With the small white sticks inside!
 	Buboy: NOT the blue box! The RED one!
 	Buboy: There's another smoke box but this one is RED!
 	Buboy: You know! The red smoke box!
 
-elif {Transaction_ItemWants} == "Kokaloka":
+elif {Transaction_ItemWantsID} == "coke":
 	Buboy: Ohhhh the dark bubbly drink!
 	Buboy: Not water! The DARK colored one!
 	Buboy: In a bottle! And when you open it — PSHHHHH!
 	Buboy: And the bubbles jump up into your NOSE!
 	Buboy: And I sneeze every single time! Hihi!
 
-elif {Transaction_ItemWants} == "Water":
+elif {Transaction_ItemWantsID} == "water":
 	Buboy: Just water po!
 	Buboy: The clear bottle!
 	Buboy: With water inside!
 	Buboy: Normal water! For drinking!
 	Buboy: That's it! It's just water! Hihi!
 
-elif {Transaction_ItemWants} == "Gin":
+elif {Transaction_ItemWantsID} == "gin":
 	Buboy: Um...
 	Buboy: The tall bottle with the clear strong drink.
 	Buboy: It smells like cleaning water but for drinking?
@@ -266,76 +266,76 @@ elif {Transaction_ItemWants} == "Gin":
 	Buboy: [pause=0.6] Mama doesn't know he asked me.
 	Buboy: Please don't tell her po. Hehe.
 
-elif {Transaction_ItemWants} == "Chubs":
+elif {Transaction_ItemWantsID} == "chubs":
 	Buboy: The soft little chewy ones!
 	Buboy: Like tiny edible pillows!
 	Buboy: They come in different colors!
 	Buboy: I once tried to save some for later.
 	Buboy: [pause=0.4] I ate them all in two minutes. Hehe.
 
-elif {Transaction_ItemWants} == "Mentor":
+elif {Transaction_ItemWantsID} == "mentor":
 	Buboy: The long plastic roll!
 	Buboy: With round flat things inside!
 	Buboy: You push them out one by one — pop! pop! pop!
 	Buboy: And your tongue feels cold after!
 	Buboy: Like a tiny cold circle! Hihi!
 
-elif {Transaction_ItemWants} == "Pocha":
+elif {Transaction_ItemWantsID} == "pocha":
 	Buboy: Small candy in a pack!
 	Buboy: Chewy ones! Or hard? I always forget which!
 	Buboy: But it's sweet and good!
 	Buboy: Mama lets me get one for myself sometimes!
 	Buboy: Hihi! That one!
 
-elif {Transaction_ItemWants} == "Pampanga's Good Tocino":
+elif {Transaction_ItemWantsID} == "tocino":
 	Buboy: The sweet sweet pink meat in the cold box!
 	Buboy: When Mama fries it the WHOLE street can smell it!
 	Buboy: I stand right next to the pan and just breathe!
 	Buboy: It smells like candy but it's MEAT!
 	Buboy: Sweet meat! In the cold section! Hihi!
 
-elif {Transaction_ItemWants} == "Purified Foods Tender Juicy":
+elif {Transaction_ItemWantsID} == "purified":
 	Buboy: The long pink sausage!
 	Buboy: In a pack! There's a bunch of them!
 	Buboy: Mama boils them for soup!
 	Buboy: Or fries them until the edges get a little burnt!
 	Buboy: I LOVE the burnt edges! Hehe!
 
-elif {Transaction_ItemWants} == "Hotdog":
+elif {Transaction_ItemWantsID} == "hotdog":
 	Buboy: The long pink sausage!
 	Buboy: In a pack! There's a bunch of them!
 	Buboy: For soup or frying!
 	Buboy: I like the burnt edges! Hehe!
 
-elif {Transaction_ItemWants} == "Borgir":
+elif {Transaction_ItemWantsID} == "borgir":
 	Buboy: The frozen flat round thing!
 	Buboy: From the cold cold section!
 	Buboy: You fry it in a pan!
 	Buboy: Like making your own burger at home!
 	Buboy: Is that one here? Hihi!
 
-elif {Transaction_ItemWants} == "Nagets":
+elif {Transaction_ItemWantsID} == "nagets":
 	Buboy: The small frozen chicken pieces!
 	Buboy: Small! And round! And frozen!
 	Buboy: You fry them and they go CRUNCH!
 	Buboy: I can eat like TEN of them! No wait — twelve!
 	Buboy: Hihi! That one!
 
-elif {Transaction_ItemWants} == "Aryel":
+elif {Transaction_ItemWantsID} == "aryel":
 	Buboy: The tiny packet that smells SO clean!
 	Buboy: Like the cleanest smell in the whole world!
 	Buboy: Mama mixes it in water for washing the clothes!
 	Buboy: I tried making bubbles with it for fun once.
 	Buboy: [pause=0.5] My eyes hurt so bad. Hehe. Don't do that.
 
-elif {Transaction_ItemWants} == "Knees and Toes":
+elif {Transaction_ItemWantsID} == "kneestoes":
 	Buboy: The small packet for washing in the bathroom!
 	Buboy: Is it for feet? Or hair? Or both?!
 	Buboy: The name sounds like a children's song!
 	Buboy: Knees and... [pause=0.4] Hihi I forget the rest.
 	Buboy: The small bath packet! That one!
 
-elif {Transaction_ItemWants} == "Kopimo":
+elif {Transaction_ItemWantsID} == "kopimo":
 	Buboy: The small brown packet!
 	Buboy: You mix it in hot water and it turns dark brown!
 	Buboy: Papa drinks it every single morning!
@@ -343,14 +343,14 @@ elif {Transaction_ItemWants} == "Kopimo":
 	Buboy: [pause=0.7] Very very bitter.
 	Buboy: I don't understand why adults like it. Hehe!
 
-elif {Transaction_ItemWants} == "Dadi Chicken na Chicken":
+elif {Transaction_ItemWantsID} == "chicken":
 	Buboy: The flat bag with the dried noodle BRICK inside!
 	Buboy: It looks like a hard brick but it's food!
 	Buboy: There's a chicken on the bag!
 	Buboy: You pour hot water and it becomes noodles!
 	Buboy: Like MAGIC! Hihi!
 
-elif {Transaction_ItemWants} == "Pantit Canton":
+elif {Transaction_ItemWantsID} == "pantit":
 	Buboy: The yellow noodle bag!
 	Buboy: Not the soupy one! The thick yellow kind!
 	Buboy: You fry it with oil in a pan!

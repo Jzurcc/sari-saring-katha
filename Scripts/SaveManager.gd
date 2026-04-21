@@ -30,6 +30,10 @@ signal save_finished
 var _customer_leave_counter: int = 0
 var _is_saving: bool = false
 
+## Debug flag: If true, force_save() will return early without writing.
+## Toggled via secret debug keybind (CTRL + P).
+var debug_skip_save: bool = false
+
 func _ready() -> void:
 	# --- Save Triggers ---
 	# A) End of day
@@ -42,9 +46,18 @@ func _ready() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		if _is_in_game():
-			force_save()
+	# Saving on exit is now handled explicitly by PauseMenu (unless in debug mode).
+	# Auto-save on window close removed per user request.
+	pass
+
+
+func _input(event: InputEvent) -> void:
+	# Secret Debug Toggle: CTRL + P
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_P and event.ctrl_pressed:
+			debug_skip_save = !debug_skip_save
+			print("[SaveManager] DEBUG_SKIP_SAVE: ", "ON (Saves disabled)" if debug_skip_save else "OFF (Saves enabled)")
+			# Optional: Visual indicator could go here.
 
 
 # ── Trigger Handlers ──────────────────────────────────────────────────────
@@ -81,6 +94,11 @@ func _on_customer_left(_customer = null) -> void:
 func force_save() -> void:
 	if _is_saving:
 		return
+	
+	if debug_skip_save:
+		print("[SaveManager] Save BLOCKED (Debug Skip Save is ON).")
+		return
+
 	_is_saving = true
 	_customer_leave_counter = 0
 

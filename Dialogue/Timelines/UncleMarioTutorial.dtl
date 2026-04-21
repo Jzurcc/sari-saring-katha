@@ -1,4 +1,4 @@
-﻿UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving, ah?
+UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving, ah?
 UncleMario: Looking at you stand behind that counter...[pause=1] the memories just comes flooding back.
 UncleMario: Your [i]Lola[/i] will definitely be overjoyed to see you now.
 UncleMario: Anyway, do you need help with how things are done here? Or are you ready to run this place on your own?
@@ -26,7 +26,8 @@ UncleMario: Anyway, do you need help with how things are done here? Or are you r
 	[signal arg="wait_for_fridge"]
 	UncleMario: You can put all sorts of frozen goods here. Do be sure to close it after though, or else the cold will run free!
 	UncleMario: Also, there's a trash can nearby to dump extra stock. This is useful for when you buy too much of an item and it's not too popular anymore!
-	UncleMario: As you serve more customers, higher tier items will be unlocked in the market. Fill your store with all sorts of products, ah!
+	UncleMario: Sometimes, people will request items that you haven't unlocked yet. Don't be afraid to turn them down, anak.
+	UncleMario: As you serve more customers, high tier items will be unlocked in the market. Fill your store with all sorts of products, ah!
 	UncleMario: When you buy a new tier, it comes with 2 of each new unlocked items. Keep upgrading your store, anak.
 	UncleMario: And if you're running out of stock, just use the phone behind you and dial in my name, [i]"Mario"[/i]!
 	UncleMario: Alternatively, you can press the asterisk (*) button as a shortcut. 

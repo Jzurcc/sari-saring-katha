@@ -185,7 +185,7 @@ func _input(event: InputEvent) -> void:
 		pass
 	
 	# Pricing Mode Toggle (Alt) - Always allowed regardless of dialogue
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ALT and not event.echo:
+	if event.is_action_pressed("pricing_lens") and not event.echo:
 		pricing_mode_active = !pricing_mode_active
 		EventBus.pricing_mode_changed.emit(pricing_mode_active)
 		print("[PlayerInteraction] Pricing Mode: ", "ON" if pricing_mode_active else "OFF")
@@ -201,16 +201,10 @@ func _input(event: InputEvent) -> void:
 	# Pricing Adjustments (Direct Price Mode)
 	if pricing_mode_active and is_instance_valid(_last_hovered):
 		var delta := 0.0
-		if event is InputEventMouseButton:
-			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				delta = 0.5 # 0.5 Peso
-			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				delta = -0.5 # -0.5 Peso
-		elif event is InputEventKey and event.pressed and not event.echo:
-			if event.keycode == KEY_PERIOD:
-				delta = 0.5
-			elif event.keycode == KEY_COMMA:
-				delta = -0.5
+		if event.is_action_pressed("price_up"):
+			delta = 0.5 # 0.5 Peso
+		elif event.is_action_pressed("price_down"):
+			delta = -0.5 # -0.5 Peso
 		
 		if delta != 0.0:
 			var trigger_adj = false

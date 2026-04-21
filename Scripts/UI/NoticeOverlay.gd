@@ -20,7 +20,18 @@ func _ready() -> void:
 	
 	EventBus.show_notification.connect(_on_show_notification)
 
+var _last_message: String = ""
+var _last_show_time: float = 0.0
+
 func _on_show_notification(title: String, message: String, sfx_name: String = "") -> void:
+	# Debounce: Skip identical messages within 2 seconds to prevent spam
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if message == _last_message and (current_time - _last_show_time) < 2.0:
+		return
+		
+	_last_message = message
+	_last_show_time = current_time
+	
 	title_label.text = title
 	message_label.text = message
 	
@@ -28,6 +39,7 @@ func _on_show_notification(title: String, message: String, sfx_name: String = ""
 		AudioManager.play_sfx(sfx_name)
 	
 	_animate_in()
+
 
 func _animate_in() -> void:
 	# Ensure it's on top of everything

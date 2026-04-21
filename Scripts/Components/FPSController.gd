@@ -167,10 +167,10 @@ func _physics_process(delta: float) -> void:
 		right = right.normalized()
 		
 		var direction = (right * input_dir.x + forward * (-input_dir.y)).normalized()
-		var current_speed = sprint_speed if Input.is_key_pressed(KEY_SHIFT) else walk_speed
+		var current_speed = sprint_speed if Input.is_action_pressed("sprint") else walk_speed
 		
 		# Crouch Tween Logic
-		var wants_to_crouch = Input.is_key_pressed(KEY_CTRL)
+		var wants_to_crouch = Input.is_action_pressed("crouch")
 		if wants_to_crouch != _is_crouching:
 			_is_crouching = wants_to_crouch
 			if _crouch_tween:

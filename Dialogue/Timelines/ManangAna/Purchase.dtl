@@ -5,6 +5,9 @@ if {Transaction_GreetingVar} <= 50:
 else:
 	ManangAna: Good day. My feet are just... they think they're made of lead tonight.
 
+if {Global_HighPriceActive}:
+	ManangAna: Jusko, pati ba naman dito? [pause=0.4] Ang mahal na talaga ng mabuhay ngayon, anak. Konting bawas naman sana.
+
 if {Transaction_WantsDebt}:
 	ManangAna: [pause=1.0] ...
 	ManangAna: Anak... I... I didn't bring any change today. I'm sorry. 

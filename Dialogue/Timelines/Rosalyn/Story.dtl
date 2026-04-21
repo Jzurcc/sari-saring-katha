@@ -1,128 +1,117 @@
 label Greeting
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The Flight"
-	Rosalyn: H-hello... [pause=0.8] 
-	Rosalyn: I... um.
-	Rosalyn: Nothing...
+	Rosalyn: [wave].[pause=1.0].[pause=1.0].[pause=1.0][/wave]
+	Rosalyn: [wave]H[pause=1.0]-hello...[pause=1.0][/wave]
+	Rosalyn: [wave]I... [pause=1.0]um.[/wave]
+	Rosalyn: [wave]...[pause=1.0][/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: "The Attempt"
-	Rosalyn: Hello again... [pause=0.6] um...
-	Rosalyn: I'm sorry about before. 
-	Rosalyn: I've been... I've been practicing. 
-	Rosalyn: My hands... let me just... [pause=0.5] oh. Good. They stayed on the counter this time.
-	Rosalyn: I would like to buy— um. I have coins. They're in my pocket. 
-	Rosalyn: Except... [pause=0.6] I... um...
-	Rosalyn: Sometimes I can hold things and sometimes I can't. And I can't always tell which kind of day it is until I try. 
-	Rosalyn: I didn't want to drop the coins on the floor and then... [pause=0.4] go through the floor. In front of you. 
-	Rosalyn: That seemed... [pause=0.3] impolite. 
-	Rosalyn: I'll... I'll try again tomorrow.
+	Rosalyn: [wave]H-hello again... [pause=1.0] um...[/wave]
+	Rosalyn: [wave]I... [pause=1.0] I brought coins this time... [pause=1.0] see?[/wave]
+	Rosalyn: [wave]...[pause=1.0][/wave]
+	Rosalyn: [wave]...oh.[/wave]
+	Rosalyn: [wave]They... [pause=1.0] they just passed straight through my hands.[/wave]
+	Rosalyn: [wave]I'm sorry... [pause=1.0] over the mess. [pause=1.0] I can't... [pause=1.0] pick them up.[/wave]
+	Rosalyn: [wave]I should go. [pause=1.0] I'll... [pause=1.0] try again tomorrow.[/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "The Anchor"
-	Rosalyn: Good day. [pause=0.5] I would like... [pause=0.3] a {Transaction_ItemWants}, please. 
-	Rosalyn: Cold... [pause=0.4] if you have it.
-	Rosalyn: Let me... [pause=0.6] one coin... two... [pause=0.3] there. They stayed.
-	Rosalyn: I figured something out. Cold things are... easier. To hold onto. 
-	Rosalyn: I think the cold gives me something to concentrate on... and the concentrating is what keeps me... present.
-	Rosalyn: It's resting in my hands now. [pause=0.5] Still solid. 
-	Rosalyn: I know that's unusual. I'm sorry. But it works. 
-	Rosalyn: I'm quite pleased about this, actually. [pause=0.4] Thank you.
-	[signal arg="story_success"]
+	Rosalyn: [wave]Good day... [pause=1.0][/wave]
+	Rosalyn: [wave]May I... [pause=1.0] try again? [pause=1.0] A {Transaction_ItemWants}, please.[/wave] 
+	Rosalyn: [wave]Cold... [pause=1.0] if you have it.[/wave]
+	Rosalyn: [wave]Let me just... [pause=1.0] one coin... [pause=1.0] two...[/wave]
+	Rosalyn: [wave]They stayed. [pause=1.0] On the counter.[/wave] 
+	Rosalyn: [wave]It takes so much... [pause=1.0] concentration.[/wave]
+	Rosalyn: [wave]The cold helps. [pause=1.0] It gives my hands something to remember.[/wave]
+	Rosalyn: [wave]Thank you for your patience.[/wave]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
 	# Chapter 4: "The Burn"
-	Rosalyn: Good day. [pause=0.5] Could I have a hot coffee, please? 
-	Rosalyn: Actually... um... [pause=0.6]
-	Rosalyn: I know what you're going to say. I know I can't feel it. I am aware.
-	Rosalyn: I spilled some on my hand last Tuesday. Just to check. I do that sometimes... I check. 
-	Rosalyn: And this time—again—nothing.
-	Rosalyn: It's fine. I'll take a cold {Transaction_ItemWants} instead. I know that works.
-	Rosalyn: My hand feels... nothing. [pause=0.5] Just the shape of the bottle.
-	Rosalyn: Maybe next Tuesday. [pause=0.4] Sorry for taking up your time.
-	[signal arg="story_success"]
+	Rosalyn: [wave]Good day. [pause=1.0] Could I have a hot coffee today?[/wave] 
+	Rosalyn: [wave]Actually... [pause=1.0] um... [pause=1.0][/wave]
+	Rosalyn: [wave]...No. [pause=1.0] Last Tuesday... [pause=1.0] I tried to hold a warm cup elsewhere.[/wave]
+	Rosalyn: [wave]My hand still couldn't feel the warmth. [pause=1.0] Just... [pause=1.0] the shape.[/wave] 
+	Rosalyn: [wave]I'll just take a cold {Transaction_ItemWants} instead, please. [pause=1.0] I know that works.[/wave]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
 	# Chapter 5: "The Silence"
-	Rosalyn: Good day. [pause=0.6] I don't have any coins tonight. I just wanted to say...
-	Rosalyn: Out there, it's very quiet. Cars pass through me and I can't hear them. 
-	Rosalyn: Two cats walked through me today... which is fine, I've adjusted to that. 
-	Rosalyn: One of them stopped and looked at me for a moment, though. Just looked. 
-	Rosalyn: I thought that was... [pause=0.4] nice.
-	Rosalyn: I'm sorry. I know you have a store to run. I just needed to say something to someone who could hear it. 
-	Rosalyn: Thank you for being open.
+	Rosalyn: [wave]Good day. [pause=1.0] I didn't bring coins tonight. [pause=1.0] I just wanted to... [pause=1.0] stand here.[/wave]
+	Rosalyn: [wave]The highway outside is so brightly lit... [pause=1.0] but there is no sound.[/wave] 
+	Rosalyn: [wave]The cars just... [pause=1.0] push right through.[/wave] 
+	Rosalyn: [wave]But earlier... [pause=1.0] a stray cat stopped to look at me.[/wave] 
+	Rosalyn: [wave]It didn't run away. [pause=1.0] Just... [pause=1.0] looked.[/wave]
+	Rosalyn: [wave]I just wanted to tell someone who could actually see me.[/wave] 
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
 	# Chapter 6: "The Puddle"
-	Rosalyn: I didn't bring coins tonight. [pause=0.8]
-	Rosalyn: I looked in a puddle on the way here. I do that sometimes... I keep hoping my reflection will come back. 
-	Rosalyn: It doesn't. 
-	Rosalyn: But tonight when I looked... I remembered the rain. A very specific rain. From a very specific night.
-	Rosalyn: I can feel the surface of the counter... just barely. But I remember the sound.
-	Rosalyn: A loud stop. On the highway. And then... [pause=0.6] quiet.
-	Rosalyn: I finally remember why I'm still here.
+	Rosalyn: [wave]I only came to visit tonight. [pause=1.0][/wave]
+	Rosalyn: [wave]I stood by a puddle on the shoulder of the road.[/wave] 
+	Rosalyn: [wave]I tried to look down... [pause=1.0] to find myself in the water.[/wave] 
+	Rosalyn: [wave]There was nothing. [pause=1.0] Just the streetlamp reflecting back.[/wave]
+	Rosalyn: [wave]But looking at it... [pause=1.0] I remembered the rain.[/wave]
+	Rosalyn: [wave]A blinding light. [pause=1.0] A loud screech of tires... [pause=1.0] and then... [pause=1.0][/wave]
+	Rosalyn: [wave]...Nothing.[/wave]
+	Rosalyn: [wave]I keep coming back to that rain.[/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 6.0:
 	# Chapter 7: "The Candy"
-	Rosalyn: Good day. [pause=0.6] Could I have one of the {Transaction_ItemWants}, please?
-	Rosalyn: The menthol ones. 
-	Rosalyn: One coin... [pause=0.3] two. There. 
-	Rosalyn: I'm just going to hold it for a while. It feels... [pause=0.5] it feels like a memory should feel.
-	Rosalyn: I was never afraid of this store. I want you to know that. 
-	Rosalyn: It's very warm in here. The light is very... present. I always felt it from the road.
-	Rosalyn: Thank you.
-	[signal arg="story_success"]
+	Rosalyn: [wave]Good day. [pause=1.0] Could I have one of the {Transaction_ItemWants}, please?[/wave]
+	Rosalyn: [wave]The menthol ones.[/wave] 
+	Rosalyn: [wave]One coin... [pause=1.0] two. [pause=1.0] There.[/wave] 
+	Rosalyn: [wave]It feels familiar. [pause=1.0] The smell... [pause=1.0] the coldness on the tongue.[/wave]
+	Rosalyn: [wave]I used to stare at your store's lights from the road. [pause=1.0] They always looked so warm.[/wave] 
+	Rosalyn: [wave]I'm glad I finally stepped inside.[/wave]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7.0:
 	# Chapter 8: "Letting Go"
-	Rosalyn: The candy. From last time. 
-	Rosalyn: His name was Ramon. He always carried menthol candies. He said they helped him think. 
-	Rosalyn: We were supposed to meet that night at the corner... and I was running late, and— [pause=1.0]
-	Rosalyn: He's been gone from that corner for a very long time. 
-	Rosalyn: He is either very old, or he has moved on. Either way, I am the only one still waiting.
-	Rosalyn: I don't think it helps anyone if I keep doing that.
-	Rosalyn: Your lights are very warm. I want you to know that. 
-	Rosalyn: It helped. More than you know.
+	Rosalyn: [wave]The candy... [pause=1.0] from last time.[/wave] 
+	Rosalyn: [wave]Ramon used to carry them. [pause=1.0] He said they kept him awake on long drives.[/wave] 
+	Rosalyn: [wave]We were supposed to meet... [pause=1.0] I was running late. [pause=1.0] I ran across the road without looking, and— [pause=1.5][/wave]
+	Rosalyn: [wave]...I don't think he's waiting for me anymore.[/wave] 
+	Rosalyn: [wave]He's probably lived a whole life by now. [pause=1.0] I shouldn't keep waiting either.[/wave]
+	Rosalyn: [wave]Your lights really helped me realize that. [pause=1.0] Thank you.[/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 8.0:
 	# Chapter 9: "The Departure"
-	Rosalyn: I'm leaving now. I just wanted to say goodbye.
-	Rosalyn: You have a good heart. 
-	Rosalyn: Please, keep the lights on for as long as you can. It helps the lost ones find their way.
-	Rosalyn: Goodbye... [pause=0.8] and thank you.
+	Rosalyn: [wave]I won't be staying tonight. [pause=1.0] I just wanted to say goodbye.[/wave]
+	Rosalyn: [wave]You have a very kind heart. [pause=1.0] To listen to someone like me.[/wave] 
+	Rosalyn: [wave]Please... [pause=1.0] keep your lights warmly lit. [pause=1.0] It helps the lost ones find their way out of the dark.[/wave]
+	Rosalyn: [wave]Goodbye... [pause=1.0] and thank you.[/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 label Talk
-Rosalyn: Oh... um... [pause=0.6] I can wait. I have... [pause=0.4] plenty of time.
-Rosalyn: I just need {Transaction_ItemWants}...
+Rosalyn: [wave]Oh... [pause=1.0] um... [pause=1.0] I can wait. [pause=1.0] I have... [pause=1.0] plenty of time.[/wave]
+Rosalyn: [wave]I just need {Transaction_ItemWants}...[/wave]
 - I'll be quick.
 	[end_timeline]
 - Sorry, we're out.
-	Rosalyn: Oh... [pause=0.4] I see. [pause=0.3] I'm sorry for asking. Goodbye.
+	Rosalyn: [wave]Oh... [pause=1.0] I see. [pause=1.0] I'm sorry for asking. [pause=1.0] Goodbye.[/wave]
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]
 
 label Satisfy
-Rosalyn: Oh! [pause=0.4] Thank you. It... um... it feels very real.
+Rosalyn: [wave]Oh! [pause=1.0] Thank you. [pause=1.0] It... [pause=1.0] um... [pause=1.0] it feels very real.[/wave]
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Rosalyn: Um... I don't think this is the {Transaction_ItemWants}. 
-Rosalyn: I'm sorry. Maybe I... um... I'll wait.
+Rosalyn: [wave]Um... [pause=1.0] I don't think this is the {Transaction_ItemWants}.[/wave] 
+Rosalyn: [wave]I'm sorry. [pause=1.0] Maybe I... [pause=1.0] um... [pause=1.0] I'll wait.[/wave]
 [end_timeline]

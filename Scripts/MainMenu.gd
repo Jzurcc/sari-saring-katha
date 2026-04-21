@@ -28,6 +28,7 @@ const SETTINGS_PATH = "user://settings.cfg"
 # ── UI Sound ─────────────────────────────────────────────────────────────────
 var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
 var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
+var _sfx_hover   : AudioStream = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var _ui_player   : AudioStreamPlayer
 
 
@@ -80,6 +81,10 @@ func _play_confirm() -> void:
 	_ui_player.stream = _sfx_confirm
 	_ui_player.play()
 
+func _play_hover() -> void:
+	_ui_player.stream = _sfx_hover
+	_ui_player.play()
+
 func _register_button(btn: Button) -> void:
 	# Cache original theme properties for unhover restoration
 	original_styles[btn] = {
@@ -104,6 +109,7 @@ func _register_button(btn: Button) -> void:
 # ─── Button hover effects ──────────────────────────────────────────────────────
 
 func _on_btn_hover(btn: Button) -> void:
+	_play_hover()
 	btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	btn.add_theme_constant_override("outline_size", 0)
 	btn.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0))
@@ -174,7 +180,6 @@ func _on_continue_pressed() -> void:
 	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
 
 func _on_exit_pressed() -> void:
-	SaveManager.force_save()
 	get_tree().quit()
 
 

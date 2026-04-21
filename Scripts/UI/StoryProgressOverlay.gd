@@ -10,6 +10,10 @@ enum View { CHARACTERS, ARCS, CHAPTERS }
 @onready var details_container: VBoxContainer = %DetailsContainer
 @onready var back_button: TextureButton = %BackButton
 @onready var subtitle_label: Label = %Subtitle
+@onready var _ui_player: AudioStreamPlayer = AudioStreamPlayer.new()
+
+var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
+var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
 
 @onready var character_card_scene = preload("res://Scenes/UI/CharacterStoryCard.tscn")
 @onready var list_button_scene = preload("res://Scenes/UI/ProgressListButton.tscn")
@@ -20,6 +24,8 @@ var _selected_arc: int = -1
 var _history: Array[View] = []
 
 func _ready() -> void:
+	_ui_player.bus = "SFX"
+	add_child(_ui_player)
 	hide()
 
 func open() -> void:
@@ -30,8 +36,17 @@ func open() -> void:
 	_update_ui()
 
 func close() -> void:
+	_play_confirm()
 	hide()
 	closed.emit()
+
+func _play_click() -> void:
+	_ui_player.stream = _sfx_click
+	_ui_player.play()
+
+func _play_confirm() -> void:
+	_ui_player.stream = _sfx_confirm
+	_ui_player.play()
 
 func _update_ui() -> void:
 	char_list_view.visible = (_current_view == View.CHARACTERS)
@@ -70,6 +85,7 @@ func _populate_characters() -> void:
 			card.pressed.connect(_on_character_selected.bind(data))
 
 func _on_character_selected(data: CustomerData) -> void:
+	_play_click()
 	_selected_character = data
 	_navigate_to(View.ARCS)
 	_populate_arcs()
@@ -97,7 +113,7 @@ func _populate_arcs() -> void:
 			arc_display_name = _selected_character.arc_names[i]
 		
 		btn.setup(arc_display_name, is_locked, is_completed)
-		btn.pressed.connect(_on_arc_selected.bind(i))
+		btn.pressed.connect(func(): _play_click(); _on_arc_selected(i))
 
 func _on_arc_selected(arc_idx: int) -> void:
 	_selected_arc = arc_idx
@@ -139,6 +155,7 @@ func _navigate_to(new_view: View) -> void:
 	_update_ui()
 
 func _on_back_button_pressed() -> void:
+	_play_confirm()
 	if _history.is_empty():
 		_current_view = View.CHARACTERS
 	else:

@@ -9,15 +9,30 @@ if {Global_AwarenessActive}:
 	else:
 		Customer: Hi there! [pause=0.3] Looks like you're fully stocked today!
 
-# 1. Price Sensitivity - 40% chance if set in StoryManager
+# 1. Price Sensitivity - 50% chance if set in StoryManager
 if {Global_HighPriceActive}:
-	set {PriceVar} = range(1, 4).pick_random()
-	if {PriceVar} == 1.0:
-		Customer: These prices are high!
-	elif {PriceVar} == 2.0:
-		Customer: Gosh, things are getting expensive lately.
+	if {Transaction_CustomerName} == "Kuya Kap":
+		KuyaKap: Hala, apo. Parang medyo masakit ata sa bulsa 'to ngayon ah? [pause=0.3] Tumataas na talaga presyo ng bilihin.
+	elif {Transaction_CustomerName} == "Manang Ana":
+		ManangAna: Jusko, pati ba naman dito? [pause=0.4] Ang mahal na talaga ng mabuhay ngayon, anak. Konting bawas naman sana.
+	elif {Transaction_CustomerName} == "Buboy":
+		Buboy: Kuya, bakit po ang mahal? [pause=0.3] Baka hindi na po ako payagan ni Mama bumili next time.
+	elif {Transaction_CustomerName} == "Danilo":
+		Danilo: Medyo mataas ata ang markup natin ngayon ah? [pause=0.3] Sige lang, para naman sa ikauunlad ng tindahan niyo.
+	elif {Transaction_CustomerName} == "Rodel":
+		Rodel: This... this is quite steep for a local shop, don't you think? [pause=0.3] I expected more competitive pricing.
+	elif {Transaction_CustomerName} == "Rosalyn":
+		Rosalyn: Ang bigat naman po yata ng halaga nito ngayon... [pause=0.4] Parang dati mas madaling makuha.
+	elif {Transaction_CustomerName} == "TK":
+		TK: Whoa, premium prices for a premium sari-sari experience? [pause=0.4] I'll have to mention this in the vlog... if I can afford it!
+	elif {Transaction_CustomerName} == "Brahim":
+		Brahim: Ang mahal naman... [pause=0.3] Isang araw na ulam na rin ang presyo nito.
+	elif {Transaction_CustomerName} == "Reyna Mayari":
+		ReynaMayari: The value you place on these items is... [pause=0.4] ambitious. I trust the quality justifies it.
+	elif {Transaction_CustomerName} == "Sarimanok":
+		Sarimanok: Expensive? Cheap? To a bird of gold, these are but earthly trifles... [pause=0.4] but my human friends might not agree.
 	else:
-		Customer: Naku, ang taas naman ng presyo niyo ngayon.
+		Customer: High prices today, huh? [pause=0.3] Economy must be tough.
 # 1. Main Request
 if {Transaction_IsRiddle}:
 	Customer: I'm looking for something that [color=#0f6e2f]{Transaction_ItemHint}[/color].
