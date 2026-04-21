@@ -213,7 +213,7 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:
-		var start_tier = StoryManager.current_tier
+		var _start_tier = StoryManager.current_tier
 		while StoryManager.current_tier < target_tier:
 			StoryManager.advance_tier("Mario Delivery")
 			var new_tier = StoryManager.current_tier

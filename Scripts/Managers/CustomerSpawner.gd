@@ -264,11 +264,11 @@ func _on_customer_clicked(customer: Customer) -> void:
 		_dialogue_phase = DialoguePhase.REPAYMENT
 		
 		# Dynamic Repayment: Check if the character has a custom "Repayment" label in their timeline
-		var timeline = customer.transaction_context.timeline
-		var timeline_path = timeline.resource_path if timeline is Resource else timeline
+		var repay_timeline = customer.transaction_context.timeline
+		var timeline_path = repay_timeline.resource_path if repay_timeline is Resource else repay_timeline
 		if StoryManager.is_label_in_timeline(timeline_path, "Repayment"):
 			print("[CustomerSpawner] Found custom Repayment label. Using: ", timeline_path)
-			start_dialogue(timeline, customer, _dialogue_phase, "Repayment")
+			start_dialogue(repay_timeline, customer, _dialogue_phase, "Repayment")
 		else:
 			print("[CustomerSpawner] No custom Repayment label. Falling back to Generic/Repayment.dtl")
 			start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, _dialogue_phase)
@@ -418,8 +418,8 @@ func _update_item_names(customer: Customer) -> void:
 		# in get_next_transaction() — stomping it here causes the "something" bug.
 		print("[CustomerSpawner] NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % InventoryManager.current_character_name)
 		# Still update character name and counts, but leave Transaction_ItemWants alone.
-		var data = customer.customer_data
-		InventoryManager.current_character_name = data.character_name if data.character_name != "" else data.get_clean_id()
+		var empty_data = customer.customer_data
+		InventoryManager.current_character_name = empty_data.character_name if empty_data.character_name != "" else empty_data.get_clean_id()
 		InventoryManager.current_item_name = ""
 		StoryManager._set_dvar("Transaction_CustomerName", InventoryManager.current_character_name)
 		if customer.transaction_context:
