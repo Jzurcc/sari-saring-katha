@@ -167,12 +167,12 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		stock_label.hide()
 
 	if is_container:
-		# Center horizontally, slightly lower vertical
-		pricing_ui.global_position = basis_position + Vector3(0, 0.2, 0.2)
+		# Centered on container
+		pricing_ui.global_position = basis_position + Vector3(0, 0.5, 0.1)
 	else:
-		# Shelf items: Center horizontally, and set at 50% of the item height
+		# Shelf items: Center horizontally and vertically at 50% of the item height
 		var h: float = item_data.display_height_meters
-		pricing_ui.global_position = basis_position + Vector3(0, h * 0.5, 0.15)
+		pricing_ui.global_position = basis_position + Vector3(0, h * 0.5, 0.12)
 	
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	pricing_ui.show()
