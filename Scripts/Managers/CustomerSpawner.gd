@@ -47,7 +47,7 @@ var _current_timeline_path: String = "" # Track the timeline started by this spa
 var _last_dialogue_frame: int = -1 # Frame-based protection against double-starting dialogue
 
 func _ready() -> void:
-	print("[DEBUG] CustomerSpawner._ready() START")
+	LogManager.debug("CustomerSpawner", "_ready() START")
 	add_to_group("customer_spawner")
 	add_to_group("persist")
 	EventBus.day_started.connect(_on_day_started)
@@ -65,21 +65,21 @@ func _ready() -> void:
 	EventBus.debt_quota_met.connect(_on_debt_quota_met)
 	
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
-	print("[DEBUG] CustomerSpawner._ready() END")
+	LogManager.debug("CustomerSpawner", "_ready() END")
 
 func _on_day_started(_day: int) -> void:
-	print("[DEBUG] CustomerSpawner._on_day_started() Day starts — customers will spawn until 8 PM.")
+	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
 	_spawn_next_customer()
 
 func _spawn_next_customer() -> void:
-	print("[DEBUG] CustomerSpawner._spawn_next_customer() CALLED. is_paused=%s, current_customer=%s, _is_spawning=%s" % [is_paused, current_customer != null, _is_spawning])
+	LogManager.debug("CustomerSpawner", "_spawn_next_customer() CALLED. is_paused=%s, current_customer=%s, _is_spawning=%s" % [is_paused, current_customer != null, _is_spawning])
 	if is_paused or current_customer != null or _is_spawning:
-		print("[DEBUG] CustomerSpawner: Aborting spawn due to state.")
+		LogManager.debug("CustomerSpawner", "Aborting spawn due to state.")
 		return
 
 	# Closing time check
 	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
-		print("[CustomerSpawner] Store is closing. Spawning Mayari for collection.")
+		LogManager.info("CustomerSpawner", "Store is closing. Spawning Mayari for collection.")
 		spawn_mayari_for_collection()
 		return
 
@@ -97,12 +97,11 @@ func _spawn_next_customer() -> void:
 	var item_list: Array[String] = []
 	for item in transaction.desired_items:
 		item_list.append(item.item_name)
-	print("\n[CUSTOMER] ── Incoming transaction ──────────────────")
-	print("  Character : ", transaction.customer_data.get_clean_id())
-	print("  Type      : ", type_name)
-	print("  Status    : Spawning...")
-	print("  Wants     : ", ", ".join(item_list) if item_list.size() > 0 else "(nothing — visit)")
-	print("[CUSTOMER] ─────────────────────────────────────────")
+	LogManager.info("Customer", "Incoming transaction: Character=%s, Type=%s, Wants=%s" % [
+		transaction.customer_data.get_clean_id(),
+		type_name,
+		", ".join(item_list) if item_list.size() > 0 else "(nothing — visit)"
+	])
 
 	await get_tree().create_timer(2.0).timeout
 
@@ -143,7 +142,7 @@ func _spawn_next_customer() -> void:
 		guest_customer.clicked.connect(_on_guest_clicked)
 		
 		# Guest doesn't trigger logic, they are just there for dialogue
-		print("[CUSTOMER] Guest spawned: ", transaction.secondary_customer_data.get_clean_id())
+		LogManager.info("Customer", "Guest spawned: %s" % transaction.secondary_customer_data.get_clean_id())
 
 	EventBus.customer_spawned.emit(current_customer)
 	_is_spawning = false
@@ -214,7 +213,7 @@ func _on_customer_finished(customer: Customer) -> void:
 		if active_path == target_path:
 			var label := "Satisfy"
 			if StoryManager.is_label_in_timeline(target_path, label):
-				print("[CustomerSpawner] Jumping to Satisfy label mid-timeline.")
+				LogManager.debug("CustomerSpawner", "Jumping to Satisfy label mid-timeline.")
 				Dialogic.Jump.jump_to_label(label)
 				_dialogue_phase = DialoguePhase.SATISFIED
 				return
@@ -267,10 +266,10 @@ func _on_customer_clicked(customer: Customer) -> void:
 		var repay_timeline = customer.transaction_context.timeline
 		var timeline_path = repay_timeline.resource_path if repay_timeline is Resource else repay_timeline
 		if StoryManager.is_label_in_timeline(timeline_path, "Repayment"):
-			print("[CustomerSpawner] Found custom Repayment label. Using: ", timeline_path)
+			LogManager.debug("CustomerSpawner", "Found custom Repayment label. Using: %s" % timeline_path)
 			start_dialogue(repay_timeline, customer, _dialogue_phase, "Repayment")
 		else:
-			print("[CustomerSpawner] No custom Repayment label. Falling back to Generic/Repayment.dtl")
+			LogManager.debug("CustomerSpawner", "No custom Repayment label. Falling back to Generic/Repayment.dtl")
 			start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, _dialogue_phase)
 		return
 
@@ -309,11 +308,11 @@ func _on_customer_clicked(customer: Customer) -> void:
 			_dialogue_phase = DialoguePhase.TALK
 
 	# ── Manual Trigger debug ─────────────────────────────
-	print("\n[CUSTOMER] ── Manual Dialogue Trigger ─────────────")
-	print("  Phase     : ", DialoguePhase.keys()[_dialogue_phase])
-	print("  Timeline  : ", timeline)
-	print("  Label     : ", label if label != "" else "(Start)")
-	print("[CUSTOMER] ─────────────────────────────────────────")
+	LogManager.info("Dialogue", "Manual Trigger: Character=%s, Phase=%s, Label=%s" % [
+		InventoryManager.current_character_name,
+		DialoguePhase.keys()[_dialogue_phase],
+		label if label != "" else "(Start)"
+	])
 
 	start_dialogue(timeline, customer, _dialogue_phase, label)
 
@@ -359,7 +358,7 @@ func _on_dialogic_signal(argument: String) -> void:
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			current_customer.transaction_context.wants_debt = true
 			StoryManager._set_dvar("Transaction_WantsDebt", 1.0)
-			print("[CustomerSpawner] Forcing DEBT state via signal.")
+			LogManager.debug("CustomerSpawner", "Forcing DEBT state via signal.")
 	elif argument == "setup_repay_full":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			var path = current_customer.customer_data.resource_path
@@ -368,7 +367,7 @@ func _on_dialogic_signal(argument: String) -> void:
 			current_customer.transaction_context.repayment_amount = debt
 			StoryManager._set_dvar("Transaction_IsRepaying", 1.0)
 			StoryManager._set_dvar("Transaction_RepaymentAmount", debt)
-			print("[CustomerSpawner] Forcing FULL REPAYMENT state via signal: ", debt)
+			LogManager.debug("CustomerSpawner", "Forcing FULL REPAYMENT state via signal: %f" % debt)
 	elif argument == "setup_repay_half":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			var path = current_customer.customer_data.resource_path
@@ -378,7 +377,7 @@ func _on_dialogic_signal(argument: String) -> void:
 			current_customer.transaction_context.repayment_amount = half
 			StoryManager._set_dvar("Transaction_IsRepaying", 1.0)
 			StoryManager._set_dvar("Transaction_RepaymentAmount", half)
-			print("[CustomerSpawner] Forcing HALF REPAYMENT state via signal: ", half)
+			LogManager.debug("CustomerSpawner", "Forcing HALF REPAYMENT state via signal: %f" % half)
 	elif argument == "spawn_guest":
 		if is_instance_valid(guest_customer) and guest_customer.has_method("trigger_arrival"):
 			guest_customer.trigger_arrival()
@@ -416,7 +415,7 @@ func _update_item_names(customer: Customer) -> void:
 		# For visit-story chapters, desired_items is intentionally empty.
 		# StoryManager already set the correct value (or the fallback random item)
 		# in get_next_transaction() — stomping it here causes the "something" bug.
-		print("[CustomerSpawner] NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % InventoryManager.current_character_name)
+		LogManager.debug("CustomerSpawner", "NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % InventoryManager.current_character_name)
 		# Still update character name and counts, but leave Transaction_ItemWants alone.
 		var empty_data = customer.customer_data
 		InventoryManager.current_character_name = empty_data.character_name if empty_data.character_name != "" else empty_data.get_clean_id()
@@ -470,7 +469,7 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 	# PROTECTION: Prevent "Double-Start" race conditions within the target frame.
 	# This happens if both Customer.gd and MainGame.gd trigger start_dialogue simultaneously.
 	if Engine.get_frames_drawn() == _last_dialogue_frame:
-		print("[CustomerSpawner] REJECTED: start_dialogue already called in this frame. Latching to previous call.")
+		LogManager.warn("CustomerSpawner", "REJECTED: start_dialogue already called in this frame. Latching to previous call.")
 		return
 	_last_dialogue_frame = Engine.get_frames_drawn()
 
@@ -491,17 +490,17 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 				final_label = "" # Final fallback: start from beginning
 				print("[CustomerSpawner] Falling back to start of timeline.")
 
-	print("[Dialogue] Starting: ", _current_timeline_path, " Phase: ", DialoguePhase.keys()[phase], " Label: ", final_label)
+	LogManager.info("Dialogue", "Starting: %s (Phase: %s, Label: %s)" % [_current_timeline_path, DialoguePhase.keys()[phase], final_label])
 
 	# If a different timeline is running, end it first to prioritize this one.
 	# We REMOVED the early return for Dialogic.current_timeline != null to allow 
 	# item-giving to interrupt greetings or idle talk.
 	if Dialogic.current_timeline != null:
 		if Dialogic.current_timeline.resource_path != _current_timeline_path:
-			print("[CustomerSpawner] Ending current timeline to play priority: ", _current_timeline_path)
+			LogManager.info("CustomerSpawner", "Ending current timeline to play priority: %s" % _current_timeline_path)
 			Dialogic.end_timeline()
 		elif final_label != "":
-			print("[CustomerSpawner] Jumping directly to label: ", final_label)
+			LogManager.debug("CustomerSpawner", "Jumping directly to label: %s" % final_label)
 			Dialogic.Jump.jump_to_label(final_label)
 			return
 
@@ -541,7 +540,7 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 func _on_dialogue_ended() -> void:
 	# 1. Detect if Mario just cut in
 	if Dialogic.current_timeline != null and "UncleMario.dtl" in Dialogic.current_timeline.resource_path:
-		print("[CustomerSpawner] Mario interrupted current flow. Interruption flag set.")
+		LogManager.debug("CustomerSpawner", "Mario interrupted current flow. Interruption flag set.")
 		if _dialogue_phase == DialoguePhase.GREETING:
 			_greeting_interrupted = true
 		_dialogue_phase = DialoguePhase.NONE
@@ -551,7 +550,7 @@ func _on_dialogue_ended() -> void:
 	# 2. Detect if Mario just FINISHED (leaving Dialogic empty)
 	# We check if restocking is active to verify it was likely Mario's timeline that just ended.
 	if MarioManager.is_restocking_active and Dialogic.current_timeline == null:
-		print("[CustomerSpawner] Mario timeline ended. (Phase '%s' preserved)" % DialoguePhase.keys()[_dialogue_phase])
+		LogManager.debug("CustomerSpawner", "Mario timeline ended. (Phase '%s' preserved)" % DialoguePhase.keys()[_dialogue_phase])
 		# Do NOT clear _dialogue_phase here! MarioManager will emit delivery_finished 
 		# which triggers the deferred/interrupted logic correctly.
 		return
@@ -640,7 +639,7 @@ func _on_dialogue_ended() -> void:
 			if is_instance_valid(current_customer) and current_customer.transaction_context:
 				var t = current_customer.transaction_context
 				if t.transaction_type == TransactionContext.Type.STORY and t.is_visit_story:
-					print("[CustomerSpawner] Fallback Satisfaction for VISIT-STORY.")
+					LogManager.debug("CustomerSpawner", "Fallback Satisfaction for VISIT-STORY.")
 					current_customer.satisfy()
 					return
 			if phase == DialoguePhase.GREETING and is_instance_valid(current_customer):
@@ -668,10 +667,7 @@ func spawn_mayari_for_collection() -> void:
 		_end_day()
 		return
 
-	print("\n[CUSTOMER] ── Incoming Debt Collection ─────────────")
-	print("  Character : Reyna Mayari")
-	print("  Type      : VISIT (Collection)")
-	print("[CUSTOMER] ─────────────────────────────────────────")
+	LogManager.info("Customer", "Incoming Debt Collection: Character=Reyna Mayari, Type=VISIT (Collection)")
 
 	await get_tree().create_timer(1.5).timeout
 
@@ -770,7 +766,7 @@ func load_save_data(data: Dictionary) -> void:
 			current_customer.satisfied.connect(_on_customer_finished)
 			
 			EventBus.customer_spawned.emit(current_customer)
-			print("[CustomerSpawner] Restored current customer: ", ctx.customer_data.get_clean_id() if ctx.customer_data else "Unknown")
+			LogManager.info("CustomerSpawner", "Restored current customer: %s" % (ctx.customer_data.get_clean_id() if ctx.customer_data else "Unknown"))
 
 	if data.has("guest_customer"):
 		var g_ctx_data = data["guest_customer"]
@@ -790,7 +786,7 @@ func load_save_data(data: Dictionary) -> void:
 				guest_customer.call("_on_target_reached")
 				
 			guest_customer.clicked.connect(_on_guest_clicked)
-			print("[CustomerSpawner] Restored guest customer: ", g_ctx.customer_data.get_clean_id() if g_ctx.customer_data else "Unknown")
+			LogManager.info("CustomerSpawner", "Restored guest customer: %s" % (g_ctx.customer_data.get_clean_id() if g_ctx.customer_data else "Unknown"))
 
 
 func _on_character_speaking(data: CustomerData) -> void:

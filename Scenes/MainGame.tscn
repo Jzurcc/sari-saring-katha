@@ -131,7 +131,7 @@ size = Vector3(1.7578125, 4.565674, 1)
 size = Vector3(0.45751953, 0.26831055, 0.5484009)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ni4m0"]
-size = Vector3(1.2250977, 1.4875488, 0.5532837)
+size = Vector3(1.3911743, 1.4875488, 1.1344337)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ptfdn"]
 size = Vector3(1.6877441, 2.1987305, 0.6505127)
@@ -701,7 +701,13 @@ shaded = true
 texture = ExtResource("61_32bjv")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="TrashInteractable" unique_id=1652016983]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11254883, 0.20617676, -0.053863525)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.033578634, 0.20617676, 0.045267105)
+shape = SubResource("BoxShape3D_ni4m0")
+
+[node name="TrashPhysicsBody" type="StaticBody3D" parent="TrashInteractable" unique_id=1652016984]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrashInteractable/TrashPhysicsBody" unique_id=1652016985]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.033578634, 0.20617676, 0.045267105)
 shape = SubResource("BoxShape3D_ni4m0")
 
 [node name="OutsideSpotLight3D" type="SpotLight3D" parent="." unique_id=1679869229]

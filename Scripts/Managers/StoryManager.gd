@@ -8,7 +8,8 @@ var save_id: String = "story_manager"
 const DAY_START_HOUR := 5.0
 const MENU_THEME_HOUR := 16.89 ## Golden hour aesthetic for Main Menu
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
-## 1 in-game hour = 30 real seconds.
+const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
+## 1 in-game hour = 50 real seconds.
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 
 var day: int = 1
@@ -36,6 +37,9 @@ var is_mayari_debt_active: bool = true
 var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 var customer_debts: Dictionary = {}
+var is_customer_present: bool = false
+var wait_limit_time: float = -1.0
+var was_paused_by_limit: bool = false
 
 
 
@@ -167,10 +171,11 @@ var _time_of_day_node: Node = null
 ]
 
 func _ready() -> void:
-	print("[DEBUG] StoryManager._ready() START")
+	LogManager.info("StoryManager", "StoryManager._ready() START")
 	add_to_group("persist")
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_satisfied)
+	EventBus.customer_arrived.connect(_on_customer_arrived)
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
 	Dialogic.VAR.variable_changed.connect(_on_dialogic_variable_changed)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
@@ -187,32 +192,56 @@ func _ready() -> void:
 			_char_lookup[c.resource_path] = c
 	
 	randomize()
-	print("[DEBUG] StoryManager._ready() END")
+	LogManager.info("StoryManager", "StoryManager._ready() END")
 	
 func _on_tod_time_changed(t: float) -> void:
 	_current_display_time = t
 	
-	# End of day check: strictly cap at CLOSING_HOUR
-	if _current_display_time >= CLOSING_HOUR:
+	# 1. Customer Wait Limit: Pause time if someone's been here for 2 hours
+	if wait_limit_time > 0 and _current_display_time >= wait_limit_time:
 		if is_clock_running:
-			print("[StoryManager] Closing Time Reached (8 PM). Pausing clock.")
+			LogManager.info("StoryManager", "Customer wait limit reached (+2h). Pausing clock.")
+			is_clock_running = false
+			was_paused_by_limit = true
+		wait_limit_time = -1.0 # Limit reached, don't trigger again for this customer
+		
+	# 2. Hard Stop Limit: Never go past Midnight
+	if _current_display_time >= HARD_STOP_HOUR:
+		if is_clock_running:
+			LogManager.info("StoryManager", "Midnight reached. Hard pausing clock.")
+			is_clock_running = false
+		_current_display_time = HARD_STOP_HOUR
+		_apply_display_time(HARD_STOP_HOUR)
+		# If someone is here, they can still be served, but time won't move.
+		# If no one is here, trigger closing immediately.
+		if not is_customer_present:
+			EventBus.closing_time_reached.emit()
+		return # Stop further checks
+
+	# 3. End of day check: strictly cap at CLOSING_HOUR ONLY if no customer is present
+	if _current_display_time >= CLOSING_HOUR and not is_customer_present:
+		if is_clock_running:
+			LogManager.info("StoryManager", "Closing Time Reached (8 PM). Pausing clock.")
 			is_clock_running = false
 			_current_display_time = CLOSING_HOUR
 			_apply_display_time(CLOSING_HOUR)
 			EventBus.closing_time_reached.emit()
 		elif _current_display_time > CLOSING_HOUR:
-			# Safety clamp to prevent time creep while paused with a customer
+			# Safety clamp to prevent time creep while paused
 			_current_display_time = CLOSING_HOUR
 			_apply_display_time(CLOSING_HOUR)
 
 func _on_day_started(new_day: int) -> void:
-	print("[DEBUG] StoryManager._on_day_started(%d) CALLED" % new_day)
+	LogManager.info("StoryManager", "StoryManager._on_day_started(%d) CALLED" % new_day)
 	day = new_day
 	has_mayari_visited = false
 	_first_customer_of_day = true
 	todays_story_counts.clear()
 	_setup_daily_focus()
-	print("[StoryManager] Day ", day, " starts.")
+	LogManager.info("StoryManager", "Day %d starts." % day)
+	is_customer_present = false
+	wait_limit_time = -1.0
+	was_paused_by_limit = false
 
 func _setup_daily_focus() -> void:
 	var unlocked = _get_unlocked_characters()
@@ -239,7 +268,7 @@ func _setup_daily_focus() -> void:
 	_last_focus_character_path = todays_focus_character_path
 	
 	var focus_display = todays_focus_character_path.get_file().get_basename()
-	print("[StoryManager] Day ", day, " focus character is: ", focus_display)
+	LogManager.info("StoryManager", "Day %d focus character is: %s" % [day, focus_display])
 
 func advance_tier(source: String = "Manual") -> void:
 	if current_tier >= 10:
@@ -249,7 +278,7 @@ func advance_tier(source: String = "Manual") -> void:
 	purchase_counter = 0
 	pending_upgrade_tier = 0
 	pending_upgrade_cost = 0.0
-	print("[StoryManager] TIER ADVANCED to ", current_tier, " via ", source)
+	LogManager.info("StoryManager", "TIER ADVANCED to %d via %s" % [current_tier, source])
 	
 	# Save state
 	_save_progression()
@@ -294,7 +323,7 @@ func process_pending_unlock() -> void:
 	if _pending_tier_advance_source != "":
 		# Safety Guard: Never notify for the same tier twice
 		if max_unlocked_tier <= _last_notified_tier:
-			print("[StoryManager] Skip redundant notification for Tier ", max_unlocked_tier)
+			LogManager.info("StoryManager", "Skip redundant notification for Tier %d" % max_unlocked_tier)
 			_pending_tier_advance_source = ""
 			return
 			
@@ -357,6 +386,9 @@ func get_save_data() -> Dictionary:
 		"last_mayari_collection_successful": last_mayari_collection_successful,
 		"current_display_time": _current_display_time,
 		"is_clock_running": is_clock_running,
+		"wait_limit_time": wait_limit_time,
+		"was_paused_by_limit": was_paused_by_limit,
+		"is_customer_present": is_customer_present,
 		"_last_notified_tier": _last_notified_tier,
 	}
 
@@ -388,6 +420,9 @@ func load_save_data(data: Dictionary) -> void:
 	last_mayari_collection_successful = data.get("last_mayari_collection_successful", true)
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
 	is_clock_running = data.get("is_clock_running", false)
+	wait_limit_time = data.get("wait_limit_time", -1.0)
+	was_paused_by_limit = data.get("was_paused_by_limit", false)
+	is_customer_present = data.get("is_customer_present", false)
 	_last_notified_tier = data.get("_last_notified_tier", 0)
 	
 	# Apply loaded state to the sky system
@@ -404,7 +439,7 @@ func load_save_data(data: Dictionary) -> void:
 				_time_of_day_node.game_time_enabled = is_clock_running
 		, CONNECT_ONE_SHOT)
 	
-	print("[StoryManager] State loaded. Tier %d, Day %d, Time %.2f" % [current_tier, day, _current_display_time])
+	LogManager.info("StoryManager", "State loaded. Tier %d, Day %d, Time %.2f" % [current_tier, day, _current_display_time])
 
 
 func reset_state() -> void:
@@ -427,12 +462,15 @@ func reset_state() -> void:
 	is_mayari_met = false
 	last_mayari_collection_successful = true
 	_current_display_time = DAY_START_HOUR
+	wait_limit_time = -1.0
+	was_paused_by_limit = false
+	is_customer_present = false
 	_last_tier_unlocked_notification = 0
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0
 
 	SaveManager.delete_save()
-	print("[StoryManager] Progression reset for New Game. Save file deleted.")
+	LogManager.info("StoryManager", "Progression reset for New Game. Save file deleted.")
 
 
 ## Ask the StoryManager for the next customer's context.
@@ -458,7 +496,7 @@ func get_next_transaction() -> TransactionContext:
 		# We don't advance the tutorial_chapter here anymore. 
 		# It will be advanced in _on_customer_satisfied to ensure it actually happened.
 		
-		print("[STORY] Spawning Uncle Mario Tutorial")
+		LogManager.info("STORY", "Spawning Uncle Mario Tutorial")
 		return tutorial_t
 	# --------------------------
 
@@ -479,7 +517,7 @@ func get_next_transaction() -> TransactionContext:
 		
 		_first_customer_of_day = false
 		
-		print("[STORY] Spawning Kuya Kap after Tutorial (Story Chapter 0)")
+		LogManager.info("STORY", "Spawning Kuya Kap after Tutorial (Story Chapter 0)")
 		return kuyakap_t
 	# --------------------------
 
@@ -505,7 +543,7 @@ func get_next_transaction() -> TransactionContext:
 	if not new_characters.is_empty():
 		char_data = new_characters.pick_random()
 		force_story = true
-		print("[StoryManager] FIRST ENCOUNTER: Forcing story for new character: ", char_data.get_clean_id())
+		LogManager.info("StoryManager", "FIRST ENCOUNTER: Forcing story for new character: %s" % char_data.get_clean_id())
 	
 	# Priority 1: Check if a story chapter is ready to be forced
 	elif global_story_cooldown <= 0:
@@ -534,15 +572,15 @@ func get_next_transaction() -> TransactionContext:
 					blocked_story_exists = true
 					break
 			if blocked_story_exists:
-				print("[StoryManager] WARNING: Potential Story Deadlock. Chapters are available but prerequisites are not met.")
+				LogManager.warn("StoryManager", "Potential Story Deadlock. Chapters are available but prerequisites are not met.")
 		
 		# If we have candidates, we force their story transaction
 		if not story_candidates.is_empty():
 			char_data = _pick_character_weighted(story_candidates)
 			if char_data and char_data.resource_path == todays_focus_character_path:
-				print("[StoryManager] Forcing story for FOCUS character: ", char_data.get_clean_id())
+				LogManager.info("StoryManager", "Forcing story for FOCUS character: %s" % char_data.get_clean_id())
 			else:
-				print("[StoryManager] Cooldown 0: Forcing story for: ", char_data.get_clean_id() if char_data else "null")
+				LogManager.info("StoryManager", "Cooldown 0: Forcing story for: %s" % (char_data.get_clean_id() if char_data else "null"))
 			
 			force_story = true
 		else:
@@ -559,7 +597,7 @@ func get_next_transaction() -> TransactionContext:
 			if not fallback_story_candidates.is_empty():
 				char_data = fallback_story_candidates.pick_random()
 				force_story = true
-				print("[StoryManager] Cooldown 0: Soft-lock override. Forcing story for: ", char_data.get_clean_id())
+				LogManager.info("StoryManager", "Cooldown 0: Soft-lock override. Forcing story for: %s" % char_data.get_clean_id())
 
 	# Priority 2: Generic flow if no story is forced, or cooldown is active
 	if not char_data:
@@ -579,7 +617,7 @@ func get_next_transaction() -> TransactionContext:
 			char_data = smk
 			force_story = false  # we'll set type manually below
 			var cycle_names := ["STORY", "PURCHASE", "VISIT"]
-			print("[DEBUG] Sarimanok cycle %d (%s)" % [_debug_sarimanok_cycle, cycle_names[_debug_sarimanok_cycle]])
+			LogManager.debug("Sarimanok", "Cycle %d (%s)" % [_debug_sarimanok_cycle, cycle_names[_debug_sarimanok_cycle]])
 			
 			_last_character_path = char_data.resource_path
 			var t_dbg = TransactionContext.new()
@@ -589,7 +627,7 @@ func get_next_transaction() -> TransactionContext:
 			match _debug_sarimanok_cycle:
 				0: # STORY
 					if smk.story_timeline == null:
-						print("[DEBUG] Sarimanok has no story timeline. Falling back to PURCHASE.")
+						LogManager.debug("Sarimanok", "Sarimanok has no story timeline. Falling back to PURCHASE.")
 						t_dbg.transaction_type = TransactionContext.Type.PURCHASE
 						var purchase_pool = smk.get_purchase_timelines(smk_chapter)
 						t_dbg.timeline = purchase_pool.pick_random() if not purchase_pool.is_empty() else "res://Dialogue/Timelines/Generic/Purchase.dtl"
@@ -599,13 +637,13 @@ func get_next_transaction() -> TransactionContext:
 						t_dbg.timeline = smk.story_timeline
 						# Populate desired_items — _build will re-confirm STORY type/timeline via force_story=true
 						_build_transaction_context(t_dbg, smk, true)
-						print("[DEBUG] Sarimanok STORY selected. Timeline: ", t_dbg.timeline.resource_path if t_dbg.timeline is Resource else t_dbg.timeline)
+						LogManager.debug("Sarimanok", "Sarimanok STORY selected. Timeline: %s" % (t_dbg.timeline.resource_path if t_dbg.timeline is Resource else t_dbg.timeline))
 				1: # PURCHASE
 					t_dbg.transaction_type = TransactionContext.Type.PURCHASE
 					var pool = smk.get_purchase_timelines(smk_chapter)
 					t_dbg.timeline = pool.pick_random() if not pool.is_empty() else "res://Dialogue/Timelines/Generic/Purchase.dtl"
 					_build_transaction_context(t_dbg, smk, false)  # populates desired_items
-					print("[DEBUG] Sarimanok PURCHASE selected. Timeline: ", t_dbg.timeline.resource_path if t_dbg.timeline is Resource else t_dbg.timeline)
+					LogManager.debug("Sarimanok", "Sarimanok PURCHASE selected. Timeline: %s" % (t_dbg.timeline.resource_path if t_dbg.timeline is Resource else t_dbg.timeline))
 				2: # VISIT
 					t_dbg.transaction_type = TransactionContext.Type.VISIT
 					var pool = smk.get_visit_timelines(smk_chapter)
@@ -616,7 +654,7 @@ func get_next_transaction() -> TransactionContext:
 					if smk.get_clean_id() == "sarimanok" and smk_chapter <= 3.0:
 						t_dbg.is_visit_story = true
 					
-					print("[DEBUG] Sarimanok VISIT selected. Timeline: ", t_dbg.timeline.resource_path if t_dbg.timeline is Resource else t_dbg.timeline)
+					LogManager.debug("Sarimanok", "Sarimanok VISIT selected. Timeline: %s" % (t_dbg.timeline.resource_path if t_dbg.timeline is Resource else t_dbg.timeline))
 			
 			_debug_sarimanok_cycle = (_debug_sarimanok_cycle + 1) % 3
 			
@@ -708,7 +746,7 @@ func get_next_transaction() -> TransactionContext:
 	if current_debt > 0 and repay_roll < 0.30:
 		t.is_repaying = true
 		t.repayment_amount = current_debt
-		print("[StoryManager] REPAYMENT ROLLED: ", current_debt)
+		LogManager.info("StoryManager", "REPAYMENT ROLLED: %.2f" % current_debt)
 	
 	# C. Riddle (Tingting)
 
@@ -726,7 +764,7 @@ func get_next_transaction() -> TransactionContext:
 			
 			# Special rule: Riddles can only be for a single item.
 			if t.desired_items.size() > 1:
-				print("[StoryManager] Riddle rolled for multi-item request. Trimming to 1 item.")
+				LogManager.info("StoryManager", "Riddle rolled for multi-item request. Trimming to 1 item.")
 				var _trim: Array[ItemData] = [main_item]
 				t.desired_items.assign(_trim)
 	
@@ -776,15 +814,15 @@ func get_next_transaction() -> TransactionContext:
 	_set_dvar("Transaction_Chapter", Transaction_Chapter)
 	_set_dvar("Transaction_Branch", Transaction_Branch)
 
-	print("\n[STORY] --- Transaction Attributes ---")
-	print("  Rumor : ", t.rumor_active, " (Target < ", rumor_chance, ")")
-	print("  Riddle: ", t.is_riddle, " (Target < ", riddle_chance, ")")
-	print("  Debt  : ", t.wants_debt, " (ManangAna-only)")
-	print("  Repay : ", t.is_repaying, " (Owed: ", current_debt, ")")
+	LogManager.info("STORY", "--- Transaction Attributes ---")
+	LogManager.info("STORY", "  Rumor : %s (Target < %.2f)" % [str(t.rumor_active), rumor_chance])
+	LogManager.info("STORY", "  Riddle: %s (Target < %.2f)" % [str(t.is_riddle), riddle_chance])
+	LogManager.info("STORY", "  Debt  : %s (ManangAna-only)" % str(t.wants_debt))
+	LogManager.info("STORY", "  Repay : %s (Owed: %.2f)" % [str(t.is_repaying), current_debt])
 
 
-	print("[STORY] Debt State: ", t.wants_debt)
-	print("[STORY] Riddle State: ", t.is_riddle) # Riddle chance check remains in _build since it needs items
+	LogManager.info("STORY", "Debt State: %s" % str(t.wants_debt))
+	LogManager.info("STORY", "Riddle State: %s" % str(t.is_riddle))
 
 	# Track the initial count for progress UI
 	t.original_count = t.desired_items.size()
@@ -1280,12 +1318,42 @@ func _on_customer_satisfied(customer) -> void:
 		_save_progression()
 		print("[StoryManager] Uncle Mario tutorial successfully completed and saved.")
 
-func _on_customer_dismissed(customer) -> void:
-	# Update LastCustomer even if they left dissatisfied so rumors stay current
-	_set_last_customer_info(customer)
+func _on_customer_arrived(_customer: Customer) -> void:
+	is_customer_present = true
+	wait_limit_time = _current_display_time + 4.0
+	LogManager.debug("StoryManager", "Customer arrived. Patience limit set to %.2f" % wait_limit_time)
+
+func _on_customer_dismissed(_customer: Customer) -> void:
+	is_customer_present = false
+	
+	# If we are past 8 PM, the day ends as soon as the customer leaves
+	if _current_display_time >= CLOSING_HOUR:
+		if is_clock_running:
+			is_clock_running = false
+			LogManager.info("StoryManager", "Grace period ended. Pausing clock for Closing Time.")
+		
+		# Clamp to Midnight if we somehow drifted past it
+		if _current_display_time > HARD_STOP_HOUR:
+			_current_display_time = HARD_STOP_HOUR
+			_apply_display_time(HARD_STOP_HOUR)
+		
+		# Note: We don't snap back to 8 PM; the late display time stands.
+		EventBus.closing_time_reached.emit()
+	
+	# Otherwise, if we were paused by the wait limit, resume time
+	elif was_paused_by_limit:
+		is_clock_running = true
+		LogManager.info("StoryManager", "Customer left. Resuming clock.")
+	
+	# Cleanup flags
+	was_paused_by_limit = false
+	wait_limit_time = -1.0
+
+	# Original logic: Update LastCustomer info
+	_set_last_customer_info(_customer)
 	_set_dvar("Global_LastSatisfaction", "Unhappy")
 	
-	_process_story_cooldown(customer)
+	_process_story_cooldown(_customer)
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer.transaction_context:

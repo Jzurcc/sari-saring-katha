@@ -37,7 +37,7 @@ func get_quota_for_day(q_day: int) -> float:
 	return 25.0 + (q_day - 1) * 15.0
 
 func _ready() -> void:
-	print("[GameManager] _ready() START")
+	LogManager.info("GameManager", "_ready() START")
 	add_to_group("game_manager")
 	add_to_group("persist")
 	money = starting_money
@@ -60,30 +60,30 @@ func _ready() -> void:
 func _finish_initialization() -> void:
 	
 	if SaveManager.has_save():
-		print("[GameManager] Loading save...")
+		LogManager.info("GameManager", "Loading save...")
 		SaveManager.request_load()
-		print("[GameManager] Save loaded.")
+		LogManager.info("GameManager", "Save loaded.")
 	else:
-		print("[GameManager] No save. Resetting clock...")
+		LogManager.info("GameManager", "No save. Resetting clock...")
 		_reset_clock_to_morning()
-		print("[GameManager] Clock reset done. Emitting money_changed...")
+		LogManager.info("GameManager", "Clock reset done. Emitting money_changed...")
 		EventBus.money_changed.emit(money)
 
-	print("[GameManager] Started Day ", day)
+	LogManager.info("GameManager", "Started Day %d" % day)
 	EventBus.day_started.emit(day)
-	print("[GameManager] day_started emitted.")
+	LogManager.info("GameManager", "day_started emitted.")
 	
 	# Safety capture: ensure mouse is captured for gameplay.
 	# Give a generous delay for Dialogic/tutorial to initialize.
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	print("[GameManager] Mouse captured immediately.")
+	LogManager.info("GameManager", "Mouse captured immediately.")
 	
 	# Secondary safety check after 1.5 seconds
 	if get_tree():
 		get_tree().create_timer(1.5).timeout.connect(func():
 			if is_instance_valid(self) and not is_tutorial_task_active and Dialogic.current_timeline == null:
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-				print("[GameManager] Startup Safety: Mouse mode re-captured.")
+				LogManager.info("GameManager", "Startup Safety: Mouse mode re-captured.")
 		)
 
 func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool, customer_path: String) -> void:
@@ -94,33 +94,33 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 		# We record this in StoryManager so it persists.
 		if wants_debt and customer_path != "":
 			StoryManager.record_debt(customer_path, _last_earning)
-			print("[GameManager] Item accepted via Utang. Debt recorded.")
+			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
 		money += _last_earning
 		EventBus.money_changed.emit(money)
-		print("[GameManager] Sold %s for %.2f (Base: %.2f, Price: %.2f). TOTAL: %.2f" % [
+		LogManager.info("GameManager", "Sold %s for %.2f (Base: %.2f, Price: %.2f). TOTAL: %.2f" % [
 			item.item_name, _last_earning, item.price, item.get_final_price(), money
 		])
 
 func _on_utang_accepted(_customer: Customer) -> void:
 	# Since we no longer add money in _on_transaction_completed for debt transactions,
 	# we don't need to deduct anything here.
-	print("[GameManager] Utang accepted! Transaction finalized with no immediate payment.")
+	LogManager.info("GameManager", "Utang accepted! Transaction finalized with no immediate payment.")
 
 func deduct_money(amount: float) -> bool:
 	if money >= amount:
 		money -= amount
 		EventBus.money_changed.emit(money)
 		EventBus.request_sfx.emit("money_decrease")
-		print("[GameManager] Spent %.2f. Remaining: %.2f" % [amount, money])
+		LogManager.info("GameManager", "Spent %.2f. Remaining: %.2f" % [amount, money])
 		return true
 	else:
-		print("[GameManager] Error: Tried to spend %.2f but only has %.2f!" % [amount, money])
+		LogManager.error("GameManager", "Tried to spend %.2f but only has %.2f!" % [amount, money])
 		return false
 
 func _on_day_ended(ended_day_number: int) -> void:
-	print("[GameManager] Day %d ended!" % ended_day_number)
+	LogManager.info("GameManager", "Day %d ended!" % ended_day_number)
 	
 	# 1. Start cinematic transition and fade music
 	AudioManager.fade_out_everything(2.0)
@@ -168,7 +168,7 @@ func _on_dialogic_signal(argument: String) -> void:
 		
 		if was_successful:
 			quota_day += 1 # Only increase the quota demand if the player paid
-			print("[GameManager] Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
+			LogManager.info("GameManager", "Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
 			
 			var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
 			
@@ -178,16 +178,16 @@ func _on_dialogic_signal(argument: String) -> void:
 			elif StoryManager.is_label_in_timeline(timeline_path, "Success"):
 				Dialogic.Jump.jump_to_label("Success")
 			else:
-				print("[GameManager] Success labels missing in current timeline. Ending dialogue safely.")
+				LogManager.warn("GameManager", "Success labels missing in current timeline. Ending dialogue safely.")
 				Dialogic.end_timeline()
 		else:
-			print("[GameManager] Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
+			LogManager.info("GameManager", "Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
 			
 			var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
 			if StoryManager.is_label_in_timeline(timeline_path, "Angry"):
 				Dialogic.Jump.jump_to_label("Angry")
 			else:
-				print("[GameManager] Angry labels missing in current timeline. Ending dialogue safely.")
+				LogManager.warn("GameManager", "Angry labels missing in current timeline. Ending dialogue safely.")
 				Dialogic.end_timeline()
 		
 		EventBus.debt_quota_met.emit(was_successful)
@@ -205,7 +205,7 @@ func _on_dialogic_signal(argument: String) -> void:
 		
 		# If it's already 8 PM, skip Mayari and end the day
 		if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
-			print("[GameManager] Tutorial ended at 8 PM. Skipping Mayari and ending day.")
+			LogManager.info("GameManager", "Tutorial ended at 8 PM. Skipping Mayari and ending day.")
 			StoryManager.has_mayari_visited = true
 			EventBus.day_ended.emit(day)
 	
@@ -259,7 +259,7 @@ func _on_dialogic_signal(argument: String) -> void:
 			if customer and customer.customer_data:
 				StoryManager.clear_debt(customer.customer_data.resource_path)
 		
-		print("[GameManager] Customer repaid %.2f pesos." % amount)
+		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 
 func _on_closing_time_reached() -> void:
 	# Calculate quota based on the player's successful payment history (quota_day)
@@ -271,7 +271,7 @@ func _on_closing_time_reached() -> void:
 	StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
 	StoryManager._set_dvar("Global_QuotaDay", float(quota_day))
 	
-	print("[GameManager] Store Closed. Pre-calculated Quota (Day %d): %.2f, Success: %s" % [
+	LogManager.info("GameManager", "Store Closed. Pre-calculated Quota (Day %d): %.2f, Success: %s" % [
 		quota_day, _pending_quota, was_successful
 	])
 
@@ -379,7 +379,7 @@ func _on_tutorial_task_completed(arg1=null, _b=null, _c=null, _d=null) -> void:
 ## Immediately cancels any in-flight tutorial task, unpauses Dialogic,
 ## and releases the mouse. Safe to call when the player skips the tutorial.
 func cancel_tutorial_tasks() -> void:
-	print("[GameManager] Tutorial tasks cancelled/cleaned up.")
+	LogManager.info("GameManager", "Tutorial tasks cancelled/cleaned up.")
 	
 	# 1. Clear interaction blocks
 	is_blocking_pickup = false
@@ -462,14 +462,14 @@ func load_save_data(data: Dictionary) -> void:
 	
 	EventBus.money_changed.emit(money)
 	# day_started is now explicitly emitted in _ready() after load finishes
-	print("[GameManager] State loaded. Day %d, Money %.2f, Quota Day %d" % [day, money, quota_day])
+	LogManager.info("GameManager", "State loaded. Day %d, Money %.2f, Quota Day %d" % [day, money, quota_day])
 
 func reset_state() -> void:
 	money = starting_money
 	day = 1
 	quota_day = 1
 	_reset_clock_to_morning()
-	print("[GameManager] State reset to defaults for New Game.")
+	LogManager.info("GameManager", "State reset to defaults for New Game.")
 
 
 func _cancel_tutorial_signal_connection() -> void:

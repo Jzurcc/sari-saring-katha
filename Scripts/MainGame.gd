@@ -20,10 +20,10 @@ var _debug_show_collisions: bool = false
 var pause_menu: Control
 
 func _ready() -> void:
-	print("[DEBUG] MainGame._ready() START")
+	LogManager.debug("MainGame", "_ready() START")
 	# Keep notifications accessible - Spawn the NoticeOverlay if it doesn't exist
 	if get_tree().get_nodes_in_group("notice_overlay").is_empty():
-		print("[DEBUG] MainGame: Spawning NoticeOverlay")
+		LogManager.debug("MainGame", "Spawning NoticeOverlay")
 		var notice_scene = load("res://Scenes/UI/NoticeOverlay.tscn")
 		if notice_scene:
 			var notice_instance = notice_scene.instantiate()
@@ -31,9 +31,9 @@ func _ready() -> void:
 			notice_instance.add_to_group("notice_overlay")
 
 	# Ensure camera is correctly scaled to 75 as a fallback
-	print("[DEBUG] MainGame: Yielding frame for camera set")
+	LogManager.debug("MainGame", "Yielding frame for camera set")
 	await get_tree().process_frame
-	print("[DEBUG] MainGame: Frame yielded")
+	LogManager.debug("MainGame", "Frame yielded")
 	var camera = $Player/Head/Camera3D
 	if camera and camera.fov != 75:
 		camera.fov = 75.0
@@ -43,7 +43,7 @@ func _ready() -> void:
 	if tray_nodes.size() > 0:
 		tray = tray_nodes[0] as TransactionTray
 	else:
-		push_error("[MainGame] Missing Transaction Tray in Scene")
+		LogManager.error("MainGame", "Missing Transaction Tray in Scene")
 
 	# Setup Ambient Effects
 	VisualEffectManager.setup_ambient_dust(self)
@@ -60,10 +60,10 @@ func _ready() -> void:
 		_on_time_changed(tod.get("current_time") if "current_time" in tod else 0.0)
 	
 	# Instantiate Pause menu
-	print("[DEBUG] MainGame: Instantiating pause menu")
+	LogManager.debug("MainGame", "Instantiating pause menu")
 	pause_menu = pause_menu_scene.instantiate().get_node("Control")
 	add_child(pause_menu.get_parent()) # Add the CanvasLayer
-	print("[DEBUG] MainGame._ready() END")
+	LogManager.debug("MainGame", "_ready() END")
 
 func _on_tray_item_placed(item: DraggableItem) -> void:
 	# Check if we have an active customer
@@ -119,10 +119,10 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				if is_mario:
 					if is_tut_block:
 						# Just skip feedback, item will return to shelf automatically at end of function
-						print("[MainGame] Suppressing WrongItem feedback for Mario during tutorial.")
+						LogManager.debug("MainGame", "Suppressing WrongItem feedback for Mario during tutorial.")
 					elif not gm or not gm.is_tutorial_task_active:
 						# If they haven't even greeted him yet (no task active), treat this as a "Greeting" trigger
-						print("[MainGame] Early Mario interaction detected. Triggering tutorial greeting.")
+						LogManager.debug("MainGame", "Early Mario interaction detected. Triggering tutorial greeting.")
 						spawner._on_customer_clicked(customer)
 				else:
 					EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
@@ -135,7 +135,7 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				# to correctly return the item to the shelf instead of leaving it in the void.
 			
 	if not handled:
-		print("[MainGame] No customer waiting, dropping item")
+		LogManager.debug("MainGame", "No customer waiting, dropping item")
 		
 	# Return item to its shelf slot only if it was not consumed by a sale.
 	if item:

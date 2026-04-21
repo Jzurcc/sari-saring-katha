@@ -48,7 +48,7 @@ func _ready() -> void:
 	if ResourceLoader.exists(MARIO_DATA_PATH):
 		_mario_data = load(MARIO_DATA_PATH)
 	else:
-		push_warning("[MarioManager] CustomerData resource not found: " + MARIO_DATA_PATH)
+		LogManager.warn("MarioManager", "CustomerData resource not found: " + MARIO_DATA_PATH)
 		
 	
 	# Connect for speaking animations
@@ -61,7 +61,7 @@ func _ready() -> void:
 
 func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	if _is_calling:
-		print("[MarioManager] Already calling — ignoring.")
+		LogManager.debug("MarioManager", "Already calling — ignoring.")
 		return
 	_is_calling = true
 	is_restocking_active = true
@@ -82,10 +82,10 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		label = "CallRest"
 		success_expected = false
 	
-	print("[MarioManager] Initiating call → Label: ", label)
+	LogManager.info("MarioManager", "Initiating call → Label: %s" % label)
 	
 	# All calls now feature the ringing/dial delay for realism
-	print("[MarioManager] Playing dial sound...")
+	LogManager.debug("MarioManager", "Playing dial sound...")
 	_play_sfx(sfx_dial)
 	
 	var delay := randf_range(2.0, 4.0)
@@ -95,7 +95,7 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
 func _on_call_dialogue_ended(success: bool) -> void:
-	print("[MarioManager] Call dialogue ended. Success: ", success)
+	LogManager.info("MarioManager", "Call dialogue ended. Success: %s" % str(success))
 	_is_calling = false
 	# Revert dialogue blips to Master
 	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Master")
@@ -106,13 +106,13 @@ func _on_call_dialogue_ended(success: bool) -> void:
 	call_ended.emit(success)
 
 func cancel_restock() -> void:
-	print("[MarioManager] Restock cancelled by player or system.")
+	LogManager.info("MarioManager", "Restock cancelled by player or system.")
 	is_restocking_active = false
 	_is_calling = false
 	_current_anchor = null
 
 func trigger_sample_delivery(tier: int) -> void:
-	print("[MarioManager] Triggering sample delivery for Tier ", tier)
+	LogManager.info("MarioManager", "Triggering sample delivery for Tier %d" % tier)
 	
 	var all_items = InventoryManager.get_all_items()
 	var new_items: Dictionary = {}
@@ -122,7 +122,7 @@ func trigger_sample_delivery(tier: int) -> void:
 			new_items[item] = 2 # 2 units of each new item
 	
 	if new_items.is_empty():
-		print("[MarioManager] No new items found for Tier ", tier, ". Skipping sample delivery.")
+		LogManager.debug("MarioManager", "No new items found for Tier %d. Skipping sample delivery." % tier)
 		return
 		
 	# Start delivery sequence with the samples
@@ -131,7 +131,7 @@ func trigger_sample_delivery(tier: int) -> void:
 # ── DELIVERY LOGIC ───────────────────────────────────────────────────
 
 func start_delivery(items_to_restock: Dictionary) -> void:
-	print("[MarioManager] Starting delivery sequence...")
+	LogManager.info("MarioManager", "Starting delivery sequence...")
 	is_mario_physically_present = true
 	await get_tree().create_timer(DELIVERY_DELAY_SEC).timeout
 	
@@ -187,7 +187,7 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 		InventoryManager.add_stock(item, items[item])
 	
 	# 2. Plastic Bag Delivery Logic
-	print("[MarioManager] Processing delivery bags...")
+	LogManager.info("MarioManager", "Processing delivery bags...")
 	var marker = get_tree().root.find_child("PlasticMarker", true, false)
 	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
 	
@@ -199,36 +199,38 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
 			target_tier = max(target_tier, item.get_meta("target_tier", 1))
-			print("[MarioManager] Upgrade detected in delivery! Target Tier: ", target_tier)
+			LogManager.info("MarioManager", "Upgrade detected in delivery! Target Tier: %d" % target_tier)
 			continue
 
 		# Filter: Candies and Sachets bypass bags
 		if item.category == "candy" or item.category == "sachet" or item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
-			print("[MarioManager] Auto-stocking digital item: ", item.item_name)
+			LogManager.debug("MarioManager", "Auto-stocking digital item: %s" % item.item_name)
+		else:
+			LogManager.debug("MarioManager", "Adding to physical bag: %s" % item.item_name)
 			continue
 			
 		# Everything else goes into bags
 		for i in range(items[item]):
 			items_to_bag.append(item)
 	
-	# Handle Tier Advancement and Samples
-	if upgrade_delivered:
-		var _start_tier = StoryManager.current_tier
-		while StoryManager.current_tier < target_tier:
-			StoryManager.advance_tier("Mario Delivery")
-			var new_tier = StoryManager.current_tier
-			print("[MarioManager] Processing unlocked samples for NEW Tier: ", new_tier)
-			
-			var all_items = InventoryManager.get_all_items()
-			for i in all_items:
-				if i.tier == new_tier and i.can_be_sold:
-					print("[MarioManager] Unpacking 2 samples of: ", i.item_name)
-					InventoryManager.add_stock(i, 2)
-					
-					if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
-						# Samples go into bags (2 units each)
-						items_to_bag.append(i)
-						items_to_bag.append(i)
+		# Handle Tier Advancement and Samples
+		if upgrade_delivered:
+			var _start_tier = StoryManager.current_tier
+			while StoryManager.current_tier < target_tier:
+				StoryManager.advance_tier("Mario Delivery")
+				var new_tier = StoryManager.current_tier
+				LogManager.info("MarioManager", "Processing unlocked samples for NEW Tier: %d" % new_tier)
+				
+				var all_items = InventoryManager.get_all_items()
+				for i in all_items:
+					if i.tier == new_tier and i.can_be_sold:
+						LogManager.debug("MarioManager", "Unpacking 2 samples of: %s" % i.item_name)
+						InventoryManager.add_stock(i, 2)
+						
+						if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
+							# Samples go into bags (2 units each)
+							items_to_bag.append(i)
+							items_to_bag.append(i)
 	
 	# Group items into batches of 5
 	var batch_size = 5
@@ -249,7 +251,7 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 			)
 			bag.global_position = marker.global_position + offset
 		else:
-			push_warning("[MarioManager] PlasticMarker not found in scene! Spawning at default.")
+			LogManager.error("MarioManager", "PlasticMarker not found in scene! Spawning at default.")
 	
 	_refresh_containers(get_tree().root)
 
@@ -281,10 +283,10 @@ func _check_and_spawn_bags() -> void:
 		
 	# Security check: Only spawn if we're in the MainGame scene
 	if get_tree().current_scene.name != "MainGame":
-		print("[MarioManager] Postponing bag spawn — not in MainGame (Current: %s)" % get_tree().current_scene.name)
+		LogManager.debug("MarioManager", "Postponing bag spawn — not in MainGame (Current: %s)" % get_tree().current_scene.name)
 		return
 		
-	print("[MarioManager] Spawning %d cached bags..." % _cached_bags_data.size())
+	LogManager.info("MarioManager", "Spawning %d cached bags..." % _cached_bags_data.size())
 	
 	# Clear whatever dummy bags currently exist to prevent dupes.
 	for old_bag in get_tree().get_nodes_in_group("delivery_bag"):
@@ -339,7 +341,7 @@ func get_save_data() -> Dictionary:
 	# overwrite the save file with an empty list if SaveManager.force_save()
 	# is called while in the Main Menu or a transition.
 	if bags_data.is_empty() and not _cached_bags_data.is_empty():
-		print("[MarioManager] get_save_data: No bags in tree, returning %d cached entries." % _cached_bags_data.size())
+		LogManager.debug("MarioManager", "get_save_data: No bags in tree, returning %d cached entries." % _cached_bags_data.size())
 		return { "bags": _cached_bags_data }
 		
 	return {
@@ -351,7 +353,7 @@ func load_save_data(data: Dictionary) -> void:
 		return
 		
 	_cached_bags_data = data["bags"]
-	print("[MarioManager] Received %d bags in load_save_data. Cached for spawning." % _cached_bags_data.size())
+	LogManager.info("MarioManager", "Received %d bags in load_save_data. Cached for spawning." % _cached_bags_data.size())
 	
 	# Try spawning immediately if the scene is already ready
 	_check_and_spawn_bags()
@@ -367,21 +369,20 @@ func load_save_data(data: Dictionary) -> void:
 ##   2. Start timeline via Dialogic.start() with NO second argument
 ##   3. Register character anchor for bubble positioning
 func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, label: String = "") -> void:
-	print("[MarioManager] --- Starting Dialogue ---")
-	print("[MarioManager]   Path:   ", timeline_path)
-	print("[MarioManager]   Anchor: ", str(anchor.name) if anchor else "NULL")
+	LogManager.debug("MarioManager", "  Path:   %s" % timeline_path)
+	LogManager.debug("MarioManager", "  Anchor: %s" % (str(anchor.name) if anchor else "NULL"))
 	
 	# 1. Verify the file exists
 	if not ResourceLoader.exists(timeline_path):
-		push_error("[MarioManager] Timeline file does not exist: " + timeline_path)
+		LogManager.error("MarioManager", "Timeline file does not exist: " + timeline_path)
 		callback.call()
 		return
 	
 	# 2. If Dialogic is running, wait for it to finish first
 	if Dialogic.current_timeline != null:
-		print("[MarioManager]   Dialogic busy — waiting for current timeline to end...")
+		LogManager.debug("MarioManager", "  Dialogic busy — waiting for current timeline to end...")
 		await Dialogic.timeline_ended
-		print("[MarioManager]   Previous timeline ended. Proceeding with Mario call.")
+		LogManager.debug("MarioManager", "  Previous timeline ended. Proceeding with Mario call.")
 	
 	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
 	Dialogic.Styles.load_style("FollowBubble")
@@ -393,7 +394,7 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 	# 5. Start the timeline (second arg is label)
 	var layout = Dialogic.start(timeline_path, label)
 	
-	print("[MarioManager]   Layout: ", str(layout.name) if layout else "NULL")
+	LogManager.debug("MarioManager", "  Layout: %s" % (str(layout.name) if layout else "NULL"))
 	
 	# 5. Register character so the bubble anchors to the marker
 	# We use DialogicResourceUtil to ensure we get the exact same object reference as NokiaUI.
@@ -407,15 +408,15 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 			layout.register_character(mario_dch, null)
 			layout.register_character(mario_dch, final_anchor)
 			
-			print("[MarioManager]   Registered character → ", final_anchor.name, " @ ", final_anchor.global_position)
+			LogManager.debug("MarioManager", "  Registered character → %s @ %s" % [final_anchor.name, str(final_anchor.global_position)])
 		else:
-			push_warning("[MarioManager]   Layout does not support register_character!")
+			LogManager.warn("MarioManager", "  Layout does not support register_character!")
 	else:
-		push_warning("[MarioManager]   Failed to find layout or UncleMario dch resource!")
+		LogManager.warn("MarioManager", "  Failed to find layout or UncleMario dch resource!")
 	
 	# 6. Connect the end signal
 	Dialogic.timeline_ended.connect(callback, CONNECT_ONE_SHOT)
-	print("[MarioManager] --- Dialogue Started OK ---")
+	LogManager.debug("MarioManager", "--- Dialogue Started OK ---")
 
 func _play_sfx(stream: AudioStream) -> void:
 	_sfx_player.stream = stream
@@ -423,7 +424,7 @@ func _play_sfx(stream: AudioStream) -> void:
 	_sfx_player.play()
 
 func _refresh_containers(_ignored_node: Node) -> void:
-	print("[MarioManager] Refreshing shelf surfaces via group lookup...")
+	LogManager.debug("MarioManager", "Refreshing shelf surfaces via group lookup...")
 	for surface in get_tree().get_nodes_in_group("shelf_surface"):
 		if surface.has_method("refresh_visibility"):
 			surface.refresh_visibility()

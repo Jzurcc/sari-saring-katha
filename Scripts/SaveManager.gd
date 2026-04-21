@@ -56,7 +56,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_P and event.ctrl_pressed:
 			debug_skip_save = !debug_skip_save
-			print("[SaveManager] DEBUG_SKIP_SAVE: ", "ON (Saves disabled)" if debug_skip_save else "OFF (Saves enabled)")
+			LogManager.debug("SaveManager", "DEBUG_SKIP_SAVE: %s" % ("ON (Saves disabled)" if debug_skip_save else "OFF (Saves enabled)"))
 			# Optional: Visual indicator could go here.
 
 
@@ -96,7 +96,7 @@ func force_save() -> void:
 		return
 	
 	if debug_skip_save:
-		print("[SaveManager] Save BLOCKED (Debug Skip Save is ON).")
+		LogManager.info("SaveManager", "Save BLOCKED (Debug Skip Save is ON).")
 		return
 
 	_is_saving = true
@@ -116,7 +116,7 @@ func force_save() -> void:
 
 	# 3. Gather data from all persist-group nodes in current scene
 	var persist_nodes = get_tree().get_nodes_in_group("persist")
-	print("[SaveManager] Saving... Merging data from %d active 'persist' nodes." % persist_nodes.size())
+	LogManager.info("SaveManager", "Saving... Merging data from %d active 'persist' nodes." % persist_nodes.size())
 	
 	for node in persist_nodes:
 		if node.has_method("get_save_data"):
@@ -127,13 +127,13 @@ func force_save() -> void:
 				sid = node.name
 			
 			if sid == "":
-				push_error("[SaveManager] Node '%s' (path: %s) has an empty save_id! Skipping." % [node.name, node.get_path()])
+				LogManager.error("SaveManager", "Node '%s' (path: %s) has an empty save_id! Skipping." % [node.name, node.get_path()])
 				continue
 			
 			master_save[sid] = node.get_save_data()
 			new_keys.append(sid)
 		else:
-			print("  [SaveManager] Skipped (no get_save_data): ", node.name)
+			LogManager.debug("SaveManager", "Skipped (no get_save_data): %s" % node.name)
 
 	# 4. Write back the combined dictionary
 	var success := _write_to_disk(master_save)
@@ -142,10 +142,10 @@ func force_save() -> void:
 	save_finished.emit()
 
 	if success:
-		print("[SaveManager] Game saved. Updated keys: ", new_keys)
-		print("[SaveManager] Total file keys: ", master_save.keys())
+		LogManager.info("SaveManager", "Game saved. Updated keys: %s" % str(new_keys))
+		LogManager.debug("SaveManager", "Total file keys: %s" % str(master_save.keys()))
 	else:
-		push_error("[SaveManager] Save failed — disk write error!")
+		LogManager.error("SaveManager", "Save failed — disk write error!")
 
 
 ## Deletes all save-related files from disk. Primarily used for New Game / Resets.
@@ -156,12 +156,12 @@ func delete_save() -> void:
 		if FileAccess.file_exists(path):
 			var err = DirAccess.remove_absolute(path)
 			if err == OK:
-				print("[SaveManager] Deleted: ", path)
+				LogManager.info("SaveManager", "Deleted: %s" % path)
 			else:
-				push_error("[SaveManager] Failed to delete %s: error %d" % [path, err])
+				LogManager.error("SaveManager", "Failed to delete %s: error %d" % [path, err])
 	
 	_customer_leave_counter = 0
-	print("[SaveManager] All save data cleared.")
+	LogManager.info("SaveManager", "All save data cleared.")
 
 
 ## Loads save data and distributes it to all persist-group nodes.
@@ -170,17 +170,17 @@ func request_load() -> void:
 	# Note: Caller should ensure tree is ready before calling this.
 
 	if not has_save():
-		print("[SaveManager] No save file found. Starting fresh.")
+		LogManager.info("SaveManager", "No save file found. Starting fresh.")
 		return
 
 	var master_save := _read_from_disk()
 	if master_save.is_empty():
-		push_warning("[SaveManager] Save file was empty or corrupt. Starting fresh.")
+		LogManager.warn("SaveManager", "Save file was empty or corrupt. Starting fresh.")
 		return
 
 	# Distribute data to persist-group nodes
 	var persist_nodes = get_tree().get_nodes_in_group("persist")
-	print("[SaveManager] Loading... Found %d nodes in 'persist' group." % persist_nodes.size())
+	LogManager.info("SaveManager", "Loading... Found %d nodes in 'persist' group." % persist_nodes.size())
 	
 	for node in persist_nodes:
 		if node.has_method("load_save_data"):
@@ -191,12 +191,12 @@ func request_load() -> void:
 				sid = node.name
 			
 			if master_save.has(sid):
-				print("  [SaveManager] Distributing to: ", sid)
+				LogManager.debug("SaveManager", "Distributing to: %s" % sid)
 				node.load_save_data(master_save[sid])
 			else:
-				print("  [SaveManager] No data found for: ", sid)
+				LogManager.debug("SaveManager", "No data found for: %s" % sid)
 
-	print("[SaveManager] Game loaded successfully. Keys: ", master_save.keys())
+	LogManager.info("SaveManager", "Game loaded successfully. Keys: %s" % str(master_save.keys()))
 
 
 ## Returns true if a save file or backup exists on disk.
@@ -216,13 +216,13 @@ func clear_save() -> void:
 func _write_to_disk(data: Dictionary) -> bool:
 	var json_string := JSON.stringify(data, "\t")
 	if json_string.is_empty():
-		push_error("[SaveManager] Serialization failed! Refusing to write empty data.")
+		LogManager.error("SaveManager", "Serialization failed! Refusing to write empty data.")
 		return false
 
 	# Step 1: Write to temporary file
 	var file := FileAccess.open(TMP_PATH, FileAccess.WRITE)
 	if not file:
-		push_error("[SaveManager] Cannot open TMP for writing: %s (Error: %s)" % [TMP_PATH, error_string(FileAccess.get_open_error())])
+		LogManager.error("SaveManager", "Cannot open TMP for writing: %s (Error: %s)" % [TMP_PATH, error_string(FileAccess.get_open_error())])
 		return false
 
 	file.store_string(json_string)
@@ -232,13 +232,13 @@ func _write_to_disk(data: Dictionary) -> bool:
 	# Step 2: VERIFICATION - Ensure the TMP file is valid before we touch the real save
 	var verify_data = _attempt_read(TMP_PATH)
 	if verify_data.is_empty():
-		push_error("[SaveManager] VERIFICATION FAILED! The written TMP file is unreadable. Aborting save swap to protect existing data.")
+		LogManager.error("SaveManager", "VERIFICATION FAILED! The written TMP file is unreadable. Aborting save swap to protect existing data.")
 		return false
 
 	# Step 3: Atomic Swap / Rotation
 	var dir := DirAccess.open("user://")
 	if not dir:
-		push_error("[SaveManager] Internal Error: Could not access user:// directory.")
+		LogManager.error("SaveManager", "Internal Error: Could not access user:// directory.")
 		return false
 	
 	# a) Move current save to backup (if it exists)
@@ -249,12 +249,12 @@ func _write_to_disk(data: Dictionary) -> bool:
 		
 		var err_bak = dir.rename(SAVE_FILE, BACKUP_FILE)
 		if err_bak != OK:
-			push_warning("[SaveManager] Could not rotate Main to Backup (Error: %s). Proceeding anyway..." % error_string(err_bak))
+			LogManager.warn("SaveManager", "Could not rotate Main to Backup (Error: %s). Proceeding anyway..." % error_string(err_bak))
 
 	# b) Rename TMP to Main
 	var err_final = dir.rename(TMP_FILE, SAVE_FILE)
 	if err_final != OK:
-		push_error("[SaveManager] FATAL: Failed to swap TMP to Main (Error: %s). Your save might be stuck as .tmp!" % error_string(err_final))
+		LogManager.error("SaveManager", "FATAL: Failed to swap TMP to Main (Error: %s). Your save might be stuck as .tmp!" % error_string(err_final))
 		return false
 
 	return true
@@ -269,10 +269,10 @@ func _read_from_disk() -> Dictionary:
 		return data
 		
 	# Fallback to backup
-	print("[SaveManager] Main save failed or missing. Attempting backup recovery...")
+	LogManager.info("SaveManager", "Main save failed or missing. Attempting backup recovery...")
 	data = _attempt_read(BACKUP_PATH)
 	if not data.is_empty():
-		print("[SaveManager] BACKUP RECOVERY SUCCESSFUL.")
+		LogManager.info("SaveManager", "BACKUP RECOVERY SUCCESSFUL.")
 		return data
 		
 	return {}
@@ -283,24 +283,24 @@ func _attempt_read(path: String) -> Dictionary:
 
 	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
-		push_error("[SaveManager] Cannot open file at %s: %s" % [path, FileAccess.get_open_error()])
+		LogManager.error("SaveManager", "Cannot open file at %s: %s" % [path, FileAccess.get_open_error()])
 		return {}
 
 	var json_string := file.get_as_text()
 	file.close()
 
 	if json_string.strip_edges().is_empty():
-		push_warning("[SaveManager] File at %s is empty." % path)
+		LogManager.warn("SaveManager", "File at %s is empty." % path)
 		return {}
 
 	var json := JSON.new()
 	var parse_result := json.parse(json_string)
 	if parse_result != OK:
-		push_error("[SaveManager] JSON parse failed for %s: %s" % [path, json.get_error_message()])
+		LogManager.error("SaveManager", "JSON parse failed for %s: %s" % [path, json.get_error_message()])
 		return {}
 
 	if json.data is Dictionary:
 		return json.data
 	else:
-		push_error("[SaveManager] Save file root is not a Dictionary.")
+		LogManager.error("SaveManager", "Save file root is not a Dictionary.")
 		return {}

@@ -138,13 +138,13 @@ func _on_skip_pressed():
 	_finish_cutscene()
 
 func _finish_cutscene():
-	print("Transitions finished. Moving to game!")
+	LogManager.info("IntroCutscene", "Transitions finished. Moving to game!")
 	if SceneTransition:
 		SceneTransition.transition_to_scene(next_scene_path)
 	else:
 		var err = get_tree().change_scene_to_file(next_scene_path)
 		if err != OK:
-			push_error("[IntroManager] Failed to load next scene: ", next_scene_path)
+			LogManager.error("IntroCutscene", "Failed to load next scene: " + next_scene_path)
 
 func play_sequence(sequence: CutsceneSequence):
 	# Setup text
@@ -159,7 +159,7 @@ func play_sequence(sequence: CutsceneSequence):
 			pans.append(child)
 			
 	if pans.size() == 0:
-		push_warning("Sequence has no CameraPans! " + sequence.name)
+		LogManager.warn("IntroCutscene", "Sequence has no CameraPans! " + sequence.name)
 		return
 		
 	var total_duration = 0.0
