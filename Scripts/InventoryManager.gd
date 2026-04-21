@@ -18,6 +18,7 @@ var _initialized: bool = false
 
 var _stock: Dictionary = {}
 var _items: Array[ItemData] = []
+var _configured_item_ids: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("persist")
@@ -142,24 +143,32 @@ func _get_item_by_path(path: String) -> ItemData:
 ## Global check for whether an item type has been manually priced
 func is_item_configured(item: ItemData) -> bool:
 	if not item: return false
-	if item.is_manually_priced: return true
 	
-	# Fallback to the master list entry
-	var master = _get_item_by_path(item.resource_path)
-	if master:
-		return master.is_manually_priced
+	var id = item.get_clean_id()
+	if _configured_item_ids.get(id, false):
+		return true
+		
+	# Instance level fallback
+	if item.is_manually_priced:
+		_configured_item_ids[id] = true # Cache it
+		return true
+		
 	return false
 
 ## Mark a product type as configured globally
 func mark_item_as_configured(item: ItemData) -> void:
 	if not item: return
+	
+	var id = item.get_clean_id()
+	_configured_item_ids[id] = true
 	item.is_manually_priced = true
 	
-	# Sync the flag to the master list entry so all future instances inherit it
-	var master = _get_item_by_path(item.resource_path)
-	if master and master != item:
-		master.is_manually_priced = true
-		master.selling_price = item.selling_price
+	# Sync all existing instances of this item type in the master list
+	for master in _items:
+		if master.get_clean_id() == id:
+			master.is_manually_priced = true
+			if master != item:
+				master.selling_price = item.selling_price
 
 func get_capacity_limit(type: ItemData.ItemType) -> int:
 	match type:
@@ -265,16 +274,16 @@ func get_save_id() -> String:
 
 func get_save_data() -> Dictionary:
 	var prices := {}
-	var pricing_flags := {}
+	var pricing_flags := {} # Deprecated, kept for compat
+	
 	for item in _items:
 		prices[item.resource_path] = item.selling_price
-		pricing_flags[item.resource_path] = item.is_manually_priced
 		
 	return {
 		"stock": _stock.duplicate(),
 		"delivery_cooldown": customers_needed_for_delivery,
 		"prices": prices,
-		"pricing_flags": pricing_flags,
+		"configured_ids": _configured_item_ids.duplicate(),
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -285,20 +294,24 @@ func load_save_data(data: Dictionary) -> void:
 		if _stock.has(path):
 			_stock[path] = int(saved_stock[path])
 			
+	# Restore configured IDs
+	_configured_item_ids = data.get("configured_ids", {}).duplicate()
+			
 	# Restore custom prices and manual pricing flag
 	var saved_prices: Dictionary = data.get("prices", {})
-	var saved_flags: Dictionary = data.get("pricing_flags", {})
 	for path in saved_prices.keys():
 		var item = _get_item_by_path(path)
 		if item:
 			item.selling_price = float(saved_prices[path])
-			item.is_manually_priced = saved_flags.get(path, false)
+			var id = item.get_clean_id()
+			item.is_manually_priced = _configured_item_ids.get(id, false)
 			
 	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
-	LogManager.info("InventoryManager", "State loaded. %d items tracked, %d custom prices restored." % [_stock.size(), saved_prices.size()])
+	LogManager.info("InventoryManager", "State loaded. %d items tracked, %d configured IDs restored." % [_stock.size(), _configured_item_ids.size()])
 
 func reset_state() -> void:
 	_stock.clear()
+	_configured_item_ids.clear()
 	# Re-initialize stock to 0 for all items and reset prices
 	for item in _items:
 		_stock[item.resource_path] = 0
@@ -306,4 +319,4 @@ func reset_state() -> void:
 		item.is_manually_priced = false
 		
 	customers_needed_for_delivery = 0
-	LogManager.info("InventoryManager", "Inventory reset for New Game. Prices cleared.")
+	LogManager.info("InventoryManager", "Inventory reset for New Game. Prices and Config Flags cleared.")

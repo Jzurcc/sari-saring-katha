@@ -24,7 +24,9 @@ enum ItemType {
 @export var item_hint: String = ""
 
 func get_clean_id() -> String:
-	return resource_path.get_file().get_basename().to_lower()
+	if not resource_path.is_empty():
+		return resource_path.get_file().get_basename().to_lower()
+	return item_name.to_lower().replace(" ", "_")
 
 @export_group("Display")
 ## Real-world height of the item on the shelf in meters.

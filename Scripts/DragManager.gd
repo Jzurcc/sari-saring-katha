@@ -95,9 +95,12 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 
 	EventBus.drag_started.emit(_dragged_item)
 	
-	# Show pricing tip if item hasn't been priced yet
-	if _dragged_item.item_data and not InventoryManager.is_item_configured(_dragged_item.item_data):
-		EventBus.show_notification.emit("Unconfigured Item", "Toggle ALT to set your own rates and earn more!", "notif_info")
+	# (Disabled for now) Show pricing tip if item hasn't been priced yet
+	#var is_configured = InventoryManager.is_item_configured(_dragged_item.item_data)
+	#LogManager.debug("DragManager", "Checking config for %s (ID: %s). Result: %s" % [_dragged_item.item_data.item_name, _dragged_item.item_data.get_clean_id(), is_configured])
+	
+	#if _dragged_item.item_data and not is_configured:
+		#EventBus.show_notification.emit("Unconfigured Item", "Toggle ALT to set your own rates and earn more!", "notif_info")
 
 	# Notify the item that dragging has started so it can hide its 3D visuals
 	_dragged_item._on_drag_started_by_manager()
