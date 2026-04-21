@@ -45,7 +45,7 @@ func _ready() -> void:
 	EventBus.customer_dismissed.connect(_on_customer_left)
 
 
-func _notification(what: int) -> void:
+func _notification(_what: int) -> void:
 	# Saving on exit is now handled explicitly by PauseMenu (unless in debug mode).
 	# Auto-save on window close removed per user request.
 	pass

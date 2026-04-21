@@ -246,7 +246,7 @@ func _update_button_text(button: Button, action: String) -> void:
 
 func _setup_scroll_container() -> VBoxContainer:
 	var vbox = $OptionsPanel/Margin/VBox
-	var header = vbox.get_node("Header")
+	var _header = vbox.get_node("Header")
 	
 	var scroll = ScrollContainer.new()
 	scroll.name = "ScrollContainer"
@@ -257,7 +257,7 @@ func _setup_scroll_container() -> VBoxContainer:
 	var content_vbox = VBoxContainer.new()
 	content_vbox.name = "ContentVBox"
 	content_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content_vbox.theme_override_constants_separation = 24
+	content_vbox.add_theme_constant_override("separation", 24)
 	scroll.add_child(content_vbox)
 	
 	var nodes_to_move = []
@@ -288,7 +288,7 @@ func _setup_controls_ui(vbox: VBoxContainer) -> void:
 	# Add Controls Container
 	var controls_vbox = VBoxContainer.new()
 	controls_vbox.name = "ControlsVBox"
-	controls_vbox.theme_override_constants_separation = 8
+	controls_vbox.add_theme_constant_override("separation", 8)
 	vbox.add_child(controls_vbox)
 	
 	for action in REMAPPABLE_ACTIONS:
