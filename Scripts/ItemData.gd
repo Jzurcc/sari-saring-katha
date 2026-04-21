@@ -14,6 +14,8 @@ enum ItemType {
 @export var price: float = 10.0
 ## The current selling price to customers. Initialized to 105% of price if set to 0.
 @export var selling_price: float = 0.0
+## Whether the player has manually adjusted this price.
+@export var is_manually_priced: bool = false
 ## If false, customers will never ask for this item (e.g. for containers/props).
 @export var can_be_sold: bool = true
 @export var type: ItemType = ItemType.SHELF

@@ -250,7 +250,11 @@ func _input(event: InputEvent) -> void:
 						
 						if new_price > current_price:
 							EventBus.price_increased.emit(item.item_data)
+						elif new_price < current_price:
+							EventBus.price_decreased.emit(item.item_data)
 						item.item_data.selling_price = new_price
+						item.item_data.is_manually_priced = true
+						InventoryManager.mark_item_as_configured(item.item_data)
 						get_tree().call_group("draggable_items", "update_pricing_ui")
 						get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
 					get_viewport().set_input_as_handled()

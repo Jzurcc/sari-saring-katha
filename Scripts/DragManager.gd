@@ -94,6 +94,10 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		_ghost_parent.add_child(_ghost_sprite)
 
 	EventBus.drag_started.emit(_dragged_item)
+	
+	# Show pricing tip if item hasn't been priced yet
+	if _dragged_item.item_data and not InventoryManager.is_item_configured(_dragged_item.item_data):
+		EventBus.show_notification.emit("Unconfigured Item", "Toggle ALT to set your own rates and earn more!", "notif_info")
 
 	# Notify the item that dragging has started so it can hide its 3D visuals
 	_dragged_item._on_drag_started_by_manager()

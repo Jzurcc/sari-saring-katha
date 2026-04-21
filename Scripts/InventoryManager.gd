@@ -33,7 +33,7 @@ func initialize() -> void:
 	var base_path: String = "res://Resources/items"
 	var base_dir: DirAccess = DirAccess.open(base_path)
 	if not base_dir:
-		push_error("InventoryManager: cannot open " + base_path)
+		LogManager.error("InventoryManager", "Cannot open " + base_path)
 		return
 	base_dir.list_dir_begin()
 	var subdir: String = base_dir.get_next()
@@ -46,17 +46,17 @@ func initialize() -> void:
 	
 	# Sort items alphabetically for deterministic display order across platforms.
 	_items.sort_custom(func(a: ItemData, b: ItemData): return a.item_name.naturalnocasecmp_to(b.item_name) < 0)
-	print("[InventoryManager] Loaded ", _items.size(), " items")
+	LogManager.info("InventoryManager", "Loaded %d items" % _items.size())
 	
 	# Debug Category Report
 	var cat_counts = {}
 	for item in _items:
 		var cat = item.category
 		cat_counts[cat] = cat_counts.get(cat, 0) + 1
-	print("[InventoryManager] Category Report: ", cat_counts)
+	LogManager.info("InventoryManager", "Category Report: %s" % str(cat_counts))
 
 func _load_folder(folder_path: String) -> void:
-	print("[InventoryManager] Scanning folder: ", folder_path)
+	LogManager.debug("InventoryManager", "Scanning folder: %s" % folder_path)
 	var dir: DirAccess = DirAccess.open(folder_path)
 	if not dir:
 		return
@@ -138,6 +138,28 @@ func _get_item_by_path(path: String) -> ItemData:
 		if item.resource_path == path:
 			return item
 	return null
+
+## Global check for whether an item type has been manually priced
+func is_item_configured(item: ItemData) -> bool:
+	if not item: return false
+	if item.is_manually_priced: return true
+	
+	# Fallback to the master list entry
+	var master = _get_item_by_path(item.resource_path)
+	if master:
+		return master.is_manually_priced
+	return false
+
+## Mark a product type as configured globally
+func mark_item_as_configured(item: ItemData) -> void:
+	if not item: return
+	item.is_manually_priced = true
+	
+	# Sync the flag to the master list entry so all future instances inherit it
+	var master = _get_item_by_path(item.resource_path)
+	if master and master != item:
+		master.is_manually_priced = true
+		master.selling_price = item.selling_price
 
 func get_capacity_limit(type: ItemData.ItemType) -> int:
 	match type:
@@ -243,13 +265,16 @@ func get_save_id() -> String:
 
 func get_save_data() -> Dictionary:
 	var prices := {}
+	var pricing_flags := {}
 	for item in _items:
 		prices[item.resource_path] = item.selling_price
+		pricing_flags[item.resource_path] = item.is_manually_priced
 		
 	return {
 		"stock": _stock.duplicate(),
 		"delivery_cooldown": customers_needed_for_delivery,
 		"prices": prices,
+		"pricing_flags": pricing_flags,
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -260,15 +285,17 @@ func load_save_data(data: Dictionary) -> void:
 		if _stock.has(path):
 			_stock[path] = int(saved_stock[path])
 			
-	# Restore custom prices
+	# Restore custom prices and manual pricing flag
 	var saved_prices: Dictionary = data.get("prices", {})
+	var saved_flags: Dictionary = data.get("pricing_flags", {})
 	for path in saved_prices.keys():
 		var item = _get_item_by_path(path)
 		if item:
 			item.selling_price = float(saved_prices[path])
+			item.is_manually_priced = saved_flags.get(path, false)
 			
 	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
-	print("[InventoryManager] State loaded. %d items tracked, %d custom prices restored." % [_stock.size(), saved_prices.size()])
+	LogManager.info("InventoryManager", "State loaded. %d items tracked, %d custom prices restored." % [_stock.size(), saved_prices.size()])
 
 func reset_state() -> void:
 	_stock.clear()
@@ -276,6 +303,7 @@ func reset_state() -> void:
 	for item in _items:
 		_stock[item.resource_path] = 0
 		item.selling_price = 0.0 # Resets to default on next get_final_price call
+		item.is_manually_priced = false
 		
 	customers_needed_for_delivery = 0
-	print("[InventoryManager] Inventory reset for New Game. Prices cleared.")
+	LogManager.info("InventoryManager", "Inventory reset for New Game. Prices cleared.")
