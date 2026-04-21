@@ -34,6 +34,10 @@ var _is_saving: bool = false
 ## Toggled via secret debug keybind (CTRL + P).
 var debug_skip_save: bool = false
 
+## System flag: Set to true when the player is returning to the Main Menu.
+## Used to suppress dismissal animations in the spawner.
+var is_quitting: bool = false
+
 func _ready() -> void:
 	# --- Save Triggers ---
 	# A) End of day

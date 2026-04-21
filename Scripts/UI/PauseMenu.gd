@@ -114,6 +114,7 @@ func _on_main_menu_pressed() -> void:
 	if has_node("/root/Dialogic"):
 		Dialogic.paused = false
 		if Dialogic.current_timeline != null:
+			SaveManager.is_quitting = true
 			Dialogic.end_timeline()
 			
 	if has_node("/root/SceneTransition"):
