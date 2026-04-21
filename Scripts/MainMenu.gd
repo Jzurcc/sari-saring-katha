@@ -6,6 +6,7 @@ extends Control
 @onready var options_overlay    : Control = $OptionsOverlay
 @onready var collection_overlay : Control = $CollectionOverlay
 @onready var story_overlay      : Control = $StoryProgressOverlay
+@onready var confirm_overlay    : Control = $ConfirmationOverlay
 
 var target_scene = "res://Scenes/IntroCutscene.tscn"
 var original_styles = {}
@@ -48,6 +49,9 @@ func _ready() -> void:
 	collection_overlay.closed.connect(_on_collection_closed)
 	if has_node("StoryProgressOverlay"):
 		story_overlay.closed.connect(_on_story_progress_closed)
+
+	confirm_overlay.confirmed.connect(_on_new_game_confirmed)
+	confirm_overlay.cancelled.connect(func(): _update_menu_interaction(true))
 
 	if has_node("TitleScreen3D/Camera3D"):
 		cam = $TitleScreen3D/Camera3D
@@ -151,6 +155,18 @@ func _process(delta: float) -> void:
 # ─── New Game ─────────────────────────────────────────────────────────────────
 
 func _on_new_game_pressed() -> void:
+	if SaveManager.has_save():
+		_play_click()
+		confirm_overlay.open("NEW GAME", "Are you sure you want to start a new game? This will overwrite your current progress.")
+		_update_menu_interaction(false)
+		return
+	
+	_start_new_game()
+
+func _on_new_game_confirmed() -> void:
+	_start_new_game()
+
+func _start_new_game() -> void:
 	# Clear existing save for a fresh start
 	SaveManager.clear_save()
 	
@@ -162,10 +178,10 @@ func _on_new_game_pressed() -> void:
 	if Engine.has_singleton("Dialogic"):
 		Dialogic.VAR.reset_all()
 
-	
 	is_starting_game = true
 	buttons.hide()
-	$LeftVignette.hide()
+	if has_node("LeftVignette"):
+		$LeftVignette.hide()
 
 	# Immediately fade to black and transition to intro cutscene
 	SceneTransition.change_scene(target_scene)
