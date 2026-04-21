@@ -129,10 +129,12 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
 					if context and context.timeline and spawner:
 						spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
-				
-				# FIX: Removed item = null and start_drag here.
-				# This allows the 'if item:' check at the bottom of _on_tray_item_placed
-				# to correctly return the item to the shelf instead of leaving it in the void.
+					
+					# Keep item in hand so it doesn't just vanish or jump
+					if DragManager and item.item_data and item.item_data.texture:
+						DragManager.call_deferred("start_drag", item, item.item_data.texture)
+					
+					item = null # Preempt return_to_start
 			
 	if not handled:
 		LogManager.debug("MainGame", "No customer waiting, dropping item")
