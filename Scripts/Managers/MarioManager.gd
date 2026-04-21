@@ -178,8 +178,10 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	# 3. Delivery Dialogue
 	_current_anchor = _delivery_sprite
 	
-		
+	EventBus.customer_arrived.emit(null)
+	
 	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock), "Delivery")
+
 
 func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	# 1. Finalize Stock Immediately (Digital pool always has the total)
@@ -272,6 +274,8 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	_delivery_sprite.queue_free()
 	_delivery_sprite = null
 	is_mario_physically_present = false
+	
+	EventBus.customer_dismissed.emit(null)
 	delivery_finished.emit()
 
 func _on_day_started(_day: int) -> void:

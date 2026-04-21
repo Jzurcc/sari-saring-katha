@@ -45,11 +45,13 @@ var is_paused: bool = false:
 var _dialogue_phase: DialoguePhase = DialoguePhase.NONE
 var _current_timeline_path: String = "" # Track the timeline started by this spawner
 var _last_dialogue_frame: int = -1 # Frame-based protection against double-starting dialogue
+var _pending_restore_transaction: TransactionContext = null
 
 func _ready() -> void:
 	LogManager.debug("CustomerSpawner", "_ready() START")
 	add_to_group("customer_spawner")
 	add_to_group("persist")
+	SaveManager.is_quitting = false # Reset quitting flag when entering the game
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_dismissed) # Completion of satisfy()
 	EventBus.customer_partial_satisfaction.connect(_on_customer_partial_satisfaction)
@@ -84,8 +86,14 @@ func _spawn_next_customer() -> void:
 		return
 
 	_is_spawning = true
-
-	var transaction = StoryManager.get_next_transaction()
+	
+	var transaction: TransactionContext = null
+	if _pending_restore_transaction:
+		transaction = _pending_restore_transaction
+		_pending_restore_transaction = null
+		LogManager.info("CustomerSpawner", "Using restored transaction for next spawn: %s" % transaction.customer_data.character_name)
+	else:
+		transaction = StoryManager.get_next_transaction()
 
 	if transaction == null:
 		# No characters configured — nothing to spawn
@@ -538,6 +546,13 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 
 
 func _on_dialogue_ended() -> void:
+	if SaveManager.is_quitting:
+		LogManager.debug("CustomerSpawner", "Dialogue ended due to quitting. Suppressing dismissal.")
+		_dialogue_phase = DialoguePhase.NONE
+		_current_timeline_path = ""
+		_pending_dismiss = false
+		return
+
 	# 1. Detect if Mario just cut in
 	if Dialogic.current_timeline != null and "UncleMario.dtl" in Dialogic.current_timeline.resource_path:
 		LogManager.debug("CustomerSpawner", "Mario interrupted current flow. Interruption flag set.")
@@ -715,10 +730,7 @@ func get_save_id() -> String:
 	return "customer_spawner"
 
 func get_save_data() -> Dictionary:
-	var data := {
-		"dialogue_phase": _dialogue_phase,
-		"greeting_interrupted": _greeting_interrupted,
-	}
+	var data := {}
 	
 	if is_instance_valid(current_customer) and current_customer.transaction_context:
 		data["current_customer"] = current_customer.transaction_context.to_dict()
@@ -731,62 +743,30 @@ func get_save_data() -> Dictionary:
 	return data
 
 func load_save_data(data: Dictionary) -> void:
-	_dialogue_phase = data.get("dialogue_phase", DialoguePhase.NONE) as DialoguePhase
-	_greeting_interrupted = data.get("greeting_interrupted", false)
+	# IMPORTANT: Do NOT restore _dialogue_phase from save.
+	# The customer will do a fresh walk-in, so the phase must start as NONE.
+	# Restoring a stale phase (e.g. GREETING or SOCIAL_VISIT) would permanently
+	# block the click guard at _on_customer_clicked() line 286, making the
+	# re-spawned customer unclickable. This was the root cause of the tutorial bug.
+	_dialogue_phase = DialoguePhase.NONE
+	_greeting_interrupted = false # Also reset: interruption state is irrelevant after a reload
 	
 	if data.has("current_customer"):
 		var ctx_data = data["current_customer"]
 		var ctx = TransactionContext.from_dict(ctx_data)
-		var has_guest = data.has("guest_customer")
-		
-		var pos_data = _calculate_positions(has_guest)
-		if not pos_data.is_empty():
-			current_customer = customer_scene.instantiate()
-			get_parent().add_child(current_customer)
+		if ctx and ctx.customer_data:
+			_pending_restore_transaction = ctx
+			LogManager.info("CustomerSpawner", "Queuing restored customer for fresh walk-in: %s" % ctx.customer_data.character_name)
 			
-			# Jump to target position immediately
-			current_customer.global_position = pos_data.primary_target
-			
-			# If the customer is Kuya Kap, offset him back so he doesn't hit his head on the roof.
-			var final_target = pos_data.primary_target
-			if ctx.customer_data and ctx.customer_data.get_clean_id() == "kuyakap":
-				var dir_back = (pos_data.spawn_pos - pos_data.target_pos).normalized()
-				final_target += (dir_back * 0.7)
-				current_customer.global_position = final_target
+			# Delay slightly to ensure self is ready, then trigger spawn
+			get_tree().create_timer(1.0).timeout.connect(func(): _spawn_next_customer())
+			return
 
-			current_customer.setup(ctx, final_target, pos_data.exit_pos)
-			current_customer.has_been_greeted = data.get("current_greeted", false)
-			
-			# Force "arrived" state instantly
-			if current_customer.has_method("_on_target_reached"):
-				current_customer.call("_on_target_reached")
-			
-			current_customer.arrived.connect(_on_customer_arrived)
-			current_customer.clicked.connect(_on_customer_clicked)
-			current_customer.satisfied.connect(_on_customer_finished)
-			
-			EventBus.customer_spawned.emit(current_customer)
-			LogManager.info("CustomerSpawner", "Restored current customer: %s" % (ctx.customer_data.get_clean_id() if ctx.customer_data else "Unknown"))
-
+	# If no customer to restore, handle guest restoration (optional, usually guest is with primary)
 	if data.has("guest_customer"):
-		var g_ctx_data = data["guest_customer"]
-		var g_ctx = TransactionContext.from_dict(g_ctx_data)
-		
-		var pos_data = _calculate_positions(true)
-		if not pos_data.is_empty():
-			guest_customer = customer_scene.instantiate()
-			get_parent().add_child(guest_customer)
-			guest_customer.global_position = pos_data.guest_target
-			
-			guest_customer.setup(g_ctx, pos_data.guest_target, pos_data.exit_pos, g_ctx.guest_spawns_later)
-			guest_customer.has_been_greeted = data.get("guest_greeted", false)
-			
-			# Force "arrived" state instantly
-			if guest_customer.has_method("_on_target_reached"):
-				guest_customer.call("_on_target_reached")
-				
-			guest_customer.clicked.connect(_on_guest_clicked)
-			LogManager.info("CustomerSpawner", "Restored guest customer: %s" % (g_ctx.customer_data.get_clean_id() if g_ctx.customer_data else "Unknown"))
+		# We'll let guests be handled by the primary re-spawn logic for now 
+		# since guests are tied to the TransactionContext of the primary.
+		pass
 
 
 func _on_character_speaking(data: CustomerData) -> void:

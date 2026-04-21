@@ -801,7 +801,7 @@ func get_next_transaction() -> TransactionContext:
 	_set_dvar("Transaction_ItemWantsBest", t.best_item_name)
 	
 	# Update Dialogic ItemWants string
-	_update_transaction_item_string(t)
+	update_transaction_item_string(t)
 	
 	# Phase-specific random rolls
 	_set_dvar("Transaction_GreetingVar", Transaction_GreetingVar)
@@ -1143,7 +1143,7 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 					if item:
 						t.desired_items.append(item)
 				
-			_update_transaction_item_string(t)
+			update_transaction_item_string(t)
 			print("[StoryManager] Chapter %d items used for %s: %s" % [chapter, data.character_name, Transaction_ItemWants])
 		else:
 			# --- 50% Unpredictability for Regular Purchases ---
@@ -1248,7 +1248,7 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 					break
 
 			# SYNC: Ensure the built item list (overrides/fallbacks) is pushed to Dialogic DVars
-			_update_transaction_item_string(t)
+			update_transaction_item_string(t)
 			print("[StoryManager] Final selection for %s: Type=%s, Items=[%s]" % [data.character_name, Transaction_Chapter, Transaction_ItemWants])
 
 
@@ -1320,8 +1320,14 @@ func _on_customer_satisfied(customer) -> void:
 
 func _on_customer_arrived(_customer: Customer) -> void:
 	is_customer_present = true
-	wait_limit_time = _current_display_time + 4.0
-	LogManager.debug("StoryManager", "Customer arrived. Patience limit set to %.2f" % wait_limit_time)
+	
+	# Only set the 4-hour limit if it hasn't been set yet (e.g., fresh arrival vs restore from save).
+	# If was_paused_by_limit is true, we also skip setting it because they already hit it.
+	if wait_limit_time < 0 and not was_paused_by_limit:
+		wait_limit_time = _current_display_time + 4.0
+		LogManager.debug("StoryManager", "Customer arrived. Patience limit set to %.2f" % wait_limit_time)
+	else:
+		LogManager.info("StoryManager", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Paused: %s)" % [wait_limit_time, str(was_paused_by_limit)])
 
 func _on_customer_dismissed(_customer: Customer) -> void:
 	is_customer_present = false
@@ -1356,6 +1362,11 @@ func _on_customer_dismissed(_customer: Customer) -> void:
 	_process_story_cooldown(_customer)
 
 func _set_last_customer_info(customer: Customer) -> void:
+	if customer == null:
+		_set_dvar("Global_LastCustomer", "Uncle Mario")
+		_set_dvar("Global_LastItem", "Stock Delivery")
+		return
+		
 	if customer.transaction_context:
 		var data = customer.transaction_context.customer_data
 		var display_name = data.character_name if data.character_name != "" else data.get_clean_id()
@@ -1375,7 +1386,7 @@ func _set_last_customer_info(customer: Customer) -> void:
 			_set_dvar("Global_LastItem", "")
 
 func _process_story_cooldown(customer) -> void:
-	if not customer.transaction_context:
+	if customer == null or not customer.transaction_context:
 		return
 	
 	var t = customer.transaction_context
@@ -1737,10 +1748,10 @@ func upgrade_desires() -> void:
 		else: new_list.append(old_item)
 	
 	t.desired_items.assign(new_list)
-	_update_transaction_item_string(t)
+	update_transaction_item_string(t)
 	print("[StoryManager] Manual Upgrade Executed: ", Transaction_ItemWants)
 
-func _update_transaction_item_string(t: TransactionContext) -> void:
+func update_transaction_item_string(t: TransactionContext) -> void:
 	var item_names: Array[String] = []
 	var highest_tier := -1
 	var highest_item_name := ""
