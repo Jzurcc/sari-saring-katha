@@ -28,7 +28,6 @@ const REMAPPABLE_ACTIONS = {
 	"look_right": "Move Right",
 	"crouch": "Crouch",
 	"sprint": "Sprint",
-	"open_drawer": "Inventory/Drawer",
 	"pricing_lens": "Pricing Lens",
 	"price_up": "Increase Price",
 	"price_down": "Decrease Price",
@@ -85,6 +84,23 @@ func _ensure_actions_initialized() -> void:
 		if not InputMap.has_action(action):
 			InputMap.add_action(action)
 			_set_default_for_action(action)
+	
+	# Special case: ensure Advance Dialogue displays Space as primary if possible
+	if InputMap.has_action("dialogic_default_action"):
+		var events = InputMap.action_get_events("dialogic_default_action")
+		var space_idx = -1
+		for i in range(events.size()):
+			if events[i] is InputEventKey and (events[i].physical_keycode == KEY_SPACE or events[i].keycode == KEY_SPACE):
+				space_idx = i
+				break
+		
+		if space_idx > 0:
+			var space_event = events[space_idx]
+			events.remove_at(space_idx)
+			events.insert(0, space_event)
+			InputMap.action_erase_events("dialogic_default_action")
+			for e in events:
+				InputMap.action_add_event("dialogic_default_action", e)
 
 func _set_default_for_action(action: String) -> void:
 	var events: Array[InputEvent] = []
@@ -129,15 +145,16 @@ func _set_default_for_action(action: String) -> void:
 	for e in events:
 		InputMap.action_add_event(action, e)
 
-func open() -> void:
-	show()
-	_load_settings()
-
 func close() -> void:
 	_play_confirm()
 	_save_settings()
 	hide()
 	closed.emit()
+
+func open() -> void:
+	show()
+	_ensure_actions_initialized() # Ensure actions and order are correct every time we open
+	_load_settings()
 
 func _play_click() -> void:
 	_ui_player.stream = _sfx_click
@@ -183,14 +200,24 @@ func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	_sync_display_label()
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
+	if not visible: return
+	
 	if not _is_remapping:
+		if event.is_action_pressed("ui_cancel"):
+			close()
+			get_viewport().set_input_as_handled()
 		return
 	
-	if event is InputEventKey or (event is InputEventMouseButton and event.pressed):
+	# Only capture actual presses to avoid binding on key release
+	if not event.is_pressed():
+		return
+		
+	if event is InputEventKey or event is InputEventMouseButton:
 		# Stop remapping if Escape is pressed (cancel)
 		if event is InputEventKey and event.keycode == KEY_ESCAPE:
 			_stop_remapping()
+			get_viewport().set_input_as_handled()
 			return
 		
 		# Set the new binding
@@ -210,10 +237,10 @@ func _start_remapping(action: String, button: Button) -> void:
 
 func _stop_remapping() -> void:
 	_is_remapping = false
-	_remapping_action = ""
 	if _remapping_button:
 		_update_button_text(_remapping_button, _remapping_action)
 		_remapping_button = null
+	_remapping_action = ""
 
 func _update_binding(action: String, event: InputEvent) -> void:
 	# Only keep key or mouse button events for now
@@ -232,7 +259,17 @@ func _update_input_map(action: String, event: InputEvent) -> void:
 		_set_default_for_action(action)
 	
 	InputMap.action_erase_events(action)
-	InputMap.action_add_event(action, event)
+	InputMap.action_add_event(action, event.duplicate())
+	
+	# Preserve mouse wheel for pricing regardless of keyboard rebind
+	if action == "price_up":
+		var wheel = InputEventMouseButton.new()
+		wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+		InputMap.action_add_event(action, wheel)
+	elif action == "price_down":
+		var wheel = InputEventMouseButton.new()
+		wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+		InputMap.action_add_event(action, wheel)
 
 func _update_button_text(button: Button, action: String) -> void:
 	if action == "": # Default recovery if aborted
@@ -240,7 +277,12 @@ func _update_button_text(button: Button, action: String) -> void:
 		
 	var events = InputMap.action_get_events(action)
 	if events.size() > 0:
-		button.text = events[0].as_text().replace(" (Physical)", "")
+		var raw_text = events[0].as_text()
+		# Aggressively clean up Godot's text representation
+		var labels = [" (Physical)", " (physical)", " - Physical", " - physical", " (Physical Key)"]
+		for label in labels:
+			raw_text = raw_text.replace(label, "")
+		button.text = raw_text
 	else:
 		button.text = "None"
 
@@ -311,6 +353,7 @@ func _setup_controls_ui(vbox: VBoxContainer) -> void:
 		var btn = Button.new()
 		btn.name = "Button"
 		btn.custom_minimum_size = Vector2(200, 40)
+		btn.focus_mode = Control.FOCUS_NONE # Prevent buttons from consuming Space/Enter
 		btn.add_theme_font_override("font", preload("res://Assets/Fonts/Inder/Inder-Regular.ttf"))
 		btn.pressed.connect(_start_remapping.bind(action, btn))
 		hbox.add_child(btn)

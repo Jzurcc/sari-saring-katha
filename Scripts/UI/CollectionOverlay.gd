@@ -17,6 +17,17 @@ func _ready() -> void:
 	add_child(_ui_player)
 	_hide_details()
 
+func _input(event: InputEvent) -> void:
+	if not visible: return
+	
+	if event.is_action_pressed("ui_cancel"):
+		if detail_overlay.visible:
+			_hide_details()
+			_play_confirm()
+		else:
+			close()
+		get_viewport().set_input_as_handled()
+
 func open() -> void:
 	show()
 	_hide_details()

@@ -11,12 +11,19 @@ func _ready() -> void:
 	
 	# Create a default style for the "Toast" look
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.85) # Semi-transparent black
-	style.set_corner_radius_all(8)
-	style.set_content_margin_all(20)
+	style.bg_color = Color(0.12, 0.11, 0.1, 0.9) # Slightly warmer dark background
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(10)
 	style.shadow_size = 8
 	style.shadow_color = Color(0, 0, 0, 0.3)
 	panel.add_theme_stylebox_override("panel", style)
+	
+	# Apply soft beige theme and smaller header
+	var beige := Color(0.92, 0.9, 0.78)
+	title_label.add_theme_color_override("font_color", beige)
+	message_label.add_theme_color_override("font_color", beige.lerp(Color.WHITE, 0.3))
+	title_label.add_theme_font_size_override("font_size", 22)
+	message_label.add_theme_font_size_override("font_size", 16)
 	
 	EventBus.show_notification.connect(_on_show_notification)
 
@@ -61,12 +68,12 @@ func _animate_in() -> void:
 	panel.pivot_offset = panel.size / 2.0
 	
 	var tween = create_tween().set_parallel(true)
-	tween.tween_property(panel, "modulate:a", 1.0, 0.3)
-	tween.tween_property(panel, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(panel, "position:y", 40.0, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.25)
+	tween.tween_property(panel, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(panel, "position:y", 30.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	
 	# Auto dismiss
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(2.5).timeout
 	_animate_out()
 
 func _animate_out() -> void:
