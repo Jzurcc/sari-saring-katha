@@ -64,6 +64,7 @@ func adjust_price(delta: float) -> void:
 	var new_price : float = clamp(current_price + delta, min_price, max_price)
 	
 	sachet_item.selling_price = new_price
+	sachet_item.is_manually_priced = true
 	
 	# Refresh all pricing UIs
 	get_tree().call_group("draggable_items", "update_pricing_ui")
@@ -71,11 +72,13 @@ func adjust_price(delta: float) -> void:
 
 func update_pricing_ui() -> void:
 	if not sachet_item: return
+	
 	if not is_hovered or not _pricing_mode_active: return
 	
 	if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
 		get_node("/root/PricingOverlay").show_item(sachet_item, global_position, true, "", stock_info)
+
 
 func _update_label_visibility() -> void:
 	if not _pricing_mode_active or not is_hovered:

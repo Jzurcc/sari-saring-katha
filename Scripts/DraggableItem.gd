@@ -37,6 +37,7 @@ func _ready() -> void:
 	
 	if item_data:
 		setup(item_data)
+	
 
 
 ## Configure this item with [param data] and place it at [param local_transform]
@@ -99,6 +100,17 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, 
 		# Now that it's perfectly centered, shift it up to sit on the shelf
 		sprite.position = Vector3.ZERO
 		sprite.position.y = h / 2.0
+		
+		# --- Collision shape resize ---
+		# Resize BoxShape3D to match the rendered sprite dimensions so picking
+		# works correctly regardless of item size.
+		var rendered_h: float = h
+		var aspect: float = item_data.get_visual_aspect()
+		var rendered_w: float = (
+			item_data.display_width_override
+			if item_data.display_width_override > 0.0
+			else rendered_h * aspect
+		)
 
 		# --- Tilt (Z-axis roll on the Sprite3D) ---
 		# Applied on the sprite itself so it's visible even with billboard=ENABLED.
@@ -112,16 +124,6 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, 
 		transform = pos_only
 		_original_transform = pos_only
 
-		# --- Collision shape resize ---
-		# Resize BoxShape3D to match the rendered sprite dimensions so picking
-		# works correctly regardless of item size.
-		var rendered_h: float = h
-		var aspect: float = item_data.get_visual_aspect()
-		var rendered_w: float = (
-			item_data.display_width_override
-			if item_data.display_width_override > 0.0
-			else rendered_h * aspect
-		)
 		if collider.shape is BoxShape3D:
 			collider.shape = collider.shape.duplicate()
 			collider.shape.size = Vector3(rendered_w, rendered_h, 0.05) # Fixed thin depth
@@ -191,10 +193,12 @@ func _update_label_visibility() -> void:
 
 func update_pricing_ui() -> void:
 	if not item_data: return
+	
 	if not is_hovered or not _pricing_mode_active: return
 	
 	if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
 		get_node("/root/PricingOverlay").show_item(item_data, global_position)
+
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return

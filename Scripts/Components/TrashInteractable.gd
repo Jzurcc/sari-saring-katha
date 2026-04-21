@@ -3,10 +3,16 @@ class_name TrashInteractable
 
 ## A dedicated interactable for deleting unwanted items.
 ## Includes "game feel" logic like squash & stretch and particle feedback.
+ 
+var _visual_base_scale: Vector3 = Vector3.ONE
 
 func _ready() -> void:
 	super._ready()
 	add_to_group("trash")
+	
+	var visuals = get_visual_nodes()
+	if not visuals.is_empty():
+		_visual_base_scale = visuals[0].scale
 	
 	# Default outline color for trash could be a slight red or just white
 	default_outline_color = Color(1.0, 0.8, 0.8)
@@ -35,6 +41,7 @@ func receive_item(item: DraggableItem) -> void:
 func on_interact() -> void:
 	if EventBus.has_signal("request_sfx"):
 		EventBus.request_sfx.emit("trash")
+	_play_trash_animation()
 
 func _play_trash_animation() -> void:
 	var visuals = get_visual_nodes()
@@ -42,7 +49,7 @@ func _play_trash_animation() -> void:
 	
 	var visual = visuals[0]
 	var tw = create_tween()
-	var start_scale = visual.scale
+	var start_scale = _visual_base_scale
 	
 	# Fast Squash (Wider and shorter)
 	tw.tween_property(visual, "scale", start_scale * Vector3(1.2, 0.8, 1.2), 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
