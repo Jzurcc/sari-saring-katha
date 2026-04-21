@@ -283,7 +283,8 @@ float calc_cumulus_density(vec3 p, vec3 offset, float t) {
 }
 
 vec4 render_cirrus_clouds(vec3 pos) {
-	pos.xy = pos.xz / pos.y;
+	float safe_y = abs(pos.y) < 0.00001 ? 0.00001 * sign(pos.y + 1e-6) : pos.y;
+	pos.xy = pos.xz / safe_y;
 	pos *= cirrus_size;
 	float density = calc_cirrus_density(pos.xy);
 	float sh = clamp_to_unit(exp(-cirrus_absorption * density));
@@ -300,7 +301,8 @@ vec4 render_cumulus_clouds(vec3 ro, vec3 rd, float am, vec3 sun_pos, vec3 moon_p
 	vec3 n; float tt;
 	if (ray_sphere_intersect(500., ro, rd, tt, n)) {
 		float march_step = float(CUMULUS_STEP) * cumulus_thickness;
-		vec3 dir_step = rd / rd.y * march_step;
+		float safe_y = abs(rd.y) < 0.00001 ? 0.00001 * sign(rd.y + 1e-6) : rd.y;
+		vec3 dir_step = rd / safe_y * march_step;
 		vec3 pos = n * cumulus_size;
 
 		vec2 mu = vec2(dot(sun_pos, rd), dot(moon_pos, rd));
@@ -439,9 +441,10 @@ vec3 align_and_rotate_vector(vec3 dir, vec3 target, float rotation_angle) {
 	// First, align Z-axis with target (Polaris)
 	target = normalize(target);
 	vec3 axis = cross(z_axis, target);
-	float angle = acos(dot(z_axis, target));
-	float valid = step(0.0001, length(axis)); // 1.0 if length(axis) >= 0.0001
-	axis = normalize(axis);
+	float angle = acos(clamp(dot(z_axis, target), -1.0, 1.0));
+	float axis_len = length(axis);
+	float valid = step(0.0001, axis_len); // 1.0 if length(axis) >= 0.0001
+	axis = valid > 0.5 ? axis / axis_len : vec3(1.0, 0.0, 0.0);
 	vec4 align_quat = create_axis_angle_quat(axis, angle);
 	dir = mix(dir, rotate_vector_by_quat(dir, align_quat), valid);
 	vec4 rot_quat = create_axis_angle_quat(vec3(0.0, 0.0, 1.0), rotation_angle);

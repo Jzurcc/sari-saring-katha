@@ -125,7 +125,8 @@ void fragment() {
 	// Y difference from camera to sea_level
 	float dy = sea_level - CAMERA_POSITION_WORLD.y;
 	// Distance along ray to sea_level plane
-	float plane_distance = dy / (ray_direction.y + 1e-6 * sign(ray_direction.y));  // avoid divide by zero
+	float safe_y = abs(ray_direction.y) < 1e-6 ? 1e-6 : ray_direction.y;
+	float plane_distance = dy / safe_y;
 	float plane_hit = float(ray_direction.y < 0.) *
 					  float(plane_distance > 0.) *
 					  float(plane_distance < original_distance);

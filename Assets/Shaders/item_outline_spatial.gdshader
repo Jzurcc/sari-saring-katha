@@ -21,7 +21,9 @@ void vertex() {
 	if (fixed_y_billboard) {
 		// Rotate around the world Y axis only — matches Sprite3D billboard = 2.
 		// Camera right projected flat onto the XZ plane, world up stays (0,1,0).
-		vec3 cam_x  = normalize(vec3(INV_VIEW_MATRIX[0].x, 0.0, INV_VIEW_MATRIX[0].z));
+		vec3 cam_right = vec3(INV_VIEW_MATRIX[0].x, 0.0, INV_VIEW_MATRIX[0].z);
+		float cr_len = length(cam_right);
+		vec3 cam_x  = cr_len > 0.0001 ? cam_right / cr_len : vec3(1.0, 0.0, 0.0);
 		vec3 world_y = vec3(0.0, 1.0, 0.0);
 		vec3 cam_z  = normalize(cross(cam_x, world_y));
 		mat_world = mat4(
@@ -60,7 +62,8 @@ void fragment() {
 	}
 
 	// Convert pixel-width to per-axis UV step (fixes non-square texture stretch).
-	vec2 px = vec2(outline_width) / vec2(textureSize(albedo_texture, 0));
+	vec2 tex_size = max(vec2(1.0), vec2(textureSize(albedo_texture, 0)));
+	vec2 px = vec2(outline_width) / tex_size;
 
 	// 8-direction sampling: 4 cardinal + 4 diagonal → smooth corners.
 	float max_a = 0.0;
