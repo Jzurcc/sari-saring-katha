@@ -107,11 +107,11 @@ var Transaction_IsRepaying: bool = false
 var Transaction_IsNextTier: bool = false
 var Transaction_RepaymentAmount: float = 0.0
 var Transaction_IsRiddle: bool = false
-var Transaction_CurrentArc: int = 0
-var Transaction_Chapter: int = 0
+var Transaction_CurrentArc: float = 0.0
+var Transaction_Chapter: float = 0.0
 var Transaction_Branch: float = 0.0
-var Transaction_DeliveredCount: int = 0
-var Transaction_RemainingCount: int = 0
+var Transaction_DeliveredCount: float = 0.0
+var Transaction_RemainingCount: float = 0.0
 var Transaction_GreetingVar: float = 0.0
 var Transaction_TalkVar: float = 0.0
 var Transaction_SatisfyVar: float = 0.0
@@ -695,7 +695,7 @@ func get_next_transaction() -> TransactionContext:
 	# Random utang is disabled for the initial version.
 	# Utang only comes from Manang Ana on PURCHASE transactions.
 	const MANANG_ANA_PATH := "res://Resources/customers/ManangAna.tres"
-	var debt_roll = randf()  # kept for logging parity
+	var _debt_roll = randf()  # kept for logging parity
 	if t.transaction_type == TransactionContext.Type.PURCHASE \
 			and t.customer_data and t.customer_data.resource_path == MANANG_ANA_PATH:
 		t.wants_debt = true
@@ -739,19 +739,19 @@ func get_next_transaction() -> TransactionContext:
 	Transaction_ItemHint = t.riddle_item.item_hint if t.is_riddle and t.riddle_item else ""
 	Transaction_CustomerName = t.customer_data.character_name if t.customer_data else ""
 	
-	Transaction_GreetingVar = float(randi() % 100)
-	Transaction_TalkVar = float(randi() % 100)
-	Transaction_SatisfyVar = float(randi() % 100)
-	Transaction_WrongItemVar = float(randi() % 100)
-	Transaction_VisitVar = float(randi() % 100)
+	Transaction_GreetingVar = randf() * 100.0
+	Transaction_TalkVar = randf() * 100.0
+	Transaction_SatisfyVar = randf() * 100.0
+	Transaction_WrongItemVar = randf() * 100.0
+	Transaction_VisitVar = randf() * 100.0
 	
 	var chapter = character_story_states.get(t.customer_data.resource_path, 0)
 	var branch_value = customer_story_branches.get(t.customer_data.resource_path, 0.0)
 	Transaction_Chapter = float(chapter)
 	Transaction_Branch = float(branch_value)
-	Transaction_CurrentArc = t.customer_data.get_arc_index(chapter) + 1
-	Transaction_DeliveredCount = t.delivered_items.size()
-	Transaction_RemainingCount = t.desired_items.size()
+	Transaction_CurrentArc = float(t.customer_data.get_arc_index(chapter) + 1)
+	Transaction_DeliveredCount = float(t.delivered_items.size())
+	Transaction_RemainingCount = float(t.desired_items.size())
 
 	# 4. Sync to Dialogic Variables
 	_set_dvar("Global_RumorActive", 1.0 if t.rumor_active else 0.0)
@@ -835,11 +835,11 @@ func get_collection_transaction() -> TransactionContext:
 			print("[StoryManager] Mayari RECOVERY nightly visit (Generic).")
 	
 	# Common nightly variety rolls
-	Transaction_GreetingVar = float(randi() % 100)
-	Transaction_TalkVar = float(randi() % 100)
-	Transaction_SatisfyVar = float(randi() % 100)
-	Transaction_WrongItemVar = float(randi() % 100)
-	Transaction_VisitVar = float(randi() % 100)
+	Transaction_GreetingVar = randf() * 100.0
+	Transaction_TalkVar = randf() * 100.0
+	Transaction_SatisfyVar = randf() * 100.0
+	Transaction_WrongItemVar = randf() * 100.0
+	Transaction_VisitVar = randf() * 100.0
 	
 	_set_dvar("Transaction_GreetingVar", Transaction_GreetingVar)
 	_set_dvar("Transaction_TalkVar", Transaction_TalkVar)
@@ -982,9 +982,9 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 		var type_str = "VISIT" if t.transaction_type == TransactionContext.Type.VISIT else "PURCHASE"
 		print("[StoryManager] Selection for %s: %s (Timeline: %s)" % [data.character_name, type_str, t.timeline])
 
+	var id = data.get_clean_id()
 	# 2.5 Identify "Visit-only" Story Chapters
 	if t.transaction_type == TransactionContext.Type.STORY:
-		var id = data.get_clean_id()
 		var i_chapter = int(chapter)
 		if id == "sarimanok" and i_chapter <= 3:
 			t.is_visit_story = true
@@ -1003,7 +1003,6 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 			print("[StoryManager] Marked STORY as VISIT-ONLY for %s (Chapter %d)" % [id, i_chapter])
 	
 	# 2.6 Dynamic Requested Category Overrides
-	var id = data.get_clean_id()
 	if id == "kuyakap":
 		if chapter == 7.0: # Chapter 8 "Not Today"
 			t.requested_category = "bottle"
@@ -1162,18 +1161,18 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 					if not hint_pool.is_empty():
 						pool = hint_pool # Buboy ONLY picks items with hints if possible
 				
-				var max_tiers_by_cat = _get_max_tier_per_category()
+				var pool_max_tiers = _get_max_tier_per_category()
 				for i in range(target_item_count):
-					var picked = _pick_weighted_item(pool, max_tiers_by_cat)
+					var picked = _pick_weighted_item(pool, pool_max_tiers)
 					if picked:
 						t.desired_items.append(picked)
 
 			# --- Fill Remaining Target Item Slots ---
 			var remaining_items = target_item_count - t.desired_items.size()
-			var max_tiers_by_cat = _get_max_tier_per_category()
+			var current_max_tiers = _get_max_tier_per_category()
 			for i in range(remaining_items):
 				if not pool.is_empty():
-					var item = _pick_weighted_item(pool, max_tiers_by_cat)
+					var item = _pick_weighted_item(pool, current_max_tiers)
 					if t.upgrade_to_best_tier:
 						var best = get_best_item_for_category(item.category, item)
 						if best: item = best
@@ -1484,7 +1483,7 @@ func _pick_weighted_item(pool: Array[ItemData], max_tiers_by_cat: Dictionary) ->
 		
 		# Priority 1: Next-Tier uncommon items
 		if item.tier > current_tier:
-			weight = 0.3
+			weight = 0.4
 		else:
 			# Priority 2: Gradual category-based decay
 			var max_tier_in_cat = max_tiers_by_cat.get(item.category, item.tier)
