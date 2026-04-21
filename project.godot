@@ -40,6 +40,7 @@ StoryManager="*res://Scripts/Managers/StoryManager.gd"
 MarioManager="*res://Scripts/Managers/MarioManager.gd"
 VisualEffectManager="*res://Scripts/Managers/VisualEffectManager.gd"
 PricingOverlay="*res://Scripts/UI/PricingOverlay.gd"
+LogManager="*res://Scripts/Managers/LogManager.gd"
 
 [debug]
 
