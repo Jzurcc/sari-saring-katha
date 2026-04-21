@@ -28,6 +28,7 @@ extends Resource
 @export var shader_cirrus_position2: Vector2
 
 @export_group("Environment Parameters")
+@export var env_color_correction: Texture2D
 @export var env_glow_intensity: float
 @export var env_glow_bloom: float
 @export var env_adjustment_saturation: float
@@ -38,6 +39,8 @@ extends Resource
 
 @export_group("Light Energies")
 @export var light_sun_energy: float
+@export var light_sun_volumetric_energy: float = 1.0
 @export var light_moon_energy: float
+@export var light_moon_volumetric_energy: float = 1.0
 @export var light_omni_energy: float
 @export var light_night_energy: float

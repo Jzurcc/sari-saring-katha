@@ -7,6 +7,8 @@
 extends Node
 
 @export var environmental_omni_light: OmniLight3D = null
+@export var wind_direction: Vector2 = Vector2(1, 0)
+@export var wind_speed: float = 0.01
 @export var keyframes: Array[LightingKeyframe] = []
 
 # Reference to parent Environment for postprocessing updates
@@ -27,6 +29,7 @@ var _transition_tween: Tween = null
 var _last_signal_time: float = -1.0
 var _state_dirty: bool = true
 var _sorted_keyframes: Array = []
+var _cloud_time_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
@@ -135,6 +138,16 @@ func _process(_delta: float) -> void:
 	if Engine.is_editor_hint() or not _environment or not _sky_material or not _time_of_day:
 		return
 
+	_cloud_time_offset -= wind_direction * wind_speed * _delta
+
+	if _current_from_state and _current_to_state:
+		var f = _current_from_state
+		var t = _current_to_state
+		var factor = _current_t
+		_sky_material.set_shader_parameter("cumulus_position", f.shader_cumulus_position.lerp(t.shader_cumulus_position, factor) + _cloud_time_offset)
+		_sky_material.set_shader_parameter("cirrus_position1", f.shader_cirrus_position1.lerp(t.shader_cirrus_position1, factor) + _cloud_time_offset * 1.2)
+		_sky_material.set_shader_parameter("cirrus_position2", f.shader_cirrus_position2.lerp(t.shader_cirrus_position2, factor) + _cloud_time_offset * 0.8)
+
 	if not _state_dirty:
 		return
 
@@ -161,11 +174,15 @@ func _update_all_systems() -> void:
 	_sky_material.set_shader_parameter("star_scintillation", lerp(f.shader_star_scintillation, t.shader_star_scintillation, factor))
 	_sky_material.set_shader_parameter("moon_size", lerp(f.shader_moon_size, t.shader_moon_size, factor))
 	_sky_material.set_shader_parameter("atm_moon_mie_intensity", lerp(f.shader_atm_moon_mie_intensity, t.shader_atm_moon_mie_intensity, factor))
-	_sky_material.set_shader_parameter("cumulus_position", f.shader_cumulus_position.lerp(t.shader_cumulus_position, factor))
 	_sky_material.set_shader_parameter("cumulus_intensity", lerp(f.shader_cumulus_intensity, t.shader_cumulus_intensity, factor))
 	_sky_material.set_shader_parameter("cumulus_coverage", lerp(f.shader_cumulus_coverage, t.shader_cumulus_coverage, factor))
-	_sky_material.set_shader_parameter("cirrus_position1", f.shader_cirrus_position1.lerp(t.shader_cirrus_position1, factor))
-	_sky_material.set_shader_parameter("cirrus_position2", f.shader_cirrus_position2.lerp(t.shader_cirrus_position2, factor))
+
+	var active_lut = f.env_color_correction if factor < 0.5 else t.env_color_correction
+	if active_lut:
+		_environment.adjustment_color_correction = active_lut
+		_environment.adjustment_enabled = true
+	else:
+		_environment.adjustment_color_correction = null
 
 	_environment.glow_intensity = lerp(f.env_glow_intensity, t.env_glow_intensity, factor)
 	_environment.glow_bloom = lerp(f.env_glow_bloom, t.env_glow_bloom, factor)
@@ -177,8 +194,12 @@ func _update_all_systems() -> void:
 		_environment.volumetric_fog_anisotropy = lerp(f.env_volumetric_fog_anisotropy, t.env_volumetric_fog_anisotropy, factor)
 		_environment.volumetric_fog_sky_affect = lerp(f.env_volumetric_fog_sky_affect, t.env_volumetric_fog_sky_affect, factor)
 
-	if _sun_light: _sun_light.light_energy = lerp(f.light_sun_energy, t.light_sun_energy, factor)
-	if _moon_light: _moon_light.light_energy = lerp(f.light_moon_energy, t.light_moon_energy, factor)
+	if _sun_light: 
+		_sun_light.light_energy = lerp(f.light_sun_energy, t.light_sun_energy, factor)
+		_sun_light.light_volumetric_fog_energy = lerp(f.light_sun_volumetric_energy, t.light_sun_volumetric_energy, factor)
+	if _moon_light: 
+		_moon_light.light_energy = lerp(f.light_moon_energy, t.light_moon_energy, factor)
+		_moon_light.light_volumetric_fog_energy = lerp(f.light_moon_volumetric_energy, t.light_moon_volumetric_energy, factor)
 	for light in _exterior_lights:
 		light.light_energy = lerp(f.light_omni_energy, t.light_omni_energy, factor)
 	if _night_light: _night_light.light_energy = lerp(f.light_night_energy, t.light_night_energy, factor)
