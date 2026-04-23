@@ -115,9 +115,14 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.guest_spawns_later = data.get("guest_spawns_later", false)
 	
 	for path in data.get("desired_items", []):
-		if path != "": ctx.desired_items.append(load(path))
+		if path == "": continue
+		var res = load(path)
+		if res: ctx.desired_items.append(res)
+		
 	for path in data.get("delivered_items", []):
-		if path != "": ctx.delivered_items.append(load(path))
+		if path == "": continue
+		var res = load(path)
+		if res: ctx.delivered_items.append(res)
 		
 	ctx.requested_category = data.get("requested_category", "")
 	ctx.best_item_name = data.get("best_item_name", "")

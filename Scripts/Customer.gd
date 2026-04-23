@@ -331,7 +331,9 @@ func reject() -> void:
 	if _outline_material:
 		_outline_material.set_shader_parameter("outline_color", Color.WHITE)
 		
-	_is_resolving = false
+	# HIGH-5: If dismissed mid-flash, do not unlock them.
+	if is_waiting:
+		_is_resolving = false
 	_update_outline()
 
 ## Called by CustomerSpawner after the player chooses "Refuse service".
