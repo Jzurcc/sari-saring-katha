@@ -25,6 +25,9 @@ var active_gaze_target_id: String = ""
 var active_gaze_group: String = ""
 var _gaze_timer: float = 0.0
 
+# Cached node references
+var _game_manager: GameManager = null
+
 # Scroll sensitivity accumulator (taking more scroll notches per 0.50 increment)
 var _scroll_event_count: int = 0
 const SCROLL_THRESHOLD: int = 3
@@ -33,12 +36,12 @@ func _ready() -> void:
 	# Ensure interaction_range is valid
 	if interaction_range <= 0.0:
 		interaction_range = 10.0
-			
+
 	_q_items = PhysicsRayQueryParameters3D.new()
 	_q_items.collide_with_areas = true
 	_q_items.collide_with_bodies = false
 	_q_items.collision_mask = LAYER_ITEMS # Layer 1 only again
-	
+
 	_q_gaze = PhysicsRayQueryParameters3D.new()
 	_q_gaze.collide_with_areas = true
 	_q_gaze.collide_with_bodies = true
@@ -50,12 +53,19 @@ func _ready() -> void:
 	_q_customer.collide_with_bodies = false
 	_q_customer.collision_mask = LAYER_CUSTOMERS
 
+	call_deferred("_cache_node_refs")
+
+func _cache_node_refs() -> void:
+	_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
+
 func _physics_process(_delta: float) -> void:
 	# While dialogue is open, we still allow raycasting if the mouse is captured
 	# (so players can see the pricing UI/hover outlines).
 	# However, we block it if the mouse is free (mouse mode != captured).
 	var is_in_timeline = Dialogic.current_timeline != null
-	var gm = get_tree().get_first_node_in_group("game_manager")
+	if not is_instance_valid(_game_manager):
+		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
+	var gm := _game_manager
 	var is_tutorial_task = gm and gm.is_tutorial_task_active
 	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 
@@ -161,7 +171,9 @@ func _input(event: InputEvent) -> void:
 	# Block world interaction triggers while dialogue is open,
 	# unless we are currently in the tutorial or a tutorial task.
 	var is_in_timeline = Dialogic.current_timeline != null
-	var gm = get_tree().get_first_node_in_group("game_manager")
+	if not is_instance_valid(_game_manager):
+		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
+	var gm := _game_manager
 	var is_tutorial_task = gm and gm.is_tutorial_task_active
 	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 	

@@ -63,6 +63,14 @@ func _ready() -> void:
 	LogManager.debug("MainGame", "Instantiating pause menu")
 	pause_menu = pause_menu_scene.instantiate().get_node("Control")
 	add_child(pause_menu.get_parent()) # Add the CanvasLayer
+
+	# Instantiate Customer Request HUD
+	LogManager.debug("MainGame", "Instantiating Customer Request HUD")
+	var hud_scene = load("res://Scenes/UI/CustomerRequestHUD.tscn")
+	if hud_scene:
+		var hud_instance = hud_scene.instantiate()
+		add_child(hud_instance)
+
 	LogManager.debug("MainGame", "_ready() END")
 
 func _on_tray_item_placed(item: DraggableItem) -> void:
@@ -111,30 +119,30 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 			else:
 				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
 				
-				# Special Tutorial Handling: If Uncle Mario is blocking items, or hasn't started yet.
-				var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
-				var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
-				var is_tut_block = gm and gm.is_tutorial_task_active and gm.current_tutorial_task_id != "wait_for_sale"
-				
-				if is_mario:
-					if is_tut_block:
+				# MISSION: If given an item before greeting, trigger greeting instead of WrongItem.
+				if not customer.has_been_greeted:
+					LogManager.debug("MainGame", "Item given before greeting. Triggering greeting instead of WrongItem.")
+					spawner._on_customer_clicked(customer)
+				else:
+					# Special Tutorial Handling: If Uncle Mario is blocking items.
+					var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
+					var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
+					var is_tut_block = gm and gm.is_tutorial_task_active and gm.current_tutorial_task_id != "wait_for_sale"
+					
+					if is_mario and is_tut_block:
 						# Just skip feedback, item will return to shelf automatically at end of function
 						LogManager.debug("MainGame", "Suppressing WrongItem feedback for Mario during tutorial.")
-					elif not gm or not gm.is_tutorial_task_active:
-						# If they haven't even greeted him yet (no task active), treat this as a "Greeting" trigger
-						LogManager.debug("MainGame", "Early Mario interaction detected. Triggering tutorial greeting.")
-						spawner._on_customer_clicked(customer)
-				else:
-					EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
-					# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
-					if context and context.timeline and spawner:
-						spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
-					
-					# Keep item in hand so it doesn't just vanish or jump
-					if DragManager and item.item_data and item.item_data.texture:
-						DragManager.call_deferred("start_drag", item, item.item_data.texture)
-					
-					item = null # Preempt return_to_start
+					else:
+						EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
+						# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
+						if context and context.timeline and spawner:
+							spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
+						
+						# Keep item in hand so it doesn't just vanish or jump
+						if DragManager and item.item_data and item.item_data.texture:
+							DragManager.call_deferred("start_drag", item, item.item_data.texture)
+						
+						item = null # Preempt return_to_start
 			
 	if not handled:
 		LogManager.debug("MainGame", "No customer waiting, dropping item")
