@@ -451,6 +451,7 @@ func reset_state() -> void:
 	pending_upgrade_cost = 0.0
 	global_story_cooldown = 0
 	last_story_advancer_path = ""
+	customer_story_branches = {}
 	character_story_states = {}
 	encountered_characters = {}
 	todays_focus_character_path = ""

@@ -78,7 +78,7 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	# 2. Rest check: if Mario is still on cooldown
 	elif InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
 		# Update Dialogic variable for the restock dialogue to show remaining customers
-		Dialogic.VAR.set_variable("Mario_RestCount", InventoryManager.customers_needed_for_delivery)
+		Dialogic.VAR.set_variable("Transaction_MarioRestCount", InventoryManager.customers_needed_for_delivery)
 		label = "CallRest"
 		success_expected = false
 	
@@ -207,32 +207,32 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 		# Filter: Candies and Sachets bypass bags
 		if item.category == "candy" or item.category == "sachet" or item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
 			LogManager.debug("MarioManager", "Auto-stocking digital item: %s" % item.item_name)
+			continue
 		else:
 			LogManager.debug("MarioManager", "Adding to physical bag: %s" % item.item_name)
-			continue
 			
 		# Everything else goes into bags
 		for i in range(items[item]):
 			items_to_bag.append(item)
 	
-		# Handle Tier Advancement and Samples
-		if upgrade_delivered:
-			var _start_tier = StoryManager.current_tier
-			while StoryManager.current_tier < target_tier:
-				StoryManager.advance_tier("Mario Delivery")
-				var new_tier = StoryManager.current_tier
-				LogManager.info("MarioManager", "Processing unlocked samples for NEW Tier: %d" % new_tier)
-				
-				var all_items = InventoryManager.get_all_items()
-				for i in all_items:
-					if i.tier == new_tier and i.can_be_sold:
-						LogManager.debug("MarioManager", "Unpacking 2 samples of: %s" % i.item_name)
-						InventoryManager.add_stock(i, 2)
-						
-						if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
-							# Samples go into bags (2 units each)
-							items_to_bag.append(i)
-							items_to_bag.append(i)
+	# Handle Tier Advancement and Samples
+	if upgrade_delivered:
+		var _start_tier = StoryManager.current_tier
+		while StoryManager.current_tier < target_tier:
+			StoryManager.advance_tier("Mario Delivery")
+			var new_tier = StoryManager.current_tier
+			LogManager.info("MarioManager", "Processing unlocked samples for NEW Tier: %d" % new_tier)
+			
+			var all_items = InventoryManager.get_all_items()
+			for i in all_items:
+				if i.tier == new_tier and i.can_be_sold:
+					LogManager.debug("MarioManager", "Unpacking 2 samples of: %s" % i.item_name)
+					InventoryManager.add_stock(i, 2)
+					
+					if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
+						# Samples go into bags (2 units each)
+						items_to_bag.append(i)
+						items_to_bag.append(i)
 	
 	# Group items into batches of 5
 	var batch_size = 5
@@ -364,6 +364,13 @@ func load_save_data(data: Dictionary) -> void:
 		
 	# Clear whatever dummy bags currently exist to prevent dupes.
 	# (LOGIC MOVED TO _check_and_spawn_bags)
+
+func reset_state() -> void:
+	_cached_bags_data.clear()
+	is_restocking_active = false
+	is_mario_physically_present = false
+	_is_calling = false
+	LogManager.info("MarioManager", "State reset for New Game.")
 
 
 

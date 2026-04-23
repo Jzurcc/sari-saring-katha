@@ -237,6 +237,9 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	# Only process signals from customers we currently track. 
 	# This prevents "ghost" signals from previous transactions (that are still fading out)
 	# from accidentally wiping out the next customer who just started spawning.
+	if customer == null:
+		return
+		
 	if customer != current_customer and customer != guest_customer:
 		return
 
@@ -761,6 +764,15 @@ func load_save_data(data: Dictionary) -> void:
 			# Delay slightly to ensure self is ready, then trigger spawn
 			get_tree().create_timer(1.0).timeout.connect(func(): _spawn_next_customer())
 			return
+
+func reset_state() -> void:
+	_pending_restore_transaction = null
+	current_customer = null
+	guest_customer = null
+	_is_spawning = false
+	_dialogue_phase = DialoguePhase.NONE
+	_greeting_interrupted = false
+	LogManager.info("CustomerSpawner", "State reset for New Game.")
 
 	# If no customer to restore, handle guest restoration (optional, usually guest is with primary)
 	if data.has("guest_customer"):
