@@ -67,9 +67,12 @@ func _update_ui() -> void:
 		View.CHARACTERS:
 			subtitle_label.text = "Select a character to view their story"
 		View.ARCS:
-			subtitle_label.text = _selected_character.character_name.to_upper() + " / CHAPTERS"
+			subtitle_label.text = _selected_character.character_name.to_upper() + " / ARCS"
 		View.CHAPTERS:
-			subtitle_label.text = _selected_character.character_name.to_upper() + " / ARC " + str(_selected_arc + 1)
+			var arc_name = "ARC " + str(_selected_arc + 1)
+			if _selected_arc < _selected_character.arc_names.size() and _selected_character.arc_names[_selected_arc] != "":
+				arc_name = _selected_character.arc_names[_selected_arc].to_upper()
+			subtitle_label.text = _selected_character.character_name.to_upper() + " / " + arc_name
 
 func _populate_characters() -> void:
 	for child in card_container.get_children():
