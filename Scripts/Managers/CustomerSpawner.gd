@@ -411,7 +411,7 @@ func _on_dialogic_signal(argument: String) -> void:
 	elif argument == "setup_debt":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			current_customer.transaction_context.wants_debt = true
-			StoryManager._set_dvar("Transaction_WantsDebt", 1.0)
+			Dialogic.VAR.set_variable("Transaction_WantsDebt", 1.0)
 			LogManager.debug("CustomerSpawner", "Forcing DEBT state via signal.")
 	elif argument == "setup_repay_full":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
@@ -419,8 +419,8 @@ func _on_dialogic_signal(argument: String) -> void:
 			var debt = StoryManager.customer_debts.get(path, 0.0)
 			current_customer.transaction_context.is_repaying = true
 			current_customer.transaction_context.repayment_amount = debt
-			StoryManager._set_dvar("Transaction_IsRepaying", 1.0)
-			StoryManager._set_dvar("Transaction_RepaymentAmount", debt)
+			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
+			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", debt)
 			LogManager.debug("CustomerSpawner", "Forcing FULL REPAYMENT state via signal: %f" % debt)
 	elif argument == "setup_repay_half":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
@@ -429,8 +429,8 @@ func _on_dialogic_signal(argument: String) -> void:
 			var half = floor(debt / 2.0)
 			current_customer.transaction_context.is_repaying = true
 			current_customer.transaction_context.repayment_amount = half
-			StoryManager._set_dvar("Transaction_IsRepaying", 1.0)
-			StoryManager._set_dvar("Transaction_RepaymentAmount", half)
+			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
+			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", half)
 			LogManager.debug("CustomerSpawner", "Forcing HALF REPAYMENT state via signal: %f" % half)
 	elif argument == "spawn_guest":
 		if is_instance_valid(guest_customer) and guest_customer.has_method("trigger_arrival"):
@@ -470,12 +470,12 @@ func _update_item_names(customer: Customer) -> void:
 		# Still update character name and counts, but leave Transaction_ItemWants alone.
 		InventoryManager.current_character_name = cname
 		InventoryManager.current_item_name = ""
-		StoryManager._set_dvar("Transaction_CustomerName", InventoryManager.current_character_name)
+		Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
 		if customer.transaction_context:
 			var total_cnt = customer.transaction_context.original_count
 			var remain_cnt = customer.transaction_context.desired_items.size()
-			StoryManager._set_dvar("Transaction_DeliveredCount", total_cnt - remain_cnt)
-			StoryManager._set_dvar("Transaction_RemainingCount", remain_cnt)
+			Dialogic.VAR.set_variable("Transaction_DeliveredCount", total_cnt - remain_cnt)
+			Dialogic.VAR.set_variable("Transaction_RemainingCount", remain_cnt)
 		if GENERIC_CHAR_RES:
 			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 		return
@@ -494,15 +494,15 @@ func _update_item_names(customer: Customer) -> void:
 	InventoryManager.current_character_name = data.character_name if data.character_name != "" else data.get_clean_id()
 
 	# 3. Update Dialogic Variables — Sync safely via StoryManager helper
-	StoryManager._set_dvar("Transaction_CustomerName", InventoryManager.current_character_name)
-	StoryManager._set_dvar("Transaction_ItemWants", InventoryManager.current_item_name)
+	Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
+	Dialogic.VAR.set_variable("Transaction_ItemWants", InventoryManager.current_item_name)
 	
 	# 4. Sync Delivered/Remaining Counts
 	if customer.transaction_context:
 		var total_cnt = customer.transaction_context.original_count
 		var remain_cnt = customer.transaction_context.desired_items.size()
-		StoryManager._set_dvar("Transaction_DeliveredCount", total_cnt - remain_cnt)
-		StoryManager._set_dvar("Transaction_RemainingCount", remain_cnt)
+		Dialogic.VAR.set_variable("Transaction_DeliveredCount", total_cnt - remain_cnt)
+		Dialogic.VAR.set_variable("Transaction_RemainingCount", remain_cnt)
 	
 	# 5. Patch Generic Character Resource
 	if GENERIC_CHAR_RES:
@@ -538,13 +538,13 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 	if final_label != "":
 		var exists = StoryManager.is_label_in_timeline(_current_timeline_path, final_label)
 		if not exists:
-			print("[CustomerSpawner] WARNING: Label '%s' missing in %s." % [final_label, _current_timeline_path])
+			LogManager.warn("CustomerSpawner", "WARNING: Label '%s' missing in %s." % [final_label, _current_timeline_path])
 			if final_label == "Partial":
 				final_label = "Satisfy" # Best fallback for multi-item orders
-				print("[CustomerSpawner] Falling back to: Satisfy")
+				LogManager.info("CustomerSpawner", "Falling back to: Satisfy")
 			elif final_label == "Satisfy":
 				final_label = "" # Final fallback: start from beginning
-				print("[CustomerSpawner] Falling back to start of timeline.")
+				LogManager.info("CustomerSpawner", "Falling back to start of timeline.")
 
 	LogManager.info("Dialogue", "Starting: %s (Phase: %s, Label: %s)" % [_current_timeline_path, DialoguePhase.keys()[phase], final_label])
 
@@ -766,7 +766,7 @@ func _on_debt_quota_met(_success: bool) -> void:
 ## Emit day_ended when no more customers will come today.
 func _end_day() -> void:
 	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
-	EventBus.day_ended.emit(gm.day if gm else 1)
+	EventBus.day_ended.emit(StoryManager.day)
 
 func _on_mario_delivery_finished() -> void:
 	pass
