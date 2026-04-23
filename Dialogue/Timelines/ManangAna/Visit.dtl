@@ -5,4 +5,6 @@ if {Transaction_VisitVar} <= 50:
 else:
 	ManangAna: Have you ever tried scrubbing bat wings, anak? Hehe! 
 	ManangAna: I'm just joking... sort of. [pause=0.6] Everything is just so heavy tonight. [pause=0.4] But seeing the store open... it’s a nice sight. Stay safe here, ha?
+[signal arg="dismiss"]
 [end_timeline]
+

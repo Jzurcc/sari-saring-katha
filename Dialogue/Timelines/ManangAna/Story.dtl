@@ -2,99 +2,99 @@ label Greeting
 # [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The Introduction"
-	ManangAna: [pause=0.6] Jusko, what a long shift. [pause=0.4] Sorry for the smudge of oil on the counter, anak... I didn't have time to change my apron. 
+	ManangAna:  Jusko, what a long shift. [pause=0.4] Sorry for the smudge of oil on the counter, anak... I didn't have time to change my apron. 
 	ManangAna: Oh! You must be the grandchild. Lola said you might be coming back. I'm Ana... I run the kitchen down at the karinderya. 
 	- Nice to meet you, Manang.
-		ManangAna: [pause=0.3] It's good to see someone finally keeping the lights on in here again. Lola would be happy.
+		ManangAna:  It's good to see someone finally keeping the lights on in here again. Lola would be happy.
 	- Is it always this busy?
-		ManangAna: [pause=0.4] The hunger in this town never sleeps, anak. Neither do the stoves.
+		ManangAna:  The hunger in this town never sleeps, anak. Neither do the stoves.
 	- You smell like adobo, Manang!
-		ManangAna: [pause=0.5] Hehe! That's the smell of hard work and secret spices, anak. [pause=0.3] It makes me hungry too, but I have to save the best cuts for the kids. Maybe I'll bring you some one of these days.
+		ManangAna:  Hehe! That's the smell of hard work and secret spices, anak. [pause=0.3] It makes me hungry too, but I have to save the best cuts for the kids. Maybe I'll bring you some one of these days.
 	ManangAna: Let's see... twenty... forty... sixty. Every centimo is here.
 	ManangAna: [color=#0f6e2f]{Transaction_ItemWants}[/color], anak. Let's make this quick... my feet are starting to think they're made of lead.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: "The Bottomless Pits"
-	ManangAna: [pause=0.8] I swear, having four teenagers is going to bankrupt me. They eat like they have hollow stomachs.
+	ManangAna:  I swear, having four teenagers is going to bankrupt me. They eat like they have hollow stomachs.
 	ManangAna: Hold on... let me just lean here for a bit. My back is killing me.
 	ManangAna: Worse, it's like I'm cleaning up after eight people. [pause=0.6] Minsan, half of them are making a mess in the kitchen while the other halves are tracking mud in the living room. Susmaryosep.
 	- Eight? I thought you said four.
-		ManangAna: [pause=0.5] That's how it feels when they're all over the place, anak! [pause=0.3] You'll see one day. Raising a family is a geometry problem I never asked to solve.
+		ManangAna:  That's how it feels when they're all over the place, anak! [pause=0.3] You'll see one day. Raising a family is a geometry problem I never asked to solve.
 	- Teenagers are hungry, I guess.
-		ManangAna: [pause=0.4] Hungry? They are black holes with hair. [pause=0.5] Anyway, just the big boxes of [color=#0f6e2f]{Transaction_ItemWants}[/color] today.
+		ManangAna:  Hungry? They are black holes with hair. [pause=0.5] Anyway, just the big boxes of [color=#0f6e2f]{Transaction_ItemWants}[/color] today.
 	- How do you do it all, Manang?
-		ManangAna: [pause=0.6] One deep breath at a time, anak. [pause=0.4] And a lot of coffee. [pause=0.3] You just keep moving because if you stop, the laundry starts to win.
+		ManangAna:  One deep breath at a time, anak. [pause=0.4] And a lot of coffee. [pause=0.3] You just keep moving because if you stop, the laundry starts to win.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "Friends with Kap"
-	ManangAna: [pause=0.6] I need the strongest [color=#0f6e2f]{Transaction_ItemWants}[/color] you have, anak. Just anything to keep me awake.
+	ManangAna:  I need the strongest [color=#0f6e2f]{Transaction_ItemWants}[/color] you have, anak. Just anything to keep me awake.
 	ManangAna: I just saw Kap outside... still leaning against that post. That man is too kind for his own good. Sometimes I worry he’s going to turn into a statue if he stands there any longer.
 	- He seems very peaceful.
-		ManangAna: [pause=0.4] Peaceful... or just tired. We've all been around a long time. 
+		ManangAna:  Peaceful... or just tired. We've all been around a long time. 
 	- You two go way back?
-		ManangAna: [pause=0.5] Long enough to know whose lighter is whose. [pause=0.4] He helped me out once, when the kids were just... well, when they were much smaller and noisier.
+		ManangAna:  Long enough to know whose lighter is whose. [pause=0.4] He helped me out once, when the kids were just... well, when they were much smaller and noisier.
 	- Does Kuya Kap ever talk about himself?
-		ManangAna: [pause=0.6] Rarely. [pause=0.4] He's an expert at turning the conversation around, isn't he? [pause=0.3] Always asking about your day so he doesn't have to talk about his clinic visits.
+		ManangAna:  Rarely. [pause=0.4] He's an expert at turning the conversation around, isn't he? [pause=0.3] Always asking about your day so he doesn't have to talk about his clinic visits.
 	ManangAna: Make sure you're taking care of yourself in here too, alright? [pause=0.4] Don't let the dust settle on you.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
 	# Chapter 4: "The First Ask"
 	[signal arg="setup_debt"]
-	ManangAna: [pause=1.0] ...
+	ManangAna:  ...
 	ManangAna: Anak... I... I didn't bring any change today. I'm sorry. 
 	ManangAna: The kids had a big... ah, 'flight' last night. They came back absolutely starving this morning.
-	ManangAna: [pause=0.6] I don't get my pay from the karinderya until Friday. I... [pause=0.4] sorry for not looking you in the eye, anak. 
+	ManangAna:  I don't get my pay from the karinderya until Friday. I... [pause=0.4] sorry for not looking you in the eye, anak. 
 	ManangAna: Can I pay you next time? Just for some [color=#0f6e2f]{Transaction_ItemWants}[/color]. I promise I'll put it on my tab.
 	- Of course, Manang. Don't worry.
 		[signal arg="utang_accepted"]
-		ManangAna: [pause=0.5] Thank you. Salamat talaga. [pause=0.4] I won't forget this. 
+		ManangAna:  Thank you. Salamat talaga. [pause=0.4] I won't forget this. 
 	- I'm sorry, I can't do credit today.
 		[signal arg="utang_rejected"]
-		ManangAna: [pause=0.4] Ah. [pause=0.3] I understand. Business is business. [pause=0.5] I... I'll just see what's left in the garden.
+		ManangAna:  Ah. [pause=0.3] I understand. Business is business. [pause=0.5] I... I'll just see what's left in the garden.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
 	# Chapter 5: "Double Shifts and Detergent"
-	ManangAna: [pause=0.6] Here’s fifty pesos toward my tab. It's not much, I know, but I'm taking the late shifts all week.
+	ManangAna:  Here’s fifty pesos toward my tab. It's not much, I know, but I'm taking the late shifts all week.
 	ManangAna: I'll take this soap here. I need it for the laundry.
 	ManangAna: They flew all the way to the next province last night. Have you ever tried scrubbing bat wings, anak? Susmaryosep... the scales get caught in the bristles. 
 	ManangAna: Eight torn shirts, four missing lower halves sitting on the sofa watching TV while I do all the work. [pause=0.5] I love them, but sometimes... just sometimes...
 	- You're a good mother, Manang.
-		ManangAna: [pause=0.4] I'm a tired mother. [pause=0.3] But I suppose those two things are the same, aren't they?
+		ManangAna:  I'm a tired mother. [pause=0.3] But I suppose those two things are the same, aren't they?
 	- Maybe they should help with the laundry.
-		ManangAna: [pause=0.5] Hehe! You try telling a teenager whose top half is currently three towns away to come home and fold the socks. 
+		ManangAna:  Hehe! You try telling a teenager whose top half is currently three towns away to come home and fold the socks. 
 	- Bat wings? Is that... special fabric?
-		ManangAna: [pause=0.6] Hehe! [pause=0.4] Let's just say it's more 'organic' than cotton, anak. [pause=0.3] Very hard to starch, and if you use too much soap, they start to sneeze. 
+		ManangAna:  Hehe! [pause=0.4] Let's just say it's more 'organic' than cotton, anak. [pause=0.3] Very hard to starch, and if you use too much soap, they start to sneeze. 
 	ManangAna: Sige, I need to get back. The adobo won't stir itself.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
 	# Chapter 6: "The Breaking Point"
 	[signal arg="setup_debt"]
-	ManangAna: [pause=0.8] ... Sorry for the shaky hands, anak. It's been a long night. 
+	ManangAna:  ... Sorry for the shaky hands, anak. It's been a long night. 
 	ManangAna: I'm sorry... about the debt. [pause=0.6] One of the twins clipped a power line while flying back this morning. 
 	ManangAna: Wait... let me see... where did I put it... [pause=0.6] The medicine cabinet is empty. [pause=0.8] I just... I just want them to be full and safe, you know?
 	- It's okay, Manang. Take what you need.
 		[signal arg="utang_accepted"]
-		ManangAna: [pause=0.6] I'll pay it back. Every last centimo. I promise.
+		ManangAna:  I'll pay it back. Every last centimo. I promise.
 	- I really need the payment today.
 		[signal arg="utang_rejected"]
-		ManangAna: [pause=0.5] Yes. [pause=0.4] Yes, I know. I... [pause=0.6] I'll find another way. Sorry.
+		ManangAna:  Yes. [pause=0.4] Yes, I know. I... [pause=0.6] I'll find another way. Sorry.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 6.0:
 	# Chapter 7: "A Deep Breath"
 	[signal arg="setup_repay_half"]
-	ManangAna: [pause=0.6] Good day, anak! The karinderya had a massive catering order today, and the boss actually gave me a cut of the tips.
+	ManangAna:  Good day, anak! The karinderya had a massive catering order today, and the boss actually gave me a cut of the tips.
 	ManangAna: Look at this! A real one-hundred bill. I haven't seen one of these in weeks.
 	ManangAna: Keep the change and put it toward my tab. Jusko, I feel like I can finally breathe a little.
 	- I'm glad to hear that, Manang.
-		ManangAna: [pause=0.4] Me too. [pause=0.3] Their wings are healing nicely, by the way. No more power lines for a while, hopefully.
+		ManangAna:  Me too. [pause=0.3] Their wings are healing nicely, by the way. No more power lines for a while, hopefully.
 	- You deserve it.
-		ManangAna: [pause=0.4] We all deserve a bit of air, don't we? 
+		ManangAna:  We all deserve a bit of air, don't we? 
 	ManangAna: Just some staples today, please. [pause=0.5] It's nice to buy things with a smile instead of a heavy heart.
 	[signal arg="repay_debt"]
 	[end_timeline]
@@ -102,50 +102,54 @@ elif {Transaction_Chapter} == 6.0:
 elif {Transaction_Chapter} == 7.0:
 	# Chapter 8: "Cleared"
 	[signal arg="setup_repay_full"]
-	ManangAna: [pause=0.6] Alright, check your ledger. That should be the last of it.
+	ManangAna:  Alright, check your ledger. That should be the last of it.
 	ManangAna: Look at that zero! It's the most beautiful thing I've seen all day.
 	ManangAna: You've been incredibly patient with a tired old woman, anak. It takes a village to raise a family... even if half of that family is currently detached and roosting on the roof.
 	- You're part of the neighborhood, Manang.
-		ManangAna: [pause=0.4] And so are you. [pause=0.3] More than you know.
+		ManangAna:  And so are you. [pause=0.3] More than you know.
 	- I'm happy for you.
-		ManangAna: [pause=0.5] Thank you. Truly.
+		ManangAna:  Thank you. Truly.
 	ManangAna: Thank you for trusting me.
 	[signal arg="repay_debt"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 8.0:
 	# Chapter 9: "The Feast"
-	ManangAna: [pause=0.6] No cheap sardines today, anak. Give me the best [color=#0f6e2f]{Transaction_ItemWants}[/color] you have.
+	ManangAna:  No cheap sardines today, anak. Give me the best [color=#0f6e2f]{Transaction_ItemWants}[/color] you have.
 	ManangAna: Here. I brought this for you. Special pork adobo from the karinderya. Eat it while it's warm.
 	ManangAna: I made sure to save the best cuts for you.
 	- This smells amazing! Thank you!
-		ManangAna: [pause=0.4] Eat up. You're getting thin behind that counter.
+		ManangAna:  Eat up. You're getting thin behind that counter.
 	- I'll return the container tomorrow.
-		ManangAna: [pause=0.5] Hehe! You're learning. [pause=0.3] Yes, make sure you wash it first!
+		ManangAna:  Hehe! You're learning. [pause=0.3] Yes, make sure you wash it first!
 	- Can I have the recipe?
-		ManangAna: [pause=0.6] Recipe? [pause=0.4] It's all in the hands, anak. [pause=0.3] And a bit of secret patis. I'll teach you when I have time, but for now... just eat and be happy.
+		ManangAna:  Recipe? [pause=0.4] It's all in the hands, anak. [pause=0.3] And a bit of secret patis. I'll teach you when I have time, but for now... just eat and be happy.
 	ManangAna: We're a whole family again. Stable. [pause=0.5] Salamat, anak. I'll see you tomorrow.
 	[end_timeline]
 
 label Talk
-ManangAna: [pause=0.4] No rush, anak. I spend half my life waiting for rice to steam... I can wait for the [color=#0f6e2f]{Transaction_ItemWants}[/color].
+ManangAna:  No rush, anak. I spend half my life waiting for rice to steam... I can wait for the [color=#0f6e2f]{Transaction_ItemWants}[/color].
 - Almost there.
 	ManangAna: Sige.
 	[end_timeline]
 - Sorry, out of stock.
-	ManangAna: [pause=0.4] Oh. [pause=0.3] That's a shame. I'll have to make do with what's in the pantry then.
+	ManangAna:  Oh. [pause=0.3] That's a shame. I'll have to make do with what's in the pantry then.
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]
+
+label Partial
+ManangAna:  Ah, salamat! [pause=0.4] Still waiting for the [color=#0f6e2f]{Transaction_ItemWants}[/color] though, anak. No rush... my feet are used to waiting.
+[end_timeline]
 
 label Satisfy
 if {Transaction_WantsDebt}:
 	ManangAna: Salamat talaga, anak.
 else:
-	ManangAna: [pause=0.3] Salamat, anak. Get some rest when you can, ha?
+	ManangAna:  Salamat, anak. Get some rest when you can, ha?
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-ManangAna: [pause=0.4] Susmaryosep, anak... my eyes might be tired, but I know that’s not a [color=#0f6e2f]{Transaction_ItemWants}[/color]. 
+ManangAna:  Susmaryosep, anak... my eyes might be tired, but I know that’s not a [color=#0f6e2f]{Transaction_ItemWants}[/color]. 
 [end_timeline]

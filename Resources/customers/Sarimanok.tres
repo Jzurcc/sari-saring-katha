@@ -27,5 +27,7 @@ dialogue_blip_volume = -6.0
 story_timeline = ExtResource("smk_story")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("8_arcdata")]([SubResource("arcdata_script")])
+arc_names = Array[String](["Arc 1: The Feathered Critic", "Arc 2: The Silent Auditor", "Arc 3: The Avian Investor"])
+chapter_names = Array[String](["The Stare", "The Judgment", "The Annoyance", "The Scrutiny", "The Theft", "The Audit", "The Clearing of the Throat", "The Macroeconomics", "The Calling Card"])
 sprite_scale = 0.3
 dialogue_blip_sound = ExtResource("2_eiccw")

@@ -49,7 +49,7 @@ elif {Transaction_ItemWantsID} == "mema":
 	Buboy: Mama said a word and I said "hah?"
 	Buboy: And she said just go get it!
 	Buboy: I think it's a tin or a can.
-	Buboy: [pause=0.4] Sorry that's all I know. Hehe.
+	Buboy:  Sorry that's all I know. Hehe.
 
 elif {Transaction_ItemWantsID} == "anoba":
 	Buboy: The flat crunchy things stacked on each other!
@@ -76,7 +76,7 @@ elif {Transaction_ItemWantsID} == "marites":
 	Buboy: The one that goes CRUNCH CRUNCH CRUNCH in your mouth!
 	Buboy: Like stepping on dried leaves! But LOUDER!
 	Buboy: And Mama says it's from the pig's...
-	Buboy: [pause=0.6] Don't think about it. I don't think about it.
+	Buboy:  Don't think about it. I don't think about it.
 	Buboy: I just eat it! Hihi!
 
 elif {Transaction_ItemWantsID} == "ngaragya":
@@ -90,7 +90,7 @@ elif {Transaction_ItemWantsID} == "champyon":
 	Buboy: Um...
 	Buboy: The white sticks in a box. That make smoke.
 	Buboy: I'm not allowed to touch them. Mama said.
-	Buboy: [pause=0.5] But Papa still sends me to get them. Hihi.
+	Buboy:  But Papa still sends me to get them. Hihi.
 
 elif {Transaction_ItemWantsID} == "marboro":
 	Buboy: The RED box!
@@ -118,7 +118,7 @@ elif {Transaction_ItemWantsID} == "gin":
 	Buboy: The tall bottle with the strong clear drink.
 	Buboy: It smells like cleaning water but for drinking?
 	Buboy: Papa needs it.
-	Buboy: [pause=0.6] Mama doesn't know he asked me.
+	Buboy:  Mama doesn't know he asked me.
 	Buboy: Please don't tell her po. Hehe.
 
 elif {Transaction_ItemWantsID} == "chubs":
@@ -126,7 +126,7 @@ elif {Transaction_ItemWantsID} == "chubs":
 	Buboy: Like tiny edible pillows!
 	Buboy: They come in lots of different colors!
 	Buboy: I once tried to save some for later.
-	Buboy: [pause=0.4] I ate them in two minutes. Hehe.
+	Buboy:  I ate them in two minutes. Hehe.
 
 elif {Transaction_ItemWantsID} == "mentor":
 	Buboy: The long plastic roll!
@@ -179,7 +179,7 @@ elif {Transaction_ItemWantsID} == "aryel":
 	Buboy: Like the cleanest smell in the world!
 	Buboy: Mama mixes it in water for the clothes!
 	Buboy: I put my face near the bubbles once.
-	Buboy: [pause=0.5] My eyes hurt a lot. Hehe. Don't do that.
+	Buboy:  My eyes hurt a lot. Hehe. Don't do that.
 
 elif {Transaction_ItemWantsID} == "kneestoes":
 	Buboy: The small packet for the bathroom!
@@ -193,7 +193,7 @@ elif {Transaction_ItemWantsID} == "kopimo":
 	Buboy: You mix it in hot water and it turns all dark brown!
 	Buboy: Papa drinks it every single morning!
 	Buboy: I tried it once.
-	Buboy: [pause=0.7] Very very bitter.
+	Buboy:  Very very bitter.
 	Buboy: I don't understand adults at all. Hehe!
 
 elif {Transaction_ItemWantsID} == "chicken":

@@ -1,7 +1,7 @@
 label Greeting
 # [signal arg="refresh_desires"]
 if {Transaction_GreetingVar} <= 50:
-	ManangAna: [pause=0.6] Jusko, what a long day at the karinderya. Good day, anak.
+	ManangAna:  Jusko, what a long day at the karinderya. Good day, anak.
 else:
 	ManangAna: Good day. My feet are just... they think they're made of lead tonight.
 
@@ -9,15 +9,15 @@ if {Global_HighPriceActive}:
 	ManangAna: Jusko, pati ba naman dito? [pause=0.4] Ang mahal na talaga ng mabuhay ngayon, anak. Konting bawas naman sana.
 
 if {Transaction_WantsDebt}:
-	ManangAna: [pause=1.0] ...
+	ManangAna:  ...
 	ManangAna: Anak... I... I didn't bring any change today. I'm sorry. 
 	ManangAna: I don't get my pay until Friday. Can I pay you next time for these [color=#0f6e2f]{Transaction_ItemWants}[/color]? I promise I'll put it on my tab.
 	- Of course, Manang.
 		[signal arg="utang_accepted"]
-		ManangAna: [pause=0.5] Thank you. Salamat talaga. I won't forget this. 
+		ManangAna:  Thank you. Salamat talaga. I won't forget this. 
 	- I'm sorry, I can't do credit.
 		[signal arg="utang_rejected"]
-		ManangAna: [pause=0.4] Ah. I understand. Business is business. I'll just see what's left in the garden.
+		ManangAna:  Ah. I understand. Business is business. I'll just see what's left in the garden.
 else:
 	ManangAna: Can you give me [color=#0f6e2f]{Transaction_ItemWants}[/color]? Let's make it quick...
 [end_timeline]
@@ -44,7 +44,7 @@ ManangAna: Salamat, anak. Pakisama na rin ang [color=#0f6e2f]{Transaction_ItemWa
 
 label Satisfy
 if {Transaction_SatisfyVar} <= 50:
-	ManangAna: [pause=0.4] Salamat, anak. You're a lifesaver.
+	ManangAna:  Salamat, anak. You're a lifesaver.
 else:
 	ManangAna: Sige, I'll see you tomorrow. Make sure you're eating properly, ha? You look thin.
 [end_timeline]

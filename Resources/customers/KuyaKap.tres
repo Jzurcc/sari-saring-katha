@@ -25,5 +25,7 @@ dialogic_character = ExtResource("dch_kuyakap")
 story_timeline = ExtResource("story_res")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_data")])
+arc_names = Array[String](["Arc 1: The Anchor of Routine", "Arc 2: The Weight of Habits", "Arc 3: Finding Your Float"])
+chapter_names = Array[String](["The New Face", "He Knows Everyone", "Almost", "Just a Bit Tired", "For Buboy", "A Short Pause", "Taking His Time", "Not Today", "Candy"])
 sprite_scale = 0.53
 dialogue_blip_sound = ExtResource("1_g8i5g")

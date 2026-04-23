@@ -2,27 +2,27 @@ label Greeting
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The Flight"
 	Rosalyn: [wave].[pause=1.0].[pause=1.0].[pause=1.0][/wave]
-	Rosalyn: [wave]H[pause=1.0]-hello...[pause=1.0][/wave]
-	Rosalyn: [wave]I... [pause=1.0]um.[/wave]
-	Rosalyn: [wave]...[pause=1.0][/wave]
+	Rosalyn: [wave]H[pause=1.0]-hello.[pause=0.6].[pause=0.6].[pause=1.0][/wave]
+	Rosalyn: [wave]I.[pause=0.6].[pause=0.6]. [pause=1.0]um.[/wave]
+	Rosalyn: [wave].[pause=0.6].[pause=0.6].[pause=1.0][/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: "The Attempt"
-	Rosalyn: [wave]H-hello again... [pause=1.0] um...[/wave]
-	Rosalyn: [wave]I... [pause=1.0] I brought coins this time... [pause=1.0] see?[/wave]
-	Rosalyn: [wave]...[pause=1.0][/wave]
-	Rosalyn: [wave]...oh.[/wave]
-	Rosalyn: [wave]They... [pause=1.0] they just passed straight through my hands.[/wave]
-	Rosalyn: [wave]I'm sorry... [pause=1.0] over the mess. [pause=1.0] I can't... [pause=1.0] pick them up.[/wave]
+	Rosalyn: [wave]H-hello again... [pause=1.0] um.[pause=0.6].[pause=0.6].[/wave]
+	Rosalyn: [wave]I.[pause=0.6].[pause=0.6]. [pause=1.0] I brought coins this time... [pause=1.0] see?[/wave]
+	Rosalyn: [wave].[pause=0.6].[pause=0.6].[pause=1.0][/wave]
+	Rosalyn: [wave]oh.[/wave]
+	Rosalyn: [wave]They just passed straight through my hands.[pause=0.6].[pause=0.6].[/wave]
+	Rosalyn: [wave]I'm sorry... [pause=0.6] over the mess. [pause=1.0] I can't... [pause=1.0] pick them up.[/wave]
 	Rosalyn: [wave]I should go. [pause=1.0] I'll... [pause=1.0] try again tomorrow.[/wave]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "The Anchor"
-	Rosalyn: [wave]Good day... [pause=1.0][/wave]
+	Rosalyn: [wave]Good day.[pause=0.6].[pause=0.6]. [pause=1.0][/wave]
 	Rosalyn: [wave]May I... [pause=1.0] try again? [pause=1.0] A {Transaction_ItemWants}, please.[/wave] 
 	Rosalyn: [wave]Cold... [pause=1.0] if you have it.[/wave]
 	Rosalyn: [wave]Let me just... [pause=1.0] one coin... [pause=1.0] two...[/wave]

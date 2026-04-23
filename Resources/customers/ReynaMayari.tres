@@ -27,5 +27,7 @@ dialogue_blip_volume = -6.0
 story_timeline = ExtResource("story_dtl")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
+arc_names = Array[String](["Arc 1: The Silver Tribute", "Arc 2: Cracks in the Spire", "Arc 3: Patron of the Moon"])
+chapter_names = Array[String](["The Inherited Burden", "A Routine Visit", "The Black Rice Confession", "The Real Reason", "The Silence of Biringan", "The One-Eyed Child", "Almost Done", "The Ledger Closes", "The Patron of the Moon"])
 sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("2_1p4eh")

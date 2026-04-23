@@ -26,5 +26,7 @@ dialogue_blip_volume = -3.0
 story_timeline = ExtResource("10_story")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arcdata_script")])
+arc_names = Array[String](["Arc 1: Low-Resolution Reality", "Arc 2: Debugging the Forest", "Arc 3: System Stable"])
+chapter_names = Array[String](["", "", "", "", "", "", "", "", ""])
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("6_e6vk5")

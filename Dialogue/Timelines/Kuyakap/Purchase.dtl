@@ -24,7 +24,7 @@ KuyaKap: Salamat. [pause=0.4] Just waiting on the [color=#0f6e2f]{Transaction_It
 label Satisfy
 if {Transaction_WantsDebt}:
 	KuyaKap: Salamat talaga, apo. [pause=0.5]
-	KuyaKap: [pause=0.4] ...Ah. [pause=0.4] My pockets feel a bit light today. [pause=0.3] I think I left my coins at home.
+	KuyaKap:  ...Ah. [pause=0.4] My pockets feel a bit light today. [pause=0.3] I think I left my coins at home.
 	KuyaKap: Would it be alright if I put this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] I'll settle it with you tomorrow, promise.
 	- Sure, Kuya. Take care.
 		[signal arg="utang_accepted"]

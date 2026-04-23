@@ -2,14 +2,14 @@ label Greeting
 [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The New Face"
-	KuyaKap: [pause=0.8] Oh... so the rumors were true. A fresh pair of eyes behind the counter.
-	KuyaKap: Nice to finally meet you, apo. I'm Kap... though most folks around Karimlan just call me Kuya Kap.
+	KuyaKap: Oh.[pause=0.8] .[pause=0.8] .[pause=0.8]  so the rumors were true. [pause=0.8]A fresh pair of eyes behind the counter.
+	KuyaKap: Nice to finally meet you, apo. [pause=0.8] I'm Kap.[pause=0.8] .[pause=0.8] .[pause=0.8] though most folks around Karimlan just call me Kuya Kap.
 	- Nice to meet you, Kuya Kap.
 		KuyaKap: The pleasure is mine. [pause=0.4] Your Lola... she used to keep these shelves so orderly. I hope you find the same peace in this work that she did.
 	- I hope I'm doing her proud.
 		KuyaKap: Hehe. [pause=0.3] You're standing where she stood. That's already half the battle won, isn't it?
 	- Lola mentioned you were her favorite customer.
-		KuyaKap: [pause=0.5] Favorite? [pause=0.4] I think I was just the most talkative, apo. [pause=0.3] She always had a way of making you feel like you were the only one in the room, even when the tricycle queue was three streets long.
+		KuyaKap: Favorite? [pause=0.7] I think I was just the most talkative, apo. [pause=0.3] She always had a way of making you feel like you were the only one in the room, even when the tricycle queue was three streets long.
 	KuyaKap: I've been coming here for a long, long time. Buying the same thing to end the day. 
 	KuyaKap: Just a pack of {Transaction_ItemWants}, if you please. [pause=0.4] I like to think of it as my little anchor in the world.
 	[end_timeline]
@@ -23,7 +23,7 @@ elif {Transaction_Chapter} == 1.0:
 	- I'll try to win her over.
 		KuyaKap: Patience is the best cure for a closed door, anak. 
 	- You seem to know everyone's business, Kuya.
-		KuyaKap: [pause=0.6] Not business, anak. Just their stories. [pause=0.4] Everyone has one if you look long enough. [pause=0.3] Sometimes, people just need someone to remember the small things, like how they like their coffee.
+		KuyaKap: Not business, anak. [pause=0.6] Just their stories. [pause=0.4] Everyone has one if you look long enough. [pause=0.3] Sometimes, people just need someone to remember the small things, like how they like their coffee.
 	KuyaKap: Anyway... I’m just here for my anchor. The usual {Transaction_ItemWants}, ha? 
 	KuyaKap: Routine is the only thing that keeps the clock from ticking too fast.
 	[end_timeline]
@@ -31,10 +31,10 @@ elif {Transaction_Chapter} == 1.0:
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "Almost"
 	KuyaKap: Good day. [pause=0.6] The usual {Transaction_ItemWants} for me, apo.
-	KuyaKap: [pause=1.2] ...
+	KuyaKap:  ...
 	KuyaKap: Those candies... [pause=0.4] They're quite bright today, aren't they?
 	- Kuya, do you want some candy too?
-		KuyaKap: [pause=0.4] Haha! [pause=0.3] Oh, maybe some other time na lang. I wouldn’t want to surprise my lungs with something sweet.
+		KuyaKap:  Haha! [pause=0.3] Oh, maybe some other time na lang. I wouldn’t want to surprise my lungs with something sweet.
 		KuyaKap: Let's stick to the old ways for now.
 		[end_timeline]
 	- Here you go.
@@ -43,13 +43,13 @@ elif {Transaction_Chapter} == 2.0:
 
 elif {Transaction_Chapter} == 3.0:
 	# Chapter 4: "Just a Bit Tired"
-	KuyaKap: [pause=0.7] Ah... do you have it? My {Transaction_ItemWants}?
+	KuyaKap:  Ah... do you have it? My {Transaction_ItemWants}?
 	- You look tired, Kuya.
-		KuyaKap: [pause=0.4] Is it that obvious? Hehe. [pause=0.3] Even the strongest tree eventually starts to lean, apo.
+		KuyaKap:  Is it that obvious? Hehe. [pause=0.3] Even the strongest tree eventually starts to lean, apo.
 	- Long day?
 		KuyaKap: The sun just took its time setting today. [pause=0.5] Or maybe I’m the one getting slower.
 	- You should take a break from the 'anchors' for a bit.
-		KuyaKap: [pause=0.6] Anchors keep us grounded, apo. [pause=0.4] But... [pause=0.3] maybe they're starting to get a bit heavy. [pause=0.4] I'll think on that. 
+		KuyaKap:  Anchors keep us grounded, apo. [pause=0.4] But... [pause=0.3] maybe they're starting to get a bit heavy. [pause=0.4] I'll think on that. 
 	KuyaKap: I stopped by the clinic yesterday. The doctor told me not to worry too much. [pause=0.5] Doctors... they always have such careful faces. 
 	KuyaKap: He’s just resting anyway. Doesn't really have anything else to do, that doctor. [pause=0.4] Unlike you, always keeping this place alive.
 	KuyaKap: Here's the exact change. [pause=0.3] Right down to the last centavo.
@@ -57,78 +57,78 @@ elif {Transaction_Chapter} == 3.0:
 
 elif {Transaction_Chapter} == 4.0:
 	# Chapter 5: "For Buboy"
-	KuyaKap: [pause=0.5] That neighbor kid, Buboy... [pause=0.4] he was sitting on my porch on Sunday.
+	KuyaKap:  That neighbor kid, Buboy... [pause=0.4] he was sitting on my porch on Sunday.
 	KuyaKap: He pointed at this pack and asked, "Kuya Kap, why don’t you just throw that away?"
-	KuyaKap: [pause=0.8] Kids, right? They think the world is made of light switches. Off... and on.
+	KuyaKap:  Kids, right? They think the world is made of light switches. Off... and on.
 	- He's a good kid.
 		set {Transaction_Branch} = 0.0
 		KuyaKap: Aye. Too smart for his own good. [pause=0.5] He sees the smoke, apo. But he doesn't understand the fire beneath it.
 	- He might be right.
 		set {Transaction_Branch} = 1.0
-		KuyaKap: [pause=0.6] Maybe. [pause=0.5] But truth is a heavy thing to swallow when you're my age.
+		KuyaKap:  Maybe. [pause=0.5] But truth is a heavy thing to swallow when you're my age.
 	- What kind of candy does Buboy like?
-		KuyaKap: [pause=0.6] Anything sweet and colorful, apo. [pause=0.4] He says they look like treasure from a storybook. [pause=0.3] I think he just likes having something that's definitely, purely good.
+		KuyaKap:  Anything sweet and colorful, apo. [pause=0.4] He says they look like treasure from a storybook. [pause=0.3] I think he just likes having something that's definitely, purely good.
 	KuyaKap: Give me my usual {Transaction_ItemWants}. [pause=0.4] And... let me have a piece of that candy too. For the boy. [pause=0.3] I want him to have something sweet for every hard question he asks.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
 	# Chapter 6: "A Short Pause"
-	KuyaKap: [pause=1.0] ...
+	KuyaKap:  ...
 	KuyaKap: Look at those moths... [pause=0.6] circling the light. Over and over.
-	KuyaKap: [pause=0.5] My {Transaction_ItemWants}, if you please.
+	KuyaKap:  My {Transaction_ItemWants}, if you please.
 	- Is everything okay, Kuya?
 		if {Transaction_Branch} == 1.0:
-			KuyaKap: [pause=0.6] I’ve just been... listening to the wind. [pause=0.4] It has a way of reminding you what’s loose.
+			KuyaKap:  I’ve just been... listening to the wind. [pause=0.4] It has a way of reminding you what’s loose.
 		else:
 			KuyaKap: Of course. [pause=0.5] Just a bit too much dust in the air today. Makes it hard to catch a full breath.
 	- Here's your item.
-		KuyaKap: [pause=0.4] Salamat. [pause=0.6] ...Salamat talaga.
+		KuyaKap:  Salamat. [pause=0.6] ...Salamat talaga.
 	KuyaKap: I'm alright. [pause=0.5] I'll see you tomorrow. [pause=0.4] I think... I'll see you tomorrow.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 6.0:
 	# Chapter 7: "Taking His Time"
-	KuyaKap: [pause=0.8] You know... your Lola... [pause=0.5] she actually hid a stone in the candy jar once.
+	KuyaKap:  You know... your Lola... [pause=0.5] she actually hid a stone in the candy jar once.
 	KuyaKap: A white one. Smooth. [pause=0.4] Like it had been polished by a hundred years of river water.
 	- A stone? 
-		KuyaKap: [pause=0.3] Aye. I asked her why she kept it there. [pause=0.6] She just smiled and said it keeps the sweetness from floating away.
+		KuyaKap:  Aye. I asked her why she kept it there. [pause=0.6] She just smiled and said it keeps the sweetness from floating away.
 	- She had her reasons.
-		KuyaKap: [pause=0.4] Haha! That she did. [pause=0.3] She always was more of a poet than a shopkeeper.
+		KuyaKap:  Haha! That she did. [pause=0.3] She always was more of a poet than a shopkeeper.
 	- Do you still have that stone?
-		KuyaKap: [pause=0.6] I do. [pause=0.4] I've carried it in my pocket for... [pause=0.3] well, longer than I can remember. [pause=0.4] It's a bit heavy today. But I'm not ready to put it down yet.
+		KuyaKap:  I do. [pause=0.4] I've carried it in my pocket for... [pause=0.3] well, longer than I can remember. [pause=0.4] It's a bit heavy today. But I'm not ready to put it down yet.
 	KuyaKap: I... [pause=1.2] ...
 	KuyaKap: One last look, I suppose. [pause=0.5] Just the {Transaction_ItemWants}. [pause=0.5] One more time. [pause=0.4] For old times' sake.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7.0:
 	# Chapter 8: "Not Today"
-	KuyaKap: [pause=1.0] ...
+	KuyaKap:  ...
 	KuyaKap: Could you get me... [pause=0.6] ...
 	KuyaKap: Actually... [pause=1.0] no. [pause=0.8] Not today.
 	KuyaKap: Wait... [pause=0.6] my hands... [pause=0.5] I didn't even bring the coins this time.
 	- Alright, apo. # (Using apo as a gentle acknowledgement)
 		set {Transaction_Branch} = 0.0
-		KuyaKap: [pause=0.5] Yes. [pause=0.4] Alright.
+		KuyaKap:  Yes. [pause=0.4] Alright.
 	- Are you sure, Kuya?
 		set {Transaction_Branch} = 1.0
-		KuyaKap: [pause=0.6] I think... [pause=0.4] I think my lungs have had enough anchors. I’d like to see if I can float for a bit.
+		KuyaKap:  I think... [pause=0.4] I think my lungs have had enough anchors. I’d like to see if I can float for a bit.
 	- Did Buboy finally win?
 		set {Transaction_Branch} = 2.0
-		KuyaKap: [pause=0.5] Hehe. [pause=0.4] Let’s just say he’s a very persistent little mirror.
-	KuyaKap: [pause=0.6] Just a bottle of water, if you please. [pause=0.5] And... [pause=0.3] I think tomorrow, I'll finally bring that stone in.
+		KuyaKap:  Hehe. [pause=0.4] Let’s just say he’s a very persistent little mirror.
+	KuyaKap:  Just a bottle of water, if you please. [pause=0.5] And... [pause=0.3] I think tomorrow, I'll finally bring that stone in.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 8.0:
 	# Chapter 9: "Candy"
-	KuyaKap: [pause=0.8] A piece of candy today. [pause=0.5] One of those {Transaction_ItemWants}.
+	KuyaKap:  A piece of candy today. [pause=0.5] One of those {Transaction_ItemWants}.
 	KuyaKap: Let me... [pause=0.4] this wrapper is a bit stubborn. [pause=0.5] There. [pause=0.4] I look more rested than usual, don't I?
-	KuyaKap: [pause=0.5] Your Lola... she was a good woman. She told me once, "Kap, give that to whoever owns the store next. They'll need it more than you do."
+	KuyaKap:  Your Lola... she was a good woman. She told me once, "Kap, give that to whoever owns the store next. They'll need it more than you do."
 	if {Transaction_Branch} == 0.0:
-		KuyaKap: [pause=0.4] I didn't think the right time would come. [pause=0.5] But I suppose time has a way of deciding for itself.
+		KuyaKap:  I didn't think the right time would come. [pause=0.5] But I suppose time has a way of deciding for itself.
 	elif {Transaction_Branch} == 1.0:
-		KuyaKap: [pause=0.5] I was so afraid that if I stopped the routine, I'd stop being... me. [pause=0.4] But I'm still here. Hehe.
+		KuyaKap:  I was so afraid that if I stopped the routine, I'd stop being... me. [pause=0.4] But I'm still here. Hehe.
 	elif {Transaction_Branch} == 2.0:
-		KuyaKap: [pause=0.5] If the kid thinks it's time to let go... I should probably listen. [pause=0.4] He hasn't been wrong yet.
+		KuyaKap:  If the kid thinks it's time to let go... I should probably listen. [pause=0.4] He hasn't been wrong yet.
 	KuyaKap: Here. [pause=0.4] It's yours now. It's a bit cool, isn't it?
 	KuyaKap: This candy is actually... [pause=0.4] it's quite sweet. [pause=0.5] Salamat, apo. [pause=0.4] I'll see you tomorrow. [pause=0.3] For real, this time.
 	[signal arg="unlock_collectible"]
@@ -145,11 +145,11 @@ if {Transaction_WantsDebt}:
 	[end_timeline]
 
 label Talk
-KuyaKap: [pause=0.4] No rush, apo. Take your time. I'll wait for the {Transaction_ItemWants}.
+KuyaKap:  No rush, apo. Take your time. I'll wait for the {Transaction_ItemWants}.
 - Coming right up.
 	KuyaKap: Sige.
 	[end_timeline]
-- Sorry, out of stock.
+- Wala, kuya... [Refuse service]
 	KuyaKap: Ah... gano'n ba? Sige apo, I'll come back next time.
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]

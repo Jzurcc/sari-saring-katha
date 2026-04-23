@@ -13,4 +13,6 @@ else:
 	else:
 		Danilo: Uy, boss. You know, people are talking about the new lights in here. 
 		Danilo: [color=#8B6855]They say it looks like a sanctuary from the main road.[/color] I think they're right. [pause=0.5] Stay focused, boss. I'm looking out for ya.
+[signal arg="dismiss"]
 [end_timeline]
+

@@ -25,5 +25,7 @@ dialogic_character = ExtResource("1_m676v")
 story_timeline = ExtResource("mana_story")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
+arc_names = Array[String](["Arc 1: The Weight of Many Mouths", "Arc 2: Secrets of the Night Flight", "Arc 3: A Balanced Table"])
+chapter_names = Array[String](["The Introduction", "The Bottomless Pits", "Friends with Kap", "The First Ask", "Double Shifts and Detergent", "The Breaking Point", "A Deep Breath", "Cleared", "The Feast"])
 sprite_scale = 0.35
 dialogue_blip_sound = ExtResource("2_n8hjk")

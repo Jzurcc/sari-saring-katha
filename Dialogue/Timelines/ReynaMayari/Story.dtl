@@ -2,40 +2,33 @@ label Greeting
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1 — "The Inherited Burden" (DEBUT)
 	# No cracks at all. This is a cold, precise, atmospheric first meeting.
-	ReynaMayari: [pause=1.0] ...
+	ReynaMayari: .[pause=1.0] .[pause=1.0] .[pause=1.0] 
 	ReynaMayari: The candle in the window is missing tonight.
 	ReynaMayari: For thirty-one years, it was never missing. [pause=0.6] And yet here I stand, and the window is dark.
 	- ...Who are you?
 		ReynaMayari: You do not know me. [pause=0.4] That is the first interesting thing you have said.
 		ReynaMayari: Your grandmother knew me very well. [pause=0.3] She was one of the few mortals I ever permitted to address me by name.
 	- Are you a customer?
-		ReynaMayari: [pause=0.6] ...
+		ReynaMayari: .[pause=0.6] .[pause=0.6] .[pause=0.6] 
 		ReynaMayari: A customer.
-		ReynaMayari: [pause=0.4] That is either the bravest or the most oblivious thing anyone has ever said to me.
-		ReynaMayari: Your grandmother would have laughed. [pause=0.3] I find that I cannot entirely disagree with her taste.
+		ReynaMayari: That is either the bravest or the most oblivious thing anyone has ever said to me. 
+		ReynaMayari: Your grandmother would have laughed. [pause=0.7] I find that I cannot entirely disagree with her taste.
 	- You're here very late.
 		ReynaMayari: The city of the moon does not observe your daylight hours, child. [pause=0.4] I arrive when I must.
 		ReynaMayari: Your grandmother understood this. She always kept the stove warm at this hour. Just in case.
-	ReynaMayari: [pause=0.5] I am Mayari. Queen of the Silver Spires of Biringan. [pause=0.4] And you are the new keeper of this store.
-	ReynaMayari: I will not soften this for you. [pause=0.4] Your grandmother made a bargain before you were born, and she kept it faithfully unto her last breath.
-	ReynaMayari: Biringan guards this town. [pause=0.3] The things that walk the forests at night — the hollow, the hungry, the ones with no faces — they do not cross your street.
-	ReynaMayari: They do not cross it because I have decreed that they shall not. [pause=0.5] And that decree is renewed each night through the payment of tribute.
-	- What kinds of things are we talking about?
-		ReynaMayari: [pause=0.4] The kind that do not have names in your language. [pause=0.5] The kind that have been watching this barangay for a very long time.
-		ReynaMayari: Your grandmother saw one, once, at the edge of the field. [pause=0.4] She never told anyone. She just came to me the next morning and asked if the tribute could be increased.
-		ReynaMayari: [pause=0.3] It could not. But I appreciated the gesture.
+	ReynaMayari: I am Mayari. [pause=0.6] Queen of the Silver Spires of Biringan. [pause=0.6] And you are the new keeper of this store.
+	ReynaMayari: I will not soften this for you. [pause=0.6] Your grandmother made a bargain before you were born, and she kept it faithfully unto her last breath.
 	- My grandmother never told me any of this.
-		ReynaMayari: [pause=0.5] No. She would not have. [pause=0.4] She was protective of you in ways she never announced.
+		ReynaMayari: No. [pause=0.5] She would not have. [pause=0.4] She was protective of you in ways she never announced.
 		ReynaMayari: She wanted you to inherit this store as something warm. [pause=0.3] Not something weighted.
-		ReynaMayari: [pause=0.4] I respected that. I am telling you now because she is no longer here to decide for you.
+		ReynaMayari: I respected that. [pause=0.4] I am telling you now because she is no longer here to decide for you.
 	- How much did she owe?
-		ReynaMayari: [pause=0.3] It is not a debt in the way you understand it. [pause=0.5] It is more like... a subscription.
+		ReynaMayari: It is not a debt in the way you understand it. [pause=0.5] It is more like... a subscription.
 		ReynaMayari: Paid nightly. In full. [pause=0.4] For as long as the store stands and someone of her line keeps it.
 		ReynaMayari: The remaining balance is considerable. But it is not unmanageable. [pause=0.3] Your grandmother made sure of that.
-	ReynaMayari: [pause=0.6] The outstanding tally for this cycle is [color=#b0c4de]{Global_TodayQuota}[/color] pesos.
-	ReynaMayari: [pause=0.3] I will collect it from the drawer now. I will know if the amount is short.
-	ReynaMayari: [pause=0.4] This is not a negotiation. It is a continuation of something your grandmother began.
-	ReynaMayari: [pause=0.5] Do not be frightened. She was not. [pause=0.3] And you have her eyes.
+	ReynaMayari: The outstanding tally for this cycle is [color=#b0c4de]{Global_TodayQuota}[/color] pesos.
+	ReynaMayari:  I will collect it from the drawer now. I will know if the amount is short.
+	ReynaMayari:  Do not be frightened. She was not. [pause=0.3] And you have her eyes.
 	[signal arg="deduct_quota"]
 	[end_timeline]
 
@@ -44,9 +37,9 @@ elif {Transaction_Chapter} == 1.0:
 	# Still imperious, but one tiny slip — she notices the bottles.
 	ReynaMayari: Another night. Another tally.
 	ReynaMayari: Your grandmother paid without complaint for thirty years. [pause=0.4] I expect the same discipline from her kin.
-	ReynaMayari: [pause=0.6] ...I see you have restocked the cold shelf.
-	ReynaMayari: [pause=0.3] Irrelevant. The drink of mortals is of no interest to the Queen of the Silver Spires.
-	ReynaMayari: [pause=0.4] Produce the tally. Tonight's collection does not wait.
+	ReynaMayari: .[pause=0.6].[pause=0.6].[pause=1]I see you have restocked the cold shelf.
+	ReynaMayari: [wave]Irrelevant.[/wave] [pause=1] The drink of mortals is of no interest to the Queen of the Silver Spires.
+	ReynaMayari: Produce the tally. [pause=0.4] Tonight's collection does not wait.
 	[signal arg="deduct_quota"]
 	[end_timeline]
 
@@ -55,9 +48,9 @@ elif {Transaction_Chapter} == 2.0:
 	# She reveals something about Biringan. The cracks begin.
 	ReynaMayari: You are still standing, little mortal. [pause=0.4] Resilient, if nothing else.
 	ReynaMayari: In Biringan, we sustain ourselves on the Black Rice. A single grain feeds an immortal for a century.
-	ReynaMayari: [pause=0.5] It is efficient. It is dignified. It is the sacred grain of the moonlit city.
-	ReynaMayari: [pause=0.7] ...It has no flavor whatsoever.
-	ReynaMayari: [pause=0.3] Not that flavor is of any consequence to a Queen.
+	ReynaMayari:  It is efficient. It is dignified. It is the sacred grain of the moonlit city.
+	ReynaMayari: .[pause=0.7] .[pause=0.7] .[pause=1] [wave]It has no flavor whatsoever.[/wave]
+	ReynaMayari:  [speed=2] Not that flavor is of any consequence to a Queen.
 	ReynaMayari: This is purely an observation. Pay the tally. Move on.
 	[signal arg="deduct_quota"]
 	[end_timeline]
@@ -69,8 +62,8 @@ elif {Transaction_Chapter} == 3.0:
 	ReynaMayari: Your grandmother did not borrow money. [pause=0.4] She asked Biringan to keep the darker things of the forest away from this town.
 	ReynaMayari: The ones that do not answer to reason. The hollow, the hungry, the formless.
 	ReynaMayari: Every coin you pay keeps the boundary intact. [pause=0.5] You are not just running a store, child. You are keeping a wall standing.
-	ReynaMayari: [pause=0.8] ...Those [color=#0f6e2f]{Transaction_ItemWants}[/color] on the third shelf. They are very... [pause=0.4] geometrically interesting for mortal confections.
-	ReynaMayari: [pause=0.3] I am studying them for strategic purposes. Produce the tally.
+	ReynaMayari:  ...Those [color=#0f6e2f]{Transaction_ItemWants}[/color] on the third shelf. They are very... [pause=0.4] geometrically interesting for mortal confections.
+	ReynaMayari:  I am studying them for strategic purposes. Produce the tally.
 	[signal arg="deduct_quota"]
 	[end_timeline]
 
@@ -80,9 +73,9 @@ elif {Transaction_Chapter} == 4.0:
 	ReynaMayari: My city does not sleep. [pause=0.4] But it does not wake, either.
 	ReynaMayari: The spires of Biringan are carved from solid moonlight. [pause=0.3] Dust does not settle. Mold does not grow. Nothing decays.
 	ReynaMayari: There is no wind. No tricycle. No one arguing about the weather at the corner of the street at eleven in the evening.
-	ReynaMayari: [pause=0.7] ...You may be wondering why I collect the tally personally instead of dispatching a herald.
+	ReynaMayari:  ...You may be wondering why I collect the tally personally instead of dispatching a herald.
 	ReynaMayari: The answer has nothing to do with curiosity. [pause=0.4] A queen must verify the collection herself. It is protocol.
-	ReynaMayari: [pause=0.3] That is the only reason I am here. Provide the tally. Immediately.
+	ReynaMayari:  That is the only reason I am here. Provide the tally. Immediately.
 	[signal arg="deduct_quota"]
 	[end_timeline]
 
@@ -92,10 +85,10 @@ elif {Transaction_Chapter} == 5.0:
 	ReynaMayari: There was an incident this week that I am required to disclose.
 	ReynaMayari: The one-eyed child from the neighborhood — Buboy, I believe — he was loitering near the street.
 	ReynaMayari: He looked directly at me and said, with complete confidence, [pause=0.4] "Ate, nice cosplay."
-	ReynaMayari: [pause=0.8] "Ate."
-	ReynaMayari: [pause=0.4] I was preparing a mild haunting. A very tasteful one. [pause=0.3] Just some disembodied wind. Nothing permanent.
+	ReynaMayari:  "Ate."
+	ReynaMayari:  I was preparing a mild haunting. A very tasteful one. [pause=0.3] Just some disembodied wind. Nothing permanent.
 	ReynaMayari: But then he held up one of your [color=#0f6e2f]{Transaction_ItemWants}[/color] and said it was "for the pretty moon lady."
-	ReynaMayari: [pause=0.6] I accepted the tribute. [pause=0.3] Because it was politically appropriate to do so. Not for any other reason.
+	ReynaMayari:  I accepted the tribute. [pause=0.3] Because it was politically appropriate to do so. Not for any other reason.
 	ReynaMayari: Produce tonight's tally before I reconsider sparing you from the disembodied wind.
 	[signal arg="deduct_quota"]
 	[end_timeline]
@@ -106,24 +99,24 @@ elif {Transaction_Chapter} == 6.0:
 	# but clearly not because she wants it to end.
 	ReynaMayari: The ledger is nearly closed. [pause=0.5] I have calculated that two, perhaps three more installments will settle the remaining balance.
 	ReynaMayari: After which, my official obligations to this establishment conclude.
-	ReynaMayari: [pause=0.5] I will no longer be required to visit this particular storefront. [pause=0.4] Which is, of course, completely fine.
+	ReynaMayari:  I will no longer be required to visit this particular storefront. [pause=0.4] Which is, of course, completely fine.
 	ReynaMayari: The silence of Biringan is dignified. The eternal moonlight is restful. The Black Rice is... it is food.
-	ReynaMayari: [pause=0.7] ...Are those [color=#0f6e2f]{Transaction_ItemWants}[/color] a new stock?
-	ReynaMayari: [pause=0.3] Also irrelevant. Tally. Now. Let us finish this.
+	ReynaMayari:  ...Are those [color=#0f6e2f]{Transaction_ItemWants}[/color] a new stock?
+	ReynaMayari:  Also irrelevant. Tally. Now. Let us finish this.
 	[signal arg="deduct_quota"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7.0:
 	# Chapter 8 — "The Ledger Closes"
 	# The debt is paid. She makes her decree, then invents a reason to stay.
-	ReynaMayari: [pause=0.6] It is done.
+	ReynaMayari:  It is done.
 	ReynaMayari: The debt of your bloodline is cleared. [pause=0.4] As Queen of Biringan, I declare the pact sealed and renewed.
 	ReynaMayari: Whatever walks the forests at night — the hollow, the hungry, the formless — they will not cross your threshold.
 	ReynaMayari: You have earned your grandmother's peace. And I... [pause=0.5] I have fulfilled my duty.
-	ReynaMayari: [pause=0.9] ...The protection requires periodic verification, of course.
+	ReynaMayari:  ...The protection requires periodic verification, of course.
 	ReynaMayari: I will need to conduct on-site inspections. At irregular intervals. At night.
 	ReynaMayari: Possibly several times a week. [pause=0.3] It is a very thorough pact.
-	ReynaMayari: [pause=0.4] Keep your coins tonight. [pause=0.3] I will... see myself out.
+	ReynaMayari:  Keep your coins tonight. [pause=0.3] I will... see myself out.
 	[signal arg="story_success"]
 	[end_timeline]
 
@@ -131,30 +124,30 @@ elif {Transaction_Chapter} == 8.0:
 	# Chapter 9 — "The Patron of the Moon"
 	# She has fully dropped the act. Warmly embarrassed. Genuinely fond.
 	ReynaMayari: I am here on an inspection. [pause=0.5] A routine one.
-	ReynaMayari: [pause=0.5] ...Alright. I may also be here because Biringan is very quiet tonight and someone left a trail of your [color=#0f6e2f]{Transaction_ItemWants}[/color] packets outside my gate.
+	ReynaMayari:  ...Alright. I may also be here because Biringan is very quiet tonight and someone left a trail of your [color=#0f6e2f]{Transaction_ItemWants}[/color] packets outside my gate.
 	ReynaMayari: I have no proof that was intentional. [pause=0.3] But if I did, I would call it a masterful act of mortal diplomacy.
-	ReynaMayari: [pause=0.6] Your grandmother used to leave a candle in the window on nights when the forest was restless. I would see it from the spires.
-	ReynaMayari: [pause=0.5] She never asked for anything in return. She just kept the light on.
-	ReynaMayari: [pause=0.4] She would have liked you very much, I think.
+	ReynaMayari:  Your grandmother used to leave a candle in the window on nights when the forest was restless. I would see it from the spires.
+	ReynaMayari:  She never asked for anything in return. She just kept the light on.
+	ReynaMayari:  She would have liked you very much, I think.
 	ReynaMayari: Here. [pause=0.3] This is for you. [pause=0.5] Do not read too much into it.
 	[signal arg="unlock_collectible" value="SilverPesoOfBiringan"]
 	[signal arg="story_success"]
 	[end_timeline]
 
 label SuccessFirst
-ReynaMayari: [pause=0.4] ...Acceptable.
+ReynaMayari:  ...Acceptable.
 ReynaMayari: The first installment has been collected and formally recorded in the ledger of Biringan.
-ReynaMayari: [pause=0.3] Do not be late next time.
+ReynaMayari:  Do not be late next time.
 [signal arg="story_success"]
 [end_timeline]
 
 label Success
 if {Transaction_SatisfyVar} <= 33:
-	ReynaMayari: [pause=0.4] The balance is restored for now. [pause=0.3] The ledger is quiet.
+	ReynaMayari:  The balance is restored for now. [pause=0.3] The ledger is quiet.
 elif {Transaction_SatisfyVar} <= 66:
-	ReynaMayari: [pause=0.4] A passable offering. [pause=0.3] The numbers are satisfied, if not by much.
+	ReynaMayari:  A passable offering. [pause=0.3] The numbers are satisfied, if not by much.
 else:
-	ReynaMayari: [pause=0.4] You gave more than required. [pause=0.5] ...That is unusual for a mortal. [pause=0.3] It is noted.
+	ReynaMayari:  You gave more than required. [pause=0.5] ...That is unusual for a mortal. [pause=0.3] It is noted.
 [signal arg="story_success"]
 [end_timeline]
 
@@ -169,13 +162,13 @@ else:
 [end_timeline]
 
 label Talk
-ReynaMayari: [pause=0.3] I require [color=#0f6e2f]{Transaction_ItemWants}[/color].
+ReynaMayari:  I require [color=#0f6e2f]{Transaction_ItemWants}[/color].
 ReynaMayari: Do not make the Queen of Biringan stand and wait.
 - Grant me a reprieve, Your Majesty.
-	ReynaMayari: [pause=0.3] Very well. You have one centennial hour... or however long it takes mortals to find a snack.
+	ReynaMayari:  Very well. You have one centennial hour... or however long it takes mortals to find a snack.
 	[end_timeline]
 - I have failed my Queen. We are out of stock.
-	ReynaMayari: [pause=0.4] Truly? [pause=0.3] A tragedy. I shall inform the silver courts of this shortage. [pause=0.3] Good day, mortal!
+	ReynaMayari:  Truly? [pause=0.3] A tragedy. I shall inform the silver courts of this shortage. [pause=0.3] Good day, mortal!
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]
@@ -186,5 +179,5 @@ ReynaMayari: The Moon acknowledges your effort. [pause=0.3] ...You may carry on.
 [end_timeline]
 
 label WrongItem
-ReynaMayari: [pause=0.3] That is not the [color=#0f6e2f]{Transaction_ItemWants}[/color]. [pause=0.4] Look again. Carefully.
+ReynaMayari:  That is not the [color=#0f6e2f]{Transaction_ItemWants}[/color]. [pause=0.4] Look again. Carefully.
 [end_timeline]

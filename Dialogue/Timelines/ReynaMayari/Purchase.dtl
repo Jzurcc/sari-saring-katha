@@ -38,7 +38,7 @@ else:
 
 label Satisfy
 if {Transaction_SatisfyVar} <= 50:
-	ReynaMayari: [pause=0.4] It is acceptable. Your service remains adequate under the eternal sun.
+	ReynaMayari:  It is acceptable. Your service remains adequate under the eternal sun.
 else:
 	ReynaMayari: The Moon acknowledges your tribute. [pause=0.4] This will pair perfectly with my eternal solitude.
 [end_timeline]

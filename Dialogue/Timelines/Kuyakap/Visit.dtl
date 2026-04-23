@@ -5,4 +5,5 @@ if {Transaction_VisitVar} <= 50:
 else:
 	KuyaKap: Hoho! I was just talking to some of the guys at the tricycle stand.
 	KuyaKap: They say the new face at the sari-sari store is a good one. [pause=0.5] I told them I already knew that. [pause=0.3] Stay strong, anak.
+[signal arg="dismiss"]
 [end_timeline]

@@ -5,7 +5,7 @@ if {Transaction_Chapter} >= 8.0:
 		ReynaMayari: I am simply... conducting a routine inspection. [pause=0.5] Make sure everything is in order. Carry on.
 	else:
 		ReynaMayari: Does the patron of Biringan need a reason to visit her favorite mortal establishment?
-		ReynaMayari: [pause=0.4] I am merely enjoying the atmosphere. [pause=0.3] And the scent of those little sweet brown cubes you mortals cherish.
+		ReynaMayari:  I am merely enjoying the atmosphere. [pause=0.3] And the scent of those little sweet brown cubes you mortals cherish.
 else:
 	if {Transaction_VisitVar} <= 50:
 		ReynaMayari: The stillness of this barangay is a rare occurrence. [pause=0.6] 
@@ -13,4 +13,6 @@ else:
 	else:
 		ReynaMayari: I do not require an installment of your tally today. [pause=0.6] 
 		ReynaMayari: I am merely observing the perimeter of my influence and the warmth of this wooden shelter. [pause=0.4] Carry on with your terrestrial obligations, mortal.
+[signal arg="dismiss"]
 [end_timeline]
+

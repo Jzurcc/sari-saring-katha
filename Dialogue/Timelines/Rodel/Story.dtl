@@ -96,6 +96,10 @@ Rodel: Ambassador. I am monitoring the evaporation rate. [pause=0.4] It is curre
 	[signal arg="story_success"]
 	[end_timeline]
 
+label Partial
+Rodel: My hydro-stasis is partially stabilized. [pause=0.4] I still require the [color=#0f6e2f]{Transaction_ItemWants}[/color] to complete the equilibrium, Ambassador.
+[end_timeline]
+
 label Satisfy
 Rodel: Refreshing. [pause=0.6] My Thank-currents to you, Ambassador.
 [signal arg="story_success"]

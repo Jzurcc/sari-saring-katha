@@ -139,6 +139,10 @@ TK: No rush, fam. I’m just... soaking in the atmosphere. Capturing it in my mi
 	[signal arg="story_success"]
 	[end_timeline]
 
+label Partial
+TK: Okay, good start fam! [pause=0.3] Still need the [color=#0f6e2f]{Transaction_ItemWants}[/color] though. [pause=0.4] Adventure waits for no one, but I'll make an exception. Take your time.
+[end_timeline]
+
 label Satisfy
 TK: Perfect! This is exactly what I needed. [pause=0.4] Peace and hydration, man. Literal goals.
 [signal arg="story_success"]

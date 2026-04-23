@@ -25,5 +25,7 @@ dialogic_character = ExtResource("1_dch")
 story_timeline = ExtResource("story_res")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_data")])
+arc_names = Array[String](["Arc 1: The Watcher in the Shade", "Arc 2: The Weight of Many Eyes", "Arc 3: The Guardian's Gaze"])
+chapter_names = Array[String](["The Free Real Estate", "The Cough", "The Midnight Flight", "The Private Conversation", "The Highway", "Too Bright", "The Pale Ledger", "The Daligmata - the reveal", "The First Purchase - Arc Finale"])
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_wav")

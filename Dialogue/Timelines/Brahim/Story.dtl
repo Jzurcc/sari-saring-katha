@@ -10,7 +10,7 @@ if {Transaction_Chapter} == 0:
 	Brahim: The humidity here seems to cause intermittent packet loss. A total cache miss for childhood memories.
 	Brahim: In Karimlan, the system is quiet. Almost too quiet. 
 	Brahim: Anyway, I'll take {Transaction_ItemWants}. I'm helping my Lolo with a ritual near the creek tonight.
-	Brahim: [pause=0.3] Apparently, even spirits appreciate a good snack during the breaks.
+	Brahim:  Apparently, even spirits appreciate a good snack during the breaks.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1:
@@ -20,17 +20,17 @@ elif {Transaction_Chapter} == 1:
 		Brahim: "A bit" is an understatement. It's pretty old and obnoxious. 
 		Brahim: It's pure legacy code. But I've noticed the whole street waits for it to chime before closing up.
 	- It belonged to my grandmother.
-		Brahim: [pause=0.3] Then it's the master server. Everything else just has to sync to it.
+		Brahim:  Then it's the master server. Everything else just has to sync to it.
 	Brahim: I miss the Baguio fog, occasionally. It felt like living inside a low-resolution cloud.
 	Brahim: Here, everything is sharp. Too much detail in the heat.
 	Brahim: I'm looking for some {Transaction_ItemWants}. Lolo says there's a "glitch" in the southern irrigation line.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2:
-	Brahim: [pause=0.5] Lolo had me chanting until three in the morning.
+	Brahim:  Lolo had me chanting until three in the morning.
 	Brahim: I kept waiting for an error message. A syntax error, or a compiler warning.
 	- Did the ritual work?
-		Brahim: [pause=0.4] Eventually. There's a significant latency between the words and the response.
+		Brahim:  Eventually. There's a significant latency between the words and the response.
 		Brahim: You don't get a logs file. You just get a sudden rustle in the leaves that means "accepted."
 	- You seem more at peace with it today.
 		Brahim: I'm learning to value the silence between queries.
@@ -40,12 +40,12 @@ elif {Transaction_Chapter} == 2:
 
 elif {Transaction_Chapter} == 3:
 	Brahim: I saw some kids by the canal today. They were poking at a mound of earth and calling it 'Skibidi'.
-	Brahim: [pause=0.3] A Duwende mound, mind you.
+	Brahim:  A Duwende mound, mind you.
 	- That's a dangerous game.
 		Brahim: Actually, it was fascinating. It's a protocol update for the local lore. 
 		Brahim: They're mapping ancient variables onto modern memes. Packaging the unexplainable into something they can share.
 	- Did the Duwende mind?
-		Brahim: [pause=0.4] I think it was confused by the terminology. It's probably still trying to look up the definition.
+		Brahim:  I think it was confused by the terminology. It's probably still trying to look up the definition.
 	Brahim: I'll take a few candies. The colorful ones. I told them I'd bring 'admin-level offerings' to keep them safe.
 	[end_timeline]
 
@@ -61,10 +61,10 @@ elif {Transaction_Chapter} == 4:
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5:
-	Brahim: [pause=0.6] You see this? This quiet?
+	Brahim:  You see this? This quiet?
 	Brahim: No department meetings. No students asking for grade-bumps in my inbox.
 	- Is this why you left the faculty?
-		Brahim: [pause=0.5] I realized I was just a process in someone else's server. 
+		Brahim:  I realized I was just a process in someone else's server. 
 		Brahim: Here, I'm the admin. Or at least, the system observer. 
 	Brahim: It's a stable build. No external traffic. Just me, the forest, and your store.
 	Brahim: Something light today. A soft drink. Cold.
@@ -74,7 +74,7 @@ elif {Transaction_Chapter} == 6:
 	Brahim: Lolo found me using my tablet to record his cleansing chants.
 	Brahim: I thought he'd call it "unholy tech." Instead, he asked if I could 're-upload' his toothache prayer.
 	- He's using the lingo?
-		Brahim: [pause=0.4] He's a fast learner. He thinks it's a way to trap the spirits in a "glowing slate" for safekeeping.
+		Brahim:  He's a fast learner. He thinks it's a way to trap the spirits in a "glowing slate" for safekeeping.
 		Brahim: I told him it's just a redundant cloud-backup for the oral tradition. 
 	Brahim: In case the legacy chain suffers a total system failure.
 	Brahim: A treat for him. The {Transaction_ItemWants}. He likes the texture.
@@ -95,11 +95,11 @@ elif {Transaction_Chapter} == 8:
 	Brahim: Lolo gave me his old brass bell today. [pause=0.3] Officially recognized.
 	Brahim: I'm not going back to Baguio. I've deleted that directory.
 	- We're glad to have you here, Teacher.
-		Brahim: [pause=0.4] I'm still teaching. Just a different curriculum. 
+		Brahim:  I'm still teaching. Just a different curriculum. 
 		Brahim: Teaching the living not to fear the glitches in the world.
 	Brahim: And thank you. Your store was the 'safe-mode' I needed to reboot my life.
 	- You're welcome anytime.
-		Brahim: [pause=0.3] Stay cozy, boss. Max rizz attained? [pause=0.4] No... let's stick with "System Stable."
+		Brahim:  Stay cozy, boss. Max rizz attained? [pause=0.4] No... let's stick with "System Stable."
 	Brahim: Here. Some {Transaction_ItemWants} to keep the background processes in your store running smoothly.
 	[end_timeline]
 
@@ -114,12 +114,16 @@ Brahim: I'm just waiting for that {Transaction_ItemWants}. No pressure on the se
 	[signal arg="story_success"]
 	[end_timeline]
 
+label Partial
+Brahim: Partial sync confirmed. [pause=0.3] Still awaiting the remaining packet — the [color=#0f6e2f]{Transaction_ItemWants}[/color]. No timeout yet.
+[end_timeline]
+
 label Satisfy
 Brahim: Correct. [pause=0.3] Metadata matches. Data validated. Salamat.
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Brahim: [pause=0.3] That's a bit of a "mismatch." 
+Brahim:  That's a bit of a "mismatch." 
 Brahim: I needed the {Transaction_ItemWants}. Let's try to sync again.
 [end_timeline]

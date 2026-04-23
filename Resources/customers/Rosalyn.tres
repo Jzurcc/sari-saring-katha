@@ -25,5 +25,7 @@ dialogic_character = ExtResource("1_epene")
 story_timeline = ExtResource("story_timeline")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
+arc_names = Array[String](["Arc 1: Learning to Hold On", "Arc 2: The Echo of the Rain", "Arc 3: Finding Your Way Out"])
+chapter_names = Array[String](["The Flight", "The Attempt", "The Anchor", "The Burn", "The Silence", "The Puddle", "The Candy", "Letting Go", "The Departure"])
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_r53lf")

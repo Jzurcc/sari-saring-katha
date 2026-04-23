@@ -27,5 +27,7 @@ dialogue_blip_volume = -5.0
 story_timeline = ExtResource("4_timeline")
 max_story_chapters = 9
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
+arc_names = Array[String](["Arc 1: The Viral Scout", "Arc 2: The Viewfinder's Limit", "Arc 3: The Path Forward"])
+chapter_names = Array[String](["The Arrival", "The Plan", "Arc 1 Recount", "Burnout", "Arc 2 Scouting", "Arc 2 Recount", "The Realization", "The Choice", "The Final Step"])
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("2_0aich")

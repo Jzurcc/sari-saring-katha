@@ -125,7 +125,7 @@ elif {Transaction_Chapter} == 6.0:
 	- You know about her?
 		Danilo: I know about everyone, boss.
 	- How do you know that name?
-		Danilo: [pause=0.4] I've been here a long time.
+		Danilo:  I've been here a long time.
 	- Yeah. She's not easy to deal with.
 		Danilo: No. She's not.
 	Danilo: [color=#8B6855]I watch her leave here with that ledger every time she visits. I've been watching her do it since before you came back to this store.[/color]
@@ -202,6 +202,13 @@ else:
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]
+
+label Partial
+if {Transaction_Chapter} == 8.0:
+	Danilo: Ha, good start. [pause=0.3] Still need the [color=#0f6e2f]{Transaction_ItemWants}[/color] though. No rush, boss. I'm a patient man.
+else:
+	Danilo: Noted. [pause=0.3] Carry on.
+[end_timeline]
 
 label Satisfy
 if {Transaction_WantsDebt}:

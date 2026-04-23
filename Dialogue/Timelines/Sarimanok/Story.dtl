@@ -134,6 +134,13 @@ else:
 	[end_timeline]
 
 
+label Partial
+if {Transaction_Chapter} < 6.0:
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It clacks its beak impatiently, gesturing toward where the [color=#0f6e2f]{Transaction_ItemWants}[/color] should be)[/color][/wave]
+else:
+	Sarimanok: A commendable partial fulfillment. [pause=0.3] However, I still require the [color=#0f6e2f]{Transaction_ItemWants}[/color] to close the transaction. Ba-kawk!
+[end_timeline]
+
 label Satisfy
 if {Transaction_WantsDebt}:
 	if {Transaction_Chapter} < 6.0:

@@ -5,4 +5,5 @@ if {Transaction_VisitVar} <= 50:
 else:
 	Brahim: Scanning the environment. The sunlight filtration through your storefront is visually pleasing. 
 	Brahim: It's a stable build, Karimlan. I'm glad I migrated my data here.
+[signal arg="dismiss"]
 [end_timeline]

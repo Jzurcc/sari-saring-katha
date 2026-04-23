@@ -5,4 +5,6 @@ if {Transaction_VisitVar} <= 50:
 else:
 	Rodel: Ambassador. I was just observing your concrete rivers. 
 	Rodel: They flow with such violence and yet... they contain no life. [pause=0.6] A strange preference. [pause=0.4] Be well in your stone fortress.
+[signal arg="dismiss"]
 [end_timeline]
+
