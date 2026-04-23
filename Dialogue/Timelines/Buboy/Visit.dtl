@@ -7,6 +7,6 @@ else:
 	Buboy: Hihi! Look what I found near the tricycle stand! [pause=0.6] 
 	Buboy: It's a shiny bottle cap! It's mine now. Treasure! [pause=0.4]
 	Buboy: See you later, Boss! Vroom!
-[signal arg="dismiss"]
+[signal arg="story_success"]
 [end_timeline]
 

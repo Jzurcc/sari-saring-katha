@@ -13,6 +13,6 @@ else:
 	else:
 		ReynaMayari: I do not require an installment of your tally today. [pause=0.6] 
 		ReynaMayari: I am merely observing the perimeter of my influence and the warmth of this wooden shelter. [pause=0.4] Carry on with your terrestrial obligations, mortal.
-[signal arg="dismiss"]
+[signal arg="story_success"]
 [end_timeline]
 

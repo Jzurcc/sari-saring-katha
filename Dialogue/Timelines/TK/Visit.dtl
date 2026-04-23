@@ -5,6 +5,6 @@ if {Transaction_VisitVar} <= 50:
 else:
 	TK: scouting out a new 'Hidden Spot' near the river. [pause=0.6] 
 	TK: The lighting is peak right now. [pause=0.3] You have a good heart for keeping this base camp open. Stay peak!
-[signal arg="dismiss"]
+[signal arg="story_success"]
 [end_timeline]
 

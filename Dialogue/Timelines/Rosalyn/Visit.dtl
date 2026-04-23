@@ -5,5 +5,5 @@ if {Transaction_VisitVar} <= 50:
 else:
 	Rosalyn: [wave]I saw a cat outside... [pause=1.0] it looked at me. [pause=1.0][/wave]
 	Rosalyn: [wave]Most things don't look. [pause=1.0] Thank you for... [pause=1.0] um... [pause=1.0] keeping the door open.[/wave]
-[signal arg="dismiss"]
+[signal arg="story_success"]
 [end_timeline]
