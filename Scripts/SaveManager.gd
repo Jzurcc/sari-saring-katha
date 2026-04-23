@@ -56,12 +56,13 @@ func _notification(_what: int) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Secret Debug Toggle: CTRL + P
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_P and event.ctrl_pressed:
-			debug_skip_save = !debug_skip_save
-			LogManager.debug("SaveManager", "DEBUG_SKIP_SAVE: %s" % ("ON (Saves disabled)" if debug_skip_save else "OFF (Saves enabled)"))
-			# Optional: Visual indicator could go here.
+	# Secret Debug Toggle: CTRL + P (Only available in Editor / Debug builds)
+	if OS.has_feature("editor") or OS.has_feature("debug"):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_P and event.ctrl_pressed:
+				debug_skip_save = !debug_skip_save
+				LogManager.debug("SaveManager", "DEBUG_SKIP_SAVE: %s" % ("ON (Saves disabled)" if debug_skip_save else "OFF (Saves enabled)"))
+				# Optional: Visual indicator could go here.
 
 
 # ── Trigger Handlers ──────────────────────────────────────────────────────

@@ -139,29 +139,7 @@ var Transaction_VisitVar: float = 0.0
 
 ## Safely sets a Dialogic variable only if it exists in the Dialogic system.
 ## Also automatically mirrors the value to the local Autoload properties (e.g. "Transaction_ItemWants")
-func _set_dvar(path: String, value) -> void:
-	# 1. Update the local mirrored property
-	var underscore_path = path.replace(".", "_")
-	var dot_path = path.replace("_", ".")
-	
-	if underscore_path in self:
-		self.set(underscore_path, value)
-	
-	# We check existence for each to avoid console spam "Tried setting non-existant variable".
-	if Dialogic.VAR.has(path):
-		Dialogic.VAR.set_variable(path, value)
-	
-	if underscore_path != path and Dialogic.VAR.has(underscore_path):
-		Dialogic.VAR.set_variable(underscore_path, value)
-		
-	if dot_path != path and Dialogic.VAR.has(dot_path):
-		Dialogic.VAR.set_variable(dot_path, value)
-	
-	# Special legacy mapping
-	var story_mgr_path = "StoryManager." + underscore_path
-	if Dialogic.VAR.has(story_mgr_path):
-		Dialogic.VAR.set_variable(story_mgr_path, value)
-	# No else: we silent the error if it doesn't exist
+
 
 ## Float representation of the currently displayed in-game hour (0–24).
 var _current_display_time: float = 16.89
@@ -430,9 +408,9 @@ func load_save_data(data: Dictionary) -> void:
 	LogManager.info("StoryManager", "State loaded. Day: %d, Tier: %d, Progressed Characters: %d" % [day, current_tier, character_story_states.size()])
 	
 	# Mirror to Dialogic
-	_set_dvar("Global.QuotaDay", day)
-	_set_dvar("Global.CurrentTier", current_tier)
-	_set_dvar("Global.MaxUnlockedTier", max_unlocked_tier)
+	Dialogic.VAR.set_variable("Global.QuotaDay", day)
+	Dialogic.VAR.set_variable("Global.CurrentTier", current_tier)
+	Dialogic.VAR.set_variable("Global.MaxUnlockedTier", max_unlocked_tier)
 	
 	encountered_characters = data.get("encountered_characters", {})
 	
@@ -451,10 +429,10 @@ func load_save_data(data: Dictionary) -> void:
 	# RE-SYNC Story Variables
 	var chapter_id = "Transaction_Chapter"
 	if Transaction_Chapter >= 0:
-		_set_dvar(chapter_id, Transaction_Chapter)
+		Dialogic.VAR.set_variable(chapter_id, Transaction_Chapter)
 	
-	_set_dvar("Global_QuotaDay", float(day))
-	_set_dvar("Global_CurrentTier", float(current_tier))
+	Dialogic.VAR.set_variable("Global_QuotaDay", float(day))
+	Dialogic.VAR.set_variable("Global_CurrentTier", float(current_tier))
 	pending_upgrade_tier = data.get("pending_upgrade_tier", 0)
 	pending_upgrade_cost = data.get("pending_upgrade_cost", 0.0)
 	has_mayari_visited = data.get("has_mayari_visited", false)
@@ -704,19 +682,19 @@ func get_next_transaction() -> TransactionContext:
 			_debug_sarimanok_cycle = (_debug_sarimanok_cycle + 1) % 3
 			
 			# Sync ALL critical Dialogic vars — same as the normal get_next_transaction() path
-			_set_dvar("Transaction_CustomerName", smk.character_name)
-			_set_dvar("Transaction_Chapter", float(smk_chapter))
-			_set_dvar("Transaction_CurrentArc", smk.get_arc_index(smk_chapter) + 1)
-			_set_dvar("Transaction_WantsDebt", 1.0 if t_dbg.wants_debt else 0.0)
-			_set_dvar("Transaction_IsRepaying", 1.0 if t_dbg.is_repaying else 0.0)
-			_set_dvar("Transaction_RepaymentAmount", t_dbg.repayment_amount)
-			_set_dvar("Transaction_IsRiddle", 1.0 if t_dbg.is_riddle else 0.0)
-			_set_dvar("Transaction_ItemWantsBest", t_dbg.best_item_name)
-			_set_dvar("Transaction_GreetingVar", float(randi() % 100))
-			_set_dvar("Transaction_TalkVar", float(randi() % 100))
-			_set_dvar("Transaction_SatisfyVar", float(randi() % 100))
-			_set_dvar("Transaction_WrongItemVar", float(randi() % 100))
-			_set_dvar("Transaction_VisitVar", float(randi() % 100))
+			Dialogic.VAR.set_variable("Transaction_CustomerName", smk.character_name)
+			Dialogic.VAR.set_variable("Transaction_Chapter", float(smk_chapter))
+			Dialogic.VAR.set_variable("Transaction_CurrentArc", smk.get_arc_index(smk_chapter) + 1)
+			Dialogic.VAR.set_variable("Transaction_WantsDebt", 1.0 if t_dbg.wants_debt else 0.0)
+			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0 if t_dbg.is_repaying else 0.0)
+			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", t_dbg.repayment_amount)
+			Dialogic.VAR.set_variable("Transaction_IsRiddle", 1.0 if t_dbg.is_riddle else 0.0)
+			Dialogic.VAR.set_variable("Transaction_ItemWantsBest", t_dbg.best_item_name)
+			Dialogic.VAR.set_variable("Transaction_GreetingVar", float(randi() % 100))
+			Dialogic.VAR.set_variable("Transaction_TalkVar", float(randi() % 100))
+			Dialogic.VAR.set_variable("Transaction_SatisfyVar", float(randi() % 100))
+			Dialogic.VAR.set_variable("Transaction_WrongItemVar", float(randi() % 100))
+			Dialogic.VAR.set_variable("Transaction_VisitVar", float(randi() % 100))
 			return t_dbg
 
 	_last_character_path = char_data.resource_path
@@ -758,9 +736,9 @@ func get_next_transaction() -> TransactionContext:
 	elif total_stock < 10:
 		stock_status = "Low"
 		
-	_set_dvar("Global_AwarenessActive", 1.0 if awareness_active else 0.0)
-	_set_dvar("Global_HighPriceActive", 1.0 if high_price_active else 0.0)
-	_set_dvar("Global_StockStatus", stock_status)
+	Dialogic.VAR.set_variable("Global_AwarenessActive", 1.0 if awareness_active else 0.0)
+	Dialogic.VAR.set_variable("Global_HighPriceActive", 1.0 if high_price_active else 0.0)
+	Dialogic.VAR.set_variable("Global_StockStatus", stock_status)
 	
 	# B. Dual Customer (Story Events only)
 	# Handled explicitly by story logic, no random chance.
@@ -805,7 +783,7 @@ func get_next_transaction() -> TransactionContext:
 		if main_item.item_hint != "" and riddle_roll < final_riddle_chance:
 			t.is_riddle = true
 			t.riddle_item = main_item
-			_set_dvar("Transaction_ItemHint", main_item.item_hint)
+			Dialogic.VAR.set_variable("Transaction_ItemHint", main_item.item_hint)
 			
 			# Special rule: Riddles can only be for a single item.
 			if t.desired_items.size() > 1:
@@ -837,27 +815,27 @@ func get_next_transaction() -> TransactionContext:
 	Transaction_RemainingCount = float(t.desired_items.size())
 
 	# 4. Sync to Dialogic Variables
-	_set_dvar("Global_RumorActive", 1.0 if t.rumor_active else 0.0)
-	_set_dvar("Global_RumorType", t.rumor_type)
-	_set_dvar("Transaction_WantsDebt", 1.0 if t.wants_debt else 0.0)
-	_set_dvar("Transaction_IsRepaying", 1.0 if t.is_repaying else 0.0)
-	_set_dvar("Transaction_RepaymentAmount", t.repayment_amount)
-	_set_dvar("Transaction_IsRiddle", 1.0 if t.is_riddle else 0.0)
-	_set_dvar("Transaction_ItemWantsBest", t.best_item_name)
+	Dialogic.VAR.set_variable("Global_RumorActive", 1.0 if t.rumor_active else 0.0)
+	Dialogic.VAR.set_variable("Global_RumorType", t.rumor_type)
+	Dialogic.VAR.set_variable("Transaction_WantsDebt", 1.0 if t.wants_debt else 0.0)
+	Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0 if t.is_repaying else 0.0)
+	Dialogic.VAR.set_variable("Transaction_RepaymentAmount", t.repayment_amount)
+	Dialogic.VAR.set_variable("Transaction_IsRiddle", 1.0 if t.is_riddle else 0.0)
+	Dialogic.VAR.set_variable("Transaction_ItemWantsBest", t.best_item_name)
 	
 	# Update Dialogic ItemWants string
 	update_transaction_item_string(t)
 	
 	# Phase-specific random rolls
-	_set_dvar("Transaction_GreetingVar", Transaction_GreetingVar)
-	_set_dvar("Transaction_TalkVar", Transaction_TalkVar)
-	_set_dvar("Transaction_SatisfyVar", Transaction_SatisfyVar)
-	_set_dvar("Transaction_WrongItemVar", Transaction_WrongItemVar)
-	_set_dvar("Transaction_VisitVar", Transaction_VisitVar)
+	Dialogic.VAR.set_variable("Transaction_GreetingVar", Transaction_GreetingVar)
+	Dialogic.VAR.set_variable("Transaction_TalkVar", Transaction_TalkVar)
+	Dialogic.VAR.set_variable("Transaction_SatisfyVar", Transaction_SatisfyVar)
+	Dialogic.VAR.set_variable("Transaction_WrongItemVar", Transaction_WrongItemVar)
+	Dialogic.VAR.set_variable("Transaction_VisitVar", Transaction_VisitVar)
 
-	_set_dvar("Transaction_CurrentArc", float(Transaction_CurrentArc))
-	_set_dvar("Transaction_Chapter", Transaction_Chapter)
-	_set_dvar("Transaction_Branch", Transaction_Branch)
+	Dialogic.VAR.set_variable("Transaction_CurrentArc", float(Transaction_CurrentArc))
+	Dialogic.VAR.set_variable("Transaction_Chapter", Transaction_Chapter)
+	Dialogic.VAR.set_variable("Transaction_Branch", Transaction_Branch)
 
 	LogManager.info("STORY", "--- Transaction Attributes ---")
 	LogManager.info("STORY", "  Rumor : %s (Target < %.2f)" % [str(t.rumor_active), rumor_chance])
@@ -910,7 +888,7 @@ func get_collection_transaction() -> TransactionContext:
 		t.timeline = data.story_timeline
 		# Synchronize necessary variables
 		Transaction_Chapter = float(chapter)
-		_set_dvar("Transaction_Chapter", Transaction_Chapter)
+		Dialogic.VAR.set_variable("Transaction_Chapter", Transaction_Chapter)
 	else:
 		t.transaction_type = TransactionContext.Type.VISIT
 		t.timeline = "res://Dialogue/Timelines/mayari_collect.dtl"
@@ -924,11 +902,11 @@ func get_collection_transaction() -> TransactionContext:
 	Transaction_WrongItemVar = randf() * 100.0
 	Transaction_VisitVar = randf() * 100.0
 	
-	_set_dvar("Transaction_GreetingVar", Transaction_GreetingVar)
-	_set_dvar("Transaction_TalkVar", Transaction_TalkVar)
-	_set_dvar("Transaction_SatisfyVar", Transaction_SatisfyVar)
-	_set_dvar("Transaction_WrongItemVar", Transaction_WrongItemVar)
-	_set_dvar("Transaction_VisitVar", Transaction_VisitVar)
+	Dialogic.VAR.set_variable("Transaction_GreetingVar", Transaction_GreetingVar)
+	Dialogic.VAR.set_variable("Transaction_TalkVar", Transaction_TalkVar)
+	Dialogic.VAR.set_variable("Transaction_SatisfyVar", Transaction_SatisfyVar)
+	Dialogic.VAR.set_variable("Transaction_WrongItemVar", Transaction_WrongItemVar)
+	Dialogic.VAR.set_variable("Transaction_VisitVar", Transaction_VisitVar)
 	
 	has_mayari_visited = true
 	encountered_characters[data.resource_path] = true
@@ -1372,7 +1350,7 @@ func _on_customer_satisfied(customer) -> void:
 		_processed_satisfied_customers.pop_front()
 
 	_set_last_customer_info(customer)
-	_set_dvar("Global_LastSatisfaction", "Happy")
+	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Happy")
 	
 	_process_story_cooldown(customer)
 	
@@ -1427,21 +1405,21 @@ func _on_customer_dismissed(_customer: Customer) -> void:
 
 	# Original logic: Update LastCustomer info
 	_set_last_customer_info(_customer)
-	_set_dvar("Global_LastSatisfaction", "Unhappy")
+	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Unhappy")
 	
 	_process_story_cooldown(_customer)
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer == null:
-		_set_dvar("Global_LastCustomer", "Uncle Mario")
-		_set_dvar("Global_LastItem", "Stock Delivery")
+		Dialogic.VAR.set_variable("Global_LastCustomer", "Uncle Mario")
+		Dialogic.VAR.set_variable("Global_LastItem", "Stock Delivery")
 		return
 		
 	if customer.transaction_context:
 		var data = customer.transaction_context.customer_data
 		var display_name = data.character_name if data.character_name != "" else data.get_clean_id()
 			
-		_set_dvar("Global_LastCustomer", display_name)
+		Dialogic.VAR.set_variable("Global_LastCustomer", display_name)
 		
 		# Mark as encountered so they leave the Priority 0 "Forced First Encounter" list
 		var path = data.resource_path
@@ -1451,9 +1429,9 @@ func _set_last_customer_info(customer: Customer) -> void:
 		
 		# Save specific item for rumors if applicable
 		if not customer.transaction_context.desired_items.is_empty():
-			_set_dvar("Global_LastItem", customer.transaction_context.desired_items[0].item_name)
+			Dialogic.VAR.set_variable("Global_LastItem", customer.transaction_context.desired_items[0].item_name)
 		else:
-			_set_dvar("Global_LastItem", "")
+			Dialogic.VAR.set_variable("Global_LastItem", "")
 
 func _process_story_cooldown(customer) -> void:
 	if customer == null or not customer.transaction_context:
@@ -1713,30 +1691,28 @@ func _on_dialogic_signal(argument: String) -> void:
 		# Force a specific item by name. Usage in .dtl: [signal arg="set_desire:Kopimo"]
 		var item_name := argument.substr(len("set_desire:")).strip_edges()
 		set_desire(item_name)
-	elif argument == "story_success":
-		# Manual story advancement signal
+	elif argument.begins_with("story_success"):
+		# HIGH-2 Fix: Support explicit path passing to prevent "wrong character" fallback bug.
+		# Usage in static scenes: [signal arg="story_success:res://Resources/customers/MyChar.tres"]
+		var override_path = ""
+		if argument.begins_with("story_success:"):
+			override_path = argument.substr(len("story_success:")).strip_edges()
+			
+		if override_path != "":
+			var chapter = character_story_states.get(override_path, 0)
+			character_story_states[override_path] = chapter + 1
+			print("[StoryManager] Direct Advance: Explicit path '", override_path, "' -> Chapter ", chapter + 1)
+			_save_progression()
+			return
+
+		# Standard spawner fallback
 		var customer = _get_current_customer()
-		
-		# NEW: Robust lookup — if spawner customer is null or doesn't match current speaker, 
-		# we try to find the character by Dialogic's active character if possible, 
-		# but for now we'll just check if the current customer exists.
 		if customer:
-			print("[StoryManager] Direct Advance: 'story_success' signal received for ", customer.customer_data.character_name)
+			print("[StoryManager] Direct Advance: 'story_success' payload matched active spawner: ", customer.customer_data.character_name)
 			_process_story_cooldown(customer)
 			_save_progression()
 		else:
-			# Fallback for characters NOT in a spawner (e.g. static scene characters)
-			# We'll use the most recently built transaction if it matches a story chapter.
-			if last_story_advancer_path != "":
-				var chapter = character_story_states.get(last_story_advancer_path, 0)
-				character_story_states[last_story_advancer_path] = chapter + 1
-				print("[StoryManager] Direct Advance (Fallback): No active customer node, using last_story_advancer_path: ", last_story_advancer_path)
-				
-				# Ensure Dialogic sees the new chapter immediately for the next timeline run
-				Transaction_Chapter = float(chapter + 1)
-				_set_dvar("Transaction_Chapter", Transaction_Chapter)
-				
-				_save_progression()
+			push_error("[StoryManager] Direct Advance FAILED: 'story_success' signal received with no active customer and no explicit path. Use [signal arg=\"story_success:res://path.tres\"] for static scenes.")
 
 
 func refresh_desires() -> void:
@@ -1860,18 +1836,18 @@ func update_transaction_item_string(t: TransactionContext) -> void:
 		wants_id = t.desired_items[0].get_clean_id()
 	
 	Transaction_ItemWantsID = wants_id
-	_set_dvar("Transaction_ItemWantsID", wants_id)
+	Dialogic.VAR.set_variable("Transaction_ItemWantsID", wants_id)
 	
 	Transaction_ItemWants = formatted_names
-	_set_dvar("Transaction_ItemWants", formatted_names)
-	_set_dvar("Transaction_IsNextTier", t.is_next_tier_request)
+	Dialogic.VAR.set_variable("Transaction_ItemWants", formatted_names)
+	Dialogic.VAR.set_variable("Transaction_IsNextTier", t.is_next_tier_request)
 	
 	Transaction_HighestItemWants = highest_item_name
-	_set_dvar("Transaction_HighestItemWants", highest_item_name)
+	Dialogic.VAR.set_variable("Transaction_HighestItemWants", highest_item_name)
 	
 	if not item_names.is_empty():
 		Transaction_ItemAnyWants = item_names.pick_random()
-		_set_dvar("Transaction_ItemAnyWants", Transaction_ItemAnyWants)
+		Dialogic.VAR.set_variable("Transaction_ItemAnyWants", Transaction_ItemAnyWants)
 
 func _get_max_tier_for_category(cat: String) -> int:
 	var mapped_cats = _get_mapped_categories(cat)
@@ -1910,6 +1886,10 @@ func is_label_in_timeline(path, label_name: String) -> bool:
 	if _label_cache.has(cache_key):
 		return _label_cache[cache_key]
 		
+	# Memory guard: Prevent unbounded growth in very long sessions
+	if _label_cache.size() > 500:
+		_label_cache.clear()
+		
 	if not FileAccess.file_exists(full_path):
 		# Try one more fallback if Dialogic uses local paths
 		if not full_path.begins_with("res://"):
@@ -1939,4 +1919,3 @@ func is_label_in_timeline(path, label_name: String) -> bool:
 			
 	_label_cache[cache_key] = false
 	return false
-

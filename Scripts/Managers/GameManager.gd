@@ -22,7 +22,7 @@ const END_OF_DAY_QUOTES = [
 
 @export var starting_money: float = 350.0
 var money: float = 0.0
-var day: int = 1
+# BUG-1: GameManager.day removed. All day logic now strictly uses StoryManager.day.
 var quota_day: int = 1
 var _last_earning: float = 0.0
 var _pending_quota: float = 0.0  # Quota for the day that just ended (cached before day increments)
@@ -67,8 +67,8 @@ func _finish_initialization() -> void:
 		_reset_clock_to_morning()
 		EventBus.money_changed.emit(money)
 
-	LogManager.info("GameManager", "Starting Gameplay Level at Day %d" % day)
-	EventBus.day_started.emit(day)
+	LogManager.info("GameManager", "Starting Gameplay Level at Day %d" % StoryManager.day)
+	EventBus.day_started.emit(StoryManager.day)
 
 	
 	# Safety capture: ensure mouse is captured for gameplay.
@@ -148,9 +148,9 @@ func _on_day_ended(ended_day_number: int) -> void:
 	overlay.queue_free()
 
 	# Advance Day
-	day += 1
+	StoryManager.day += 1
 	_reset_clock_to_morning()
-	EventBus.day_started.emit(day)
+	EventBus.day_started.emit(StoryManager.day)
 	
 	# 3. Open eyes for the new day
 	await SceneTransition.open_eyes()
@@ -162,7 +162,7 @@ func _on_dialogic_signal(argument: String) -> void:
 		var was_successful := deduct_money(quota)
 		
 		# Keep the variable synced in case any other system reads it
-		StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
+		Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
 		
 		if was_successful:
 			quota_day += 1 # Only increase the quota demand if the player paid
@@ -194,7 +194,7 @@ func _on_dialogic_signal(argument: String) -> void:
 	elif argument == "refuse_service":
 		# If this is Uncle Mario leaving on Day 1, mark the tutorial as complete automatically.
 		# This prevents a loop if the player skips or finishes without the specific success signal.
-		if day == 1 and _is_mario_tutorial_active():
+		if StoryManager.day == 1 and _is_mario_tutorial_active():
 			StoryManager.complete_tutorial()
 		cancel_tutorial_tasks()
 	elif argument == "tutorial_skipped" or argument == "tutorial_completed":
@@ -205,7 +205,7 @@ func _on_dialogic_signal(argument: String) -> void:
 		if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
 			LogManager.info("GameManager", "Tutorial ended at 8 PM. Skipping Mayari and ending day.")
 			StoryManager.has_mayari_visited = true
-			EventBus.day_ended.emit(day)
+			EventBus.day_ended.emit(StoryManager.day)
 	
 	# --- Interactive Tutorial Tasks ---
 	elif argument == "allow_sale_early":
@@ -265,9 +265,9 @@ func _on_closing_time_reached() -> void:
 	_pending_quota = get_quota_for_day(quota_day)
 	var was_successful = money >= _pending_quota
 	
-	StoryManager._set_dvar("Global_TodayQuota", _pending_quota)
-	StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
-	StoryManager._set_dvar("Global_QuotaDay", float(quota_day))
+	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
+	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
+	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
 	
 	LogManager.info("GameManager", "Store Closed. Pre-calculated Quota (Day %d): %.2f, Success: %s" % [
 		quota_day, _pending_quota, was_successful
@@ -439,32 +439,29 @@ func get_save_id() -> String:
 func get_save_data() -> Dictionary:
 	return {
 		"money": money,
-		"day": day,
 		"quota_day": quota_day,
 		"pending_quota": _pending_quota,
 	}
 
 func load_save_data(data: Dictionary) -> void:
 	money = data.get("money", starting_money)
-	day = data.get("day", 1)
 	quota_day = data.get("quota_day", 1)
 	_pending_quota = data.get("pending_quota", 0.0)
 	
 	# RE-SYNC: Ensure Dialogic variables match these loaded values immediately
-	StoryManager._set_dvar("Global_TodayQuota", _pending_quota)
-	StoryManager._set_dvar("Global_QuotaDay", float(quota_day))
+	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
+	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
 	
 	# Re-calculate HasEnoughMoney for the UI/Timeline if we loaded at closing time
 	var has_enough = money >= _pending_quota
-	StoryManager._set_dvar("Global_HasEnoughMoney", 1.0 if has_enough else 0.0)
+	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if has_enough else 0.0)
 	
 	EventBus.money_changed.emit(money)
 	# day_started is now explicitly emitted in _ready() after load finishes
-	LogManager.info("GameManager", "State loaded. Day %d, Money %.2f, Quota Day %d" % [day, money, quota_day])
+	LogManager.info("GameManager", "State loaded. Day %d, Money %.2f, Quota Day %d" % [StoryManager.day, money, quota_day])
 
 func reset_state() -> void:
 	money = starting_money
-	day = 1
 	quota_day = 1
 	_reset_clock_to_morning()
 	LogManager.info("GameManager", "State reset to defaults for New Game.")
