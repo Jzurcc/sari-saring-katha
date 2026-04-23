@@ -1,5 +1,7 @@
 extends Node
 
+signal stock_changed(item: ItemData, new_stock: int)
+
 var save_id: String = "inventory_manager"
 
 ## Tracks item stock counts across the game.
@@ -236,12 +238,14 @@ func take_item(item: ItemData) -> bool:
 	if count <= 0:
 		return false
 	_stock[item.resource_path] = count - 1
+	stock_changed.emit(item, _stock[item.resource_path])
 	return true
 
 ## Add stock back (e.g. when a drag is cancelled).
 func return_item(item: ItemData) -> void:
 	var count: int = _stock.get(item.resource_path, 0)
 	_stock[item.resource_path] = mini(count + 1, get_max_stock(item))
+	stock_changed.emit(item, _stock[item.resource_path])
 
 ## Restock an item to a specific count (capped at get_max_stock).
 func restock_item(item: ItemData, count: int = -1) -> void:
@@ -249,11 +253,13 @@ func restock_item(item: ItemData, count: int = -1) -> void:
 	if count < 0:
 		count = limit
 	_stock[item.resource_path] = mini(count, limit)
+	stock_changed.emit(item, _stock[item.resource_path])
 
 ## Add a delta amount of stock (e.g. ordered quantity), capped at get_max_stock.
 func add_stock(item: ItemData, amount: int) -> void:
 	var current: int = _stock.get(item.resource_path, 0) as int
 	_stock[item.resource_path] = mini(current + amount, get_max_stock(item))
+	stock_changed.emit(item, _stock[item.resource_path])
 
 func decrement_cooldown() -> void:
 	if customers_needed_for_delivery > 0:

@@ -62,9 +62,9 @@ func get_visual_aspect() -> float:
 	return 1.0
 
 func get_final_price() -> float:
-	# Migration/Default: if selling_price hasn't been set, initialize it with a 5% margin
+	# Migration/Default: if selling_price hasn't been set, initialize it with a 15% margin
 	if selling_price <= 0.0:
-		var margin = 0.05
+		var margin = 0.15
 		selling_price = price + round(price * margin)
 		
 	# Floor constraint: selling price can never be below base price
@@ -76,12 +76,12 @@ func get_final_price() -> float:
 func get_max_selling_price() -> float:
 	var base_price : float = price
 	var tier_val : int = max(1, tier)
-	# Max margin: 25% (Tier 1) to 50% (Tier 10)
-	var max_margin : float = 0.25 + (float(tier_val) - 1.0) * (0.25 / 9.0)
+	# Max margin: 35% (Tier 1) to 60% (Tier 10)
+	var max_margin : float = 0.35 + (float(tier_val) - 1.0) * (0.25 / 9.0)
 	var max_p : float = base_price * (1.0 + max_margin)
 	
-	# Rule: If potential max <= 10, add 3 pesos
-	if max_p <= 10.0:
+	# Rule: If potential max <= 15, add 3 pesos (Lifeline for cheap items)
+	if max_p <= 15.0:
 		max_p += 3.0
 		
 	return snapped(max_p, 0.5)

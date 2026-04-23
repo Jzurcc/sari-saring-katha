@@ -226,8 +226,6 @@ func check_item(item: ItemData) -> bool:
 	# Purchase customers must be greeted before they accept items — silent red pulse.
 	if not has_been_greeted:
 		# Special case for Mario: if MainGame handles the early start, don't pulse here.
-		if not (customer_data and customer_data.get_clean_id() == "unclemario"):
-			reject()
 		return false
 
 	if item == null or transaction_context == null:

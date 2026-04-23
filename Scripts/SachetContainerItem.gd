@@ -34,6 +34,7 @@ func _ready() -> void:
 	
 	EventBus.tier_advanced.connect(_on_tier_advanced)
 	EventBus.day_started.connect(_on_day_started)
+	InventoryManager.stock_changed.connect(_on_inventory_stock_changed)
 	_check_unlock_status()
 	_update_local_stock()
 	# UI is now handled by the global PricingOverlay
@@ -154,6 +155,11 @@ func _update_local_stock() -> void:
 	# Refresh UI if active
 	if is_instance_valid(get_node_or_null("/root/PricingOverlay")) and is_hovered and _pricing_mode_active:
 		update_pricing_ui()
+
+func _on_inventory_stock_changed(item: ItemData, _new_stock: int) -> void:
+	# Refresh if the changed item is ours
+	if item == sachet_item:
+		_update_local_stock()
 
 # --- Private ---
 
