@@ -31,7 +31,9 @@ var current_customer: Customer = null
 var guest_customer: Customer = null
 var _pending_dismiss: bool = false
 var _is_spawning: bool = false
-var _greeting_interrupted: bool = false # Remembers if Uncle Mario forcibly shut down the greeting.
+var _watchdog_frames: int = 0
+var _greeting_interrupted: bool = false
+ # Remembers if Uncle Mario forcibly shut down the greeting.
 var _is_partial_success: bool = false # Tracks if a dismissal should be treated as a success
 var _is_nokia_open: bool = false
 
@@ -73,7 +75,15 @@ func _on_day_started(_day: int) -> void:
 	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
 	_spawn_next_customer()
 
-func _spawn_next_customer() -> void:
+func _spawn_next_customer(delay: float = -1.0) -> void:
+	if _is_spawning:
+		LogManager.debug("CustomerSpawner", "_spawn_next_customer() IGNORED: Spawn already in progress.")
+		return
+		
+	if current_customer:
+		LogManager.debug("CustomerSpawner", "_spawn_next_customer() ABORTED: customer already present!")
+		return
+
 	LogManager.debug("CustomerSpawner", "_spawn_next_customer() CALLED. is_paused=%s, current_customer=%s, _is_spawning=%s" % [is_paused, current_customer != null, _is_spawning])
 	if is_paused or current_customer != null or _is_spawning:
 		LogManager.debug("CustomerSpawner", "Aborting spawn due to state.")
@@ -92,6 +102,10 @@ func _spawn_next_customer() -> void:
 		transaction = _pending_restore_transaction
 		_pending_restore_transaction = null
 		LogManager.info("CustomerSpawner", "Using restored transaction for next spawn: %s" % transaction.customer_data.character_name)
+		
+		# RE-SYNC: Ensure StoryManager (and Dialogic) has the correct string data
+		# for this restored transaction before the greeting starts.
+		StoryManager.update_transaction_item_string(transaction)
 	else:
 		transaction = StoryManager.get_next_transaction()
 
@@ -234,32 +248,61 @@ func _on_customer_finished(customer: Customer) -> void:
 	start_dialogue(timeline, customer, _dialogue_phase, "Satisfy")
 
 func _on_customer_dismissed(customer: Customer) -> void:
-	# Only process signals from customers we currently track. 
+	# Only process signals from customers we currently track.
 	# This prevents "ghost" signals from previous transactions (that are still fading out)
 	# from accidentally wiping out the next customer who just started spawning.
 	if customer == null:
 		return
-		
+
 	if customer != current_customer and customer != guest_customer:
 		return
+
+	# RACE GUARD: Both customer_satisfied AND customer_dismissed route here.
+	# Lock _is_spawning NOW — before the await — so the second signal fire
+	# is rejected by _spawn_next_customer()'s guard instead of racing it.
+	if _is_spawning:
+		LogManager.debug("CustomerSpawner", "_on_customer_dismissed: already spawning — ignoring duplicate signal.")
+		return
+	_is_spawning = true
 
 	if is_instance_valid(guest_customer):
 		guest_customer.dismiss()
 		guest_customer = null
-		
 	current_customer = null
-	
+
+	EventBus.customer_order_cleared.emit()
+
 	# Check if we have a pending tier unlock now that the counter is clear
 	StoryManager.process_pending_unlock()
-	
+
 	var delay = randf_range(0.3, 5.0)
 	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
 		delay = 1.0 # Short delay for Mayari arrival
-		
+
 	await get_tree().create_timer(delay).timeout
+	# _is_spawning will be managed by _spawn_next_customer from here
+	_is_spawning = false
 	_spawn_next_customer()
 
+func _process(_delta: float) -> void:
+	# Watchdog: If we are in a dialogue phase but Dialogic is no longer running,
+	# something likely crashed or ended without firing the timeline_ended signal.
+	# We exclude SATISFIED and NONE as those are stable/resolving states.
+	if _dialogue_phase != DialoguePhase.NONE and _dialogue_phase != DialoguePhase.SATISFIED:
+		if Dialogic.current_timeline == null:
+			# Give it a few frames to make sure it's not just a transition
+			_watchdog_frames += 1
+			if _watchdog_frames > 30: # ~0.5s at 60fps
+				LogManager.warn("CustomerSpawner", "WATCHDOG: Dialogue phase stuck in '%s' while Dialogic is inactive. Resetting." % DialoguePhase.keys()[_dialogue_phase])
+				_dialogue_phase = DialoguePhase.NONE
+				_watchdog_frames = 0
+		else:
+			_watchdog_frames = 0
+	else:
+		_watchdog_frames = 0
+
 func _on_customer_clicked(customer: Customer) -> void:
+
 	# Guard order matters — check from cheapest to most specific:
 	# 1. Dialogic is actively running a timeline right now.
 	if Dialogic.current_timeline != null or customer.transaction_context == null:
@@ -405,8 +448,6 @@ func _on_customer_partial_satisfaction(customer: Customer) -> void:
 	var timeline = customer.transaction_context.timeline
 	_dialogue_phase = DialoguePhase.TALK 
 	
-	# For now, we will just use the "Talk" label which we've already updated 
-	# to show the remaining items in Neutral.dtl.
 	start_dialogue(timeline, customer, _dialogue_phase, "Partial")
 
 func _update_item_names(customer: Customer) -> void:
@@ -422,14 +463,12 @@ func _update_item_names(customer: Customer) -> void:
 	
 	var formatted_names = ""
 	if item_names.size() == 0:
-		# DO NOT overwrite Transaction_ItemWants with "something".
-		# For visit-story chapters, desired_items is intentionally empty.
-		# StoryManager already set the correct value (or the fallback random item)
-		# in get_next_transaction() — stomping it here causes the "something" bug.
-		LogManager.debug("CustomerSpawner", "NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % InventoryManager.current_character_name)
+		var data = customer.customer_data
+		var cname = data.character_name if data.character_name != "" else data.get_clean_id()
+		LogManager.debug("CustomerSpawner", "NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % cname)
+		
 		# Still update character name and counts, but leave Transaction_ItemWants alone.
-		var empty_data = customer.customer_data
-		InventoryManager.current_character_name = empty_data.character_name if empty_data.character_name != "" else empty_data.get_clean_id()
+		InventoryManager.current_character_name = cname
 		InventoryManager.current_item_name = ""
 		StoryManager._set_dvar("Transaction_CustomerName", InventoryManager.current_character_name)
 		if customer.transaction_context:
@@ -487,6 +526,12 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 	_dialogue_phase = phase
 	_current_timeline_path = timeline.resource_path if timeline is Resource else timeline
 	
+	# HUD: Update orders immediately for transaction phases (Partial/Satisfied)
+	# For GREETING, we wait until the dialogue ENDS (in _on_dialogue_ended)
+	if phase in [DialoguePhase.TALK, DialoguePhase.SATISFIED]:
+		if is_instance_valid(customer) and customer.transaction_context:
+			EventBus.customer_order_updated.emit(customer.customer_data.character_name, customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
+
 	# LABEL SAFETY: If a specific label (like 'Partial') is requested but missing from the timeline,
 	# fallback to 'Satisfy' or start at the beginning to avoid silent Dialogic crashes.
 	var final_label = label
@@ -517,6 +562,11 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 
 	Dialogic.Styles.load_style("FollowBubble")
 	var layout = Dialogic.start(timeline, final_label)
+	if layout == null:
+		LogManager.error("CustomerSpawner", "Dialogic FAILED to start timeline: %s (Phase reset to NONE)" % _current_timeline_path)
+		_dialogue_phase = DialoguePhase.NONE
+		_current_timeline_path = ""
+		return
 
 	# Anchor characters to the speech markers.
 	if layout and layout.has_method("register_character"):
@@ -549,6 +599,8 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 
 
 func _on_dialogue_ended() -> void:
+	LogManager.debug("CustomerSpawner", "Dialogue Ended signal received. Current Phase: %s" % DialoguePhase.keys()[_dialogue_phase])
+
 	if SaveManager.is_quitting:
 		LogManager.debug("CustomerSpawner", "Dialogue ended due to quitting. Suppressing dismissal.")
 		_dialogue_phase = DialoguePhase.NONE
@@ -662,6 +714,8 @@ func _on_dialogue_ended() -> void:
 					return
 			if phase == DialoguePhase.GREETING and is_instance_valid(current_customer):
 				current_customer.has_been_greeted = true
+				if current_customer.transaction_context:
+					EventBus.customer_order_updated.emit(InventoryManager.current_character_name, current_customer.transaction_context.desired_items, current_customer.transaction_context.is_riddle)
 			pass
 
 
@@ -775,10 +829,6 @@ func reset_state() -> void:
 	LogManager.info("CustomerSpawner", "State reset for New Game.")
 
 	# If no customer to restore, handle guest restoration (optional, usually guest is with primary)
-	if data.has("guest_customer"):
-		# We'll let guests be handled by the primary re-spawn logic for now 
-		# since guests are tied to the TransactionContext of the primary.
-		pass
 
 
 func _on_character_speaking(data: CustomerData) -> void:

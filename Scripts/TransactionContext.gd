@@ -142,4 +142,7 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.is_visit_story = data.get("is_visit_story", false)
 	ctx.story_advanced = data.get("story_advanced", false)
 	
+	if not ctx.desired_items.is_empty() or not ctx.delivered_items.is_empty():
+		print("[TransactionContext] Restored: %d desired, %d delivered items." % [ctx.desired_items.size(), ctx.delivered_items.size()])
+	
 	return ctx

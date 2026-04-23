@@ -28,6 +28,12 @@ signal transaction_started(item: ItemData)
 @warning_ignore("unused_signal")
 signal transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool, customer_path: String)
 
+# --- Orders and HUD ---
+@warning_ignore("unused_signal")
+signal customer_order_updated(customer_name: String, items: Array[ItemData], is_riddle: bool)
+@warning_ignore("unused_signal")
+signal customer_order_cleared()
+
 # --- Progression ---
 @warning_ignore("unused_signal")
 signal world_save_requested()

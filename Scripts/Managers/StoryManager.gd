@@ -51,9 +51,11 @@ var _first_customer_of_day: bool = true
 
 var _char_lookup: Dictionary = {}   # resource_path -> CustomerData
 
-## DEBUG: Set to true to cycle Sarimanok through STORY -> PURCHASE -> VISIT each spawn.
 var DEBUG_SARIMANOK_ONLY: bool = false
 var _debug_sarimanok_cycle: int = 0  # 0=STORY, 1=PURCHASE, 2=VISIT
+
+# Cached node references — populated after scene is ready to avoid null captures during _ready
+var _game_manager: GameManager = null
 
 
 # --- Tier Progression ---
@@ -64,12 +66,23 @@ var _last_notified_tier: int = 0
 var purchase_counter: int = 0:
 	set(value):
 		purchase_counter = value
-		if purchase_counter >= 5:
+		var required = get_required_purchases_for_next_tier()
+		if purchase_counter >= required:
 			if max_unlocked_tier < 10:
 				max_unlocked_tier += 1
 				_pending_tier_advance_source = "Activity"
 				_last_tier_unlocked_notification = max_unlocked_tier
 			purchase_counter = 0
+
+func get_required_purchases_for_next_tier() -> int:
+	# Formula: 5 + floor(current_tier / 2) with a steeper curve for the end game
+	var base = 5 + floori(current_tier / 2.0)
+	
+	# Late game ramp-up (T7+) to hit the user's target of 15 at T10
+	if current_tier >= 7:
+		base += (current_tier - 6) * 2
+		
+	return clampi(base, 5, 15)
 
 var pending_upgrade_tier: int = 0
 
@@ -192,7 +205,12 @@ func _ready() -> void:
 			_char_lookup[c.resource_path] = c
 	
 	randomize()
+	call_deferred("_cache_node_refs")
 	LogManager.info("StoryManager", "StoryManager._ready() END")
+
+func _cache_node_refs() -> void:
+	_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
+	LogManager.debug("StoryManager", "Cached GameManager: %s" % str(is_instance_valid(_game_manager)))
 	
 func _on_tod_time_changed(t: float) -> void:
 	_current_display_time = t
@@ -353,9 +371,9 @@ func _save_progression() -> void:
 	SaveManager.force_save()
 
 # ── Persistence ──────────────────────────────────────────────────────────
-
+## Persistence ID
 func get_save_id() -> String:
-	return "progression"
+	return "StoryManager"
 
 func get_save_data() -> Dictionary:
 	# Robustness: Explicitly sync time from the sky system before returning save data
@@ -377,6 +395,7 @@ func get_save_data() -> Dictionary:
 		"customer_debts": customer_debts.duplicate(),
 		"global_story_cooldown": global_story_cooldown,
 		"last_story_advancer_path": last_story_advancer_path,
+		"_last_character_path": _last_character_path,
 		"todays_focus_character_path": todays_focus_character_path,
 		"pending_upgrade_tier": pending_upgrade_tier,
 		"pending_upgrade_cost": pending_upgrade_cost,
@@ -393,12 +412,27 @@ func get_save_data() -> Dictionary:
 	}
 
 func load_save_data(data: Dictionary) -> void:
-	day = data.get("day", 1)
-	current_tier = data.get("current_tier", 1)
-	max_unlocked_tier = data.get("max_unlocked_tier", 1)
-	purchase_counter = data.get("purchase_counter", 0)
-	character_story_states = data.get("character_story_states", {})
-	customer_story_branches = data.get("customer_story_branches", {})
+	# Migration logic: Support both "progression" (old) and "StoryManager" (new)
+	# This is now handled at the SaveManager level, but we keep load robust here.
+	day = data.get("day", day)
+	current_tier = data.get("current_tier", current_tier)
+	max_unlocked_tier = data.get("max_unlocked_tier", max_unlocked_tier)
+	purchase_counter = data.get("purchase_counter", purchase_counter)
+	
+	var new_states = data.get("character_story_states", {})
+	if not new_states.is_empty():
+		character_story_states = new_states
+		
+	var new_branches = data.get("customer_story_branches", {})
+	if not new_branches.is_empty():
+		customer_story_branches = new_branches
+	
+	LogManager.info("StoryManager", "State loaded. Day: %d, Tier: %d, Progressed Characters: %d" % [day, current_tier, character_story_states.size()])
+	
+	# Mirror to Dialogic
+	_set_dvar("Global.QuotaDay", day)
+	_set_dvar("Global.CurrentTier", current_tier)
+	_set_dvar("Global.MaxUnlockedTier", max_unlocked_tier)
 	
 	encountered_characters = data.get("encountered_characters", {})
 	
@@ -411,7 +445,16 @@ func load_save_data(data: Dictionary) -> void:
 	customer_debts = data.get("customer_debts", {})
 	global_story_cooldown = data.get("global_story_cooldown", 0)
 	last_story_advancer_path = data.get("last_story_advancer_path", "")
+	_last_character_path = data.get("_last_character_path", "")
 	todays_focus_character_path = data.get("todays_focus_character_path", "")
+
+	# RE-SYNC Story Variables
+	var chapter_id = "Transaction_Chapter"
+	if Transaction_Chapter >= 0:
+		_set_dvar(chapter_id, Transaction_Chapter)
+	
+	_set_dvar("Global_QuotaDay", float(day))
+	_set_dvar("Global_CurrentTier", float(current_tier))
 	pending_upgrade_tier = data.get("pending_upgrade_tier", 0)
 	pending_upgrade_cost = data.get("pending_upgrade_cost", 0.0)
 	has_mayari_visited = data.get("has_mayari_visited", false)
@@ -581,7 +624,7 @@ func get_next_transaction() -> TransactionContext:
 			if char_data and char_data.resource_path == todays_focus_character_path:
 				LogManager.info("StoryManager", "Forcing story for FOCUS character: %s" % char_data.get_clean_id())
 			else:
-				LogManager.info("StoryManager", "Cooldown 0: Forcing story for: %s" % (char_data.get_clean_id() if char_data else "null"))
+				LogManager.info("StoryManager", "Cooldown 0: Forcing chapter %d for: %s" % [character_story_states.get(char_data.resource_path if char_data else "", 0), char_data.get_clean_id() if char_data else "null"])
 			
 			force_story = true
 		else:
@@ -607,6 +650,7 @@ func get_next_transaction() -> TransactionContext:
 		if possible_chars.is_empty(): possible_chars = unlocked # Fallback
 		
 		char_data = _pick_character_weighted(possible_chars)
+		LogManager.debug("StoryManager", "Generic Pick: [Cooldown: %d] Selected %s" % [global_story_cooldown, char_data.get_clean_id() if char_data else "null"])
 
 	_last_character_path = char_data.resource_path
 
@@ -977,24 +1021,35 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 	var path = data.resource_path
 	var chapter = character_story_states.get(path, 0)
 	
-	# If this is their first visit (chapter 0) OR the system forced a story chapter
-	# NEW: Always force story if a chapter is pending (unless it's Reyna Mayari during the day)
-	# This prevents characters from getting "stuck" in generic visit loops.
 	var story_pending = chapter < data.max_story_chapters and data.story_timeline != null
 	var is_mayari = data.get_clean_id() == "reynamayari"
+	var story_available = story_pending and _is_story_chapter_available(data, chapter)
 	
-	if (chapter == 0 or force_story or story_pending) and story_pending and not is_mayari:
+	if (chapter == 0 or force_story) and story_available and not is_mayari:
+		# Priority Story Branch (First encounters or Forced via Priority 1 logic)
 		t.transaction_type = TransactionContext.Type.STORY
 		t.timeline = data.story_timeline
-	else:
-		# Generic flow selection: use the exported visit_chance (default 20%)
-		# Force a purchase if it is the first regular customer of the day.
-		# NOTE: Reyna Mayari falls here during the day even if she has pending story.
-		var is_purchase = true
-		if _first_customer_of_day:
-			print("[StoryManager] First regular customer of the day. Forcing PURCHASE.")
+	elif story_available and global_story_cooldown <= 0 and not is_mayari:
+		# Random Chance Branch - Only if pacing allows CD check
+		# We add a random weight to prevent every visitor from being story even at CD 0
+		if randf() < 0.25: # 25% chance to "naturally" trigger story at CD 0
+			t.transaction_type = TransactionContext.Type.STORY
+			t.timeline = data.story_timeline
 		else:
-			is_purchase = randf() < (1.0 - visit_chance)
+			# Cooldown met but skipped by weight - allow generic instead
+			_build_generic_transaction(t, data, chapter)
+	else:
+		_build_generic_transaction(t, data, chapter)
+# -----------------------------------------------------------------
+func _build_generic_transaction(t: TransactionContext, data: CustomerData, chapter: int) -> void:
+	# Generic flow selection: use the exported visit_chance (default 20%)
+	# Force a purchase if it is the first regular customer of the day.
+	# NOTE: Reyna Mayari falls here during the day even if she has pending story.
+	var is_purchase = true
+	if _first_customer_of_day:
+		print("[StoryManager] First regular customer of the day. Forcing PURCHASE.")
+	else:
+		is_purchase = randf() < (1.0 - visit_chance)
 
 		# Danilo Overdrive: Should only have VISIT timelines if story isn't finished.
 		# FIX: Danilo's Chapter 8 (index 8) is a PURCHASE finale, allow it to remain PURCHASE.
@@ -1257,11 +1312,25 @@ func _build_transaction_context(t: TransactionContext, data: CustomerData, force
 
 ## Returns the number of items a customer should request.
 ## Distribution: 1 item (40%), 2 items (30%), 3 items (30%)
-func _get_item_count_for_tier(_tier: int) -> int:
+func _get_item_count_for_tier(t_val: int) -> int:
 	var roll = randf() * 100.0
-	if roll < 40: return 1
-	elif roll < 70: return 2
-	else: return 3
+	
+	# Early game (T1-T2): 40/30/30 distribution
+	# Mid game (T3-T6): 30/40/30 distribution
+	# Late game (T7-T10): 10/40/50 distribution
+	
+	if t_val <= 2:
+		if roll < 40: return 1
+		elif roll < 70: return 2
+		else: return 3
+	elif t_val <= 6:
+		if roll < 30: return 1
+		elif roll < 70: return 2
+		else: return 3
+	else:
+		if roll < 10: return 1
+		elif roll < 50: return 2
+		else: return 3
 
 ## Returns a random item that is unlocked for the current day.
 ## Prioritizes items that are currently in stock. 
@@ -1405,7 +1474,7 @@ func _process_story_cooldown(customer) -> void:
 		
 		var chapter = character_story_states.get(path, 0)
 		character_story_states[path] = chapter + 1
-		print("[StoryManager] Advanced story for ", path.get_file(), " to chapter ", chapter + 1)
+		LogManager.info("StoryManager", "STORY ADVANCE: %s | %d -> %d" % [path.get_file(), chapter, chapter + 1])
 		
 		# Track daily story count
 		var current_count = todays_story_counts.get(path, 0)
@@ -1454,8 +1523,9 @@ func _is_story_chapter_available(customer: CustomerData, chapter: int) -> bool:
 
 func _get_unlocked_characters() -> Array[CustomerData]:
 	var unlocked: Array[CustomerData] = []
-	var gm = get_tree().get_first_node_in_group("game_manager")
-	var current_quota_day = gm.quota_day if gm else 1
+	if not is_instance_valid(_game_manager):
+		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
+	var current_quota_day = _game_manager.quota_day if _game_manager else 1
 	
 	for c in available_characters:
 		if not c:
@@ -1563,14 +1633,18 @@ func _pick_weighted_item(pool: Array[ItemData], max_tiers_by_cat: Dictionary) ->
 		
 		# Priority 1: Next-Tier uncommon items
 		if item.tier > current_tier:
-			weight = 0.4
+			# Increased weight for "teasing" next tier items
+			weight = 0.5
 		else:
 			# Priority 2: Gradual category-based decay
 			var max_tier_in_cat = max_tiers_by_cat.get(item.category, item.tier)
 			var gap = max_tier_in_cat - item.tier
 			
 			if gap <= 0:
-				weight = 1.0 # Best currently unlocked in this category
+				# Best currently unlocked in this category
+				# Steering: Add a bonus if this item's tier is high relative to player level
+				# to favor selling more profitable, higher-tier items the player has stocked.
+				weight = 1.0 + (float(item.tier) * 0.1)
 			else:
 				# Gradual linear decay: 1.0 -> 0.75 -> 0.50 -> 0.25 -> 0.20 floor
 				weight = max(0.2, 1.0 - (float(gap) * 0.25))
@@ -1850,15 +1924,19 @@ func is_label_in_timeline(path, label_name: String) -> bool:
 		return false
 	
 	var content = file.get_as_text()
+	# Strip UTF-8 BOM if present so the caret anchor (^) in regex works correctly
+	content = content.replace("\uFEFF", "")
 	
 	# Robust label matching:
 	var regex = RegEx.new()
 	regex.compile("^\\s*label\\s+" + label_name + "(\\s+|#|$)")
 	
 	for line in content.split("\n"):
-		if regex.search(line):
+		# Use strip_edges to handle \r and other whitespace robustly
+		if regex.search(line.strip_edges()):
 			_label_cache[cache_key] = true
 			return true
 			
 	_label_cache[cache_key] = false
 	return false
+

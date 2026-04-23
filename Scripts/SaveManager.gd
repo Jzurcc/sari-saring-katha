@@ -124,9 +124,15 @@ func force_save() -> void:
 	
 	for node in persist_nodes:
 		if node.has_method("get_save_data"):
-			var sid: String
+			var sid: String = ""
+			
+			# Priority 1: get_save_id() method
 			if node.has_method("get_save_id"):
 				sid = node.call("get_save_id")
+			# Priority 2: save_id property (used by older managers)
+			elif "save_id" in node:
+				sid = node.get("save_id")
+			# Priority 3: node name
 			else:
 				sid = node.name
 			
@@ -138,6 +144,7 @@ func force_save() -> void:
 			new_keys.append(sid)
 		else:
 			LogManager.debug("SaveManager", "Skipped (no get_save_data): %s" % node.name)
+
 
 	# 4. Write back the combined dictionary
 	var success := _write_to_disk(master_save)
@@ -188,17 +195,30 @@ func request_load() -> void:
 	
 	for node in persist_nodes:
 		if node.has_method("load_save_data"):
-			var sid: String
+			var sid: String = ""
+			# Priority 1: get_save_id() method
 			if node.has_method("get_save_id"):
 				sid = node.call("get_save_id")
+			# Priority 2: save_id property
+			elif "save_id" in node:
+				sid = node.get("save_id")
+			# Priority 3: node name
 			else:
 				sid = node.name
 			
 			if master_save.has(sid):
 				LogManager.debug("SaveManager", "Distributing to: %s" % sid)
 				node.load_save_data(master_save[sid])
+			# MIGRATION: Support for 'progression' key used in older versions of StoryManager
+			elif (sid == "StoryManager" or node.name == "StoryManager") and master_save.has("progression"):
+				LogManager.info("SaveManager", "Migration: Found 'progression' data for StoryManager. Recovering...")
+				node.load_save_data(master_save["progression"])
+			elif sid == "progression" and master_save.has("StoryManager"):
+				LogManager.info("SaveManager", "Migration: Found 'StoryManager' data for progression. Recovering...")
+				node.load_save_data(master_save["StoryManager"])
 			else:
 				LogManager.debug("SaveManager", "No data found for: %s" % sid)
+
 
 	LogManager.info("SaveManager", "Game loaded successfully. Keys: %s" % str(master_save.keys()))
 

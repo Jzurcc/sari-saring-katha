@@ -58,20 +58,18 @@ func _ready() -> void:
 	call_deferred("_finish_initialization")
 
 func _finish_initialization() -> void:
-	
 	if SaveManager.has_save():
-		LogManager.info("GameManager", "Loading save...")
+		LogManager.info("GameManager", "Found save. Requesting distribution...")
 		SaveManager.request_load()
-		LogManager.info("GameManager", "Save loaded.")
+		LogManager.info("GameManager", "Save distribution complete. Story Day: %d, Story Tier: %d" % [StoryManager.day, StoryManager.current_tier])
 	else:
-		LogManager.info("GameManager", "No save. Resetting clock...")
+		LogManager.info("GameManager", "No save file found. Initializing fresh session (Morning, Day 1).")
 		_reset_clock_to_morning()
-		LogManager.info("GameManager", "Clock reset done. Emitting money_changed...")
 		EventBus.money_changed.emit(money)
 
-	LogManager.info("GameManager", "Started Day %d" % day)
+	LogManager.info("GameManager", "Starting Gameplay Level at Day %d" % day)
 	EventBus.day_started.emit(day)
-	LogManager.info("GameManager", "day_started emitted.")
+
 	
 	# Safety capture: ensure mouse is captured for gameplay.
 	# Give a generous delay for Dialogic/tutorial to initialize.

@@ -185,6 +185,7 @@ variables={
 "Transaction_ItemWants": "",
 "Transaction_ItemWantsBest": "",
 "Transaction_ItemWantsID": "",
+"Transaction_MarioRestCount": 0.0,
 "Transaction_RemainingCount": 0.0,
 "Transaction_RepaymentAmount": 0.0,
 "Transaction_SatisfyVar": 1.0,
@@ -204,7 +205,7 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/UniParticles3D/plugin.cfg", "res://addons/copy_all_errors/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
+enabled=PackedStringArray("res://addons/UniParticles3D/plugin.cfg", "res://addons/copy_all_errors/plugin.cfg", "res://addons/dialogic/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/sky_3d/plugin.cfg")
 
 [input]
 
