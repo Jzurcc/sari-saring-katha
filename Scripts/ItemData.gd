@@ -62,9 +62,9 @@ func get_visual_aspect() -> float:
 	return 1.0
 
 func get_final_price() -> float:
-	# Migration/Default: if selling_price hasn't been set, initialize it with a 15% margin
+	# Migration/Default: if selling_price hasn't been set, initialize it with a 10% margin
 	if selling_price <= 0.0:
-		var margin = 0.15
+		var margin = 0.10
 		selling_price = price + round(price * margin)
 		
 	# Floor constraint: selling price can never be below base price
