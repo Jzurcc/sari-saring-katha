@@ -60,6 +60,17 @@ func _ready() -> void:
 # ── CALL LOGIC ───────────────────────────────────────────────────────
 
 func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
+	# Block if already in a call or restocking is active
+	if is_restocking_active:
+		# Defensive: If restocking is active but the Nokia UI is gone, something leaked.
+		# But only reset if Mario isn't physically on his way (delivery phase).
+		if not is_mario_physically_present and get_tree().get_nodes_in_group("nokia_ui_active").is_empty():
+			LogManager.debug("MarioManager", "Orphaned restocking state detected. Resetting.")
+			is_restocking_active = false
+		else:
+			LogManager.debug("MarioManager", "Already calling — ignoring.")
+			return
+			
 	if _is_calling:
 		LogManager.debug("MarioManager", "Already calling — ignoring.")
 		return
