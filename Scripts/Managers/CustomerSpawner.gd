@@ -343,6 +343,16 @@ func _on_customer_clicked(customer: Customer) -> void:
 	var timeline = customer.transaction_context.timeline
 	var label: String = ""
 
+	# FALLBACK: Danilo should only ever have SOCIAL_VISIT unless it's his finale.
+	# We check this on greeting as a final safety measure.
+	if customer.customer_data.get_clean_id() == "danilo":
+		var path = customer.customer_data.resource_path
+		var chapter = StoryManager.character_story_states.get(path, 0)
+		if chapter < customer.customer_data.max_story_chapters - 1:
+			if customer.transaction_context.transaction_type == TransactionContext.Type.PURCHASE:
+				LogManager.info("CustomerSpawner", "Danilo purchase override to VISIT (Fallback).")
+				customer.transaction_context.transaction_type = TransactionContext.Type.VISIT
+
 	if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT:
 		_dialogue_phase = DialoguePhase.SOCIAL_VISIT
 		var timeline_path = timeline.resource_path if timeline is Resource else timeline
