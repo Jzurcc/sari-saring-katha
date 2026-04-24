@@ -556,7 +556,8 @@ func start_dialogue(timeline, customer: Customer, phase: DialoguePhase = Dialogu
 				final_label = "" # Final fallback: start from beginning
 				LogManager.info("CustomerSpawner", "Falling back to start of timeline.")
 
-	LogManager.info("Dialogue", "Starting: %s (Phase: %s, Label: %s)" % [_current_timeline_path, DialoguePhase.keys()[phase], final_label])
+	var path_debug = timeline.resource_path if timeline is Resource else timeline
+	LogManager.info("Dialogue", "Starting: %s (Phase: %s, Label: %s)" % [path_debug, DialoguePhase.keys()[phase], final_label])
 
 	# If a different timeline is running, end it first to prioritize this one.
 	# We REMOVED the early return for Dialogic.current_timeline != null to allow 

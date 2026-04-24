@@ -139,10 +139,13 @@ func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
 		return [load("res://Dialogue/Timelines/Generic/Visit.dtl")] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
 	for tl in arc.visit_timelines:
-		if tl is DialogicTimeline:
+		if tl != null:
 			result.append(tl)
+		else:
+			LogManager.warn("CustomerData", "Null visit timeline found in arc for %s" % character_name)
 			
 	if result.is_empty():
+		LogManager.info("CustomerData", "No visit timelines for %s chapter %d, falling back to generic." % [character_name, chapter])
 		result.append(load("res://Dialogue/Timelines/Generic/Visit.dtl"))
 		
 	return result
