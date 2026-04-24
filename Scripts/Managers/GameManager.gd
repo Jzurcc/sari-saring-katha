@@ -365,8 +365,8 @@ func _on_tutorial_task_completed(arg1=null, _b=null, _c=null, _d=null) -> void:
 	is_blocking_pickup = false # Clear blocking state when a task is done
 	EventBus.helper_prompt_requested.emit("", false)
 	
-	# Small delay before resuming for juice
-	await get_tree().create_timer(0.5).timeout
+	# Small delay before resuming for juice (increased to let animations settle)
+	await get_tree().create_timer(0.7).timeout
 	
 	var layout = Dialogic.Styles.get_layout_node()
 	if layout: layout.show()
