@@ -3,6 +3,9 @@ extends CanvasLayer
 @onready var panel_container: PanelContainer = %PanelContainer
 @onready var item_container: HBoxContainer = %ItemContainer
 
+var _last_customer_name: String = ""
+var _last_items: Array[ItemData] = []
+var _last_is_riddle: bool = false
 var is_visible_hud: bool = false
 
 func _ready() -> void:
@@ -10,33 +13,89 @@ func _ready() -> void:
 	
 	EventBus.customer_order_updated.connect(_on_order_updated)
 	EventBus.customer_order_cleared.connect(_on_order_cleared)
+	EventBus.tier_advanced.connect(_on_tier_advanced)
 
-func _on_order_updated(_customer_name: String, items: Array[ItemData], is_riddle: bool) -> void:
+func _on_tier_advanced(_new_tier: int, _source: String) -> void:
+	if is_visible_hud and not _last_items.is_empty():
+		_on_order_updated(_last_customer_name, _last_items, _last_is_riddle)
+
+func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle: bool) -> void:
+	_last_customer_name = customer_name
+	_last_items = items
+	_last_is_riddle = is_riddle
+	
 	_show_hud()
 	
-	# 1. Identify which icons to remove (those not in the new list)
-	var children = item_container.get_children()
-	for child in children:
-		if child.get_meta("is_popping", false):
-			continue
-			
+	# 1. Identify which icons to remove and which to keep
+	# We use a checklist strategy to handle duplicate items (e.g., two of the same item)
+	var checklist = items.duplicate()
+	var active_children = []
+	
+	for child in item_container.get_children():
+		if not child.get_meta("is_popping", false):
+			active_children.append(child)
+	
+	# Match right-to-left to prioritize keeping the rightmost icons
+	# This causes the leftmost icon of a duplicate set to be the one that pops
+	for i in range(active_children.size() - 1, -1, -1):
+		var child = active_children[i]
 		var bound_item = child.get_meta("item_data", null)
-		if not items.has(bound_item):
+		
+		var match_idx = checklist.find(bound_item)
+		if match_idx != -1:
+			# This icon is accounted for in the new list, keep it
+			_update_icon_visuals(child, bound_item, is_riddle)
+			checklist.remove_at(match_idx)
+		else:
+			# This icon is no longer in the order, remove it
 			_pop_and_remove_item(child)
 	
-	# 2. Identify which items to add (those not already in the container)
-	for item in items:
-		var already_exists = false
-		for child in item_container.get_children():
-			if child.get_meta("item_data", null) == item and not child.get_meta("is_popping", false):
-				already_exists = true
-				break
-		
-		if not already_exists:
-			_add_item_icon(item, is_riddle)
+	# 2. Add any remaining items in the checklist (truly new items)
+	var is_refresh = not checklist.is_empty() and items.size() == _last_items.size()
+	for item in checklist:
+		_add_item_icon(item, is_riddle)
 
 	if items.is_empty():
 		_hide_hud()
+
+func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bool) -> void:
+	var icon = rect_container.get_child(0) as TextureRect
+	if not icon: return
+	
+	# Riddle specific silhouette
+	if is_riddle:
+		if icon.texture != preload("res://icon.svg"):
+			icon.texture = preload("res://icon.svg")
+		icon.modulate = Color(0, 0, 0, 1)
+		
+		# Ensure label exists
+		var has_label = false
+		for c in rect_container.get_children():
+			if c is Label:
+				has_label = true
+				break
+		
+		if not has_label:
+			var label = Label.new()
+			label.text = "?"
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			label.size = Vector2(120, 120)
+			label.add_theme_color_override("font_color", Color.WHITE)
+			label.add_theme_font_size_override("font_size", 64)
+			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			rect_container.add_child(label)
+	else:
+		icon.texture = item.texture
+		if item.tier > StoryManager.current_tier:
+			icon.modulate = Color(0.2, 0.2, 0.2, 1)
+		else:
+			icon.modulate = Color.WHITE
+		
+		# Remove riddle label if it exists
+		for c in rect_container.get_children():
+			if c is Label:
+				c.queue_free()
 
 func _add_item_icon(item: ItemData, is_riddle: bool) -> void:
 	var rect_container = Control.new()
@@ -49,28 +108,9 @@ func _add_item_icon(item: ItemData, is_riddle: bool) -> void:
 	icon.size = Vector2(120, 120)
 	icon.pivot_offset = Vector2(60, 60)
 	icon.position = Vector2.ZERO
-	icon.texture = item.texture
 	
 	rect_container.add_child(icon)
-	
-	# Riddle specific silhouette
-	if is_riddle:
-		icon.texture = preload("res://icon.svg")
-		icon.modulate = Color(0, 0, 0, 1)
-		
-		var label = Label.new()
-		label.text = "?"
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.size = Vector2(120, 120)
-		label.add_theme_color_override("font_color", Color.WHITE)
-		label.add_theme_font_size_override("font_size", 64)
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		rect_container.add_child(label)
-	elif item.tier > StoryManager.current_tier:
-		icon.modulate = Color(0.2, 0.2, 0.2, 1)
-	else:
-		icon.modulate = Color.WHITE
+	_update_icon_visuals(rect_container, item, is_riddle)
 	
 	item_container.add_child(rect_container)
 	
