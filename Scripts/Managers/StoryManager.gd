@@ -283,7 +283,7 @@ func advance_tier(source: String = "Manual") -> void:
 	EventBus.tier_advanced.emit(current_tier, source)
 
 func get_upgrade_cost(target_tier: int) -> float:
-	return 60.0 + float(target_tier - 2) * 20.0
+	return 80.0 + float(target_tier - 2) * 20.0
 
 ## Returns a virtual ItemData representating a store upgrade for a specific tier.
 func get_tier_upgrade_item(target_tier: int) -> ItemData:
@@ -1025,32 +1025,32 @@ func _build_generic_transaction(t: TransactionContext, data: CustomerData, chapt
 	# NOTE: Reyna Mayari falls here during the day even if she has pending story.
 	var is_purchase = randf() < (1.0 - visit_chance)
 
-		# Danilo Overdrive: Should only have VISIT timelines if story isn't finished.
-		# FIX: Danilo's Chapter 8 (index 8) is a PURCHASE finale, allow it to remain PURCHASE.
-		if is_purchase and data.get_clean_id() == "danilo" and chapter < data.max_story_chapters - 1:
-			print("[StoryManager] Danilo story incomplete (%d/%d). Overriding PURCHASE to VISIT." % [chapter, data.max_story_chapters])
-			is_purchase = false
-			
+	# Danilo Overdrive: Should only have VISIT timelines if story isn't finished.
+	# FIX: Danilo's Chapter 8 (index 8) is a PURCHASE finale, allow it to remain PURCHASE.
+	if is_purchase and data.get_clean_id() == "danilo" and chapter < data.max_story_chapters - 1:
+		print("[StoryManager] Danilo story incomplete (%d/%d). Overriding PURCHASE to VISIT." % [chapter, data.max_story_chapters])
+		is_purchase = false
+		
 
-		var purchase_pool = data.get_purchase_timelines(chapter)
-		var visit_pool = data.get_visit_timelines(chapter)
-		
-		if is_purchase and not purchase_pool.is_empty():
-			t.transaction_type = TransactionContext.Type.PURCHASE
-			t.timeline = purchase_pool.pick_random()
-		elif not visit_pool.is_empty():
-			t.transaction_type = TransactionContext.Type.VISIT
-			t.timeline = visit_pool.pick_random()
-		elif is_purchase:
-			t.transaction_type = TransactionContext.Type.PURCHASE
-			t.timeline = "res://Dialogue/Timelines/Generic/Purchase.dtl"
-		else:
-			t.transaction_type = TransactionContext.Type.VISIT
-			t.timeline = "res://Dialogue/Timelines/Generic/Visit.dtl"
-		
-		# Log the selection
-		var type_str = "VISIT" if t.transaction_type == TransactionContext.Type.VISIT else "PURCHASE"
-		print("[StoryManager] Selection for %s: %s (Timeline: %s)" % [data.character_name, type_str, t.timeline])
+	var purchase_pool = data.get_purchase_timelines(chapter)
+	var visit_pool = data.get_visit_timelines(chapter)
+	
+	if is_purchase and not purchase_pool.is_empty():
+		t.transaction_type = TransactionContext.Type.PURCHASE
+		t.timeline = purchase_pool.pick_random()
+	elif not visit_pool.is_empty():
+		t.transaction_type = TransactionContext.Type.VISIT
+		t.timeline = visit_pool.pick_random()
+	elif is_purchase:
+		t.transaction_type = TransactionContext.Type.PURCHASE
+		t.timeline = "res://Dialogue/Timelines/Generic/Purchase.dtl"
+	else:
+		t.transaction_type = TransactionContext.Type.VISIT
+		t.timeline = "res://Dialogue/Timelines/Generic/Visit.dtl"
+	
+	# Log the selection
+	var type_str = "VISIT" if t.transaction_type == TransactionContext.Type.VISIT else "PURCHASE"
+	print("[StoryManager] Selection for %s: %s (Timeline: %s)" % [data.character_name, type_str, t.timeline])
 
 	var id = data.get_clean_id()
 	# 2.5 Identify "Visit-only" Story Chapters
@@ -1906,14 +1906,18 @@ func is_label_in_timeline(path, label_name: String) -> bool:
 	content = content.replace("\uFEFF", "")
 	
 	# Robust label matching:
+	# Clear cache if stale or requested
+	if _label_cache.size() > 500:
+		_label_cache.clear()
+
 	var regex = RegEx.new()
-	regex.compile("^\\s*label\\s+" + label_name + "(\\s+|#|$)")
+	# (?m) enables multiline mode so ^ matches start of ANY line.
+	# We look for "label", at least one space, then the target label name.
+	regex.compile("(?m)^\\s*label\\s+" + label_name + "(\\s+|#|$)")
 	
-	for line in content.split("\n"):
-		# Use strip_edges to handle \r and other whitespace robustly
-		if regex.search(line.strip_edges()):
-			_label_cache[cache_key] = true
-			return true
+	if regex.search(content):
+		_label_cache[cache_key] = true
+		return true
 			
 	_label_cache[cache_key] = false
 	return false
