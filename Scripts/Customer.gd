@@ -29,6 +29,8 @@ var _last_pos: Vector3 = Vector3.ZERO
 
 @onready var body_sprite: Sprite3D = $Body
 var _outline_material: ShaderMaterial = null
+var _visual_tween: Tween = null
+
 
 func _ready() -> void:
 	# Place customers on layer 5 (value 16) so PlayerInteraction can detect
@@ -174,16 +176,17 @@ func arrived_at_counter() -> void:
 	
 	# Landing Thud (Squash and Stretch)
 	if body_sprite:
-		var landing_tween = create_tween()
+		if _visual_tween: _visual_tween.kill()
+		_visual_tween = create_tween()
 		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
 		# Squash down
-		landing_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.15, base_scale.y * 0.85, base_scale.z), 0.1) \
+		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.15, base_scale.y * 0.85, base_scale.z), 0.1) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		# Snap back with overshoot
-		landing_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.95, base_scale.y * 1.05, base_scale.z), 0.1) \
+		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.95, base_scale.y * 1.05, base_scale.z), 0.1) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		# Settle
-		landing_tween.tween_property(body_sprite, "scale", base_scale, 0.1) \
+		_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.1) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 			
 			
@@ -251,16 +254,17 @@ func _on_item_accepted(item: ItemData) -> void:
 	
 	# Excited Pop (Exaggerated Squash and Stretch)
 	if body_sprite:
-		var pop_tween = create_tween()
+		if _visual_tween: _visual_tween.kill()
+		_visual_tween = create_tween()
 		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
 		# Squash down
-		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.25, base_scale.y * 0.75, base_scale.z), 0.1) \
+		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.2, base_scale.y * 0.8, base_scale.z), 0.1) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		# Snap up (Stretch)
-		pop_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.8, base_scale.y * 1.3, base_scale.z), 0.12) \
+		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.85, base_scale.y * 1.2, base_scale.z), 0.12) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		# Settle
-		pop_tween.tween_property(body_sprite, "scale", base_scale, 0.3) \
+		_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.3) \
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	
 	# If this was a riddle and we just solved the riddle item, clear the riddle flag
@@ -322,19 +326,47 @@ func reject() -> void:
 	_is_resolving = true
 	EventBus.request_sfx.emit("error")
 	
-	if _outline_material and body_sprite:
-		body_sprite.material_overlay = _outline_material
-		_outline_material.set_shader_parameter("outline_color", Color.RED)
+	# VISUAL: Disappointed Squash and Stretch + Shiver
+	if body_sprite:
+		if _visual_tween: _visual_tween.kill()
+		_visual_tween = create_tween()
+		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
 		
+		# Pulse red
+		if _outline_material:
+			body_sprite.material_overlay = _outline_material
+			_outline_material.set_shader_parameter("outline_color", Color.RED)
+		
+		# Squash down and vibrate (Shiver)
+		_visual_tween.set_parallel(true)
+		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.08, base_scale.y * 0.92, base_scale.z), 0.1) \
+			.set_trans(Tween.TRANS_SINE)
+		
+		# Quick horizontal shiver sequence
+		var shiver_tween = create_tween()
+		shiver_tween.tween_property(body_sprite, "position:x", 0.04, 0.05)
+		shiver_tween.tween_property(body_sprite, "position:x", -0.04, 0.05)
+		shiver_tween.tween_property(body_sprite, "position:x", 0.03, 0.05)
+		shiver_tween.tween_property(body_sprite, "position:x", -0.03, 0.05)
+		shiver_tween.tween_property(body_sprite, "position:x", 0.0, 0.05)
+		
+		_visual_tween.set_parallel(false)
+		
+		# Bounce back
+		_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.2) \
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			
 	await get_tree().create_timer(0.3).timeout
 	
 	if _outline_material:
 		_outline_material.set_shader_parameter("outline_color", Color.WHITE)
 		
-	# HIGH-5: If dismissed mid-flash, do not unlock them.
+	# Reset state
 	if is_waiting:
 		_is_resolving = false
 	_update_outline()
+	
+
 
 ## Called by CustomerSpawner after the player chooses "Refuse service".
 ## Plays a brief leaving animation then notifies the EventBus.
@@ -391,18 +423,18 @@ func _clear_outline() -> void:
 func play_speak_animation() -> void:
 	if not body_sprite: return
 	
+	if _visual_tween: _visual_tween.kill()
+	_visual_tween = create_tween()
 	var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
-	var speak_tween = create_tween()
 	
-	# Two quick, subtle vertical pulses (1.0s total)
 	# Two quick, subtle vertical pulses (0.6s total)
 	# Pulse 1
-	speak_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.05, base_scale.y * 0.95, base_scale.z), 0.15) \
+	_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.04, base_scale.y * 0.96, base_scale.z), 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	speak_tween.tween_property(body_sprite, "scale", base_scale, 0.15) \
+	_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	# Pulse 2
-	speak_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.05, base_scale.y * 0.95, base_scale.z), 0.15) \
+	_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.04, base_scale.y * 0.96, base_scale.z), 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	speak_tween.tween_property(body_sprite, "scale", base_scale, 0.15) \
+	_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
