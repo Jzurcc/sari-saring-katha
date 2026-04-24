@@ -19,6 +19,7 @@ var target_number: String = "62777444666"
 var screen_label: Label = null
 var _is_calling: bool = false
 var _is_on_side: bool = false
+var _side_pos: Vector2 = Vector2.ZERO
 
 const T9_MAP = {
 	"1": ".,!",
@@ -47,12 +48,20 @@ var button_audio_player: AudioStreamPlayer
 
 
 func _ready() -> void:
+	add_to_group("nokia_ui_active")
 	button_audio_player = AudioStreamPlayer.new()
 	add_child(button_audio_player)
 	
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
+	
+	# Store the side position for animation AFTER scan
+	var nokia = get_node_or_null("Nokia")
+	if nokia:
+		_side_pos = Vector2(80, nokia.position.y) 
+	
 	_animate_entrance()
+
 
 func _animate_entrance() -> void:
 	var nokia = get_node("Nokia")
@@ -218,31 +227,30 @@ func _trigger_store_menu() -> void:
 func _on_mario_call_finished(success: bool) -> void:
 	print("[NokiaUI] Mario call finished. Success: ", success)
 	_is_calling = false
-	current_input = ""
-	_reset_t9_state()
-	_update_screen()
-	# The Nokia now stays on the side to make room for the RestockMenu
 	
 	if success:
-		if not store_menu:
-			store_menu = find_child("RestockMenu", true, false)
-			
+		var store_menu = get_node_or_null("RestockMenu")
 		if store_menu:
-			print("[NokiaUI] Opening RestockMenu...")
 			store_menu.visible = true
 			if store_menu.has_method("open_menu"):
 				store_menu.open_menu()
-		else:
-			push_warning("[NokiaUI] No store_menu found to open!")
-			nokia_closed.emit()
+			
+			# NEW: Set focus to a button in the store menu to prevent keyboard/Space leak to the Nokia background 
+			var default_btn = store_menu.get_node_or_null("%AllBtn") 
+			if default_btn:
+				default_btn.grab_focus()
+				
+			_move_to_side()
 	else:
-		# If the call failed (Mario was busy or resting), we just close the Nokia UI
-		# so the player can continue serving customers.
-		var nokia_ui = get_node_or_null("Nokia")
-		if nokia_ui:
-			nokia_ui.visible = false
-		nokia_closed.emit()
-		_animate_exit_and_free()
+		# If call failed or was cancelled by Mario, wait a bit then close
+		pass
+
+func _on_mario_delivery_started() -> void:
+	# Mario hangs up once the delivery is confirmed/starting
+	_on_close_pressed()
+
+func _on_nokia_ui_closed() -> void:
+	nokia_closed.emit()
 
 func _update_screen() -> void:
 	if screen_label:
@@ -261,8 +269,25 @@ func _update_screen() -> void:
 		else:
 			screen_label.remove_theme_color_override("font_color")
 
+## Triggered by Nokia buttons
+func _on_number_pressed(digit: String) -> void:
+	if _is_calling: return
+	_play_button_sound("number")
+	current_input += digit
+	if current_input.length() > 10:
+		current_input = current_input.right(10)
+	if $Nokia/Label:
+		$Nokia/Label.text = current_input
+
 func _on_close_pressed() -> void:
 	if _is_calling: return
+	
+	# Defensive: Ensure the restock state is cleaned up if the phone is closed manually 
+	# while the ordering menu was meant to be active.
+	if MarioManager.is_restocking_active and not MarioManager.is_mario_physically_present:
+		LogManager.debug("NokiaUI", "Phone closed while ordering. Cancelling restock state.")
+		MarioManager.cancel_restock()
+		
 	_reset_t9_state()
 	nokia_closed.emit()
 	_animate_exit_and_free()

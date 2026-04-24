@@ -153,6 +153,13 @@ func open_menu() -> void:
 	print("[RestockMenu] open_menu() called")
 	_build_category_cache()
 	show()
+	
+	# NEW: Explicitly grab focus on a button to prevent keyboard input (like Space)
+	# from accidentally hitting background phone buttons.
+	var all_btn = get_node_or_null("%AllBtn")
+	if all_btn:
+		all_btn.grab_focus()
+		
 	_animate_entrance()
 	selected_items.clear()
 	total_price = 0
