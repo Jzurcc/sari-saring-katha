@@ -1023,11 +1023,7 @@ func _build_generic_transaction(t: TransactionContext, data: CustomerData, chapt
 	# Generic flow selection: use the exported visit_chance (default 20%)
 	# Force a purchase if it is the first regular customer of the day.
 	# NOTE: Reyna Mayari falls here during the day even if she has pending story.
-	var is_purchase = true
-	if _first_customer_of_day:
-		print("[StoryManager] First regular customer of the day. Forcing PURCHASE.")
-	else:
-		is_purchase = randf() < (1.0 - visit_chance)
+	var is_purchase = randf() < (1.0 - visit_chance)
 
 		# Danilo Overdrive: Should only have VISIT timelines if story isn't finished.
 		# FIX: Danilo's Chapter 8 (index 8) is a PURCHASE finale, allow it to remain PURCHASE.
@@ -1045,10 +1041,12 @@ func _build_generic_transaction(t: TransactionContext, data: CustomerData, chapt
 		elif not visit_pool.is_empty():
 			t.transaction_type = TransactionContext.Type.VISIT
 			t.timeline = visit_pool.pick_random()
-		else:
-			# Fallback to last resort
+		elif is_purchase:
 			t.transaction_type = TransactionContext.Type.PURCHASE
 			t.timeline = "res://Dialogue/Timelines/Generic/Purchase.dtl"
+		else:
+			t.transaction_type = TransactionContext.Type.VISIT
+			t.timeline = "res://Dialogue/Timelines/Generic/Visit.dtl"
 		
 		# Log the selection
 		var type_str = "VISIT" if t.transaction_type == TransactionContext.Type.VISIT else "PURCHASE"
