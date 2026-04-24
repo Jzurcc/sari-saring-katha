@@ -376,7 +376,7 @@ chubs_container = NodePath("../CandyContainer_Chubs")
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
 
 [node name="Sky3D" parent="." unique_id=532059736 instance=ExtResource("22_7p2u3")]
-current_time = 20.2
+current_time = 16.13
 wind_direction = 2.35619451204804
 
 [node name="FridgeDoorPivot" type="Node3D" parent="." unique_id=789456123]
