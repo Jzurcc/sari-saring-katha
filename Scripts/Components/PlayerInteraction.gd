@@ -66,8 +66,8 @@ func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(_game_manager):
 		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
 	var gm := _game_manager
-	var is_tutorial_task = gm and gm.is_tutorial_task_active
-	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
+	var _is_tutorial_task = gm and gm.tutorial.is_tutorial_task_active
+	var _is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
@@ -91,7 +91,7 @@ func _physics_process(_delta: float) -> void:
 	var hit_customer = get_world_3d().direct_space_state.intersect_ray(_q_customer)
 
 	# --- Raycast 3: tutorial gaze only (layer 1 | 2) ---
-	var hit_gaze = {}
+	var _hit_gaze = {}
 
 	# Resolve which target is "closer" to the camera.
 	var current_hovered: Node = null
@@ -174,7 +174,7 @@ func _input(event: InputEvent) -> void:
 	if not is_instance_valid(_game_manager):
 		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
 	var gm := _game_manager
-	var is_tutorial_task = gm and gm.is_tutorial_task_active
+	var is_tutorial_task = gm and gm.tutorial.is_tutorial_task_active
 	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 	
 	# Detect if Dialogic UI is actually visible

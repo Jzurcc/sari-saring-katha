@@ -5,10 +5,10 @@
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="4_ghw46"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="5_df05h"]
 [ext_resource type="PackedScene" uid="uid://cgv6p5u6o2x2a" path="res://Scenes/UI/CollectionOverlay.tscn" id="collection_overlay"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/ConfirmationOverlay.tscn" id="confirm_overlay"]
 [ext_resource type="Script" uid="uid://oq2ueyehis8b" path="res://Scripts/UI/NowPlayingIndicator.gd" id="nowplaying_scr"]
 [ext_resource type="PackedScene" uid="uid://c7v6p5u6o2x18" path="res://Scenes/UI/OptionsOverlay.tscn" id="options_overlay"]
 [ext_resource type="PackedScene" uid="uid://c7v6p5u6o2x21" path="res://Scenes/UI/StoryProgressOverlay.tscn" id="story_progress_overlay"]
-[ext_resource type="PackedScene" uid="uid://confirmation_overlay_uid" path="res://Scenes/UI/ConfirmationOverlay.tscn" id="confirm_overlay"]
 [ext_resource type="PackedScene" uid="uid://dyxtw4qitbahn" path="res://Scenes/TitleScreen3D.tscn" id="title_screen_scene"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
@@ -170,37 +170,16 @@ alignment = 0
 
 [node name="OptionsOverlay" parent="." unique_id=413020143 instance=ExtResource("options_overlay")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="CollectionOverlay" parent="." unique_id=662282016 instance=ExtResource("collection_overlay")]
-visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="StoryProgressOverlay" parent="." unique_id=309426670 instance=ExtResource("story_progress_overlay")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="ConfirmationOverlay" parent="." unique_id=987654321 instance=ExtResource("confirm_overlay")]
 visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="Cube_001" parent="." unique_id=1452766205 instance=ExtResource("5_df05h")]
 transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 2.015456e-07, -1.5199125, 1.5184417, 0.07436426, 5.14117e-09, 0.31191707, 0.7678091, -4.009146)

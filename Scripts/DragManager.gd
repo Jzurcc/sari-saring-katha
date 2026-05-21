@@ -105,10 +105,6 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	# Notify the item that dragging has started so it can hide its 3D visuals
 	_dragged_item._on_drag_started_by_manager()
 
-	# Highlight the drop zone
-	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
-	if tray_nodes.size() > 0 and tray_nodes[0].has_method("activate_dropzone"):
-		tray_nodes[0].activate_dropzone()
 
 func _process(_delta: float) -> void:
 	if not _is_dragging:
@@ -199,10 +195,6 @@ func end_drag() -> void:
 	if is_instance_valid(_ghost_parent):
 		_ghost_parent.queue_free()
 
-	# Deactivate drop zone highlight (will also fire on bad drop)
-	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
-	if tray_nodes.size() > 0 and tray_nodes[0].has_method("deactivate_dropzone"):
-		tray_nodes[0].deactivate_dropzone()
 
 	var camera := get_viewport().get_camera_3d()
 	if not camera:
@@ -221,7 +213,7 @@ func end_drag() -> void:
 			success = true
 		elif collider is Customer:
 			# Redirect the drop to the standard transaction tray logic
-			tray_nodes = get_tree().get_nodes_in_group("transaction_tray")
+			var tray_nodes = get_tree().get_nodes_in_group("transaction_tray")
 			if tray_nodes.size() > 0 and tray_nodes[0].has_method("receive_item"):
 				tray_nodes[0].receive_item(_dragged_item)
 				success = true

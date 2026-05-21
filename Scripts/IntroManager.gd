@@ -162,9 +162,9 @@ func play_sequence(sequence: CutsceneSequence):
 		LogManager.warn("IntroCutscene", "Sequence has no CameraPans! " + sequence.name)
 		return
 		
-	var total_duration = 0.0
+	var _total_duration = 0.0
 	for pan in pans:
-		total_duration += pan.duration
+		_total_duration += pan.duration
 		
 	var text_duration = sequence.subtitle_text.length() / characters_per_second
 	if text_duration < 1.0: text_duration = 1.0

@@ -89,7 +89,7 @@ func _ready() -> void:
 	# 1. Auto-generate save_id if empty based on hierarchy
 	if save_id == "":
 		save_id = "shelf_" + get_parent().name + "_" + name
-		print("[ShelfSurface] Auto-generated save_id: ", save_id)
+		LogManager.info("ShelfSurface", "Auto-generated save_id: %s" % save_id)
 		
 	# 2. Join persistence groups
 	add_to_group("shelf_surface")
@@ -139,7 +139,7 @@ func _ready() -> void:
 	if not _data_was_loaded:
 		populate()
 	else:
-		print("[ShelfSurface] '%s' skipping populate() because data was already loaded." % save_id)
+		LogManager.info("ShelfSurface", "'%s' skipping populate() because data was already loaded." % save_id)
 
 
 ## Create a thin Area3D covering the shelf surface so DragManager's
@@ -210,7 +210,7 @@ func populate() -> void:
 		_spawned.append(d)
 		slot_idx += 1
 
-	print("[ShelfSurface] '%s' placed %d/%d items in %d slots" % [name, _spawned.size(), spawn_list.size(), _slot_transforms.size()])
+	LogManager.info("ShelfSurface", "'%s' placed %d/%d items in %d slots" % [name, _spawned.size(), spawn_list.size(), _slot_transforms.size()])
 
 
 ## Show or hide each spawned item based on whether its slot is occupied.
@@ -278,7 +278,7 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 	# Spawn impact dust at the final snapped global position
 	VisualEffectManager.spawn_impact_dust(to_global(target_pos))
 
-	print("[ShelfSurface] '%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
+	LogManager.info("ShelfSurface", "'%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
 
 
 ## Returns an array of indices for all currently unoccupied slots.
@@ -418,7 +418,7 @@ func load_save_data(data: Dictionary) -> void:
 	if data.is_empty():
 		return
 		
-	print("[ShelfSurface] '%s' applying save data: %s" % [save_id, data.keys()])
+	LogManager.info("ShelfSurface", "'%s' applying save data: %s" % [save_id, data.keys()])
 	_is_loading = true
 	_data_was_loaded = true
 	_clear()
@@ -454,4 +454,4 @@ func load_save_data(data: Dictionary) -> void:
 			placed += 1
 	
 	_is_loading = false
-	print("[ShelfSurface] '%s' loaded %d/%d saved items" % [name, placed, slots_data.size()])
+	LogManager.info("ShelfSurface", "'%s' loaded %d/%d saved items" % [name, placed, slots_data.size()])

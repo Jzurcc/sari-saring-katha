@@ -55,7 +55,6 @@
 [ext_resource type="Script" uid="uid://dmr2hly48pbkb" path="res://Scripts/UI/DayTimeUI.gd" id="dt_scr"]
 [ext_resource type="Script" uid="uid://dnowjpw0mq2o4" path="res://Scripts/Components/FPSController.gd" id="fps_scr"]
 [ext_resource type="Script" uid="uid://dchrvgkvawu1a" path="res://Scripts/Managers/GameManager.gd" id="gm_scr"]
-[ext_resource type="Script" uid="uid://y0dn7halcfkk" path="res://Scripts/UI/HeldItemLabelUI.gd" id="hil_scr"]
 [ext_resource type="AudioStream" uid="uid://co4ijn45uea7r" path="res://Audio/SFX/meow1.wav" id="meow1"]
 [ext_resource type="AudioStream" uid="uid://cita80tdosv0o" path="res://Audio/SFX/meow2.wav" id="meow2"]
 [ext_resource type="AudioStream" uid="uid://bolh1qcr1fith" path="res://Audio/SFX/meow3.wav" id="meow3"]
@@ -247,15 +246,6 @@ theme_override_font_sizes/font_size = 30
 text = "5:00 AM"
 script = ExtResource("dt_scr")
 display_mode = 1
-
-[node name="HeldItemLabel" type="Label" parent="CanvasLayer" unique_id=195192398]
-visible = false
-offset_left = 20.0
-offset_top = 135.0
-offset_right = 250.0
-offset_bottom = 170.0
-theme_override_font_sizes/font_size = 24
-script = ExtResource("hil_scr")
 
 [node name="CrosshairContainer" type="CenterContainer" parent="CanvasLayer" unique_id=983198302]
 anchors_preset = 15

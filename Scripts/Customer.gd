@@ -207,13 +207,13 @@ func check_item(item: ItemData) -> bool:
 	# but we need him to accept an item to finish the tutorial properly.
 	if customer_data and customer_data.get_clean_id() == "unclemario":
 		var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
-		if gm and gm.is_tutorial_task_active:
-			if gm.current_tutorial_task_id in ["allow_sale_early", "wait_for_sale"]:
+		if gm and gm.tutorial.is_tutorial_task_active:
+			if gm.tutorial.current_tutorial_task_id in ["allow_sale_early", "wait_for_sale"]:
 				if transaction_context and transaction_context.fulfill_item(item):
 					_on_item_accepted(item)
 					
 					# Complete the task
-					gm._on_tutorial_task_completed()
+					gm.tutorial._on_tutorial_task_completed()
 					return true
 			return false
 
@@ -237,7 +237,7 @@ func check_item(item: ItemData) -> bool:
 
 	# Story fallback: If this is a STORY but the dev forgot to populate items (and it's not a visit-story), accept anything.
 	if transaction_context.transaction_type == TransactionContext.Type.STORY and transaction_context.desired_items.is_empty():
-		print("[Customer] STORY type with empty wants detected. Accepting any item as 'gift'.")
+		LogManager.info("Customer", "STORY type with empty wants detected. Accepting any item as 'gift'.")
 		_on_item_accepted(item)
 		return true
 

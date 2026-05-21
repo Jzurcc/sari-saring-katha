@@ -127,7 +127,7 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					# Special Tutorial Handling: If Uncle Mario is blocking items.
 					var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
 					var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
-					var is_tut_block = gm and gm.is_tutorial_task_active and gm.current_tutorial_task_id != "wait_for_sale"
+					var is_tut_block = gm and gm.tutorial.is_tutorial_task_active and gm.tutorial.current_tutorial_task_id != "wait_for_sale"
 					
 					if is_mario and is_tut_block:
 						# Just skip feedback, item will return to shelf automatically at end of function

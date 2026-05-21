@@ -41,6 +41,7 @@ MarioManager="*res://Scripts/Managers/MarioManager.gd"
 VisualEffectManager="*res://Scripts/Managers/VisualEffectManager.gd"
 PricingOverlay="*res://Scripts/UI/PricingOverlay.gd"
 LogManager="*res://Scripts/Managers/LogManager.gd"
+CharacterProgressionManager="*res://Scripts/Managers/CharacterProgressionManager.gd"
 
 [debug]
 
@@ -67,9 +68,6 @@ directories/dch_directory={
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dch"
 }
 directories/dtl_directory={
-"Brahim/Purchase": "res://Dialogue/Timelines/Brahim/Purchase.dtl",
-"Brahim/Story": "res://Dialogue/Timelines/Brahim/Story.dtl",
-"Brahim/Visit": "res://Dialogue/Timelines/Brahim/Visit.dtl",
 "Buboy/Purchase": "res://Dialogue/Timelines/Buboy/Purchase.dtl",
 "Buboy/Story": "res://Dialogue/Timelines/Buboy/Story.dtl",
 "Buboy/Visit": "res://Dialogue/Timelines/Buboy/Visit.dtl",
@@ -77,13 +75,15 @@ directories/dtl_directory={
 "Danilo/Purchase": "res://Dialogue/Timelines/Danilo/Purchase.dtl",
 "Danilo/Story": "res://Dialogue/Timelines/Danilo/Story.dtl",
 "Danilo/Visit": "res://Dialogue/Timelines/Danilo/Visit.dtl",
+"Generic/Purchase": "res://Dialogue/Timelines/Generic/Purchase.dtl",
+"Generic/Visit": "res://Dialogue/Timelines/Generic/Visit.dtl",
 "Kuyakap/Purchase": "res://Dialogue/Timelines/Kuyakap/Purchase.dtl",
 "Kuyakap/Story": "res://Dialogue/Timelines/Kuyakap/Story.dtl",
 "Kuyakap/Visit": "res://Dialogue/Timelines/Kuyakap/Visit.dtl",
 "ManangAna/Purchase": "res://Dialogue/Timelines/ManangAna/Purchase.dtl",
 "ManangAna/Story": "res://Dialogue/Timelines/ManangAna/Story.dtl",
 "ManangAna/Visit": "res://Dialogue/Timelines/ManangAna/Visit.dtl",
-"Purchase": "res://Dialogue/Timelines/Generic/Purchase.dtl",
+"Purchase": "res://Dialogue/Timelines/Brahim/Purchase.dtl",
 "Repayment": "res://Dialogue/Timelines/Generic/Repayment.dtl",
 "ReynaMayari/Purchase": "res://Dialogue/Timelines/ReynaMayari/Purchase.dtl",
 "ReynaMayari/Story": "res://Dialogue/Timelines/ReynaMayari/Story.dtl",
@@ -95,14 +95,15 @@ directories/dtl_directory={
 "Rosalyn/Story": "res://Dialogue/Timelines/Rosalyn/Story.dtl",
 "Rosalyn/Visit": "res://Dialogue/Timelines/Rosalyn/Visit.dtl",
 "Sarimanok/Purchase": "res://Dialogue/Timelines/Sarimanok/Purchase.dtl",
+"Sarimanok/Story": "res://Dialogue/Timelines/Sarimanok/Story.dtl",
 "Sarimanok/Visit": "res://Dialogue/Timelines/Sarimanok/Visit.dtl",
-"Story": "res://Dialogue/Timelines/Sarimanok/Story.dtl",
+"Story": "res://Dialogue/Timelines/Brahim/Story.dtl",
 "TK/Purchase": "res://Dialogue/Timelines/TK/Purchase.dtl",
 "TK/Story": "res://Dialogue/Timelines/TK/Story.dtl",
 "TK/Visit": "res://Dialogue/Timelines/TK/Visit.dtl",
 "UncleMario": "res://Dialogue/Timelines/UncleMario.dtl",
 "UncleMarioTutorial": "res://Dialogue/Timelines/UncleMarioTutorial.dtl",
-"Visit": "res://Dialogue/Timelines/Generic/Visit.dtl",
+"Visit": "res://Dialogue/Timelines/Brahim/Visit.dtl",
 "debug_debt_system": "res://Dialogue/Timelines/Generic/debug_debt_system.dtl",
 "debug_dual_customer": "res://Dialogue/Timelines/debug_dual_customer.dtl",
 "mayari_collect": "res://Dialogue/Timelines/mayari_collect.dtl",

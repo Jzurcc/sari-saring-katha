@@ -280,7 +280,7 @@ func get_save_id() -> String:
 
 func get_save_data() -> Dictionary:
 	var prices := {}
-	var pricing_flags := {} # Deprecated, kept for compat
+	var _pricing_flags := {} # Deprecated, kept for compat
 	
 	for item in _items:
 		prices[item.resource_path] = item.selling_price

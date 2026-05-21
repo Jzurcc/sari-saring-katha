@@ -31,7 +31,8 @@ var current_customer: Customer = null
 var guest_customer: Customer = null
 var _pending_dismiss: bool = false
 var _is_spawning: bool = false
-var _watchdog_frames: int = 0
+var _watchdog_elapsed: float = 0.0
+const WATCHDOG_TIMEOUT_SEC: float = 0.5
 var _greeting_interrupted: bool = false
  # Remembers if Uncle Mario forcibly shut down the greeting.
 var _is_partial_success: bool = false # Tracks if a dismissal should be treated as a success
@@ -75,7 +76,7 @@ func _on_day_started(_day: int) -> void:
 	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
 	_spawn_next_customer()
 
-func _spawn_next_customer(delay: float = -1.0) -> void:
+func _spawn_next_customer(_delay: float = -1.0) -> void:
 	if _is_spawning:
 		LogManager.debug("CustomerSpawner", "_spawn_next_customer() IGNORED: Spawn already in progress.")
 		return
@@ -90,7 +91,7 @@ func _spawn_next_customer(delay: float = -1.0) -> void:
 		return
 
 	# Closing time check
-	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
+	if StoryManager.is_past_closing_time():
 		LogManager.info("CustomerSpawner", "Store is closing. Spawning Mayari for collection.")
 		spawn_mayari_for_collection()
 		return
@@ -276,7 +277,7 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	StoryManager.process_pending_unlock()
 
 	var delay = randf_range(0.3, 5.0)
-	if StoryManager._current_display_time >= StoryManager.CLOSING_HOUR:
+	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 
 	await get_tree().create_timer(delay).timeout
@@ -284,22 +285,21 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	_is_spawning = false
 	_spawn_next_customer()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# Watchdog: If we are in a dialogue phase but Dialogic is no longer running,
 	# something likely crashed or ended without firing the timeline_ended signal.
 	# We exclude SATISFIED and NONE as those are stable/resolving states.
 	if _dialogue_phase != DialoguePhase.NONE and _dialogue_phase != DialoguePhase.SATISFIED:
 		if Dialogic.current_timeline == null:
-			# Give it a few frames to make sure it's not just a transition
-			_watchdog_frames += 1
-			if _watchdog_frames > 30: # ~0.5s at 60fps
+			_watchdog_elapsed += delta
+			if _watchdog_elapsed >= WATCHDOG_TIMEOUT_SEC:
 				LogManager.warn("CustomerSpawner", "WATCHDOG: Dialogue phase stuck in '%s' while Dialogic is inactive. Resetting." % DialoguePhase.keys()[_dialogue_phase])
 				_dialogue_phase = DialoguePhase.NONE
-				_watchdog_frames = 0
+				_watchdog_elapsed = 0.0
 		else:
-			_watchdog_frames = 0
+			_watchdog_elapsed = 0.0
 	else:
-		_watchdog_frames = 0
+		_watchdog_elapsed = 0.0
 
 func _on_customer_clicked(customer: Customer) -> void:
 
@@ -347,7 +347,7 @@ func _on_customer_clicked(customer: Customer) -> void:
 	# We check this on greeting as a final safety measure.
 	if customer.customer_data.get_clean_id() == "danilo":
 		var path = customer.customer_data.resource_path
-		var chapter = StoryManager.character_story_states.get(path, 0)
+		var chapter = CharacterProgressionManager.get_chapter(path)
 		if chapter < customer.customer_data.max_story_chapters - 1:
 			if customer.transaction_context.transaction_type == TransactionContext.Type.PURCHASE:
 				LogManager.info("CustomerSpawner", "Danilo purchase override to VISIT (Fallback).")
@@ -473,8 +473,8 @@ func _update_item_names(customer: Customer) -> void:
 	
 	var formatted_names = ""
 	if item_names.size() == 0:
-		var data = customer.customer_data
-		var cname = data.character_name if data.character_name != "" else data.get_clean_id()
+		var c_data = customer.customer_data
+		var cname = c_data.character_name if c_data.character_name != "" else c_data.get_clean_id()
 		LogManager.debug("CustomerSpawner", "NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % cname)
 		
 		# Still update character name and counts, but leave Transaction_ItemWants alone.
@@ -669,7 +669,7 @@ func _on_dialogue_ended() -> void:
 			if is_instance_valid(guest_customer):
 				var g = guest_customer
 				guest_customer = null
-				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
+				g.create_tween().tween_callback(g.dismiss).set_delay(0.5)
 
 			# Final decision: Satisfy (happy/partial) vs Dismiss (canceled/failure)
 			# We use satisfy() if items were traded OR if we explicitly marked it as a partial success.
@@ -688,7 +688,7 @@ func _on_dialogue_ended() -> void:
 			if is_instance_valid(guest_customer):
 				var g = guest_customer
 				guest_customer = null
-				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
+				g.create_tween().tween_callback(g.dismiss).set_delay(0.5)
 
 			if is_instance_valid(current_customer) and current_customer.is_waiting:
 				current_customer.has_been_greeted = true
@@ -699,7 +699,7 @@ func _on_dialogue_ended() -> void:
 			if is_instance_valid(guest_customer):
 				var g = guest_customer
 				guest_customer = null
-				get_tree().create_timer(0.5).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
+				g.create_tween().tween_callback(g.dismiss).set_delay(0.5)
 
 			if is_instance_valid(current_customer):
 				current_customer.satisfy()
@@ -776,7 +776,6 @@ func _on_debt_quota_met(_success: bool) -> void:
 
 ## Emit day_ended when no more customers will come today.
 func _end_day() -> void:
-	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
 	EventBus.day_ended.emit(StoryManager.day)
 
 func _on_mario_delivery_finished() -> void:
@@ -827,7 +826,7 @@ func load_save_data(data: Dictionary) -> void:
 			LogManager.info("CustomerSpawner", "Queuing restored customer for fresh walk-in: %s" % ctx.customer_data.character_name)
 			
 			# Delay slightly to ensure self is ready, then trigger spawn
-			get_tree().create_timer(1.0).timeout.connect(func(): _spawn_next_customer())
+			get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
 			return
 
 func reset_state() -> void:

@@ -172,6 +172,7 @@ func _start_new_game() -> void:
 	
 	# Reset in-memory singletons to avoid carrying over old data
 	StoryManager.reset_state()
+	CharacterProgressionManager.reset_state()
 	InventoryManager.reset_state()
 	MarioManager.reset_state()
 	
