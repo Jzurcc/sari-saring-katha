@@ -32,7 +32,7 @@ func _refresh() -> void:
 		DisplayMode.DAY:
 			var gm_nodes = get_tree().get_nodes_in_group("game_manager")
 			if gm_nodes.size() > 0:
-				var gm = gm_nodes[0]
+				var _gm = gm_nodes[0]
 				text = "Day %d" % int(StoryManager.day)
 			else:
 				text = "Day ?"

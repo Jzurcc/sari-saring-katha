@@ -229,14 +229,14 @@ func _on_mario_call_finished(success: bool) -> void:
 	_is_calling = false
 	
 	if success:
-		var store_menu = get_node_or_null("RestockMenu")
-		if store_menu:
-			store_menu.visible = true
-			if store_menu.has_method("open_menu"):
-				store_menu.open_menu()
+		var actual_menu = store_menu if store_menu else get_node_or_null("RestockMenu")
+		if actual_menu:
+			actual_menu.visible = true
+			if actual_menu.has_method("open_menu"):
+				actual_menu.open_menu()
 			
 			# NEW: Set focus to a button in the store menu to prevent keyboard/Space leak to the Nokia background 
-			var default_btn = store_menu.get_node_or_null("%AllBtn") 
+			var default_btn = actual_menu.get_node_or_null("%AllBtn") 
 			if default_btn:
 				default_btn.grab_focus()
 				

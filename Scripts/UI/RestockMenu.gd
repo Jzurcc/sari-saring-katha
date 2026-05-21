@@ -657,7 +657,7 @@ func _update_minus_btn_appearance(btn: Button, count: int) -> void:
 		btn.text = "-"
 		_style_button(btn, COLOR_TAB_ACTIVE, Color.WHITE, 14.0)
 
-func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row: HBoxContainer) -> void:
+func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, _row: HBoxContainer) -> void:
 	var count = selected_items.get(item, 0)
 	if count <= 0:
 		return
