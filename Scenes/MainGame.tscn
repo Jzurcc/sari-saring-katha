@@ -622,8 +622,8 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 4.33
 mesh = SubResource("BoxMesh_50m7d")
 
 [node name="VoxelGI" type="VoxelGI" parent="." unique_id=954057711]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5098877, 1.732666, -0.06629944)
-size = Vector3(19.682861, 23.465332, 17.533234)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.94866943, 1.732666, -0.06629944)
+size = Vector3(12.765747, 23.465332, 17.533234)
 data = ExtResource("46_uvjf7")
 
 [node name="SachetContainerItem" type="Area3D" parent="." unique_id=1273543074]
@@ -659,7 +659,7 @@ shaded = true
 texture = ExtResource("47_hfiw1")
 
 [node name="SachetContainerItem3" type="Area3D" parent="." unique_id=1536702727]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0922375, 4.5312266, -2.462047)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0922375, 4.516964, -2.462047)
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("51_hnhmk")
