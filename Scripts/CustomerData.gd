@@ -28,6 +28,30 @@ func get_clean_id() -> String:
 ## Set to 0 if the character has no main story arc.
 @export var max_story_chapters: int = 0
 
+@export_group("Chapter Overrides")
+
+## Per-chapter item category for purchase requests (index = chapter number, 0-based).
+## Leave a slot empty ("") to use the standard random selection for that chapter.
+## Example: ["cigarette", "cigarette", "bottle", "cigarette", "candy"]
+@export var chapter_categories: Array[String] = []
+
+## Which story chapters are "visit-only" (customer talks but doesn't buy).
+## Index = chapter number (0-based). True = this chapter is visit-only.
+## Example: [true, true, true, true, false] = first 4 chapters are visits only.
+@export var visit_story_chapters: Array[bool] = []
+
+## Returns the category override for a given chapter, or "" if none.
+func get_chapter_category(chapter: int) -> String:
+	if chapter_categories.is_empty() or chapter >= chapter_categories.size():
+		return ""
+	return chapter_categories[chapter]
+
+## Returns true if the given chapter should be treated as a visit-only story chapter.
+func is_visit_story_chapter(chapter: int) -> bool:
+	if visit_story_chapters.is_empty() or chapter >= visit_story_chapters.size():
+		return false
+	return visit_story_chapters[chapter]
+
 ## Optional prerequisites for each story chapter. 
 ## Index matches story_timelines index. If empty or null at an index, no requirements.
 @export var story_prerequisites: Array[StoryPrerequisiteGroup] = []

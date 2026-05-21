@@ -1,16 +1,16 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://dgqlotcmv4xee"]
 
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_ftdyi"]
-[ext_resource type="Resource" uid="uid://ckx12ugj7m8oc" path="res://Dialogue/Timelines/Buboy.dch" id="1_x7l5d"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Buboy.dch" id="1_x7l5d"]
 [ext_resource type="AudioStream" uid="uid://bh8uoecpi02gd" path="res://Audio/DialogueBlips/Buboy.wav" id="2_siajg"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/CustomerData.gd" id="2_voalc"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://b2klfrum7thsh" path="res://Assets/characters/sprites/Buboy.png" id="5_mx7nj"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_pwffr"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://chirwjrehoxjg" path="res://Dialogue/Timelines/Buboy/Purchase.dtl" id="buboy_purchase"]
-[ext_resource type="Resource" uid="uid://c5xtxtkwciuu5" path="res://Dialogue/Timelines/Buboy/Visit.dtl" id="buboy_visit"]
-[ext_resource type="Resource" uid="uid://c3sj15wq5i3pc" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Buboy/Purchase.dtl" id="buboy_purchase"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Buboy/Visit.dtl" id="buboy_visit"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
@@ -25,6 +25,8 @@ dialogic_character = ExtResource("1_x7l5d")
 dialogue_blip_volume = -7.0
 story_timeline = ExtResource("story_timeline")
 max_story_chapters = 10
+chapter_categories = Array[String](["", "can", "snack", "sachet", "snack", "pack", "bottle", "candy", "snack", "pack"])
+visit_story_chapters = Array[bool]([true, false, false, false, false, false, false, false, false, false])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 arc_names = Array[String](["Arc 1: Games and Errands", "Arc 2: Questions on the Porch", "Arc 3: Strawberry Success", "Arc 4: The Masterpiece"])
 chapter_names = Array[String](["The Memory Game", "The First Task", "The Big Neighbor", "The Smell of Smoke", "The Direct Question", "Where is He?", "The Idea", "The Secret", "No More Smoke", "The Masterpiece"])

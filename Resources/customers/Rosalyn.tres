@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://byea48mhahajp"]
 
-[ext_resource type="Resource" uid="uid://c73mtch2ugm37" path="res://Dialogue/Timelines/Rosalyn.dch" id="1_epene"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Rosalyn.dch" id="1_epene"]
 [ext_resource type="AudioStream" uid="uid://cw6wiae0bdxfh" path="res://Audio/DialogueBlips/Rosalyn.wav" id="2_r53lf"]
 [ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="3_s680y"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
@@ -8,9 +8,9 @@
 [ext_resource type="Texture2D" uid="uid://bnah6st44t36f" path="res://Assets/characters/sprites/Rosalyn.png" id="5_8o33b"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="9_8o33b"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://bosnm7nb7n52i" path="res://Dialogue/Timelines/Rosalyn/Purchase.dtl" id="ros_purchase"]
-[ext_resource type="Resource" uid="uid://d2s4cte6itmct" path="res://Dialogue/Timelines/Rosalyn/Visit.dtl" id="ros_visit"]
-[ext_resource type="Resource" uid="uid://bnumeiduxs8n1" path="res://Dialogue/Timelines/Rosalyn/Story.dtl" id="story_timeline"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Rosalyn/Purchase.dtl" id="ros_purchase"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Rosalyn/Visit.dtl" id="ros_visit"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Rosalyn/Story.dtl" id="story_timeline"]
 
 [sub_resource type="Resource" id="arcdata_script"]
 script = ExtResource("arcdata_script")
@@ -24,6 +24,8 @@ sprite_texture = ExtResource("5_8o33b")
 dialogic_character = ExtResource("1_epene")
 story_timeline = ExtResource("story_timeline")
 max_story_chapters = 9
+chapter_categories = Array[String](["", "", "bottle", "bottle", "", "", "candy", "", ""])
+visit_story_chapters = Array[bool]([true, true, false, false, true, true, false, true, true])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
 arc_names = Array[String](["Arc 1: Learning to Hold On", "Arc 2: The Echo of the Rain", "Arc 3: Finding Your Way Out"])
 chapter_names = Array[String](["The Flight", "The Attempt", "The Anchor", "The Burn", "The Silence", "The Puddle", "The Candy", "Letting Go", "The Departure"])

@@ -6,10 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/characters/sprites/Kuya_Kap.png" id="6_5suku"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/StoryPrerequisiteGroup.gd" id="6_jf5g1"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
-[ext_resource type="Resource" uid="uid://vd6vqcihb85s" path="res://Dialogue/Timelines/Kuyakap/Purchase.dtl" id="kuyakap_purchase"]
-[ext_resource type="Resource" uid="uid://d2xpnhja6r33a" path="res://Dialogue/Timelines/Kuyakap/Visit.dtl" id="kuyakap_visit"]
-[ext_resource type="Resource" uid="uid://b5ajudb37ubvf" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Kuyakap/Purchase.dtl" id="kuyakap_purchase"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Kuyakap/Visit.dtl" id="kuyakap_visit"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
 
 [sub_resource type="Resource" id="arc_data"]
@@ -24,6 +24,7 @@ sprite_texture = ExtResource("6_5suku")
 dialogic_character = ExtResource("dch_kuyakap")
 story_timeline = ExtResource("story_res")
 max_story_chapters = 9
+chapter_categories = Array[String](["cigarette", "cigarette", "cigarette", "cigarette", "cigarette", "cigarette", "cigarette", "bottle", "candy"])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_data")])
 arc_names = Array[String](["Arc 1: The Anchor of Routine", "Arc 2: The Weight of Habits", "Arc 3: Finding Your Float"])
 chapter_names = Array[String](["The New Face", "He Knows Everyone", "Almost", "Just a Bit Tired", "For Buboy", "A Short Pause", "Taking His Time", "Not Today", "Candy"])
