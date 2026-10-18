@@ -155,11 +155,11 @@ func _on_dialogic_signal(argument: String) -> void:
 		
 		Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
 		
+		var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
+		
 		if was_successful:
 			quota_day += 1 
 			LogManager.info("GameManager", "Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
-			
-			var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
 			if quota_day == 2 and StoryManager.is_label_in_timeline(timeline_path, "SuccessFirst"):
 				Dialogic.Jump.jump_to_label("SuccessFirst")
 			elif StoryManager.is_label_in_timeline(timeline_path, "Success"):
@@ -169,8 +169,6 @@ func _on_dialogic_signal(argument: String) -> void:
 				Dialogic.end_timeline()
 		else:
 			LogManager.info("GameManager", "Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
-			
-			var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
 			if StoryManager.is_label_in_timeline(timeline_path, "Angry"):
 				Dialogic.Jump.jump_to_label("Angry")
 			else:
@@ -224,15 +222,10 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	
-	if event is InputEventMouseButton and event.pressed:
-		pass
+
 
 func _reset_clock_to_morning() -> void:
-	# Delegate to StoryManager
-	if StoryManager.has_method("reset_to_morning"):
-		StoryManager.reset_to_morning()
-	else:
-		LogManager.warn("GameManager", "StoryManager.reset_to_morning() missing. Ensure Phase 4 is applied.")
+	StoryManager.reset_to_morning()
 
 
 # ── Persistence ──────────────────────────────────────────────────────────
@@ -394,8 +387,7 @@ class TutorialManager extends RefCounted:
 		is_blocking_pickup = false
 		_is_waiting_for_tutorial_space = false
 		
-		if gm.get_node_or_null("/root/MarioManager"):
-			var MarioManager = gm.get_node("/root/MarioManager")
+		if is_instance_valid(MarioManager):
 			MarioManager.is_restocking_active = false
 			MarioManager.is_mario_physically_present = false
 			if MarioManager.has_method("cancel_restock"):

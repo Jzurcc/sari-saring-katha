@@ -86,8 +86,8 @@ func _spawn_next_customer(_delay: float = -1.0) -> void:
 		return
 
 	LogManager.debug("CustomerSpawner", "_spawn_next_customer() CALLED. is_paused=%s, current_customer=%s, _is_spawning=%s" % [is_paused, current_customer != null, _is_spawning])
-	if is_paused or current_customer != null or _is_spawning:
-		LogManager.debug("CustomerSpawner", "Aborting spawn due to state.")
+	if is_paused:
+		LogManager.debug("CustomerSpawner", "Aborting spawn: store is paused.")
 		return
 
 	# Closing time check
@@ -207,8 +207,6 @@ func _handle_customer_logic(customer: Customer, is_initial_arrival: bool) -> voi
 		
 		_update_item_names(customer)
 		
-
-		
 		# Patch the generic character resource so "Customer:" lines show the right name and play sounds.
 		if GENERIC_CHAR_RES:
 			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
@@ -311,7 +309,7 @@ func _on_customer_clicked(customer: Customer) -> void:
 	if not customer.is_waiting:
 		return
 		
-	# 4. Check for Repayment Preamble (30% chance rolled in StoryManager)
+	# 3. Check for Repayment Preamble (30% chance rolled in StoryManager)
 	if customer.transaction_context.is_repaying:
 		customer.transaction_context.is_repaying = false # Consume flag so it doesn't loop
 		_dialogue_phase = DialoguePhase.REPAYMENT
@@ -327,12 +325,11 @@ func _on_customer_clicked(customer: Customer) -> void:
 			start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, _dialogue_phase)
 		return
 
-	# 5. _dialogue_phase != NONE means a timeline just finished its async clear
-	#    but timeline_ended hasn't fired yet.
+	# 4. Block if dialogue phase is still resolving (timeline_ended not yet fired).
 	if _dialogue_phase != DialoguePhase.NONE and _dialogue_phase != DialoguePhase.SATISFIED:
 		return
 
-	# 4. If they are already in the middle of a satisfy/dismiss process, block.
+	# 5. If they are already in the middle of a satisfy/dismiss process, block.
 	if customer.has_method("_is_resolving") and customer._is_resolving:
 		return
 

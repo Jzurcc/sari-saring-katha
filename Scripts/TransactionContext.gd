@@ -35,13 +35,11 @@ var is_visit_story: bool = false
 var story_advanced: bool = false
 
 func _is_match(item: ItemData, desired: ItemData) -> bool:
-	if item == desired:
-		return true
-	if item.resource_path != "" and item.resource_path == desired.resource_path:
-		return true
-	if item.item_name == desired.item_name:
-		return true
-	return false
+	return (
+		item == desired or 
+		(item.resource_path != "" and item.resource_path == desired.resource_path) or 
+		item.item_name == desired.item_name
+	)
 
 func is_item_desired(item: ItemData) -> bool:
 	if desired_items.is_empty():

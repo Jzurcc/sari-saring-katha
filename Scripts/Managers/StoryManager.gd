@@ -1,6 +1,5 @@
 extends Node
 
-var save_id: String = "story_manager"
 
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
@@ -44,7 +43,6 @@ var _first_customer_of_day: bool = true
 
 var _char_lookup: Dictionary = {}   # resource_path -> CustomerData
 
-var DEBUG_SARIMANOK_ONLY: bool = false
 
 # Cached node references — populated after scene is ready to avoid null captures during _ready
 var _game_manager: GameManager = null
@@ -102,10 +100,6 @@ var _upgrade_item_cache: Dictionary = {}
 @export_range(0, 1) var visit_chance: float = 0.35
 ## Chance (0.0 to 1.0) that a customer's request will be a riddle.
 @export_range(0, 1) var riddle_chance: float = 0.35
-
-# --- Transaction Mirroring (for Dialogic access via {StoryManager.Transaction_...}) ---
-
-# --- Safe Dialogic Synchronization ---
 
 ## Safely sets a Dialogic variable only if it exists in the Dialogic system.
 ## Also automatically mirrors the value to the local Autoload properties (e.g. "Dialogic.VAR.get_variable("Transaction_ItemWants", "")")
@@ -361,6 +355,7 @@ func load_save_data(data: Dictionary) -> void:
 				_apply_display_time(_current_display_time)
 				_time_of_day_node.game_time_enabled = is_clock_running
 		, CONNECT_ONE_SHOT)
+
 func reset_state() -> void:
 	day = 1
 	current_tier = 1
@@ -381,6 +376,7 @@ func reset_state() -> void:
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0
 	SaveManager.delete_save()
+
 func get_next_transaction() -> TransactionContext:
 	# 1. Special Encounters (Tutorial / Kuya Kap injection)
 	var special_transaction = _inject_special_customer()
@@ -467,9 +463,13 @@ func _select_character() -> Dictionary:
 	var unlocked = CharacterProgressionManager.get_unlocked_characters(current_tier, day)
 	
 	# Priority 0: Forced First-Time Encounters (Ignores Cooldown)
-	var new_characters = unlocked.filter(func(c): 
+	var new_characters = unlocked.filter(func(c: CustomerData) -> bool:
 		var c_ch = CharacterProgressionManager.get_chapter(c.resource_path)
-		return (not CharacterProgressionManager.has_encountered(c.resource_path) or c_ch == 0) 			and c_ch < c.max_story_chapters and c.story_timeline != null 			and CharacterProgressionManager.is_story_chapter_available(c, c_ch) 			and c.get_clean_id() != "reynamayari"
+		var is_new_or_chapter_zero = not CharacterProgressionManager.has_encountered(c.resource_path) or c_ch == 0
+		var has_story = c_ch < c.max_story_chapters and c.story_timeline != null
+		var prereqs_met = CharacterProgressionManager.is_story_chapter_available(c, c_ch)
+		var is_not_mayari = c.get_clean_id() != "reynamayari"
+		return is_new_or_chapter_zero and has_story and prereqs_met and is_not_mayari
 	)
 	
 	if not new_characters.is_empty():

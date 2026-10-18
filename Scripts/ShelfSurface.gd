@@ -80,8 +80,8 @@ const DRAGGABLE_ITEM_SCENE: PackedScene = preload("res://Scenes/DraggableItem.ts
 var _spawned: Array[DraggableItem] = []
 ## Pre-generated world-local transforms, one per slot across the shelf.
 var _slot_transforms: Array[Transform3D] = []
-## Which DraggableItem occupies each slot index. null = empty.
-var _slot_occupants: Array = []  # Array[DraggableItem?]
+## Which DraggableItem occupies each slot index. `null` means the slot is empty.
+var _slot_occupants: Array = []
 var _is_loading: bool = false
 var _data_was_loaded: bool = false
 
@@ -122,16 +122,12 @@ func _ready() -> void:
 		preview.queue_free()
 
 	_create_drop_zone()
-	
-	if not layout_strategy:
-		push_error("[ShelfSurface] '%s': No layout_strategy assigned." % name)
-		return
 
 	# Free the slot when any item on this surface is picked up.
 	EventBus.drag_started.connect(_on_any_drag_started)
 
 	await get_tree().process_frame
-	
+
 	# Always populate with Inspector defaults first, BUT ONLY if no save data was loaded.
 	# If a save file exists, SaveManager.request_load() will call load_save_data()
 	# which clears and rebuilds from saved state. This removes the timing race
@@ -348,7 +344,6 @@ func _free_slot_for(item: DraggableItem) -> void:
 	var idx := _slot_occupants.find(item)
 	if idx >= 0:
 		_slot_occupants[idx] = null
-
 
 
 ## Returns true if [param item] is allowed to be dropped onto this surface

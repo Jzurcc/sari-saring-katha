@@ -49,10 +49,7 @@ func _ready() -> void:
 	EventBus.customer_dismissed.connect(_on_customer_left)
 
 
-func _notification(_what: int) -> void:
-	# Saving on exit is now handled explicitly by PauseMenu (unless in debug mode).
-	# Auto-save on window close removed per user request.
-	pass
+
 
 
 func _input(event: InputEvent) -> void:
@@ -96,6 +93,15 @@ func _on_customer_left(_customer = null) -> void:
 ## MERGING: This function reads the existing save file first and overwrites 
 ## only the keys found in the current scene tree. This preserves data for
 ## nodes not Currently in the tree (like shelves when in the Main Menu).
+func _get_node_save_id(node: Node) -> String:
+	if node.has_method("get_save_id"):
+		return node.call("get_save_id")
+	elif "save_id" in node:
+		return node.get("save_id")
+	else:
+		return node.name
+
+
 func force_save() -> void:
 	if _is_saving:
 		return
@@ -125,17 +131,7 @@ func force_save() -> void:
 	
 	for node in persist_nodes:
 		if node.has_method("get_save_data"):
-			var sid: String = ""
-			
-			# Priority 1: get_save_id() method
-			if node.has_method("get_save_id"):
-				sid = node.call("get_save_id")
-			# Priority 2: save_id property (used by older managers)
-			elif "save_id" in node:
-				sid = node.get("save_id")
-			# Priority 3: node name
-			else:
-				sid = node.name
+			var sid: String = _get_node_save_id(node)
 			
 			if sid == "":
 				LogManager.error("SaveManager", "Node '%s' (path: %s) has an empty save_id! Skipping." % [node.name, node.get_path()])
@@ -196,16 +192,7 @@ func request_load() -> void:
 	
 	for node in persist_nodes:
 		if node.has_method("load_save_data"):
-			var sid: String = ""
-			# Priority 1: get_save_id() method
-			if node.has_method("get_save_id"):
-				sid = node.call("get_save_id")
-			# Priority 2: save_id property
-			elif "save_id" in node:
-				sid = node.get("save_id")
-			# Priority 3: node name
-			else:
-				sid = node.name
+			var sid: String = _get_node_save_id(node)
 			
 			if master_save.has(sid):
 				LogManager.debug("SaveManager", "Distributing to: %s" % sid)

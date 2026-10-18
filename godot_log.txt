@@ -1,0 +1,1226 @@
+WorkerThreadPool: 12 threads, 3 max low-priority.
+Godot Engine v4.6.stable.official.89cea1439 - https://godotengine.org
+TextServer: Added interface "Dummy"
+TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
+Unrecognized output string "misc2" in mapping:
+030000000d0f00000202000000000000,Horipad O Nintendo Switch 2 Controller,a:b1,b:b0,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:b6,leftx:a0,lefty:a1,misc1:b13,misc2:b14,rightshoulder:b5,rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,x:b3,y:b2,platform:Windows,
+Unrecognized output string "misc2" in mapping:
+030000000d0f00009601000000000000,Horipad Steam,a:b0,b:b1,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b6,leftstick:b13,lefttrigger:b8,leftx:a0,lefty:a1,misc2:b2,paddle1:b5,paddle2:b15,paddle3:b18,paddle4:b19,rightshoulder:b7,rightstick:b14,righttrigger:b9,rightx:a3,righty:a4,start:b11,x:b3,y:b4,platform:Windows,
+Unrecognized output string "misc2" in mapping:
+030000007e0500006920000000000000,Nintendo Switch 2 Pro Controller,a:b0,b:b1,back:b14,dpdown:b8,dpleft:b10,dpright:b9,dpup:b11,guide:b16,leftshoulder:b12,leftstick:b15,lefttrigger:b13,leftx:a0,lefty:a1~,misc1:b17,misc2:b20,paddle1:b18,paddle2:b19,rightshoulder:b4,rightstick:b7,righttrigger:b5,rightx:a2,righty:a3~,start:b6,x:b2,y:b3,platform:Windows,
+Using "default" pen tablet driver...
+
+TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
+Loading resource: res://default_bus_layout.tres
+CORE API HASH: 3663110324
+EDITOR API HASH: 835956462
+SceneTreeFTI: traversal method DEFAULT
+Loading resource: res://addons/dialogic/Resources/CharacterResourceLoader.gd
+Loading resource: res://addons/dialogic/Resources/TimelineResourceLoader.gd
+Loading resource: res://addons/dialogic/Resources/CharacterResourceSaver.gd
+Loading resource: res://addons/dialogic/Resources/TimelineResourceSaver.gd
+Loading resource: res://Scripts/EventBus.gd
+Loading resource: res://Assets/Shaders/item_outline_spatial.gdshader
+Loading resource: res://Audio/SFX/motorcyle arrives and honks.mp3
+Loading resource: res://.godot/imported/motorcyle arrives and honks.mp3-72a1b4426da36ee3c28863cce803ce43.mp3str
+Loading resource: res://Audio/SFX/motorcyle leaves.mp3
+Loading resource: res://.godot/imported/motorcyle leaves.mp3-6b24be79fabafe81c1488776a1f20af9.mp3str
+Loading resource: res://Audio/SFX/dial.wav
+Loading resource: res://.godot/imported/dial.wav-41bff2b00aa2254ded1da6ccb5d24de4.sample
+Loading resource: res://Scenes/PlasticDeliveryItem.tscn
+Loading resource: res://Scripts/PlasticDeliveryItem.gd
+Loading resource: res://Scenes/DraggableItem.tscn
+Loading resource: res://Scripts/DraggableItem.gd
+Loading resource: res://Resources/customers/KuyaKap.tres
+Loading resource: res://Audio/DialogueBlips/KuyaKap.wav
+Loading resource: res://.godot/imported/KuyaKap.wav-8671c0c7bec871a013a10c9316e94637.sample
+Loading resource: res://Assets/characters/sprites/Kuya_Kap.png
+Loading resource: res://.godot/imported/Kuya_Kap.png-accd112cc690910bdc43b341ccfc7247.s3tc.ctex
+Loading resource: res://Dialogue/Timelines/KuyaKap.dch
+Loading resource: res://Dialogue/Timelines/Kuyakap/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Kuyakap/Visit.dtl
+Loading resource: res://Dialogue/Timelines/Kuyakap/Story.dtl
+Loading resource: res://Resources/customers/ManangAna.tres
+Loading resource: res://Dialogue/Timelines/ManangAna.dch
+Loading resource: res://Audio/DialogueBlips/ManangAna.wav
+Loading resource: res://.godot/imported/ManangAna.wav-5c666ba9f8c26bacec85c6288bdd6475.sample
+Loading resource: res://Assets/characters/sprites/ManangAna.png
+Loading resource: res://.godot/imported/ManangAna.png-5dac0e68086fd4f36c918a2bf1643edf.ctex
+Loading resource: res://Dialogue/Timelines/ManangAna/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/ManangAna/Story.dtl
+Loading resource: res://Dialogue/Timelines/ManangAna/Visit.dtl
+Loading resource: res://Resources/customers/ReynaMayari.tres
+Loading resource: res://Dialogue/Timelines/ReynaMayari.dch
+Loading resource: res://Audio/DialogueBlips/ReynaMayari.wav
+Loading resource: res://.godot/imported/ReynaMayari.wav-28f699f08dd42b2102bb7dee7ac07a0f.sample
+Loading resource: res://Assets/characters/sprites/ReynaMayari.png
+Loading resource: res://.godot/imported/ReynaMayari.png-1ea1307db4d228e16321a8763585ceec.s3tc.ctex
+Loading resource: res://Dialogue/Timelines/ReynaMayari/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/ReynaMayari/Story.dtl
+Loading resource: res://Dialogue/Timelines/ReynaMayari/Visit.dtl
+Loading resource: res://Resources/customers/Rosalyn.tres
+Loading resource: res://Dialogue/Timelines/Rosalyn.dch
+Loading resource: res://Audio/DialogueBlips/Rosalyn.wav
+Loading resource: res://.godot/imported/Rosalyn.wav-e3b5c0b65c3956d1477cbf48bec80332.sample
+Loading resource: res://Assets/characters/sprites/Rosalyn.png
+Loading resource: res://.godot/imported/Rosalyn.png-b5e1c10561972b87dfdf99c45556ce3d.ctex
+Loading resource: res://Dialogue/Timelines/Rosalyn/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Rosalyn/Visit.dtl
+Loading resource: res://Dialogue/Timelines/Rosalyn/Story.dtl
+Loading resource: res://Resources/customers/TK.tres
+Loading resource: res://Dialogue/Timelines/TK.dch
+Loading resource: res://Audio/DialogueBlips/TK.wav
+Loading resource: res://.godot/imported/TK.wav-7a6f2fe3c3390db0370debd5a55e4707.sample
+Loading resource: res://Dialogue/Timelines/TK/Story.dtl
+Loading resource: res://Assets/characters/sprites/TK.png
+Loading resource: res://.godot/imported/TK.png-e983831e0f13271ff0f8fda39a66bbf4.s3tc.ctex
+Loading resource: res://Dialogue/Timelines/TK/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/TK/Visit.dtl
+Loading resource: res://Resources/customers/Buboy.tres
+Loading resource: res://Dialogue/Timelines/Buboy.dch
+Loading resource: res://Audio/DialogueBlips/Buboy.wav
+Loading resource: res://.godot/imported/Buboy.wav-e04d554429bdebd3f24d4e2f8e259470.sample
+Loading resource: res://Assets/characters/sprites/Buboy.png
+Loading resource: res://.godot/imported/Buboy.png-b4d118c4846410539e861de4c26e9c76.ctex
+Loading resource: res://Dialogue/Timelines/Buboy/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Buboy/Visit.dtl
+Loading resource: res://Dialogue/Timelines/Buboy/Story.dtl
+Loading resource: res://Resources/customers/Sarimanok.tres
+Loading resource: res://Dialogue/Timelines/Sarimanok.dch
+Loading resource: res://Audio/DialogueBlips/Sarimanok.wav
+Loading resource: res://.godot/imported/Sarimanok.wav-82769903beff9f71c3ae418a543b0c2b.sample
+Loading resource: res://Assets/characters/sprites/Sarimanok.png
+Loading resource: res://.godot/imported/Sarimanok.png-afc8d6cd77f5db864c73dabd62663812.s3tc.ctex
+Loading resource: res://Dialogue/Timelines/Sarimanok/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Sarimanok/Story.dtl
+Loading resource: res://Dialogue/Timelines/Sarimanok/Visit.dtl
+Loading resource: res://Resources/customers/Danilo.tres
+Loading resource: res://Dialogue/Timelines/Danilo.dch
+Loading resource: res://Audio/DialogueBlips/Danilo.wav
+Loading resource: res://.godot/imported/Danilo.wav-e6c8a66bb4878de5aa40329aaa00f201.sample
+Loading resource: res://Assets/characters/sprites/Danilo.png
+Loading resource: res://.godot/imported/Danilo.png-e814328a107531ec39ff3566ddbe07fd.s3tc.ctex
+Loading resource: res://Dialogue/Timelines/Danilo/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Danilo/Visit.dtl
+Loading resource: res://Dialogue/Timelines/Danilo/Story.dtl
+Loading resource: res://Resources/customers/Brahim.tres
+Loading resource: res://Dialogue/Timelines/Brahim.dch
+Loading resource: res://Audio/DialogueBlips/Brahim.wav
+Loading resource: res://.godot/imported/Brahim.wav-5f6a2d9a4dbc3fc121ad97a02ab92fbd.sample
+Loading resource: res://Assets/characters/sprites/Brahim.png
+Loading resource: res://.godot/imported/Brahim.png-bbe35b5ff97f02d41138e5230724b7d7.ctex
+Loading resource: res://Dialogue/Timelines/Brahim/Story.dtl
+Loading resource: res://Dialogue/Timelines/Brahim/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Brahim/Visit.dtl
+Loading resource: res://Resources/customers/Rodel.tres
+Loading resource: res://Dialogue/Timelines/Rodel.dch
+Loading resource: res://Audio/DialogueBlips/Rodel.wav
+Loading resource: res://.godot/imported/Rodel.wav-f24158526c0368893f121632581dd894.sample
+Loading resource: res://Assets/characters/sprites/Rodel.png
+Loading resource: res://.godot/imported/Rodel.png-425d31790dfadc7478a0e21af0e5eb81.s3tc.ctex
+Loading resource: res://Dialogue/Timelines/Rodel/Story.dtl
+Loading resource: res://Dialogue/Timelines/Rodel/Purchase.dtl
+Loading resource: res://Dialogue/Timelines/Rodel/Visit.dtl
+Loading resource: res://Resources/customers/UncleMario.tres
+Loading resource: res://Dialogue/Timelines/UncleMario.dch
+Loading resource: res://Assets/characters/sprites/UncleMario.png
+Loading resource: res://.godot/imported/UncleMario.png-b6a158a5084be0c0cbdc356d8d6017c0.ctex
+Loading resource: res://Dialogue/Timelines/UncleMarioTutorial.dtl
+Loading resource: res://Resources/items/snack/Anoba.tres
+Loading resource: res://Assets/items/icons/4_snack_anoba.png
+Loading resource: res://.godot/imported/4_snack_anoba.png-d7f6f0f60f567adf3e1c76e0e1b55a0b.s3tc.ctex
+Loading resource: res://Scenes/UI/SleepOverlay.tscn
+Loading resource: res://Scripts/UI/SleepOverlay.gd
+Loading resource: res://Assets/Fonts/Inder/Inder-Regular.ttf
+Loading resource: res://.godot/imported/Inder-Regular.ttf-7993e0a6bf3a3457e2b2d5d4b8655796.fontdata
+Loading resource: res://Audio/Soundtracks/A Boring Day.mp3
+Loading resource: res://.godot/imported/A Boring Day.mp3-6c525dc469468492801ab8d2017c9706.mp3str
+Loading resource: res://Audio/Soundtracks/Fantastic Idea.mp3
+Loading resource: res://.godot/imported/Fantastic Idea.mp3-9db3c333782fb35ff14edd00d746ed13.mp3str
+Loading resource: res://Audio/Soundtracks/Not ME.mp3
+Loading resource: res://.godot/imported/Not ME.mp3-917ab175ae76c886d9171d635f05c62c.mp3str
+Loading resource: res://Audio/Soundtracks/Sleepy.mp3
+Loading resource: res://.godot/imported/Sleepy.mp3-a7294d6b88328e1056801fac01566c30.mp3str
+Loading resource: res://Audio/Soundtracks/Laughing Horse.mp3
+Loading resource: res://.godot/imported/Laughing Horse.mp3-e3240b1d052e425b9392ffce300e884f.mp3str
+Loading resource: res://Audio/Soundtracks/an Autumn Wind.mp3
+Loading resource: res://.godot/imported/an Autumn Wind.mp3-f9774842227cb523f2eed651bcf1ff52.mp3str
+Loading resource: res://Audio/Soundtracks/Brunch.wav
+Loading resource: res://.godot/imported/Brunch.wav-5be6254a077cdfe74675a0ef7e8c31a7.sample
+Loading resource: res://Audio/Soundtracks/Brunch II.wav
+Loading resource: res://.godot/imported/Brunch II.wav-97431a7c361ade96af46a5ca7418e2b1.sample
+Loading resource: res://Audio/Soundtracks/Kid's Room.wav
+Loading resource: res://.godot/imported/Kid's Room.wav-ebdae3eb7e0b2649164d7d3db7f03319.sample
+Loading resource: res://Audio/Soundtracks/Adventure of a Hermit Crab.wav
+Loading resource: res://.godot/imported/Adventure of a Hermit Crab.wav-e73197fe776df282010f56fb8c518c06.sample
+Loading resource: res://Audio/Soundtracks/Naptime.wav
+Loading resource: res://.godot/imported/Naptime.wav-3cbce890303d86674f6c66e8823a5691.sample
+Loading resource: res://Audio/SFX/Calming Morning Sounds.mp3
+Loading resource: res://.godot/imported/Calming Morning Sounds.mp3-fbb726589e7015f12957cccb230a18f5.mp3str
+Loading resource: res://Audio/SFX/Sounds of Night Crickets.mp3
+Loading resource: res://.godot/imported/Sounds of Night Crickets.mp3-03ce94aa8ef1f0c8dfce512f4ab2ab58.mp3str
+Loading resource: res://Audio/SFX/money kaching.mp3
+Loading resource: res://.godot/imported/money kaching.mp3-1f1759e848c2be0db9c0898eefb6a245.mp3str
+Loading resource: res://Audio/SFX/ui_sfx_12.mp3
+Loading resource: res://.godot/imported/ui_sfx_12.mp3-5de25481fb437b494f823f1da6daf663.mp3str
+Loading resource: res://Audio/SFX/ui_sfx_15.mp3
+Loading resource: res://.godot/imported/ui_sfx_15.mp3-5875040636b3a3e530671f764e358956.mp3str
+Loading resource: res://Audio/SFX/ui_sfx_3.mp3
+Loading resource: res://.godot/imported/ui_sfx_3.mp3-036abaeec6e8c91dbb1cf58f175df5aa.mp3str
+Loading resource: res://Audio/SFX/ui_sfx_9.mp3
+Loading resource: res://.godot/imported/ui_sfx_9.mp3-05c074b15b09f433bf12d92ec59ef633.mp3str
+Loading resource: res://Audio/SFX/ui_sfx_4.mp3
+Loading resource: res://.godot/imported/ui_sfx_4.mp3-6f38f871f110fd7a1f55bfbb10f0390a.mp3str
+Loading resource: res://Audio/SFX/ui_sfx_7.mp3
+Loading resource: res://.godot/imported/ui_sfx_7.mp3-67f50a92e013a90e79d0952e65aa9aa1.mp3str
+Loading resource: res://Audio/SFX/plastic.mp3
+Loading resource: res://.godot/imported/plastic.mp3-c0b8f1c918dae0dfbbbe2cc8a1175627.mp3str
+Loading resource: res://Audio/SFX/trash.mp3
+Loading resource: res://.godot/imported/trash.mp3-084dfdcab3b0ff13fb6ae60aa60bd7d8.mp3str
+Loading resource: res://Audio/SFX/money_decrease.wav
+Loading resource: res://.godot/imported/money_decrease.wav-9c0858f2898743306992073e96f78e26.sample
+Loading resource: res://Audio/SFX/refrigerator_open.mp3
+Loading resource: res://.godot/imported/refrigerator_open.mp3-d6f57b5154d9ad423cdc9accdfd54079.mp3str
+Loading resource: res://Audio/SFX/refrigerator_close.mp3
+Loading resource: res://.godot/imported/refrigerator_close.mp3-b8bfd162ee8c914ec636a7574bb81495.mp3str
+Loading resource: res://Audio/SFX/refrigerator.mp3
+Loading resource: res://.godot/imported/refrigerator.mp3-a7da61e91605e70b09b11311b7de9f63.mp3str
+Loading resource: res://Scenes/Customer.tscn
+Loading resource: res://Scripts/Customer.gd
+Loading resource: res://Dialogue/Timelines/Customer.dch
+Loading resource: res://Assets/brackeys_vfx/smoke_04_a.png
+Loading resource: res://.godot/imported/smoke_04_a.png-ea30218f0bd2497db86641c62199b92f.ctex
+Loading resource: res://Assets/brackeys_vfx/star_04_a.png
+Loading resource: res://.godot/imported/star_04_a.png-2fac48434cb3b40318b90ba68a07f576.ctex
+Loading resource: res://Assets/brackeys_vfx/circle_05_a.png
+Loading resource: res://.godot/imported/circle_05_a.png-d8f43c3d45f7d0db8fff13da91de34e8.ctex
+Loading resource: res://Assets/brackeys_vfx/smoke_02_a.png
+Loading resource: res://.godot/imported/smoke_02_a.png-defedfd70add962171b4a44577e26c96.ctex
+Loading resource: res://Assets/brackeys_vfx/star_07_a.png
+Loading resource: res://.godot/imported/star_07_a.png-294fc4eca48eda724a86dab2725983ea.ctex
+Loading resource: res://Assets/brackeys_vfx/star_01_a.png
+Loading resource: res://.godot/imported/star_01_a.png-0d8419e8c29068534aea6fc721f721c3.ctex
+Loading resource: res://Assets/brackeys_vfx/flare_01_a.png
+Loading resource: res://.godot/imported/flare_01_a.png-8b444ec1b03828eed07143a3daf60921.ctex
+Loading resource: res://Assets/brackeys_vfx/smoke_03_a.png
+Loading resource: res://.godot/imported/smoke_03_a.png-51f750a83b96ee4ff3ff0eb7cd192fd6.ctex
+Loading resource: res://icon.svg
+Loading resource: res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.s3tc.ctex
+Loading resource: res://Assets/ui/Plastic.png
+Loading resource: res://.godot/imported/Plastic.png-372e91df80ec36a389b9815f2da91f9e.ctex
+Loading resource: res://addons/dialogic/Modules/Background/DefaultBackgroundScene/default_background.tscn
+Loading resource: res://addons/dialogic/Modules/Background/DefaultBackgroundScene/default_background.gd
+Loading resource: res://addons/dialogic/Modules/Character/default_portrait.tscn
+Loading resource: res://addons/dialogic/Modules/Character/default_portrait.gd
+Loading resource: res://Scripts/UI/DialogueChoiceNavigator.gd
+Loading resource: res://Scripts/UI/PricingOverlay.gd
+Loaded system CA certificates
+Loading resource: res://Scenes/MainMenu.tscn
+Loading resource: res://Scripts/MainMenu.gd
+Loading resource: res://Assets/ui/backgrounds/Background.png
+Loading resource: res://.godot/imported/Background.png-41b6e2d8fa9254bf5d1ab3efb1bdd262.ctex
+Loading resource: res://Scenes/refrigerator_door.tscn
+Loading resource: res://Assets/3D/final store/textures/materials/Material.016.tres
+Loading resource: res://Scripts/RefrigeratorDoor.gd
+Loading resource: res://Scripts/FridgeDoorInteractor.gd
+Loading resource: res://Scenes/UI/CollectionOverlay.tscn
+Loading resource: res://Scripts/UI/CollectionOverlay.gd
+Loading resource: res://Scenes/UI/ConfirmationOverlay.tscn
+Loading resource: res://Scripts/UI/ConfirmationOverlay.gd
+Loading resource: res://Scripts/UI/NowPlayingIndicator.gd
+Loading resource: res://Scenes/UI/OptionsOverlay.tscn
+Loading resource: res://Scripts/UI/OptionsOverlay.gd
+Loading resource: res://Assets/ui/grabber.png
+Loading resource: res://.godot/imported/grabber.png-3c806aa771a2c65c0739c4e1c2c38d57.ctex
+Loading resource: res://Assets/ui/carbon_checkbox.png
+Loading resource: res://.godot/imported/carbon_checkbox.png-ed9d5f985c868d4def4bc34ae60c80ea.ctex
+Loading resource: res://Assets/ui/mingcute_checkbox-fill.png
+Loading resource: res://.godot/imported/mingcute_checkbox-fill.png-41fe3c3be2a6984653fc2193b3d24d91.ctex
+Loading resource: res://Assets/ui/weui_arrow-filled.png
+Loading resource: res://.godot/imported/weui_arrow-filled.png-57cb7f77016831d1ea76afed25ba781f.ctex
+Loading resource: res://Scenes/UI/StoryProgressOverlay.tscn
+Loading resource: res://Scripts/UI/StoryProgressOverlay.gd
+Loading resource: res://Scenes/UI/CharacterStoryCard.tscn
+Loading resource: res://Scripts/UI/CharacterStoryCard.gd
+Loading resource: res://Scenes/UI/ProgressListButton.tscn
+Loading resource: res://Scripts/UI/ProgressListButton.gd
+Loading resource: res://Scenes/TitleScreen3D.tscn
+Loading resource: res://addons/sky_3d/shaders/SkyMaterial.gdshader
+Loading resource: res://addons/sky_3d/shaders/Common.gdshaderinc
+Loading resource: res://addons/sky_3d/assets/resources/SNoise.tres
+Loading resource: res://addons/sky_3d/assets/textures/noiseClouds.png
+Loading resource: res://.godot/imported/noiseClouds.png-07511094ef8b72a49cc860b35c60d0fd.s3tc.ctex
+Loading resource: res://addons/sky_3d/assets/thirdparty/textures/moon/MoonMap.png
+Loading resource: res://.godot/imported/MoonMap.png-81d542c3fafff4e5b235a177af6f3221.s3tc.ctex
+Loading resource: res://addons/sky_3d/assets/textures/noise.jpg
+Loading resource: res://.godot/imported/noise.jpg-b47d5d36d9abfdaec2a09c140a78ba24.s3tc.ctex
+Loading resource: res://addons/sky_3d/assets/thirdparty/textures/milkyway/StarField.jpg
+Loading resource: res://.godot/imported/StarField.jpg-9d224e20fcbe8fdc7ff5028dae269839.s3tc.ctex
+Loading resource: res://addons/sky_3d/assets/thirdparty/textures/milkyway/Milkyway.jpg
+Loading resource: res://.godot/imported/Milkyway.jpg-a06044e407cf6953ab6e46a2f0f17f3a.s3tc.ctex
+Loading resource: res://Scenes/TitleScreen3D.VoxelGI2_data.res
+Loading resource: res://addons/sky_3d/src/Sky3D.gd
+Loading resource: res://addons/sky_3d/assets/resources/SunMoonLightFade.tres
+Loading resource: res://Scenes/notebook.tscn
+Loading resource: res://Assets/3D/final store/textures/materials/_16734_notebook_v1default.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.003.tres
+Loading resource: res://Assets/3D/final store/textures/agua_bendita.jpg
+Loading resource: res://.godot/imported/agua_bendita.jpg-7b6a3a21d58b8d724585d5d4616a1a7c.s3tc.ctex
+Loading resource: res://Scenes/final_store.tscn
+Loading resource: res://Assets/3D/final store/final_store.gltf
+Loading resource: res://.godot/imported/final_store.gltf-603d74e030ac54c2d3f418fd5d56ddf8.scn
+Loading resource: res://Assets/3D/final store/textures/materials/Material.025.tres
+Loading resource: res://Assets/3D/final store/textures/materials/door_1.001.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.012.tres
+Loading resource: res://Assets/3D/final store/textures/materials/inner_wall.001.tres
+Loading resource: res://Assets/3D/final store/textures/wall.png
+Loading resource: res://.godot/imported/wall.png-2192000b2811c743a3d5ef3cedb1bb51.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/outer_wall.001.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.014.tres
+Loading resource: res://Assets/3D/final store/textures/materials/countertop.tres
+Loading resource: res://Assets/3D/final store/textures/wood2.png
+Loading resource: res://.godot/imported/wood2.png-9ca0bfcbf4c4e4d53fa96888e8a300ac.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.009.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.005.tres
+Loading resource: res://Assets/3D/final store/textures/wood3.png
+Loading resource: res://.godot/imported/wood3.png-77ff650761a03c3560ac5112ba98b02d.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/door.tres
+Loading resource: res://Assets/3D/final store/textures/wooden_door.jpg
+Loading resource: res://.godot/imported/wooden_door.jpg-7939a4338382f4b6a922a2da8ad0921e.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.001.tres
+Loading resource: res://Assets/3D/final store/textures/floor.png
+Loading resource: res://.godot/imported/floor.png-bbdfab0ac614d717a4fa98ba24b6f33f.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/metal_sheet.tres
+Loading resource: res://Assets/3D/final store/textures/materials/marble.tres
+Loading resource: res://Assets/3D/final store/textures/floating_shelf_marble.jpg
+Loading resource: res://.godot/imported/floating_shelf_marble.jpg-4c581081b75e0845f051f4a81cf8cf30.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/metal.tres
+Loading resource: res://Assets/3D/final store/textures/floating_shelf_metal.jpg
+Loading resource: res://.godot/imported/floating_shelf_metal.jpg-b04e65d56681bd498f37033c23bde976.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/[0085_Turquoise].tres
+Loading resource: res://Assets/3D/final store/textures/materials/scratch.tres
+Loading resource: res://Assets/3D/final store/textures/scratch_chair.png
+Loading resource: res://.godot/imported/scratch_chair.png-3fc33bc61bec8561da904844fd91737b.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/brown_.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.045.tres
+Loading resource: res://Assets/3D/final store/textures/materials/door.001.tres
+Loading resource: res://Assets/3D/final store/textures/materials/back.tres
+Loading resource: res://Assets/3D/final store/textures/nokia.jpg
+Loading resource: res://.godot/imported/nokia.jpg-d18e3e094f7fbe06a1e902e2df4d3483.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/screen.tres
+Loading resource: res://Assets/3D/final store/textures/materials/side.tres
+Loading resource: res://Assets/3D/final store/textures/materials/3_- Default.tres
+Loading resource: res://Assets/3D/final store/textures/materials/3_-_Default.tres
+Loading resource: res://Assets/3D/final store/textures/materials/None.tres
+Loading resource: res://Assets/3D/final store/textures/materials/doorway_1.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.002.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.007.tres
+Loading resource: res://Assets/3D/final store/textures/materials/WINDOWNS.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.015.tres
+Loading resource: res://Assets/3D/final store/textures/materials/glass.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.024.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.004.tres
+Loading resource: res://Assets/3D/final store/textures/iron_table_bcolor.png
+Loading resource: res://.godot/imported/iron_table_bcolor.png-d84e67afe7ddce6d6adfa36d0a479c0d.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.011.tres
+Loading resource: res://Assets/3D/final store/textures/signage.png
+Loading resource: res://.godot/imported/signage.png-738ca6fda469752dc29c9bfd55b0dd4b.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Radio.001.tres
+Loading resource: res://Assets/3D/final store/textures/Panasonic.png
+Loading resource: res://.godot/imported/Panasonic.png-94bed947436765f45fd02186afee472a.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Blanco.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Adds.tres
+Loading resource: res://Assets/3D/final store/textures/radio.jpg
+Loading resource: res://.godot/imported/radio.jpg-24ee45d0d0ffd2aee5e3cab1e6569bb3.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/MetalGris.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Panasonic.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Rojo.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.043.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.029.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.058.tres
+Loading resource: res://Assets/3D/final store/textures/materials/tanduay_poster.tres
+Loading resource: res://Assets/3D/final store/textures/tanduay_poster.png
+Loading resource: res://.godot/imported/tanduay_poster.png-090e1e6f4dc36d9af040fc94e6cf6fd7.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.010.tres
+Loading resource: res://Assets/3D/final store/textures/panday_poster.png
+Loading resource: res://.godot/imported/panday_poster.png-7bd061e3e850e59d889c8f1d09f21e23.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/outer_wall.tres
+Loading resource: res://Assets/3D/final store/textures/materials/inner_wall.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.020.tres
+Loading resource: res://Assets/3D/final store/textures/materials/fam_pic.tres
+Loading resource: res://Assets/ui/family_portrait.png
+Loading resource: res://.godot/imported/family_portrait.png-ebd405fd6b6c66ea8759382534499e83.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/grad_pic.tres
+Loading resource: res://Assets/3D/final store/textures/grad_pic.png
+Loading resource: res://.godot/imported/grad_pic.png-d41384b0b129cc8f36e8052cf5940f75.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/calendar.tres
+Loading resource: res://Assets/3D/final store/textures/calendar_2.png
+Loading resource: res://.godot/imported/calendar_2.png-b691c64b1edd428aa816773e95a3fcdc.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.041.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.042.tres
+Loading resource: res://Assets/3D/final store/textures/materials/color2.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Tree1_2.001.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Tree1.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.046.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.047.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.063.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.082.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.064.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.081.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.068.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.069.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.080.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.067.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.065.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.066.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.074.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.079.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.084.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.078.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.083.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.085.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.086.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.070.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.077.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.073.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.076.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.071.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.075.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.072.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.087.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.044.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material_0.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material_1.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material_3.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material_4.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material_5.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.048.tres
+Loading resource: res://Assets/3D/final store/textures/materials/chainlink.tres
+Loading resource: res://Assets/3D/final store/textures/fence.png
+Loading resource: res://.godot/imported/fence.png-3e4d28cd5d2f7d743c44c1486f977df5.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/fence_normal.png
+Loading resource: res://.godot/imported/fence_normal.png-13220672b8cab479ea86b79c51f4c358.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/fence_supports.tres
+Loading resource: res://Assets/3D/final store/textures/fence_supports_normal.png
+Loading resource: res://.godot/imported/fence_supports_normal.png-f4b2a34679052070a23aca344f7ee036.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.049.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.008.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.006.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.030.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.031.tres
+Loading resource: res://Assets/3D/final store/textures/materials/M_door.tres
+Loading resource: res://Assets/3D/final store/textures/materials/M_door_handle1.tres
+Loading resource: res://Assets/3D/final store/textures/materials/windowns_2.tres
+Loading resource: res://Assets/3D/final store/textures/materials/glass.001.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.053.tres
+Loading resource: res://Assets/3D/final store/textures/tm_advert.png
+Loading resource: res://.godot/imported/tm_advert.png-2da97e0feb4dc977fc1c4ee1c751d7f4.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.055.tres
+Loading resource: res://Assets/3D/final store/textures/load_poster.png
+Loading resource: res://.godot/imported/load_poster.png-0fb283f34924dbac66ef07491dd5816b.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.057.tres
+Loading resource: res://Assets/3D/final store/textures/vote_poster.png
+Loading resource: res://.godot/imported/vote_poster.png-2d2d640ca53af15f41da912f56491d16.s3tc.ctex
+Loading resource: res://Assets/3D/final store/textures/materials/Material.018.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.019.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.056.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.040.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.032.tres
+Loading resource: res://Assets/3D/final store/textures/materials/door_1.tres
+Loading resource: res://Assets/3D/final store/textures/materials/door_handle_1.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.062.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.039.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.027.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.028.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.033.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.054.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.038.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.034.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.026.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.023.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.061.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.021.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.050.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.052.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.051.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.035.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.037.tres
+Loading resource: res://Assets/3D/final store/textures/materials/Material.036.tres
+Loading resource: res://Scripts/FlickerLight.gd
+Loading resource: res://Scenes/nokia.tscn
+Loading resource: res://Resources/MainGame.VoxelGI_data.res
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/bottle
+Loading resource: res://Resources/items/bottle/Coke.tres
+Loading resource: res://Assets/items/icons/26_bottle_coke.png
+Loading resource: res://.godot/imported/26_bottle_coke.png-7014e88378279cc27d1d8c0d49ff27c5.ctex
+Loading resource: res://Resources/items/bottle/Gin.tres
+Loading resource: res://Assets/items/icons/25_bottle_gin.png
+Loading resource: res://.godot/imported/25_bottle_gin.png-b57354a9565031dc7467924104a9df61.s3tc.ctex
+Loading resource: res://Resources/items/bottle/Water.tres
+Loading resource: res://Assets/items/icons/27_bottle_water.png
+Loading resource: res://.godot/imported/27_bottle_water.png-2b9253782cad5cc5f68b6bb7bc12b4b6.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/can
+Loading resource: res://Resources/items/can/Argentita.tres
+Loading resource: res://Assets/items/icons/10_can_argentita.png
+Loading resource: res://.godot/imported/10_can_argentita.png-b1c9fdd12c75723781881b68e77ebc11.s3tc.ctex
+Loading resource: res://Resources/items/can/Cenchuree.tres
+Loading resource: res://Assets/items/icons/11_can_cenchuree.png
+Loading resource: res://.godot/imported/11_can_cenchuree.png-a8cd3efae137713c9c6e6db0cf4067b3.s3tc.ctex
+Loading resource: res://Resources/items/can/Lucky9.tres
+Loading resource: res://Assets/items/icons/14_can_lucky_9.png
+Loading resource: res://.godot/imported/14_can_lucky_9.png-c7c6b701098f267fb631152079113db9.s3tc.ctex
+Loading resource: res://Resources/items/can/Mema.tres
+Loading resource: res://Assets/items/icons/12_can_mema.png
+Loading resource: res://.godot/imported/12_can_mema.png-f89d4180f9361ef5c4ec08f43210f7b0.s3tc.ctex
+Loading resource: res://Resources/items/can/Scam.tres
+Loading resource: res://Assets/items/icons/13_can_scam.png
+Loading resource: res://.godot/imported/13_can_scam.png-bcd060d69f20ec7c30abc37b9fea4f06.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/candy
+Loading resource: res://Resources/items/candy/Chubs.tres
+Loading resource: res://Assets/items/icons/16_candy_chubs.png
+Loading resource: res://.godot/imported/16_candy_chubs.png-f8fca854eb008fed836a5b491d2710a2.s3tc.ctex
+Loading resource: res://Resources/items/candy/Mentor.tres
+Loading resource: res://Assets/items/icons/17_candy_mentor.png
+Loading resource: res://.godot/imported/17_candy_mentor.png-5597e441f215ef41ebc6e68bec9027ca.s3tc.ctex
+Loading resource: res://Resources/items/candy/Pocha.tres
+Loading resource: res://Assets/items/icons/15_candy_pocha.png
+Loading resource: res://.godot/imported/15_candy_pocha.png-4d7369acab0eaf514d423ee0679821bc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/candycontainer
+Loading resource: res://Resources/items/candycontainer/Chubs.tres
+Loading resource: res://Assets/items/icons/20_candycontainer_chubs.png
+Loading resource: res://.godot/imported/20_candycontainer_chubs.png-7442420551dd91485658384c28eeacdc.s3tc.ctex
+Loading resource: res://Resources/items/candycontainer/Mentor.tres
+Loading resource: res://Assets/items/icons/18_candycontainer_mentor.png
+Loading resource: res://.godot/imported/18_candycontainer_mentor.png-c7a0e8b12513bd3e8fbffaf314273448.s3tc.ctex
+Loading resource: res://Resources/items/candycontainer/Mix.tres
+Loading resource: res://Assets/items/icons/21_candycontainer_mix.png
+Loading resource: res://.godot/imported/21_candycontainer_mix.png-8d9343e81fb100f2121d0231d2328dba.s3tc.ctex
+Loading resource: res://Resources/items/candycontainer/Pocha.tres
+Loading resource: res://Assets/items/icons/19_candycontainer_pocha.png
+Loading resource: res://.godot/imported/19_candycontainer_pocha.png-1e840fac360e6e2f40fa41632c9b2a82.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/cigarette
+Loading resource: res://Resources/items/cigarette/Champyon.tres
+Loading resource: res://Assets/items/icons/22_cigarette_champyon.png
+Loading resource: res://.godot/imported/22_cigarette_champyon.png-2c66504730f25f8a18ad3be0fdab2f1b.s3tc.ctex
+Loading resource: res://Resources/items/cigarette/Marboro.tres
+Loading resource: res://Assets/items/icons/23_cigarette_marboro.png
+Loading resource: res://.godot/imported/23_cigarette_marboro.png-63efa80776f8e5b88bc95255ed0cae4a.s3tc.ctex
+Loading resource: res://Resources/items/cigarette/Mayti.tres
+Loading resource: res://Assets/items/icons/24_cigarette_mayti.png
+Loading resource: res://.godot/imported/24_cigarette_mayti.png-3374d2c8dd9a93a9585fda026c003a55.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/frozen
+Loading resource: res://Resources/items/frozen/Borgir.tres
+Loading resource: res://Assets/items/icons/32_frozen_borgir.png
+Loading resource: res://.godot/imported/32_frozen_borgir.png-43eee3c967e6fca36fd51e095b6305ab.s3tc.ctex
+Loading resource: res://Resources/items/frozen/Hotdog.tres
+Loading resource: res://Assets/items/icons/31_frozen_hotdog.png
+Loading resource: res://.godot/imported/31_frozen_hotdog.png-dd287219d39fb4028599399ed7e61b80.s3tc.ctex
+Loading resource: res://Resources/items/frozen/Nagets.tres
+Loading resource: res://Assets/items/icons/33_frozen_nagets.png
+Loading resource: res://.godot/imported/33_frozen_nagets.png-7059f1dd5a8266ce6326df1f54456d1b.s3tc.ctex
+Loading resource: res://Resources/items/frozen/Tocino.tres
+Loading resource: res://Assets/items/icons/30_frozen_tocino.png
+Loading resource: res://.godot/imported/30_frozen_tocino.png-7ee00db60ea103384751ca2433c75097.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/pack
+Loading resource: res://Resources/items/pack/Chicken.tres
+Loading resource: res://Assets/items/icons/29_pack_chicken.png
+Loading resource: res://.godot/imported/29_pack_chicken.png-b5ffd750ac5bba8c46c9c992564a9d53.s3tc.ctex
+Loading resource: res://Resources/items/pack/Pantit.tres
+Loading resource: res://Assets/items/icons/28_pack_pantit.png
+Loading resource: res://.godot/imported/28_pack_pantit.png-a9c242da464fe9b21a1f25821614360d.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/sachet
+Loading resource: res://Resources/items/sachet/Aryel.tres
+Loading resource: res://Assets/items/icons/34_sachet_aryel.png
+Loading resource: res://.godot/imported/34_sachet_aryel.png-d54ed571b6e2c42531859559a73c80ef.s3tc.ctex
+Loading resource: res://Resources/items/sachet/KneesToes.tres
+Loading resource: res://Assets/items/icons/36_sachet_kneestoes.png
+Loading resource: res://.godot/imported/36_sachet_kneestoes.png-d35a8ae2103827843804f8be595523fc.ctex
+Loading resource: res://Resources/items/sachet/Kopimo.tres
+Loading resource: res://Assets/items/icons/35_sachet_kopimo.png
+Loading resource: res://.godot/imported/35_sachet_kopimo.png-15172f59f680827bf181786bba2b7656.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/sachetcontainers
+Loading resource: res://Resources/items/sachetcontainers/Aryel.tres
+Loading resource: res://Assets/items/icons/8_sachet_ariel.png
+Loading resource: res://.godot/imported/8_sachet_ariel.png-61509068c702daa579d137d3be534436.s3tc.ctex
+Loading resource: res://Resources/items/sachetcontainers/KneesToes.tres
+Loading resource: res://Assets/items/icons/7_sachet_knees_toes.png
+Loading resource: res://.godot/imported/7_sachet_knees_toes.png-5c55c18dbae9e4758e0cb9a70705f7d4.s3tc.ctex
+Loading resource: res://Resources/items/sachetcontainers/Kopimo.tres
+Loading resource: res://Assets/items/icons/9_sachet_kopimo.png
+Loading resource: res://.godot/imported/9_sachet_kopimo.png-b8ba015d69a2674f7470a6566ce72447.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [DEBUG] Scanning folder: res://Resources/items/snack
+Loading resource: res://Resources/items/snack/Dantes.tres
+Loading resource: res://Assets/items/icons/3_snack_dantes.png
+Loading resource: res://.godot/imported/3_snack_dantes.png-43ca99ea8baf68047f0157caeabf52e7.ctex
+Loading resource: res://Resources/items/snack/Marites.tres
+Loading resource: res://Assets/items/icons/1_snack_marites.png
+Loading resource: res://.godot/imported/1_snack_marites.png-300184ec4346983b0cef3d1c9bdcc7b4.s3tc.ctex
+Loading resource: res://Resources/items/snack/NgaragYa.tres
+Loading resource: res://Assets/items/icons/6_snack_ngarag_ya.png
+Loading resource: res://.godot/imported/6_snack_ngarag_ya.png-7468b1dd8f518f22f825896dd1d37095.s3tc.ctex
+Loading resource: res://Resources/items/snack/Patos.tres
+Loading resource: res://Assets/items/icons/5_snack_patos.png
+Loading resource: res://.godot/imported/5_snack_patos.png-d879399811c3e764a7413ffe697d0f7a.s3tc.ctex
+Loading resource: res://Resources/items/snack/Utang.tres
+Loading resource: res://Assets/items/icons/2_snack_utang.png
+Loading resource: res://.godot/imported/2_snack_utang.png-7e71ac25e30b2a0b9cd9cd60b762717a.s3tc.ctex
+2026-05-21 19:48:58 [InventoryManager] [INFO] Loaded 36 items
+2026-05-21 19:48:58 [InventoryManager] [INFO] Category Report: { "snack": 6, "can": 5, "sachet": 6, "cigarette": 3, "candy": 3, "candycontainer": 4, "frozen": 4, "pack": 2, "bottle": 3 }
+Loading resource: res://addons/dialogic/Modules/Audio/index.gd
+Loading resource: res://addons/dialogic/Modules/Background/index.gd
+Loading resource: res://addons/dialogic/Modules/Call/index.gd
+Loading resource: res://addons/dialogic/Modules/Character/index.gd
+Loading resource: res://addons/dialogic/Modules/Choice/index.gd
+Loading resource: res://addons/dialogic/Modules/Clear/index.gd
+Loading resource: res://addons/dialogic/Modules/Comment/index.gd
+Loading resource: res://addons/dialogic/Modules/Condition/index.gd
+Loading resource: res://addons/dialogic/Modules/Core/index.gd
+Loading resource: res://addons/dialogic/Modules/DefaultLayoutParts/index.gd
+Loading resource: res://addons/dialogic/Modules/End/index.gd
+Loading resource: res://addons/dialogic/Modules/Glossary/index.gd
+Loading resource: res://addons/dialogic/Modules/HighlightPortrait/index.gd
+Loading resource: res://addons/dialogic/Modules/History/index.gd
+Loading resource: res://addons/dialogic/Modules/Jump/index.gd
+Loading resource: res://addons/dialogic/Modules/LayeredPortrait/index.gd
+Loading resource: res://addons/dialogic/Modules/Save/index.gd
+Loading resource: res://addons/dialogic/Modules/Settings/index.gd
+Loading resource: res://addons/dialogic/Modules/Signal/index.gd
+Loading resource: res://addons/dialogic/Modules/Style/index.gd
+Loading resource: res://addons/dialogic/Modules/StyleEditor/index.gd
+Loading resource: res://addons/dialogic/Modules/Text/index.gd
+Loading resource: res://addons/dialogic/Modules/TextInput/index.gd
+Loading resource: res://addons/dialogic/Modules/Variable/index.gd
+Loading resource: res://addons/dialogic/Modules/Voice/index.gd
+Loading resource: res://addons/dialogic/Modules/Wait/index.gd
+Loading resource: res://addons/dialogic/Modules/WaitInput/index.gd
+Loading resource: res://addons/dialogic/Modules/Audio/event_audio.gd
+Loading resource: res://addons/dialogic/Modules/Background/event_background.gd
+Loading resource: res://addons/dialogic/Modules/Call/event_call.gd
+Loading resource: res://addons/dialogic/Modules/Clear/event_clear.gd
+Loading resource: res://addons/dialogic/Modules/Comment/event_comment.gd
+Loading resource: res://addons/dialogic/Modules/Condition/event_condition.gd
+Loading resource: res://addons/dialogic/Modules/End/event_end.gd
+Loading resource: res://addons/dialogic/Modules/History/event_history.gd
+Loading resource: res://addons/dialogic/Modules/Jump/event_return.gd
+Loading resource: res://addons/dialogic/Modules/Save/event_save.gd
+Loading resource: res://addons/dialogic/Modules/Settings/event_setting.gd
+Loading resource: res://addons/dialogic/Modules/Signal/event_signal.gd
+Loading resource: res://addons/dialogic/Modules/Style/event_style.gd
+Loading resource: res://addons/dialogic/Modules/TextInput/event_text_input.gd
+Loading resource: res://addons/dialogic/Modules/Variable/event_variable.gd
+Loading resource: res://addons/dialogic/Modules/Wait/event_wait.gd
+Loading resource: res://addons/dialogic/Modules/WaitInput/event_wait_input.gd
+2026-05-21 19:48:59 [StoryManager] [INFO] StoryManager._ready() START
+2026-05-21 19:48:59 [StoryManager] [INFO] StoryManager._ready() END
+2026-05-21 19:48:59 [CharacterProgressionManager] [INFO] Ready.
+Loading resource: res://addons/sky_3d/shaders/AtmFog.gdshader
+Loading resource: res://Shaders/outline.gdshader
+2026-05-21 19:48:59 [StoryManager] [DEBUG] Cached GameManager: false
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
+Leaked instance: GDScriptNativeClass:9223372043615994191 - Reference count: 23
+Leaked instance: GDScriptNativeClass:9223372046099022307 - Reference count: 1
+Leaked instance: GDScript:9223372065946469874 - Reference count: 1
+Leaked instance: GDScript:9223372067758409213 - Reference count: 1
+Leaked instance: GDScript:9223372068127507968 - Reference count: 1
+Leaked instance: GDScript:9223372068412720642 - Reference count: 1
+Leaked instance: GDScript:9223372068697933316 - Reference count: 1
+Leaked instance: GDScript:9223372068983145990 - Reference count: 1
+Leaked instance: GDScript:9223372069268358664 - Reference count: 1
+Leaked instance: GDScript:9223372069553571338 - Reference count: 1
+Leaked instance: GDScript:9223372069838784012 - Reference count: 1
+Leaked instance: GDScript:9223372070123996686 - Reference count: 1
+Leaked instance: GDScript:9223372070409209360 - Reference count: 1
+Leaked instance: GDScript:9223372070694422034 - Reference count: 1
+Leaked instance: GDScript:9223372070979634708 - Reference count: 1
+Leaked instance: GDScript:9223372071264847382 - Reference count: 1
+Leaked instance: GDScript:9223372071550060056 - Reference count: 1
+Leaked instance: GDScript:9223372071835272730 - Reference count: 1
+Leaked instance: GDScript:9223372072120485404 - Reference count: 1
+Leaked instance: GDScript:9223372072405698078 - Reference count: 1
+Leaked instance: GDScript:9223372072707687969 - Reference count: 1
+Leaked instance: GDScript:9223372072942568995 - Reference count: 36
+Leaked instance: GDScript:9223372076868437559 - Reference count: 2
+Leaked instance: GDScript:9223372083948422724 - Reference count: 2
+Leaked instance: Node:121299273292 - Node path: 
+Leaked instance: Node:121316050509 - Node path: 
+Leaked instance: Node:121332827726 - Node path: 
+Leaked instance: Node:121869698639 - Node path: 
+Leaked instance: Timer:121886475856 - Node path: 
+Leaked instance: Node:121903253073 - Node path: 
+Leaked instance: GDScript:9223372158338598492 - Reference count: 1
+Leaked instance: PackedScene:9223372158657365597 - Reference count: 1
+Leaked instance: SceneState:9223372158674142821 - Reference count: 1
+Leaked instance: RegEx:9223372158774806119 - Reference count: 1
+Leaked instance: Node:121265718906 - Node path: 
+Leaked instance: Node:121936807594 - Node path: 
+Leaked instance: Node:121282496227 - Node path: 
+Leaked instance: AudioStreamWAV:9223372120304649969 - Reference count: 1
+Leaked instance: AudioStreamMP3:9223372121395169014 - Reference count: 1
+Leaked instance: AudioStreamMP3:9223372122049480441 - Reference count: 1
+Leaked instance: Node:121953584902 - Node path: 
+Leaked instance: Timer:121987139339 - Node path: 
+Leaked instance: Node:121970362139 - Node path: 
+Leaked instance: Node:122003916572 - Node path: 
+Leaked instance: Node:122020693789 - Node path: 
+Leaked instance: Node:122037471006 - Node path: 
+Leaked instance: Node:122574341919 - Node path: 
+Leaked instance: Timer:122591119136 - Node path: 
+Leaked instance: Node:122607896353 - Node path: 
+Leaked instance: GDScript:9223372159043241762 - Reference count: 1
+Leaked instance: PackedScene:9223372159362008867 - Reference count: 1
+Leaked instance: SceneState:9223372159378786084 - Reference count: 1
+Leaked instance: Node:122624673573 - Node path: 
+Leaked instance: Node:122641450790 - Node path: 
+Leaked instance: RegEx:9223372159513003815 - Reference count: 1
+Leaked instance: RegEx:9223372159529781032 - Reference count: 1
+Leaked instance: RegEx:9223372159546558249 - Reference count: 1
+Leaked instance: RegEx:9223372159563335466 - Reference count: 1
+Leaked instance: Node:122725336875 - Node path: 
+Leaked instance: Node:122742114092 - Node path: 
+Leaked instance: Node:122758891309 - Node path: 
+Leaked instance: AudioStreamPlayer:122775668526 - Node path: 
+Leaked instance: AudioStreamPlayerInternal:122792445743
+Leaked instance: AudioStreamPlaybackMP3:9223372267424059907 - Reference count: 1
+Leaked instance: AudioStreamPlaybackWAV:9223372271584809478 - Reference count: 1
+Leaked instance: AudioStreamPlaybackMP3:9223372271165379267 - Reference count: 1
+Hint: Leaked instances typically happen when nodes are removed from the scene tree (with `remove_child()`) but not freed (with `free()` or `queue_free()`).
+Resource still in use: res://addons/dialogic/Core/Dialogic_Subsystem.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Character/dialogic_portrait.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Character/subsystem_containers.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Core/subsystem_expression.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Variable/subsystem_variables.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Jump/subsystem_jump.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Save/subsystem_save.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/History/subsystem_history.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Voice/subsystem_voice.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Settings/subsystem_settings.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Glossary/subsystem_glossary.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Core/subsystem_animation.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Text/subsystem_text.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Core/subsystem_input.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Character/subsystem_portraits.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Style/subsystem_styles.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Choice/subsystem_choices.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Audio/subsystem_audio.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Background/dialogic_background.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Background/subsystem_backgrounds.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/TextInput/subsystem_text_input.gd (GDScript)
+Resource still in use: res://addons/dialogic/Resources/event.gd (GDScript)
+Resource still in use: res://Audio/Soundtracks/Brunch.wav (AudioStreamWAV)
+Resource still in use: res://Audio/SFX/Calming Morning Sounds.mp3 (AudioStreamMP3)
+Resource still in use: res://Audio/SFX/ui_sfx_12.mp3 (AudioStreamMP3)
+Resource still in use: res://addons/dialogic/Modules/Background/DefaultBackgroundScene/default_background.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Background/DefaultBackgroundScene/default_background.tscn (PackedScene)
+Resource still in use: res://addons/dialogic/Modules/Character/default_portrait.gd (GDScript)
+Resource still in use: res://addons/dialogic/Modules/Character/default_portrait.tscn (PackedScene)
+Orphan StringName: auto_advance (static: 0, total: 4)
+Orphan StringName: has_setting (static: 0, total: 1)
+Orphan StringName: get_setting (static: 0, total: 1)
+Orphan StringName: save_game_state (static: 0, total: 2)
+Orphan StringName: text_effect_extradata (static: 0, total: 1)
+Orphan StringName: load_game_state (static: 0, total: 9)
+Orphan StringName: _on_choice_selected (static: 0, total: 1)
+Orphan StringName: full_event_history_content (static: 0, total: 3)
+Orphan StringName: stop_animation (static: 0, total: 1)
+Orphan StringName: animation_textbox_hide (static: 0, total: 2)
+Orphan StringName: event_description (static: 0, total: 3)
+Orphan StringName: update_text_version (static: 0, total: 1)
+Orphan StringName: can_be_translated (static: 0, total: 1)
+Orphan StringName: hotkey_behaviour (static: 0, total: 4)
+Orphan StringName: "addons/dialogic/Modules/Text/subsystem_text.gd" (static: 0, total: 1)
+Orphan StringName: handle_input (static: 0, total: 1)
+Orphan StringName: _update_character_transform (static: 0, total: 1)
+Orphan StringName: DialogicBackground (static: 0, total: 3)
+Orphan StringName: "addons/dialogic/Modules/Save/subsystem_save.gd" (static: 0, total: 1)
+Orphan StringName: color_character_names (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Background/subsystem_backgrounds.gd" (static: 0, total: 1)
+Orphan StringName: reset_all (static: 0, total: 1)
+Orphan StringName: simple_history_enabled (static: 0, total: 4)
+Orphan StringName: animation_textbox_show (static: 0, total: 2)
+Orphan StringName: event_color (static: 0, total: 3)
+Orphan StringName: prev_state (static: 0, total: 4)
+Orphan StringName: variable_changed (static: 0, total: 2)
+Orphan StringName: has_slot (static: 0, total: 1)
+Orphan StringName: _unhandled_input (static: 1, total: 2)
+Orphan StringName: animation_finished (static: 1, total: 2)
+Orphan StringName: _ready (static: 1, total: 12)
+Orphan StringName: DialogicSubsystem (static: 0, total: 3)
+Orphan StringName: script (static: 0, total: 2)
+Orphan StringName: "addons/dialogic/Modules/Variable/subsystem_variables.gd" (static: 0, total: 1)
+Orphan StringName: handle_node_gui_input (static: 0, total: 1)
+Orphan StringName: delete_slot (static: 0, total: 1)
+Orphan StringName: save_slot_thumbnail (static: 0, total: 1)
+Orphan StringName: viewport (static: 0, total: 2)
+Orphan StringName: visited_event (static: 0, total: 2)
+Orphan StringName: apply_character_and_portrait (static: 0, total: 1)
+Orphan StringName: _enter_visual_editor (static: 0, total: 1)
+Orphan StringName: dialogic_action_priority (static: 0, total: 2)
+Orphan StringName: effect_pause (static: 0, total: 1)
+Orphan StringName: has_active_layout_node (static: 0, total: 1)
+Orphan StringName: _change_portrait_z_index (static: 0, total: 1)
+Orphan StringName: set_variable (static: 0, total: 1)
+Orphan StringName: color_overrides (static: 0, total: 3)
+Orphan StringName: _load_custom_defaults (static: 0, total: 1)
+Orphan StringName: leave_character (static: 0, total: 1)
+Orphan StringName: change_character_mirror (static: 0, total: 1)
+Orphan StringName: has_last_event_been_visited (static: 0, total: 1)
+Orphan StringName: reset_slot (static: 0, total: 1)
+Orphan StringName: anchors_preset (static: 0, total: 3)
+Orphan StringName: _on_dialogic_event_handled (static: 0, total: 1)
+Orphan StringName: _change_portrait (static: 0, total: 1)
+Orphan StringName: open_requested (static: 0, total: 2)
+Orphan StringName: jumped_to_label (static: 0, total: 2)
+Orphan StringName: add_body_line_break (static: 0, total: 1)
+Orphan StringName: simple_history_changed (static: 0, total: 2)
+Orphan StringName: get_autoloads (static: 0, total: 1)
+Orphan StringName: current_audio_file (static: 0, total: 3)
+Orphan StringName: get_containers (static: 0, total: 1)
+Orphan StringName: SFX (static: 0, total: 2)
+Orphan StringName: meta_hover_started (static: 0, total: 2)
+Orphan StringName: change_speaker (static: 0, total: 1)
+Orphan StringName: _set (static: 0, total: 2)
+Orphan StringName: "addons/dialogic/Modules/Character/subsystem_portraits.gd" (static: 0, total: 1)
+Orphan StringName: is_any_channel_playing (static: 0, total: 1)
+Orphan StringName: set_file (static: 0, total: 1)
+Orphan StringName: reset_setting (static: 0, total: 1)
+Orphan StringName: get_end_branch_index (static: 0, total: 1)
+Orphan StringName: get_character_info (static: 0, total: 1)
+Orphan StringName: effect_signal (static: 0, total: 1)
+Orphan StringName: one_shot_audio_node (static: 0, total: 3)
+Orphan StringName: start_autoskip_timer (static: 0, total: 1)
+Orphan StringName: portrait (static: 0, total: 2)
+Orphan StringName: autofocus_first_choice (static: 0, total: 4)
+Orphan StringName: this_folder (static: 0, total: 2)
+Orphan StringName: show_textbox (static: 0, total: 1)
+Orphan StringName: store_to_shortcode_parameters (static: 0, total: 1)
+Orphan StringName: _make_sure_slot_dir_exists (static: 0, total: 1)
+Orphan StringName: event_sorting_index (static: 0, total: 3)
+Orphan StringName: animation_interrupted (static: 0, total: 2)
+Orphan StringName: invalid_question_reached (static: 0, total: 2)
+Orphan StringName: "addons/dialogic/Modules/Core/subsystem_animation.gd" (static: 0, total: 1)
+Orphan StringName: ui_update_needed (static: 0, total: 2)
+Orphan StringName: ValueType (static: 0, total: 1)
+Orphan StringName: background_changed (static: 0, total: 2)
+Orphan StringName: TextureRect (static: 0, total: 1)
+Orphan StringName: reset_container (static: 0, total: 1)
+Orphan StringName: _test_event_string (static: 0, total: 1)
+Orphan StringName: set_text_voice_synced (static: 0, total: 1)
+Orphan StringName: _get_event_key (static: 0, total: 1)
+Orphan StringName: load (static: 1, total: 2)
+Orphan StringName: voiceline_started (static: 0, total: 2)
+Orphan StringName: mouse_filter (static: 0, total: 1)
+Orphan StringName: dialogic_action (static: 0, total: 2)
+Orphan StringName: _SETTING_INPUT_ACTION_DEFAULT (static: 0, total: 1)
+Orphan StringName: _update_background (static: 0, total: 2)
+Orphan StringName: _update_portrait (static: 0, total: 2)
+Orphan StringName: save_visited_history (static: 0, total: 1)
+Orphan StringName: connect_meta_signals (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Core/subsystem_input.gd" (static: 0, total: 1)
+Orphan StringName: update_typing_sound_mood_from_character (static: 0, total: 1)
+Orphan StringName: to_text (static: 0, total: 1)
+Orphan StringName: take_thumbnail (static: 0, total: 1)
+Orphan StringName: select_choice (static: 0, total: 1)
+Orphan StringName: default_false_behaviour (static: 0, total: 4)
+Orphan StringName: str_to_vector (static: 0, total: 1)
+Orphan StringName: needs_indentation (static: 0, total: 3)
+Orphan StringName: _change_portrait_mirror (static: 0, total: 1)
+Orphan StringName: _letter_speed_absolute (static: 0, total: 4)
+Orphan StringName: saved (static: 0, total: 2)
+Orphan StringName: animation_textbox_new_text (static: 0, total: 2)
+Orphan StringName: add_glossary (static: 0, total: 1)
+Orphan StringName: Control (static: 0, total: 1)
+Orphan StringName: anchor_bottom (static: 0, total: 3)
+Orphan StringName: simple_history_save (static: 0, total: 4)
+Orphan StringName: text_finished (static: 0, total: 2)
+Orphan StringName: load_from_shortcode_parameters (static: 0, total: 1)
+Orphan StringName: set_volume (static: 0, total: 1)
+Orphan StringName: select_focused_choice (static: 0, total: 1)
+Orphan StringName: open_history (static: 0, total: 1)
+Orphan StringName: load_file (static: 0, total: 1)
+Orphan StringName: Location (static: 0, total: 1)
+Orphan StringName: voiceline_finished (static: 0, total: 2)
+Orphan StringName: get_encryption_password (static: 0, total: 1)
+Orphan StringName: get_container (static: 0, total: 1)
+Orphan StringName: update_text_speed (static: 0, total: 1)
+Orphan StringName: load_style (static: 0, total: 1)
+Orphan StringName: effect_autoadvance (static: 0, total: 1)
+Orphan StringName: _visited_last_event (static: 0, total: 4)
+Orphan StringName: reset (static: 0, total: 1)
+Orphan StringName: _execute (static: 0, total: 1)
+Orphan StringName: passed_label (static: 0, total: 2)
+Orphan StringName: store_simple_history_entry (static: 0, total: 1)
+Orphan StringName: _current_event_key (static: 0, total: 1)
+Orphan StringName: hide_text_input (static: 0, total: 1)
+Orphan StringName: post_install (static: 0, total: 5)
+Orphan StringName: emit_meta_signal (static: 0, total: 1)
+Orphan StringName: ColorRect (static: 0, total: 2)
+Orphan StringName: SAVE_SLOTS_DIR (static: 0, total: 1)
+Orphan StringName: _create_character_node (static: 0, total: 1)
+Orphan StringName: grow_vertical (static: 0, total: 3)
+Orphan StringName: hide_all_choices (static: 0, total: 1)
+Orphan StringName: _remove_portrait (static: 0, total: 1)
+Orphan StringName: _animate_node (static: 0, total: 1)
+Orphan StringName: z_sort_portrait_containers (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Audio/subsystem_audio.gd" (static: 0, total: 1)
+Orphan StringName: text_started (static: 0, total: 2)
+Orphan StringName: DialogicPortrait (static: 0, total: 3)
+Orphan StringName: move_container (static: 0, total: 1)
+Orphan StringName: _on_autoskip_toggled (static: 0, total: 1)
+Orphan StringName: set_slot_info (static: 0, total: 1)
+Orphan StringName: update_textbox (static: 0, total: 1)
+Orphan StringName: is_string_full_event (static: 0, total: 1)
+Orphan StringName: set_text_reveal_skippable (static: 0, total: 1)
+Orphan StringName: _should_do_portrait_update (static: 0, total: 1)
+Orphan StringName: event_category (static: 0, total: 3)
+Orphan StringName: effect_speed (static: 0, total: 1)
+Orphan StringName: get_remaining_time (static: 0, total: 1)
+Orphan StringName: change_character_z_index (static: 0, total: 1)
+Orphan StringName: full_event_history_enabled (static: 0, total: 4)
+Orphan StringName: add_container (static: 0, total: 1)
+Orphan StringName: _get_syntax_highlighting (static: 0, total: 1)
+Orphan StringName: _update_user_speed (static: 0, total: 1)
+Orphan StringName: Sprite2D (static: 0, total: 1)
+Orphan StringName: execute_condition (static: 0, total: 1)
+Orphan StringName: editor_list (static: 0, total: 2)
+Orphan StringName: parse_stack (static: 0, total: 3)
+Orphan StringName: _on_dialogic_timeline_ended (static: 0, total: 1)
+Orphan StringName: folders (static: 0, total: 1)
+Orphan StringName: _on_voice_finished (static: 0, total: 1)
+Orphan StringName: is_jump_stack_empty (static: 0, total: 1)
+Orphan StringName: show_next_indicators (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Jump/subsystem_jump.gd" (static: 0, total: 1)
+Orphan StringName: created_by_button (static: 0, total: 3)
+Orphan StringName: voiceline_stopped (static: 0, total: 2)
+Orphan StringName: get_current_speaker (static: 0, total: 1)
+Orphan StringName: is_textbox_visible (static: 0, total: 1)
+Orphan StringName: transform_regex (static: 0, total: 4)
+Orphan StringName: get_saved_visited_history (static: 0, total: 1)
+Orphan StringName: modifier_break (static: 0, total: 1)
+Orphan StringName: finished (static: 0, total: 2)
+Orphan StringName: is_character_joined (static: 0, total: 1)
+Orphan StringName: glossaries (static: 0, total: 3)
+Orphan StringName: ParserModes (static: 0, total: 1)
+Orphan StringName: apply_texture (static: 0, total: 1)
+Orphan StringName: variable_was_set (static: 0, total: 2)
+Orphan StringName: modifier_condition (static: 0, total: 1)
+Orphan StringName: finish (static: 0, total: 1)
+Orphan StringName: stop_all_channels (static: 0, total: 1)
+Orphan StringName: FalseBehaviour (static: 0, total: 1)
+Orphan StringName: collect_text_modifiers (static: 0, total: 1)
+Orphan StringName: DialogicEvent (static: 0, total: 5)
+Orphan StringName: _update_saved_connection (static: 0, total: 1)
+Orphan StringName: _input (static: 1, total: 2)
+Orphan StringName: character (static: 0, total: 2)
+Orphan StringName: stop_audio (static: 0, total: 1)
+Orphan StringName: change_character_extradata (static: 0, total: 1)
+Orphan StringName: skip_text_reveal (static: 0, total: 1)
+Orphan StringName: _get_property_original_translation (static: 0, total: 1)
+Orphan StringName: parse_text_effects (static: 0, total: 1)
+Orphan StringName: get_event_editor_info (static: 0, total: 1)
+Orphan StringName: full_event_history_changed (static: 0, total: 2)
+Orphan StringName: value_to_string (static: 0, total: 1)
+Orphan StringName: invalid_choice_behaviour (static: 0, total: 4)
+Orphan StringName: _get_end_branch_control (static: 0, total: 1)
+Orphan StringName: hide_next_indicators (static: 0, total: 1)
+Orphan StringName: _clear_state (static: 0, total: 1)
+Orphan StringName: get_global_info (static: 0, total: 1)
+Orphan StringName: get_current_style (static: 0, total: 1)
+Orphan StringName: add_header_button (static: 0, total: 1)
+Orphan StringName: d_range (static: 0, total: 1)
+Orphan StringName: get_latest_slot (static: 0, total: 1)
+Orphan StringName: show_current_question (static: 0, total: 1)
+Orphan StringName: event_node_as_text (static: 0, total: 3)
+Orphan StringName: get_container_container (static: 0, total: 1)
+Orphan StringName: audio_started (static: 0, total: 2)
+Orphan StringName: merge_folder (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Character/subsystem_containers.gd" (static: 0, total: 1)
+Orphan StringName: meta_clicked (static: 0, total: 2)
+Orphan StringName: has_background (static: 0, total: 1)
+Orphan StringName: default_portrait_scene (static: 0, total: 3)
+Orphan StringName: _check_seen (static: 0, total: 1)
+Orphan StringName: Image (static: 0, total: 1)
+Orphan StringName: Resource (static: 1, total: 3)
+Orphan StringName: character_colors (static: 0, total: 3)
+Orphan StringName: update_name_label (static: 0, total: 1)
+Orphan StringName: is_running (static: 0, total: 1)
+Orphan StringName: choice_selected (static: 0, total: 2)
+Orphan StringName: is_question (static: 0, total: 1)
+Orphan StringName: change_style (static: 0, total: 1)
+Orphan StringName: help_page_path (static: 0, total: 3)
+Orphan StringName: reveal_by_input (static: 0, total: 4)
+Orphan StringName: effect_noskip (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Voice/subsystem_voice.gd" (static: 0, total: 1)
+Orphan StringName: from_text (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Core/subsystem_expression.gd" (static: 0, total: 1)
+Orphan StringName: _to_string (static: 0, total: 1)
+Orphan StringName: play_voice (static: 0, total: 1)
+Orphan StringName: get_current_choice_indexes (static: 0, total: 1)
+Orphan StringName: effect_input (static: 0, total: 1)
+Orphan StringName: is_channel_playing (static: 0, total: 1)
+Orphan StringName: translate_container (static: 0, total: 1)
+Orphan StringName: AUTO_SAVE_MODE_SETTINGS (static: 0, total: 1)
+Orphan StringName: speaker_updated (static: 0, total: 2)
+Orphan StringName: _pure_letter_speed (static: 0, total: 4)
+Orphan StringName: HotkeyBehaviour (static: 0, total: 1)
+Orphan StringName: _unhighlight (static: 0, total: 1)
+Orphan StringName: centered (static: 0, total: 1)
+Orphan StringName: _should_do_background_update (static: 0, total: 1)
+Orphan StringName: block_input (static: 0, total: 1)
+Orphan StringName: has (static: 0, total: 1)
+Orphan StringName: _voice_synced_text (static: 0, total: 4)
+Orphan StringName: mark_event_as_visited (static: 0, total: 1)
+Orphan StringName: character_left (static: 0, total: 2)
+Orphan StringName: get_character_name_parsed (static: 0, total: 1)
+Orphan StringName: d_regex (static: 0, total: 1)
+Orphan StringName: image (static: 0, total: 4)
+Orphan StringName: text_modifiers (static: 0, total: 3)
+Orphan StringName: get_slot_path (static: 0, total: 1)
+Orphan StringName: Music (static: 0, total: 1)
+Orphan StringName: get_valid_portrait (static: 0, total: 1)
+Orphan StringName: _SETTING_INPUT_ACTION (static: 0, total: 1)
+Orphan StringName: _is_branch_starter (static: 0, total: 1)
+Orphan StringName: audio_node (static: 0, total: 3)
+Orphan StringName: add_empty_slot (static: 0, total: 1)
+Orphan StringName: reveal_delay (static: 0, total: 4)
+Orphan StringName: create_layout (static: 0, total: 1)
+Orphan StringName: d_len (static: 0, total: 1)
+Orphan StringName: visited_event_save_key (static: 0, total: 4)
+Orphan StringName: input_confirmed (static: 0, total: 2)
+Orphan StringName: voice_player (static: 0, total: 3)
+Orphan StringName: Portrait (static: 0, total: 1)
+Orphan StringName: visited_event_history_content (static: 0, total: 3)
+Orphan StringName: collect_character_names (static: 0, total: 1)
+Orphan StringName: editor_node (static: 0, total: 3)
+Orphan StringName: _reload_settings (static: 0, total: 1)
+Orphan StringName: save_position_container (static: 0, total: 1)
+Orphan StringName: color_node (static: 0, total: 2)
+Orphan StringName: interpolate_volume_linearly (static: 0, total: 1)
+Orphan StringName: is_animating (static: 0, total: 1)
+Orphan StringName: load_position_container (static: 0, total: 1)
+Orphan StringName: set_global_info (static: 0, total: 1)
+Orphan StringName: set_latest_slot (static: 0, total: 1)
+Orphan StringName: question_shown (static: 0, total: 2)
+Orphan StringName: VariableFolder (static: 0, total: 1)
+Orphan StringName: Node2D (static: 0, total: 1)
+Orphan StringName: execute_effects (static: 0, total: 1)
+Orphan StringName: _get_code_completion (static: 0, total: 1)
+Orphan StringName: Master (static: 0, total: 3)
+Orphan StringName: find_glossary (static: 0, total: 1)
+Orphan StringName: reset_visited_history (static: 0, total: 1)
+Orphan StringName: update_background (static: 0, total: 1)
+Orphan StringName: get_entry (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Settings/subsystem_settings.gd" (static: 0, total: 1)
+Orphan StringName: _get_covered_rect (static: 0, total: 1)
+Orphan StringName: remove_character (static: 0, total: 1)
+Orphan StringName: _highlight (static: 0, total: 1)
+Orphan StringName: _convert_state_info (static: 0, total: 1)
+Orphan StringName: resize_container (static: 0, total: 1)
+Orphan StringName: AUTO_SAVE_SETTINGS (static: 0, total: 1)
+Orphan StringName: character_portrait_changed (static: 0, total: 2)
+Orphan StringName: collect_text_effects (static: 0, total: 1)
+Orphan StringName: skip_question (static: 0, total: 1)
+Orphan StringName: modifier_select_split_regex (static: 0, total: 3)
+Orphan StringName: execute (static: 0, total: 1)
+Orphan StringName: get_dependencies (static: 0, total: 1)
+Orphan StringName: ui_update_warning (static: 0, total: 2)
+Orphan StringName: get_property_translated (static: 0, total: 1)
+Orphan StringName: event_finished (static: 0, total: 2)
+Orphan StringName: modifier_autopauses (static: 0, total: 1)
+Orphan StringName: remove_translation_id (static: 0, total: 1)
+Orphan StringName: rotate_container (static: 0, total: 1)
+Orphan StringName: disable_editor_button (static: 0, total: 3)
+Orphan StringName: default_background_scene (static: 0, total: 3)
+Orphan StringName: _process (static: 3, total: 4)
+Orphan StringName: input_block_timer (static: 0, total: 3)
+Orphan StringName: get_slot_thumbnail (static: 0, total: 1)
+Orphan StringName: stop_timers (static: 0, total: 1)
+Orphan StringName: _custom_fade_out (static: 0, total: 1)
+Orphan StringName: get_shortcode_parameters (static: 0, total: 1)
+Orphan StringName: condition_modifier_regex (static: 0, total: 3)
+Orphan StringName: parse_glossary (static: 0, total: 1)
+Orphan StringName: is_channel_playing_file (static: 0, total: 1)
+Orphan StringName: input_was_mouse_input (static: 0, total: 4)
+Orphan StringName: leave_all_characters (static: 0, total: 1)
+Orphan StringName: AutoSaveMode (static: 0, total: 1)
+Orphan StringName: autosave_time (static: 0, total: 4)
+Orphan StringName: has_event_been_visited (static: 0, total: 1)
+Orphan StringName: close_history (static: 0, total: 1)
+Orphan StringName: get_simple_history (static: 0, total: 1)
+Orphan StringName: jump_to_label (static: 0, total: 1)
+Orphan StringName: get_last_label_identifier (static: 0, total: 1)
+Orphan StringName: _is_animating (static: 0, total: 4)
+Orphan StringName: _set_mirror (static: 0, total: 1)
+Orphan StringName: get_last_label_name (static: 0, total: 1)
+Orphan StringName: copy_container_setup (static: 0, total: 1)
+Orphan StringName: autosave_enabled (static: 0, total: 4)
+Orphan StringName: get_default_slot (static: 0, total: 1)
+Orphan StringName: _update_portrait_transform (static: 0, total: 1)
+Orphan StringName: expand_by_default (static: 0, total: 3)
+Orphan StringName: _get_translatable_properties (static: 0, total: 1)
+Orphan StringName: hide_textbox (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Style/subsystem_styles.gd" (static: 0, total: 1)
+Orphan StringName: store_full_event (static: 0, total: 1)
+Orphan StringName: _autopauses (static: 0, total: 3)
+Orphan StringName: add_header_label (static: 0, total: 1)
+Orphan StringName: get_choice_button (static: 0, total: 1)
+Orphan StringName: event_started (static: 0, total: 2)
+Orphan StringName: character_moved (static: 0, total: 2)
+Orphan StringName: about_to_show_text (static: 0, total: 2)
+Orphan StringName: _speed_multiplier (static: 0, total: 4)
+Orphan StringName: parsed_text_effect_info (static: 0, total: 3)
+Orphan StringName: save_visited_history_on_save (static: 0, total: 4)
+Orphan StringName: update_typing_sound_mood (static: 0, total: 1)
+Orphan StringName: is_voiced (static: 0, total: 1)
+Orphan StringName: _store_as_string (static: 0, total: 1)
+Orphan StringName: modifier_random_selection (static: 0, total: 1)
+Orphan StringName: get_variable (static: 0, total: 1)
+Orphan StringName: get_layout_node (static: 0, total: 1)
+Orphan StringName: modifier_select_regex (static: 0, total: 3)
+Orphan StringName: _load_from_string (static: 0, total: 1)
+Orphan StringName: . (static: 1, total: 4)
+Orphan StringName: _auto_skip_timer_left (static: 0, total: 4)
+Orphan StringName: is_input_blocked (static: 0, total: 1)
+Orphan StringName: DialogicCharacter (static: 0, total: 1)
+Orphan StringName: save_visited_history_on_autosave (static: 0, total: 4)
+Orphan StringName: simple_history_content (static: 0, total: 3)
+Orphan StringName: Node (static: 7, total: 8)
+Orphan StringName: dialogic (static: 0, total: 24)
+Orphan StringName: show_text_input (static: 0, total: 1)
+Orphan StringName: _connections (static: 0, total: 3)
+Orphan StringName: _on_start_or_end_autosave (static: 0, total: 1)
+Orphan StringName: get_character_portrait (static: 0, total: 1)
+Orphan StringName: parse_text (static: 0, total: 1)
+Orphan StringName: _setting_changed (static: 0, total: 1)
+Orphan StringName: _get_join_default_length (static: 0, total: 1)
+Orphan StringName: _on_autosave_timer_timeout (static: 0, total: 1)
+Orphan StringName: InvalidChoiceBehaviour (static: 0, total: 1)
+Orphan StringName: _choice_blocker (static: 0, total: 3)
+Orphan StringName: get_first_node_in_layout (static: 0, total: 1)
+Orphan StringName: switched_timeline (static: 0, total: 2)
+Orphan StringName: anchor_right (static: 0, total: 3)
+Orphan StringName: connect_to_change (static: 0, total: 1)
+Orphan StringName: add_body_edit (static: 0, total: 1)
+Orphan StringName: is_text_reveal_skippable (static: 0, total: 1)
+Orphan StringName: style_changed (static: 0, total: 2)
+Orphan StringName: meta_hover_ended (static: 0, total: 2)
+Orphan StringName: _on_dialogic_action (static: 0, total: 1)
+Orphan StringName: input_shown (static: 0, total: 2)
+Orphan StringName: "addons/dialogic/Modules/Glossary/subsystem_glossary.gd" (static: 0, total: 1)
+Orphan StringName: grow_horizontal (static: 0, total: 3)
+Orphan StringName: effect_lspeed (static: 0, total: 1)
+Orphan StringName: _change_portrait_extradata (static: 0, total: 1)
+Orphan StringName: DefaultPortrait (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/TextInput/subsystem_text_input.gd" (static: 0, total: 1)
+Orphan StringName: empty_lines_above (static: 0, total: 3)
+Orphan StringName: is_text_voice_synced (static: 0, total: 1)
+Orphan StringName: can_contain_events (static: 0, total: 3)
+Orphan StringName: add_header_edit (static: 0, total: 1)
+Orphan StringName: current_audio_channels (static: 0, total: 3)
+Orphan StringName: full_event_history_save (static: 0, total: 4)
+Orphan StringName: "addons/dialogic/Modules/Character/default_portrait.gd" (static: 0, total: 1)
+Orphan StringName: auto_skip (static: 0, total: 4)
+Orphan StringName: autosave_timer (static: 0, total: 3)
+Orphan StringName: autoskip_timer_finished (static: 0, total: 2)
+Orphan StringName: update_dialog_text (static: 0, total: 1)
+Orphan StringName: close_requested (static: 0, total: 2)
+Orphan StringName: save (static: 0, total: 1)
+Orphan StringName: effect_mood (static: 0, total: 1)
+Orphan StringName: event_name (static: 0, total: 3)
+Orphan StringName: TextTypes (static: 0, total: 1)
+Orphan StringName: stop_all_one_shot_sounds (static: 0, total: 1)
+Orphan StringName: text_already_read (static: 0, total: 4)
+Orphan StringName: collapse_on_create (static: 0, total: 3)
+Orphan StringName: reload_current_info_into_new_style (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/History/subsystem_history.gd" (static: 0, total: 1)
+Orphan StringName: clear_game_state (static: 0, total: 16)
+Orphan StringName: SETTING_DEFAULT_COLOR (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Choice/subsystem_choices.gd" (static: 0, total: 1)
+Orphan StringName: set_bus (static: 0, total: 1)
+Orphan StringName: save_file (static: 0, total: 1)
+Orphan StringName: text_effect_portrait (static: 0, total: 1)
+Orphan StringName: text_effects (static: 0, total: 3)
+Orphan StringName: load_parse_stack (static: 0, total: 1)
+Orphan StringName: _translation_id (static: 0, total: 3)
+Orphan StringName: execute_string (static: 0, total: 1)
+Orphan StringName: end_branch_event (static: 0, total: 3)
+Orphan StringName: load_visited_history (static: 0, total: 1)
+Orphan StringName: focus_choice (static: 0, total: 1)
+Orphan StringName: _move_character (static: 0, total: 1)
+Orphan StringName: change_character_portrait (static: 0, total: 1)
+Orphan StringName: resume (static: 0, total: 6)
+Orphan StringName: visited_event_history_enabled (static: 0, total: 4)
+Orphan StringName: join_character (static: 0, total: 1)
+Orphan StringName: get_slot_names (static: 0, total: 1)
+Orphan StringName: @group_0_Main (static: 0, total: 1)
+Orphan StringName: vector_to_str (static: 0, total: 1)
+Orphan StringName: text_effects_regex (static: 0, total: 3)
+Orphan StringName: unvisited_event (static: 0, total: 2)
+Orphan StringName: settings (static: 0, total: 3)
+Orphan StringName: get_slot_info (static: 0, total: 1)
+Orphan StringName: _on_transition_finished (static: 0, total: 1)
+Orphan StringName: DefaultBackground (static: 0, total: 1)
+Orphan StringName: _custom_fade_in (static: 0, total: 1)
+Orphan StringName: character_joined (static: 0, total: 2)
+Orphan StringName: LoadFlags (static: 0, total: 1)
+Orphan StringName: sort_by_length (static: 0, total: 1)
+Orphan StringName: _set_extra_data (static: 0, total: 1)
+Orphan StringName: _on_dialog_text_finished (static: 0, total: 1)
+Orphan StringName: _get_icon (static: 0, total: 1)
+Orphan StringName: variables (static: 0, total: 1)
+Orphan StringName: viewport_container (static: 0, total: 2)
+Orphan StringName: get_character_node (static: 0, total: 1)
+Orphan StringName: autosave_mode (static: 0, total: 4)
+Orphan StringName: layout_mode (static: 0, total: 3)
+Orphan StringName: move_character (static: 0, total: 1)
+Orphan StringName: ThumbnailMode (static: 0, total: 1)
+Orphan StringName: wants_to_group (static: 0, total: 3)
+Orphan StringName: AUTO_SAVE_TIME_SETTINGS (static: 0, total: 1)
+Orphan StringName: dialogic_color_name (static: 0, total: 3)
+Orphan StringName: enabled (static: 0, total: 4)
+Orphan StringName: push_to_jump_stack (static: 0, total: 1)
+Orphan StringName: _on_save (static: 0, total: 1)
+Orphan StringName: pause (static: 0, total: 6)
+Orphan StringName: add_character (static: 0, total: 1)
+Orphan StringName: update_audio (static: 0, total: 1)
+Orphan StringName: resume_from_last_jump (static: 0, total: 1)
+Orphan StringName: _get (static: 0, total: 2)
+Orphan StringName: translate (static: 0, total: 1)
+Orphan StringName: _on_passed_label (static: 0, total: 1)
+Orphan StringName: textbox_visibility_changed (static: 0, total: 2)
+Orphan StringName: parse_shortcode_parameters (static: 0, total: 1)
+Orphan StringName: build_event_editor (static: 0, total: 1)
+Orphan StringName: parse_variables (static: 0, total: 1)
+Orphan StringName: is_input_pressed (static: 0, total: 1)
+Orphan StringName: _on_audio_finished (static: 0, total: 1)
+Orphan StringName: last_question_info (static: 0, total: 3)
+Orphan StringName: get_current_question_info (static: 0, total: 1)
+Orphan StringName: event_node_ready (static: 0, total: 3)
+Orphan StringName: perform_autosave (static: 0, total: 1)
+Orphan StringName: position_changed (static: 0, total: 2)
+Orphan StringName: get_property_translation_key (static: 0, total: 1)
+Orphan StringName: returned_from_jump (static: 0, total: 2)
+Orphan StringName: _get_start_code_completion (static: 0, total: 1)
+Orphan StringName: get_shortcode (static: 0, total: 1)
+Orphan StringName: "addons/dialogic/Modules/Background/DefaultBackgroundScene/default_background.gd" (static: 0, total: 1)
+Orphan StringName: image_node (static: 0, total: 2)
+Orphan StringName: preload_style (static: 0, total: 1)
+Orphan StringName: add_background_node (static: 0, total: 1)
+Orphan StringName: animate_character (static: 0, total: 1)
+Orphan StringName: color_regex (static: 0, total: 3)
+Orphan StringName: is_valid_event (static: 0, total: 1)
+Orphan StringName: add_translation_id (static: 0, total: 1)
+Orphan StringName: latest_thumbnail (static: 0, total: 4)
+Orphan StringName: set_default_color (static: 0, total: 1)
+Orphan StringName: get_joined_characters (static: 0, total: 1)
+Orphan StringName: reset_all_containers (static: 0, total: 1)
+Orphan StringName: use_input_action (static: 0, total: 4)
+Orphan StringName: _get_leave_default_length (static: 0, total: 1)
+Orphan StringName: block_delay (static: 0, total: 4)
+Orphan StringName: start_animating (static: 0, total: 1)
+Orphan StringName: default_transition (static: 0, total: 3)
+Orphan StringName: manual_advance (static: 0, total: 4)
+Orphan StringName: action_was_consumed (static: 0, total: 4)
+StringName: 507 unclaimed string names at exit.

@@ -153,20 +153,11 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 		item.return_to_start()
 
 func _input(event: InputEvent) -> void:
-	# F1 toggles collision shape debug visualization
-	# if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.is_echo():
-	# 	_debug_show_collisions = !_debug_show_collisions
-	# 	DebugDraw2D.set_text("Collision Debug", "ON" if _debug_show_collisions else "OFF")
-	
 	# Escape toggles pause menu
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
 		if pause_menu and not pause_menu.visible:
 			get_viewport().set_input_as_handled()
 			pause_menu.pause()
-			
-	# H key to test notifications (debug only)
-	# if event is InputEventKey and event.keycode == KEY_H and event.pressed and not event.is_echo():
-	# 	EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
 
 func _process(_delta: float) -> void:
 	if not _debug_show_collisions:
@@ -225,4 +216,3 @@ func _on_time_changed(hour: float) -> void:
 	for light in street_lights:
 		if is_instance_valid(light) and light.visible != should_be_on:
 			light.visible = should_be_on
-			# print("[MainGame] Street Light %s toggled: %s" % [light.name, should_be_on])

@@ -24,8 +24,6 @@ var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
 
-const SETTINGS_PATH = "user://settings.cfg"
-
 # ── UI Sound ─────────────────────────────────────────────────────────────────
 var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
 var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
@@ -64,14 +62,15 @@ func _ready() -> void:
 			_register_button(btn)
 	# Show Continue only if a save file exists
 	var continue_btn = buttons.get_node_or_null("Continue")
-	if continue_btn:
-		continue_btn.visible = SaveManager.has_save()
-		if SaveManager.has_save():
-			continue_btn.grab_focus()
-		else:
-			buttons.get_node("NewGame").grab_focus()
+	var new_game_btn = buttons.get_node("NewGame")
+	
+	if continue_btn and SaveManager.has_save():
+		continue_btn.visible = true
+		continue_btn.grab_focus()
 	else:
-		buttons.get_node("NewGame").grab_focus()
+		if continue_btn:
+			continue_btn.visible = false
+		new_game_btn.grab_focus()
 
 
 
@@ -194,7 +193,8 @@ func _on_continue_pressed() -> void:
 		return
 	is_starting_game = true
 	buttons.hide()
-	$LeftVignette.hide()
+	if has_node("LeftVignette"):
+		$LeftVignette.hide()
 	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
 
 func _on_exit_pressed() -> void:

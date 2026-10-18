@@ -51,12 +51,12 @@ func initialize() -> void:
 	_items.sort_custom(func(a: ItemData, b: ItemData): return a.item_name.naturalnocasecmp_to(b.item_name) < 0)
 	LogManager.info("InventoryManager", "Loaded %d items" % _items.size())
 	
-	# Debug Category Report
+	# Category distribution (debug only)
 	var cat_counts = {}
 	for item in _items:
 		var cat = item.category
 		cat_counts[cat] = cat_counts.get(cat, 0) + 1
-	LogManager.info("InventoryManager", "Category Report: %s" % str(cat_counts))
+	LogManager.debug("InventoryManager", "Category Report: %s" % str(cat_counts))
 
 func _load_folder(folder_path: String) -> void:
 	LogManager.debug("InventoryManager", "Scanning folder: %s" % folder_path)
@@ -124,7 +124,7 @@ func _get_max_stock_internal(id: String, _day: int) -> int:
 		"pocha", "mentor":
 			return 10 if StoryManager.current_tier >= 10 else 5
 		"chubs":
-			return 5 # Always 5 once unlocked (Day 7+)
+			return 5
 		"aryel", "ariel", "kneestoes", "kopimo": 
 			return 5
 		_:
@@ -183,6 +183,8 @@ func get_count_on_shelves(type: ItemData.ItemType) -> int:
 	var surfaces: Array[Node] = get_tree().get_nodes_in_group("shelf_surface")
 	for s in surfaces:
 		if s is ShelfSurface and s.surface_type == type:
+			# Direct access to _slot_occupants is intentional — InventoryManager and
+			# ShelfSurface are tightly coupled peers; no public API is needed here.
 			for occupant in s._slot_occupants:
 				if occupant != null and is_instance_valid(occupant):
 					total += 1
@@ -280,7 +282,6 @@ func get_save_id() -> String:
 
 func get_save_data() -> Dictionary:
 	var prices := {}
-	var _pricing_flags := {} # Deprecated, kept for compat
 	
 	for item in _items:
 		prices[item.resource_path] = item.selling_price

@@ -30,8 +30,6 @@ func _ready() -> void:
 	
 	if not Engine.is_editor_hint():
 		add_to_group("draggable_items")
-		# Connect to global drag events so we drop if clicked elsewhere
-		# EventBus.drag_started.connect(_on_global_drag_started)
 		original_scale = scale
 		billboard_collision = false
 	
@@ -78,7 +76,6 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, 
 		# Reset any scale baked into the scene so pixel_size is the sole control
 		sprite.scale = Vector3.ONE
 
-		# --- Sizing ---
 		var rect = item_data.get_used_rect()
 		var v_h = float(rect.size.y) if rect.has_area() else float(item_data.texture.get_height())
 
@@ -181,13 +178,18 @@ func adjust_price(delta: float) -> void:
 	# Also update containers if any of their item_data changed
 	get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
 
+func _get_pricing_overlay() -> Node:
+	return get_node_or_null("/root/PricingOverlay")
+
+
 func _update_label_visibility() -> void:
 	if not _pricing_mode_active or not is_hovered:
 		# If we stop hovering while this was the active item, hide the overlay.
 		# A global check could ensure we don't hide it if another item is already hovered,
 		# but `on_hover(true)` on the new item will instantly show it again.
-		if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
-			get_node("/root/PricingOverlay").hide_ui()
+		var overlay = _get_pricing_overlay()
+		if is_instance_valid(overlay):
+			overlay.hide_ui()
 	elif _pricing_mode_active and is_hovered:
 		update_pricing_ui()
 
@@ -196,8 +198,9 @@ func update_pricing_ui() -> void:
 	
 	if not is_hovered or not _pricing_mode_active: return
 	
-	if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
-		get_node("/root/PricingOverlay").show_item(item_data, global_position)
+	var overlay = _get_pricing_overlay()
+	if is_instance_valid(overlay):
+		overlay.show_item(item_data, global_position)
 
 
 func on_interact() -> void:
@@ -207,8 +210,9 @@ func on_interact() -> void:
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()
-	if is_instance_valid(get_node_or_null("/root/PricingOverlay")):
-		get_node("/root/PricingOverlay").hide_ui()
+	var overlay = _get_pricing_overlay()
+	if is_instance_valid(overlay):
+		overlay.hide_ui()
 	drag_started.emit()
 
 func _on_drag_cancelled_by_manager() -> void:

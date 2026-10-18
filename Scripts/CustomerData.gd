@@ -1,6 +1,9 @@
 class_name CustomerData
 extends Resource
 
+const DEFAULT_PURCHASE_TIMELINE = preload("res://Dialogue/Timelines/Generic/Purchase.dtl")
+const DEFAULT_VISIT_TIMELINE = preload("res://Dialogue/Timelines/Generic/Visit.dtl")
+
 ## The display name of the character (can contain spaces).
 @export var character_name: String
 
@@ -146,21 +149,21 @@ func get_cumulative_filler_items(chapter: int) -> Array[ItemData]:
 func get_purchase_timelines(chapter: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(chapter)
 	if not arc:
-		return [load("res://Dialogue/Timelines/Generic/Purchase.dtl")] as Array[DialogicTimeline]
+		return [DEFAULT_PURCHASE_TIMELINE] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
 	for tl in arc.purchase_timelines:
 		if tl is DialogicTimeline:
 			result.append(tl)
 	
 	if result.is_empty():
-		result.append(load("res://Dialogue/Timelines/Generic/Purchase.dtl"))
+		result.append(DEFAULT_PURCHASE_TIMELINE)
 		
 	return result
 
 func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(chapter)
 	if not arc:
-		return [load("res://Dialogue/Timelines/Generic/Visit.dtl")] as Array[DialogicTimeline]
+		return [DEFAULT_VISIT_TIMELINE] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
 	for tl in arc.visit_timelines:
 		if tl != null:
@@ -170,6 +173,6 @@ func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
 			
 	if result.is_empty():
 		LogManager.info("CustomerData", "No visit timelines for %s chapter %d, falling back to generic." % [character_name, chapter])
-		result.append(load("res://Dialogue/Timelines/Generic/Visit.dtl"))
+		result.append(DEFAULT_VISIT_TIMELINE)
 		
 	return result

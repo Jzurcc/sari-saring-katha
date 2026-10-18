@@ -68,8 +68,7 @@ func get_final_price() -> float:
 		selling_price = price + round(price * margin)
 		
 	# Floor constraint: selling price can never be below base price
-	if selling_price < price:
-		selling_price = price
+	selling_price = max(selling_price, price)
 		
 	return selling_price
 

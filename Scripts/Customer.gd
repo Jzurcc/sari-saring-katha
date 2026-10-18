@@ -41,7 +41,7 @@ func _ready() -> void:
 	if body_sprite:
 		_base_sprite_y = body_sprite.position.y
 
-# [REMOVED] _on_input_event moved to on_interact() to prevent double-firing with PlayerInteraction.
+
 
 func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3.ZERO, delayed_arrival: bool = false) -> void:
 	# Capture spawn position now — global_position is already set by CustomerSpawner.
@@ -68,34 +68,33 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 	_last_pos = global_position
 
 	# Apply the character's sprite texture and scale from their CustomerData resource.
-	var char_data = customer_data
-	if char_data and body_sprite:
-		if char_data.sprite_texture:
-			body_sprite.texture = char_data.sprite_texture
+	if customer_data and body_sprite:
+		if customer_data.sprite_texture:
+			body_sprite.texture = customer_data.sprite_texture
 			# Dynamically set the offset to half the texture height (in pixels).
 			# Since 'centered' is true, this pins the texture bottom to the node origin.
-			body_sprite.offset.y = char_data.sprite_texture.get_height() / 2.0
+			body_sprite.offset.y = customer_data.sprite_texture.get_height() / 2.0
 		
 		# Reset sprite position to 0 so it sits at the root's origin.
 		body_sprite.position.y = 0
 
 		# Scale only the visuals and the speech marker.
-		body_sprite.scale = Vector3.ONE * char_data.sprite_scale
+		body_sprite.scale = Vector3.ONE * customer_data.sprite_scale
 		
 		# Position the SpeechMarker relative to the character's height and data ratio.
 		var speech_marker = get_node_or_null("SpeechMarker")
-		if speech_marker and char_data.sprite_texture:
-			var full_height_y = char_data.sprite_texture.get_height() * body_sprite.pixel_size
-			var ratio = char_data.speech_marker_height_ratio
-			speech_marker.position.y = (full_height_y * ratio) * char_data.sprite_scale
+		if speech_marker and customer_data.sprite_texture:
+			var full_height_y = customer_data.sprite_texture.get_height() * body_sprite.pixel_size
+			var ratio = customer_data.speech_marker_height_ratio
+			speech_marker.position.y = (full_height_y * ratio) * customer_data.sprite_scale
 
 		# Adjust the collision shape so it tightly fits the customer's sprite boundaries.
 		var collision_shape = get_node_or_null("CollisionShape3D")
-		if collision_shape and collision_shape.shape is BoxShape3D and char_data.sprite_texture:
+		if collision_shape and collision_shape.shape is BoxShape3D and customer_data.sprite_texture:
 			# Duplicate shape so changes don't affect other instances
 			var shape_copy: BoxShape3D = collision_shape.shape.duplicate()
-			var sprite_w = char_data.sprite_texture.get_width() * body_sprite.pixel_size * char_data.sprite_scale
-			var sprite_h = char_data.sprite_texture.get_height() * body_sprite.pixel_size * char_data.sprite_scale
+			var sprite_w = customer_data.sprite_texture.get_width() * body_sprite.pixel_size * customer_data.sprite_scale
+			var sprite_h = customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale
 			shape_copy.size = Vector3(sprite_w, sprite_h, shape_copy.size.z)
 			collision_shape.shape = shape_copy
 			# Set position so the bottom of the shape is at 0
@@ -105,7 +104,7 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 		self.scale = Vector3.ONE
 		
 		# If this is Uncle Mario (Tutorial), mark him present to block phone calls
-		if char_data and char_data.get_clean_id() == "unclemario":
+		if customer_data and customer_data.get_clean_id() == "unclemario":
 			MarioManager.is_mario_physically_present = true
 
 
@@ -219,10 +218,8 @@ func check_item(item: ItemData) -> bool:
 
 	# Visiting customers (including Visit-type story chapters) should never receive items — silent red outline.
 	if transaction_context:
-		if transaction_context.transaction_type == TransactionContext.Type.VISIT:
-			reject()
-			return false
-		if transaction_context.is_visit_story:
+		var is_visit = transaction_context.transaction_type == TransactionContext.Type.VISIT
+		if is_visit or transaction_context.is_visit_story:
 			reject()
 			return false
 		
@@ -271,12 +268,7 @@ func _on_item_accepted(item: ItemData) -> void:
 	if transaction_context.is_riddle and item == transaction_context.riddle_item:
 		transaction_context.is_riddle = false
 	
-	if transaction_context.desired_items.is_empty():
-		# REDUNDANT: We no longer emit 'satisfied' here because MainGame.gd
-		# is now the sole authority for triggering the success dialogue.
-		# This prevents the "Double-Start" race condition in Dialogic.
-		pass
-	else:
+	if not transaction_context.desired_items.is_empty():
 		# Partial fulfillment: Update naming and stay at the counter.
 		# We do NOT emit customer_satisfied yet, as the transaction is incomplete.
 		if EventBus.has_signal("customer_partial_satisfaction"):
