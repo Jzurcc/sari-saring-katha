@@ -1,5 +1,6 @@
 extends Node
 
+# ontop variables
 var _is_dragging: bool = false
 var _dragged_item: DraggableItem = null
 var _dragged_texture_rect: TextureRect = null
@@ -33,7 +34,7 @@ func _ready() -> void:
 	_raycast_query = PhysicsRayQueryParameters3D.new()
 	_raycast_query.collide_with_areas = true
 	_raycast_query.collide_with_bodies = false
-	_raycast_query.collision_mask = 19  # Layer 1 (tray) + layer 2 (shelf) + layer 5 (customer)
+	_raycast_query.collision_mask = 19 # Layer 1 (tray) + layer 2 (shelf) + layer 5 (customer)
 
 	# Release the drag reference if the held node is freed (e.g. scene change).
 	get_tree().node_removed.connect(_on_node_removed)
@@ -125,8 +126,8 @@ func _process(_delta: float) -> void:
 	
 	# Smoothly interpolate position using Spring Physics (Natural Ease In/Out)
 	var diff = final_pos - _dragged_texture_rect.position
-	var spring_force = diff * 150.0  # Stiffness
-	var damping = _drag_velocity * 20.0  # Friction
+	var spring_force = diff * 150.0 # Stiffness
+	var damping = _drag_velocity * 20.0 # Friction
 	_drag_velocity += (spring_force - damping) * _delta
 	_dragged_texture_rect.position += _drag_velocity * _delta
 	
