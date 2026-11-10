@@ -43,10 +43,6 @@ PricingOverlay="*res://Scripts/UI/PricingOverlay.gd"
 LogManager="*res://Scripts/Managers/LogManager.gd"
 CharacterProgressionManager="*res://Scripts/Managers/CharacterProgressionManager.gd"
 
-[debug]
-
-settings/collision/visible_shapes=true
-
 [debug_draw_3d]
 
 settings/addon_root_folder="res://addons/debug_draw_3d"
