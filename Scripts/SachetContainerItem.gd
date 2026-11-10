@@ -12,6 +12,12 @@ func adjust_price(delta: float) -> void:
 		return
 	InventoryManager.adjust_item_price([sachet_item], delta)
 
+func get_available_items() -> Array[ItemData]:
+	var items: Array[ItemData] = []
+	if sachet_item and current_stock > 0:
+		items.append(sachet_item)
+	return items
+
 func update_pricing_ui() -> void:
 	if not sachet_item or not is_hovered or not _pricing_mode_active:
 		return

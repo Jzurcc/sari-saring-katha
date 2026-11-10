@@ -205,11 +205,27 @@ func get_count_on_shelves(type: ItemData.ItemType) -> int:
 	var surfaces: Array[Node] = get_tree().get_nodes_in_group("shelf_surface")
 	for s in surfaces:
 		if s is ShelfSurface and s.surface_type == type:
-			# Direct access to _slot_occupants is intentional — InventoryManager and
-			# ShelfSurface are tightly coupled peers; no public API is needed here.
-			for occupant in s._slot_occupants:
-				if occupant != null and is_instance_valid(occupant):
-					total += 1
+			total += s.get_occupied_count()
+	return total
+
+## Returns the total physical count of [param item] currently placed across all matching shelf surfaces.
+func get_count_on_shelves_for_item(item: ItemData) -> int:
+	if not item:
+		return 0
+	var total: int = 0
+	var surfaces: Array[Node] = get_tree().get_nodes_in_group("shelf_surface")
+	for s in surfaces:
+		if s is ShelfSurface and s.surface_type == item.type:
+			total += s.get_item_count(item)
+	return total
+
+## Returns the total available stock for an item, combining digital stock and placed shelf stock.
+func get_total_item_stock(item: ItemData) -> int:
+	if not item:
+		return 0
+	var total: int = get_stock(item)
+	if item.type == ItemData.ItemType.SHELF or item.type == ItemData.ItemType.FRIDGE:
+		total += get_count_on_shelves_for_item(item)
 	return total
 
 func get_total_owned_count(type: ItemData.ItemType) -> int:
@@ -227,31 +243,20 @@ func get_items_available_on_display() -> Array[ItemData]:
 	var result: Array[ItemData] = []
 	
 	# 1. Check all ShelfSurface nodes for physical items
-	var surfaces = get_tree().get_nodes_in_group("shelf_surface")
+	var surfaces: Array[Node] = get_tree().get_nodes_in_group("shelf_surface")
 	for s in surfaces:
 		if s is ShelfSurface:
-			for occupant in s._slot_occupants:
-				if occupant != null and is_instance_valid(occupant) and occupant.item_data:
-					if not result.has(occupant.item_data):
-						result.append(occupant.item_data)
+			for item in s.get_unique_items():
+				if not result.has(item):
+					result.append(item)
 						
-	# 2. Check all Containers (Sachet and Candy)
-	var containers = get_tree().get_nodes_in_group("pricing_ui_containers")
+	# 2. Check all Containers (Sachet and Candy) via polymorphic DispenserContainerItem
+	var containers: Array[Node] = get_tree().get_nodes_in_group("pricing_ui_containers")
 	for c in containers:
-		# Check if the container is unlocked/visible and has stock
-		if not c.visible:
-			continue
-			
-		if c is SachetContainerItem:
-			if c.sachet_item and c.current_stock > 0:
-				if not result.has(c.sachet_item):
-					result.append(c.sachet_item)
-		elif c is CandyContainerItem:
-			if c.current_stock > 0:
-				for candy in c.possible_candies:
-					if is_in_stock(candy):
-						if not result.has(candy):
-							result.append(candy)
+		if c is DispenserContainerItem and c.visible:
+			for item in c.get_available_items():
+				if not result.has(item):
+					result.append(item)
 							
 	return result
 

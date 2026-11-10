@@ -14,6 +14,15 @@ func adjust_price(delta: float) -> void:
 		return
 	InventoryManager.adjust_item_price(possible_candies, delta)
 
+func get_available_items() -> Array[ItemData]:
+	var items: Array[ItemData] = []
+	if current_stock > 0:
+		for candy in possible_candies:
+			if candy and InventoryManager.is_in_stock(candy):
+				if not items.has(candy):
+					items.append(candy)
+	return items
+
 func update_pricing_ui() -> void:
 	if possible_candies.is_empty() or not is_hovered or not _pricing_mode_active:
 		return

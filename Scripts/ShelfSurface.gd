@@ -286,6 +286,55 @@ func get_empty_slots() -> Array[int]:
 	return empty_indices
 
 
+## Returns the number of currently occupied slots on this surface.
+func get_occupied_count() -> int:
+	var count: int = 0
+	for occ in _slot_occupants:
+		if occ != null and is_instance_valid(occ):
+			count += 1
+	return count
+
+
+## Returns an array of unique [ItemData] resources currently placed on this surface.
+func get_unique_items() -> Array[ItemData]:
+	var result: Array[ItemData] = []
+	for occ in _slot_occupants:
+		if occ != null and is_instance_valid(occ) and occ.item_data:
+			if not result.has(occ.item_data):
+				result.append(occ.item_data)
+	return result
+
+
+## Returns all [ItemData] resources placed on this surface, including duplicates.
+func get_all_placed_items() -> Array[ItemData]:
+	var result: Array[ItemData] = []
+	for occ in _slot_occupants:
+		if occ != null and is_instance_valid(occ) and occ.item_data:
+			result.append(occ.item_data)
+	return result
+
+
+## Returns true if an item matching [param item] is currently placed on this surface.
+func has_item(item: ItemData) -> bool:
+	if not item:
+		return false
+	for occ in _slot_occupants:
+		if occ != null and is_instance_valid(occ) and occ.item_data == item:
+			return true
+	return false
+
+
+## Returns the number of placed physical items matching [param item] on this surface.
+func get_item_count(item: ItemData) -> int:
+	if not item:
+		return 0
+	var count: int = 0
+	for occ in _slot_occupants:
+		if occ != null and is_instance_valid(occ) and occ.item_data == item:
+			count += 1
+	return count
+
+
 ## Programmatically spawn an item into a specific slot index.
 ## Returns the newly created DraggableItem instance.
 func place_item_in_slot(item: ItemData, slot_idx: int) -> DraggableItem:

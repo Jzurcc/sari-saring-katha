@@ -102,6 +102,11 @@ func adjust_price(_delta: float) -> void:
 func update_pricing_ui() -> void:
 	pass
 
+## Returns an array of [ItemData] items currently in-stock and available to dispense.
+## Overridden by subclasses.
+func get_available_items() -> Array[ItemData]:
+	return []
+
 func _update_local_stock() -> void:
 	pass
 
