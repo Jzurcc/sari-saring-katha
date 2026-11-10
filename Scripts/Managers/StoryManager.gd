@@ -10,14 +10,28 @@ const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
 ## 1 in-game hour = 50 real seconds.
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 
+var clock: DayClock = DayClock.new()
+
 var day: int = 1
-var is_clock_running: bool = false:
-	set(value):
-		is_clock_running = value
-		_ensure_tod_node()
-		if _time_of_day_node:
-			var in_menu = get_tree().current_scene and get_tree().current_scene.name == "MainMenu"
-			_time_of_day_node.game_time_enabled = is_clock_running and not in_menu
+var is_clock_running: bool:
+	get: return clock.is_clock_running
+	set(value): clock.set_clock_running(value)
+
+var is_customer_present: bool:
+	get: return clock.is_customer_present
+	set(value): clock.is_customer_present = value
+
+var wait_limit_time: float:
+	get: return clock.wait_limit_time
+	set(value): clock.wait_limit_time = value
+
+var was_paused_by_limit: bool:
+	get: return clock.was_paused_by_limit
+	set(value): clock.was_paused_by_limit = value
+
+var _current_display_time: float:
+	get: return clock.current_display_time
+	set(value): clock.current_display_time = value
 
 var _last_character_path: String = ""
 var _pending_tier_advance_source: String = ""
@@ -26,9 +40,6 @@ var is_mayari_debt_active: bool = true
 var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 var customer_debts: Dictionary = {}
-var is_customer_present: bool = false
-var wait_limit_time: float = -1.0
-var was_paused_by_limit: bool = false
 var _save_requested: bool = false
 
 # --- Story Progression ---
@@ -93,17 +104,13 @@ var _time_of_day_node: Node = null
 func _ready() -> void:
 	LogManager.info("StoryManager", "StoryManager._ready() START")
 	add_to_group("persist")
+	clock.setup(self)
 	EventBus.day_started.connect(_on_day_started)
 	EventBus.customer_satisfied.connect(_on_customer_satisfied)
 	EventBus.customer_arrived.connect(_on_customer_arrived)
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
 	Dialogic.VAR.variable_changed.connect(_on_dialogic_variable_changed)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
-	
-	_ensure_tod_node()
-	if _time_of_day_node and not _time_of_day_node.time_changed.is_connected(_on_tod_time_changed):
-		_time_of_day_node.time_changed.connect(_on_tod_time_changed)
-	
 	EventBus.debt_quota_met.connect(_on_debt_quota_met)
 	
 	# Initial child character data into a lookup map for faster retrieval
@@ -118,43 +125,6 @@ func _ready() -> void:
 func _cache_node_refs() -> void:
 	_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
 	LogManager.debug("StoryManager", "Cached GameManager: %s" % str(is_instance_valid(_game_manager)))
-	
-func _on_tod_time_changed(t: float) -> void:
-	_current_display_time = t
-	
-	# 1. Customer Wait Limit: Pause time if someone's been here for 4 hours
-	if wait_limit_time > 0 and _current_display_time >= wait_limit_time:
-		if is_clock_running:
-			LogManager.info("StoryManager", "Customer wait limit reached (+4h). Pausing clock.")
-			is_clock_running = false
-			was_paused_by_limit = true
-		wait_limit_time = -1.0 # Limit reached, don't trigger again for this customer
-		
-	# 2. Hard Stop Limit: Never go past Midnight
-	if _current_display_time >= HARD_STOP_HOUR:
-		if is_clock_running:
-			LogManager.info("StoryManager", "Midnight reached. Hard pausing clock.")
-			is_clock_running = false
-		_current_display_time = HARD_STOP_HOUR
-		_apply_display_time(HARD_STOP_HOUR)
-		# If someone is here, they can still be served, but time won't move.
-		# If no one is here, trigger closing immediately.
-		if not is_customer_present:
-			EventBus.closing_time_reached.emit()
-		return # Stop further checks
-
-	# 3. End of day check: strictly cap at CLOSING_HOUR ONLY if no customer is present
-	if _current_display_time >= CLOSING_HOUR and not is_customer_present:
-		if is_clock_running:
-			LogManager.info("StoryManager", "Closing Time Reached (8 PM). Pausing clock.")
-			is_clock_running = false
-			_current_display_time = CLOSING_HOUR
-			_apply_display_time(CLOSING_HOUR)
-			EventBus.closing_time_reached.emit()
-		elif _current_display_time > CLOSING_HOUR:
-			# Safety clamp to prevent time creep while paused
-			_current_display_time = CLOSING_HOUR
-			_apply_display_time(CLOSING_HOUR)
 
 func _on_day_started(new_day: int) -> void:
 	LogManager.info("StoryManager", "StoryManager._on_day_started(%d) CALLED" % new_day)
@@ -162,13 +132,7 @@ func _on_day_started(new_day: int) -> void:
 	day = new_day
 	has_mayari_visited = false
 	LogManager.info("StoryManager", "Day %d starts." % day)
-	is_customer_present = false
-	wait_limit_time = -1.0
-	was_paused_by_limit = false
-	_current_display_time = DAY_START_HOUR
-	_ensure_tod_node()
-	_apply_display_time(DAY_START_HOUR)
-	is_clock_running = true
+	clock.on_day_started()
 
 
 func advance_tier(source: String = "Manual") -> void:
@@ -266,8 +230,8 @@ func get_save_id() -> String:
 
 func get_save_data() -> Dictionary:
 	_ensure_tod_node()
-	if is_instance_valid(_time_of_day_node) and _time_of_day_node.has_method("get"):
-		var tod_time = _time_of_day_node.get("current_time")
+	if is_instance_valid(clock._time_of_day_node) and clock._time_of_day_node.has_method("get"):
+		var tod_time = clock._time_of_day_node.get("current_time")
 		if tod_time != null: _current_display_time = tod_time
 	return {
 		"day": day,
@@ -311,15 +275,15 @@ func load_save_data(data: Dictionary) -> void:
 	DialogicBridge.sync_global(day, current_tier, max_unlocked_tier, 1)
 
 	_ensure_tod_node()
-	if is_instance_valid(_time_of_day_node):
+	if is_instance_valid(clock._time_of_day_node):
 		_apply_display_time(_current_display_time)
-		_time_of_day_node.game_time_enabled = is_clock_running
+		clock._time_of_day_node.game_time_enabled = is_clock_running
 	else:
 		get_tree().process_frame.connect(func():
 			_ensure_tod_node()
-			if is_instance_valid(_time_of_day_node):
+			if is_instance_valid(clock._time_of_day_node):
 				_apply_display_time(_current_display_time)
-				_time_of_day_node.game_time_enabled = is_clock_running
+				clock._time_of_day_node.game_time_enabled = is_clock_running
 		, CONNECT_ONE_SHOT)
 
 func reset_state() -> void:
@@ -334,13 +298,10 @@ func reset_state() -> void:
 	is_mayari_debt_active = true
 	is_mayari_met = false
 	last_mayari_collection_successful = true
-	_current_display_time = DAY_START_HOUR
-	wait_limit_time = -1.0
-	was_paused_by_limit = false
-	is_customer_present = false
 	_last_tier_unlocked_notification = 0
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0
+	clock.reset_state()
 	SaveManager.delete_save()
 
 func get_next_transaction() -> TransactionContext:
@@ -579,33 +540,11 @@ func clear_debt(customer_path: String) -> void:
 		LogManager.info("StoryManager", "Debt CLEARED for %s" % customer_path.get_file())
 		_save_progression()
 
-## Write the float hour value to the TimeOfDay node (drives sky/shadow).
 func _apply_display_time(t: float) -> void:
-	if not _time_of_day_node:
-		return
-	
-	# Guard: The main menu should have its own constant lighting (16.89).
-	# Do not overwrite the main menu background with loaded game time or resets.
-	if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
-		return
-
-	var h: int = int(t)
-	var m: int = int((t - h) * 60.0)
-	_time_of_day_node.set_time(h, m, 0)
+	clock.apply_display_time(t)
 
 func _ensure_tod_node() -> void:
-	if not is_instance_valid(_time_of_day_node):
-		_time_of_day_node = get_tree().root.find_child("TimeOfDay", true, false)
-		if is_instance_valid(_time_of_day_node):
-			# If we are in the Main Menu, force the special aesthetic time immediately
-			if get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
-				var h: int = int(MENU_THEME_HOUR)
-				var m: int = int((MENU_THEME_HOUR - h) * 60.0)
-				_time_of_day_node.set_time(h, m, 0)
-				_time_of_day_node.game_time_enabled = false # Keep it static for the menu
-			
-			if not _time_of_day_node.time_changed.is_connected(_on_tod_time_changed):
-				_time_of_day_node.time_changed.connect(_on_tod_time_changed)
+	clock._ensure_tod_node()
 
 func complete_tutorial() -> void:
 	var tutorial_path := "res://Resources/customers/UncleMario.tres"
@@ -783,46 +722,12 @@ func _on_customer_satisfied(customer) -> void:
 		LogManager.info("StoryManager", "Uncle Mario tutorial successfully completed and saved.")
 
 func _on_customer_arrived(_customer: Customer) -> void:
-	is_customer_present = true
-	
-	# Only set the 4-hour limit if it hasn't been set yet (e.g., fresh arrival vs restore from save).
-	# If was_paused_by_limit is true, we also skip setting it because they already hit it.
-	if wait_limit_time < 0 and not was_paused_by_limit:
-		wait_limit_time = _current_display_time + 4.0
-		LogManager.debug("StoryManager", "Customer arrived. Patience limit set to %.2f" % wait_limit_time)
-	else:
-		LogManager.info("StoryManager", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Paused: %s)" % [wait_limit_time, str(was_paused_by_limit)])
+	clock.on_customer_arrived()
 
 func _on_customer_dismissed(_customer: Customer) -> void:
-	is_customer_present = false
-	
-	# If we are past 8 PM, the day ends as soon as the customer leaves
-	if _current_display_time >= CLOSING_HOUR:
-		if is_clock_running:
-			is_clock_running = false
-			LogManager.info("StoryManager", "Grace period ended. Pausing clock for Closing Time.")
-		
-		# Clamp to Midnight if we somehow drifted past it
-		if _current_display_time > HARD_STOP_HOUR:
-			_current_display_time = HARD_STOP_HOUR
-			_apply_display_time(HARD_STOP_HOUR)
-		
-		# Note: We don't snap back to 8 PM; the late display time stands.
-		EventBus.closing_time_reached.emit()
-	
-	# Otherwise, if we were paused by the wait limit, resume time
-	elif was_paused_by_limit:
-		is_clock_running = true
-		LogManager.info("StoryManager", "Customer left. Resuming clock.")
-	
-	# Cleanup flags
-	was_paused_by_limit = false
-	wait_limit_time = -1.0
-
-	# Original logic: Update LastCustomer info
+	clock.on_customer_dismissed()
 	_set_last_customer_info(_customer)
 	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Unhappy")
-	
 	_process_story_cooldown(_customer)
 
 func _set_last_customer_info(customer: Customer) -> void:
@@ -979,12 +884,11 @@ func is_label_in_timeline(path, label_name: String) -> bool:
 	return TimelineLabels.has_label(path, label_name)
 
 
-func reset_to_morning() -> void:
-	_current_display_time = DAY_START_HOUR
-	is_clock_running = true
-
 func is_past_closing_time() -> bool:
-	return _current_display_time >= CLOSING_HOUR
+	return clock.is_past_closing_time()
+
+func reset_to_morning() -> void:
+	clock.reset_to_morning()
 
 func has_pending_tier_advance() -> bool:
 	return _pending_tier_advance_source != ""
