@@ -464,52 +464,52 @@ func _on_add_pressed() -> void:
 		return
 	
 	var item = currently_selected_item
+	if not _can_add_to_basket(item):
+		return
+
+	AudioManager.play_sfx("pickup")
+	selected_items[item] = selected_items.get(item, 0) + 1
+	total_price += item.price
+	_update_order_list()
 	
-	# Initial basic checks for upgrades
+	# If an upgrade was added, refresh grid to show next tiers
+	if item.get_meta("is_upgrade", false):
+		_populate_grid(current_category)
+
+func _can_add_to_basket(item: ItemData) -> bool:
 	var is_upgrade = item.get_meta("is_upgrade", false)
-	
 	if is_upgrade:
 		var target_tier = item.get_meta("target_tier", 1)
-		
-		# Robust Duplicate Check
-		var already_in_basket = false
 		for basket_item in selected_items.keys():
 			if basket_item.get_meta("is_upgrade", false) and basket_item.get_meta("target_tier", 1) == target_tier:
-				already_in_basket = true
-				break
-				
-		if already_in_basket:
-			EventBus.show_notification.emit("Already in Basket", "You only need one package for Tier %d per order." % target_tier, "error")
-			AudioManager.play_sfx("error")
-			return
+				EventBus.show_notification.emit("Already in Basket", "You only need one package for Tier %d per order." % target_tier, "error")
+				AudioManager.play_sfx("error")
+				return false
 		
 		if target_tier > StoryManager.max_unlocked_tier:
 			EventBus.show_notification.emit("Upgrade Locked", "Continue serving customers to unlock this.", "error")
 			AudioManager.play_sfx("error")
-			return
+			return false
 
 		if not _is_upgrade_prerequisite_met(target_tier):
 			EventBus.show_notification.emit("Sequence Error", "You must add Tier %d first!" % (target_tier - 1), "error")
 			AudioManager.play_sfx("error")
-			return
+			return false
 
-	if selected_items.get(item, 0) >= 99: 
+	if selected_items.get(item, 0) >= 99:
 		EventBus.show_notification.emit("Limit Reached", "Order limit for this item reached.", "error")
-		return
+		return false
 
-	var money = _get_money()
-	if total_price + item.price > money:
+	if total_price + item.price > _get_money():
 		EventBus.insufficient_funds.emit()
-		return
+		return false
 
-	# Simulate the basket after addition
+	# Simulate the basket after addition and flatten into effective item/type counts
 	var proposed_basket = selected_items.duplicate()
 	proposed_basket[item] = proposed_basket.get(item, 0) + 1
 	
-	# Flatten the basket into actual item counts
 	var effective_counts = {}
 	var effective_types = {}
-	
 	for k in proposed_basket.keys():
 		var count = proposed_basket[k]
 		if k.get_meta("is_upgrade", false):
@@ -522,49 +522,34 @@ func _on_add_pressed() -> void:
 			effective_counts[k] = effective_counts.get(k, 0) + count
 			effective_types[k.type] = effective_types.get(k.type, 0) + count
 
-	# Validate individual item limits
 	for eff_item in effective_counts.keys():
-		var count = effective_counts[eff_item]
-		var limit = InventoryManager.get_max_stock(eff_item)
-		if count > limit:
+		if effective_counts[eff_item] > InventoryManager.get_max_stock(eff_item):
 			print("[RestockMenu] BLOCKED: Individual limit for ", eff_item.item_name, " would be exceeded.")
 			EventBus.show_notification.emit("Stock Limit Reached!", "Not enough space for " + eff_item.item_name, "")
 			AudioManager.play_sfx("error")
-			return
+			return false
 
-	# [SPECIAL CASE] Validate shared candy container limit (Mentor + Pocha) pre-Tier 10
+	# Shared candy container limit (Mentor + Pocha) pre-Tier 10
 	if StoryManager.current_tier < 10:
 		var bowl_sum = 0
 		for eff_item in effective_counts.keys():
 			var id = eff_item.get_clean_id()
 			if id == "mentor" or id == "pocha":
 				bowl_sum += (effective_counts[eff_item] + InventoryManager.get_stock(eff_item))
-		
 		if bowl_sum > 10:
 			print("[RestockMenu] BLOCKED: Shared bowl limit (Mentor + Pocha) would be exceeded. (", bowl_sum, "/10)")
 			EventBus.show_notification.emit("Bowl is full!", "Mentor + Pocha cannot exceed 10 total.", "")
 			AudioManager.play_sfx("error")
-			return
+			return false
 
-	# Validate global capacities
 	for eff_type in effective_types.keys():
-		var count = effective_types[eff_type]
-		var available = InventoryManager.get_available_capacity(eff_type)
-		if count > available:
+		if effective_types[eff_type] > InventoryManager.get_available_capacity(eff_type):
 			print("[RestockMenu] CANNOT ADD: Capacity for type ", eff_type, " would be exceeded.")
 			EventBus.show_notification.emit("Shelf is full!", "Not enough physical space.", "")
 			AudioManager.play_sfx("error")
-			return
+			return false
 
-	# If we pass all validation, accept the item
-	AudioManager.play_sfx("pickup")
-	selected_items[item] = proposed_basket[item]
-	total_price += item.price
-	_update_order_list()
-	
-	# If an upgrade was added, refresh grid to show next tiers
-	if is_upgrade:
-		_populate_grid(current_category)
+	return true
 
 # ========== ORDER LIST ==========
 func _update_order_list() -> void:
@@ -702,36 +687,13 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, _row
 	_update_total_amount_ui()
 
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
-	var count = selected_items.get(item, 0)
-	
-	# Individual item limit
-	var is_upgrade = item.get_meta("is_upgrade", false)
-	if is_upgrade: return # Upgrades limited to 1
-	
-	var item_limit = InventoryManager.get_max_stock(item)
-	if count + 1 > item_limit:
-		AudioManager.play_sfx("error")
+	if item.get_meta("is_upgrade", false):
 		return
-		
-	# Global capacity limit
-	var available = InventoryManager.get_available_capacity(item.type)
-	var in_basket = 0
-	for k in selected_items.keys():
-		if k.type == item.type:
-			in_basket += selected_items[k]
-	
-	if in_basket + 1 > available:
-		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
-		AudioManager.play_sfx("error")
-		return
-		
-	var money = _get_money()
-	if total_price + item.price > money:
-		EventBus.insufficient_funds.emit()
+	if not _can_add_to_basket(item):
 		return
 	
 	AudioManager.play_sfx("pickup")
-	var new_count = count + 1
+	var new_count = selected_items.get(item, 0) + 1
 	selected_items[item] = new_count
 	total_price += item.price
 	count_lbl.text = str(new_count)
