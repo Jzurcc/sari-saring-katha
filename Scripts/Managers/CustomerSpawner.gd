@@ -184,6 +184,39 @@ func _calculate_positions(has_guest: bool) -> Dictionary:
 		"guest_target": guest_target
 	}
 
+func _on_customer_dismissed(customer: Customer) -> void:
+	if customer == null:
+		return
+
+	if customer != current_customer and customer != guest_customer:
+		return
+
+	# RACE GUARD: Both customer_satisfied AND customer_dismissed route here.
+	# Lock _is_spawning NOW — before the await — so the second signal fire
+	# is rejected by _spawn_next_customer()'s guard instead of racing it.
+	if _is_spawning:
+		LogManager.debug("CustomerSpawner", "_on_customer_dismissed: already spawning — ignoring duplicate signal.")
+		return
+	_is_spawning = true
+
+	if is_instance_valid(guest_customer):
+		guest_customer.dismiss()
+		guest_customer = null
+	current_customer = null
+
+	EventBus.customer_order_cleared.emit()
+
+	# Check if we have a pending tier unlock now that the counter is clear
+	StoryManager.process_pending_unlock()
+
+	var delay = randf_range(0.3, 5.0)
+	if StoryManager.is_past_closing_time():
+		delay = 1.0 # Short delay for Mayari arrival
+
+	await get_tree().create_timer(delay).timeout
+	_is_spawning = false
+	_spawn_next_customer()
+
 func _process(delta: float) -> void:
 	session.update_watchdog(delta)
 
@@ -303,7 +336,7 @@ func load_save_data(data: Dictionary) -> void:
 	# block the click guard at _on_customer_clicked() line 286, making the
 	# re-spawned customer unclickable. This was the root cause of the tutorial bug.
 	_dialogue_phase = DialoguePhase.NONE
-	_greeting_interrupted = false # Also reset: interruption state is irrelevant after a reload
+	session._greeting_interrupted = false # Also reset: interruption state is irrelevant after a reload
 	
 	if data.has("current_customer"):
 		var ctx_data = data["current_customer"]
@@ -322,7 +355,7 @@ func reset_state() -> void:
 	guest_customer = null
 	_is_spawning = false
 	_dialogue_phase = DialoguePhase.NONE
-	_greeting_interrupted = false
+	session._greeting_interrupted = false
 	LogManager.info("CustomerSpawner", "State reset for New Game.")
 
 	# If no customer to restore, handle guest restoration (optional, usually guest is with primary)

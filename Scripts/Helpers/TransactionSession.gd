@@ -368,3 +368,4 @@ func _dismiss_guest_if_present() -> void:
 		var g = guest_customer
 		guest_customer = null
 		g.create_tween().tween_callback(g.dismiss).set_delay(0.5)
+
