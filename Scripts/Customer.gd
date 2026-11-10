@@ -289,6 +289,10 @@ func pulse_color(color: Color, duration: float = 0.5) -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func satisfy() -> void:
+	await _leave_store(EventBus.customer_satisfied)
+
+
+func _leave_store(completion_signal: Signal) -> void:
 	# Immediately mark as no longer waiting so nothing else can interact with
 	# or dismiss this customer while the exit animation plays.
 	is_waiting = false
@@ -296,7 +300,7 @@ func satisfy() -> void:
 	_clear_outline()
 	InventoryManager.decrement_cooldown()
 	
-	# Points toward the custom exit marker and let _process handle the walk
+	# Point toward the custom exit marker and let _process handle the walk
 	target_position = _exit_position
 	
 	var exit_tween = create_tween()
@@ -310,7 +314,7 @@ func satisfy() -> void:
 		MarioManager.is_mario_physically_present = false
 		
 	# Emit completion signal only once FULLY resolved (gone from the scene)
-	EventBus.customer_satisfied.emit(self)
+	completion_signal.emit(self)
 	queue_free()
 
 
@@ -363,26 +367,7 @@ func reject() -> void:
 ## Called by CustomerSpawner after the player chooses "Refuse service".
 ## Plays a brief leaving animation then notifies the EventBus.
 func dismiss() -> void:
-	is_waiting = false
-	_is_resolving = true
-	_clear_outline()
-	InventoryManager.decrement_cooldown()
-
-	# Point toward the custom exit marker and let _process handle the walk
-	target_position = _exit_position
-	
-	var exit_tween = create_tween()
-	exit_tween.tween_interval(2.0)
-	exit_tween.tween_property(body_sprite, "modulate:a", 0.0, 0.5) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	await exit_tween.finished
-	
-	if customer_data and customer_data.get_clean_id() == "unclemario":
-		MarioManager.is_mario_physically_present = false
-		
-	EventBus.customer_dismissed.emit(self)
-	queue_free()
+	await _leave_store(EventBus.customer_dismissed)
 
 ## Show or hide the hover outline on the customer sprite.
 ## Only shows when the customer is actively waiting and can be interacted with.

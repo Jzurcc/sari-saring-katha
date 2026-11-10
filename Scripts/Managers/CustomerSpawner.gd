@@ -458,7 +458,6 @@ func _on_customer_partial_satisfaction(customer: Customer) -> void:
 	start_dialogue(timeline, customer, _dialogue_phase, "Partial")
 
 func _update_item_names(customer: Customer) -> void:
-	# 1. Build the grammar-aware item list
 	var item_names: Array[String] = []
 	var ctx = customer.transaction_context
 	
@@ -468,50 +467,22 @@ func _update_item_names(customer: Customer) -> void:
 			continue
 		item_names.append(item.item_name)
 	
-	var formatted_names = ""
-	if item_names.size() == 0:
-		var c_data = customer.customer_data
-		var cname = c_data.character_name if c_data.character_name != "" else c_data.get_clean_id()
-		LogManager.debug("CustomerSpawner", "NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % cname)
-		
-		# Still update character name and counts, but leave Transaction_ItemWants alone.
-		InventoryManager.current_character_name = cname
-		InventoryManager.current_item_name = ""
-		Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
-		if customer.transaction_context:
-			var total_cnt = customer.transaction_context.original_count
-			var remain_cnt = customer.transaction_context.desired_items.size()
-			Dialogic.VAR.set_variable("Transaction_DeliveredCount", total_cnt - remain_cnt)
-			Dialogic.VAR.set_variable("Transaction_RemainingCount", remain_cnt)
-		if GENERIC_CHAR_RES:
-			GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
-		return
-	elif item_names.size() == 1:
-		formatted_names = item_names[0]
-	elif item_names.size() == 2:
-		formatted_names = item_names[0] + " and " + item_names[1]
-	else:
-		var last = item_names.pop_back()
-		formatted_names = ", ".join(item_names) + ", and " + last
-		
-	InventoryManager.current_item_name = formatted_names
-
-	# 2. Set the character display name
 	var data = customer.customer_data
 	InventoryManager.current_character_name = data.character_name if data.character_name != "" else data.get_clean_id()
-
-	# 3. Update Dialogic Variables — Sync safely via StoryManager helper
-	Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
-	Dialogic.VAR.set_variable("Transaction_ItemWants", InventoryManager.current_item_name)
+	InventoryManager.current_item_name = DialogicBridge.join_names(item_names)
 	
-	# 4. Sync Delivered/Remaining Counts
-	if customer.transaction_context:
-		var total_cnt = customer.transaction_context.original_count
-		var remain_cnt = customer.transaction_context.desired_items.size()
+	Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
+	if not item_names.is_empty():
+		Dialogic.VAR.set_variable("Transaction_ItemWants", InventoryManager.current_item_name)
+	else:
+		LogManager.debug("CustomerSpawner", "NOTE: Transaction has zero items for '%s' (visit or visit-story). Skipping ItemWants update." % InventoryManager.current_character_name)
+	
+	if ctx:
+		var total_cnt = ctx.original_count
+		var remain_cnt = ctx.desired_items.size()
 		Dialogic.VAR.set_variable("Transaction_DeliveredCount", total_cnt - remain_cnt)
 		Dialogic.VAR.set_variable("Transaction_RemainingCount", remain_cnt)
 	
-	# 5. Patch Generic Character Resource
 	if GENERIC_CHAR_RES:
 		GENERIC_CHAR_RES.display_name = InventoryManager.current_character_name
 

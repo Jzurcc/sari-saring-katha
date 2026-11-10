@@ -135,7 +135,7 @@ static func _pick_any_item_name(transaction: TransactionContext) -> String:
 	return transaction.desired_items.pick_random().item_name
 
 
-static func _join_names(names: Array[String]) -> String:
+static func join_names(names: Array[String]) -> String:
 	match names.size():
 		0: return ""
 		1: return names[0]
@@ -143,3 +143,7 @@ static func _join_names(names: Array[String]) -> String:
 	var last := names[-1]
 	var rest := names.slice(0, names.size() - 1)
 	return ", ".join(rest) + ", and " + last
+
+
+static func _join_names(names: Array[String]) -> String:
+	return join_names(names)
