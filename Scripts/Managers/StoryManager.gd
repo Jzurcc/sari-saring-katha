@@ -1,6 +1,5 @@
 extends Node
 
-
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
@@ -12,9 +11,6 @@ const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 
 var day: int = 1
-
-
-var _label_cache: Dictionary = {}
 var is_clock_running: bool = false:
 	set(value):
 		is_clock_running = value
@@ -35,18 +31,9 @@ var wait_limit_time: float = -1.0
 var was_paused_by_limit: bool = false
 var _save_requested: bool = false
 
-
-
-
 # --- Story Progression ---
-var _first_customer_of_day: bool = true
-
 var _char_lookup: Dictionary = {}   # resource_path -> CustomerData
-
-
-# Cached node references — populated after scene is ready to avoid null captures during _ready
 var _game_manager: GameManager = null
-
 
 # --- Tier Progression ---
 var current_tier: int = 1
@@ -67,43 +54,21 @@ var purchase_counter: int = 0:
 func get_required_purchases_for_next_tier() -> int:
 	# Formula: 5 + floor(current_tier / 2) with a steeper curve for the end game
 	var base = 5 + floori(current_tier / 2.0)
-	
-	# Late game ramp-up (T7+) to hit the user's target of 15 at T10
 	if current_tier >= 7:
 		base += (current_tier - 6) * 2
-		
 	return clampi(base, 5, 15)
 
 var pending_upgrade_tier: int = 0
-
-const CATEGORY_DISPLAY_NAMES = {
-	"snack": "snack",
-	"sachet": "sachet",
-	"can": "can",
-	"candy": "candy",
-	"cigarette": "cigarette",
-	"pack": "noodles",
-	"frozen": "frozen",
-	"bottle": "beverage"
-}
 var pending_upgrade_cost: float = 0.0
 var _upgrade_item_cache: Dictionary = {}
-
 
 @export_group("Transaction Probabilities")
 ## Chance (0.0 to 1.0) that a customer will start with a rumor.
 @export_range(0, 1) var rumor_chance: float = 0.45
-## Chance (0.0 to 1.0) that a customer will ask for debt (utang).
-## NOTE: Random utang is disabled for the initial version — utang only comes from Manang Ana.
-@export_range(0, 1) var debt_chance: float = 0.0
 ## Chance (0.0 to 1.0) that a customer will just visit without buying.
 @export_range(0, 1) var visit_chance: float = 0.35
 ## Chance (0.0 to 1.0) that a customer's request will be a riddle.
 @export_range(0, 1) var riddle_chance: float = 0.35
-
-## Safely sets a Dialogic variable only if it exists in the Dialogic system.
-## Also automatically mirrors the value to the local Autoload properties (e.g. "Dialogic.VAR.get_variable("Transaction_ItemWants", "")")
-
 
 ## Float representation of the currently displayed in-game hour (0–24).
 var _current_display_time: float = 16.89
@@ -193,9 +158,9 @@ func _on_tod_time_changed(t: float) -> void:
 
 func _on_day_started(new_day: int) -> void:
 	LogManager.info("StoryManager", "StoryManager._on_day_started(%d) CALLED" % new_day)
+	_cache_node_refs()
 	day = new_day
 	has_mayari_visited = false
-	_first_customer_of_day = true
 	LogManager.info("StoryManager", "Day %d starts." % day)
 	is_customer_present = false
 	wait_limit_time = -1.0
@@ -342,6 +307,7 @@ func load_save_data(data: Dictionary) -> void:
 	is_customer_present = data.get("is_customer_present", false)
 	_last_notified_tier = data.get("_last_notified_tier", 0)
 
+	CharacterProgressionManager.migrate_from_story_manager_save(data)
 	DialogicBridge.sync_global(day, current_tier, max_unlocked_tier, 1)
 
 	_ensure_tod_node()
@@ -404,9 +370,6 @@ func get_next_transaction() -> TransactionContext:
 	# 3. Build context & choose timeline
 	_build_transaction_context(transaction, char_data, force_story)
 	
-	if not force_story:
-		_first_customer_of_day = false
-	
 	# 4. Independent Feature Rolls (Awareness, Riddle, Price, Debt)
 	_apply_feature_rolls(transaction)
 	
@@ -450,7 +413,6 @@ func _inject_special_customer() -> TransactionContext:
 		_build_transaction_context(kuyakap_t, kuyakap_data, true)
 		CharacterProgressionManager.advance_story_direct(kuyakap_tut_path)
 		CharacterProgressionManager.record_encounter(kuyakap_data.resource_path)
-		_first_customer_of_day = false
 		LogManager.info("STORY", "Spawning Kuya Kap after Tutorial (Story Chapter 0)")
 		return kuyakap_t
 		
@@ -603,10 +565,6 @@ func get_collection_transaction() -> TransactionContext:
 
 func _on_debt_quota_met(was_successful: bool) -> void:
 	last_mayari_collection_successful = was_successful
-	if was_successful:
-		# Narrative advancement is usually handled by [signal arg="story_success"] in the dtl,
-		# but we can add a safety check here or handle it manually for the nightly cycle.
-		pass
 	_save_progression()
 
 func record_debt(customer_path: String, amount: float) -> void:
@@ -620,13 +578,6 @@ func clear_debt(customer_path: String) -> void:
 		customer_debts.erase(customer_path)
 		LogManager.info("StoryManager", "Debt CLEARED for %s" % customer_path.get_file())
 		_save_progression()
-
-## Tick the clock every frame — runs continuously from DAY_START_HOUR to CLOSING_HOUR.
-## No caps, no tweens, no toggling. The sky just moves.
-func _process(_delta: float) -> void:
-	# Continuous sync check — primarily uses signals now, but ensures
-	# StoryManager logic stays informed if external factors change TOD time.
-	pass
 
 ## Write the float hour value to the TimeOfDay node (drives sky/shadow).
 func _apply_display_time(t: float) -> void:
@@ -709,7 +660,7 @@ func _build_transaction_context(transaction: TransactionContext, data: CustomerD
 				if item:
 					if item_auto_upgrade or pinned_request.upgrade_all or item.tier > current_tier:
 						var best_in_cat = get_best_item_for_category(item.category, item)
-						item = best_in_cat if best_in_cat else _pick_random_orderable_item()
+						item = best_in_cat if best_in_cat else OrderItemPicker.random_orderable(current_tier)
 					if item: transaction.desired_items.append(item)
 		else:
 			# Dynamic category requests via CustomerData.chapter_categories
@@ -720,7 +671,7 @@ func _build_transaction_context(transaction: TransactionContext, data: CustomerD
 			if transaction.transaction_type == TransactionContext.Type.PURCHASE and transaction.requested_category != "":
 				if randf() > 0.5: transaction.requested_category = ""
 				
-			var target_item_count = _get_item_count_for_tier(current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
+			var target_item_count = OrderItemPicker.item_count_for_tier(current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
 			
 			if transaction.requested_category != "":
 				var prefer_hint = (data.get_clean_id() == "buboy")
@@ -746,26 +697,21 @@ func _build_transaction_context(transaction: TransactionContext, data: CustomerD
 					var hint_pool = pool.filter(func(i): return i.item_hint != "")
 					if not hint_pool.is_empty(): pool = hint_pool
 					
-				var pool_max_tiers = _get_max_tier_per_category()
-				for i in range(target_item_count - transaction.desired_items.size()):
-					var picked = _pick_weighted_item(pool, pool_max_tiers)
-					if picked: transaction.desired_items.append(picked)
-					
 			var remaining_items = target_item_count - transaction.desired_items.size()
-			var current_max_tiers = _get_max_tier_per_category()
+			var current_max_tiers = OrderItemPicker.max_tier_per_category(current_tier)
 			for i in range(remaining_items):
 				if not pool.is_empty():
-					var item = _pick_weighted_item(pool, current_max_tiers)
+					var item = OrderItemPicker.pick_weighted(pool, current_tier, current_max_tiers)
 					if transaction.upgrade_to_best_tier:
 						var best = get_best_item_for_category(item.category, item)
 						if best: item = best
 					transaction.desired_items.append(item)
 				else:
-					var fallback = _pick_random_orderable_item()
+					var fallback = OrderItemPicker.random_orderable(current_tier)
 					if fallback: transaction.desired_items.append(fallback)
 					
 			if transaction.desired_items.is_empty() and transaction.transaction_type != TransactionContext.Type.VISIT:
-				var fallback = _pick_random_orderable_item()
+				var fallback = OrderItemPicker.random_orderable(current_tier)
 				if fallback: transaction.desired_items.append(fallback)
 
 			if transaction.desired_items.is_empty():
@@ -804,52 +750,9 @@ func _build_generic_transaction(transaction: TransactionContext, data: CustomerD
 		if data.is_visit_story_chapter(chapter):
 			transaction.is_visit_story = true
 
-func _get_item_count_for_tier(t_val: int) -> int:
-	var roll = randf() * 100.0
-	
-	# Early game (T1-T2): 40/30/30 distribution
-	# Mid game (T3-T6): 30/40/30 distribution
-	# Late game (T7-T10): 10/40/50 distribution
-	
-	if t_val <= 2:
-		if roll < 40: return 1
-		elif roll < 70: return 2
-		else: return 3
-	elif t_val <= 6:
-		if roll < 30: return 1
-		elif roll < 70: return 2
-		else: return 3
-	else:
-		if roll < 10: return 1
-		elif roll < 50: return 2
-		else: return 3
-
-## Returns a random item that is unlocked for the current day.
-## Prioritizes items that are currently in stock. 
-## Fallback: picks an unlocked item even if out of stock (prevents "something" dialogue gap).
-func _pick_random_orderable_item() -> ItemData:
-	var all_unlocked: Array[ItemData] = []
-	var absolute_fallback: Array[ItemData] = []
-	
-	for item in InventoryManager.get_all_items():
-		if item.can_be_sold:
-			absolute_fallback.append(item)
-			if is_item_unlocked(item):
-				all_unlocked.append(item)
-
-	if not all_unlocked.is_empty():
-		return all_unlocked.pick_random()
-		
-	if not absolute_fallback.is_empty():
-		push_warning("[StoryManager] No Tier %d items unlocked. Falling back to absolute random item pool." % current_tier)
-		return absolute_fallback.pick_random()
-		
-	push_warning("[StoryManager] No sellable items available at all for fallback filler.")
-	return null
-
 ## Helper to check if an item is available based on the current tier.
 func is_item_unlocked(item: ItemData) -> bool:
-	return item.tier <= current_tier
+	return OrderItemPicker.is_unlocked(item, current_tier)
 
 
 var _processed_satisfied_customers: Array[Customer] = []
@@ -947,122 +850,11 @@ func _set_last_customer_info(customer: Customer) -> void:
 func _process_story_cooldown(customer) -> void:
 	CharacterProgressionManager.process_story_cooldown(customer, last_mayari_collection_successful)
 
-func _get_unlocked_characters() -> Array:
-	return []
-func _pick_character_weighted(_candidates) -> CustomerData:
-	return null
 func get_best_item_for_category(cat: String, current_item: ItemData = null) -> ItemData:
-	var mapped_categories = _get_mapped_categories(cat)
-	var max_tier = -1
-	for item in InventoryManager.get_all_items():
-		if item.category in mapped_categories and item.tier <= current_tier + 1 and item.can_be_sold:
-			if item.tier > max_tier:
-				max_tier = item.tier
-	
-	if max_tier == -1: return null
-	
-	# Optimization: If the current item is already at the peak available tier, don't reroll it.
-	if current_item and current_item.tier == max_tier and current_item.category in mapped_categories:
-		return current_item
-	
-	var pool: Array[ItemData] = []
-	for item in InventoryManager.get_all_items():
-		if item.category in mapped_categories and item.tier == max_tier and item.can_be_sold:
-			pool.append(item)
-			
-	return pool.pick_random()
+	return OrderItemPicker.best_for_category(cat, current_tier, current_item)
 
 func get_any_item_for_category(cat: String, prefer_hint: bool = false) -> ItemData:
-	var mapped_categories = _get_mapped_categories(cat)
-	var pool: Array[ItemData] = []
-	for item in InventoryManager.get_all_items():
-		if item.category in mapped_categories and item.tier <= current_tier + 1 and item.can_be_sold:
-			pool.append(item)
-	
-	if prefer_hint:
-		var hint_pool = pool.filter(func(i): return i.item_hint != "")
-		if not hint_pool.is_empty():
-			pool = hint_pool
-			
-	var max_tiers_by_cat = _get_max_tier_per_category()
-	var item = _pick_weighted_item(pool, max_tiers_by_cat) if not pool.is_empty() else null
-	if not item:
-		LogManager.warn("StoryManager", "Category Search FAILURE: '%s'. Attempting global fallback." % cat)
-		item = _pick_random_orderable_item()
-	return item
-
-## Calculates the highest unlocked tier for every item category.
-func _get_max_tier_per_category() -> Dictionary:
-	var max_tiers = {}
-	for item in InventoryManager.get_all_items():
-		if item.tier <= current_tier and item.can_be_sold:
-			var cat = item.category
-			if not max_tiers.has(cat) or item.tier > max_tiers[cat]:
-				max_tiers[cat] = item.tier
-	return max_tiers
-
-## Picks an item from the pool with weighting based on its tier relative to the max tier in its category.
-## 1. Next-Tier Items (item.tier > current_tier): Fixed 0.3 weight.
-## 2. Best-in-Category Items (item.tier == max_tier_for_cat): 1.0 weight.
-## 3. Older Items: Gradual linear decay (-25% per tier gap, max(0.2, 1.0 - gap * 0.25)).
-func _pick_weighted_item(pool: Array[ItemData], max_tiers_by_cat: Dictionary) -> ItemData:
-	if pool.is_empty():
-		return null
-		
-	var total_weight: float = 0.0
-	var weights: Array[float] = []
-	
-	for item in pool:
-		var weight: float = 0.0
-		
-		# Priority 1: Next-Tier uncommon items
-		if item.tier > current_tier:
-			# Increased weight for "teasing" next tier items
-			weight = 0.5
-		else:
-			# Priority 2: Gradual category-based decay
-			var max_tier_in_cat = max_tiers_by_cat.get(item.category, item.tier)
-			var gap = max_tier_in_cat - item.tier
-			
-			if gap <= 0:
-				# Best currently unlocked in this category
-				# Steering: Add a bonus if this item's tier is high relative to player level
-				# to favor selling more profitable, higher-tier items the player has stocked.
-				weight = 1.0 + (float(item.tier) * 0.1)
-			else:
-				# Gradual linear decay: 1.0 -> 0.75 -> 0.50 -> 0.25 -> 0.20 floor
-				weight = max(0.2, 1.0 - (float(gap) * 0.25))
-		
-		weights.append(weight)
-		total_weight += weight
-		
-	var roll = randf() * total_weight
-	var cursor = 0.0
-	for i in range(pool.size()):
-		cursor += weights[i]
-		if roll <= cursor:
-			return pool[i]
-			
-	return pool.pick_random() # Absolute fallback
-
-func _get_mapped_categories(cat: String) -> Array[String]:
-	var c = cat.to_lower()
-	match c:
-		"bottle", "drinks", "beverage": return ["bottle"]
-		"cigarette", "cigars", "cigarettes": return ["cigarette"]
-		"candy", "candies": return ["candy"]
-		"snack", "snacks": return ["snack"]
-		"sachet", "sachets": return ["sachet"]
-		"pack", "packs", "noodles": return ["pack"]
-		"frozen": return ["frozen"]
-		"can", "cans", "cannedgoods": return ["can"]
-	
-	# Fallback: if it's not a keyword, check if it's an item name
-	for item in InventoryManager.get_all_items():
-		if item.item_name.to_lower() == c:
-			return [item.category]
-			
-	return [c]
+	return OrderItemPicker.any_for_category(cat, current_tier, prefer_hint)
 
 func _get_current_customer() -> Node:
 	var spawners = get_tree().get_nodes_in_group("customer_spawner")
@@ -1144,38 +936,17 @@ func set_desire(item_name: String) -> void:
 		LogManager.warn("StoryManager", "SET_DESIRE FAILED: No active customer or context.")
 		return
 	
-	# Find the item resource by name.
-	# Priority: exact match → starts-with → contains (all case-insensitive)
-	var search := item_name.to_lower()
-	var target_item: ItemData = null
-	var starts_match: ItemData = null
-	var contains_match: ItemData = null
-	for item in InventoryManager.get_all_items():
-		var n := item.item_name.to_lower()
-		if n == search:
-			target_item = item
-			break
-		elif starts_match == null and n.begins_with(search):
-			starts_match = item
-		elif contains_match == null and n.contains(search):
-			contains_match = item
-	
-	if not target_item:
-		target_item = starts_match if starts_match else contains_match
-	
+	var target_item := OrderItemPicker.find_by_name(item_name)
 	if not target_item:
 		push_warning("[StoryManager] set_desire: No item matching '%s' found in inventory." % item_name)
 		return
 	
 	LogManager.info("StoryManager", "SET_DESIRE: Matched '%s' -> '%s'" % [item_name, target_item.item_name])
 	
-	# Override the desired_items list with just this one item
 	var transaction = customer.transaction_context
-	var typed_list: Array[ItemData] = []
-	typed_list.append(target_item)
+	var typed_list: Array[ItemData] = [target_item]
 	transaction.desired_items.assign(typed_list)
 	
-	# Now upgrade it to the best available tier in its category
 	upgrade_desires()
 	LogManager.info("StoryManager", "SET_DESIRE: Forced desire to '%s' -> upgraded to '%s'" % [item_name, Dialogic.VAR.get_variable("Transaction_ItemWants", "")])
 
@@ -1201,80 +972,11 @@ func upgrade_desires() -> void:
 
 func update_transaction_item_string(transaction: TransactionContext) -> void:
 	DialogicBridge.sync_item_string(transaction)
-func _get_max_tier_for_category(cat: String) -> int:
-	var mapped_cats = _get_mapped_categories(cat)
-	var max_found = -1
-	for item in InventoryManager.get_all_items():
-		if item.category in mapped_cats and item.can_be_sold:
-			if item.tier > max_found and item.tier <= current_tier:
-				max_found = item.tier
-	return max_found
-
-func _join_names(names: Array[String]) -> String:
-	if names.size() == 0: return ""
-	if names.size() == 1: return names[0]
-	if names.size() == 2: return names[0] + " and " + names[1]
-	
-	var result = ""
-	for i in range(names.size()):
-		if i == names.size() - 1:
-			result += "and " + names[i]
-		else:
-			result += names[i] + ", "
-	return result
 
 
 ## Helper to see if a label exists in a timeline file (.dtl) safely without crashing.
 func is_label_in_timeline(path, label_name: String) -> bool:
-	if typeof(path) != TYPE_STRING or path == "":
-		return false
-	
-	# Normalize path and handle missing .dtl extension
-	var full_path = path
-	if not full_path.ends_with(".dtl"):
-		full_path += ".dtl"
-		
-	var cache_key = full_path + "::" + label_name
-	if _label_cache.has(cache_key):
-		return _label_cache[cache_key]
-		
-	# Memory guard: Prevent unbounded growth in very long sessions
-	if _label_cache.size() > 500:
-		_label_cache.clear()
-		
-	if not FileAccess.file_exists(full_path):
-		# Try one more fallback if Dialogic uses local paths
-		if not full_path.begins_with("res://"):
-			full_path = "res://" + full_path
-		if not FileAccess.file_exists(full_path):
-			_label_cache[cache_key] = false
-			return false
-	
-	var file = FileAccess.open(full_path, FileAccess.READ)
-	if not file: 
-		_label_cache[cache_key] = false
-		return false
-	
-	var content = file.get_as_text()
-	# Strip UTF-8 BOM if present so the caret anchor (^) in regex works correctly
-	content = content.replace("\uFEFF", "")
-	
-	# Robust label matching:
-	# Clear cache if stale or requested
-	if _label_cache.size() > 500:
-		_label_cache.clear()
-
-	var regex = RegEx.new()
-	# (?m) enables multiline mode so ^ matches start of ANY line.
-	# We look for "label", at least one space, then the target label name.
-	regex.compile("(?m)^\\s*label\\s+" + label_name + "(\\s+|#|$)")
-	
-	if regex.search(content):
-		_label_cache[cache_key] = true
-		return true
-			
-	_label_cache[cache_key] = false
-	return false
+	return TimelineLabels.has_label(path, label_name)
 
 
 func reset_to_morning() -> void:
