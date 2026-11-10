@@ -81,11 +81,6 @@ var _upgrade_item_cache: Dictionary = {}
 ## Chance (0.0 to 1.0) that a customer's request will be a riddle.
 @export_range(0, 1) var riddle_chance: float = 0.35
 
-## Float representation of the currently displayed in-game hour (0–24).
-var _current_display_time: float = 16.89
-## Cached reference to the TimeOfDay node (searched once on first use).
-var _time_of_day_node: Node = null
-
 ## Pool of characters that can arrive as regular customers.
 ## UncleMario is excluded — he is the delivery uncle, not a regular customer.
 @export var available_characters: Array[CustomerData] = [
