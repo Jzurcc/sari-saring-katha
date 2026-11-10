@@ -101,7 +101,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
 				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
 				EventBus.transaction_completed.emit(item.item_data, true, context.wants_debt, c_path)
-				InventoryManager.take_item(item.item_data)
+				if not item.is_transient:
+					InventoryManager.take_item(item.item_data)
 				item.notify_placed()
 				item.play_give_animation()
 				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
