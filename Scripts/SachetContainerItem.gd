@@ -55,21 +55,7 @@ func set_pricing_ui_active(active: bool) -> void:
 
 func adjust_price(delta: float) -> void:
 	if not sachet_item: return
-	
-	var base_price : float = sachet_item.price
-	var current_price : float = sachet_item.get_final_price()
-	
-	var min_price : float = base_price
-	var max_price : float = sachet_item.get_max_selling_price()
-	
-	var new_price : float = clamp(current_price + delta, min_price, max_price)
-	
-	sachet_item.selling_price = new_price
-	sachet_item.is_manually_priced = true
-	
-	# Refresh all pricing UIs
-	get_tree().call_group("draggable_items", "update_pricing_ui")
-	get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+	InventoryManager.adjust_item_price([sachet_item], delta)
 
 func update_pricing_ui() -> void:
 	if not sachet_item: return

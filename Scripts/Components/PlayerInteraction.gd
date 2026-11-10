@@ -17,13 +17,7 @@ var pricing_mode_active: bool = false
 
 var _q_items: PhysicsRayQueryParameters3D
 var _q_customer: PhysicsRayQueryParameters3D
-var _q_gaze: PhysicsRayQueryParameters3D
 var _last_hovered: Node = null
-
-# Tutorial Gaze Tracking
-var active_gaze_target_id: String = ""
-var active_gaze_group: String = ""
-var _gaze_timer: float = 0.0
 
 # Cached node references
 var _game_manager: GameManager = null
@@ -41,12 +35,6 @@ func _ready() -> void:
 	_q_items.collide_with_areas = true
 	_q_items.collide_with_bodies = false
 	_q_items.collision_mask = LAYER_ITEMS # Layer 1 only again
-
-	_q_gaze = PhysicsRayQueryParameters3D.new()
-	_q_gaze.collide_with_areas = true
-	_q_gaze.collide_with_bodies = true
-	# Gaze targets can be Layer 1 (Items) or Layer 2 (Drop Zones/Surfaces)
-	_q_gaze.collision_mask = LAYER_ITEMS | 2
 
 	_q_customer = PhysicsRayQueryParameters3D.new()
 	_q_customer.collide_with_areas = true
@@ -90,9 +78,6 @@ func _physics_process(_delta: float) -> void:
 	_q_customer.to = ray_end
 	var hit_customer = get_world_3d().direct_space_state.intersect_ray(_q_customer)
 
-	# --- Raycast 3: tutorial gaze only (layer 1 | 2) ---
-	var _hit_gaze = {}
-
 	# Resolve which target is "closer" to the camera.
 	var current_hovered: Node = null
 	
@@ -128,42 +113,6 @@ func _physics_process(_delta: float) -> void:
 				current_hovered.set_pricing_ui_active(pricing_mode_active)
 		_last_hovered = current_hovered
 
-	# --- Removed Tutorial Gaze Detection ---
-	# The gaze tutorial is now simply a 2-second automated wait from GameManager.
-
-func _is_in_group_recursive(node: Node, group_name: String, max_depth: int) -> bool:
-	if not node or max_depth < 0:
-		return false
-	if node.is_in_group(group_name):
-		return true
-		
-	# Fallback for environment collision shapes in the final store scene
-	# This allows looking at physical models that might not have the specific groups applied.
-	var lower_name = node.name.to_lower()
-	match group_name:
-		"shelf_surface":
-			if "shelf" in lower_name: return true
-		"fridge_surfaces":
-			if "fridge" in lower_name or "cube_001" in lower_name or "refrigerator" in lower_name: return true
-		"nokia_phone":
-			if "nokia" in lower_name or "phone" in lower_name: return true
-		"notebook_item":
-			if "notebook" in lower_name: return true
-			
-	return _is_in_group_recursive(node.get_parent(), group_name, max_depth - 1)
-
-
-func setup_gaze_task(target_id: String, group_name: String) -> void:
-	active_gaze_target_id = target_id
-	active_gaze_group = group_name
-	_gaze_timer = 0.0
-	print("[PlayerInteraction] Setup gaze task: ", target_id, " (group: ", group_name, ")")
-
-
-func clear_gaze_task() -> void:
-	active_gaze_target_id = ""
-	active_gaze_group = ""
-	_gaze_timer = 0.0
 
 func _input(event: InputEvent) -> void:
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
@@ -250,25 +199,8 @@ func _input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 					return
 				
-				if target.is_in_group("draggable_items"):
-					var item = target
-					if item.item_data:
-						# ... (logic remains same)
-						var base_price : float = item.item_data.price
-						var current_price : float = item.item_data.get_final_price()
-						var min_price : float = base_price
-						var max_price : float = item.item_data.get_max_selling_price()
-						var new_price : float = clamp(current_price + delta, min_price, max_price)
-						
-						if new_price > current_price:
-							EventBus.price_increased.emit(item.item_data)
-						elif new_price < current_price:
-							EventBus.price_decreased.emit(item.item_data)
-						item.item_data.selling_price = new_price
-						item.item_data.is_manually_priced = true
-						InventoryManager.mark_item_as_configured(item.item_data)
-						get_tree().call_group("draggable_items", "update_pricing_ui")
-						get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+				if target.is_in_group("draggable_items") and target.item_data:
+					InventoryManager.adjust_item_price([target.item_data], delta)
 					get_viewport().set_input_as_handled()
 					return
 		else:
@@ -291,14 +223,12 @@ func _input(event: InputEvent) -> void:
 				var p = target.get_parent()
 				if p and (p.has_method("on_interact") or p.is_in_group("draggable_items")):
 					target = p
-					# print("[PI-DEBUG] Switching target to parent: ", target.name)
-					pass
 					
 			if target.has_method("on_interact"):
 				get_viewport().set_input_as_handled()
 				target.on_interact()
 			elif target.is_in_group("draggable_items"):
-				if gm and gm.is_blocking_pickup:
+				if gm and gm.tutorial and gm.tutorial.is_blocking_pickup:
 					return
 				get_viewport().set_input_as_handled()
 				_pickup_item(target)

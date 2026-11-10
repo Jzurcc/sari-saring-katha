@@ -156,27 +156,7 @@ func set_pricing_ui_active(active: bool) -> void:
 
 func adjust_price(delta: float) -> void:
 	if not item_data: return
-	
-	var base_price : float = item_data.price
-	var current_price : float = item_data.get_final_price()
-	
-	# Range Rules: 
-	# 1. Minimum: Base price.
-	# 2. Maximum: Progressive margin based on tier. 25% (Tier 1) to 50% (Tier 10).
-	var min_price : float = base_price
-	var max_price : float = item_data.get_max_selling_price()
-	
-	var new_price : float = clamp(current_price + delta, min_price, max_price)
-	
-	item_data.selling_price = new_price
-	
-	if new_price > current_price:
-		EventBus.price_increased.emit(item_data)
-	
-	# Refresh all items of this type (they share the resource)
-	get_tree().call_group("draggable_items", "update_pricing_ui")
-	# Also update containers if any of their item_data changed
-	get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+	InventoryManager.adjust_item_price([item_data], delta)
 
 func _get_pricing_overlay() -> Node:
 	return get_node_or_null("/root/PricingOverlay")
@@ -205,6 +185,9 @@ func update_pricing_ui() -> void:
 
 func on_interact() -> void:
 	if DragManager._is_dragging: return
+	var gm = get_tree().get_first_node_in_group("game_manager")
+	if gm and gm.tutorial and gm.tutorial.is_blocking_pickup:
+		return
 	EventBus.request_sfx.emit("pickup")
 	DragManager.start_drag(self, sprite.texture)
 

@@ -398,10 +398,6 @@ class TutorialManager extends RefCounted:
 		is_tutorial_task_active = false
 		current_tutorial_task_id = ""
 		
-		var interaction = gm.get_tree().get_first_node_in_group("player_interaction")
-		if interaction and interaction.has_method("clear_gaze_task"):
-			interaction.clear_gaze_task()
-		
 		if Dialogic.current_timeline != null:
 			Dialogic.end_timeline()
 		

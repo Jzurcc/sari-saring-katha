@@ -172,6 +172,28 @@ func mark_item_as_configured(item: ItemData) -> void:
 			if master != item:
 				master.selling_price = item.selling_price
 
+## Adjusts selling price for one or more ItemData resources (clamped between base and tier max),
+## marks them as configured, emits price change signals, and refreshes all pricing UIs.
+func adjust_item_price(items: Array[ItemData], delta: float) -> void:
+	if items.is_empty() or not items[0]:
+		return
+	var ref_item: ItemData = items[0]
+	var current_price: float = ref_item.get_final_price()
+	var new_price: float = clampf(current_price + delta, ref_item.price, ref_item.get_max_selling_price())
+	
+	for item in items:
+		if item:
+			item.selling_price = new_price
+			mark_item_as_configured(item)
+	
+	if new_price > current_price:
+		EventBus.price_increased.emit(ref_item)
+	elif new_price < current_price:
+		EventBus.price_decreased.emit(ref_item)
+	
+	get_tree().call_group("draggable_items", "update_pricing_ui")
+	get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+
 func get_capacity_limit(type: ItemData.ItemType) -> int:
 	match type:
 		ItemData.ItemType.SHELF: return 36
