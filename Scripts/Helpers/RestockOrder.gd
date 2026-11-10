@@ -239,3 +239,4 @@ func get_effective_types(basket: Dictionary = selected_items) -> Dictionary:
 		else:
 			types[k.type] = types.get(k.type, 0) + count
 	return types
+
