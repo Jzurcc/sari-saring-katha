@@ -138,3 +138,4 @@ func _ensure_tod_node() -> void:
 				_time_of_day_node.game_time_enabled = false
 			if not _time_of_day_node.time_changed.is_connected(_on_tod_time_changed):
 				_time_of_day_node.time_changed.connect(_on_tod_time_changed)
+

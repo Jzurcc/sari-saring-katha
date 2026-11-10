@@ -110,3 +110,4 @@ func _check_unlock_status() -> void:
 
 func _on_inventory_stock_changed(_item: ItemData, _new_stock: int) -> void:
 	pass
+
