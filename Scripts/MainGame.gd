@@ -109,11 +109,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
 				# Only trigger Satisfy if the whole order is done.
 				# Otherwise, trigger Partial.
-				var phase = CustomerSpawner.DialoguePhase.SATISFIED if context.desired_items.is_empty() else CustomerSpawner.DialoguePhase.TALK
-				var label = "Satisfy" if context.desired_items.is_empty() else "Partial"
-				
-				if context and context.timeline and spawner:
-					spawner.start_dialogue(context.timeline, customer, phase, label)
+				if spawner and spawner.session:
+					spawner.session.on_item_delivered(customer, context.desired_items.is_empty())
 				
 				# SUCCESS: Nullify item reference as it is being consumed/removed.
 				item = null 
@@ -123,7 +120,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 				# MISSION: If given an item before greeting, trigger greeting instead of WrongItem.
 				if not customer.has_been_greeted:
 					LogManager.debug("MainGame", "Item given before greeting. Triggering greeting instead of WrongItem.")
-					spawner._on_customer_clicked(customer)
+					if spawner and spawner.session:
+						spawner.session.on_wrong_item_given(customer)
 				else:
 					# Special Tutorial Handling: If Uncle Mario is blocking items.
 					var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
@@ -136,8 +134,8 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					else:
 						EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
 						# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
-						if context and context.timeline and spawner:
-							spawner.start_dialogue(context.timeline, customer, CustomerSpawner.DialoguePhase.WRONG_ITEM, "WrongItem")
+						if spawner and spawner.session:
+							spawner.session.on_wrong_item_given(customer)
 						
 						# Keep item in hand so it doesn't just vanish or jump
 						if DragManager and item.item_data and item.item_data.texture:
