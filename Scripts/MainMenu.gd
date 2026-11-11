@@ -166,18 +166,7 @@ func _on_new_game_confirmed() -> void:
 	_start_new_game()
 
 func _start_new_game() -> void:
-	# Clear existing save for a fresh start
-	SaveManager.clear_save()
-	
-	# Reset in-memory singletons to avoid carrying over old data
-	StoryManager.reset_state()
-	CharacterProgressionManager.reset_state()
-	InventoryManager.reset_state()
-	MarioManager.reset_state()
-	
-	# Reset Dialogic state (variables, history, etc.)
-	if Engine.has_singleton("Dialogic"):
-		Dialogic.VAR.reset_all()
+	SaveManager.reset_all_state()
 
 	is_starting_game = true
 	buttons.hide()

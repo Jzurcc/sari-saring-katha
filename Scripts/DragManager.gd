@@ -142,21 +142,16 @@ func _process(_delta: float) -> void:
 		var collider = (result.collider as Node)
 		if collider.is_in_group("shelf_drop_zone"):
 			var shelf = collider.get_parent()
-			if shelf and shelf.has_method("receive_item"):
-				var local_x = shelf.to_local(result.position).x
-				var slot_idx: int = shelf._find_nearest_empty_slot(local_x)
-				if slot_idx >= 0:
-					var slot_pos: Vector3 = shelf._slot_transforms[slot_idx].origin
-					var world_pos: Vector3 = shelf.to_global(slot_pos)
-					if is_instance_valid(_ghost_parent):
-						_ghost_parent.show()
-						var slot_transform = shelf.global_transform * shelf._slot_transforms[slot_idx]
-						_ghost_parent.global_transform = Transform3D(slot_transform.basis, world_pos)
-						
-						var can_accept = shelf.accepts_drop(_dragged_item.item_data)
-						if is_instance_valid(_ghost_sprite):
-							_ghost_sprite.modulate = Color(1.0, 1.0, 1.0, 0.4) if can_accept else Color(1.0, 0.3, 0.3, 0.5)
-						valid_ghost = true
+			if shelf and shelf.has_method("get_drop_preview_transform"):
+				var preview_transform = shelf.get_drop_preview_transform(result.position)
+				if preview_transform != null and is_instance_valid(_ghost_parent):
+					_ghost_parent.show()
+					_ghost_parent.global_transform = preview_transform
+					
+					var can_accept = shelf.accepts_drop(_dragged_item.item_data)
+					if is_instance_valid(_ghost_sprite):
+						_ghost_sprite.modulate = Color(1.0, 1.0, 1.0, 0.4) if can_accept else Color(1.0, 0.3, 0.3, 0.5)
+					valid_ghost = true
 
 	if not valid_ghost and is_instance_valid(_ghost_parent):
 		_ghost_parent.hide()
@@ -261,6 +256,22 @@ func _cancel_drag() -> void:
 		_dragged_item._on_drag_cancelled_by_manager()
 		_dragged_item.return_to_start()
 		_dragged_item = null
+
+
+## Safely aborts any active drag and cleans up the 3D ghost preview (e.g. on scene change or New Game).
+func force_cancel_drag() -> void:
+	_is_dragging = false
+	if is_instance_valid(_dragged_texture_rect):
+		_dragged_texture_rect.hide()
+	if is_instance_valid(_ghost_parent):
+		_ghost_parent.queue_free()
+	_ghost_parent = null
+	_ghost_sprite = null
+	_cancel_drag()
+
+
+func reset_state() -> void:
+	force_cancel_drag()
 
 
 ## Called when any node is removed from the scene tree.

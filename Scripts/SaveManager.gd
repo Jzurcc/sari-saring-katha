@@ -125,7 +125,11 @@ func force_save() -> void:
 	meta["version"] = ProjectSettings.get_setting("application/config/version", "0.9")
 	master_save["_meta"] = meta
 
-	# 3. Gather data from all persist-group nodes in current scene
+	# 3. Flush any in-flight paid orders before gathering persist-group data
+	if is_instance_valid(MarioManager) and MarioManager.has_method("flush_pending_delivery"):
+		MarioManager.flush_pending_delivery()
+
+	# 4. Gather data from all persist-group nodes in current scene
 	var persist_nodes = get_tree().get_nodes_in_group("persist")
 	LogManager.info("SaveManager", "Saving... Merging data from %d active 'persist' nodes." % persist_nodes.size())
 	
@@ -186,8 +190,16 @@ func request_load() -> void:
 		LogManager.warn("SaveManager", "Save file was empty or corrupt. Starting fresh.")
 		return
 
-	# Distribute data to persist-group nodes
+	# Distribute data to persist-group nodes (Autoloads first, then scene children)
 	var persist_nodes = get_tree().get_nodes_in_group("persist")
+	var root := get_tree().root
+	persist_nodes.sort_custom(func(a: Node, b: Node) -> bool:
+		var a_is_autoload := (a.get_parent() == root)
+		var b_is_autoload := (b.get_parent() == root)
+		if a_is_autoload != b_is_autoload:
+			return a_is_autoload
+		return false
+	)
 	LogManager.info("SaveManager", "Loading... Found %d nodes in 'persist' group." % persist_nodes.size())
 	
 	for node in persist_nodes:
@@ -219,6 +231,32 @@ func has_save() -> bool:
 ## Alias for delete_save to maintain compatibility with legacy triggers.
 func clear_save() -> void:
 	delete_save()
+
+
+## Centralizes full state reset for New Game: clears save files, cancels active drags,
+## resets all persistent singletons/nodes, and resets Dialogic variables.
+func reset_all_state() -> void:
+	delete_save()
+
+	if is_instance_valid(DragManager) and DragManager.has_method("force_cancel_drag"):
+		DragManager.force_cancel_drag()
+
+	var reset_targets: Array[Node] = []
+	for node in [StoryManager, CharacterProgressionManager, InventoryManager, MarioManager]:
+		if is_instance_valid(node) and not reset_targets.has(node):
+			reset_targets.append(node)
+	for node in get_tree().get_nodes_in_group("persist"):
+		if is_instance_valid(node) and not reset_targets.has(node):
+			reset_targets.append(node)
+
+	for node in reset_targets:
+		if node.has_method("reset_state"):
+			node.reset_state()
+
+	if Engine.has_singleton("Dialogic") or is_instance_valid(Dialogic):
+		Dialogic.VAR.reset_all()
+
+	LogManager.info("SaveManager", "All persistent state and Dialogic variables reset for New Game.")
 
 
 # ── Disk I/O ──────────────────────────────────────────────────────────────

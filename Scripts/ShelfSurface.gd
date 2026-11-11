@@ -286,6 +286,19 @@ func get_empty_slots() -> Array[int]:
 	return empty_indices
 
 
+## Returns the global Transform3D for the nearest empty slot to [param world_hit_pos],
+## or null if no empty slot is available.
+func get_drop_preview_transform(world_hit_pos: Vector3) -> Variant:
+	var local_x := to_local(world_hit_pos).x
+	var slot_idx := _find_nearest_empty_slot(local_x)
+	if slot_idx < 0:
+		return null
+	var slot_pos: Vector3 = _slot_transforms[slot_idx].origin
+	var world_pos: Vector3 = to_global(slot_pos)
+	var slot_transform: Transform3D = global_transform * _slot_transforms[slot_idx]
+	return Transform3D(slot_transform.basis, world_pos)
+
+
 ## Returns the number of currently occupied slots on this surface.
 func get_occupied_count() -> int:
 	var count: int = 0
