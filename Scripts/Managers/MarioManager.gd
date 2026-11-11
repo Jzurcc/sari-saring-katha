@@ -301,12 +301,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var batch_size = 5
 	for i in range(0, items_to_bag.size(), batch_size):
 		var batch = items_to_bag.slice(i, i + batch_size)
-		var offset = Vector3(
+		var offset := Vector3(
 			randf_range(-1.1, 1.1),
 			0.05, # Slight lift
 			randf_range(-1.1, 1.1)
 		)
-		var bag_pos := base_marker_pos + offset
+		var bag_pos: Vector3 = base_marker_pos + offset
 		if spawn_in_tree and _is_in_main_game():
 			var bag = plastic_scene.instantiate()
 			get_tree().current_scene.add_child(bag)

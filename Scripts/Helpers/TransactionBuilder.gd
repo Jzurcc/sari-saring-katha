@@ -378,3 +378,4 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	sm.has_mayari_visited = true
 	CharacterProgressionManager.record_encounter(path)
 	return transaction
+
