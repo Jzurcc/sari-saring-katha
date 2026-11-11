@@ -17,20 +17,29 @@ const RANK_UP_STAR_TEXTURE = preload("res://Assets/brackeys_vfx/star_01_a.png")
 const FLARE_TEXTURE = preload("res://Assets/brackeys_vfx/flare_01_a.png")
 const STYLIZED_SMOKE = preload("res://Assets/brackeys_vfx/smoke_03_a.png")
 
+func _attach_effect(node: Node, pos: Vector3) -> void:
+	var target_parent: Node = get_tree().current_scene if (get_tree() and get_tree().current_scene) else self
+	target_parent.add_child(node)
+	if node is Node3D:
+		node.global_position = pos
+
+func _schedule_cleanup(node: Node, delay: float) -> void:
+	get_tree().create_timer(delay).timeout.connect(func():
+		if is_instance_valid(node):
+			node.queue_free()
+	)
+
 func spawn_impact_dust(pos: Vector3) -> void:
 	var p = _create_dust_particles()
-	add_child(p)
-	p.global_position = pos
+	_attach_effect(p, pos)
 	p.emitting = true
-	# Auto-cleanup
-	get_tree().create_timer(2.0).timeout.connect(p.queue_free)
+	_schedule_cleanup(p, 2.0)
 
 func spawn_transaction_glimmer(pos: Vector3, area_size: Vector3 = Vector3(0.4, 0.6, 0.1)) -> void:
 	var p = _create_glimmer_particles(area_size)
-	add_child(p)
-	p.global_position = pos
+	_attach_effect(p, pos)
 	p.emitting = true
-	get_tree().create_timer(3.0).timeout.connect(p.queue_free)
+	_schedule_cleanup(p, 3.0)
 
 func _create_dust_particles() -> CPUParticles3D:
 	var p = CPUParticles3D.new()
@@ -111,8 +120,7 @@ func _create_glimmer_particles(area_size: Vector3) -> CPUParticles3D:
 
 func spawn_cold_mist(pos: Vector3) -> CPUParticles3D:
 	var p = CPUParticles3D.new()
-	add_child(p)
-	p.global_position = pos
+	_attach_effect(p, pos)
 	
 	p.amount = 6
 	p.one_shot = false
@@ -176,8 +184,7 @@ func spawn_mass_mist(pos: Vector3, width: float) -> Array[CPUParticles3D]:
 
 func spawn_heart_burst(pos: Vector3) -> void:
 	var p = CPUParticles3D.new()
-	add_child(p)
-	p.global_position = pos
+	_attach_effect(p, pos)
 	
 	p.amount = 8
 	p.one_shot = true
@@ -208,13 +215,12 @@ func spawn_heart_burst(pos: Vector3) -> void:
 	p.scale_amount_curve = curves
 	
 	p.emitting = true
-	get_tree().create_timer(2.0).timeout.connect(p.queue_free)
+	_schedule_cleanup(p, 2.0)
 
 func spawn_rank_up_fanfare(pos: Vector3) -> void:
 	# 1. Main Gold Burst
 	var p = CPUParticles3D.new()
-	add_child(p)
-	p.global_position = pos
+	_attach_effect(p, pos)
 	
 	p.amount = 40
 	p.one_shot = true
@@ -246,12 +252,11 @@ func spawn_rank_up_fanfare(pos: Vector3) -> void:
 	p.scale_amount_curve = curves
 	
 	p.emitting = true
-	get_tree().create_timer(3.0).timeout.connect(p.queue_free)
+	_schedule_cleanup(p, 3.0)
 	
 	# 2. Central Flare
 	var f = CPUParticles3D.new()
-	add_child(f)
-	f.global_position = pos
+	_attach_effect(f, pos)
 	f.amount = 1
 	f.one_shot = true
 	f.lifetime = 0.5
@@ -274,7 +279,7 @@ func spawn_rank_up_fanfare(pos: Vector3) -> void:
 	f.scale_amount_curve = f_curves
 	
 	f.emitting = true
-	get_tree().create_timer(1.0).timeout.connect(f.queue_free)
+	_schedule_cleanup(f, 1.0)
 
 
 func setup_ambient_dust(parent: Node3D) -> void:

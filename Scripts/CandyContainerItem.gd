@@ -28,7 +28,7 @@ func update_pricing_ui() -> void:
 	if possible_candies.is_empty() or not is_hovered or not _pricing_mode_active:
 		return
 	var ref_item = possible_candies[0]
-	var overlay = get_node_or_null("/root/PricingOverlay")
+	var overlay = PricingOverlay.get_active(get_tree())
 	if is_instance_valid(overlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
 		overlay.show_item(ref_item, global_position, true, "Candies", stock_info)
@@ -82,7 +82,8 @@ func _update_local_stock() -> void:
 	# The capacity for these candy containers is capped at 10 total.
 	max_stock = 10
 	
-	if is_instance_valid(get_node_or_null("/root/PricingOverlay")) and is_hovered and _pricing_mode_active:
+	var overlay = PricingOverlay.get_active(get_tree())
+	if is_instance_valid(overlay) and is_hovered and _pricing_mode_active:
 		update_pricing_ui()
 
 func _on_inventory_stock_changed(item: ItemData, _new_stock: int) -> void:

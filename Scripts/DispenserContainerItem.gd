@@ -58,7 +58,7 @@ func on_hover(is_hov: bool) -> void:
 
 func _update_label_visibility() -> void:
 	if not _pricing_mode_active or not is_hovered:
-		var overlay = get_node_or_null("/root/PricingOverlay")
+		var overlay = PricingOverlay.get_active(get_tree())
 		if is_instance_valid(overlay):
 			overlay.hide_ui()
 	elif _pricing_mode_active and is_hovered:

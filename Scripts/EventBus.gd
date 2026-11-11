@@ -102,3 +102,8 @@ signal show_notification(message: String, sub_message: String, sfx_to_play: Stri
 signal restock_catalog_refresh()
 @warning_ignore("unused_signal")
 signal target_gazed(target_id: String)
+
+func _ready() -> void:
+	var choice_nav = preload("res://Scripts/UI/DialogueChoiceNavigator.gd").new()
+	choice_nav.name = "DialogueChoiceNavigator"
+	add_child(choice_nav)

@@ -1,3 +1,4 @@
+class_name PricingOverlay
 extends Node3D
 
 var pricing_ui: Sprite3D
@@ -13,8 +14,14 @@ var _current_item: ItemData
 
 const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
+static func get_active(tree: SceneTree) -> PricingOverlay:
+	if not tree:
+		return null
+	return tree.get_first_node_in_group("pricing_overlay") as PricingOverlay
+
 func _ready() -> void:
 	name = "PricingOverlay"
+	add_to_group("pricing_overlay")
 	
 	var beige := Color(0.92, 0.9, 0.78)
 	var beige_subtle := beige.lerp(Color.BLACK, 0.2)

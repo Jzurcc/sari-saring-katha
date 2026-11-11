@@ -40,12 +40,14 @@ func _ready() -> void:
 
 	# Release the drag reference if the held node is freed (e.g. scene change).
 	get_tree().node_removed.connect(_on_node_removed)
+	set_process(false)
 
 func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	if _is_dragging:
 		return
 
 	_is_dragging = true
+	set_process(true)
 	_dragged_item = item
 	_drag_start_frame = Engine.get_frames_drawn()
 
@@ -179,6 +181,7 @@ func end_drag() -> void:
 		return
 
 	_is_dragging = false
+	set_process(false)
 	_dragged_texture_rect.hide()
 
 	var success = false
@@ -263,6 +266,7 @@ func _cancel_drag() -> void:
 ## Safely aborts any active drag and cleans up the 3D ghost preview (e.g. on scene change or New Game).
 func force_cancel_drag() -> void:
 	_is_dragging = false
+	set_process(false)
 	if is_instance_valid(_dragged_texture_rect):
 		_dragged_texture_rect.hide()
 	if is_instance_valid(_ghost_parent):
@@ -281,6 +285,7 @@ func reset_state() -> void:
 func _on_node_removed(node: Node) -> void:
 	if node == _dragged_item:
 		_is_dragging = false
+		set_process(false)
 		_dragged_item = null
 		_dragged_texture_rect.hide()
 		if is_instance_valid(_ghost_parent):
