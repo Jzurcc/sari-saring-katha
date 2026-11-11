@@ -233,3 +233,4 @@ func cancel_tutorial_tasks() -> void:
 func _cancel_tutorial_signal_connection() -> void:
 	if _current_task_signal and _current_task_signal.is_connected(_on_tutorial_task_completed):
 		_current_task_signal.disconnect(_on_tutorial_task_completed)
+

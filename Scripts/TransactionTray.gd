@@ -9,3 +9,4 @@ func _ready() -> void:
 
 func receive_item(item: DraggableItem) -> void:
 	item_placed.emit(item)
+	EventBus.tray_item_placed.emit(item, global_position)

@@ -27,6 +27,8 @@ signal customer_clicked(customer: Customer)
 signal transaction_started(item: ItemData)
 @warning_ignore("unused_signal")
 signal transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool, customer_path: String)
+@warning_ignore("unused_signal")
+signal tray_item_placed(item: DraggableItem, tray_global_pos: Vector3)
 
 # --- Orders and HUD ---
 @warning_ignore("unused_signal")

@@ -1,14 +1,9 @@
 class_name MainGame
 extends Node3D
 
-# --- MainGame: Dramatically simplified via architectural rewrite ---
-# All physics and input are handled by FPSController.gd
-# All dragging is handled by EventBus and DragManager
-# All time logic is handled by DayNightManager
-# -----------------------------------------------------------------
-
-var _debug_show_collisions: bool = false
-@onready var tray: TransactionTray
+## Level root for the sari-sari store main scene.
+## Wires up scene overlays, ambient environment effects, lighting schedules, and player pause handling.
+## Transaction resolution is owned by CustomerSpawner / TransactionSession.
 
 @onready var street_lights: Array[Light3D] = [
 	$OutsideSpotLight3D,
@@ -38,27 +33,16 @@ func _ready() -> void:
 	if camera and camera.fov != 75:
 		camera.fov = 75.0
 
-	# Ensure Transaction tray exists
-	var tray_nodes := get_tree().get_nodes_in_group("transaction_tray")
-	if tray_nodes.size() > 0:
-		tray = tray_nodes[0] as TransactionTray
-	else:
-		LogManager.error("MainGame", "Missing Transaction Tray in Scene")
-
 	# Setup Ambient Effects
 	VisualEffectManager.setup_ambient_dust(self)
 
-	# Connect the tray to the generic event bus instead of handling logic here
-	tray.item_placed.connect(_on_tray_item_placed)
-	
 	# Street Lights Time Sync
 	var tod = get_tree().root.find_child("TimeOfDay", true, false)
 	if tod:
 		if not tod.time_changed.is_connected(_on_time_changed):
 			tod.time_changed.connect(_on_time_changed)
-		# Initial check
 		_on_time_changed(tod.get("current_time") if "current_time" in tod else 0.0)
-	
+
 	# Instantiate Pause menu
 	LogManager.debug("MainGame", "Instantiating pause menu")
 	pause_menu = pause_menu_scene.instantiate().get_node("Control")
@@ -73,80 +57,6 @@ func _ready() -> void:
 
 	LogManager.debug("MainGame", "_ready() END")
 
-func _on_tray_item_placed(item: DraggableItem) -> void:
-	# Check if we have an active customer
-	# The generic flow is: Item -> Tray -> Signal emitted
-	# We query the active customer directly from the signal bus or CustomerSpawner
-	EventBus.transaction_started.emit(item.item_data)
-	
-	var handled = false
-	var spawners = get_tree().get_nodes_in_group("customer_spawner")
-	if spawners.size() > 0:
-		var spawner := spawners[0] as CustomerSpawner
-		var customer = spawner.current_customer
-		if customer and customer.is_waiting:
-			handled = true
-			var is_correct = customer.check_item(item.item_data)
-			var context = customer.transaction_context
-			
-			if is_correct:
-				EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
-				
-				# Spawn glimmer at the customer's visual center (SpeechMarker)
-				var glimmer_pos = tray.global_position + Vector3(0, 0.2, 0)
-				var marker = customer.get_node_or_null("SpeechMarker")
-				if marker:
-					glimmer_pos = marker.global_position
-				
-				VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
-				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
-				EventBus.transaction_completed.emit(item.item_data, true, context.wants_debt, c_path)
-				if not item.is_transient:
-					InventoryManager.take_item(item.item_data)
-				item.notify_placed()
-				item.play_give_animation()
-				# We removed the Dialogic.current_timeline == null check so that CustomerSpawner
-				# can intelligently jump to the 'Satisfy' label even if a 'Greeting' was playing.
-				# Only trigger Satisfy if the whole order is done.
-				# Otherwise, trigger Partial.
-				if spawner and spawner.session:
-					spawner.session.on_item_delivered(customer, context.desired_items.is_empty())
-				
-				# SUCCESS: Nullify item reference as it is being consumed/removed.
-				item = null 
-			else:
-				var c_path = customer.customer_data.resource_path if customer.customer_data else ""
-				
-				# MISSION: If given an item before greeting, trigger greeting instead of WrongItem.
-				if not customer.has_been_greeted:
-					LogManager.debug("MainGame", "Item given before greeting. Triggering greeting instead of WrongItem.")
-					if spawner and spawner.session:
-						spawner.session.on_wrong_item_given(customer)
-				else:
-					var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
-					if gm and gm.tutorial and gm.tutorial.should_suppress_wrong_item_feedback(context):
-						# Skip feedback while a non-sale guided task is active; item returns to shelf at end of function
-						LogManager.debug("MainGame", "Suppressing WrongItem feedback during guided tutorial task.")
-					else:
-						EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
-						# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
-						if spawner and spawner.session:
-							spawner.session.on_wrong_item_given(customer)
-						
-						# Keep item in hand so it doesn't just vanish or jump
-						if DragManager and item.item_data and item.item_data.texture:
-							DragManager.call_deferred("start_drag", item, item.item_data.texture)
-						
-						item = null # Preempt return_to_start
-			
-	if not handled:
-		LogManager.debug("MainGame", "No customer waiting, dropping item")
-		
-	# Return item to its shelf slot only if it was not consumed by a sale.
-	if item:
-		item.show_visuals()
-		item.return_to_start()
-
 func _input(event: InputEvent) -> void:
 	# Escape toggles pause menu
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
@@ -154,60 +64,9 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			pause_menu.pause()
 
-func _process(_delta: float) -> void:
-	if not _debug_show_collisions:
-		return
-	_draw_all_collision_shapes(get_tree().root)
-
-func _draw_all_collision_shapes(node: Node) -> void:
-	# Keep the debug drawer logic intact
-	if node is CollisionShape3D:
-		var cs: CollisionShape3D = node
-		if cs.shape == null or not cs.visible:
-			return
-		var xform: Transform3D = cs.global_transform
-		var color := Color(0.0, 1.0, 0.3, 0.8)
-		if cs.get_parent() is CharacterBody3D:
-			color = Color(0.2, 0.6, 1.0, 0.9)  # Blue for player
-		elif cs.get_parent() is Area3D:
-			color = Color(1.0, 1.0, 0.0, 0.8)  # Yellow for areas/items
-
-		if cs.shape is BoxShape3D:
-			var box: BoxShape3D = cs.shape
-			DebugDraw3D.draw_box(xform.origin, xform.basis.get_rotation_quaternion(), box.size, color)
-		elif cs.shape is CapsuleShape3D:
-			var cap: CapsuleShape3D = cs.shape
-			DebugDraw3D.draw_capsule(xform.origin, xform.basis.get_rotation_quaternion(), cap.radius, cap.height, color)
-		elif cs.shape is SphereShape3D:
-			var sph: SphereShape3D = cs.shape
-			DebugDraw3D.draw_sphere(xform.origin, sph.radius, color)
-		elif cs.shape is ConcavePolygonShape3D:
-			var faces = cs.shape.get_faces()
-			var lines = PackedVector3Array()
-			for i in range(0, faces.size(), 3):
-				var a: Vector3 = xform * faces[i]
-				var b: Vector3 = xform * faces[i+1]
-				var c: Vector3 = xform * faces[i+2]
-				lines.append(a)
-				lines.append(b)
-				lines.append(b)
-				lines.append(c)
-				lines.append(c)
-				lines.append(a)
-			if lines.size() > 0:
-				DebugDraw3D.draw_lines(lines, color)
-		elif cs.shape is WorldBoundaryShape3D:
-			DebugDraw3D.draw_position(xform, color)
-		elif cs.shape is ConvexPolygonShape3D:
-			DebugDraw3D.draw_position(xform, color)
-
-	for child in node.get_children():
-		_draw_all_collision_shapes(child)
-
 func _on_time_changed(hour: float) -> void:
 	# Street lights turn on at 6 PM (18:00) and off at 8 PM (20:00)
 	var should_be_on = hour >= 18.0 and hour < 20.5
-	
 	for light in street_lights:
 		if is_instance_valid(light) and light.visible != should_be_on:
 			light.visible = should_be_on

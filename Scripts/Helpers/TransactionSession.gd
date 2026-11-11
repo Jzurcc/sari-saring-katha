@@ -114,6 +114,76 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 
 	start_dialogue(timeline, customer, phase, label)
 
+## Resolves an item placed on the transaction tray.
+## Validates the customer state, checks the item against requirements,
+## triggers audio/visual feedback, updates inventory/progression,
+## and transitions dialogue state accordingly.
+func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZERO) -> bool:
+	if item == null or item.item_data == null:
+		return false
+
+	EventBus.transaction_started.emit(item.item_data)
+
+	if not is_instance_valid(current_customer) or not current_customer.is_waiting:
+		LogManager.debug("TransactionSession", "No customer waiting, dropping item")
+		item.show_visuals()
+		item.return_to_start()
+		return false
+
+	var customer: Customer = current_customer
+	var context: TransactionContext = customer.transaction_context
+	var is_correct: bool = customer.check_item(item.item_data)
+	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
+
+	if is_correct:
+		EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
+
+		# Spawn glimmer at the customer's visual center (SpeechMarker) or fallback position
+		var glimmer_pos: Vector3 = fallback_pos + Vector3(0, 0.2, 0)
+		var marker: Node3D = customer.get_node_or_null("SpeechMarker") as Node3D
+		if marker:
+			glimmer_pos = marker.global_position
+
+		VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
+		var wants_debt: bool = context.wants_debt if context else false
+		EventBus.transaction_completed.emit(item.item_data, true, wants_debt, c_path)
+
+		if not item.is_transient:
+			InventoryManager.take_item(item.item_data)
+		item.notify_placed()
+		item.play_give_animation()
+
+		var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
+		on_item_delivered(customer, is_whole_order_done)
+		return true
+	else:
+		# If given an item before greeting, trigger greeting instead of WrongItem.
+		if not customer.has_been_greeted:
+			LogManager.debug("TransactionSession", "Item given before greeting. Triggering greeting instead of WrongItem.")
+			on_wrong_item_given(customer)
+		else:
+			var gm: GameManager = null
+			if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
+				gm = _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
+
+			if gm and gm.tutorial and gm.tutorial.should_suppress_wrong_item_feedback(context):
+				LogManager.debug("TransactionSession", "Suppressing WrongItem feedback during guided tutorial task.")
+			else:
+				var wants_debt: bool = context.wants_debt if context else false
+				EventBus.transaction_completed.emit(item.item_data, false, wants_debt, c_path)
+				on_wrong_item_given(customer)
+
+				# Keep item in hand so it doesn't just vanish or jump
+				if DragManager and item.item_data and item.item_data.texture:
+					DragManager.call_deferred("start_drag", item, item.item_data.texture)
+					return false
+
+		# Return item to its shelf slot if not consumed or kept in hand
+		if item:
+			item.show_visuals()
+			item.return_to_start()
+		return false
+
 func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 	if Dialogic.current_timeline != null:
 		var active_path = Dialogic.current_timeline.resource_path

@@ -57,6 +57,7 @@ func _ready() -> void:
 	EventBus.closing_time_reached.connect(_on_closing_time_reached)
 	EventBus.debt_quota_met.connect(_on_debt_quota_met)
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
+	EventBus.tray_item_placed.connect(_on_tray_item_placed)
 	LogManager.debug("CustomerSpawner", "_ready() END")
 
 func _on_day_started(_day: int) -> void:
@@ -248,6 +249,12 @@ func start_dialogue(timeline, customer: Customer, phase: TransactionSession.Phas
 
 func _on_dialogue_ended() -> void:
 	session.on_dialogue_ended()
+
+func _on_tray_item_placed(item: DraggableItem, tray_pos: Vector3) -> void:
+	session.process_item_placed(item, tray_pos)
+
+func on_tray_item_placed(item: DraggableItem, tray_pos: Vector3 = Vector3.ZERO) -> bool:
+	return session.process_item_placed(item, tray_pos)
 
 
 
