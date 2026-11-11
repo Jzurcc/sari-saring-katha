@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="CustomerData" format=4 uid="uid://drt1rivqisq6m"]
 
-[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="1_3q4xm"]
+[ext_resource type="Script" path="res://Scripts/Data/ArcData.gd" id="1_3q4xm"]
 [ext_resource type="Resource" path="res://Dialogue/Timelines/UncleMario.dch" id="1_mario"]
-[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="2_4srvu"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerData.gd" id="2_4srvu"]
 [ext_resource type="Texture2D" uid="uid://dbeuhl3lp3ih6" path="res://Assets/characters/sprites/UncleMario.png" id="4_pv788"]
-[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="5_4lb08"]
+[ext_resource type="Script" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="5_4lb08"]
 [ext_resource type="Resource" path="res://Dialogue/Timelines/UncleMarioTutorial.dtl" id="tut_timeline"]
 
 [sub_resource type="AudioStreamWAV" id="AudioStreamWAV_lpy21"]

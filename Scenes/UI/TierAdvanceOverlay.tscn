@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://6wc4w7r1ls6t"]
 
-[ext_resource type="Script" uid="uid://dcyj5m14jty5b" path="res://Scripts/UI/TierAdvanceOverlay.gd" id="1_script"]
+[ext_resource type="Script" path="res://Scripts/UI/TierAdvanceOverlay.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o9a2b"]
 bg_color = Color(0.13376084, 0.1284008, 0.11768069, 0.9647059)

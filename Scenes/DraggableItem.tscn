@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bro5t8giw25g5"]
 
-[ext_resource type="Script" uid="uid://b125r4aqte2v6" path="res://Scripts/World/Entities/DraggableItem.gd" id="1_script"]
+[ext_resource type="Script" path="res://Scripts/World/Entities/DraggableItem.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://dq5lstkdwwxct" path="res://icon.svg" id="2_icon"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]

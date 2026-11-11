@@ -34,6 +34,8 @@ var _ui_player   : AudioStreamPlayer
 # ─── Ready ────────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	
 	# UI sound player (uses SFX bus)
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "SFX"

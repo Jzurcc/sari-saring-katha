@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b1q2ur3e1hrua"]
 
-[ext_resource type="Script" uid="uid://cn5sn12fdwnsh" path="res://Scripts/UI/NoticeOverlay.gd" id="1_script"]
+[ext_resource type="Script" path="res://Scripts/UI/NoticeOverlay.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_notice"]
 content_margin_left = 30.0
