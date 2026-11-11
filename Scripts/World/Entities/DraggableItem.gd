@@ -166,8 +166,8 @@ func adjust_price(delta: float) -> bool:
 	InventoryManager.adjust_item_price([item_data], delta)
 	return true
 
-func _get_pricing_overlay() -> PricingOverlay:
-	return PricingOverlay.get_active(get_tree())
+func _get_pricing_overlay() -> Node:
+	return PricingOverlay if is_instance_valid(PricingOverlay) else null
 
 
 func _update_label_visibility() -> void:

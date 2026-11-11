@@ -36,10 +36,6 @@ func _ready() -> void:
 	# Setup Ambient Effects
 	VisualEffectManager.setup_ambient_dust(self)
 
-	# Instantiate 3D Pricing Overlay
-	var pricing_overlay := PricingOverlay.new()
-	add_child(pricing_overlay)
-
 	# Street Lights Time Sync
 	var tod = get_tree().root.find_child("TimeOfDay", true, false)
 	if tod:

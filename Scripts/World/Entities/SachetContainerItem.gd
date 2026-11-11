@@ -22,10 +22,9 @@ func get_available_items() -> Array[ItemData]:
 func update_pricing_ui() -> void:
 	if not sachet_item or not is_hovered or not _pricing_mode_active:
 		return
-	var overlay = PricingOverlay.get_active(get_tree())
-	if is_instance_valid(overlay):
+	if is_instance_valid(PricingOverlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
-		overlay.show_item(sachet_item, global_position, true, "", stock_info)
+		PricingOverlay.show_item(sachet_item, global_position, true, "", stock_info)
 
 func _check_unlock_status() -> void:
 	var tier = StoryManager.current_tier
@@ -65,8 +64,7 @@ func _update_local_stock() -> void:
 		current_stock = InventoryManager.get_stock(sachet_item)
 		max_stock = InventoryManager.get_max_stock(sachet_item)
 	
-	var overlay = PricingOverlay.get_active(get_tree())
-	if is_instance_valid(overlay) and is_hovered and _pricing_mode_active:
+	if is_instance_valid(PricingOverlay) and is_hovered and _pricing_mode_active:
 		update_pricing_ui()
 
 func _on_inventory_stock_changed(item: ItemData, _new_stock: int) -> void:
