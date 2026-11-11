@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cv3kc6f1s6724"]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://casyub1yio83c" path="res://Assets/items/icons/7_sachet_knees_toes.png" id="2_tex"]
 
 [resource]

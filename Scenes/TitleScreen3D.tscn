@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://is4naxr6ch1" path="res://Scenes/notebook.tscn" id="16_3w5yf"]
 [ext_resource type="Script" uid="uid://cjmkcj8hwm7ts" path="res://addons/sky_3d/src/TimeOfDay.gd" id="16_fgk2h"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="16_ktwve"]
-[ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="17_r5sjn"]
+[ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/World/Environment/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="17_re88u"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
 

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c4vq703xgyume"]
 
-[ext_resource type="Script" uid="uid://uhfkahoco085" path="res://Scripts/TransactionTray.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://uhfkahoco085" path="res://Scripts/World/Entities/TransactionTray.gd" id="1_script"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hegtq"]
 size = Vector3(1.493, 2.767, 1.735)

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dps7b8giw25g5"]
 
-[ext_resource type="Script" path="res://Scripts/PlasticDeliveryItem.gd" id="1_script"]
+[ext_resource type="Script" path="res://Scripts/World/Entities/PlasticDeliveryItem.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://Assets/ui/Plastic.png" id="2_plastic"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]

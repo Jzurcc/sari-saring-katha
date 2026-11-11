@@ -28,18 +28,18 @@ buses/default_bus_layout="uid://b3scee0b03k1u"
 
 [autoload]
 
-EventBus="*res://Scripts/EventBus.gd"
-DragManager="*res://Scripts/DragManager.gd"
-InventoryManager="*res://Scripts/InventoryManager.gd"
+EventBus="*res://Scripts/Core/EventBus.gd"
+DragManager="*res://Scripts/World/DragManager.gd"
+InventoryManager="*res://Scripts/Store/InventoryManager.gd"
 Dialogic="*uid://ds2q0uclmolvu"
-SceneTransition="*res://Scripts/Managers/SceneTransitionManager.gd"
-SaveManager="*res://Scripts/SaveManager.gd"
-AudioManager="*res://Scripts/Managers/AudioManager.gd"
-StoryManager="*res://Scripts/Managers/StoryManager.gd"
-MarioManager="*res://Scripts/Managers/MarioManager.gd"
-VisualEffectManager="*res://Scripts/Managers/VisualEffectManager.gd"
-LogManager="*res://Scripts/Managers/LogManager.gd"
-CharacterProgressionManager="*res://Scripts/Managers/CharacterProgressionManager.gd"
+SceneTransition="*res://Scripts/Core/SceneTransitionManager.gd"
+SaveManager="*res://Scripts/Core/SaveManager.gd"
+AudioManager="*res://Scripts/Audio/AudioManager.gd"
+StoryManager="*res://Scripts/Progression/StoryManager.gd"
+MarioManager="*res://Scripts/World/MarioManager.gd"
+VisualEffectManager="*res://Scripts/World/VisualEffectManager.gd"
+LogManager="*res://Scripts/Core/LogManager.gd"
+CharacterProgressionManager="*res://Scripts/Progression/CharacterProgressionManager.gd"
 
 [debug_draw_3d]
 

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dlkqfec8grra2"]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://cgphmchrybpcw" path="res://Assets/items/icons/6_snack_ngarag_ya.png" id="2_tex"]
 
 [resource]

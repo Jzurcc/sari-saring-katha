@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://b83qhc1lkdq1w"]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" uid="uid://bau8sy6ych0oa" path="res://Assets/items/icons/32_frozen_borgir.png" id="2_tex"]
 
 [resource]

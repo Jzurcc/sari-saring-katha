@@ -3,7 +3,7 @@ class_name GameManager
 
 ## Central manager for progression out of MainGame.gd
 
-const TutorialManager = preload("res://Scripts/Managers/TutorialManager.gd")
+const TutorialManager = preload("res://Scripts/World/TutorialManager.gd")
 
 var save_id: String = "game_manager"
 

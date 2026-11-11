@@ -1,6 +1,6 @@
 extends Node
 
-const TransactionBuilder = preload("res://Scripts/Helpers/TransactionBuilder.gd")
+const TransactionBuilder = preload("res://Scripts/Store/TransactionBuilder.gd")
 
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.

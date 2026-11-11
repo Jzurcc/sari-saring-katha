@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b46bhnivkyc61"]
 
-[ext_resource type="Script" uid="uid://cdfame0ocuhdn" path="res://Scripts/MainMenu.gd" id="1_menu"]
+[ext_resource type="Script" uid="uid://cdfame0ocuhdn" path="res://Scripts/UI/MainMenu.gd" id="1_menu"]
 [ext_resource type="Texture2D" uid="uid://c2hb2c0ugd6ki" path="res://Assets/ui/backgrounds/Background.png" id="2_bg"]
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="4_ghw46"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="5_df05h"]

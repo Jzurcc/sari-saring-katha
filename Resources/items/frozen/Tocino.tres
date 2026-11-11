@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://nbmk858t133b"]
 
-[ext_resource type="Script" path="res://Scripts/ItemData.gd" id="1_item"]
+[ext_resource type="Script" path="res://Scripts/Data/ItemData.gd" id="1_item"]
 [ext_resource type="Texture2D" path="res://Assets/items/icons/30_frozen_tocino.png" id="2_tex"]
 
 [resource]
