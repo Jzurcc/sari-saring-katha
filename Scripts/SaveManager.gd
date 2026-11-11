@@ -253,8 +253,8 @@ func reset_all_state() -> void:
 		if node.has_method("reset_state"):
 			node.reset_state()
 
-	if Engine.has_singleton("Dialogic") or is_instance_valid(Dialogic):
-		Dialogic.VAR.reset_all()
+	if is_instance_valid(Dialogic) and is_instance_valid(Dialogic.VAR) and Dialogic.VAR.has_method("reset"):
+		Dialogic.VAR.reset()
 
 	LogManager.info("SaveManager", "All persistent state and Dialogic variables reset for New Game.")
 
