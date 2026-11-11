@@ -47,5 +47,6 @@ func update_master_muted_by_user(value: bool) -> void:
 func _apply_bus_volume(bus_name: String, linear_val: float) -> void:
 	var idx := AudioServer.get_bus_index(bus_name)
 	if idx >= 0:
-		AudioServer.set_bus_volume_db(idx, @GlobalScope.linear_to_db(linear_val) if linear_val > 0.0 else -80.0)
+		AudioServer.set_bus_volume_db(idx, linear_to_db(linear_val) if linear_val > 0.0 else -80.0)
 		AudioServer.set_bus_mute(idx, linear_val <= 0.0)
+

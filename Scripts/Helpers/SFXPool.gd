@@ -62,17 +62,17 @@ func _init_library() -> void:
 	}
 
 	sfx_volume_offsets = {
-		"money_gain": -6.0,
-		"purchase": -6.0,
-		"tab_switch": -6.0,
-		"interact": -6.0,
-		"pickup": -6.0,
-		"drop": -6.0,
-		"error": -6.0,
-		"ui_hover": -6.0,
-		"refrigerator_open": -3.0,
-		"refrigerator_close": -3.0,
-		"price_change": -6.0
+		"money_gain": - 6.0,
+		"purchase": - 6.0,
+		"tab_switch": - 6.0,
+		"interact": - 6.0,
+		"pickup": - 6.0,
+		"drop": - 6.0,
+		"error": - 6.0,
+		"ui_hover": - 6.0,
+		"refrigerator_open": - 3.0,
+		"refrigerator_close": - 3.0,
+		"price_change": - 6.0
 	}
 
 func play_sfx(sfx_name: String) -> void:
