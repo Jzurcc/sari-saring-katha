@@ -15,6 +15,7 @@ const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
 func _ready() -> void:
 	name = "PricingOverlay"
+	add_to_group("pricing_overlay")
 	
 	var beige := Color(0.92, 0.9, 0.78)
 	var beige_subtle := beige.lerp(Color.BLACK, 0.2)

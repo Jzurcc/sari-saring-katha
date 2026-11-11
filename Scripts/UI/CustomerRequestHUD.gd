@@ -51,7 +51,7 @@ func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle:
 			_pop_and_remove_item(child)
 	
 	# 2. Add any remaining items in the checklist (truly new items)
-	var is_refresh = not checklist.is_empty() and items.size() == _last_items.size()
+	var _is_refresh = not checklist.is_empty() and items.size() == _last_items.size()
 	for item in checklist:
 		_add_item_icon(item, is_riddle)
 

@@ -322,9 +322,9 @@ func _setup_controls_ui(vbox: VBoxContainer) -> void:
 	# Add Label
 	var label = Label.new()
 	label.text = "Controls"
-	label.add_theme_font_override("font", preload("res://Assets/Fonts/Inder/Inder-Regular.ttf"))
+	label.add_theme_font_override("font", UIStyle.FONT_INDER)
 	label.add_theme_font_size_override("font_size", 24)
-	label.add_theme_color_override("font_color", Color(1, 0.922, 0.792, 1))
+	label.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 	vbox.add_child(label)
 	
 	# Add Controls Container
@@ -345,16 +345,16 @@ func _setup_controls_ui(vbox: VBoxContainer) -> void:
 		var action_label = Label.new()
 		action_label.text = REMAPPABLE_ACTIONS[action]
 		action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		action_label.add_theme_font_override("font", preload("res://Assets/Fonts/Inder/Inder-Regular.ttf"))
+		action_label.add_theme_font_override("font", UIStyle.FONT_INDER)
 		action_label.add_theme_font_size_override("font_size", 20)
-		action_label.add_theme_color_override("font_color", Color(1, 0.922, 0.792, 1))
+		action_label.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 		hbox.add_child(action_label)
 		
 		var btn = Button.new()
 		btn.name = "Button"
 		btn.custom_minimum_size = Vector2(200, 40)
 		btn.focus_mode = Control.FOCUS_NONE # Prevent buttons from consuming Space/Enter
-		btn.add_theme_font_override("font", preload("res://Assets/Fonts/Inder/Inder-Regular.ttf"))
+		btn.add_theme_font_override("font", UIStyle.FONT_INDER)
 		btn.pressed.connect(_start_remapping.bind(action, btn))
 		hbox.add_child(btn)
 

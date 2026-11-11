@@ -10,7 +10,7 @@ var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
 var _sfx_hover   : AudioStream = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var _ui_player   : AudioStreamPlayer
 
-var _original_music_db: float = 0.0
+#var _original_music_db: float = 0.0
 const DUCK_AMOUNT: float = -6.0 # Subtler ducking
 const MUFFLE_CUTOFF: float = 1500.0 # Muffled frequency
 const NORMAL_CUTOFF: float = 20500.0 # Full range frequency

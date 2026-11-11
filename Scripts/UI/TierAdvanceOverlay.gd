@@ -18,7 +18,7 @@ func _ready() -> void:
 	sfx_player.stream = stream_notification
 	# The Panel's background color is now controlled purely via the Godot Editor Theme Overrides.
 
-func _input(event: InputEvent) -> void:
+func _input(_event: InputEvent) -> void:
 	# if event is InputEventKey and event.pressed and event.keycode == KEY_J and not event.echo:
 	# 	print("[TierAdvanceOverlay] DEBUG: Triggering test notification...")
 	# 	var test_items: Array[ItemData] = [

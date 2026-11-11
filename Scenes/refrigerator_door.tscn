@@ -1,8 +1,8 @@
 [gd_scene format=4 uid="uid://31a5l8kvteys"]
 
 [ext_resource type="Material" uid="uid://cgpgycmpm30l4" path="res://Assets/3D/final store/textures/materials/Material.016.tres" id="1_tjicy"]
-[ext_resource type="Script" path="res://Scripts/RefrigeratorDoor.gd" id="2_door"]
-[ext_resource type="Script" path="res://Scripts/FridgeDoorInteractor.gd" id="3_interactor"]
+[ext_resource type="Script" path="res://Scripts/World/Entities/RefrigeratorDoor.gd" id="2_door"]
+[ext_resource type="Script" path="res://Scripts/World/Interactors/FridgeDoorInteractor.gd" id="3_interactor"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_e85sq"]
 _surfaces = [{

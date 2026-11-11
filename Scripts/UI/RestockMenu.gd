@@ -53,8 +53,13 @@ var _tab_drag_active: bool = false
 var _tab_drag_start_x: float = 0.0
 var _tab_scroll_start: float = 0.0
 
-var selected_items: Dictionary = {}  # ItemData -> int (order count)
-var total_price: float = 0.0
+var order: RestockOrder = RestockOrder.new()
+
+var selected_items: Dictionary:
+	get: return order.selected_items
+var total_price: float:
+	get: return order.total_price
+
 var current_category: String = ""
 var currently_selected_item: ItemData = null
 var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
@@ -77,23 +82,21 @@ var category_labels: Dictionary = {
 	"bottle": "Beverage"
 }
 
-
-
-
-
-# --- Colors ---
-var COLOR_TAB_BG := Color("666666")         # Background gray
-var COLOR_TAB_ACTIVE := Color("7EC292")      # Nokia green active tab
-var COLOR_TAB_NORMAL := Color("BFC0BA")      # Light gray inactive tab
-var COLOR_CONTENT_BG := Color("7EC292")      # Nokia green accents
-var COLOR_CARD_BG := Color("7EC292")       # Nokia green product cards
-var COLOR_CARD_SELECTED := Color("D59F47")   # Gold highlight when selected
-var COLOR_DETAIL_BG := Color("BFC0BA")       # Light gray detail panel
-var COLOR_CANCEL := Color("C0544E")          # Red cancel button
-var COLOR_CONFIRM := Color("7EC292")         # Nokia green confirm button
-var COLOR_LIST_BG := Color("BFC0BA")         # Light gray list panel
-var COLOR_BEIGE := Color("F5F5DC")           # Light beige for upgrade
-var COLOR_DARK_BG := Color("151412")         # Dark background black
+# --- Colors (delegated to UIStyle) ---
+const COLOR_TAB_BG := UIStyle.COLOR_TAB_BG
+const COLOR_TAB_ACTIVE := UIStyle.COLOR_TAB_ACTIVE
+const COLOR_TAB_NORMAL := UIStyle.COLOR_TAB_NORMAL
+const COLOR_TAB_LOCKED := UIStyle.COLOR_TAB_LOCKED
+const COLOR_TAB_LOCKED_FONT := UIStyle.COLOR_TAB_LOCKED_FONT
+const COLOR_CONTENT_BG := UIStyle.COLOR_CONTENT_BG
+const COLOR_CARD_BG := UIStyle.COLOR_CARD_BG
+const COLOR_CARD_SELECTED := UIStyle.COLOR_CARD_SELECTED
+const COLOR_DETAIL_BG := UIStyle.COLOR_DETAIL_BG
+const COLOR_CANCEL := UIStyle.COLOR_CANCEL
+const COLOR_CONFIRM := UIStyle.COLOR_CONFIRM
+const COLOR_LIST_BG := UIStyle.COLOR_LIST_BG
+const COLOR_BEIGE := UIStyle.COLOR_BEIGE
+const COLOR_DARK_BG := UIStyle.COLOR_DARK_BG
 
 func _ready() -> void:
 	
@@ -109,13 +112,13 @@ func _ready() -> void:
 	
 	if cancel_btn:
 		cancel_btn.pressed.connect(_on_cancel_pressed)
-		_style_button(cancel_btn, COLOR_CANCEL, Color.WHITE)
+		UIStyle.style_button(cancel_btn, UIStyle.COLOR_CANCEL, Color.WHITE)
 	if confirm_btn:
 		confirm_btn.pressed.connect(_on_confirm_pressed)
-		_style_button(confirm_btn, COLOR_CONFIRM, Color.WHITE)
+		UIStyle.style_button(confirm_btn, UIStyle.COLOR_CONFIRM, Color.WHITE)
 	if add_btn:
 		add_btn.pressed.connect(_on_add_pressed)
-		_style_button(add_btn, COLOR_DARK_BG, Color.WHITE)
+		UIStyle.style_button(add_btn, UIStyle.COLOR_DARK_BG, Color.WHITE)
 	if tab_scroll:
 		tab_scroll.gui_input.connect(_on_tab_scroll_input)
 	
@@ -161,8 +164,7 @@ func open_menu() -> void:
 		all_btn.grab_focus()
 		
 	_animate_entrance()
-	selected_items.clear()
-	total_price = 0
+	order.clear()
 	currently_selected_item = null
 	if detail_icon and detail_name and detail_price and add_btn:
 		_clear_detail_panel()
@@ -201,9 +203,6 @@ func _animate_entrance() -> void:
 	tween.parallel().tween_property(self, "modulate:a", 1.0, 0.3)
 
 # ========== TAB SYSTEM ==========
-var COLOR_TAB_LOCKED := Color("4D4D4D")       # dark grey for locked tabs
-var COLOR_TAB_LOCKED_FONT := Color("878787")  # muted text for locked tabs
-
 func _build_tabs() -> void:
 	# Clear existing tabs
 	for child in tab_container.get_children():
@@ -220,11 +219,7 @@ func _build_tabs() -> void:
 		tab_btn.name = "Tab_" + cat_key.replace(" ", "_")
 		tab_btn.mouse_filter = Control.MOUSE_FILTER_PASS
 		
-		if is_locked:
-			_style_button(tab_btn, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
-		else:
-			_style_button(tab_btn, COLOR_TAB_NORMAL, Color.WHITE, float(tab_font_size))
-		
+		UIStyle.style_tab_button(tab_btn, false, is_locked, float(tab_font_size))
 		tab_btn.pressed.connect(_on_tab_pressed.bind(cat_key))
 		tab_container.add_child(tab_btn)
 
@@ -239,8 +234,6 @@ func _on_tab_pressed(cat_key: String) -> void:
 	
 	_select_category(cat_key)
 
-
-
 func _select_category(cat_key: String) -> void:
 	current_category = cat_key
 	
@@ -251,13 +244,7 @@ func _select_category(cat_key: String) -> void:
 			var child_items = _get_items_for_category(child_cat)
 			var child_locked = child_items.size() == 0 and child_cat != "upgrades"
 			var is_active = child_cat == cat_key
-			
-			if child_locked:
-				_style_button(child, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT, float(tab_font_size))
-			elif is_active:
-				_style_button(child, COLOR_TAB_ACTIVE, Color.WHITE, float(tab_font_size))
-			else:
-				_style_button(child, COLOR_TAB_NORMAL, Color.WHITE, float(tab_font_size))
+			UIStyle.style_tab_button(child, is_active, child_locked, float(tab_font_size))
 	
 	_populate_grid(cat_key)
 
@@ -285,33 +272,13 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 		is_locked = target_tier > StoryManager.max_unlocked_tier
 		is_stacked = target_tier > StoryManager.pending_upgrade_tier and target_tier <= StoryManager.max_unlocked_tier
 	else:
-		is_locked = false # Regular items use stock visibility
+		is_locked = item.tier > StoryManager.current_tier
 	
-	# Regular item locking based on current tier
-	if not is_upgrade and item.tier > StoryManager.current_tier:
-		is_locked = true
-	
-	var style = StyleBoxFlat.new()
-	style.bg_color = COLOR_CARD_BG
+	var bg_col := UIStyle.COLOR_CARD_BG
 	if is_upgrade and item.get_meta("target_tier", 1) <= StoryManager.current_tier:
-		style.bg_color = Color(0.2, 0.4, 0.2, 0.6) # Dimmed green for owned upgrades
+		bg_col = UIStyle.COLOR_CARD_OWNED_BG
 	
-	style.border_color = Color(0.15, 0.15, 0.15, 1) # Dark grey
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	style.corner_radius_top_left = 0
-	style.corner_radius_top_right = 0
-	style.corner_radius_bottom_left = 0
-	style.corner_radius_bottom_right = 0
-	style.content_margin_left = 4
-	style.content_margin_right = 4
-	style.content_margin_top = 4
-	style.content_margin_bottom = 4
-	card.add_theme_stylebox_override("panel", style)
-	
-	# Fix for "white stroke" — disable focus border
+	card.add_theme_stylebox_override("panel", UIStyle.create_card_style(bg_col))
 	card.focus_mode = Control.FOCUS_NONE
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	
@@ -339,14 +306,11 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	if is_upgrade:
 		var target_tier = item.get_meta("target_tier", 1)
 		var tier_lbl = Label.new()
-		tier_lbl.text = "TIER %d" % target_tier
 		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tier_lbl.add_theme_font_size_override("font_size", 11)
 		tier_lbl.add_theme_color_override("font_color", Color.WHITE)
 		
-		var prereq_met = _is_upgrade_prerequisite_met(target_tier)
-		
-		# User requested change: If prerequisite met (either owned or in basket), show actual name/sprite
+		var prereq_met = order.is_upgrade_prerequisite_met(target_tier)
 		if target_tier <= StoryManager.current_tier:
 			tier_lbl.text = "OWNED"
 		elif prereq_met:
@@ -364,7 +328,7 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	# Visibility logic based on whether prerequisite is met
 	if is_upgrade:
 		var target_tier = item.get_meta("target_tier", 1)
-		var prereq_met = _is_upgrade_prerequisite_met(target_tier)
+		var prereq_met = order.is_upgrade_prerequisite_met(target_tier)
 		var owned = target_tier <= StoryManager.current_tier
 		
 		if owned:
@@ -407,23 +371,7 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	return card
 
 func _is_upgrade_prerequisite_met(target_tier: int) -> bool:
-	if target_tier <= StoryManager.current_tier + 1:
-		# The immediate next tier is always "staged-ready"
-		# Actually, StoryManager.pending_upgrade_tier handles this usually
-		if target_tier == StoryManager.pending_upgrade_tier:
-			return true
-		# Fallback: if pending_upgrade_tier is 0 (not processed yet), but it's current+1
-		if StoryManager.pending_upgrade_tier == 0 and target_tier == StoryManager.current_tier + 1:
-			return true
-	
-	# Check if predecessor is in basket
-	for basket_item in selected_items.keys():
-		if basket_item.get_meta("is_upgrade", false):
-			var upg_tier = basket_item.get_meta("target_tier", 1)
-			if upg_tier == target_tier - 1:
-				return true
-				
-	return false
+	return order.is_upgrade_prerequisite_met(target_tier)
 
 func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -436,11 +384,11 @@ func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -
 			if child is PanelContainer:
 				var s = child.get_theme_stylebox("panel") as StyleBoxFlat
 				if s:
-					s.border_color = Color(0.15, 0.15, 0.15, 1)
+					s.border_color = UIStyle.COLOR_CARD_BORDER
 		
 		var selected_style = card.get_theme_stylebox("panel") as StyleBoxFlat
 		if selected_style:
-			selected_style.border_color = COLOR_CARD_SELECTED
+			selected_style.border_color = UIStyle.COLOR_CARD_SELECTED
 
 # ========== DETAIL PANEL ==========
 func _update_detail_panel(item: ItemData) -> void:
@@ -463,108 +411,27 @@ func _on_add_pressed() -> void:
 	if currently_selected_item == null:
 		return
 	
-	var item = currently_selected_item
-	
-	# Initial basic checks for upgrades
-	var is_upgrade = item.get_meta("is_upgrade", false)
-	
-	if is_upgrade:
-		var target_tier = item.get_meta("target_tier", 1)
-		
-		# Robust Duplicate Check
-		var already_in_basket = false
-		for basket_item in selected_items.keys():
-			if basket_item.get_meta("is_upgrade", false) and basket_item.get_meta("target_tier", 1) == target_tier:
-				already_in_basket = true
-				break
-				
-		if already_in_basket:
-			EventBus.show_notification.emit("Already in Basket", "You only need one package for Tier %d per order." % target_tier, "error")
-			AudioManager.play_sfx("error")
-			return
-		
-		if target_tier > StoryManager.max_unlocked_tier:
-			EventBus.show_notification.emit("Upgrade Locked", "Continue serving customers to unlock this.", "error")
-			AudioManager.play_sfx("error")
-			return
-
-		if not _is_upgrade_prerequisite_met(target_tier):
-			EventBus.show_notification.emit("Sequence Error", "You must add Tier %d first!" % (target_tier - 1), "error")
-			AudioManager.play_sfx("error")
-			return
-
-	if selected_items.get(item, 0) >= 99: 
-		EventBus.show_notification.emit("Limit Reached", "Order limit for this item reached.", "error")
+	var item := currently_selected_item
+	var check := order.can_add(item, _get_money())
+	if not check.ok:
+		if check.title != "":
+			EventBus.show_notification.emit(check.title, check.message, check.sfx)
+		if check.sfx != "":
+			AudioManager.play_sfx(check.sfx)
+		elif check.error == "insufficient_funds":
+			EventBus.insufficient_funds.emit()
 		return
 
-	var money = _get_money()
-	if total_price + item.price > money:
-		EventBus.insufficient_funds.emit()
-		return
-
-	# Simulate the basket after addition
-	var proposed_basket = selected_items.duplicate()
-	proposed_basket[item] = proposed_basket.get(item, 0) + 1
-	
-	# Flatten the basket into actual item counts
-	var effective_counts = {}
-	var effective_types = {}
-	
-	for k in proposed_basket.keys():
-		var count = proposed_basket[k]
-		if k.get_meta("is_upgrade", false):
-			var upg_tier = k.get_meta("target_tier", 1)
-			for i in InventoryManager.get_all_items():
-				if i.tier == upg_tier and i.can_be_sold:
-					effective_counts[i] = effective_counts.get(i, 0) + (count * 2)
-					effective_types[i.type] = effective_types.get(i.type, 0) + (count * 2)
-		else:
-			effective_counts[k] = effective_counts.get(k, 0) + count
-			effective_types[k.type] = effective_types.get(k.type, 0) + count
-
-	# Validate individual item limits
-	for eff_item in effective_counts.keys():
-		var count = effective_counts[eff_item]
-		var limit = InventoryManager.get_max_stock(eff_item)
-		if count > limit:
-			print("[RestockMenu] BLOCKED: Individual limit for ", eff_item.item_name, " would be exceeded.")
-			EventBus.show_notification.emit("Stock Limit Reached!", "Not enough space for " + eff_item.item_name, "")
-			AudioManager.play_sfx("error")
-			return
-
-	# [SPECIAL CASE] Validate shared candy container limit (Mentor + Pocha) pre-Tier 10
-	if StoryManager.current_tier < 10:
-		var bowl_sum = 0
-		for eff_item in effective_counts.keys():
-			var id = eff_item.get_clean_id()
-			if id == "mentor" or id == "pocha":
-				bowl_sum += (effective_counts[eff_item] + InventoryManager.get_stock(eff_item))
-		
-		if bowl_sum > 10:
-			print("[RestockMenu] BLOCKED: Shared bowl limit (Mentor + Pocha) would be exceeded. (", bowl_sum, "/10)")
-			EventBus.show_notification.emit("Bowl is full!", "Mentor + Pocha cannot exceed 10 total.", "")
-			AudioManager.play_sfx("error")
-			return
-
-	# Validate global capacities
-	for eff_type in effective_types.keys():
-		var count = effective_types[eff_type]
-		var available = InventoryManager.get_available_capacity(eff_type)
-		if count > available:
-			print("[RestockMenu] CANNOT ADD: Capacity for type ", eff_type, " would be exceeded.")
-			EventBus.show_notification.emit("Shelf is full!", "Not enough physical space.", "")
-			AudioManager.play_sfx("error")
-			return
-
-	# If we pass all validation, accept the item
 	AudioManager.play_sfx("pickup")
-	selected_items[item] = proposed_basket[item]
-	total_price += item.price
+	order.add_item(item)
 	_update_order_list()
 	
 	# If an upgrade was added, refresh grid to show next tiers
-	if is_upgrade:
+	if item.get_meta("is_upgrade", false):
 		_populate_grid(current_category)
+
+func _can_add_to_basket(item: ItemData) -> bool:
+	return order.can_add(item, _get_money()).ok
 
 # ========== ORDER LIST ==========
 func _update_order_list() -> void:
@@ -572,15 +439,16 @@ func _update_order_list() -> void:
 	for child in order_list_container.get_children():
 		child.queue_free()
 	
-	if selected_items.is_empty():
+	if order.is_empty():
 		var empty_lbl = Label.new()
 		empty_lbl.text = "No items added yet"
 		empty_lbl.add_theme_color_override("font_color", Color("CCCCCC"))
 		empty_lbl.add_theme_font_size_override("font_size", 13)
 		order_list_container.add_child(empty_lbl)
 	else:
-		for item in selected_items.keys():
-			var count = selected_items[item]
+		var items_dict := order.get_items()
+		for item in items_dict.keys():
+			var count: int = items_dict[item]
 			if count <= 0:
 				continue
 			var row = _create_order_row(item, count)
@@ -589,23 +457,23 @@ func _update_order_list() -> void:
 	_update_total_amount_ui()
 	
 	# Disable confirm button if unaffordable or empty
-	var money = _get_money()
-	confirm_btn.disabled = (total_price <= 0) or (total_price > money)
+	var money := _get_money()
+	confirm_btn.disabled = (order.total_price <= 0) or (order.total_price > money)
 	
 	# Keep header static — total shown separately at confirm
 	list_header.text = "Order List"
 	list_header.add_theme_font_size_override("font_size", list_header_font_size)
 
 func _update_total_amount_ui() -> void:
-	total_amount_label.text = "₱%.2f" % total_price
+	total_amount_label.text = "₱%.2f" % order.total_price
 	if not confirm_btn: return
 	
-	if total_price <= 0:
+	if order.total_price <= 0:
 		confirm_btn.disabled = true
-		_style_button(confirm_btn, COLOR_TAB_LOCKED, COLOR_TAB_LOCKED_FONT)
+		UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT)
 	else:
 		confirm_btn.disabled = false
-		_style_button(confirm_btn, COLOR_CONFIRM, Color.WHITE)
+		UIStyle.style_button(confirm_btn, UIStyle.COLOR_CONFIRM, Color.WHITE)
 
 
 func _create_order_row(item: ItemData, count: int) -> HBoxContainer:
@@ -639,7 +507,7 @@ func _create_order_row(item: ItemData, count: int) -> HBoxContainer:
 	var plus_btn = Button.new()
 	plus_btn.text = "+"
 	plus_btn.custom_minimum_size = Vector2(30, 30)
-	_style_button(plus_btn, COLOR_CONFIRM, Color.WHITE, 14.0)
+	UIStyle.style_button(plus_btn, UIStyle.COLOR_CONFIRM, Color.WHITE, 14.0)
 	row.add_child(plus_btn)
 	
 	# Connect buttons — pass references so they can update each other
@@ -652,88 +520,39 @@ func _update_minus_btn_appearance(btn: Button, count: int) -> void:
 	if count <= 1:
 		# Show trash icon — pressing it will remove the item
 		btn.text = "🗑"
-		_style_button(btn, COLOR_CANCEL, Color.WHITE, 14.0)
+		UIStyle.style_button(btn, UIStyle.COLOR_CANCEL, Color.WHITE, 14.0)
 	else:
 		btn.text = "-"
-		_style_button(btn, COLOR_TAB_ACTIVE, Color.WHITE, 14.0)
+		UIStyle.style_button(btn, UIStyle.COLOR_TAB_ACTIVE, Color.WHITE, 14.0)
 
-func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, row: HBoxContainer) -> void:
-	var count = selected_items.get(item, 0)
-	if count <= 0:
-		return
-	
+func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, _row: HBoxContainer) -> void:
 	AudioManager.play_sfx("drop")
-	
-	var new_count = count - 1
-	var is_upgrade = item.get_meta("is_upgrade", false)
-	
-	if is_upgrade or new_count <= 0:
-		# For upgrades, we remove entirely (count is always 1)
-		# For regular items, we remove when count hits zero
-		
-		# Cascading removal for upgrades
-		if is_upgrade:
-			var removed_tier = item.get_meta("target_tier", 1)
-			var to_remove: Array[ItemData] = []
-			
-			for basket_item in selected_items.keys():
-				if basket_item.get_meta("is_upgrade", false):
-					var upg_tier = basket_item.get_meta("target_tier", 1)
-					if upg_tier > removed_tier:
-						to_remove.append(basket_item)
-			
-			for rip in to_remove:
-				total_price -= rip.price
-				selected_items.erase(rip)
-				print("[RestockMenu] Cascading removal: Tier ", rip.get_meta("target_tier"), " removed because Tier ", removed_tier, " was removed.")
-		
-		total_price -= item.price
-		selected_items.erase(item)
+	var result := order.remove_item(item)
+	if result.removed:
 		_update_order_list()
-		
-		if is_upgrade:
+		if result.is_upgrade:
 			_populate_grid(current_category)
-		return
-	
-	selected_items[item] = new_count
-	total_price -= item.price
-	count_lbl.text = str(new_count)
-	_update_minus_btn_appearance(minus_btn, new_count)
-	_update_total_amount_ui()
+	else:
+		count_lbl.text = str(result.new_count)
+		_update_minus_btn_appearance(minus_btn, result.new_count)
+		_update_total_amount_ui()
 
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
-	var count = selected_items.get(item, 0)
-	
-	# Individual item limit
-	var is_upgrade = item.get_meta("is_upgrade", false)
-	if is_upgrade: return # Upgrades limited to 1
-	
-	var item_limit = InventoryManager.get_max_stock(item)
-	if count + 1 > item_limit:
-		AudioManager.play_sfx("error")
+	if item.get_meta("is_upgrade", false):
 		return
-		
-	# Global capacity limit
-	var available = InventoryManager.get_available_capacity(item.type)
-	var in_basket = 0
-	for k in selected_items.keys():
-		if k.type == item.type:
-			in_basket += selected_items[k]
-	
-	if in_basket + 1 > available:
-		EventBus.show_notification.emit("Shelf is full!", "Can't add any more stock.", "")
-		AudioManager.play_sfx("error")
-		return
-		
-	var money = _get_money()
-	if total_price + item.price > money:
-		EventBus.insufficient_funds.emit()
+	var check := order.can_add(item, _get_money())
+	if not check.ok:
+		if check.title != "":
+			EventBus.show_notification.emit(check.title, check.message, check.sfx)
+		if check.sfx != "":
+			AudioManager.play_sfx(check.sfx)
+		elif check.error == "insufficient_funds":
+			EventBus.insufficient_funds.emit()
 		return
 	
 	AudioManager.play_sfx("pickup")
-	var new_count = count + 1
-	selected_items[item] = new_count
-	total_price += item.price
+	order.add_item(item)
+	var new_count := order.get_item_count(item)
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)
 	_update_total_amount_ui()
@@ -760,19 +579,17 @@ func _on_confirm_pressed() -> void:
 	if confirm_btn:
 		confirm_btn.disabled = true
 	# Check if the user has actually ordered items
-	var actual_items: Dictionary = {}
-	for item in selected_items:
-		if selected_items[item] > 0:
-			actual_items[item] = selected_items[item]
+	var actual_items := order.get_actual_items()
+	var cost := order.get_total_cost()
 			
-	if actual_items.is_empty() or total_price <= 0:
+	if actual_items.is_empty() or cost <= 0:
 		print("[RestockMenu] No items ordered. Canceling.")
 		_on_cancel_pressed()
 		if confirm_btn:
 			confirm_btn.disabled = false
 		return
 	var money = _get_money()
-	if total_price > money:
+	if cost > money:
 		EventBus.insufficient_funds.emit()
 		if confirm_btn:
 			confirm_btn.disabled = false
@@ -785,10 +602,10 @@ func _on_confirm_pressed() -> void:
 	if gm_nodes.size() > 0:
 		var gm = gm_nodes[0]
 		if gm.has_method("deduct_money"):
-			gm.deduct_money(total_price)
-			print("[RestockMenu] Restock purchased for ₱%.2f. Remaining: ₱%.2f" % [total_price, gm.money])
+			gm.deduct_money(cost)
+			print("[RestockMenu] Restock purchased for ₱%.2f. Remaining: ₱%.2f" % [cost, gm.money])
 	
-	catalog_purchase_confirmed.emit(total_price, actual_items)
+	catalog_purchase_confirmed.emit(cost, actual_items)
 	_close_restock_screen()
 	# Set delivery cooldown and trigger the manager ONLY if items were ordered
 	InventoryManager.start_delivery_cooldown()
@@ -812,33 +629,4 @@ func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 	return empty
 
 func _style_button(btn: Button, bg_color: Color, font_color: Color, font_size: float = 14.0) -> void:
-	var style = StyleBoxFlat.new()
-	style.bg_color = bg_color
-	style.corner_radius_top_left = 6
-	style.corner_radius_top_right = 6
-	style.corner_radius_bottom_left = 6
-	style.corner_radius_bottom_right = 6
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 4
-	style.content_margin_bottom = 4
-	btn.add_theme_stylebox_override("normal", style)
-	
-	var hover_style = style.duplicate()
-	hover_style.bg_color = bg_color.lightened(0.1)
-	btn.add_theme_stylebox_override("hover", hover_style)
-	
-	var pressed_style = style.duplicate()
-	pressed_style.bg_color = bg_color.darkened(0.1)
-	btn.add_theme_stylebox_override("pressed", pressed_style)
-	
-	var disabled_style = style.duplicate()
-	disabled_style.bg_color = bg_color.darkened(0.5)
-	disabled_style.bg_color.a = 0.6
-	btn.add_theme_stylebox_override("disabled", disabled_style)
-	
-	btn.add_theme_color_override("font_color", font_color)
-	btn.add_theme_color_override("font_hover_color", font_color)
-	btn.add_theme_color_override("font_pressed_color", font_color)
-	btn.add_theme_color_override("font_disabled_color", font_color.darkened(0.4))
-	btn.add_theme_font_size_override("font_size", int(font_size))
+	UIStyle.style_button(btn, bg_color, font_color, font_size)

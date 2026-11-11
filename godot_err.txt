@@ -1,0 +1,136 @@
+WARNING: res://Resources/customers/KuyaKap.tres:9 - ext_resource, invalid UID: uid://bnlbs41r6ge5c - using text path instead: res://Dialogue/Timelines/KuyaKap.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/KuyaKap.tres:10 - ext_resource, invalid UID: uid://vd6vqcihb85s - using text path instead: res://Dialogue/Timelines/Kuyakap/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/KuyaKap.tres:11 - ext_resource, invalid UID: uid://d2xpnhja6r33a - using text path instead: res://Dialogue/Timelines/Kuyakap/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/KuyaKap.tres:12 - ext_resource, invalid UID: uid://b5ajudb37ubvf - using text path instead: res://Dialogue/Timelines/Kuyakap/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ManangAna.tres:4 - ext_resource, invalid UID: uid://ujg1okhawa3p - using text path instead: res://Dialogue/Timelines/ManangAna.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ManangAna.tres:11 - ext_resource, invalid UID: uid://bpb60ibkybakm - using text path instead: res://Dialogue/Timelines/ManangAna/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ManangAna.tres:12 - ext_resource, invalid UID: uid://dc1yt6iiwlltd - using text path instead: res://Dialogue/Timelines/ManangAna/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ManangAna.tres:13 - ext_resource, invalid UID: uid://dw2evopysv3yc - using text path instead: res://Dialogue/Timelines/ManangAna/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ReynaMayari.tres:4 - ext_resource, invalid UID: uid://clx0mg7ky65sq - using text path instead: res://Dialogue/Timelines/ReynaMayari.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ReynaMayari.tres:11 - ext_resource, invalid UID: uid://ckwsx1odxr3mx - using text path instead: res://Dialogue/Timelines/ReynaMayari/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ReynaMayari.tres:12 - ext_resource, invalid UID: uid://chi8ndhwuhd3c - using text path instead: res://Dialogue/Timelines/ReynaMayari/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/ReynaMayari.tres:13 - ext_resource, invalid UID: uid://c5ftr0ohic643 - using text path instead: res://Dialogue/Timelines/ReynaMayari/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rosalyn.tres:3 - ext_resource, invalid UID: uid://c73mtch2ugm37 - using text path instead: res://Dialogue/Timelines/Rosalyn.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rosalyn.tres:11 - ext_resource, invalid UID: uid://bosnm7nb7n52i - using text path instead: res://Dialogue/Timelines/Rosalyn/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rosalyn.tres:12 - ext_resource, invalid UID: uid://d2s4cte6itmct - using text path instead: res://Dialogue/Timelines/Rosalyn/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rosalyn.tres:13 - ext_resource, invalid UID: uid://bnumeiduxs8n1 - using text path instead: res://Dialogue/Timelines/Rosalyn/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/TK.tres:3 - ext_resource, invalid UID: uid://cegjg31uitlcf - using text path instead: res://Dialogue/Timelines/TK.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/TK.tres:7 - ext_resource, invalid UID: uid://dp26h4886jwi7 - using text path instead: res://Dialogue/Timelines/TK/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/TK.tres:12 - ext_resource, invalid UID: uid://bkxgcd1fe4pf - using text path instead: res://Dialogue/Timelines/TK/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/TK.tres:13 - ext_resource, invalid UID: uid://crmfh6krc8b5c - using text path instead: res://Dialogue/Timelines/TK/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Buboy.tres:4 - ext_resource, invalid UID: uid://ckx12ugj7m8oc - using text path instead: res://Dialogue/Timelines/Buboy.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Buboy.tres:11 - ext_resource, invalid UID: uid://chirwjrehoxjg - using text path instead: res://Dialogue/Timelines/Buboy/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Buboy.tres:12 - ext_resource, invalid UID: uid://c5xtxtkwciuu5 - using text path instead: res://Dialogue/Timelines/Buboy/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Buboy.tres:13 - ext_resource, invalid UID: uid://c3sj15wq5i3pc - using text path instead: res://Dialogue/Timelines/Buboy/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Sarimanok.tres:3 - ext_resource, invalid UID: uid://bhl7nyuop4wn5 - using text path instead: res://Dialogue/Timelines/Sarimanok.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Sarimanok.tres:11 - ext_resource, invalid UID: uid://c2s7pfyxbggpr - using text path instead: res://Dialogue/Timelines/Sarimanok/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Sarimanok.tres:12 - ext_resource, invalid UID: uid://br147rott8bhs - using text path instead: res://Dialogue/Timelines/Sarimanok/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Sarimanok.tres:13 - ext_resource, invalid UID: uid://dlcphfad8n24f - using text path instead: res://Dialogue/Timelines/Sarimanok/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Danilo.tres:3 - ext_resource, invalid UID: uid://biocfofav7eq2 - using text path instead: res://Dialogue/Timelines/Danilo.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Danilo.tres:10 - ext_resource, invalid UID: uid://dvps8884o1s8l - using text path instead: res://Dialogue/Timelines/Danilo/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Danilo.tres:11 - ext_resource, invalid UID: uid://csh0cxkt44aci - using text path instead: res://Dialogue/Timelines/Danilo/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Danilo.tres:12 - ext_resource, invalid UID: uid://cjllu4anoqql8 - using text path instead: res://Dialogue/Timelines/Danilo/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Brahim.tres:6 - ext_resource, invalid UID: uid://c3uougawddnkw - using text path instead: res://Dialogue/Timelines/Brahim.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Brahim.tres:11 - ext_resource, invalid UID: uid://deblnveoir8f0 - using text path instead: res://Dialogue/Timelines/Brahim/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Brahim.tres:12 - ext_resource, invalid UID: uid://d2bs58pcxejrb - using text path instead: res://Dialogue/Timelines/Brahim/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Brahim.tres:13 - ext_resource, invalid UID: uid://dgxmsapgmuqq3 - using text path instead: res://Dialogue/Timelines/Brahim/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rodel.tres:3 - ext_resource, invalid UID: uid://bl2eb1507afc7 - using text path instead: res://Dialogue/Timelines/Rodel.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rodel.tres:10 - ext_resource, invalid UID: uid://dwi4bgdufy8s8 - using text path instead: res://Dialogue/Timelines/Rodel/Story.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rodel.tres:12 - ext_resource, invalid UID: uid://dp41iwukbcg12 - using text path instead: res://Dialogue/Timelines/Rodel/Purchase.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/Rodel.tres:13 - ext_resource, invalid UID: uid://b5rduauht166t - using text path instead: res://Dialogue/Timelines/Rodel/Visit.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/UncleMario.tres:4 - ext_resource, invalid UID: uid://ud54y8wnnuay - using text path instead: res://Dialogue/Timelines/UncleMario.dch
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: res://Resources/customers/UncleMario.tres:8 - ext_resource, invalid UID: uid://xsm3rsyy30hc - using text path instead: res://Dialogue/Timelines/UncleMarioTutorial.dtl
+   at: load (scene/resources/resource_format_text.cpp:500)
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2641)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: Cannot get path of node as it is not in a scene tree.
+   at: get_path (scene/main/node.cpp:2419)
+ERROR: 29 resources still in use at exit.
+   at: clear (core/io/resource.cpp:805)

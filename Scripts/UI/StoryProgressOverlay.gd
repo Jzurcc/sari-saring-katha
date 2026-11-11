@@ -88,7 +88,7 @@ func _populate_characters() -> void:
 	for data in characters:
 		if not data: continue
 		
-		var is_encountered = StoryManager.encountered_characters.has(data.resource_path)
+		var is_encountered = CharacterProgressionManager.has_encountered(data.resource_path)
 		
 		var card = character_card_scene.instantiate()
 		card_container.add_child(card)
@@ -106,8 +106,7 @@ func _on_character_selected(data: CustomerData) -> void:
 func _populate_arcs() -> void:
 	_clear_details()
 	
-	var story_states = StoryManager.character_story_states
-	var current_progress = story_states.get(_selected_character.resource_path, 0)
+	var current_progress = CharacterProgressionManager.get_chapter(_selected_character.resource_path)
 	
 	var arc_count = ceil(_selected_character.max_story_chapters / 3.0)
 	if arc_count == 0: arc_count = 3 # Default minimum arcs if story exists
@@ -136,8 +135,7 @@ func _on_arc_selected(arc_idx: int) -> void:
 func _populate_chapters() -> void:
 	_clear_details()
 	
-	var story_states = StoryManager.character_story_states
-	var current_progress = story_states.get(_selected_character.resource_path, 0)
+	var current_progress = CharacterProgressionManager.get_chapter(_selected_character.resource_path)
 	
 	# Calculate how many chapters in this arc
 	# Usually 3, but the last arc might have fewer (or use max_story_chapters)

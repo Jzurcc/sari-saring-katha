@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dcqjyggeu0f12"]
 
-[ext_resource type="Script" uid="uid://dwco3oj1h6w5e" path="res://Scripts/UI/RestockMenu.gd" id="1_store_script"]
+[ext_resource type="Script" path="res://Scripts/UI/RestockMenu.gd" id="1_store_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 content_margin_left = 20.0

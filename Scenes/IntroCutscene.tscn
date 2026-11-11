@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://bs0db8j7b70xh"]
 
-[ext_resource type="Script" uid="uid://bod3ji72gqpvb" path="res://Scripts/IntroManager.gd" id="1_manager"]
-[ext_resource type="Script" uid="uid://dmlix7i2ugfar" path="res://Scripts/CutsceneSequence.gd" id="2_seq"]
-[ext_resource type="Script" uid="uid://1lgnvkyd04cb" path="res://Scripts/CameraPan.gd" id="3_pan"]
+[ext_resource type="Script" path="res://Scripts/Cutscene/IntroManager.gd" id="1_manager"]
+[ext_resource type="Script" path="res://Scripts/Cutscene/CutsceneSequence.gd" id="2_seq"]
+[ext_resource type="Script" path="res://Scripts/Cutscene/CameraPan.gd" id="3_pan"]
 [ext_resource type="AudioStream" uid="uid://cwj0dt2xougdf" path="res://Audio/Soundtracks/an Autumn Wind.mp3" id="4_audio"]
 [ext_resource type="PackedScene" uid="uid://b8737oxrqtgs4" path="res://Scenes/final_store.tscn" id="5_store"]
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="6_cysq5"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="7_7h0lc"]
-[ext_resource type="Script" uid="uid://djedyju1up2f2" path="res://Scripts/FlickerLight.gd" id="8_qkryq"]
+[ext_resource type="Script" path="res://Scripts/World/Environment/FlickerLight.gd" id="8_qkryq"]
 
 [node name="IntroCutscene" type="Node" unique_id=1041759822]
 script = ExtResource("1_manager")
