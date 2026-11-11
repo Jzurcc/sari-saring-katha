@@ -72,6 +72,22 @@ func on_interact() -> void:
 	# Virtual method to be overridden by subclasses
 	pass
 
+## Returns true if this object can be picked up and dragged into the player's hand.
+func can_pickup() -> bool:
+	return false
+
+## Returns true if this object supports pricing adjustments.
+func can_adjust_price() -> bool:
+	return false
+
+## Adjusts the price of this object's item(s) by delta. Returns true if handled.
+func adjust_price(_delta: float) -> bool:
+	return false
+
+## Toggles pricing overlay display for this object when hovered.
+func set_pricing_ui_active(_active: bool) -> void:
+	pass
+
 func _input_event(_viewport_camera: Camera3D, event: InputEvent, _pos: Vector3, _normal: Vector3, _shape_idx: int) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

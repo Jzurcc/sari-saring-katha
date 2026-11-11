@@ -3,7 +3,7 @@
 ## The Area3D sits on collision layer 1 so PlayerInteraction's center-raycast
 ## detects it. This script simply forwards the game's standard on_hover /
 ## on_interact calls up to the parent RefrigeratorDoor node.
-extends Area3D
+extends WorldInteractor
 
 func on_hover(is_hovered: bool) -> void:
 	var door := get_parent() as RefrigeratorDoor

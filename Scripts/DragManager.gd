@@ -2,6 +2,8 @@ extends Node
 
 # ontop variables
 var _is_dragging: bool = false
+var is_dragging: bool:
+	get: return _is_dragging
 var _dragged_item: DraggableItem = null
 var _dragged_texture_rect: TextureRect = null
 var _canvas_layer: CanvasLayer = null

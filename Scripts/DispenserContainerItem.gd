@@ -96,8 +96,11 @@ func _spawn_and_drag_item(item_data: ItemData) -> void:
 	DragManager.start_drag(drag_item, item_data.texture)
 
 # Virtual methods to override in subclasses:
-func adjust_price(_delta: float) -> void:
-	pass
+func can_adjust_price() -> bool:
+	return _is_unlocked and not get_available_items().is_empty()
+
+func adjust_price(_delta: float) -> bool:
+	return false
 
 func update_pricing_ui() -> void:
 	pass

@@ -1,5 +1,5 @@
 class_name Customer
-extends Area3D
+extends WorldInteractor
 
 @warning_ignore("unused_signal")
 signal satisfied(customer: Customer)
@@ -33,6 +33,7 @@ var _visual_tween: Tween = null
 
 
 func _ready() -> void:
+	super._ready()
 	# Place customers on layer 5 (value 16) so PlayerInteraction can detect
 	# them with a dedicated raycast that passes through counters and items.
 	collision_layer = 0

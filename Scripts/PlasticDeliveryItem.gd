@@ -54,7 +54,7 @@ func _apply_outline(color: Color) -> void:
 		_outline_mat.set_shader_parameter("fixed_y_billboard", false)
 
 func on_interact() -> void:
-	if is_fading_in or DragManager._is_dragging:
+	if is_fading_in or DragManager.is_dragging:
 		return
 		
 	if items.is_empty():

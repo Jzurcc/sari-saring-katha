@@ -142,6 +142,12 @@ func on_hover(hovered: bool) -> void:
 		
 	_update_label_visibility()
 
+func can_pickup() -> bool:
+	return true
+
+func can_adjust_price() -> bool:
+	return item_data != null
+
 func set_pricing_ui_active(active: bool) -> void:
 	_pricing_mode_active = active
 	
@@ -154,9 +160,11 @@ func set_pricing_ui_active(active: bool) -> void:
 	elif not active and is_hovered:
 		_update_label_visibility()
 
-func adjust_price(delta: float) -> void:
-	if not item_data: return
+func adjust_price(delta: float) -> bool:
+	if not item_data:
+		return false
 	InventoryManager.adjust_item_price([item_data], delta)
+	return true
 
 func _get_pricing_overlay() -> Node:
 	return get_node_or_null("/root/PricingOverlay")
@@ -184,7 +192,7 @@ func update_pricing_ui() -> void:
 
 
 func on_interact() -> void:
-	if DragManager._is_dragging: return
+	if DragManager.is_dragging: return
 	var gm = get_tree().get_first_node_in_group("game_manager")
 	if gm and gm.tutorial and not gm.tutorial.can_pickup_item():
 		return

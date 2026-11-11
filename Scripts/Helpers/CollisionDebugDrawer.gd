@@ -48,3 +48,4 @@ static func draw_all_collision_shapes(node: Node) -> void:
 
 	for child in node.get_children():
 		draw_all_collision_shapes(child)
+

@@ -9,10 +9,11 @@ extends DispenserContainerItem
 
 @export var possible_candies: Array[ItemData] = []
 
-func adjust_price(delta: float) -> void:
+func adjust_price(delta: float) -> bool:
 	if possible_candies.is_empty():
-		return
+		return false
 	InventoryManager.adjust_item_price(possible_candies, delta)
+	return true
 
 func get_available_items() -> Array[ItemData]:
 	var items: Array[ItemData] = []
@@ -53,7 +54,7 @@ func _check_unlock_status() -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if _is_unlocked else Node.PROCESS_MODE_DISABLED
 
 func on_interact() -> void:
-	if not _is_unlocked or DragManager._is_dragging:
+	if not _is_unlocked or DragManager.is_dragging:
 		return
 	
 	_update_local_stock()
