@@ -25,6 +25,7 @@ var money: float = 0.0
 var quota_day: int = 1
 var _last_earning: float = 0.0
 var _pending_quota: float = 0.0  # Quota for the day that just ended (cached before day increments)
+var _is_ending_day: bool = false
 
 # --- Tutorial Manager Instance ---
 var tutorial: TutorialManager
@@ -111,11 +112,18 @@ func deduct_money(amount: float) -> bool:
 		return false
 
 func _on_day_ended(ended_day_number: int) -> void:
+	if _is_ending_day:
+		LogManager.warn("GameManager", "Duplicate day_ended signal ignored for Day %d." % ended_day_number)
+		return
+	_is_ending_day = true
 	LogManager.info("GameManager", "Day %d ended!" % ended_day_number)
 	
 	# 1. Start cinematic transition and fade music
 	AudioManager.fade_out_everything(2.0)
 	await SceneTransition.blink_and_blackout()
+	if not is_inside_tree():
+		_is_ending_day = false
+		return
 	
 	# 2. Show Sleep Overlay
 	var overlay = sleep_overlay_scene.instantiate()
@@ -124,6 +132,9 @@ func _on_day_ended(ended_day_number: int) -> void:
 	# Phase A: Closed shop message
 	overlay.display_text("You closed the shop and went to sleep.")
 	await overlay.completed
+	if not is_inside_tree() or not is_instance_valid(overlay):
+		_is_ending_day = false
+		return
 	
 	# Phase B: Sequential/Random Folklore Quote
 	var quote_index = (ended_day_number - 1)
@@ -135,10 +146,17 @@ func _on_day_ended(ended_day_number: int) -> void:
 		
 	overlay.display_text(quote)
 	await overlay.completed
+	if not is_inside_tree() or not is_instance_valid(overlay):
+		_is_ending_day = false
+		return
 	
 	# Phase C: Clean up
 	await overlay.fade_out()
-	overlay.queue_free()
+	if is_instance_valid(overlay):
+		overlay.queue_free()
+	if not is_inside_tree():
+		_is_ending_day = false
+		return
 
 	# Advance Day
 	StoryManager.day += 1
@@ -147,6 +165,7 @@ func _on_day_ended(ended_day_number: int) -> void:
 	
 	# 3. Open eyes for the new day
 	await SceneTransition.open_eyes()
+	_is_ending_day = false
 
 func _on_dialogic_signal(argument: String) -> void:
 	if argument == "deduct_quota":
@@ -257,6 +276,8 @@ func load_save_data(data: Dictionary) -> void:
 func reset_state() -> void:
 	money = starting_money
 	quota_day = 1
+	_pending_quota = 0.0
+	_is_ending_day = false
 	_reset_clock_to_morning()
 	LogManager.info("GameManager", "State reset to defaults for New Game.")
 
@@ -353,6 +374,8 @@ class TutorialManager extends RefCounted:
 		EventBus.helper_prompt_requested.emit(prompt, true)
 		
 		await gm.get_tree().create_timer(duration).timeout
+		if not is_instance_valid(gm) or not gm.is_inside_tree() or not is_tutorial_task_active:
+			return
 		
 		is_tutorial_task_active = false
 		is_blocking_pickup = false
@@ -376,6 +399,8 @@ class TutorialManager extends RefCounted:
 		EventBus.helper_prompt_requested.emit("", false)
 		
 		await gm.get_tree().create_timer(0.7).timeout
+		if not is_instance_valid(gm) or not gm.is_inside_tree():
+			return
 		
 		var layout = Dialogic.Styles.get_layout_node()
 		if layout: layout.show()

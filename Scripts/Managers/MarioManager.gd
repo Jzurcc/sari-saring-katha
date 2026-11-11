@@ -24,6 +24,7 @@ var is_mario_physically_present: bool = false
 const START_POS = Vector3(-15.299, 3.206, 20.0)
 const TARGET_POS = Vector3(-15.299, 3.206, -6.055)
 const EXIT_POS = Vector3(-15.299, 3.206, -45.0)
+const DEFAULT_PLASTIC_MARKER_POS := Vector3(0.9908627, 0.9105438, 2.585338)
 
 # Timing
 const DELIVERY_DELAY_SEC := 2.0
@@ -38,6 +39,9 @@ var _is_calling: bool = false
 var _delivery_sprite: Sprite3D = null
 var _sfx_player: AudioStreamPlayer
 var _cached_bags_data: Array = []
+var _call_session_id: int = 0
+var _delivery_session_id: int = 0
+var _pending_delivery_items: Dictionary = {}
 
 func _ready() -> void:
 	_sfx_player = AudioStreamPlayer.new()
@@ -56,6 +60,12 @@ func _ready() -> void:
 	
 	# Restore bags when the game session actually begins
 	EventBus.day_started.connect(_on_day_started)
+
+func _is_in_main_game() -> bool:
+	return get_tree() != null and get_tree().current_scene != null and get_tree().current_scene.name == "MainGame"
+
+func _restore_audio_bus() -> void:
+	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Master")
 
 # ── CALL LOGIC ───────────────────────────────────────────────────────
 
@@ -77,6 +87,8 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	_is_calling = true
 	is_restocking_active = true
 	_current_anchor = anchor
+	_call_session_id += 1
+	var session_id := _call_session_id
 	
 	var label := "Call"
 	var success_expected := true
@@ -103,13 +115,19 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	await get_tree().create_timer(delay).timeout
 	_sfx_player.stop()
 	
+	# Guard against call cancellation or scene exit during dial delay
+	if session_id != _call_session_id or not is_restocking_active or not _is_in_main_game() or not is_instance_valid(anchor):
+		LogManager.debug("MarioManager", "Call aborted during dial delay (cancelled or scene changed).")
+		_is_calling = false
+		_restore_audio_bus()
+		return
+	
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
 func _on_call_dialogue_ended(success: bool) -> void:
 	LogManager.info("MarioManager", "Call dialogue ended. Success: %s" % str(success))
 	_is_calling = false
-	# Revert dialogue blips to Master
-	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Master")
+	_restore_audio_bus()
 	
 	if not success:
 		is_restocking_active = false
@@ -118,9 +136,13 @@ func _on_call_dialogue_ended(success: bool) -> void:
 
 func cancel_restock() -> void:
 	LogManager.info("MarioManager", "Restock cancelled by player or system.")
+	_call_session_id += 1
 	is_restocking_active = false
 	_is_calling = false
 	_current_anchor = null
+	if _sfx_player and _sfx_player.playing:
+		_sfx_player.stop()
+	_restore_audio_bus()
 
 func trigger_sample_delivery(tier: int) -> void:
 	LogManager.info("MarioManager", "Triggering sample delivery for Tier %d" % tier)
@@ -144,7 +166,15 @@ func trigger_sample_delivery(tier: int) -> void:
 func start_delivery(items_to_restock: Dictionary) -> void:
 	LogManager.info("MarioManager", "Starting delivery sequence...")
 	is_mario_physically_present = true
+	_delivery_session_id += 1
+	var session_id := _delivery_session_id
+	_pending_delivery_items = items_to_restock.duplicate()
+	
 	await get_tree().create_timer(DELIVERY_DELAY_SEC).timeout
+	if session_id != _delivery_session_id or not _is_in_main_game():
+		LogManager.debug("MarioManager", "Delivery sequence aborted before arrival (scene changed or reset).")
+		flush_pending_delivery()
+		return
 	
 	# 1. Setup Tricycle
 	_delivery_sprite = Sprite3D.new()
@@ -177,31 +207,54 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	
 	# 2. Arrive
 	_play_sfx(sfx_arrive)
-	var arrive_tween = create_tween()
+	var arrive_tween = create_tween().bind_node(_delivery_sprite)
 	arrive_tween.set_parallel(true)
 	arrive_tween.tween_property(_delivery_sprite, "position:z", TARGET_POS.z, 3.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	arrive_tween.tween_property(_delivery_sprite, "position:x", TARGET_POS.x, 3.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	arrive_tween.tween_property(_delivery_sprite, "position:y", TARGET_POS.y + 0.15, 0.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	
 	await arrive_tween.finished
-	if _sfx_player.playing: await _sfx_player.finished
+	if session_id != _delivery_session_id or not _is_in_main_game() or not is_instance_valid(_delivery_sprite):
+		LogManager.debug("MarioManager", "Delivery sequence aborted during arrival.")
+		flush_pending_delivery()
+		return
+	if _sfx_player.playing:
+		await _sfx_player.finished
+	if session_id != _delivery_session_id or not _is_in_main_game() or not is_instance_valid(_delivery_sprite):
+		LogManager.debug("MarioManager", "Delivery sequence aborted after arrival SFX.")
+		flush_pending_delivery()
+		return
 	
 	# 3. Delivery Dialogue
 	_current_anchor = _delivery_sprite
 	
 	EventBus.customer_arrived.emit(null)
 	
-	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock), "Delivery")
+	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock, session_id), "Delivery")
 
 
-func _on_delivery_dialogue_ended(items: Dictionary) -> void:
+## Immediately commits any in-flight paid order so stock, tier upgrades, and bags are never lost on save/exit.
+func flush_pending_delivery() -> void:
+	if _pending_delivery_items.is_empty():
+		return
+	LogManager.info("MarioManager", "Flushing in-flight delivery order to persistent stock & bag cache.")
+	_commit_pending_delivery(_is_in_main_game())
+
+
+func _commit_pending_delivery(spawn_in_tree: bool) -> void:
+	if _pending_delivery_items.is_empty():
+		return
+	var items := _pending_delivery_items.duplicate()
+	_pending_delivery_items.clear()
+
 	# 1. Finalize Stock Immediately (Digital pool always has the total)
 	for item in items.keys():
 		InventoryManager.add_stock(item, items[item])
 	
 	# 2. Plastic Bag Delivery Logic
 	LogManager.info("MarioManager", "Processing delivery bags...")
-	var marker = get_tree().root.find_child("PlasticMarker", true, false)
+	var marker = get_tree().root.find_child("PlasticMarker", true, false) if get_tree() and get_tree().root else null
+	var base_marker_pos: Vector3 = marker.global_position if marker else DEFAULT_PLASTIC_MARKER_POS
 	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
 	
 	var items_to_bag: Array[ItemData] = []
@@ -228,7 +281,6 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:
-		var _start_tier = StoryManager.current_tier
 		while StoryManager.current_tier < target_tier:
 			StoryManager.advance_tier("Mario Delivery")
 			var new_tier = StoryManager.current_tier
@@ -249,45 +301,65 @@ func _on_delivery_dialogue_ended(items: Dictionary) -> void:
 	var batch_size = 5
 	for i in range(0, items_to_bag.size(), batch_size):
 		var batch = items_to_bag.slice(i, i + batch_size)
-		var bag = plastic_scene.instantiate()
-		get_tree().current_scene.add_child(bag)
-		
-		# Transfer item data to bag
-		bag.items = batch
-		
-		# Positioning at marker with slight random offset for grouping
-		if marker:
-			var offset = Vector3(
-				randf_range(-1.1, 1.1),
-				0.05, # Slight lift
-				randf_range(-1.1, 1.1)
-			)
-			bag.global_position = marker.global_position + offset
+		var offset = Vector3(
+			randf_range(-1.1, 1.1),
+			0.05, # Slight lift
+			randf_range(-1.1, 1.1)
+		)
+		var bag_pos := base_marker_pos + offset
+		if spawn_in_tree and _is_in_main_game():
+			var bag = plastic_scene.instantiate()
+			get_tree().current_scene.add_child(bag)
+			bag.items = batch
+			bag.global_position = bag_pos
 		else:
-			LogManager.error("MarioManager", "PlasticMarker not found in scene! Spawning at default.")
+			var item_paths: Array = []
+			for batch_item in batch:
+				item_paths.append(batch_item.resource_path)
+			_cached_bags_data.append({
+				"pos_x": bag_pos.x,
+				"pos_y": bag_pos.y,
+				"pos_z": bag_pos.z,
+				"items": item_paths
+			})
 	
-	_refresh_containers(get_tree().root)
+	if spawn_in_tree and get_tree() and get_tree().root:
+		_refresh_containers(get_tree().root)
 
+
+func _on_delivery_dialogue_ended(_items: Dictionary, session_id: int = -1) -> void:
+	_restore_audio_bus()
+	_commit_pending_delivery(_is_in_main_game())
 	
 	# 3. Clear interaction blockers immediately so customers can be clicked 
 	# while Mario is driving off.
 	_current_anchor = null
 	is_restocking_active = false
 	
+	if (session_id != -1 and session_id != _delivery_session_id) or not _is_in_main_game() or not is_instance_valid(_delivery_sprite):
+		if is_instance_valid(_delivery_sprite):
+			_delivery_sprite.queue_free()
+		_delivery_sprite = null
+		is_mario_physically_present = false
+		return
+
 	# 4. Leave sequence
 	_play_sfx(sfx_leave)
-	var leave_tween = create_tween()
+	var leave_tween = create_tween().bind_node(_delivery_sprite)
 	leave_tween.tween_property(_delivery_sprite, "position:z", EXIT_POS.z, 3.5).set_trans(Tween.TRANS_LINEAR)
 	await leave_tween.finished
-	if _sfx_player.playing: await _sfx_player.finished
+	if _sfx_player.playing and _is_in_main_game():
+		await _sfx_player.finished
 	
 	# 5. Cleanup
-	_delivery_sprite.queue_free()
+	if is_instance_valid(_delivery_sprite):
+		_delivery_sprite.queue_free()
 	_delivery_sprite = null
 	is_mario_physically_present = false
 	
-	EventBus.customer_dismissed.emit(null)
-	delivery_finished.emit()
+	if _is_in_main_game():
+		EventBus.customer_dismissed.emit(null)
+		delivery_finished.emit()
 
 func _on_day_started(_day: int) -> void:
 	_check_and_spawn_bags()
@@ -339,6 +411,10 @@ func _check_and_spawn_bags() -> void:
 # ── SAVE / LOAD LOGIC ────────────────────────────────────────────────
 
 func get_save_data() -> Dictionary:
+	# Ensure any in-flight paid order is committed before serializing bags
+	if not _pending_delivery_items.is_empty():
+		_commit_pending_delivery(false)
+
 	var bags_data = []
 	for bag in get_tree().get_nodes_in_group("delivery_bag"):
 		var item_paths = []
@@ -352,12 +428,9 @@ func get_save_data() -> Dictionary:
 			"items": item_paths
 		})
 	
-	# If no bags are in the tree, fallback to our cached data so we don't 
-	# overwrite the save file with an empty list if SaveManager.force_save()
-	# is called while in the Main Menu or a transition.
-	if bags_data.is_empty() and not _cached_bags_data.is_empty():
-		LogManager.debug("MarioManager", "get_save_data: No bags in tree, returning %d cached entries." % _cached_bags_data.size())
-		return { "bags": _cached_bags_data }
+	# Include any cached bags that haven't been spawned in the scene yet
+	if not _cached_bags_data.is_empty():
+		bags_data.append_array(_cached_bags_data)
 		
 	return {
 		"bags": bags_data
@@ -377,10 +450,20 @@ func load_save_data(data: Dictionary) -> void:
 	# (LOGIC MOVED TO _check_and_spawn_bags)
 
 func reset_state() -> void:
+	_call_session_id += 1
+	_delivery_session_id += 1
+	_pending_delivery_items.clear()
 	_cached_bags_data.clear()
 	is_restocking_active = false
 	is_mario_physically_present = false
 	_is_calling = false
+	_current_anchor = null
+	if is_instance_valid(_delivery_sprite):
+		_delivery_sprite.queue_free()
+	_delivery_sprite = null
+	if _sfx_player and _sfx_player.playing:
+		_sfx_player.stop()
+	_restore_audio_bus()
 	LogManager.info("MarioManager", "State reset for New Game.")
 
 
@@ -392,7 +475,7 @@ func reset_state() -> void:
 ##   3. Register character anchor for bubble positioning
 func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, label: String = "") -> void:
 	LogManager.debug("MarioManager", "  Path:   %s" % timeline_path)
-	LogManager.debug("MarioManager", "  Anchor: %s" % (str(anchor.name) if anchor else "NULL"))
+	LogManager.debug("MarioManager", "  Anchor: %s" % (str(anchor.name) if is_instance_valid(anchor) else "NULL"))
 	
 	# 1. Verify the file exists
 	if not ResourceLoader.exists(timeline_path):
@@ -404,6 +487,10 @@ func _start_dialogue(timeline_path: String, anchor: Node, callback: Callable, la
 	if Dialogic.current_timeline != null:
 		LogManager.debug("MarioManager", "  Dialogic busy — waiting for current timeline to end...")
 		await Dialogic.timeline_ended
+		if not _is_in_main_game() or not is_instance_valid(anchor):
+			LogManager.debug("MarioManager", "  Anchor or MainGame invalid after waiting for Dialogic. Aborting.")
+			callback.call()
+			return
 		LogManager.debug("MarioManager", "  Previous timeline ended. Proceeding with Mario call.")
 	
 	# 3. Load the FollowBubble style FIRST (this is how Dialogic works)
