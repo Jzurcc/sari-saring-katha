@@ -31,6 +31,33 @@ func get_clean_id() -> String:
 ## Set to 0 if the character has no main story arc.
 @export var max_story_chapters: int = 0
 
+@export_group("Behavior Traits")
+## If true, this customer prefers items with riddles/hints (e.g. Buboy).
+@export var prefers_riddles: bool = false
+## If true, this customer requests to pay via Utang/debt on purchases (e.g. Manang Ana).
+@export var requests_utang: bool = false
+## If true, this customer spreads rumors about previous customers (e.g. Danilo).
+@export var spreads_rumors: bool = false
+## If true, generic transactions stay visit-only until reaching the final story chapter (e.g. Danilo).
+@export var purchase_only_on_final_chapter: bool = false
+## If true, this character only appears as the nightly quota collector, bypassing day spawns (e.g. Reyna Mayari).
+@export var is_nightly_collector: bool = false
+
+func has_riddle_preference() -> bool:
+	return prefers_riddles or get_clean_id() == "buboy"
+
+func can_request_utang() -> bool:
+	return requests_utang or get_clean_id() == "manangana"
+
+func can_spread_rumors() -> bool:
+	return spreads_rumors or get_clean_id() == "danilo"
+
+func is_visit_only_until_final_chapter() -> bool:
+	return purchase_only_on_final_chapter or get_clean_id() == "danilo"
+
+func is_collector() -> bool:
+	return is_nightly_collector or get_clean_id() == "reynamayari"
+
 @export_group("Chapter Overrides")
 
 ## Per-chapter item category for purchase requests (index = chapter number, 0-based).
