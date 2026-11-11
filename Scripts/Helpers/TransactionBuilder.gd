@@ -65,6 +65,8 @@ static func inject_special_customer(sm: Node) -> TransactionContext:
 		tutorial_t.customer_data = tutorial_char_data
 		tutorial_t.transaction_type = TransactionContext.Type.VISIT
 		tutorial_t.timeline = tutorial_char_data.story_timeline
+		tutorial_t.is_guided_tutorial = true
+		tutorial_t.blocks_phone_call = true
 		var anoba: ItemData = load(ANOBA_ITEM_PATH)
 		tutorial_t.desired_items.append(anoba)
 		LogManager.info("STORY", "Spawning Uncle Mario Tutorial")

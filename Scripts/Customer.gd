@@ -103,8 +103,7 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 		# Ensure the root node stays at unit scale.
 		self.scale = Vector3.ONE
 		
-		# If this is Uncle Mario (Tutorial), mark him present to block phone calls
-		if customer_data and customer_data.get_clean_id() == "unclemario":
+		if transaction_context and transaction_context.blocks_phone_call:
 			MarioManager.is_mario_physically_present = true
 
 
@@ -201,20 +200,17 @@ func check_item(item: ItemData) -> bool:
 	if not is_waiting or _is_resolving:
 		return false
 		
-	# --- Special Case: Uncle Mario Tutorial ---
-	# He is set as a VISIT type during the tutorial to bypass regular greeting logic,
-	# but we need him to accept an item to finish the tutorial properly.
-	if customer_data and customer_data.get_clean_id() == "unclemario":
-		var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
-		if gm and gm.tutorial.is_tutorial_task_active:
-			if gm.tutorial.current_tutorial_task_id in ["allow_sale_early", "wait_for_sale"]:
-				if transaction_context and transaction_context.fulfill_item(item):
-					_on_item_accepted(item)
-					
-					# Complete the task
-					gm.tutorial._on_tutorial_task_completed()
-					return true
-			return false
+	# --- Guided Tutorial Encounter ---
+	# Guided tutorial encounters use VISIT to bypass regular greeting logic,
+	# and delegate item acceptance to TutorialManager when a sale task is active.
+	if transaction_context and transaction_context.is_guided_tutorial:
+		var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+		if gm and gm.tutorial and gm.tutorial.can_accept_guided_item():
+			if transaction_context.fulfill_item(item):
+				_on_item_accepted(item)
+				gm.tutorial.complete_active_task()
+				return true
+		return false
 
 	# Visiting customers (including Visit-type story chapters) should never receive items — silent red outline.
 	if transaction_context:
@@ -310,7 +306,7 @@ func _leave_store(completion_signal: Signal) -> void:
 	
 	await exit_tween.finished
 	
-	if customer_data and customer_data.get_clean_id() == "unclemario":
+	if transaction_context and transaction_context.blocks_phone_call:
 		MarioManager.is_mario_physically_present = false
 		
 	# Emit completion signal only once FULLY resolved (gone from the scene)

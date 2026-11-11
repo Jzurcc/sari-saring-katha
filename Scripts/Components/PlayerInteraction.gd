@@ -50,12 +50,8 @@ func _physics_process(_delta: float) -> void:
 	# While dialogue is open, we still allow raycasting if the mouse is captured
 	# (so players can see the pricing UI/hover outlines).
 	# However, we block it if the mouse is free (mouse mode != captured).
-	var is_in_timeline = Dialogic.current_timeline != null
 	if not is_instance_valid(_game_manager):
 		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
-	var gm := _game_manager
-	var _is_tutorial_task = gm and gm.tutorial.is_tutorial_task_active
-	var _is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
 
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		if is_instance_valid(_last_hovered) and _last_hovered.has_method("on_hover"):
@@ -118,27 +114,11 @@ func _input(event: InputEvent) -> void:
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		return
 	# Block world interaction triggers while dialogue is open,
-	# unless we are currently in the tutorial or a tutorial task.
-	var is_in_timeline = Dialogic.current_timeline != null
+	# unless permitted by the active guided interaction / tutorial state.
 	if not is_instance_valid(_game_manager):
 		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
 	var gm := _game_manager
-	var is_tutorial_task = gm and gm.tutorial.is_tutorial_task_active
-	var is_mario_tutorial = is_in_timeline and _is_mario_tutorial_active()
-	
-	# Detect if Dialogic UI is actually visible
-	var is_dialogue_ui_visible = false
-	var layout = Dialogic.Styles.get_layout_node()
-	if is_instance_valid(layout) and layout.visible:
-		is_dialogue_ui_visible = true
-	
-	# NEW: Interaction rules - Fully permissive for Mario tutorial as requested
-	var allow_interaction = false
-	if not is_in_timeline or not is_dialogue_ui_visible:
-		allow_interaction = true
-	elif is_tutorial_task or is_mario_tutorial:
-		allow_interaction = true
-	
+	var allow_interaction: bool = gm.tutorial.can_interact_with_world() if (gm and gm.tutorial) else (Dialogic.current_timeline == null)
 	if not allow_interaction:
 		return
 	
@@ -228,7 +208,7 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 				target.on_interact()
 			elif target.is_in_group("draggable_items"):
-				if gm and gm.tutorial and gm.tutorial.is_blocking_pickup:
+				if gm and gm.tutorial and not gm.tutorial.can_pickup_item():
 					return
 				get_viewport().set_input_as_handled()
 				_pickup_item(target)
@@ -236,20 +216,6 @@ func _input(event: InputEvent) -> void:
 				print("[PI-DEBUG] Left click on valid hovered object, but no interact/drag method: ", target.name, " (Original: ", _last_hovered.name, ")")
 		else:
 			print("[PI-DEBUG] Left click, but _last_hovered is null/invalid")
-
-## Returns true if the currently active Dialogic timeline is the Uncle Mario tutorial.
-## Safe to call even when current_timeline is a String (Dialogic sometimes stores it that way).
-func _is_mario_tutorial_active() -> bool:
-	var tl = Dialogic.current_timeline
-	if tl == null:
-		return false
-	var res = false
-	if typeof(tl) == TYPE_STRING:
-		res = tl.to_lower().contains("unclemario")
-	elif "resource_path" in tl:
-		res = tl.resource_path.to_lower().contains("unclemario")
-	
-	return res
 
 func _pickup_item(item: DraggableItem) -> void:
 	DragManager.start_drag(item, item.sprite.texture)

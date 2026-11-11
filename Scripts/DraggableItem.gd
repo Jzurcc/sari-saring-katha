@@ -186,7 +186,7 @@ func update_pricing_ui() -> void:
 func on_interact() -> void:
 	if DragManager._is_dragging: return
 	var gm = get_tree().get_first_node_in_group("game_manager")
-	if gm and gm.tutorial and gm.tutorial.is_blocking_pickup:
+	if gm and gm.tutorial and not gm.tutorial.can_pickup_item():
 		return
 	EventBus.request_sfx.emit("pickup")
 	DragManager.start_drag(self, sprite.texture)

@@ -33,6 +33,8 @@ var rumor_active: bool = false
 var rumor_type: float = 0.0
 var is_visit_story: bool = false
 var story_advanced: bool = false
+var is_guided_tutorial: bool = false
+var blocks_phone_call: bool = false
 
 func _is_match(item: ItemData, desired: ItemData) -> bool:
 	return (
@@ -98,7 +100,9 @@ func to_dict() -> Dictionary:
 		"rumor_active": rumor_active,
 		"rumor_type": rumor_type,
 		"is_visit_story": is_visit_story,
-		"story_advanced": story_advanced
+		"story_advanced": story_advanced,
+		"is_guided_tutorial": is_guided_tutorial,
+		"blocks_phone_call": blocks_phone_call
 	}
 
 static func from_dict(data: Dictionary) -> TransactionContext:
@@ -144,6 +148,8 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.rumor_type = data.get("rumor_type", 0.0)
 	ctx.is_visit_story = data.get("is_visit_story", false)
 	ctx.story_advanced = data.get("story_advanced", false)
+	ctx.is_guided_tutorial = data.get("is_guided_tutorial", false)
+	ctx.blocks_phone_call = data.get("blocks_phone_call", false)
 	
 	if not ctx.desired_items.is_empty() or not ctx.delivered_items.is_empty():
 		LogManager.info("TransactionContext", "Restored: %d desired, %d delivered items." % [ctx.desired_items.size(), ctx.delivered_items.size()])

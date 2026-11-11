@@ -378,12 +378,12 @@ func _on_customer_satisfied(customer) -> void:
 	if customer.transaction_context and customer.transaction_context.transaction_type != TransactionContext.Type.VISIT:
 		purchase_counter += 1
 		
-	# Tutorial Persistence: If this was Uncle Mario, mark the tutorial as complete now.
-	if customer.customer_data and customer.customer_data.get_clean_id() == "unclemario":
-		var tutorial_path := "res://Resources/customers/UncleMario.tres"
-		CharacterProgressionManager.advance_story_direct(tutorial_path)
-		CharacterProgressionManager.record_encounter(tutorial_path)
-		LogManager.info("StoryManager", "Uncle Mario tutorial successfully completed and saved.")
+	# Tutorial Persistence: If this encounter was the guided tutorial, mark it complete now.
+	if customer.transaction_context and customer.transaction_context.is_guided_tutorial:
+		complete_tutorial()
+		if customer.customer_data:
+			CharacterProgressionManager.record_encounter(customer.customer_data.resource_path)
+		LogManager.info("StoryManager", "Guided tutorial encounter successfully completed and saved.")
 
 func _on_customer_arrived(_customer: Customer) -> void:
 	clock.on_customer_arrived()

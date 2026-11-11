@@ -123,14 +123,10 @@ func _on_tray_item_placed(item: DraggableItem) -> void:
 					if spawner and spawner.session:
 						spawner.session.on_wrong_item_given(customer)
 				else:
-					# Special Tutorial Handling: If Uncle Mario is blocking items.
-					var is_mario = customer.customer_data and customer.customer_data.get_clean_id() == "unclemario"
-					var gm = get_tree().get_first_node_in_group("game_manager") as GameManager
-					var is_tut_block = gm and gm.tutorial.is_tutorial_task_active and gm.tutorial.current_tutorial_task_id != "wait_for_sale"
-					
-					if is_mario and is_tut_block:
-						# Just skip feedback, item will return to shelf automatically at end of function
-						LogManager.debug("MainGame", "Suppressing WrongItem feedback for Mario during tutorial.")
+					var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+					if gm and gm.tutorial and gm.tutorial.should_suppress_wrong_item_feedback(context):
+						# Skip feedback while a non-sale guided task is active; item returns to shelf at end of function
+						LogManager.debug("MainGame", "Suppressing WrongItem feedback during guided tutorial task.")
 					else:
 						EventBus.transaction_completed.emit(item.item_data, false, context.wants_debt, c_path)
 						# Wrong item — play per-character reaction. CustomerSpawner handles the jump if talking.
