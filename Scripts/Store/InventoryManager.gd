@@ -2,8 +2,6 @@ extends Node
 
 signal stock_changed(item: ItemData, new_stock: int)
 
-var save_id: String = "inventory_manager"
-
 ## Tracks item stock counts across the game.
 ## Key: ItemData.resource_path → Value: current stock count.
 
@@ -66,15 +64,12 @@ func _load_folder(folder_path: String) -> void:
 	dir.list_dir_begin()
 	var file_name: String = dir.get_next()
 	while file_name != "":
-		if not dir.current_is_dir():
-			if file_name.ends_with(".tres") or file_name.ends_with(".tres.remap"):
-				# In exported builds, .tres files are often remapped. 
-				# We strip the .remap suffix if present so load() can find the binary resource.
-				var res_path = folder_path + "/" + file_name.trim_suffix(".remap")
-				var res: Resource = load(res_path)
-				if res is ItemData:
-					_items.append(res)
-					_stock[res.resource_path] = 0
+		if not dir.current_is_dir() and (file_name.ends_with(".tres") or file_name.ends_with(".tres.remap")):
+			var res_path = folder_path + "/" + file_name.trim_suffix(".remap")
+			var res: Resource = load(res_path)
+			if res is ItemData:
+				_items.append(res)
+				_stock[res.resource_path] = 0
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
@@ -266,29 +261,29 @@ func take_item(item: ItemData) -> bool:
 	var count: int = _stock.get(item.resource_path, 0)
 	if count <= 0:
 		return false
-	_stock[item.resource_path] = count - 1
-	stock_changed.emit(item, _stock[item.resource_path])
+	_set_stock(item, count - 1)
 	return true
 
 ## Add stock back (e.g. when a drag is cancelled).
 func return_item(item: ItemData) -> void:
 	var count: int = _stock.get(item.resource_path, 0)
-	_stock[item.resource_path] = mini(count + 1, get_max_stock(item))
-	stock_changed.emit(item, _stock[item.resource_path])
+	_set_stock(item, mini(count + 1, get_max_stock(item)))
 
 ## Restock an item to a specific count (capped at get_max_stock).
 func restock_item(item: ItemData, count: int = -1) -> void:
 	var limit: int = get_max_stock(item)
 	if count < 0:
 		count = limit
-	_stock[item.resource_path] = mini(count, limit)
-	stock_changed.emit(item, _stock[item.resource_path])
+	_set_stock(item, mini(count, limit))
 
 ## Add a delta amount of stock (e.g. ordered quantity), capped at get_max_stock.
 func add_stock(item: ItemData, amount: int) -> void:
 	var current: int = _stock.get(item.resource_path, 0) as int
-	_stock[item.resource_path] = mini(current + amount, get_max_stock(item))
-	stock_changed.emit(item, _stock[item.resource_path])
+	_set_stock(item, mini(current + amount, get_max_stock(item)))
+
+func _set_stock(item: ItemData, new_count: int) -> void:
+	_stock[item.resource_path] = new_count
+	stock_changed.emit(item, new_count)
 
 func decrement_cooldown() -> void:
 	if customers_needed_for_delivery > 0:

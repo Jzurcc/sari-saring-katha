@@ -66,7 +66,7 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 		_dragged_texture_rect.size = Vector2(display_w, display_h)
 		_dragged_texture_rect.pivot_offset = _dragged_texture_rect.size / 2.0
 		# Start from slightly below for a nice jump-in animation
-		_dragged_texture_rect.position = get_viewport().get_mouse_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 150)
+		_dragged_texture_rect.position = _get_screen_pointer_position() - (_dragged_texture_rect.size / 2.0) + Vector2(0, 150)
 		_dragged_texture_rect.show()
 		
 		# Squash and stretch pop-in animation
@@ -81,8 +81,7 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	_dragged_texture_rect.rotation = 0.0
 
 	# Setup 3D Ghost Preview
-	if is_instance_valid(_ghost_parent):
-		_ghost_parent.queue_free()
+	_cleanup_ghost()
 	
 	_ghost_parent = Node3D.new()
 	_ghost_parent.hide()
@@ -108,12 +107,7 @@ func _process(_delta: float) -> void:
 	if not _is_dragging:
 		return
 
-	var target_pos: Vector2
-	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		target_pos = get_viewport().get_visible_rect().size / 2.0
-	else:
-		target_pos = get_viewport().get_mouse_position()
-		
+	var target_pos := _get_screen_pointer_position()
 	# Offset downward to mimic holding the item rather than impaling it on the crosshair/cursor
 	target_pos.y += _dragged_texture_rect.size.y * 0.45
 
@@ -139,26 +133,7 @@ func _process(_delta: float) -> void:
 	var target_rotation = _sway_offset.x * 0.003
 	_dragged_texture_rect.rotation = lerp(_dragged_texture_rect.rotation, target_rotation, 15.0 * _delta)
 
-	# --- 3D Ghost Preview Logic ---
-	var result := _get_drag_raycast_result()
-	var valid_ghost := false
-	if result and result.collider:
-		var collider = (result.collider as Node)
-		if collider.is_in_group("shelf_drop_zone"):
-			var shelf = collider.get_parent()
-			if shelf and shelf.has_method("get_drop_preview_transform"):
-				var preview_transform = shelf.get_drop_preview_transform(result.position)
-				if preview_transform != null and is_instance_valid(_ghost_parent):
-					_ghost_parent.show()
-					_ghost_parent.global_transform = preview_transform
-					
-					var can_accept = shelf.accepts_drop(_dragged_item.item_data)
-					if is_instance_valid(_ghost_sprite):
-						_ghost_sprite.modulate = Color(1.0, 1.0, 1.0, 0.4) if can_accept else Color(1.0, 0.3, 0.3, 0.5)
-					valid_ghost = true
-
-	if not valid_ghost and is_instance_valid(_ghost_parent):
-		_ghost_parent.hide()
+	_update_ghost_preview()
 
 func _input(event: InputEvent) -> void:
 	if not _is_dragging:
@@ -185,10 +160,7 @@ func end_drag() -> void:
 	_dragged_texture_rect.hide()
 
 	var success = false
-
-	if is_instance_valid(_ghost_parent):
-		_ghost_parent.queue_free()
-
+	_cleanup_ghost()
 
 	var camera := get_viewport().get_camera_3d()
 	if not camera:
@@ -235,12 +207,7 @@ func _get_drag_raycast_result() -> Dictionary:
 	if not camera:
 		return {}
 
-	var screen_pos: Vector2
-	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		screen_pos = get_viewport().get_visible_rect().size / 2.0
-	else:
-		screen_pos = get_viewport().get_mouse_position()
-
+	var screen_pos := _get_screen_pointer_position()
 	var ray_origin := camera.project_ray_origin(screen_pos)
 	var ray_dir := camera.project_ray_normal(screen_pos)
 	var ray_end := ray_origin + ray_dir * 50.0
@@ -269,10 +236,7 @@ func force_cancel_drag() -> void:
 	set_process(false)
 	if is_instance_valid(_dragged_texture_rect):
 		_dragged_texture_rect.hide()
-	if is_instance_valid(_ghost_parent):
-		_ghost_parent.queue_free()
-	_ghost_parent = null
-	_ghost_sprite = null
+	_cleanup_ghost()
 	_cancel_drag()
 
 
@@ -288,5 +252,48 @@ func _on_node_removed(node: Node) -> void:
 		set_process(false)
 		_dragged_item = null
 		_dragged_texture_rect.hide()
-		if is_instance_valid(_ghost_parent):
-			_ghost_parent.queue_free()
+		_cleanup_ghost()
+
+
+func _get_screen_pointer_position() -> Vector2:
+	if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		return get_viewport().get_visible_rect().size / 2.0
+	return get_viewport().get_mouse_position()
+
+
+func _cleanup_ghost() -> void:
+	if is_instance_valid(_ghost_parent):
+		_ghost_parent.queue_free()
+	_ghost_parent = null
+	_ghost_sprite = null
+
+
+func _update_ghost_preview() -> void:
+	if not is_instance_valid(_ghost_parent):
+		return
+
+	var result := _get_drag_raycast_result()
+	if result.is_empty() or not result.collider:
+		_ghost_parent.hide()
+		return
+
+	var collider = result.collider as Node
+	if not collider.is_in_group("shelf_drop_zone"):
+		_ghost_parent.hide()
+		return
+
+	var shelf = collider.get_parent()
+	if not (shelf and shelf.has_method("get_drop_preview_transform")):
+		_ghost_parent.hide()
+		return
+
+	var preview_transform = shelf.get_drop_preview_transform(result.position)
+	if preview_transform == null:
+		_ghost_parent.hide()
+		return
+
+	_ghost_parent.show()
+	_ghost_parent.global_transform = preview_transform
+	if is_instance_valid(_ghost_sprite):
+		var can_accept = shelf.accepts_drop(_dragged_item.item_data)
+		_ghost_sprite.modulate = Color(1.0, 1.0, 1.0, 0.4) if can_accept else Color(1.0, 0.3, 0.3, 0.5)

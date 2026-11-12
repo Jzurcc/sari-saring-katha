@@ -156,21 +156,24 @@ func _create_drop_zone() -> void:
 	add_child(area)
 
 
+func _init_slots() -> bool:
+	if not layout_strategy:
+		return false
+	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
+	_slot_occupants.clear()
+	_slot_occupants.resize(_slot_transforms.size())
+	_slot_occupants.fill(null)
+	return true
+
 ## Spawn [DraggableItem] nodes for each entry in [member items],
 ## filling slots left-to-right from the pre-generated slot list.
 ## Safe to call multiple times — clears existing spawns first.
 func populate() -> void:
 	_clear()
 
-	if not layout_strategy:
+	if not _init_slots():
 		push_error("[ShelfSurface] '%s': Cannot populate — no layout_strategy." % name)
 		return
-
-	# Regenerate slots every time we populate (random tilt/depth per session).
-	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
-	_slot_occupants.clear()
-	_slot_occupants.resize(_slot_transforms.size())
-	_slot_occupants.fill(null)
 
 	# Build the validated item list.
 	var spawn_list: Array[ItemData] = []
@@ -197,12 +200,7 @@ func populate() -> void:
 		if slot_idx >= _slot_transforms.size():
 			push_warning("[ShelfSurface] '%s': No more slots for '%s'." % [name, item.item_name])
 			break
-		var d: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
-		add_child(d)
-		d.setup(item, _slot_transforms[slot_idx])
-		d.set_meta("slot_index", slot_idx)
-		_slot_occupants[slot_idx] = d
-		_spawned.append(d)
+		place_item_in_slot(item, slot_idx)
 		slot_idx += 1
 
 	LogManager.info("ShelfSurface", "'%s' placed %d/%d items in %d slots" % [name, _spawned.size(), spawn_list.size(), _slot_transforms.size()])
@@ -298,30 +296,32 @@ func get_drop_preview_transform(world_hit_pos: Vector3) -> Variant:
 	return Transform3D(slot_transform.basis, world_pos)
 
 
-## Returns the number of currently occupied slots on this surface.
-func get_occupied_count() -> int:
-	var count: int = 0
+func _get_valid_occupants() -> Array[DraggableItem]:
+	var valid: Array[DraggableItem] = []
 	for occ in _slot_occupants:
 		if occ != null and is_instance_valid(occ):
-			count += 1
-	return count
+			valid.append(occ)
+	return valid
+
+## Returns the number of currently occupied slots on this surface.
+func get_occupied_count() -> int:
+	return _get_valid_occupants().size()
 
 
 ## Returns an array of unique [ItemData] resources currently placed on this surface.
 func get_unique_items() -> Array[ItemData]:
 	var result: Array[ItemData] = []
-	for occ in _slot_occupants:
-		if occ != null and is_instance_valid(occ) and occ.item_data:
-			if not result.has(occ.item_data):
-				result.append(occ.item_data)
+	for occ in _get_valid_occupants():
+		if occ.item_data and not result.has(occ.item_data):
+			result.append(occ.item_data)
 	return result
 
 
 ## Returns all [ItemData] resources placed on this surface, including duplicates.
 func get_all_placed_items() -> Array[ItemData]:
 	var result: Array[ItemData] = []
-	for occ in _slot_occupants:
-		if occ != null and is_instance_valid(occ) and occ.item_data:
+	for occ in _get_valid_occupants():
+		if occ.item_data:
 			result.append(occ.item_data)
 	return result
 
@@ -330,8 +330,8 @@ func get_all_placed_items() -> Array[ItemData]:
 func has_item(item: ItemData) -> bool:
 	if not item:
 		return false
-	for occ in _slot_occupants:
-		if occ != null and is_instance_valid(occ) and occ.item_data == item:
+	for occ in _get_valid_occupants():
+		if occ.item_data == item:
 			return true
 	return false
 
@@ -341,8 +341,8 @@ func get_item_count(item: ItemData) -> int:
 	if not item:
 		return 0
 	var count: int = 0
-	for occ in _slot_occupants:
-		if occ != null and is_instance_valid(occ) and occ.item_data == item:
+	for occ in _get_valid_occupants():
+		if occ.item_data == item:
 			count += 1
 	return count
 
@@ -479,12 +479,8 @@ func load_save_data(data: Dictionary) -> void:
 	_clear()
 	
 	# Rebuild slot transforms
-	if not layout_strategy:
+	if not _init_slots():
 		return
-	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
-	_slot_occupants.clear()
-	_slot_occupants.resize(_slot_transforms.size())
-	_slot_occupants.fill(null)
 	
 	var slots_data: Array = data.get("slots", [])
 	var placed := 0
