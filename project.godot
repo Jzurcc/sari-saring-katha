@@ -31,7 +31,6 @@ buses/default_bus_layout="uid://b3scee0b03k1u"
 EventBus="*res://Scripts/Core/EventBus.gd"
 DragManager="*res://Scripts/World/DragManager.gd"
 InventoryManager="*res://Scripts/Store/InventoryManager.gd"
-StoreEventManager="*res://Scripts/Store/StoreEventManager.gd"
 Dialogic="*uid://ds2q0uclmolvu"
 SceneTransition="*res://Scripts/Core/SceneTransitionManager.gd"
 DialogueChoiceNavigator="*res://Scripts/UI/DialogueChoiceNavigator.gd"
@@ -43,6 +42,7 @@ VisualEffectManager="*res://Scripts/World/VisualEffectManager.gd"
 PricingOverlay="*res://Scripts/UI/PricingOverlay.gd"
 LogManager="*res://Scripts/Core/LogManager.gd"
 CharacterProgressionManager="*res://Scripts/Progression/CharacterProgressionManager.gd"
+StoreEventManager="*res://Scripts/Store/StoreEventManager.gd"
 
 [debug_draw_3d]
 

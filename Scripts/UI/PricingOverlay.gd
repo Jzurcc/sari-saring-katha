@@ -155,9 +155,9 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	
 	_current_item = item_data
 		
-	var final_price = item_data.get_final_price()
-	var base_price = item_data.price
-	var step = item_data.current_step
+	var final_price: float = item_data.get_final_price()
+	var base_price: float = item_data.price
+	var step: int = item_data.current_step
 
 	name_label.text = custom_name if custom_name != "" else item_data.item_name
 	price_label.text = "₱%.2f" % [final_price]
@@ -182,7 +182,7 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	step_pips_label.text = pips.strip_edges()
 
 	# Comparison readout & coloring
-	var diff := final_price - base_price
+	var diff: float = final_price - base_price
 	if step > 0:
 		comparison_label.text = "Step +%d (+₱%.2f)" % [step, diff]
 		var factor = float(step) / 3.0

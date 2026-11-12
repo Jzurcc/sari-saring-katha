@@ -350,10 +350,10 @@ func _update_row_display(item: ItemData) -> void:
 	var minus_btn: Button = row_data["minus_btn"]
 	var plus_btn: Button = row_data["plus_btn"]
 
-	var step := item.current_step
-	var final_price := item.get_final_price()
-	var base_price := item.price
-	var diff := final_price - base_price
+	var step: int = item.current_step
+	var final_price: float = item.get_final_price()
+	var base_price: float = item.price
+	var diff: float = final_price - base_price
 
 	# Pip track string
 	var pips_text := ""
