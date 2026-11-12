@@ -331,10 +331,10 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		transaction.is_repaying = true
 		transaction.repayment_amount = current_debt
 
-	# Riddle
-	if not transaction.desired_items.is_empty() and transaction.transaction_type != TransactionContext.Type.VISIT:
+	# Riddle (strictly for characters who speak in riddles/hints, e.g. Buboy)
+	if transaction.customer_data.has_riddle_preference() and not transaction.desired_items.is_empty() and transaction.transaction_type != TransactionContext.Type.VISIT:
 		var main_item: ItemData = transaction.desired_items[0]
-		var final_riddle_chance: float = 1.0 if transaction.customer_data.has_riddle_preference() else sm.riddle_chance
+		var final_riddle_chance: float = 1.0 if transaction.customer_data.get_clean_id() == "buboy" else sm.riddle_chance
 		if main_item.item_hint != "" and randf() < final_riddle_chance:
 			transaction.is_riddle = true
 			transaction.riddle_item = main_item
