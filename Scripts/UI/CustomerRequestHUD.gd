@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const RIDDLE_ICON = preload("res://icon.svg")
+
 @onready var panel_container: PanelContainer = %PanelContainer
 @onready var item_container: HBoxContainer = %ItemContainer
 
@@ -51,7 +53,6 @@ func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle:
 			_pop_and_remove_item(child)
 	
 	# 2. Add any remaining items in the checklist (truly new items)
-	var _is_refresh = not checklist.is_empty() and items.size() == _last_items.size()
 	for item in checklist:
 		_add_item_icon(item, is_riddle)
 
@@ -64,19 +65,15 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 	
 	# Riddle specific silhouette
 	if is_riddle:
-		if icon.texture != preload("res://icon.svg"):
-			icon.texture = preload("res://icon.svg")
+		if icon.texture != RIDDLE_ICON:
+			icon.texture = RIDDLE_ICON
 		icon.modulate = Color(0, 0, 0, 1)
 		
 		# Ensure label exists
-		var has_label = false
-		for c in rect_container.get_children():
-			if c is Label:
-				has_label = true
-				break
-		
-		if not has_label:
-			var label = Label.new()
+		var label = rect_container.get_node_or_null("RiddleLabel") as Label
+		if not label:
+			label = Label.new()
+			label.name = "RiddleLabel"
 			label.text = "?"
 			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -87,15 +84,12 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 			rect_container.add_child(label)
 	else:
 		icon.texture = item.texture
-		if item.tier > StoryManager.current_tier:
-			icon.modulate = Color(0.2, 0.2, 0.2, 1)
-		else:
-			icon.modulate = Color.WHITE
+		icon.modulate = Color(0.2, 0.2, 0.2, 1) if item.tier > StoryManager.current_tier else Color.WHITE
 		
 		# Remove riddle label if it exists
-		for c in rect_container.get_children():
-			if c is Label:
-				c.queue_free()
+		var label = rect_container.get_node_or_null("RiddleLabel")
+		if label:
+			label.queue_free()
 
 func _add_item_icon(item: ItemData, is_riddle: bool) -> void:
 	var rect_container = Control.new()

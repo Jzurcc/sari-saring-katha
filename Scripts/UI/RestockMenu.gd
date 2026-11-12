@@ -260,19 +260,12 @@ func _populate_grid(cat_key: String) -> void:
 func _create_product_card(item: ItemData) -> PanelContainer:
 	var card = PanelContainer.new()
 	card.custom_minimum_size = card_size
-	var is_locked: bool = false
-	var is_stacked: bool = false
-	var is_upgrade = item.get_meta("is_upgrade", false)
-	
-	if is_upgrade:
-		var target_tier = item.get_meta("target_tier", 1)
-		is_locked = target_tier > StoryManager.max_unlocked_tier
-		is_stacked = target_tier > StoryManager.pending_upgrade_tier and target_tier <= StoryManager.max_unlocked_tier
-	else:
-		is_locked = item.tier > StoryManager.current_tier
+	var is_upgrade: bool = item.get_meta("is_upgrade", false)
+	var target_tier: int = item.get_meta("target_tier", 1) if is_upgrade else 0
+	var is_locked: bool = (target_tier > StoryManager.max_unlocked_tier) if is_upgrade else (item.tier > StoryManager.current_tier)
 	
 	var bg_col := UIStyle.COLOR_CARD_BG
-	if is_upgrade and item.get_meta("target_tier", 1) <= StoryManager.current_tier:
+	if is_upgrade and target_tier <= StoryManager.current_tier:
 		bg_col = UIStyle.COLOR_CARD_OWNED_BG
 	
 	card.add_theme_stylebox_override("panel", UIStyle.create_card_style(bg_col))
@@ -292,16 +285,8 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	if item.texture:
 		icon.texture = item.texture
 	
-	if is_locked:
-		icon.modulate = Color(0, 0, 0, 1) # Silhouette
-		card.modulate = Color(0.6, 0.6, 0.6, 0.8) # Dimmed card
-	elif is_stacked:
-		icon.modulate = Color(0.3, 0.3, 0.3, 0.5) # Grayed out
-		card.modulate = Color(0.5, 0.5, 0.5, 0.7) # Dimmed card
-	
 	# Add Label for Tiers
 	if is_upgrade:
-		var target_tier = item.get_meta("target_tier", 1)
 		var tier_lbl = Label.new()
 		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tier_lbl.add_theme_font_size_override("font_size", 11)
@@ -324,7 +309,6 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	
 	# Visibility logic based on whether prerequisite is met
 	if is_upgrade:
-		var target_tier = item.get_meta("target_tier", 1)
 		var prereq_met = order.is_upgrade_prerequisite_met(target_tier)
 		var owned = target_tier <= StoryManager.current_tier
 		
@@ -401,11 +385,7 @@ func _clear_detail_panel() -> void:
 	detail_price.text = ""
 	add_btn.visible = false
 
-func _on_add_pressed() -> void:
-	if currently_selected_item == null:
-		return
-	
-	var item := currently_selected_item
+func _try_add_item_to_order(item: ItemData) -> bool:
 	var check := order.can_add(item, _get_money())
 	if not check.ok:
 		if check.title != "":
@@ -414,13 +394,21 @@ func _on_add_pressed() -> void:
 			AudioManager.play_sfx(check.sfx)
 		elif check.error == "insufficient_funds":
 			EventBus.insufficient_funds.emit()
-		return
+		return false
 
 	AudioManager.play_sfx("pickup")
 	order.add_item(item)
-	_update_order_list()
+	return true
+
+func _on_add_pressed() -> void:
+	if currently_selected_item == null:
+		return
 	
-	# If an upgrade was added, refresh grid to show next tiers
+	var item := currently_selected_item
+	if not _try_add_item_to_order(item):
+		return
+
+	_update_order_list()
 	if item.get_meta("is_upgrade", false):
 		_populate_grid(current_category)
 
@@ -531,18 +519,9 @@ func _on_minus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button, _row
 func _on_plus_pressed(item: ItemData, count_lbl: Label, minus_btn: Button) -> void:
 	if item.get_meta("is_upgrade", false):
 		return
-	var check := order.can_add(item, _get_money())
-	if not check.ok:
-		if check.title != "":
-			EventBus.show_notification.emit(check.title, check.message, check.sfx)
-		if check.sfx != "":
-			AudioManager.play_sfx(check.sfx)
-		elif check.error == "insufficient_funds":
-			EventBus.insufficient_funds.emit()
+	if not _try_add_item_to_order(item):
 		return
 	
-	AudioManager.play_sfx("pickup")
-	order.add_item(item)
 	var new_count := order.get_item_count(item)
 	count_lbl.text = str(new_count)
 	_update_minus_btn_appearance(minus_btn, new_count)

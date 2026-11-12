@@ -59,13 +59,13 @@ func _ready() -> void:
 	# Show Continue only if a save file exists
 	var continue_btn = buttons.get_node_or_null("Continue")
 	var new_game_btn = buttons.get_node("NewGame")
+	var can_continue = continue_btn != null and SaveManager.has_save()
 	
-	if continue_btn and SaveManager.has_save():
-		continue_btn.visible = true
+	if continue_btn:
+		continue_btn.visible = can_continue
+	if can_continue:
 		continue_btn.grab_focus()
 	else:
-		if continue_btn:
-			continue_btn.visible = false
 		new_game_btn.grab_focus()
 
 
@@ -159,24 +159,18 @@ func _on_new_game_confirmed() -> void:
 
 func _start_new_game() -> void:
 	SaveManager.reset_all_state()
-
-	is_starting_game = true
-	buttons.hide()
-	if has_node("LeftVignette"):
-		$LeftVignette.hide()
-
-	# Immediately fade to black and transition to intro cutscene
-	SceneTransition.change_scene(target_scene)
-
+	_transition_to_game(target_scene)
 
 func _on_continue_pressed() -> void:
-	if not SaveManager.has_save():
-		return
+	if SaveManager.has_save():
+		_transition_to_game("res://Scenes/MainGame.tscn")
+
+func _transition_to_game(scene_path: String) -> void:
 	is_starting_game = true
 	buttons.hide()
 	if has_node("LeftVignette"):
 		$LeftVignette.hide()
-	SceneTransition.change_scene("res://Scenes/MainGame.tscn")
+	SceneTransition.change_scene(scene_path)
 
 func _on_exit_pressed() -> void:
 	get_tree().quit()

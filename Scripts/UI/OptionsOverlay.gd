@@ -164,30 +164,26 @@ func _play_confirm() -> void:
 	_ui_player.stream = _sfx_confirm
 	_ui_player.play()
 
-func _on_master_changed(value: float) -> void:
-	var idx: int = AudioServer.get_bus_index("Master")
+func _set_audio_bus_volume(bus_name: String, value: float) -> void:
+	var idx: int = AudioServer.get_bus_index(bus_name)
+	if idx < 0:
+		return
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
 	AudioServer.set_bus_mute(idx, value <= 0.0)
+
+func _on_master_changed(value: float) -> void:
+	_set_audio_bus_volume("Master", value)
 	if has_node("/root/AudioManager"):
 		AudioManager.update_master_muted_by_user(value <= 0.0)
 
 func _on_bgm_changed(value: float) -> void:
-	var idx: int = AudioServer.get_bus_index("Music")
-	if idx < 0: return
-	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
-	AudioServer.set_bus_mute(idx, value <= 0.0)
+	_set_audio_bus_volume("Music", value)
 
 func _on_sfx_changed(value: float) -> void:
-	var idx: int = AudioServer.get_bus_index("SFX")
-	if idx < 0: return
-	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
-	AudioServer.set_bus_mute(idx, value <= 0.0)
+	_set_audio_bus_volume("SFX", value)
 
 func _on_voices_changed(value: float) -> void:
-	var idx: int = AudioServer.get_bus_index("Voices")
-	if idx < 0: return
-	AudioServer.set_bus_volume_db(idx, linear_to_db(value) if value > 0.0 else -80.0)
-	AudioServer.set_bus_mute(idx, value <= 0.0)
+	_set_audio_bus_volume("Voices", value)
 
 func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed):
@@ -201,7 +197,8 @@ func _on_window_mode_panel_gui_input(event: InputEvent) -> void:
 	_sync_display_label()
 
 func _input(event: InputEvent) -> void:
-	if not visible: return
+	if not visible:
+		return
 	
 	if not _is_remapping:
 		if event.is_action_pressed("ui_cancel"):
@@ -209,21 +206,20 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	
-	# Only capture actual presses to avoid binding on key release
 	if not event.is_pressed():
 		return
 		
-	if event is InputEventKey or event is InputEventMouseButton:
-		# Stop remapping if Escape is pressed (cancel)
-		if event is InputEventKey and event.keycode == KEY_ESCAPE:
-			_stop_remapping()
-			get_viewport().set_input_as_handled()
-			return
-		
-		# Set the new binding
-		_update_binding(_remapping_action, event)
+	if not (event is InputEventKey or event is InputEventMouseButton):
+		return
+
+	if event is InputEventKey and event.keycode == KEY_ESCAPE:
 		_stop_remapping()
 		get_viewport().set_input_as_handled()
+		return
+	
+	_update_binding(_remapping_action, event)
+	_stop_remapping()
+	get_viewport().set_input_as_handled()
 
 func _start_remapping(action: String, button: Button) -> void:
 	if _is_remapping:

@@ -105,19 +105,20 @@ func _scan_and_connect_nodes(node: Node) -> void:
 		screen_label.text = ""
 	elif node is Button:
 		var btn_name = node.name.to_lower()
-		if btn_name == "clear":
-			node.pressed.connect(_on_clear_pressed)
-		elif btn_name == "enter" or btn_name == "call" or btn_name == "ok":
-			node.pressed.connect(_on_enter_pressed)
-		elif btn_name == "back" or btn_name == "cancel":
-			node.pressed.connect(_on_close_pressed)
-		elif str(node.name).length() == 1 and str(node.name)[0].is_valid_int():
-			# Single digit number buttons only
-			node.pressed.connect(_on_key_pressed.bind(str(node.name)))
-		elif node.name.to_lower() == "asterisk" or node.name == "Star":
-			node.pressed.connect(_on_asterisk_pressed)
-		elif node.name.to_lower() == "home" or node.name == "Hash":
-			node.pressed.connect(_on_home_pressed)
+		match btn_name:
+			"clear":
+				node.pressed.connect(_on_clear_pressed)
+			"enter", "call", "ok":
+				node.pressed.connect(_on_enter_pressed)
+			"back", "cancel":
+				node.pressed.connect(_on_close_pressed)
+			"asterisk", "star":
+				node.pressed.connect(_on_asterisk_pressed)
+			"home", "hash":
+				node.pressed.connect(_on_home_pressed)
+			_:
+				if btn_name.length() == 1 and btn_name.is_valid_int():
+					node.pressed.connect(_on_key_pressed.bind(str(node.name)))
 		# All other buttons (Add, Cancel, Order, tab buttons, etc.) are ignored
 		
 	for child in node.get_children():
@@ -236,21 +237,21 @@ func _on_mario_call_finished(success: bool) -> void:
 		pass
 
 func _update_screen() -> void:
-	if screen_label:
-		screen_label.text = current_input
-		
-		# Change color to dark green if input contains alphabetical characters
-		var has_alpha = false
-		for i in range(current_input.length()):
-			var c = current_input[i]
-			if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z"):
-				has_alpha = true
-				break
-		
-		if has_alpha:
-			screen_label.add_theme_color_override("font_color", Color("004d00")) # Dark Green
-		else:
-			screen_label.remove_theme_color_override("font_color")
+	if not screen_label:
+		return
+	screen_label.text = current_input
+	
+	# Change color to dark green if input contains alphabetical characters
+	var has_alpha: bool = false
+	for c in current_input:
+		if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z"):
+			has_alpha = true
+			break
+	
+	if has_alpha:
+		screen_label.add_theme_color_override("font_color", Color("004d00")) # Dark Green
+	else:
+		screen_label.remove_theme_color_override("font_color")
 
 func _on_close_pressed() -> void:
 	if _is_calling: return
