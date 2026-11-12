@@ -11,9 +11,6 @@ signal menu_close_requested
 ## Size of the product icon inside each card
 @export var card_icon_size := Vector2(80, 80)
 
-@export_group("Audio")
-@export_range(-80.0, 24.0) var sfx_volume_db: float = 0.0
-
 @export_group("Font Sizes")
 ## Font size for product names on cards
 @export var card_font_size: int = 13
@@ -370,9 +367,6 @@ func _create_product_card(item: ItemData) -> PanelContainer:
 	
 	return card
 
-func _is_upgrade_prerequisite_met(target_tier: int) -> bool:
-	return order.is_upgrade_prerequisite_met(target_tier)
-
 func _on_card_clicked(event: InputEvent, item: ItemData, card: PanelContainer) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		AudioManager.play_sfx("interact")
@@ -429,9 +423,6 @@ func _on_add_pressed() -> void:
 	# If an upgrade was added, refresh grid to show next tiers
 	if item.get_meta("is_upgrade", false):
 		_populate_grid(current_category)
-
-func _can_add_to_basket(item: ItemData) -> bool:
-	return order.can_add(item, _get_money()).ok
 
 # ========== ORDER LIST ==========
 func _update_order_list() -> void:
@@ -627,6 +618,3 @@ func _get_items_for_category(cat_key: String) -> Array[ItemData]:
 		return _category_cache[cat_key]
 	var empty: Array[ItemData] = []
 	return empty
-
-func _style_button(btn: Button, bg_color: Color, font_color: Color, font_size: float = 14.0) -> void:
-	UIStyle.style_button(btn, bg_color, font_color, font_size)

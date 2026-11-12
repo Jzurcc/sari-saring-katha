@@ -19,7 +19,6 @@ var target_number: String = "62777444666"
 var screen_label: Label = null
 var _is_calling: bool = false
 var _is_on_side: bool = false
-var _side_pos: Vector2 = Vector2.ZERO
 
 const T9_MAP = {
 	"1": ".,!",
@@ -86,15 +85,6 @@ func _move_to_side() -> void:
 	var tween = create_tween()
 	# Move to the left (e.g., 80px from left)
 	tween.tween_property(nokia, "position:x", 80, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-
-func _move_to_center() -> void:
-	if not _is_on_side: return
-	_is_on_side = false
-	var nokia = get_node("Nokia")
-	var screen_size = get_viewport_rect().size
-	var target_x = (screen_size.x - nokia.size.x * nokia.scale.x) / 2
-	var tween = create_tween()
-	tween.tween_property(nokia, "position:x", target_x, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 func _animate_exit_and_free() -> void:
 	var nokia = get_node("Nokia")
@@ -245,13 +235,6 @@ func _on_mario_call_finished(success: bool) -> void:
 		# If call failed or was cancelled by Mario, wait a bit then close
 		pass
 
-func _on_mario_delivery_started() -> void:
-	# Mario hangs up once the delivery is confirmed/starting
-	_on_close_pressed()
-
-func _on_nokia_ui_closed() -> void:
-	nokia_closed.emit()
-
 func _update_screen() -> void:
 	if screen_label:
 		screen_label.text = current_input
@@ -268,16 +251,6 @@ func _update_screen() -> void:
 			screen_label.add_theme_color_override("font_color", Color("004d00")) # Dark Green
 		else:
 			screen_label.remove_theme_color_override("font_color")
-
-## Triggered by Nokia buttons
-func _on_number_pressed(digit: String) -> void:
-	if _is_calling: return
-	_play_button_sound("number")
-	current_input += digit
-	if current_input.length() > 10:
-		current_input = current_input.right(10)
-	if $Nokia/Label:
-		$Nokia/Label.text = current_input
 
 func _on_close_pressed() -> void:
 	if _is_calling: return

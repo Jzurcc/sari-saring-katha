@@ -11,22 +11,16 @@ extends Control
 var target_scene = "res://Scenes/IntroCutscene.tscn"
 var original_styles = {}
 
-@export var default_master_volume : float = 0.8
-@export var default_bgm_volume    : float = 0.6
-@export var default_sfx_volume    : float = 0.9
-
 var cam: Camera3D = null
 var cam_origin_rot: Vector3
 var cam_origin_pos: Vector3
 var is_starting_game: bool = false
-var settings_open: bool = false
 var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
 
 # ── UI Sound ─────────────────────────────────────────────────────────────────
 var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
-var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
 var _sfx_hover   : AudioStream = preload("res://Audio/SFX/ui_sfx_12.mp3")
 var _ui_player   : AudioStreamPlayer
 
@@ -80,10 +74,6 @@ func _ready() -> void:
 
 func _play_click() -> void:
 	_ui_player.stream = _sfx_click
-	_ui_player.play()
-
-func _play_confirm() -> void:
-	_ui_player.stream = _sfx_confirm
 	_ui_player.play()
 
 func _play_hover() -> void:
@@ -195,12 +185,10 @@ func _on_exit_pressed() -> void:
 # ─── Settings overlay ─────────────────────────────────────────────────────────
 
 func _on_options_pressed() -> void:
-	settings_open = true
 	options_overlay.open()
 	_update_menu_interaction(false)
 
 func _on_options_closed() -> void:
-	settings_open = false
 	_update_menu_interaction(true)
 
 

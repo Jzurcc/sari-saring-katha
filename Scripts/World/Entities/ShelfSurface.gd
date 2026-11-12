@@ -82,7 +82,6 @@ var _spawned: Array[DraggableItem] = []
 var _slot_transforms: Array[Transform3D] = []
 ## Which DraggableItem occupies each slot index. `null` means the slot is empty.
 var _slot_occupants: Array = []
-var _is_loading: bool = false
 var _data_was_loaded: bool = false
 
 func _ready() -> void:
@@ -476,13 +475,11 @@ func load_save_data(data: Dictionary) -> void:
 		return
 		
 	LogManager.info("ShelfSurface", "'%s' applying save data: %s" % [save_id, data.keys()])
-	_is_loading = true
 	_data_was_loaded = true
 	_clear()
 	
 	# Rebuild slot transforms
 	if not layout_strategy:
-		_is_loading = false
 		return
 	_slot_transforms = layout_strategy.generate_slots(shelf_width, slot_width)
 	_slot_occupants.clear()
@@ -510,5 +507,4 @@ func load_save_data(data: Dictionary) -> void:
 			place_item_in_slot(item_res, slot_idx)
 			placed += 1
 	
-	_is_loading = false
 	LogManager.info("ShelfSurface", "'%s' loaded %d/%d saved items" % [name, placed, slots_data.size()])

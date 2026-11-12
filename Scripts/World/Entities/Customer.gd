@@ -3,8 +3,6 @@ extends WorldInteractor
 
 @warning_ignore("unused_signal")
 signal satisfied(customer: Customer)
-@warning_ignore("unused_signal")
-signal left
 signal arrived(customer: Customer)
 signal clicked(customer: Customer)
 
@@ -16,10 +14,6 @@ var has_been_greeted: bool = false
 var customer_data: CustomerData = null
 var transaction_context: TransactionContext
 
-@export var vertical_follow_factor: float = 1.0
-@export var min_sprite_y: float = 1.3
-@export var max_sprite_y: float = 2.4
-var _base_sprite_y: float = 0.0
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var _exit_position: Vector3 = Vector3.ZERO
@@ -38,9 +32,6 @@ func _ready() -> void:
 	# them with a dedicated raycast that passes through counters and items.
 	collision_layer = 0
 	set_collision_layer_value(5, true)
-
-	if body_sprite:
-		_base_sprite_y = body_sprite.position.y
 
 
 

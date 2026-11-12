@@ -5,8 +5,6 @@ class_name GameManager
 
 const TutorialManager = preload("res://Scripts/World/TutorialManager.gd")
 
-var save_id: String = "game_manager"
-
 const END_OF_DAY_QUOTES = [
 	"The gentle Bungisngis hides in the woods not to frighten, but to share his endless, echoing giggles with the wind.",
 	"A creature of a thousand eyes, the Daligmata stays awake simply to guide lost dreamers safely through the dark.",
@@ -65,7 +63,7 @@ func _finish_initialization() -> void:
 		LogManager.info("GameManager", "Save distribution complete. Story Day: %d, Story Tier: %d" % [StoryManager.day, StoryManager.current_tier])
 	else:
 		LogManager.info("GameManager", "No save file found. Initializing fresh session (Morning, Day 1).")
-		_reset_clock_to_morning()
+		StoryManager.reset_to_morning()
 		EventBus.money_changed.emit(money)
 
 	LogManager.info("GameManager", "Starting Gameplay Level at Day %d" % StoryManager.day)
@@ -233,10 +231,6 @@ func _input(event: InputEvent) -> void:
 		return
 
 
-func _reset_clock_to_morning() -> void:
-	StoryManager.reset_to_morning()
-
-
 # ── Persistence ──────────────────────────────────────────────────────────
 
 func get_save_id() -> String:
@@ -268,6 +262,6 @@ func reset_state() -> void:
 	quota_day = 1
 	_pending_quota = 0.0
 	_is_ending_day = false
-	_reset_clock_to_morning()
+	StoryManager.reset_to_morning()
 	LogManager.info("GameManager", "State reset to defaults for New Game.")
 

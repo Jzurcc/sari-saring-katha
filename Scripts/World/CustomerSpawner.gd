@@ -11,8 +11,6 @@ const DialoguePhase = TransactionSession.Phase
 @export var target_pos: NodePath
 @export var exit_pos: NodePath
 
-const PLACEHOLDER_EMPTY_STORY := "res://Dialogue/Timelines/Generic/Neutral.dtl"
-
 var session: TransactionSession = TransactionSession.new()
 
 var current_customer: Customer:
@@ -50,12 +48,9 @@ func _ready() -> void:
 	EventBus.customer_dismissed.connect(_on_customer_dismissed)
 	Dialogic.timeline_ended.connect(_on_dialogue_ended)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
-	MarioManager.delivery_finished.connect(_on_mario_delivery_finished)
-	MarioManager.call_ended.connect(_on_mario_call_ended)
 	EventBus.nokia_opened.connect(_on_nokia_opened)
 	EventBus.nokia_closed.connect(_on_nokia_closed)
 	EventBus.closing_time_reached.connect(_on_closing_time_reached)
-	EventBus.debt_quota_met.connect(_on_debt_quota_met)
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
 	EventBus.tray_item_placed.connect(_on_tray_item_placed)
 	LogManager.debug("CustomerSpawner", "_ready() END")
@@ -64,7 +59,7 @@ func _on_day_started(_day: int) -> void:
 	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
 	_spawn_next_customer()
 
-func _spawn_next_customer(_delay: float = -1.0) -> void:
+func _spawn_next_customer() -> void:
 	if _is_spawning:
 		LogManager.debug("CustomerSpawner", "_spawn_next_customer() IGNORED: Spawn already in progress.")
 		return
@@ -241,9 +236,6 @@ func _on_dialogic_signal(argument: String) -> void:
 func _on_customer_partial_satisfaction(customer: Customer) -> void:
 	session.on_item_delivered(customer, false)
 
-func _update_item_names(customer: Customer) -> void:
-	session.update_item_names(customer)
-
 func start_dialogue(timeline, customer: Customer, phase: TransactionSession.Phase = TransactionSession.Phase.NONE, label: String = "") -> void:
 	session.start_dialogue(timeline, customer, phase, label)
 
@@ -252,9 +244,6 @@ func _on_dialogue_ended() -> void:
 
 func _on_tray_item_placed(item: DraggableItem, tray_pos: Vector3) -> void:
 	session.process_item_placed(item, tray_pos)
-
-func on_tray_item_placed(item: DraggableItem, tray_pos: Vector3 = Vector3.ZERO) -> bool:
-	return session.process_item_placed(item, tray_pos)
 
 
 func _on_closing_time_reached() -> void:
@@ -294,20 +283,9 @@ func spawn_mayari_for_collection() -> void:
 	EventBus.customer_spawned.emit(current_customer)
 	_is_spawning = false
 
-func _on_debt_quota_met(_success: bool) -> void:
-	# This is called after Mayari's dialogue finishes and she is dismissed.
-	# We can now safely end the day.
-	pass
-
 ## Emit day_ended when no more customers will come today.
 func _end_day() -> void:
 	EventBus.day_ended.emit(StoryManager.day)
-
-func _on_mario_delivery_finished() -> void:
-	pass
-
-func _on_mario_call_ended(_success: bool) -> void:
-	pass
 
 func _on_nokia_opened() -> void:
 	_is_nokia_open = true
