@@ -210,7 +210,7 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	# Check if we have a pending tier unlock now that the counter is clear
 	StoryManager.process_pending_unlock()
 
-	var delay = randf_range(0.3, 5.0)
+	var delay = randf_range(0.0, 1.5)
 	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 
@@ -255,8 +255,6 @@ func _on_tray_item_placed(item: DraggableItem, tray_pos: Vector3) -> void:
 
 func on_tray_item_placed(item: DraggableItem, tray_pos: Vector3 = Vector3.ZERO) -> bool:
 	return session.process_item_placed(item, tray_pos)
-
-
 
 
 func _on_closing_time_reached() -> void:
