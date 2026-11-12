@@ -270,6 +270,7 @@ func receive_item(item: DraggableItem, world_hit_pos: Vector3 = Vector3.ZERO) ->
 
 	# Spawn impact dust at the final snapped global position
 	VisualEffectManager.spawn_impact_dust(to_global(target_pos))
+	EventBus.request_sfx.emit("drop")
 
 	LogManager.info("ShelfSurface", "'%s' received '%s' → slot %d (X=%.2f)" % [name, item.item_data.item_name, target_idx, target_pos.x])
 

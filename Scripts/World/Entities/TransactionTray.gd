@@ -8,5 +8,6 @@ func _ready() -> void:
 	add_to_group("transaction_tray")
 
 func receive_item(item: DraggableItem) -> void:
+	EventBus.request_sfx.emit("drop")
 	item_placed.emit(item)
 	EventBus.tray_item_placed.emit(item, global_position)

@@ -196,7 +196,6 @@ func on_interact() -> void:
 	var gm = get_tree().get_first_node_in_group("game_manager")
 	if gm and gm.tutorial and not gm.tutorial.can_pickup_item():
 		return
-	EventBus.request_sfx.emit("pickup")
 	DragManager.start_drag(self, sprite.texture)
 
 func _on_drag_started_by_manager() -> void:

@@ -50,6 +50,7 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	set_process(true)
 	_dragged_item = item
 	_drag_start_frame = Engine.get_frames_drawn()
+	EventBus.request_sfx.emit("pickup")
 
 	if texture:
 		_dragged_texture_rect.texture = texture
