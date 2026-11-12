@@ -3,8 +3,6 @@ class_name GameManager
 
 ## Central manager for progression out of MainGame.gd
 
-const TutorialManager = preload("res://Scripts/World/TutorialManager.gd")
-
 const END_OF_DAY_QUOTES = [
 	"The gentle Bungisngis hides in the woods not to frighten, but to share his endless, echoing giggles with the wind.",
 	"A creature of a thousand eyes, the Daligmata stays awake simply to guide lost dreamers safely through the dark.",

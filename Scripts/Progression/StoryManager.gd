@@ -1,7 +1,5 @@
 extends Node
 
-const TransactionBuilder = preload("res://Scripts/Store/TransactionBuilder.gd")
-
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
@@ -35,7 +33,7 @@ var _current_display_time: float:
 	get: return clock.current_display_time
 	set(value): clock.current_display_time = value
 
-var _last_character_path: String = ""
+var last_character_path: String = ""
 var _pending_tier_advance_source: String = ""
 var has_mayari_visited: bool = false
 var is_mayari_debt_active: bool = true

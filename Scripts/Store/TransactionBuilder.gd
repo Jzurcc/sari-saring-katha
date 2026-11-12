@@ -36,7 +36,7 @@ static func build_next_transaction(sm: Node) -> TransactionContext:
 	if not char_data:
 		return null
 
-	sm._last_character_path = char_data.resource_path
+	sm.last_character_path = char_data.resource_path
 
 	var transaction := TransactionContext.new()
 	transaction.customer_data = char_data
@@ -119,7 +119,7 @@ static func select_character(sm: Node) -> Dictionary:
 	# Priority 1: Cooldown is 0, check for available story chapters
 	if CharacterProgressionManager.global_story_cooldown <= 0:
 		var story_candidates := unlocked.filter(func(c: CustomerData) -> bool:
-			if c.resource_path == CharacterProgressionManager.last_story_advancer_path or c.resource_path == sm._last_character_path or c.is_collector():
+			if c.resource_path == CharacterProgressionManager.last_story_advancer_path or c.resource_path == sm.last_character_path or c.is_collector():
 				return false
 			return _has_available_story_chapter(c)
 		)
@@ -131,7 +131,7 @@ static func select_character(sm: Node) -> Dictionary:
 		else:
 			# Soft-lock override
 			var fallback := unlocked.filter(func(c: CustomerData) -> bool:
-				return c.resource_path != sm._last_character_path and _has_available_story_chapter(c)
+				return c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
 			)
 			if not fallback.is_empty():
 				char_data = fallback.pick_random()
@@ -140,7 +140,7 @@ static func select_character(sm: Node) -> Dictionary:
 
 	# Priority 2: Generic flow if no story is forced
 	if not char_data:
-		var possible_chars := unlocked.filter(func(c: CustomerData) -> bool: return c.resource_path != sm._last_character_path)
+		var possible_chars := unlocked.filter(func(c: CustomerData) -> bool: return c.resource_path != sm.last_character_path)
 		if possible_chars.is_empty():
 			possible_chars = unlocked
 		char_data = CharacterProgressionManager.pick_character_weighted(possible_chars)

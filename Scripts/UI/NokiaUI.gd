@@ -54,11 +54,6 @@ func _ready() -> void:
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
 	
-	# Store the side position for animation AFTER scan
-	var nokia = get_node_or_null("Nokia")
-	if nokia:
-		_side_pos = Vector2(80, nokia.position.y) 
-	
 	_animate_entrance()
 
 
