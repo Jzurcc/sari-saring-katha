@@ -12,6 +12,13 @@ const MAYARI_COLLECT_TIMELINE := "res://Dialogue/Timelines/mayari_collect.dtl"
 const GENERIC_PURCHASE_TIMELINE := "res://Dialogue/Timelines/Generic/Purchase.dtl"
 const GENERIC_VISIT_TIMELINE := "res://Dialogue/Timelines/Generic/Visit.dtl"
 
+const AWARENESS_CHANCE := 0.4
+const HIGH_PRICE_CHANCE := 0.5
+const REPAYMENT_CHANCE := 0.30
+const DISPLAY_POOL_CHANCE := 0.6
+const STORY_ROLL_CHANCE := 0.25
+const LOW_STOCK_THRESHOLD := 10
+
 static func build_next_transaction(sm: Node) -> TransactionContext:
 	# 1. Special Encounters (Tutorial / Kuya Kap Day 1 injection)
 	var special_transaction := inject_special_customer(sm)
@@ -86,6 +93,10 @@ static func inject_special_customer(sm: Node) -> TransactionContext:
 
 	return null
 
+static func _has_available_story_chapter(c: CustomerData) -> bool:
+	var chapter: int = CharacterProgressionManager.get_chapter(c.resource_path)
+	return chapter < c.max_story_chapters and c.story_timeline != null and CharacterProgressionManager.is_story_chapter_available(c, chapter)
+
 static func select_character(sm: Node) -> Dictionary:
 	var char_data: CustomerData = null
 	var force_story: bool = false
@@ -95,10 +106,8 @@ static func select_character(sm: Node) -> Dictionary:
 	# Priority 0: Forced First-Time Encounters (Ignores Cooldown)
 	var new_characters := unlocked.filter(func(c: CustomerData) -> bool:
 		var c_ch: int = CharacterProgressionManager.get_chapter(c.resource_path)
-		var is_new_or_chapter_zero: bool = not CharacterProgressionManager.has_encountered(c.resource_path) or c_ch == 0
-		var has_story: bool = c_ch < c.max_story_chapters and c.story_timeline != null
-		var prereqs_met: bool = CharacterProgressionManager.is_story_chapter_available(c, c_ch)
-		return is_new_or_chapter_zero and has_story and prereqs_met and not c.is_collector()
+		var is_new: bool = not CharacterProgressionManager.has_encountered(c.resource_path) or c_ch == 0
+		return is_new and not c.is_collector() and _has_available_story_chapter(c)
 	)
 
 	if not new_characters.is_empty():
@@ -110,14 +119,9 @@ static func select_character(sm: Node) -> Dictionary:
 	# Priority 1: Cooldown is 0, check for available story chapters
 	if CharacterProgressionManager.global_story_cooldown <= 0:
 		var story_candidates := unlocked.filter(func(c: CustomerData) -> bool:
-			if c.resource_path == CharacterProgressionManager.last_story_advancer_path:
+			if c.resource_path == CharacterProgressionManager.last_story_advancer_path or c.resource_path == sm._last_character_path or c.is_collector():
 				return false
-			if c.resource_path == sm._last_character_path:
-				return false
-			if c.is_collector():
-				return false
-			var c_chapter: int = CharacterProgressionManager.get_chapter(c.resource_path)
-			return c_chapter < c.max_story_chapters and c.story_timeline != null and CharacterProgressionManager.is_story_chapter_available(c, c_chapter)
+			return _has_available_story_chapter(c)
 		)
 
 		if not story_candidates.is_empty():
@@ -127,10 +131,7 @@ static func select_character(sm: Node) -> Dictionary:
 		else:
 			# Soft-lock override
 			var fallback := unlocked.filter(func(c: CustomerData) -> bool:
-				if c.resource_path == sm._last_character_path:
-					return false
-				var c_chapter: int = CharacterProgressionManager.get_chapter(c.resource_path)
-				return c_chapter < c.max_story_chapters and c.story_timeline != null and CharacterProgressionManager.is_story_chapter_available(c, c_chapter)
+				return c.resource_path != sm._last_character_path and _has_available_story_chapter(c)
 			)
 			if not fallback.is_empty():
 				char_data = fallback.pick_random()
@@ -164,7 +165,7 @@ static func build_transaction_context(
 		transaction.transaction_type = TransactionContext.Type.STORY
 		transaction.timeline = data.story_timeline
 	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0 and not is_collector:
-		if randf() < 0.25:
+		if randf() < STORY_ROLL_CHANCE:
 			transaction.transaction_type = TransactionContext.Type.STORY
 			transaction.timeline = data.story_timeline
 		else:
@@ -208,13 +209,13 @@ static func build_transaction_context(
 
 			var pool: Array[ItemData] = []
 			var selection_roll := randf()
-			if selection_roll < 0.6:
+			if selection_roll < DISPLAY_POOL_CHANCE:
 				var display_pool := InventoryManager.get_items_available_on_display()
 				for item in display_pool:
 					if OrderItemPicker.is_unlocked(item, sm.current_tier) and item.can_be_sold:
 						pool.append(item)
 
-			if selection_roll >= 0.6 or pool.is_empty():
+			if selection_roll >= DISPLAY_POOL_CHANCE or pool.is_empty():
 				for item in InventoryManager.get_all_items():
 					if item.tier <= sm.current_tier + 1 and item.can_be_sold:
 						pool.append(item)
@@ -287,7 +288,7 @@ static func build_generic_transaction(
 
 static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> void:
 	# Awareness
-	var awareness_active: bool = randf() < 0.4
+	var awareness_active: bool = randf() < AWARENESS_CHANCE
 
 	# Price Sensitivity
 	var any_item_at_max: bool = false
@@ -295,7 +296,7 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		if item.get_final_price() >= item.get_max_selling_price():
 			any_item_at_max = true
 			break
-	var high_price_active: bool = any_item_at_max and randf() < 0.5
+	var high_price_active: bool = any_item_at_max and randf() < HIGH_PRICE_CHANCE
 
 	# Stock Status
 	var total_stock: int = (
@@ -307,7 +308,7 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 	var stock_status := "Normal"
 	if total_stock == 0:
 		stock_status = "Empty"
-	elif total_stock < 10:
+	elif total_stock < LOW_STOCK_THRESHOLD:
 		stock_status = "Low"
 
 	Dialogic.VAR.set_variable("Global_AwarenessActive", 1.0 if awareness_active else 0.0)
@@ -326,7 +327,7 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 
 	# Repayment
 	var current_debt: float = sm.customer_debts.get(transaction.customer_data.resource_path, 0.0)
-	if current_debt > 0 and randf() < 0.30:
+	if current_debt > 0 and randf() < REPAYMENT_CHANCE:
 		transaction.is_repaying = true
 		transaction.repayment_amount = current_debt
 

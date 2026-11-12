@@ -134,17 +134,17 @@ func force_save() -> void:
 	LogManager.info("SaveManager", "Saving... Merging data from %d active 'persist' nodes." % persist_nodes.size())
 	
 	for node in persist_nodes:
-		if node.has_method("get_save_data"):
-			var sid: String = _get_node_save_id(node)
-			
-			if sid == "":
-				LogManager.error("SaveManager", "Node '%s' (path: %s) has an empty save_id! Skipping." % [node.name, node.get_path()])
-				continue
-			
-			master_save[sid] = node.get_save_data()
-			new_keys.append(sid)
-		else:
+		if not node.has_method("get_save_data"):
 			LogManager.debug("SaveManager", "Skipped (no get_save_data): %s" % node.name)
+			continue
+
+		var sid: String = _get_node_save_id(node)
+		if sid == "":
+			LogManager.error("SaveManager", "Node '%s' (path: %s) has an empty save_id! Skipping." % [node.name, node.get_path()])
+			continue
+		
+		master_save[sid] = node.get_save_data()
+		new_keys.append(sid)
 
 
 	# 4. Write back the combined dictionary
@@ -241,12 +241,11 @@ func reset_all_state() -> void:
 	if is_instance_valid(DragManager) and DragManager.has_method("force_cancel_drag"):
 		DragManager.force_cancel_drag()
 
+	var seen: Dictionary = {}
 	var reset_targets: Array[Node] = []
-	for node in [StoryManager, CharacterProgressionManager, InventoryManager, MarioManager]:
-		if is_instance_valid(node) and not reset_targets.has(node):
-			reset_targets.append(node)
-	for node in get_tree().get_nodes_in_group("persist"):
-		if is_instance_valid(node) and not reset_targets.has(node):
+	for node in [StoryManager, CharacterProgressionManager, InventoryManager, MarioManager] + get_tree().get_nodes_in_group("persist"):
+		if is_instance_valid(node) and not seen.has(node):
+			seen[node] = true
 			reset_targets.append(node)
 
 	for node in reset_targets:

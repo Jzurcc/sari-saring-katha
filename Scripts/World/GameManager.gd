@@ -126,6 +126,21 @@ func _on_day_ended(ended_day_number: int) -> void:
 		return
 	
 	# 2. Show Sleep Overlay
+	var completed = await _play_sleep_sequence(ended_day_number)
+	if not completed or not is_inside_tree():
+		_is_ending_day = false
+		return
+
+	# Advance Day
+	StoryManager.day += 1
+	StoryManager.reset_to_morning()
+	EventBus.day_started.emit(StoryManager.day)
+	
+	# 3. Open eyes for the new day
+	await SceneTransition.open_eyes()
+	_is_ending_day = false
+
+func _play_sleep_sequence(ended_day_number: int) -> bool:
 	var overlay = sleep_overlay_scene.instantiate()
 	add_child(overlay)
 	
@@ -133,68 +148,26 @@ func _on_day_ended(ended_day_number: int) -> void:
 	overlay.display_text("You closed the shop and went to sleep.")
 	await overlay.completed
 	if not is_inside_tree() or not is_instance_valid(overlay):
-		_is_ending_day = false
-		return
+		return false
 	
 	# Phase B: Sequential/Random Folklore Quote
 	var quote_index = (ended_day_number - 1)
-	var quote = ""
-	if quote_index < END_OF_DAY_QUOTES.size():
-		quote = END_OF_DAY_QUOTES[quote_index]
-	else:
-		quote = END_OF_DAY_QUOTES.pick_random()
+	var quote = END_OF_DAY_QUOTES[quote_index] if quote_index < END_OF_DAY_QUOTES.size() else END_OF_DAY_QUOTES.pick_random()
 		
 	overlay.display_text(quote)
 	await overlay.completed
 	if not is_inside_tree() or not is_instance_valid(overlay):
-		_is_ending_day = false
-		return
+		return false
 	
 	# Phase C: Clean up
 	await overlay.fade_out()
 	if is_instance_valid(overlay):
 		overlay.queue_free()
-	if not is_inside_tree():
-		_is_ending_day = false
-		return
-
-	# Advance Day
-	StoryManager.day += 1
-	_reset_clock_to_morning()
-	EventBus.day_started.emit(StoryManager.day)
-	
-	# 3. Open eyes for the new day
-	await SceneTransition.open_eyes()
-	_is_ending_day = false
+	return is_inside_tree()
 
 func _on_dialogic_signal(argument: String) -> void:
 	if argument == "deduct_quota":
-		var quota := _pending_quota
-		var was_successful := deduct_money(quota)
-		
-		Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
-		
-		var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
-		
-		if was_successful:
-			quota_day += 1 
-			LogManager.info("GameManager", "Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
-			if quota_day == 2 and StoryManager.is_label_in_timeline(timeline_path, "SuccessFirst"):
-				Dialogic.Jump.jump_to_label("SuccessFirst")
-			elif StoryManager.is_label_in_timeline(timeline_path, "Success"):
-				Dialogic.Jump.jump_to_label("Success")
-			else:
-				LogManager.warn("GameManager", "Success labels missing in current timeline. Ending dialogue safely.")
-				Dialogic.end_timeline()
-		else:
-			LogManager.info("GameManager", "Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
-			if StoryManager.is_label_in_timeline(timeline_path, "Angry"):
-				Dialogic.Jump.jump_to_label("Angry")
-			else:
-				LogManager.warn("GameManager", "Angry labels missing in current timeline. Ending dialogue safely.")
-				Dialogic.end_timeline()
-		
-		EventBus.debt_quota_met.emit(was_successful)
+		_handle_deduct_quota()
 	
 	# Let TutorialManager handle tutorial-specific signals
 	elif tutorial.handle_dialogic_signal(argument):
@@ -213,6 +186,34 @@ func _on_dialogic_signal(argument: String) -> void:
 				StoryManager.clear_debt(customer.customer_data.resource_path)
 		
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
+
+func _handle_deduct_quota() -> void:
+	var quota := _pending_quota
+	var was_successful := deduct_money(quota)
+	
+	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
+	
+	var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
+	
+	if was_successful:
+		quota_day += 1 
+		LogManager.info("GameManager", "Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
+		if quota_day == 2 and StoryManager.is_label_in_timeline(timeline_path, "SuccessFirst"):
+			Dialogic.Jump.jump_to_label("SuccessFirst")
+		elif StoryManager.is_label_in_timeline(timeline_path, "Success"):
+			Dialogic.Jump.jump_to_label("Success")
+		else:
+			LogManager.warn("GameManager", "Success labels missing in current timeline. Ending dialogue safely.")
+			Dialogic.end_timeline()
+	else:
+		LogManager.info("GameManager", "Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
+		if StoryManager.is_label_in_timeline(timeline_path, "Angry"):
+			Dialogic.Jump.jump_to_label("Angry")
+		else:
+			LogManager.warn("GameManager", "Angry labels missing in current timeline. Ending dialogue safely.")
+			Dialogic.end_timeline()
+	
+	EventBus.debt_quota_met.emit(was_successful)
 
 func _on_closing_time_reached() -> void:
 	_pending_quota = get_quota_for_day(quota_day)

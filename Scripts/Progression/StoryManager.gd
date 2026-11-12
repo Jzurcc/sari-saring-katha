@@ -182,34 +182,36 @@ func get_representative_item_for_tier(target_tier: int) -> ItemData:
 	return null
 
 func process_pending_unlock() -> void:
-	if _pending_tier_advance_source != "":
-		# Safety Guard: Never notify for the same tier twice
-		if max_unlocked_tier <= _last_notified_tier:
-			LogManager.info("StoryManager", "Skip redundant notification for Tier %d" % max_unlocked_tier)
-			_pending_tier_advance_source = ""
-			return
-			
-		# Always offer the NEXT sequential upgrade for purchase
-		pending_upgrade_tier = current_tier + 1
-		pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
-		
-		# But the notification highlights the specific tier that was JUST unlocked
-		var notify_tier = _last_tier_unlocked_notification if _last_tier_unlocked_notification > 0 else pending_upgrade_tier
-		
-		# Collect items belonging specifically to the newly unlocked tier
-		var new_items: Array[ItemData] = []
-		for item in InventoryManager.get_all_items():
-			if item.tier == notify_tier:
-				new_items.append(item)
-		
+	if _pending_tier_advance_source == "":
+		return
+
+	# Safety Guard: Never notify for the same tier twice
+	if max_unlocked_tier <= _last_notified_tier:
+		LogManager.info("StoryManager", "Skip redundant notification for Tier %d" % max_unlocked_tier)
 		_pending_tier_advance_source = ""
-		_last_tier_unlocked_notification = 0 # Reset after notification
-		_last_notified_tier = notify_tier
+		return
 		
-		# Notify the player. We show the items for notify_tier, 
-		# but the cost is for the NEXT purchaseable upgrade (pending_upgrade_tier).
-		EventBus.upgrade_available.emit(notify_tier, pending_upgrade_cost, new_items)
-		_save_progression()
+	# Always offer the NEXT sequential upgrade for purchase
+	pending_upgrade_tier = current_tier + 1
+	pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
+	
+	# But the notification highlights the specific tier that was JUST unlocked
+	var notify_tier = _last_tier_unlocked_notification if _last_tier_unlocked_notification > 0 else pending_upgrade_tier
+	
+	# Collect items belonging specifically to the newly unlocked tier
+	var new_items: Array[ItemData] = []
+	for item in InventoryManager.get_all_items():
+		if item.tier == notify_tier:
+			new_items.append(item)
+	
+	_pending_tier_advance_source = ""
+	_last_tier_unlocked_notification = 0 # Reset after notification
+	_last_notified_tier = notify_tier
+	
+	# Notify the player. We show the items for notify_tier, 
+	# but the cost is for the NEXT purchaseable upgrade (pending_upgrade_tier).
+	EventBus.upgrade_available.emit(notify_tier, pending_upgrade_cost, new_items)
+	_save_progression()
 
 func _save_progression() -> void:
 	if not _save_requested:
