@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "barangay_liga"
+event_name = "Liga Finals sa Covered Court"
+description = "Championship game ng inter-barangay basketball! Uhaw at gutom ang mga manonood at manlalaro."
+rumor_text = "Game 3 na mamaya ng liga! Sigurado dagsa ang mga tambay para bumili ng chichirya at inumin."
+affected_categories = ["snack", "bottle"]
+affected_items = []
+demand_multiplier = 2.5
+tolerance_offset = 2

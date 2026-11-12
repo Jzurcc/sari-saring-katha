@@ -290,13 +290,22 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 	# Awareness
 	var awareness_active: bool = randf() < AWARENESS_CHANCE
 
-	# Price Sensitivity
-	var any_item_at_max: bool = false
+	# Price Sensitivity & Market Tolerance Evaluation
+	var has_overpriced: bool = false
+	var max_effective_step: int = -99
 	for item in transaction.desired_items:
-		if item.get_final_price() >= item.get_max_selling_price():
-			any_item_at_max = true
-			break
-	var high_price_active: bool = any_item_at_max and randf() < HIGH_PRICE_CHANCE
+		var item_step: int = item.current_step
+		var tolerance: int = 0
+		if is_instance_valid(StoreEventManager):
+			tolerance = StoreEventManager.get_item_tolerance_offset(item)
+		var effective_step: int = item_step - tolerance
+		if effective_step > max_effective_step:
+			max_effective_step = effective_step
+		if effective_step >= 2:
+			has_overpriced = true
+
+	# 40% chance to trigger haggle / price-sensitivity dialogue when effective step >= 2
+	var high_price_active: bool = has_overpriced and (randf() < 0.40)
 
 	# Stock Status
 	var total_stock: int = (

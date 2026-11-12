@@ -89,10 +89,17 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
+		# Tip Windfall on Loss Leaders (step <= -1)
+		var tip: float = 0.0
+		if item.current_step < 0 and not wants_debt:
+			tip = snapped(float(abs(item.current_step)) * 1.5 + 1.0, 1.0)
+			_last_earning += tip
+			LogManager.info("GameManager", "Loss leader discount rewarded with a tip of +₱%.2f!" % tip)
+
 		money += _last_earning
 		EventBus.money_changed.emit(money)
-		LogManager.info("GameManager", "Sold %s for %.2f (Base: %.2f, Price: %.2f). TOTAL: %.2f" % [
-			item.item_name, _last_earning, item.price, item.get_final_price(), money
+		LogManager.info("GameManager", "Sold %s for %.2f (Base: %.2f, Price: %.2f, Tip: %.2f). TOTAL: %.2f" % [
+			item.item_name, _last_earning, item.price, item.get_final_price(), tip, money
 		])
 
 func _on_utang_accepted(_customer: Customer) -> void:

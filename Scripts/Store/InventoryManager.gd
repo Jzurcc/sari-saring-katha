@@ -167,27 +167,41 @@ func mark_item_as_configured(item: ItemData) -> void:
 			if master != item:
 				master.selling_price = item.selling_price
 
-## Adjusts selling price for one or more ItemData resources (clamped between base and tier max),
-## marks them as configured, emits price change signals, and refreshes all pricing UIs.
-func adjust_item_price(items: Array[ItemData], delta: float) -> void:
+## Sets the discrete pricing step (-3 to +3) for one or more items.
+func set_item_step(items: Array[ItemData], new_step: int) -> void:
 	if items.is_empty() or not items[0]:
 		return
 	var ref_item: ItemData = items[0]
-	var current_price: float = ref_item.get_final_price()
-	var new_price: float = clampf(current_price + delta, ref_item.price, ref_item.get_max_selling_price())
+	var old_price: float = ref_item.get_final_price()
+	var clamped_step := clampi(new_step, -3, 3)
 	
 	for item in items:
 		if item:
-			item.selling_price = new_price
+			item.current_step = clamped_step
+			item.selling_price = item.get_price_for_step(clamped_step)
 			mark_item_as_configured(item)
-	
-	if new_price > current_price:
+			
+	var updated_price: float = ref_item.get_final_price()
+	if updated_price > old_price:
 		EventBus.price_increased.emit(ref_item)
-	elif new_price < current_price:
+	elif updated_price < old_price:
 		EventBus.price_decreased.emit(ref_item)
-	
+		
 	get_tree().call_group("draggable_items", "update_pricing_ui")
 	get_tree().call_group("pricing_ui_containers", "update_pricing_ui")
+
+## Adjusts the pricing step by step_delta (-1 or +1) for one or more items.
+func adjust_item_step(items: Array[ItemData], step_delta: int) -> void:
+	if items.is_empty() or not items[0]:
+		return
+	var ref_item: ItemData = items[0]
+	set_item_step(items, ref_item.current_step + step_delta)
+
+## Adjusts selling price for items via discrete steps.
+## Accepts positive float as +1 step, negative as -1 step for backward compatibility.
+func adjust_item_price(items: Array[ItemData], delta: float) -> void:
+	var step_delta := 1 if delta > 0.0 else (-1 if delta < 0.0 else 0)
+	adjust_item_step(items, step_delta)
 
 func get_capacity_limit(type: ItemData.ItemType) -> int:
 	match type:
@@ -304,14 +318,17 @@ func get_save_id() -> String:
 
 func get_save_data() -> Dictionary:
 	var prices := {}
+	var steps := {}
 	
 	for item in _items:
 		prices[item.resource_path] = item.selling_price
+		steps[item.resource_path] = item.current_step
 		
 	return {
 		"stock": _stock.duplicate(),
 		"delivery_cooldown": customers_needed_for_delivery,
 		"prices": prices,
+		"steps": steps,
 		"configured_ids": _configured_item_ids.duplicate(),
 	}
 
@@ -326,14 +343,22 @@ func load_save_data(data: Dictionary) -> void:
 	# Restore configured IDs
 	_configured_item_ids = data.get("configured_ids", {}).duplicate()
 			
-	# Restore custom prices and manual pricing flag
+	# Restore custom steps/prices and manual pricing flag
+	var saved_steps: Dictionary = data.get("steps", {})
 	var saved_prices: Dictionary = data.get("prices", {})
 	for path in saved_prices.keys():
 		var item = _get_item_by_path(path)
 		if item:
-			item.selling_price = float(saved_prices[path])
 			var id = item.get_clean_id()
 			item.is_manually_priced = _configured_item_ids.get(id, false)
+			if saved_steps.has(path):
+				item.current_step = int(saved_steps[path])
+				item.selling_price = item.get_price_for_step(item.current_step)
+			else:
+				# Legacy save: migrate float price to closest discrete step
+				item.selling_price = float(saved_prices[path])
+				item.current_step = item.get_step_from_price(item.selling_price)
+				item.selling_price = item.get_price_for_step(item.current_step)
 			
 	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
 	LogManager.info("InventoryManager", "State loaded. %d items tracked, %d configured IDs restored." % [_stock.size(), _configured_item_ids.size()])
@@ -344,6 +369,7 @@ func reset_state() -> void:
 	# Re-initialize stock to 0 for all items and reset prices
 	for item in _items:
 		_stock[item.resource_path] = 0
+		item.current_step = 0
 		item.selling_price = 0.0 # Resets to default on next get_final_price call
 		item.is_manually_priced = false
 		

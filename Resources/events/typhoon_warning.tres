@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "typhoon_warning"
+event_name = "Banta ng Bagyo"
+description = "May paparating na sama ng panahon. Mabilis maubos ang mga de lata, kape, at instant noodles."
+rumor_text = "Naku, sabi sa radyo Signal No. 1 na raw mamayang gabi! Mag-imbak na ng de lata at mainit na kape."
+affected_categories = ["can", "sachet"]
+affected_items = []
+demand_multiplier = 2.5
+tolerance_offset = 2

@@ -25,6 +25,15 @@ func _ready() -> void:
 			add_child(notice_instance)
 			notice_instance.add_to_group("notice_overlay")
 
+	# Spawn the PriceLedgerOverlay if it doesn't exist
+	if get_tree().get_nodes_in_group("price_ledger_overlay").is_empty():
+		LogManager.debug("MainGame", "Spawning PriceLedgerOverlay")
+		var ledger_scene = load("res://Scenes/UI/PriceLedgerOverlay.tscn")
+		if ledger_scene:
+			var ledger_instance = ledger_scene.instantiate()
+			add_child(ledger_instance)
+			ledger_instance.add_to_group("price_ledger_overlay")
+
 	# Ensure camera is correctly scaled to 75 as a fallback
 	LogManager.debug("MainGame", "Yielding frame for camera set")
 	await get_tree().process_frame

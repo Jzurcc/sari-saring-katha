@@ -133,13 +133,25 @@ func _input(event: InputEvent) -> void:
 			_last_hovered.set_pricing_ui_active(pricing_mode_active)
 		return
 
+	# Price Ledger Toggle (L)
+	var is_ledger_press := false
+	if event.is_action_pressed("toggle_ledger") and not event.echo:
+		is_ledger_press = true
+	elif event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_L or event.keycode == KEY_L):
+		is_ledger_press = true
+
+	if is_ledger_press and allow_interaction:
+		EventBus.price_ledger_toggled.emit(true)
+		get_viewport().set_input_as_handled()
+		return
+
 	# Pricing Adjustments (Direct Price Mode)
 	if pricing_mode_active and is_instance_valid(_last_hovered):
 		var delta := 0.0
 		if event.is_action_pressed("price_up"):
-			delta = 0.5
+			delta = 1.0
 		elif event.is_action_pressed("price_down"):
-			delta = -0.5
+			delta = -1.0
 
 		if delta != 0.0:
 			var trigger_adj := false

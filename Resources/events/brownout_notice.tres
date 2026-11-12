@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "brownout_notice"
+event_name = "Meralco Maintenance / Brownout"
+description = "Nakatakdang mawalan ng kuryente mamayang gabi. Naghahanap ang mga kapitbahay ng de lata at sigarilyo."
+rumor_text = "Sabi ni Kapitana may scheduled maintenance daw ang poste mamayang gabi, maghanda na kayo!"
+affected_categories = ["can", "cigarette"]
+affected_items = []
+demand_multiplier = 2.0
+tolerance_offset = 2

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "payday_friday"
+event_name = "Araw ng Sahod"
+description = "Kakasahod lang ng mga nagtatrabaho sa kabayanan. Mas bukas ang bulsa ng mga mamimili."
+rumor_text = "Sahod day ngayon! Treat ko ang pamilya ng masarap na meryenda at de lata."
+affected_categories = ["snack", "can", "pack"]
+affected_items = []
+demand_multiplier = 2.0
+tolerance_offset = 1
