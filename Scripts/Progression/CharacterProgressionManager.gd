@@ -118,7 +118,7 @@ func process_story_cooldown(customer: Node, last_mayari_collection_successful: b
 	# If the focus character reaches 3 interactions, rotate focus
 	if todays_story_counts[path] >= 3 and path == todays_focus_character_path:
 		LogManager.info("CharacterProgressionManager", "Focus character reached 3 interactions. Rotating focus.")
-		_rotate_focus_character(StoryManager.available_characters, path)
+		_rotate_focus_character(_get_story_manager().available_characters, path)
 
 	# Mark as advanced, set cooldown
 	transaction.story_advanced = true
@@ -126,11 +126,11 @@ func process_story_cooldown(customer: Node, last_mayari_collection_successful: b
 	global_story_cooldown = randi_range(1, 3)
 
 	story_advanced.emit(path, character_story_states.get(path, 0))
-	StoryManager._save_progression()
+	_get_story_manager()._save_progression()
 
 
 func _rotate_focus_character(all_characters: Array, current_path: String) -> void:
-	var unlocked := _get_unlocked_characters_from(all_characters, StoryManager.current_tier, StoryManager.day)
+	var unlocked := _get_unlocked_characters_from(all_characters, _get_story_manager().current_tier, _get_story_manager().day)
 	var possible := unlocked.filter(func(c): return c.resource_path != current_path)
 	if possible.is_empty():
 		possible = unlocked
@@ -144,7 +144,7 @@ func advance_story_direct(character_path: String) -> void:
 	var chapter = character_story_states.get(character_path, 0)
 	character_story_states[character_path] = chapter + 1
 	LogManager.info("CharacterProgressionManager", "Direct Advance: '%s' -> Chapter %d" % [character_path.get_file(), chapter + 1])
-	StoryManager._save_progression()
+	_get_story_manager()._save_progression()
 
 # ---------------------------------------------------------------------------
 # Character Filtering & Selection
@@ -152,15 +152,15 @@ func advance_story_direct(character_path: String) -> void:
 
 ## Returns all characters unlocked for the current tier & day.
 func get_unlocked_characters(current_tier: int, current_day: int) -> Array[CustomerData]:
-	return _get_unlocked_characters_from(StoryManager.available_characters, current_tier, current_day)
+	return _get_unlocked_characters_from(_get_story_manager().available_characters, current_tier, current_day)
 
 
 func _get_unlocked_characters_from(all_chars: Array, current_tier: int, current_day: int) -> Array[CustomerData]:
 	var unlocked: Array[CustomerData] = []
 
 	var current_quota_day: int = 1
-	if is_instance_valid(StoryManager._game_manager):
-		current_quota_day = StoryManager._game_manager.quota_day
+	if is_instance_valid(_get_story_manager()._game_manager):
+		current_quota_day = _get_story_manager()._game_manager.quota_day
 
 	for c in all_chars:
 		if not c:
@@ -277,3 +277,6 @@ func reset_state() -> void:
 	global_story_cooldown = 0
 	last_story_advancer_path = ""
 	LogManager.info("CharacterProgressionManager", "State reset for New Game.")
+
+func _get_story_manager() -> Node:
+	return get_node("/root/StoryManager")
