@@ -246,30 +246,30 @@ func start_dialogue(timeline, customer: Customer, in_phase: Phase = Phase.NONE, 
 		_current_timeline_path = ""
 		return
 
-	if layout and layout.has_method("register_character"):
-		var marker = customer.get_node_or_null("SpeechMarker")
-		if marker:
-			var char_data = customer.customer_data
-			if char_data and char_data.dialogic_character:
-				var dch_name: String = char_data.dialogic_character.resource_path.get_file().get_basename()
-				var canonical_char = DialogicResourceUtil.get_character_resource(dch_name)
-				if canonical_char:
-					layout.register_character(canonical_char, marker)
-			if generic_char_res:
-				var generic_name: String = generic_char_res.resource_path.get_file().get_basename()
-				var canonical_generic = DialogicResourceUtil.get_character_resource(generic_name)
-				if canonical_generic:
-					layout.register_character(canonical_generic, marker)
+	_register_characters_to_layout(layout, customer)
 
-		if is_instance_valid(guest_customer):
-			var guest_marker = guest_customer.get_node_or_null("SpeechMarker")
-			if guest_marker:
-				var guest_data = guest_customer.customer_data
-				if guest_data and guest_data.dialogic_character:
-					var guest_dch_name: String = guest_data.dialogic_character.resource_path.get_file().get_basename()
-					var canonical_guest = DialogicResourceUtil.get_character_resource(guest_dch_name)
-					if canonical_guest:
-						layout.register_character(canonical_guest, guest_marker)
+func _register_characters_to_layout(layout: Node, customer: Customer) -> void:
+	if not (layout and layout.has_method("register_character")):
+		return
+
+	var marker: Node3D = customer.get_node_or_null("SpeechMarker") as Node3D
+	if marker:
+		if customer.customer_data:
+			_register_marker_character(layout, customer.customer_data.dialogic_character, marker)
+		_register_marker_character(layout, generic_char_res, marker)
+
+	if is_instance_valid(guest_customer):
+		var guest_marker: Node3D = guest_customer.get_node_or_null("SpeechMarker") as Node3D
+		if guest_marker and guest_customer.customer_data:
+			_register_marker_character(layout, guest_customer.customer_data.dialogic_character, guest_marker)
+
+func _register_marker_character(layout: Node, char_res: Resource, marker: Node3D) -> void:
+	if not char_res or not marker:
+		return
+	var dch_name: String = char_res.resource_path.get_file().get_basename()
+	var canonical = DialogicResourceUtil.get_character_resource(dch_name)
+	if canonical:
+		layout.register_character(canonical, marker)
 
 func on_dialogic_signal(argument: String) -> void:
 	if argument == "refuse_service":
@@ -369,6 +369,9 @@ func on_dialogue_ended() -> void:
 			_is_partial_success = false
 		return
 
+	_resolve_phase_transition(ending_phase)
+
+func _resolve_phase_transition(ending_phase: Phase) -> void:
 	match ending_phase:
 		Phase.SOCIAL_VISIT:
 			_dismiss_guest_if_present()

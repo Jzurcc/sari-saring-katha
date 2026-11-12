@@ -204,20 +204,18 @@ func check_item(item: ItemData) -> bool:
 				return true
 		return false
 
+	if not transaction_context or item == null:
+		reject()
+		return false
+
 	# Visiting customers (including Visit-type story chapters) should never receive items — silent red outline.
-	if transaction_context:
-		var is_visit = transaction_context.transaction_type == TransactionContext.Type.VISIT
-		if is_visit or transaction_context.is_visit_story:
-			reject()
-			return false
+	if transaction_context.transaction_type == TransactionContext.Type.VISIT or transaction_context.is_visit_story:
+		reject()
+		return false
 		
 	# Purchase customers must be greeted before they accept items — silent red pulse.
 	if not has_been_greeted:
 		# Special case for Mario: if MainGame handles the early start, don't pulse here.
-		return false
-
-	if item == null or transaction_context == null:
-		reject()
 		return false
 
 	# Story fallback: If this is a STORY but the dev forgot to populate items (and it's not a visit-story), accept anything.
@@ -229,9 +227,18 @@ func check_item(item: ItemData) -> bool:
 	if transaction_context.fulfill_item(item):
 		_on_item_accepted(item)
 		return true
-	else:
-		reject()
-		return false
+
+	reject()
+	return false
+
+func _get_base_sprite_scale() -> Vector3:
+	return Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
+
+func _start_visual_tween() -> Tween:
+	if _visual_tween:
+		_visual_tween.kill()
+	_visual_tween = create_tween()
+	return _visual_tween
 
 func _on_item_accepted(item: ItemData) -> void:
 	# VISUAL: Stronger green pulse for success
@@ -239,17 +246,16 @@ func _on_item_accepted(item: ItemData) -> void:
 	
 	# Excited Pop (Exaggerated Squash and Stretch)
 	if body_sprite:
-		if _visual_tween: _visual_tween.kill()
-		_visual_tween = create_tween()
-		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
+		var tw = _start_visual_tween()
+		var base_scale = _get_base_sprite_scale()
 		# Squash down
-		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.2, base_scale.y * 0.8, base_scale.z), 0.1) \
+		tw.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.2, base_scale.y * 0.8, base_scale.z), 0.1) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		# Snap up (Stretch)
-		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.85, base_scale.y * 1.2, base_scale.z), 0.12) \
+		tw.tween_property(body_sprite, "scale", Vector3(base_scale.x * 0.85, base_scale.y * 1.2, base_scale.z), 0.12) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		# Settle
-		_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.3) \
+		tw.tween_property(body_sprite, "scale", base_scale, 0.3) \
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	
 	# If this was a riddle and we just solved the riddle item, clear the riddle flag
@@ -312,9 +318,8 @@ func reject() -> void:
 	
 	# VISUAL: Disappointed Squash and Stretch + Shiver
 	if body_sprite:
-		if _visual_tween: _visual_tween.kill()
-		_visual_tween = create_tween()
-		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
+		var tw = _start_visual_tween()
+		var base_scale = _get_base_sprite_scale()
 		
 		# Pulse red
 		if _outline_material:
@@ -322,8 +327,8 @@ func reject() -> void:
 			_outline_material.set_shader_parameter("outline_color", Color.RED)
 		
 		# Squash down and vibrate (Shiver)
-		_visual_tween.set_parallel(true)
-		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.08, base_scale.y * 0.92, base_scale.z), 0.1) \
+		tw.set_parallel(true)
+		tw.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.08, base_scale.y * 0.92, base_scale.z), 0.1) \
 			.set_trans(Tween.TRANS_SINE)
 		
 		# Quick horizontal shiver sequence
@@ -334,10 +339,10 @@ func reject() -> void:
 		shiver_tween.tween_property(body_sprite, "position:x", -0.03, 0.05)
 		shiver_tween.tween_property(body_sprite, "position:x", 0.0, 0.05)
 		
-		_visual_tween.set_parallel(false)
+		tw.set_parallel(false)
 		
 		# Bounce back
-		_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.2) \
+		tw.tween_property(body_sprite, "scale", base_scale, 0.2) \
 			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 			
 	await get_tree().create_timer(0.3).timeout
@@ -388,18 +393,17 @@ func _clear_outline() -> void:
 func play_speak_animation() -> void:
 	if not body_sprite: return
 	
-	if _visual_tween: _visual_tween.kill()
-	_visual_tween = create_tween()
-	var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
+	var tw = _start_visual_tween()
+	var base_scale = _get_base_sprite_scale()
 	
 	# Two quick, subtle vertical pulses (0.6s total)
 	# Pulse 1
-	_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.04, base_scale.y * 0.96, base_scale.z), 0.15) \
+	tw.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.04, base_scale.y * 0.96, base_scale.z), 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.15) \
+	tw.tween_property(body_sprite, "scale", base_scale, 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	# Pulse 2
-	_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.04, base_scale.y * 0.96, base_scale.z), 0.15) \
+	tw.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.04, base_scale.y * 0.96, base_scale.z), 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.15) \
+	tw.tween_property(body_sprite, "scale", base_scale, 0.15) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

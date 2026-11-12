@@ -122,14 +122,7 @@ func _spawn_next_customer() -> void:
 		var dir_back = (spawn_global - target_global).normalized()
 		final_target += (dir_back * 0.7)
 
-	current_customer = customer_scene.instantiate()
-	get_parent().add_child(current_customer)
-	current_customer.global_position = spawn_global
-	current_customer.setup(transaction, final_target, exit_global)
-
-	current_customer.arrived.connect(_on_customer_arrived)
-	current_customer.clicked.connect(_on_customer_clicked)
-	current_customer.satisfied.connect(_on_customer_finished) # Triggers Satisfy dialogue
+	current_customer = _create_customer(transaction, spawn_global, final_target, exit_global)
 
 	# Spawn Guest Customer if present
 	if transaction.secondary_customer_data:
@@ -271,14 +264,7 @@ func spawn_mayari_for_collection() -> void:
 	var spawn_global = get_node(spawn_pos).global_position
 	var target_global = get_node(target_pos).global_position
 	
-	current_customer = customer_scene.instantiate()
-	get_parent().add_child(current_customer)
-	current_customer.global_position = spawn_global
-	current_customer.setup(transaction, target_global)
-
-	current_customer.arrived.connect(_on_customer_arrived)
-	current_customer.clicked.connect(_on_customer_clicked)
-	current_customer.satisfied.connect(_on_customer_finished)
+	current_customer = _create_customer(transaction, spawn_global, target_global)
 
 	EventBus.customer_spawned.emit(current_customer)
 	_is_spawning = false
@@ -344,17 +330,21 @@ func reset_state() -> void:
 	# If no customer to restore, handle guest restoration (optional, usually guest is with primary)
 
 
+func _create_customer(transaction: TransactionContext, spawn: Vector3, target: Vector3, exit: Vector3 = Vector3.ZERO) -> Customer:
+	var customer: Customer = customer_scene.instantiate()
+	get_parent().add_child(customer)
+	customer.global_position = spawn
+	customer.setup(transaction, target, exit)
+	customer.arrived.connect(_on_customer_arrived)
+	customer.clicked.connect(_on_customer_clicked)
+	customer.satisfied.connect(_on_customer_finished)
+	return customer
+
 func _on_character_speaking(data: CustomerData) -> void:
 	if not data:
 		return
 		
-	# Match data to current_customer or guest_customer using stable ID
 	var target_id = data.get_clean_id()
-	
-	if current_customer and current_customer.customer_data:
-		if current_customer.customer_data.get_clean_id() == target_id:
-			current_customer.play_speak_animation()
-	
-	if guest_customer and guest_customer.customer_data:
-		if guest_customer.customer_data.get_clean_id() == target_id:
-			guest_customer.play_speak_animation()
+	for c in [current_customer, guest_customer]:
+		if c and c.customer_data and c.customer_data.get_clean_id() == target_id:
+			c.play_speak_animation()
