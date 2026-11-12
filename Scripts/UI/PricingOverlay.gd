@@ -107,7 +107,7 @@ func _ready() -> void:
 	# 7-Step Pip Track
 	step_pips_label = Label.new()
 	step_pips_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	step_pips_label.add_theme_font_size_override("font_size", 22)
+	step_pips_label.add_theme_font_size_override("font_size", 28)
 	step_pips_label.add_theme_color_override("font_color", beige_subtle)
 	vbox.add_child(step_pips_label)
 
@@ -162,23 +162,13 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	name_label.text = custom_name if custom_name != "" else item_data.item_name
 	price_label.text = "₱%.2f" % [final_price]
 
-	# 7-Step Pip Track generation: e.g. "[-3] [-2] [-1] [0] [+1] [+2] [+3]"
+	# 7-Step Circle Track: • for selected and ◦ for not selected
 	var pips := ""
 	for i in range(-3, 4):
 		if i == step:
-			if i > 0:
-				pips += "[+%d] " % i
-			elif i == 0:
-				pips += "[ 0 ] "
-			else:
-				pips += "[%d] " % i
+			pips += "•  "
 		else:
-			if i > 0:
-				pips += "+%d " % i
-			elif i == 0:
-				pips += " 0  "
-			else:
-				pips += "%d " % i
+			pips += "◦  "
 	step_pips_label.text = pips.strip_edges()
 
 	# Comparison readout & coloring
@@ -188,12 +178,15 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		var factor = float(step) / 3.0
 		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.35, 0.2), factor)
 		comparison_label.add_theme_color_override("font_color", markup_color)
+		step_pips_label.add_theme_color_override("font_color", markup_color)
 	elif step < 0:
 		comparison_label.text = "Step %d (-₱%.2f Loss Leader)" % [step, absf(diff)]
 		comparison_label.add_theme_color_override("font_color", Color(0.49, 0.76, 0.57))
+		step_pips_label.add_theme_color_override("font_color", Color(0.49, 0.76, 0.57))
 	else:
 		comparison_label.text = "Step 0 (Cost: ₱%.2f)" % [base_price]
 		comparison_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78, 0.8))
+		step_pips_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78, 0.8))
 
 	# Arrow Dimming
 	left_arrow.modulate = Color(1, 1, 1, 0.3) if step <= -3 else Color(1, 1, 1, 1.0)

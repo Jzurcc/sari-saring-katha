@@ -144,7 +144,7 @@ func refresh_events() -> void:
 		card.add_theme_stylebox_override("panel", card_style)
 
 		var vbox := VBoxContainer.new()
-		vbox.theme_override_constants.separation = 4
+		vbox.add_theme_constant_override("separation", 4)
 		card.add_child(vbox)
 
 		# Event Name
@@ -222,7 +222,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 
 	var hbox := HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
-	hbox.theme_override_constants.separation = 12
+	hbox.add_theme_constant_override("separation", 12)
 	row.add_child(hbox)
 
 	# Product Icon
@@ -237,7 +237,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 	var info_vbox := VBoxContainer.new()
 	info_vbox.custom_minimum_size = Vector2(170, 0)
 	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_vbox.theme_override_constants.separation = 2
+	info_vbox.add_theme_constant_override("separation", 2)
 	hbox.add_child(info_vbox)
 
 	var name_lbl := Label.new()
@@ -249,7 +249,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 
 	# Subline: Cost + In Demand tag
 	var sub_hbox := HBoxContainer.new()
-	sub_hbox.theme_override_constants.separation = 8
+	sub_hbox.add_theme_constant_override("separation", 8)
 	info_vbox.add_child(sub_hbox)
 
 	var cost_lbl := Label.new()
@@ -272,7 +272,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 
 	# Stepper Control HBox
 	var stepper_hbox := HBoxContainer.new()
-	stepper_hbox.theme_override_constants.separation = 6
+	stepper_hbox.add_theme_constant_override("separation", 6)
 	hbox.add_child(stepper_hbox)
 
 	var minus_btn := Button.new()
@@ -287,7 +287,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 	pips_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pips_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	pips_lbl.add_theme_font_override("font", FONT_INDER)
-	pips_lbl.add_theme_font_size_override("font_size", 13)
+	pips_lbl.add_theme_font_size_override("font_size", 18)
 	stepper_hbox.add_child(pips_lbl)
 
 	var plus_btn := Button.new()
@@ -355,23 +355,13 @@ func _update_row_display(item: ItemData) -> void:
 	var base_price: float = item.price
 	var diff: float = final_price - base_price
 
-	# Pip track string
+	# Circle track string: • for selected and ◦ for not selected
 	var pips_text := ""
 	for i in range(-3, 4):
 		if i == step:
-			if i > 0:
-				pips_text += "[+%d] " % i
-			elif i == 0:
-				pips_text += "[ 0 ] "
-			else:
-				pips_text += "[%d] " % i
+			pips_text += "•  "
 		else:
-			if i > 0:
-				pips_text += "+%d " % i
-			elif i == 0:
-				pips_text += " 0  "
-			else:
-				pips_text += "%d " % i
+			pips_text += "◦  "
 	pips_lbl.text = pips_text.strip_edges()
 
 	# Price and status readout
