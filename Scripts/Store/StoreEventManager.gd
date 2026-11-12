@@ -10,6 +10,7 @@ const EVENTS_DIR := "res://Resources/events"
 
 var _available_events: Dictionary = {} # event_id -> StoreEventData
 var _active_events: Array[StoreEventData] = []
+var _pending_event: StoreEventData = null
 var _has_rolled_for_day: bool = false
 
 func _ready() -> void:
@@ -39,26 +40,40 @@ func _load_available_events() -> void:
 func _on_day_started(_day_number: int) -> void:
 	roll_daily_events()
 
-## Rolls 1-2 random market events for the new day.
+## Rolls a random daily market event that begins in a pending state until Danilo announces it.
 func roll_daily_events() -> void:
 	_active_events.clear()
+	_pending_event = null
 	var pool := _available_events.values().duplicate()
 	if pool.is_empty():
 		events_changed.emit(_active_events)
 		return
 
 	pool.shuffle()
-	# 70% chance for 1 event, 30% chance for 2 events
-	var count := 2 if (randf() < 0.30 and pool.size() >= 2) else 1
-	for i in range(mini(count, pool.size())):
-		_active_events.append(pool[i])
-
+	_pending_event = pool[0]
 	_has_rolled_for_day = true
-	LogManager.info("StoreEventManager", "Rolled %d daily events: %s" % [
-		_active_events.size(),
-		", ".join(_active_events.map(func(e): return e.event_name))
-	])
+	LogManager.info("StoreEventManager", "Daily event queued for Danilo's announcement: %s" % _pending_event.event_name)
 	events_changed.emit(_active_events)
+
+func has_pending_announcement() -> bool:
+	return _pending_event != null
+
+func get_pending_event() -> StoreEventData:
+	return _pending_event
+
+## Marks the pending event as officially announced by Danilo, moving it to active events.
+func mark_event_announced(event_id: String = "") -> void:
+	var event_to_activate: StoreEventData = null
+	if _pending_event and (event_id.is_empty() or _pending_event.event_id == event_id):
+		event_to_activate = _pending_event
+		_pending_event = null
+	elif not event_id.is_empty() and _available_events.has(event_id):
+		event_to_activate = _available_events[event_id]
+
+	if event_to_activate and not _active_events.has(event_to_activate):
+		_active_events.append(event_to_activate)
+		LogManager.info("StoreEventManager", "Danilo announced event '%s'. Event is now ACTIVE!" % event_to_activate.event_name)
+		events_changed.emit(_active_events)
 
 func get_active_events() -> Array[StoreEventData]:
 	return _active_events
@@ -103,21 +118,30 @@ func get_save_data() -> Dictionary:
 		ids.append(e.event_id)
 	return {
 		"active_event_ids": ids,
+		"pending_event_id": _pending_event.event_id if _pending_event else "",
 		"has_rolled_for_day": _has_rolled_for_day
 	}
 
 func load_save_data(data: Dictionary) -> void:
 	_active_events.clear()
+	_pending_event = null
 	var ids: Array = data.get("active_event_ids", [])
 	for id in ids:
 		var event_id_str := str(id)
 		if _available_events.has(event_id_str):
 			_active_events.append(_available_events[event_id_str])
+	var pending_id: String = str(data.get("pending_event_id", ""))
+	if not pending_id.is_empty() and _available_events.has(pending_id):
+		_pending_event = _available_events[pending_id]
 	_has_rolled_for_day = data.get("has_rolled_for_day", false)
 	events_changed.emit(_active_events)
-	LogManager.info("StoreEventManager", "Restored %d active events from save." % _active_events.size())
+	LogManager.info("StoreEventManager", "Restored %d active events and pending (%s) from save." % [
+		_active_events.size(), pending_id
+	])
 
 func reset_state() -> void:
 	_active_events.clear()
+	_pending_event = null
 	_has_rolled_for_day = false
 	events_changed.emit(_active_events)
+

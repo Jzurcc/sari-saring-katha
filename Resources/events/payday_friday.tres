@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "payday_friday"
-event_name = "Araw ng Sahod"
-description = "Kakasahod lang ng mga nagtatrabaho sa kabayanan. Mas bukas ang bulsa ng mga mamimili."
-rumor_text = "Sahod day ngayon! Treat ko ang pamilya ng masarap na meryenda at de lata."
+event_name = "Payday Rush"
+description = "Workers in town just received their payroll. Customers have extra cash and are willing to spend on premium snacks and canned meats."
+rumor_text = "Uy, boss. Folks from town just got their payroll packets today. Pockets are full for once, so don't be shy about stocking up the snacks and good canned meat."
 affected_categories = ["snack", "can", "pack"]
 affected_items = []
 demand_multiplier = 2.0

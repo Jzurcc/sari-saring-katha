@@ -284,6 +284,9 @@ func on_dialogic_signal(argument: String) -> void:
 	elif argument == "partial_dismiss" or argument == "story_success":
 		_is_partial_success = true
 		_pending_dismiss = true
+	elif argument == "event_announced":
+		if is_instance_valid(StoreEventManager):
+			StoreEventManager.mark_event_announced()
 	elif argument == "utang_accepted":
 		EventBus.utang_accepted.emit(current_customer)
 	elif argument == "utang_rejected":
@@ -356,6 +359,10 @@ func on_dialogue_ended() -> void:
 	var ending_phase := phase
 	phase = Phase.NONE
 	_current_timeline_path = ""
+
+	if is_instance_valid(current_customer) and current_customer.transaction_context:
+		if current_customer.transaction_context.event_rumor_active and is_instance_valid(StoreEventManager):
+			StoreEventManager.mark_event_announced(current_customer.transaction_context.pending_event_id)
 
 	if _pending_dismiss:
 		_pending_dismiss = false

@@ -1,5 +1,12 @@
 label Greeting
-if {Global_RumorActive}:
+if {Global_EventRumorActive}:
+	Danilo: {Global_EventRumorText}
+	[pause=0.3]
+	Danilo: [color=#8B6855]Keep that in mind, boss. Could be good business if you play it right.[/color] [pause=0.4] Stay focused, 'no? I'm watching the road.
+	[signal arg="event_announced"]
+	[signal arg="story_success"]
+	[end_timeline]
+elif {Global_RumorActive}:
 	if {Global_RumorType} == 0.0:
 		Danilo: Psst. Boss. I saw {Global_LastCustomer} walking past the tricycle stand just now. [pause=0.3] Looking a bit tired, 'no?
 	else:

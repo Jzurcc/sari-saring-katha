@@ -21,3 +21,4 @@ func affects_item(item: ItemData) -> bool:
 	if not affected_categories.is_empty() and affected_categories.has(item.category):
 		return true
 	return false
+

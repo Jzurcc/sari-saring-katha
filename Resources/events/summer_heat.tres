@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "summer_heat"
-event_name = "Sobrang Init ng Panahon"
-description = "Napakainit ng sikat ng araw. Nag-aagawan ang mga bata at tricycle drivers sa pampalamig at kendi."
-rumor_text = "Grabe ang lagkit ng panahon ngayon! Wala bang malamig na inumin diyan o kendi pampatamis?"
+event_name = "Intense Heatwave"
+description = "Blistering afternoon heat. Trike drivers and kids are desperate for cold drinks, juices, and sweet candy."
+rumor_text = "Whew. Boss, it's brutal out there today. Even the stray dogs are hiding under the jeepneys. Anyone passing by is gonna want cold drinks and candy to cool down."
 affected_categories = ["bottle", "candy"]
 affected_items = []
 demand_multiplier = 2.5

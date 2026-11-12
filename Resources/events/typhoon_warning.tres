@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "typhoon_warning"
-event_name = "Banta ng Bagyo"
-description = "May paparating na sama ng panahon. Mabilis maubos ang mga de lata, kape, at instant noodles."
-rumor_text = "Naku, sabi sa radyo Signal No. 1 na raw mamayang gabi! Mag-imbak na ng de lata at mainit na kape."
+event_name = "Typhoon Warning"
+description = "A storm is heading this way. Neighbors are preparing to stock up on canned goods, instant noodles, and warm coffee."
+rumor_text = "Psst. Boss. Heavy clouds rolling in over the hills. Word from the terminal is Signal No. 1 tonight. Everyone's gonna be rushing for canned goods and coffee before the rain hits."
 affected_categories = ["can", "sachet"]
 affected_items = []
 demand_multiplier = 2.5

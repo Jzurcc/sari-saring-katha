@@ -151,6 +151,8 @@ audio/channel_defaults={
 }
 variables={
 "Global_AwarenessActive": 0.0,
+"Global_EventRumorActive": false,
+"Global_EventRumorText": "",
 "Global_HasEnoughMoney": 0.0,
 "Global_HighPriceActive": 0.0,
 "Global_LastCustomer": "",

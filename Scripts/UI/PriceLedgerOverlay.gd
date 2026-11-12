@@ -20,12 +20,12 @@ var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 var is_open: bool = false
 
 const CATEGORIES: Array[Dictionary] = [
-	{"id": "all", "label": "Lahat"},
-	{"id": "snack", "label": "Tsitsirya"},
-	{"id": "sachet", "label": "Sachet"},
-	{"id": "can", "label": "De-Lata"},
-	{"id": "bottle", "label": "Inumin/Bote"},
-	{"id": "other", "label": "Iba Pa"}
+	{"id": "all", "label": "All"},
+	{"id": "snack", "label": "Snacks"},
+	{"id": "sachet", "label": "Sachets"},
+	{"id": "can", "label": "Canned"},
+	{"id": "bottle", "label": "Drinks"},
+	{"id": "other", "label": "Other"}
 ]
 
 func _ready() -> void:
@@ -125,7 +125,7 @@ func refresh_events() -> void:
 
 	if active_events.is_empty():
 		var empty_lbl := Label.new()
-		empty_lbl.text = "Tahimik ang baryo ngayon.\nNormal ang takbo ng bilihin at presyo."
+		empty_lbl.text = "The neighborhood is quiet today.\nMarket demand and prices are stable."
 		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		empty_lbl.add_theme_font_override("font", FONT_INDER)
 		empty_lbl.add_theme_font_size_override("font_size", 14)
@@ -193,7 +193,7 @@ func refresh_catalog() -> void:
 
 	if filtered_items.is_empty():
 		var empty_lbl := Label.new()
-		empty_lbl.text = "Walang paninda sa kategoryang ito."
+		empty_lbl.text = "No items in this category."
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty_lbl.add_theme_font_override("font", FONT_INDER)
 		empty_lbl.add_theme_font_size_override("font_size", 16)
@@ -253,7 +253,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 	info_vbox.add_child(sub_hbox)
 
 	var cost_lbl := Label.new()
-	cost_lbl.text = "Puhunan: ₱%.2f" % item.price
+	cost_lbl.text = "Cost: ₱%.2f" % item.price
 	cost_lbl.add_theme_font_override("font", FONT_INDER)
 	cost_lbl.add_theme_font_size_override("font_size", 12)
 	cost_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
@@ -388,7 +388,7 @@ func _update_row_display(item: ItemData) -> void:
 		price_lbl.add_theme_color_override("font_color", Color(0.494, 0.761, 0.573))
 		step_info_lbl.add_theme_color_override("font_color", Color(0.494, 0.761, 0.573))
 	else:
-		step_info_lbl.text = "Step 0 (Puhunan)"
+		step_info_lbl.text = "Step 0 (Cost)"
 		price_lbl.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78))
 		step_info_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 

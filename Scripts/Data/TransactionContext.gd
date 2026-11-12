@@ -31,6 +31,9 @@ var is_repaying: bool = false
 var repayment_amount: float = 0.0
 var rumor_active: bool = false
 var rumor_type: float = 0.0
+var event_rumor_active: bool = false
+var event_rumor_text: String = ""
+var pending_event_id: String = ""
 var is_visit_story: bool = false
 var story_advanced: bool = false
 var is_guided_tutorial: bool = false
@@ -99,6 +102,9 @@ func to_dict() -> Dictionary:
 		"repayment_amount": repayment_amount,
 		"rumor_active": rumor_active,
 		"rumor_type": rumor_type,
+		"event_rumor_active": event_rumor_active,
+		"event_rumor_text": event_rumor_text,
+		"pending_event_id": pending_event_id,
 		"is_visit_story": is_visit_story,
 		"story_advanced": story_advanced,
 		"is_guided_tutorial": is_guided_tutorial,
@@ -146,6 +152,9 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.repayment_amount = data.get("repayment_amount", 0.0)
 	ctx.rumor_active = data.get("rumor_active", false)
 	ctx.rumor_type = data.get("rumor_type", 0.0)
+	ctx.event_rumor_active = data.get("event_rumor_active", false)
+	ctx.event_rumor_text = data.get("event_rumor_text", "")
+	ctx.pending_event_id = data.get("pending_event_id", "")
 	ctx.is_visit_story = data.get("is_visit_story", false)
 	ctx.story_advanced = data.get("story_advanced", false)
 	ctx.is_guided_tutorial = data.get("is_guided_tutorial", false)

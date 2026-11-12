@@ -116,6 +116,15 @@ static func select_character(sm: Node) -> Dictionary:
 		LogManager.info("StoryManager", "FIRST ENCOUNTER: Forcing story for new character: %s" % char_data.get_clean_id())
 		return {"customer": char_data, "force_story": force_story}
 
+	# Priority 0.5: Pending Market Event Announcement (Danilo delivers the rumor!)
+	if is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
+		var danilo_candidates = unlocked.filter(func(c: CustomerData) -> bool: return c.get_clean_id() == "danilo")
+		if not danilo_candidates.is_empty():
+			char_data = danilo_candidates[0]
+			force_story = false
+			LogManager.info("StoryManager", "EVENT PENDING: Forcing Danilo to deliver market event rumor.")
+			return {"customer": char_data, "force_story": force_story}
+
 	# Priority 1: Cooldown is 0, check for available story chapters
 	if CharacterProgressionManager.global_story_cooldown <= 0:
 		var story_candidates := unlocked.filter(func(c: CustomerData) -> bool:
@@ -161,7 +170,20 @@ static func build_transaction_context(
 	var is_collector: bool = data.is_collector()
 	var story_available: bool = story_pending and CharacterProgressionManager.is_story_chapter_available(data, chapter)
 
-	if (chapter == 0 or force_story) and story_available and not is_collector:
+	if not force_story and data.get_clean_id() == "danilo" and is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
+		var pending_event: StoreEventData = StoreEventManager.get_pending_event()
+		if pending_event:
+			transaction.transaction_type = TransactionContext.Type.VISIT
+			var visit_pool := data.get_visit_timelines(chapter)
+			if not visit_pool.is_empty():
+				transaction.timeline = visit_pool[0]
+			else:
+				transaction.timeline = load("res://Dialogue/Timelines/Danilo/Visit.dtl")
+			transaction.event_rumor_active = true
+			transaction.event_rumor_text = pending_event.rumor_text
+			transaction.pending_event_id = pending_event.event_id
+			LogManager.info("TransactionBuilder", "Configured Danilo visit to announce event: %s" % pending_event.event_name)
+	elif (chapter == 0 or force_story) and story_available and not is_collector:
 		transaction.transaction_type = TransactionContext.Type.STORY
 		transaction.timeline = data.story_timeline
 	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0 and not is_collector:

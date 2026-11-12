@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "brownout_notice"
-event_name = "Meralco Maintenance / Brownout"
-description = "Nakatakdang mawalan ng kuryente mamayang gabi. Naghahanap ang mga kapitbahay ng de lata at sigarilyo."
-rumor_text = "Sabi ni Kapitana may scheduled maintenance daw ang poste mamayang gabi, maghanda na kayo!"
+event_name = "Scheduled Power Outage"
+description = "Power lines are getting serviced tonight. Expect a spike in demand for canned rations, matches, and cigarettes."
+rumor_text = "Psst. Boss. Overheard the linemen by the main road. Power's getting cut tonight for line repairs. Expect folks looking for canned food and smokes before it gets dark."
 affected_categories = ["can", "cigarette"]
 affected_items = []
 demand_multiplier = 2.0

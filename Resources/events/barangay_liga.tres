@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "barangay_liga"
-event_name = "Liga Finals sa Covered Court"
-description = "Championship game ng inter-barangay basketball! Uhaw at gutom ang mga manonood at manlalaro."
-rumor_text = "Game 3 na mamaya ng liga! Sigurado dagsa ang mga tambay para bumili ng chichirya at inumin."
+event_name = "Barangay Basketball Finals"
+description = "The championship game at the covered court is today. Expect thirsty and hungry players and spectators."
+rumor_text = "Uy, boss. Covered court is packed today. Championship match of the barangay league. Whole neighborhood's gonna be parched and looking for cold drinks and snacks after the buzzer."
 affected_categories = ["snack", "bottle"]
 affected_items = []
 demand_multiplier = 2.5
