@@ -20,8 +20,7 @@ func _ready() -> void:
 	_refresh()
 
 func _process(_delta: float) -> void:
-	if display_mode == DisplayMode.TIME:
-		_refresh()
+	_refresh()
 
 func _on_day_started(_day: int) -> void:
 	if display_mode == DisplayMode.DAY:

@@ -115,22 +115,27 @@ func _on_tod_time_changed(t: float) -> void:
 			apply_display_time(CLOSING_HOUR)
 
 func apply_display_time(t: float) -> void:
-	if not _time_of_day_node or not is_instance_valid(_tree_owner):
+	_ensure_tod_node()
+	if not is_instance_valid(_time_of_day_node) or not is_instance_valid(_tree_owner):
 		return
 	var tree = _tree_owner.get_tree()
 	if tree.current_scene and tree.current_scene.name == "MainMenu":
 		return
 	var h: int = int(t)
 	var m: int = int((t - h) * 60.0)
-	_time_of_day_node.set_time(h, m, 0)
+	var s: int = int((((t - h) * 60.0) - m) * 60.0)
+	_time_of_day_node.set_time(h, m, s)
 
 func _ensure_tod_node() -> void:
 	if not is_instance_valid(_tree_owner):
 		return
-	if not is_instance_valid(_time_of_day_node):
-		_time_of_day_node = _tree_owner.get_tree().root.find_child("TimeOfDay", true, false)
+	if not is_instance_valid(_time_of_day_node) or not _time_of_day_node.is_inside_tree():
+		var tree := _tree_owner.get_tree()
+		if tree.current_scene:
+			_time_of_day_node = tree.current_scene.find_child("TimeOfDay", true, false)
+		if not is_instance_valid(_time_of_day_node):
+			_time_of_day_node = tree.root.find_child("TimeOfDay", true, false)
 		if is_instance_valid(_time_of_day_node):
-			var tree = _tree_owner.get_tree()
 			if tree.current_scene and tree.current_scene.name == "MainMenu":
 				var h: int = int(MENU_THEME_HOUR)
 				var m: int = int((MENU_THEME_HOUR - h) * 60.0)

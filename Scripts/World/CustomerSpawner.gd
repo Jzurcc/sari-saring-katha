@@ -318,6 +318,12 @@ func load_save_data(data: Dictionary) -> void:
 			get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
 			return
 
+	# If no active customer was at the counter at save time, resume customer spawning
+	if not StoryManager.is_past_closing_time():
+		get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
+	elif not StoryManager.has_mayari_visited:
+		get_tree().create_timer(1.0).timeout.connect(spawn_mayari_for_collection)
+
 func reset_state() -> void:
 	_pending_restore_transaction = null
 	current_customer = null

@@ -59,13 +59,13 @@ func _finish_initialization() -> void:
 		LogManager.info("GameManager", "Found save. Requesting distribution...")
 		SaveManager.request_load()
 		LogManager.info("GameManager", "Save distribution complete. Story Day: %d, Story Tier: %d" % [StoryManager.day, StoryManager.current_tier])
+		LogManager.info("GameManager", "Resuming Gameplay Level at Day %d" % StoryManager.day)
 	else:
 		LogManager.info("GameManager", "No save file found. Initializing fresh session (Morning, Day 1).")
 		StoryManager.reset_to_morning()
 		EventBus.money_changed.emit(money)
-
-	LogManager.info("GameManager", "Starting Gameplay Level at Day %d" % StoryManager.day)
-	EventBus.day_started.emit(StoryManager.day)
+		LogManager.info("GameManager", "Starting Gameplay Level at Day %d" % StoryManager.day)
+		EventBus.day_started.emit(StoryManager.day)
 
 	# Safety capture: ensure mouse is captured for gameplay.
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
