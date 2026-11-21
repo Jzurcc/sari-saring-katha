@@ -99,6 +99,8 @@ func _scan_and_connect_nodes(node: Node) -> void:
 		screen_label = node
 		screen_label.text = ""
 	elif node is Button:
+		# Prevent Space/Enter during Dialogic dialogue from re-activating focused Nokia keypad buttons
+		node.focus_mode = Control.FOCUS_NONE
 		var btn_name = node.name.to_lower()
 		match btn_name:
 			"clear":
@@ -273,7 +275,8 @@ func _on_mario_call_finished(success: bool, action: String = "restock") -> void:
 				default_btn.grab_focus()
 				
 			_move_to_side()
-	elif action == "cancel":
+	else:
+		# CallRest, Busy, or Nevermind — close the phone cleanly after Mario finishes talking
 		_on_close_pressed()
 
 func _update_screen() -> void:

@@ -108,6 +108,9 @@ func on_interact() -> void:
 		var restock_menu = ui.get_node_or_null("RestockMenu")
 		if restock_menu and restock_menu.has_signal("menu_close_requested"):
 			restock_menu.menu_close_requested.connect(_on_nokia_ui_closed_with_parent.bind(ui), CONNECT_ONE_SHOT)
+		var upgrade_menu = ui.get_node_or_null("UpgradeMenu")
+		if upgrade_menu and upgrade_menu.has_signal("menu_close_requested"):
+			upgrade_menu.menu_close_requested.connect(_on_nokia_ui_closed_with_parent.bind(ui), CONNECT_ONE_SHOT)
 		if is_incoming_call and ui.has_method("start_incoming_answer"):
 			ui.start_incoming_answer()
 	else:
