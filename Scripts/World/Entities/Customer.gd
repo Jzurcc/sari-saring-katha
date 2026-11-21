@@ -299,6 +299,7 @@ func _leave_store(completion_signal: Signal) -> void:
 	is_waiting = false
 	_is_resolving = true
 	_clear_outline()
+	EventBus.customer_order_cleared.emit()
 	InventoryManager.decrement_cooldown()
 	
 	# Point toward the custom exit marker and let _process handle the walk
