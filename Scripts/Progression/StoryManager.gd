@@ -179,7 +179,10 @@ func advance_tier(source: String = "Manual") -> void:
 	EventBus.tier_advanced.emit(current_tier, source)
 
 func get_upgrade_cost(target_tier: int) -> float:
-	return 80.0 + float(target_tier - 2) * 20.0
+	var step := float(maxi(0, target_tier - 2))
+	var linear_base := 80.0 + step * 20.0
+	var scaled := linear_base * (1.0 + 0.05 * step)
+	return roundf(scaled / 5.0) * 5.0
 
 ## Returns a virtual ItemData representating a store upgrade for a specific tier.
 func get_tier_upgrade_item(target_tier: int) -> ItemData:

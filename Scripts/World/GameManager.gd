@@ -30,7 +30,10 @@ var tutorial: TutorialManager
 
 # --- Debt System (Dynamic) ---
 func get_quota_for_day(q_day: int) -> float:
-	return 50.0 + (q_day - 1) * 15.0
+	var step := float(maxi(0, q_day - 1))
+	var linear_base := 50.0 + step * 15.0
+	var scaled := linear_base * (1.0 + 0.03 * step)
+	return roundf(scaled / 5.0) * 5.0
 
 func _ready() -> void:
 	LogManager.info("GameManager", "_ready() START")
