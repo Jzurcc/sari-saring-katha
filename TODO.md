@@ -58,10 +58,17 @@
 
 ## Design Notes & Discussion
 
-### 1. Custom Signage & Poster Reflected in the Main Menu
+### 1. Store Upgrades & Customization
 - **Why it hits hard:** Seeing *your* hand-drawn sari-sari sign and storefront poster on the Main Menu every time you launch the game turns the store from a level into *your* tindahan.
 - **UX tip for non-artists:** Pair freehand drawing (a few brush sizes + 6–8 marker/paint colors + undo/clear) with quick **sari-sari stamps/presets** (e.g., *"SARI-SARI STORE"*, *"ICE FOR SALE"*, *"LOAD HERE"*, *"BAWAL UTANG"*, stars/hearts) so players who don't draw can still make something funny and personal in 30 seconds.
 - **Tech note:** Save both canvases as `.png` files in `user://` and load them onto the storefront mesh materials in both `MainGame` and `MainMenu`.
+- **More Store Upgrade & Customization Ideas (beyond Trash Can, Cats & Signage):**
+  - **Outside *Bangko* / Monoblock Chairs:** Directly unlocks or expands the *Tambayan* side-visitor slot so more neighbors can hang out at the store (also visible on the Main Menu).
+  - **Counter Radio & Oscillating Electric Fan:** Tactile clickable props — clicking the radio cycles BGM tracks or plays short barangay announcements; the fan adds cozy hum and motion.
+  - **Fiesta *Banderitas* / Warm String Lights:** Lights up the storefront at dusk/night and shows up on the Main Menu golden-hour view.
+  - **Storefront Awning (*Tolda*) & Shelf Linoleum Themes:** Color/pattern swaps for the awning stripes, counter cloth, or painted trim.
+  - **Wall Bulletin Board / Barangay Corkboard:** Displays pinned market event flyers and neighborhood doodles in 3D space.
+  - **Counter *Alkansiya* (Coin Jar) or Lucky Charm Altar:** Visual prop that fills up as you earn money, or gives a tiny passive tip-chance bump.
 
 ### 2. Refrigerator Coldness & Upgrades
 - **Why it works:** Every Filipino player instantly relates to *"isara mo yung ref, sayang kuryente!"* — it turns opening the fridge into a quick, memorable micro-ritual.
@@ -72,17 +79,23 @@
 - **Clean architecture:** Generalize `CustomerSpawner`'s `current_customer` + `guest_customer` into a small multi-slot counter (**Main Buyer Slot** + **Side Tambay Slot(s)**). That single system unlocks **both** lingering visitors **and** multi-character Duwende groups at once!
 - **Autonomous banter:** Keep NPC-to-NPC exchanges as short, non-blocking floating speech bubbles (1–2 lines) so they add warmth without interrupting the player while they're dragging items or pricing shelves.
 
-### 4. Folklore Journal & Relationship (Familiarity) System
+### 4. Folklore Journal, Educational Trivia & Relationship (Familiarity) System
 - **Chapters vs. Familiarity:** Keep **Familiarity separate from story chapters**, with soft bridges between them:
   - *Chapters* pace the scripted narrative arc.
   - *Familiarity* reflects day-to-day treatment (fair/low prices, honoring utang, quick service, chitchat with lingering visitors, completing favors).
 - **Ways to lose familiarity (beyond rejection):** Repeatedly overcharging at `+3`, refusing utang during a vulnerable beat, or repeatedly handing the wrong item.
 - **Rewarding payoffs:** Higher familiarity can unlock **deeper real-life Philippine folklore trivia** in the Journal, better tips/tolerance, occasional neighbor gifts (like Manang Ana's adobo), and **ending/epilogue variations** (who shows up for you at the end).
+- **Journal & Educational Trivia Ideas:**
+  - **Two-Page Scrapbook Spread:** Styled like Lola's handwritten notebook — **Left Page:** Neighbor profile, favorite snacks, relationship hearts/stars, and story chapter recap; **Right Page:** *"Real-Life Folklore Field Notes"* clearly separating game fiction from authentic Philippine mythology.
+  - **Progressive Discovery:** Entries start as vague silhouettes/rumors on first meeting and unlock **regional origins** (Tagalog, Visayan, Bicolano, Maranao, etc.), **traditional beliefs/taboos** (e.g., *"Tabi-tabi po"* for Duwende, salt/garlic myths for Manananggal, turning shirts inside-out for Tikbalang), and **cultural/historical context** as you befriend them.
+  - **Folklore Stamps & Doodles:** Unlockable hand-drawn sketches, polaroids, or sticker stamps in the margins when you finish a character's arc or hit max familiarity.
+  - **Casual Trivia Callbacks:** Occasional playful quiz lines from Buboy or Danilo referencing real folklore facts you've unlocked in the journal for a bonus familiarity/tip boost.
 
 ### 5. Non-Purchase Quests & Filipino Cultural Minigames
 Great fits that stay grounded at the counter and reuse existing mechanics:
 - **Nokia *Paload* (E-Load):** Customer reads out a number/promo and you dial it on the Nokia keypad you already built!
 - **Neighbor Errands / Message Passing:** *"Can you hand this to Kuya Kap when he passes by?"* — simple item/message handoffs that make the neighborhood feel interconnected.
+  - *Note:* **Add a new Filipino myth character that parodies online deliveries to neighbors!** (e.g., a folklore parcel-rider yelling *"Parcel po! Pa-receive muna dito!"* and leaving a neighbor's package at your sari-sari store for you to hold and hand off when they drop by.)
 - ***Barya-barya* / Exact Change:** Occasional big bill (₱100 / ₱500) requiring quick change-making.
 - **Expanded *Bugtong* (Riddles):** Folklore-themed Filipino riddles with bonus familiarity/tips.
 
