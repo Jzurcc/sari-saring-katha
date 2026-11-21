@@ -40,6 +40,15 @@ func _ready() -> void:
 	_q_customer.collide_with_bodies = false
 	_q_customer.collision_mask = LAYER_CUSTOMERS
 
+	EventBus.drag_ended.connect(_on_drag_ended)
+
+func _on_drag_ended(_item: DraggableItem, _dropped_successfully: bool) -> void:
+	# Force fresh hover + pricing lens evaluation on the next frame after dropping an item
+	if is_instance_valid(_last_hovered):
+		_last_hovered.on_hover(false)
+		_last_hovered.set_pricing_ui_active(false)
+	_last_hovered = null
+
 	call_deferred("_cache_node_refs")
 
 func _cache_node_refs() -> void:
@@ -104,10 +113,10 @@ func _physics_process(_delta: float) -> void:
 	if current_hovered != _last_hovered:
 		if is_instance_valid(_last_hovered):
 			_last_hovered.on_hover(false)
+			_last_hovered.set_pricing_ui_active(false)
 		if is_instance_valid(current_hovered):
+			current_hovered.set_pricing_ui_active(pricing_mode_active)
 			current_hovered.on_hover(true)
-			if pricing_mode_active:
-				current_hovered.set_pricing_ui_active(pricing_mode_active)
 		_last_hovered = current_hovered
 
 func _input(event: InputEvent) -> void:

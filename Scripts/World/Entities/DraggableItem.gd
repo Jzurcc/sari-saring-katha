@@ -123,7 +123,8 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, 
 
 		if collider.shape is BoxShape3D:
 			collider.shape = collider.shape.duplicate()
-			collider.shape.size = Vector3(rendered_w, rendered_h, 0.05) # Fixed thin depth
+			var depth: float = maxf(0.16, rendered_w * 0.6)
+			collider.shape.size = Vector3(rendered_w, rendered_h, depth)
 		collider.position.y = rendered_h / 2.0
 
 	# UI is now handled by the global PricingOverlay
