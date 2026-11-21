@@ -119,7 +119,6 @@ func _spawn_delta_popup(diff: float) -> void:
 	var icon_px := float(popup_size) * 0.85
 	icon_rect.custom_minimum_size = Vector2(icon_px, icon_px)
 	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	icon_rect.modulate = fg_color
 	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	popup.add_child(icon_rect)
 
