@@ -92,12 +92,16 @@ func _physics_process(_delta: float) -> void:
 	var current_hovered: WorldInteractor = null
 
 	if DragManager.is_dragging:
-		# When dragging, completely ignore items so we don't highlight shelves/containers.
-		# Only allow hovering over the customer to indicate they can receive the item,
-		# or the trash bin for deletion.
-		if hit_customer:
+		# When dragging, highlight valid drop targets:
+		# customer, trash bin, blinking container placement slot, or a matching placed dispenser for refills.
+		var dragged_data: ItemData = DragManager.get_dragged_item_data()
+		if hit_item and hit_item.collider.is_in_group("container_drop_slot"):
+			current_hovered = _resolve_interactor(hit_item.collider)
+		elif hit_item and hit_item.collider.is_in_group("dispenser_containers") and hit_item.collider.has_method("accepts_refill") and hit_item.collider.accepts_refill(dragged_data):
+			current_hovered = _resolve_interactor(hit_item.collider)
+		elif hit_customer and not DispenserContainerItem.is_container_prop(dragged_data):
 			current_hovered = _resolve_interactor(hit_customer.collider)
-		elif hit_item and hit_item.collider.is_in_group("trash"):
+		elif hit_item and hit_item.collider.is_in_group("trash") and not DispenserContainerItem.is_container_prop(dragged_data):
 			current_hovered = _resolve_interactor(hit_item.collider)
 	else:
 		# Items take priority when they are in front of the customer,

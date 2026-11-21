@@ -49,11 +49,18 @@ func _check_unlock_status() -> void:
 		within_range = false
 		
 	_is_unlocked = within_range
-	visible = _is_unlocked
-	process_mode = Node.PROCESS_MODE_INHERIT if _is_unlocked else Node.PROCESS_MODE_DISABLED
+	_apply_visibility_state()
+
+func accepts_refill(item: ItemData) -> bool:
+	if not is_placed_and_active() or item == null:
+		return false
+	for candy in possible_candies:
+		if candy == item or (candy != null and candy.resource_path != "" and candy.resource_path == item.resource_path):
+			return true
+	return false
 
 func on_interact() -> void:
-	if not _is_unlocked or DragManager.is_dragging:
+	if not is_placed_and_active() or DragManager.is_dragging:
 		return
 	
 	_update_local_stock()

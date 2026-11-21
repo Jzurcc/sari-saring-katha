@@ -61,8 +61,18 @@ func on_interact() -> void:
 		_fade_out_and_destroy()
 		return
 		
-	# Pop the last item
-	var item_data: ItemData = items.pop_back()
+	# Always pop unplaced container props first so the player places the bowl/sachet strip before refills
+	var item_data: ItemData = null
+	var container_idx: int = -1
+	for i in range(items.size()):
+		if DispenserContainerItem.is_container_prop(items[i]):
+			container_idx = i
+			break
+	if container_idx >= 0:
+		item_data = items[container_idx]
+		items.remove_at(container_idx)
+	else:
+		item_data = items.pop_back()
 	
 	# Instantiate a DraggableItem
 	var drag_item: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
@@ -73,9 +83,10 @@ func on_interact() -> void:
 	drag_item.is_transient = true # It shouldn't persist if dropped in mid-air
 	drag_item.sprite.hide() # Hide base sprite as DragManager provides a cursor sprite
 	
-	# Subtract from digital stock immediately when taken out 
-	# (Since add_stock was already called in MarioManager)
-	InventoryManager.take_item(item_data)
+	# Subtract from digital stock immediately for pre-credited shelf/fridge items.
+	# Container props and bagged candy/sachet refills are credited only when placed in their container.
+	if not DispenserContainerItem.is_container_prop(item_data) and not DispenserContainerItem.is_dispenser_refill(item_data):
+		InventoryManager.take_item(item_data)
 	in_flight_count += 1
 	
 	DragManager.start_drag(drag_item, item_data.texture)
@@ -93,8 +104,9 @@ func receive_item(drag_item: DraggableItem) -> void:
 		
 	items.push_back(drag_item.item_data)
 	
-	# Restore digital stock since it was likely taken out (or just general logic consistency)
-	InventoryManager.return_item(drag_item.item_data)
+	# Restore digital stock for pre-credited shelf/fridge items
+	if not DispenserContainerItem.is_container_prop(drag_item.item_data) and not DispenserContainerItem.is_dispenser_refill(drag_item.item_data):
+		InventoryManager.return_item(drag_item.item_data)
 	
 	# Visual feedback: tween the item into the bag
 	var target_pos = global_position + Vector3(0, 0.1, 0)

@@ -81,22 +81,26 @@ func start_drag(item: DraggableItem, texture: Texture2D) -> void:
 	_drag_velocity = Vector2.ZERO
 	_dragged_texture_rect.rotation = 0.0
 
-	# Setup 3D Ghost Preview
+	# Setup 3D Ghost Preview (skip for container props — they blink at their designated store slot)
 	_cleanup_ghost()
-	
-	_ghost_parent = Node3D.new()
-	_ghost_parent.hide()
-	var scene = get_tree().current_scene
-	if scene:
-		scene.add_child(_ghost_parent)
+	var is_container_prop := DispenserContainerItem.is_container_prop(item.item_data if item else null)
+	if is_container_prop:
+		_notify_container_ghosts(item.item_data)
 	else:
-		add_child(_ghost_parent)
-		
-	if item.sprite:
-		_ghost_sprite = item.sprite.duplicate()
-		_ghost_sprite.material_overlay = null # Ensure no highlight outline on ghost
-		_ghost_sprite.show()
-		_ghost_parent.add_child(_ghost_sprite)
+		_notify_container_ghosts(null)
+		_ghost_parent = Node3D.new()
+		_ghost_parent.hide()
+		var scene = get_tree().current_scene
+		if scene:
+			scene.add_child(_ghost_parent)
+		else:
+			add_child(_ghost_parent)
+			
+		if item.sprite:
+			_ghost_sprite = item.sprite.duplicate()
+			_ghost_sprite.material_overlay = null # Ensure no highlight outline on ghost
+			_ghost_sprite.show()
+			_ghost_parent.add_child(_ghost_sprite)
 
 	EventBus.drag_started.emit(_dragged_item)
 
@@ -169,32 +173,46 @@ func end_drag() -> void:
 		return
 
 	var result := _get_drag_raycast_result()
+	var dragged_data: ItemData = _dragged_item.item_data if is_instance_valid(_dragged_item) else null
+	var is_container_prop := DispenserContainerItem.is_container_prop(dragged_data)
+	var is_refill := DispenserContainerItem.is_dispenser_refill(dragged_data)
 
 	if result:
 		var collider: Node = result.collider
-		if collider.is_in_group("transaction_tray") and collider.has_method("receive_item"):
-			collider.receive_item(_dragged_item)
-			success = true
-		elif collider.is_in_group("trash") and collider.has_method("receive_item"):
-			collider.receive_item(_dragged_item)
-			success = true
-		elif collider is Customer:
-			# Redirect the drop to the standard transaction tray logic
-			var tray_nodes = get_tree().get_nodes_in_group("transaction_tray")
-			if tray_nodes.size() > 0 and tray_nodes[0].has_method("receive_item"):
-				tray_nodes[0].receive_item(_dragged_item)
-				success = true
-		elif collider.is_in_group("shelf_drop_zone"):
-			# The drop zone Area3D's parent is the ShelfSurface
-			var shelf_surface := collider.get_parent()
-			if shelf_surface and shelf_surface.has_method("receive_item"):
-				shelf_surface.receive_item(_dragged_item, result.position)
-				success = true
-		elif collider.is_in_group("delivery_bag"):
-			if collider.has_method("receive_item"):
+		if is_container_prop:
+			# Container props can ONLY be placed at their designated blinking slot or back in a delivery bag
+			if collider.is_in_group("container_drop_slot") and collider.has_method("place_container"):
+				success = collider.place_container(_dragged_item)
+			elif collider.is_in_group("delivery_bag") and collider.has_method("receive_item"):
 				collider.receive_item(_dragged_item)
 				success = true
+		else:
+			if is_refill and collider.is_in_group("dispenser_containers") and collider.has_method("receive_refill"):
+				success = collider.receive_refill(_dragged_item)
+			elif collider.is_in_group("transaction_tray") and collider.has_method("receive_item"):
+				collider.receive_item(_dragged_item)
+				success = true
+			elif collider.is_in_group("trash") and collider.has_method("receive_item"):
+				collider.receive_item(_dragged_item)
+				success = true
+			elif collider is Customer:
+				# Redirect the drop to the standard transaction tray logic
+				var tray_nodes = get_tree().get_nodes_in_group("transaction_tray")
+				if tray_nodes.size() > 0 and tray_nodes[0].has_method("receive_item"):
+					tray_nodes[0].receive_item(_dragged_item)
+					success = true
+			elif collider.is_in_group("shelf_drop_zone"):
+				# The drop zone Area3D's parent is the ShelfSurface
+				var shelf_surface := collider.get_parent()
+				if shelf_surface and shelf_surface.has_method("receive_item"):
+					shelf_surface.receive_item(_dragged_item, result.position)
+					success = true
+			elif collider.is_in_group("delivery_bag"):
+				if collider.has_method("receive_item"):
+					collider.receive_item(_dragged_item)
+					success = true
 
+	_notify_container_ghosts(null)
 	EventBus.drag_ended.emit(_dragged_item, success)
 
 	if not success:
@@ -237,8 +255,23 @@ func force_cancel_drag() -> void:
 	set_process(false)
 	if is_instance_valid(_dragged_texture_rect):
 		_dragged_texture_rect.hide()
+	_notify_container_ghosts(null)
 	_cleanup_ghost()
 	_cancel_drag()
+
+
+func get_dragged_item_data() -> ItemData:
+	if _is_dragging and is_instance_valid(_dragged_item):
+		return _dragged_item.item_data
+	return null
+
+
+func _notify_container_ghosts(item_data: ItemData) -> void:
+	if not is_inside_tree() or not get_tree():
+		return
+	for node in get_tree().get_nodes_in_group("dispenser_containers"):
+		if is_instance_valid(node) and node.has_method("set_ghost_preview_for"):
+			node.set_ghost_preview_for(item_data)
 
 
 func reset_state() -> void:

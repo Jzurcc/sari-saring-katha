@@ -47,6 +47,13 @@
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
+[ext_resource type="Resource" uid="uid://bw5rcxfc4rw5d" path="res://Resources/items/candycontainer/Mix.tres" id="cc_mix"]
+[ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
+[ext_resource type="Resource" uid="uid://dxicfamgebq1j" path="res://Resources/items/candycontainer/Mentor.tres" id="cc_mentor"]
+[ext_resource type="Resource" uid="uid://cbsrv36cx7m4r" path="res://Resources/items/candycontainer/Pocha.tres" id="cc_pocha"]
+[ext_resource type="Resource" uid="uid://wm1gpkw3glu2" path="res://Resources/items/sachetcontainers/Aryel.tres" id="sc_aryel"]
+[ext_resource type="Resource" uid="uid://b1a3e2b3icb32" path="res://Resources/items/sachetcontainers/Kopimo.tres" id="sc_kopimo"]
+[ext_resource type="Resource" uid="uid://cv3kc6f1s6724" path="res://Resources/items/sachetcontainers/KneesToes.tres" id="sc_kneestoes"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
@@ -453,6 +460,7 @@ script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha"), ExtResource("candy_mentor")])
 min_unlock_tier = 2
 disable_at_tier = 10
+container_item = ExtResource("cc_mix")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Mix" unique_id=290924168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03137207, -0.064819336, 1.9026871)
@@ -472,6 +480,7 @@ visible = false
 script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_chubs")])
 min_unlock_tier = 6
+container_item = ExtResource("cc_chubs")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Chubs" unique_id=1977615065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.48161507)
@@ -491,6 +500,7 @@ visible = false
 script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_mentor")])
 min_unlock_tier = 10
+container_item = ExtResource("cc_mentor")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Mentor" unique_id=394685186]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.799263)
@@ -510,6 +520,7 @@ visible = false
 script = ExtResource("cci_scr")
 possible_candies = Array[ExtResource("12_yc6xl")]([ExtResource("candy_pocha")])
 min_unlock_tier = 10
+container_item = ExtResource("cc_pocha")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Pocha" unique_id=82948427]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.6319962)
@@ -619,6 +630,7 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("47_50m7d")
+container_item = ExtResource("sc_aryel")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem" unique_id=746439960]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
@@ -635,6 +647,7 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -4.1
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("49_1u2qj")
+container_item = ExtResource("sc_kopimo")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem2" unique_id=1366571915]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08065796, -0.03533411, 0.02798462)
@@ -651,6 +664,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0922375, 4.516964, -2.4620
 visible = false
 script = ExtResource("45_glkqw")
 sachet_item = ExtResource("51_hnhmk")
+container_item = ExtResource("sc_kneestoes")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SachetContainerItem3" unique_id=1432288744]
 transform = Transform3D(0.20468557, 0.011357678, -1.4201085e-11, -0.011357678, 0.20468557, -4.9913773e-10, -1.3541168e-11, 4.991555e-10, 0.205, -0.11953378, 0.08510351, 0.02798462)

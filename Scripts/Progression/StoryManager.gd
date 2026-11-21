@@ -73,6 +73,38 @@ var pending_upgrade_tier: int = 0
 var pending_upgrade_cost: float = 0.0
 var _upgrade_item_cache: Dictionary = {}
 
+## Physical container equipment props delivered in plastic bags on tier upgrades.
+const CONTAINER_PROP_PATHS: Array[String] = [
+	"res://Resources/items/candycontainer/Mix.tres",
+	"res://Resources/items/candycontainer/Chubs.tres",
+	"res://Resources/items/candycontainer/Mentor.tres",
+	"res://Resources/items/candycontainer/Pocha.tres",
+	"res://Resources/items/sachetcontainers/KneesToes.tres",
+	"res://Resources/items/sachetcontainers/Kopimo.tres",
+	"res://Resources/items/sachetcontainers/Aryel.tres",
+]
+var placed_containers: Array[String] = []
+
+func is_container_placed(resource_path: String) -> bool:
+	return resource_path != "" and resource_path in placed_containers
+
+func mark_container_placed(resource_path: String) -> void:
+	if resource_path == "":
+		return
+	if resource_path not in placed_containers:
+		placed_containers.append(resource_path)
+		_save_progression()
+
+func get_unplaced_containers_for_tier(tier: int) -> Array[ItemData]:
+	var result: Array[ItemData] = []
+	for path in CONTAINER_PROP_PATHS:
+		if not ResourceLoader.exists(path):
+			continue
+		var res := load(path) as ItemData
+		if res and res.tier == tier and not is_container_placed(res.resource_path):
+			result.append(res)
+	return result
+
 @export_group("Transaction Probabilities")
 ## Chance (0.0 to 1.0) that a customer will start with a rumor.
 @export_range(0, 1) var rumor_chance: float = 0.45
@@ -251,6 +283,7 @@ func get_save_data() -> Dictionary:
 		"was_paused_by_limit": was_paused_by_limit,
 		"is_customer_present": is_customer_present,
 		"_last_notified_tier": _last_notified_tier,
+		"placed_containers": placed_containers.duplicate(),
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -270,6 +303,18 @@ func load_save_data(data: Dictionary) -> void:
 	was_paused_by_limit = data.get("was_paused_by_limit", false)
 	is_customer_present = data.get("is_customer_present", false)
 	_last_notified_tier = data.get("_last_notified_tier", 0)
+
+	placed_containers.clear()
+	if data.has("placed_containers"):
+		for p in data["placed_containers"]:
+			placed_containers.append(str(p))
+	else:
+		# Backward compatibility for older saves: treat already-unlocked tier containers as placed
+		for path in CONTAINER_PROP_PATHS:
+			if ResourceLoader.exists(path):
+				var res := load(path) as ItemData
+				if res and res.tier <= current_tier:
+					placed_containers.append(res.resource_path)
 
 	CharacterProgressionManager.migrate_from_story_manager_save(data)
 	DialogicBridge.sync_global(day, current_tier, max_unlocked_tier, 1)
@@ -301,6 +346,7 @@ func reset_state() -> void:
 	_last_tier_unlocked_notification = 0
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0
+	placed_containers.clear()
 	clock.reset_state()
 	SaveManager.delete_save()
 

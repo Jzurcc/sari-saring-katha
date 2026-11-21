@@ -353,8 +353,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items := _pending_delivery_items.duplicate()
 	_pending_delivery_items.clear()
 
-	# 1. Finalize Stock Immediately (Digital pool always has the total)
+	# 1. Finalize Stock Immediately for regular shelf/fridge items.
+	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
+		if item.get_meta("is_upgrade", false):
+			continue
+		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
+			continue
 		InventoryManager.add_stock(item, items[item])
 	
 	# 2. Plastic Bag Delivery Logic
@@ -363,6 +368,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var base_marker_pos: Vector3 = marker.global_position if marker else DEFAULT_PLASTIC_MARKER_POS
 	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
 	
+	var containers_to_bag: Array[ItemData] = []
 	var items_to_bag: Array[ItemData] = []
 	var upgrade_delivered := false
 	var target_tier := 1
@@ -374,16 +380,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			LogManager.info("MarioManager", "Upgrade detected in delivery! Target Tier: %d" % target_tier)
 			continue
 
-		# Filter: Candies and Sachets bypass bags
-		if item.category == "candy" or item.category == "sachet" or item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
-			LogManager.debug("MarioManager", "Auto-stocking digital item: %s" % item.item_name)
-			continue
-		else:
-			LogManager.debug("MarioManager", "Adding to physical bag: %s" % item.item_name)
-			
-		# Everything else goes into bags
+		LogManager.debug("MarioManager", "Adding to physical bag: %s" % item.item_name)
 		for i in range(items[item]):
-			items_to_bag.append(item)
+			if DispenserContainerItem.is_container_prop(item):
+				containers_to_bag.append(item)
+			else:
+				items_to_bag.append(item)
 	
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:
@@ -391,22 +393,32 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			StoryManager.advance_tier("Mario Delivery")
 			var new_tier = StoryManager.current_tier
 			LogManager.info("MarioManager", "Processing unlocked samples for NEW Tier: %d" % new_tier)
+
+			# Pack any newly unlocked physical candy bowls / sachet strips first
+			var tier_containers := StoryManager.get_unplaced_containers_for_tier(new_tier)
+			for container_prop in tier_containers:
+				LogManager.info("MarioManager", "Packing physical container prop into bag: %s" % container_prop.item_name)
+				containers_to_bag.append(container_prop)
 			
 			var all_items = InventoryManager.get_all_items()
 			for i in all_items:
 				if i.tier == new_tier and i.can_be_sold:
 					LogManager.debug("MarioManager", "Unpacking 2 samples of: %s" % i.item_name)
-					InventoryManager.add_stock(i, 2)
-					
-					if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
-						# Samples go into bags (2 units each)
-						items_to_bag.append(i)
-						items_to_bag.append(i)
+					if not DispenserContainerItem.is_dispenser_refill(i):
+						InventoryManager.add_stock(i, 2)
+					# All samples (including candies & sachets) go into physical bags (2 units each)
+					items_to_bag.append(i)
+					items_to_bag.append(i)
+	
+	# Pack containers first so the first bag(s) always yield unplaced containers before refills
+	var final_bag_items: Array[ItemData] = []
+	final_bag_items.append_array(containers_to_bag)
+	final_bag_items.append_array(items_to_bag)
 	
 	# Group items into batches of 5
 	var batch_size = 5
-	for i in range(0, items_to_bag.size(), batch_size):
-		var batch = items_to_bag.slice(i, i + batch_size)
+	for i in range(0, final_bag_items.size(), batch_size):
+		var batch = final_bag_items.slice(i, i + batch_size)
 		var offset := Vector3(
 			randf_range(-1.1, 1.1),
 			0.05, # Slight lift
