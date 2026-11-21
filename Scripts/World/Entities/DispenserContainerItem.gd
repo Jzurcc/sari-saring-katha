@@ -20,6 +20,7 @@ var _pricing_mode_active: bool = false
 var _original_alpha_cut: SpriteBase3D.AlphaCutMode = SpriteBase3D.ALPHA_CUT_DISABLED
 var _base_sprite_scale: Vector3 = Vector3.ONE
 var _ghost_blink_tween: Tween = null
+var _alt_badge: AltBadge3D = null
 
 @onready var sprite: Sprite3D = $Sprite3D
 
@@ -50,6 +51,7 @@ func _ready() -> void:
 	EventBus.tier_advanced.connect(_on_tier_advanced)
 	EventBus.day_started.connect(_on_day_started)
 	InventoryManager.stock_changed.connect(_on_inventory_stock_changed)
+	InventoryManager.item_inspected.connect(_on_item_inspected)
 	_check_unlock_status()
 	_update_local_stock()
 
@@ -79,6 +81,27 @@ func _apply_visibility_state() -> void:
 	monitoring = active
 	collision_layer = 1 if active else 0
 	process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
+	_refresh_alt_badge()
+
+func _has_uninspected_items() -> bool:
+	return false
+
+func _on_item_inspected(_item_id: String) -> void:
+	_refresh_alt_badge()
+
+func _refresh_alt_badge() -> void:
+	var should_show := is_placed_and_active() and _has_uninspected_items()
+	if should_show:
+		if not is_instance_valid(_alt_badge):
+			_alt_badge = AltBadge3D.new()
+			add_child(_alt_badge)
+		if sprite:
+			_alt_badge.position = sprite.position + Vector3(0.35, -0.35, 0.25)
+		_alt_badge.show()
+	elif is_instance_valid(_alt_badge):
+		var b := _alt_badge
+		_alt_badge = null
+		b.dismiss_and_free()
 
 func matches_container_item(item: ItemData) -> bool:
 	if not container_item or not item:
@@ -161,6 +184,7 @@ func place_container(drag_item: DraggableItem) -> bool:
 	drag_item.notify_placed()
 	drag_item.queue_free()
 	_update_local_stock()
+	_refresh_alt_badge()
 	return true
 
 func is_placed_and_active() -> bool:

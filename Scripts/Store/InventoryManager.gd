@@ -1,6 +1,7 @@
 extends Node
 
 signal stock_changed(item: ItemData, new_stock: int)
+signal item_inspected(item_id: String)
 
 ## Tracks item stock counts across the game.
 ## Key: ItemData.resource_path → Value: current stock count.
@@ -19,6 +20,7 @@ var _initialized: bool = false
 var _stock: Dictionary = {}
 var _items: Array[ItemData] = []
 var _configured_item_ids: Dictionary = {}
+var _inspected_item_ids: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("persist")
@@ -299,6 +301,20 @@ func _set_stock(item: ItemData, new_count: int) -> void:
 	_stock[item.resource_path] = new_count
 	stock_changed.emit(item, new_count)
 
+func is_item_inspected(item: ItemData) -> bool:
+	if not item or not item.can_be_sold:
+		return true
+	var id := item.get_clean_id()
+	return _inspected_item_ids.get(id, false) or _configured_item_ids.get(id, false)
+
+func mark_item_inspected(item: ItemData) -> void:
+	if not item or not item.can_be_sold:
+		return
+	var id := item.get_clean_id()
+	if not _inspected_item_ids.get(id, false):
+		_inspected_item_ids[id] = true
+		item_inspected.emit(id)
+
 func decrement_cooldown() -> void:
 	if customers_needed_for_delivery > 0:
 		customers_needed_for_delivery -= 1
@@ -330,6 +346,7 @@ func get_save_data() -> Dictionary:
 		"prices": prices,
 		"steps": steps,
 		"configured_ids": _configured_item_ids.duplicate(),
+		"inspected_ids": _inspected_item_ids.duplicate(),
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -340,8 +357,9 @@ func load_save_data(data: Dictionary) -> void:
 		if _stock.has(path):
 			_stock[path] = int(saved_stock[path])
 			
-	# Restore configured IDs
+	# Restore configured & inspected IDs
 	_configured_item_ids = data.get("configured_ids", {}).duplicate()
+	_inspected_item_ids = data.get("inspected_ids", {}).duplicate()
 			
 	# Restore custom steps/prices and manual pricing flag
 	var saved_steps: Dictionary = data.get("steps", {})
@@ -365,11 +383,15 @@ func load_save_data(data: Dictionary) -> void:
 				item.selling_price = item.get_price_for_step(item.current_step)
 			
 	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
+	if get_tree():
+		get_tree().call_group("draggable_items", "_refresh_alt_badge")
+		get_tree().call_group("dispenser_containers", "_refresh_alt_badge")
 	LogManager.info("InventoryManager", "State loaded. %d items tracked, %d configured IDs restored." % [_stock.size(), _configured_item_ids.size()])
 
 func reset_state() -> void:
 	_stock.clear()
 	_configured_item_ids.clear()
+	_inspected_item_ids.clear()
 	# Re-initialize stock to 0 for all items and reset prices
 	for item in _items:
 		_stock[item.resource_path] = 0

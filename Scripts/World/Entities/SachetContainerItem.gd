@@ -19,9 +19,13 @@ func get_available_items() -> Array[ItemData]:
 		items.append(sachet_item)
 	return items
 
+func _has_uninspected_items() -> bool:
+	return sachet_item != null and not InventoryManager.is_item_inspected(sachet_item)
+
 func update_pricing_ui() -> void:
 	if not sachet_item or not is_hovered or not _pricing_mode_active:
 		return
+	InventoryManager.mark_item_inspected(sachet_item)
 	if is_instance_valid(PricingOverlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
 		PricingOverlay.show_item(sachet_item, global_position, true, "", stock_info)

@@ -24,9 +24,17 @@ func get_available_items() -> Array[ItemData]:
 					items.append(candy)
 	return items
 
+func _has_uninspected_items() -> bool:
+	for candy in possible_candies:
+		if candy and not InventoryManager.is_item_inspected(candy):
+			return true
+	return false
+
 func update_pricing_ui() -> void:
 	if possible_candies.is_empty() or not is_hovered or not _pricing_mode_active:
 		return
+	for candy in possible_candies:
+		InventoryManager.mark_item_inspected(candy)
 	var ref_item = possible_candies[0]
 	if is_instance_valid(PricingOverlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]

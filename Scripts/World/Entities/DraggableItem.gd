@@ -22,6 +22,9 @@ var is_hovered: bool = false
 var is_mouse_inside: bool = false
 var original_scale: Vector3 = Vector3.ONE
 var _pricing_mode_active: bool = false
+var _alt_badge: AltBadge3D = null
+var _rendered_w: float = 0.2
+var _rendered_h: float = 0.2
 
 func _ready() -> void:
 	super._ready()
@@ -32,6 +35,8 @@ func _ready() -> void:
 		add_to_group("draggable_items")
 		original_scale = scale
 		billboard_collision = false
+		if not InventoryManager.item_inspected.is_connected(_on_item_inspected):
+			InventoryManager.item_inspected.connect(_on_item_inspected)
 	
 	if item_data:
 		setup(item_data)
@@ -126,8 +131,10 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, 
 			var depth: float = maxf(0.16, rendered_w * 0.6)
 			collider.shape.size = Vector3(rendered_w, rendered_h, depth)
 		collider.position.y = rendered_h / 2.0
+		_rendered_w = rendered_w
+		_rendered_h = rendered_h
 
-	# UI is now handled by the global PricingOverlay
+	_refresh_alt_badge()
 
 
 
@@ -186,10 +193,45 @@ func update_pricing_ui() -> void:
 	if not item_data: return
 	
 	if not is_hovered or not _pricing_mode_active: return
+
+	InventoryManager.mark_item_inspected(item_data)
 	
 	var overlay = _get_pricing_overlay()
 	if is_instance_valid(overlay):
 		overlay.show_item(item_data, global_position)
+
+func _on_item_inspected(item_id: String) -> void:
+	if item_data and item_data.get_clean_id() == item_id:
+		_remove_alt_badge(true)
+
+func _refresh_alt_badge() -> void:
+	if Engine.is_editor_hint():
+		return
+	var should_show := item_data != null \
+		and not is_transient \
+		and sprite != null \
+		and sprite.visible \
+		and not InventoryManager.is_item_inspected(item_data)
+
+	if should_show:
+		if not is_instance_valid(_alt_badge):
+			_alt_badge = AltBadge3D.new()
+			add_child(_alt_badge)
+		_alt_badge.position = Vector3(_rendered_w * 0.38, _rendered_h * 0.16, 0.06)
+		_alt_badge.show()
+	else:
+		_remove_alt_badge(false)
+
+func _remove_alt_badge(animate: bool) -> void:
+	if not is_instance_valid(_alt_badge):
+		_alt_badge = null
+		return
+	var b := _alt_badge
+	_alt_badge = null
+	if animate:
+		b.dismiss_and_free()
+	else:
+		b.queue_free()
 
 
 func on_interact() -> void:
@@ -201,6 +243,7 @@ func on_interact() -> void:
 
 func _on_drag_started_by_manager() -> void:
 	sprite.hide()
+	_remove_alt_badge(false)
 	var overlay = _get_pricing_overlay()
 	if is_instance_valid(overlay):
 		overlay.hide_ui()
@@ -214,6 +257,7 @@ func show_visuals() -> void:
 	if not sprite: sprite = get_node_or_null("Sprite3D")
 	if sprite:
 		sprite.show()
+		_refresh_alt_badge()
 	else:
 		push_error("[DraggableItem] Cannot show visuals: Sprite3D is missing!")
 
