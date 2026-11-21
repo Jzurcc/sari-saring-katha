@@ -45,3 +45,10 @@ UncleMario: I just got a fresh batch of next-tier stock ready to be bought for y
 UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
 UncleMario: Go ahead and check out the catalog — I've got the upgrade package ready for you right now!
 [end_timeline]
+
+label MissedUpgradeCall
+UncleMario: Uy, [i]anak[/i]! I was just trying to call you earlier, ah! Must've been busy at the counter.
+UncleMario: Anyway, good thing you called back — I've got a fresh batch of next-tier stock ready to be bought for your store!
+UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
+UncleMario: Go ahead and check out the catalog — I've got the upgrade package ready for you right now!
+[end_timeline]

@@ -46,6 +46,7 @@ var _pending_delivery_items: Dictionary = {}
 # Incoming Upgrade Call State
 const INCOMING_CALL_RING_DURATION := 6.0
 var is_incoming_upgrade_call: bool = false
+var _has_missed_upgrade_call: bool = false
 var _incoming_call_items: Array[ItemData] = []
 var _incoming_call_session_id: int = 0
 
@@ -81,6 +82,7 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 
 	_incoming_call_items = items.duplicate()
 	is_incoming_upgrade_call = true
+	_has_missed_upgrade_call = false
 	_incoming_call_session_id += 1
 	var ring_session := _incoming_call_session_id
 
@@ -92,9 +94,10 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 	if ring_session != _incoming_call_session_id or not is_incoming_upgrade_call:
 		return
 
-	# Player ignored the call for 6 seconds — stop ringing cleanly
+	# Player ignored the call for 6 seconds — stop ringing cleanly and remember for next manual call
 	_stop_incoming_ring()
-	LogManager.info("MarioManager", "Incoming upgrade call timed out (ignored by player).")
+	_has_missed_upgrade_call = true
+	LogManager.info("MarioManager", "Incoming upgrade call timed out (ignored by player). Queued missed-call follow-up.")
 
 func _stop_incoming_ring() -> void:
 	is_incoming_upgrade_call = false
@@ -123,6 +126,7 @@ func _format_upgrade_items_list(items: Array[ItemData]) -> String:
 
 func answer_incoming_upgrade_call(anchor: Node) -> void:
 	_stop_incoming_ring()
+	_has_missed_upgrade_call = false
 	_is_calling = true
 	is_restocking_active = true
 	_current_anchor = anchor
@@ -160,6 +164,7 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	
 	var label := "Call"
 	var success_expected := true
+	var is_missed_upgrade_followup := false
 	
 	# 1. Busy check: if a dialogue is ACTIVELY running (blocking the phone UI)
 	# If a customer is just waiting silently for an item, we are NOT busy.
@@ -172,6 +177,10 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		Dialogic.VAR.set_variable("Transaction_MarioRestCount", InventoryManager.customers_needed_for_delivery)
 		label = "CallRest"
 		success_expected = false
+	# 3. Missed upgrade call follow-up: player missed Mario's incoming upgrade call earlier
+	elif _has_missed_upgrade_call:
+		label = "MissedUpgradeCall"
+		is_missed_upgrade_followup = true
 	
 	LogManager.info("MarioManager", "Initiating call → Label: %s" % label)
 	
@@ -189,6 +198,12 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		_is_calling = false
 		_restore_audio_bus()
 		return
+	
+	if is_missed_upgrade_followup:
+		var list_str := _format_upgrade_items_list(_incoming_call_items)
+		Dialogic.VAR.set_variable("Global_UpgradeItemsList", list_str)
+		_has_missed_upgrade_call = false
+		_incoming_call_items.clear()
 	
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
@@ -520,6 +535,9 @@ func load_save_data(data: Dictionary) -> void:
 func reset_state() -> void:
 	_call_session_id += 1
 	_delivery_session_id += 1
+	_stop_incoming_ring()
+	_has_missed_upgrade_call = false
+	_incoming_call_items.clear()
 	_pending_delivery_items.clear()
 	_cached_bags_data.clear()
 	is_restocking_active = false
