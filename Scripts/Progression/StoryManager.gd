@@ -413,6 +413,17 @@ func record_debt(customer_path: String, amount: float) -> void:
 	LogManager.info("StoryManager", "Recorded Debt for %s: +%.2f (Total: %.2f)" % [customer_path.get_file(), amount, customer_debts[customer_path]])
 	_save_progression()
 
+func reduce_debt(customer_path: String, amount: float) -> void:
+	if not customer_debts.has(customer_path) or amount <= 0.0:
+		return
+	var remaining: float = float(customer_debts[customer_path]) - amount
+	if remaining <= 0.01:
+		clear_debt(customer_path)
+	else:
+		customer_debts[customer_path] = remaining
+		LogManager.info("StoryManager", "Debt REDUCED for %s: -%.2f (Remaining: %.2f)" % [customer_path.get_file(), amount, remaining])
+		_save_progression()
+
 func clear_debt(customer_path: String) -> void:
 	if customer_debts.has(customer_path):
 		customer_debts.erase(customer_path)

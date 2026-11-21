@@ -63,7 +63,7 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 		return
 
 	# Repayment preamble check
-	if customer.transaction_context.is_repaying:
+	if customer.transaction_context.is_repaying and customer.transaction_context.repayment_amount > 0.0:
 		customer.transaction_context.is_repaying = false
 		phase = Phase.REPAYMENT
 		var repay_timeline = customer.transaction_context.timeline
@@ -312,20 +312,32 @@ func on_dialogic_signal(argument: String) -> void:
 	elif argument == "setup_repay_full":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			var path = current_customer.customer_data.resource_path
-			var debt = StoryManager.customer_debts.get(path, 0.0)
-			current_customer.transaction_context.is_repaying = true
-			current_customer.transaction_context.repayment_amount = debt
-			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
-			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", debt)
+			var debt: float = float(StoryManager.customer_debts.get(path, 0.0))
+			if debt > 0.0:
+				current_customer.transaction_context.is_repaying = true
+				current_customer.transaction_context.repayment_amount = debt
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", debt)
+			else:
+				current_customer.transaction_context.is_repaying = false
+				current_customer.transaction_context.repayment_amount = 0.0
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
 	elif argument == "setup_repay_half":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			var path = current_customer.customer_data.resource_path
-			var debt = StoryManager.customer_debts.get(path, 0.0)
-			var half = floor(debt / 2.0)
-			current_customer.transaction_context.is_repaying = true
-			current_customer.transaction_context.repayment_amount = half
-			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
-			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", half)
+			var debt: float = float(StoryManager.customer_debts.get(path, 0.0))
+			var half: float = floor(debt / 2.0) if debt >= 2.0 else debt
+			if half > 0.0:
+				current_customer.transaction_context.is_repaying = true
+				current_customer.transaction_context.repayment_amount = half
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", half)
+			else:
+				current_customer.transaction_context.is_repaying = false
+				current_customer.transaction_context.repayment_amount = 0.0
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
 	elif argument == "spawn_guest":
 		if is_instance_valid(guest_customer) and guest_customer.has_method("trigger_arrival"):
 			guest_customer.trigger_arrival()

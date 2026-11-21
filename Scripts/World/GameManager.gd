@@ -182,16 +182,22 @@ func _on_dialogic_signal(argument: String) -> void:
 		return
 		
 	elif argument == "repay_debt":
-		var amount = Dialogic.VAR.get_variable("Transaction_RepaymentAmount")
+		var amount: float = float(Dialogic.VAR.get_variable("Transaction_RepaymentAmount", 0.0))
+		if amount <= 0.0:
+			return
 		money += amount
 		EventBus.money_changed.emit(money)
-		
+		Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
+		Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
 		var spawners = get_tree().get_nodes_in_group("customer_spawner")
 		if spawners.size() > 0:
 			var spawner := spawners[0] as CustomerSpawner
 			var customer = spawner.current_customer
 			if customer and customer.customer_data:
-				StoryManager.clear_debt(customer.customer_data.resource_path)
+				if customer.transaction_context:
+					customer.transaction_context.is_repaying = false
+					customer.transaction_context.repayment_amount = 0.0
+				StoryManager.reduce_debt(customer.customer_data.resource_path, amount)
 		
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 
