@@ -174,6 +174,15 @@ func _update_audio_for_time(time: float) -> void:
 
 	if new_phase != current_bgm_phase:
 		_change_bgm_phase(new_phase)
+	elif not bgm_player.playing and (not bgm_transition_tween or not bgm_transition_tween.is_valid()):
+		# Recover if BGM stopped (e.g. after fade_out_everything or interrupted transition)
+		_change_bgm_phase(new_phase)
+	elif bgm_player.playing and not theme_player.playing \
+		and (not bgm_transition_tween or not bgm_transition_tween.is_valid()) \
+		and (not crossfade_tween or not crossfade_tween.is_valid()) \
+		and bgm_player.volume_db < base_volume_db - 1.0:
+		# Self-heal if BGM volume ever got stranded at -80 dB after an interrupted fade
+		bgm_player.volume_db = base_volume_db
 
 	if is_night and not ambience_night.playing:
 		ambience_night.stream = audio_night_crickets
@@ -221,7 +230,7 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		bgm_transition_tween.kill()
 
 	bgm_transition_tween = create_tween()
-	var is_first_play = not bgm_player.playing
+	var is_first_play = not bgm_player.playing or bgm_player.volume_db <= -79.0
 
 	if not is_first_play:
 		bgm_transition_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
@@ -229,13 +238,12 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 
 	bgm_transition_tween.tween_callback(func():
 		bgm_player.stream = _active_playlist[_playlist_index]
-		var target_vol = -80.0 if theme_player.playing else base_volume_db
 		bgm_player.volume_db = -80.0
 		bgm_player.play()
-		bgm_transition_tween = create_tween()
-		bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
 		_emit_music_change(bgm_player.stream)
 	)
+	var target_vol = -80.0 if theme_player.playing else base_volume_db
+	bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
 
 func _update_fridge_hum(phase: BGMPhase) -> void:
 	if not fridge_hum_player:
@@ -247,6 +255,8 @@ func _update_fridge_hum(phase: BGMPhase) -> void:
 		fridge_hum_player.stop()
 
 func _on_bgm_finished() -> void:
+	if _active_playlist.is_empty():
+		return
 	var last_song = _active_playlist[_playlist_index]
 	_playlist_index += 1
 
@@ -263,6 +273,7 @@ func _on_bgm_finished() -> void:
 			_playlist_index = 0
 
 	bgm_player.stream = _active_playlist[_playlist_index]
+	bgm_player.volume_db = -80.0 if theme_player.playing else base_volume_db
 	bgm_player.play()
 	_emit_music_change(bgm_player.stream)
 
@@ -325,6 +336,11 @@ func _emit_music_change(stream: AudioStream) -> void:
 	EventBus.music_title_changed.emit(title)
 
 func fade_out_everything(duration: float = FADE_DURATION) -> void:
+	if bgm_transition_tween and bgm_transition_tween.is_valid():
+		bgm_transition_tween.kill()
+	if crossfade_tween and crossfade_tween.is_valid():
+		crossfade_tween.kill()
+
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(bgm_player, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
@@ -337,6 +353,7 @@ func fade_out_everything(duration: float = FADE_DURATION) -> void:
 	theme_player.stop()
 	ambience_base.stop()
 	ambience_night.stop()
+	current_bgm_phase = BGMPhase.NONE
 
 	bgm_player.volume_db = base_volume_db
 	theme_player.volume_db = -80.0
