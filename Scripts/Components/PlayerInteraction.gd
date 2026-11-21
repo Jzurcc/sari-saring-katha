@@ -22,9 +22,9 @@ var _last_hovered: WorldInteractor = null
 # Cached node references
 var _game_manager: GameManager = null
 
-# Scroll sensitivity accumulator (taking more scroll notches per 0.50 increment)
+# Scroll sensitivity accumulator (1 scroll notch = 1 discrete price step)
 var _scroll_event_count: int = 0
-const SCROLL_THRESHOLD: int = 3
+const SCROLL_THRESHOLD: int = 1
 
 func _ready() -> void:
 	if interaction_range <= 0.0:

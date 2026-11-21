@@ -368,17 +368,17 @@ func _update_row_display(item: ItemData) -> void:
 	price_lbl.text = "₱%.2f" % final_price
 
 	if step > 0:
-		step_info_lbl.text = "Step +%d (+₱%.2f)" % [step, diff]
+		step_info_lbl.text = "+₱%.2f" % diff
 		var factor = float(step) / 3.0
 		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.35, 0.2), factor)
 		price_lbl.add_theme_color_override("font_color", markup_color)
 		step_info_lbl.add_theme_color_override("font_color", markup_color)
 	elif step < 0:
-		step_info_lbl.text = "Step %d (Loss Leader)" % step
+		step_info_lbl.text = "-₱%.2f" % absf(diff)
 		price_lbl.add_theme_color_override("font_color", Color(0.494, 0.761, 0.573))
 		step_info_lbl.add_theme_color_override("font_color", Color(0.494, 0.761, 0.573))
 	else:
-		step_info_lbl.text = "Step 0 (Cost)"
+		step_info_lbl.text = "+₱0.00"
 		price_lbl.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78))
 		step_info_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 

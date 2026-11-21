@@ -174,17 +174,17 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	# Comparison readout & coloring
 	var diff: float = final_price - base_price
 	if step > 0:
-		comparison_label.text = "Step +%d (+₱%.2f)" % [step, diff]
+		comparison_label.text = "+₱%.2f" % diff
 		var factor = float(step) / 3.0
 		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.35, 0.2), factor)
 		comparison_label.add_theme_color_override("font_color", markup_color)
 		step_pips_label.add_theme_color_override("font_color", markup_color)
 	elif step < 0:
-		comparison_label.text = "Step %d (-₱%.2f Loss Leader)" % [step, absf(diff)]
+		comparison_label.text = "-₱%.2f" % absf(diff)
 		comparison_label.add_theme_color_override("font_color", Color(0.49, 0.76, 0.57))
 		step_pips_label.add_theme_color_override("font_color", Color(0.49, 0.76, 0.57))
 	else:
-		comparison_label.text = "Step 0 (Cost: ₱%.2f)" % [base_price]
+		comparison_label.text = "+₱0.00"
 		comparison_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78, 0.8))
 		step_pips_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78, 0.8))
 
