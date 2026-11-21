@@ -7,7 +7,7 @@ extends Node
 ## IMPORTANT: Dialogic.start(timeline, X) — X is a LABEL, not a style.
 ## Style must be set via Dialogic.Styles.load_style() BEFORE calling start().
 
-signal call_ended(success: bool)
+signal call_ended(success: bool, action: String)
 signal delivery_finished
 
 const MARIO_DATA_PATH = "res://Resources/customers/UncleMario.tres"
@@ -42,6 +42,7 @@ var _cached_bags_data: Array = []
 var _call_session_id: int = 0
 var _delivery_session_id: int = 0
 var _pending_delivery_items: Dictionary = {}
+var _pending_call_action: String = ""
 
 # Incoming Upgrade Call State
 const INCOMING_CALL_RING_DURATION := 6.0
@@ -69,6 +70,8 @@ func _ready() -> void:
 	EventBus.day_started.connect(_on_day_started)
 	# Ring the player when a new tier upgrade becomes available
 	EventBus.upgrade_available.connect(_on_upgrade_available)
+	# Listen for Mario call choice signals from UncleMario.dtl
+	Dialogic.signal_event.connect(_on_dialogic_signal)
 
 func _is_in_main_game() -> bool:
 	return get_tree() != null and get_tree().current_scene != null and get_tree().current_scene.name == "MainGame"
@@ -129,6 +132,7 @@ func answer_incoming_upgrade_call(anchor: Node) -> void:
 	_has_missed_upgrade_call = false
 	_is_calling = true
 	is_restocking_active = true
+	_pending_call_action = ""
 	_current_anchor = anchor
 	_call_session_id += 1
 
@@ -158,6 +162,7 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		return
 	_is_calling = true
 	is_restocking_active = true
+	_pending_call_action = ""
 	_current_anchor = anchor
 	_call_session_id += 1
 	var session_id := _call_session_id
@@ -207,19 +212,37 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
+func _on_dialogic_signal(arg: String) -> void:
+	match arg:
+		"mario_open_restock":
+			_pending_call_action = "restock"
+		"mario_open_upgrade":
+			_pending_call_action = "upgrade"
+		"mario_cancel_call":
+			_pending_call_action = "cancel"
+
 func _on_call_dialogue_ended(success: bool) -> void:
-	LogManager.info("MarioManager", "Call dialogue ended. Success: %s" % str(success))
+	var action := _pending_call_action
+	_pending_call_action = ""
+	var final_success := success
+	if success and action == "cancel":
+		final_success = false
+	elif success and action == "":
+		action = "restock"
+
+	LogManager.info("MarioManager", "Call dialogue ended. Success: %s, Action: %s" % [str(final_success), action])
 	_is_calling = false
 	_restore_audio_bus()
 	
-	if not success:
+	if not final_success:
 		is_restocking_active = false
 	_current_anchor = null
-	call_ended.emit(success)
+	call_ended.emit(final_success, action)
 
 func cancel_restock() -> void:
 	LogManager.info("MarioManager", "Restock cancelled by player or system.")
 	_call_session_id += 1
+	_pending_call_action = ""
 	is_restocking_active = false
 	_is_calling = false
 	_current_anchor = null
@@ -535,6 +558,7 @@ func load_save_data(data: Dictionary) -> void:
 func reset_state() -> void:
 	_call_session_id += 1
 	_delivery_session_id += 1
+	_pending_call_action = ""
 	_stop_incoming_ring()
 	_has_missed_upgrade_call = false
 	_incoming_call_items.clear()

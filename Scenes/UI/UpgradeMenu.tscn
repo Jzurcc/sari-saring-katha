@@ -1,0 +1,248 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/UI/UpgradeMenu.gd" id="1_upgrade_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+content_margin_left = 20.0
+content_margin_top = 20.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
+bg_color = Color(0.08235294, 0.078431375, 0.07058824, 0.9647059)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_x"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_left_panel"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.78039217, 0.7176471, 0.5686275, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_icon_bg"]
+bg_color = Color(0.494, 0.761, 0.573, 0.35)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.835, 0.624, 0.278, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_separator"]
+color = Color(0.8, 0.8, 0.8, 0.4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cancel_btn"]
+bg_color = Color(0.82, 0.44, 0.35, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_btn"]
+bg_color = Color(0.494, 0.761, 0.573, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="UpgradeMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_upgrade_script")
+
+[node name="Background" type="PanelContainer" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -520.0
+offset_top = -325.0
+offset_right = 487.0
+offset_bottom = 304.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="MainVBox" type="VBoxContainer" parent="Background"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="HeaderHBox" type="HBoxContainer" parent="Background/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="CloseBtn" type="Button" parent="Background/MainVBox/HeaderHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxEmpty_x")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_x")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_x")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_x")
+text = "X"
+
+[node name="TitleLabel" type="Label" parent="Background/MainVBox/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_font_sizes/font_size = 26
+text = "Store Upgrades"
+vertical_alignment = 1
+
+[node name="CurrentTierLabel" type="Label" parent="Background/MainVBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.494, 0.761, 0.573, 1)
+theme_override_font_sizes/font_size = 20
+text = "Current: Tier 1"
+vertical_alignment = 1
+
+[node name="ContentSplit" type="HBoxContainer" parent="Background/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="LeftPanelBackground" type="PanelContainer" parent="Background/MainVBox/ContentSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.9
+theme_override_styles/panel = SubResource("StyleBoxFlat_left_panel")
+
+[node name="UpgradeScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="UpgradeList" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/LeftPanelBackground/UpgradeScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="RightSideVBox" type="VBoxContainer" parent="Background/MainVBox/ContentSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="DetailHeader" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Package Details"
+
+[node name="HSeparator" type="HSeparator" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_separator")
+
+[node name="SelectedHeaderHBox" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DetailIconBg" type="PanelContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox/SelectedHeaderHBox"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_icon_bg")
+
+[node name="DetailIcon" type="TextureRect" parent="Background/MainVBox/ContentSplit/RightSideVBox/SelectedHeaderHBox/DetailIconBg"]
+unique_name_in_owner = true
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DetailName" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/SelectedHeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_font_sizes/font_size = 20
+text = "Select an upgrade"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="DetailSubtitle" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "Includes 2x starter samples of each item:"
+autowrap_mode = 3
+
+[node name="UnlocksScroll" type="ScrollContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="UnlocksList" type="VBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox/UnlocksScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TotalRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+layout_mode = 2
+
+[node name="TotalLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/TotalRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Cost :"
+
+[node name="TotalAmountLabel" type="Label" parent="Background/MainVBox/ContentSplit/RightSideVBox/TotalRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+theme_override_font_sizes/font_size = 20
+text = "₱0.00"
+horizontal_alignment = 2
+
+[node name="ButtonRow" type="HBoxContainer" parent="Background/MainVBox/ContentSplit/RightSideVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="CancelBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSideVBox/ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_cancel_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_cancel_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cancel_btn")
+text = "Cancel"
+
+[node name="ConfirmBtn" type="Button" parent="Background/MainVBox/ContentSplit/RightSideVBox/ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_confirm_btn")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_confirm_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_confirm_btn")
+text = "Upgrade"

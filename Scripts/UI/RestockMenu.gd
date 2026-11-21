@@ -64,11 +64,10 @@ var _category_cache: Dictionary = {} # cat_key -> Array[ItemData]
 # Category display names and their internal keys (must match category = "..." in .tres files)
 # NOTE: "candycontainer" is intentionally excluded — those are physical equipment that spawn in-world.
 var category_tabs: Array[String] = [
-	"upgrades", "snack", "sachets", "can", "cigarette", "candy",
+	"snack", "sachets", "can", "cigarette", "candy",
 	"bottle", "pack", "frozen"
 ]
 var category_labels: Dictionary = {
-	"upgrades": "Upgrades",
 	"snack": "Snack",
 	"sachets": "Sachet",
 	"can": "Can",
