@@ -10,7 +10,7 @@ const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 const CUSTOMER_TIME_WINDOW_HOURS := 4.0
-const CUSTOMER_FAST_FORWARD_HOURS := 2.0
+const CUSTOMER_FAST_FORWARD_HOURS := CUSTOMER_TIME_WINDOW_HOURS / 2.0
 
 var current_display_time: float = MENU_THEME_HOUR
 var is_clock_running: bool = false
