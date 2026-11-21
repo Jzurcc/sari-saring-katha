@@ -210,60 +210,58 @@ static func build_transaction_context(
 					if item:
 						transaction.desired_items.append(item)
 		else:
-			var dynamic_cat := data.get_chapter_category(chapter)
-			if dynamic_cat != "":
-				transaction.requested_category = dynamic_cat
-
-			if transaction.transaction_type == TransactionContext.Type.PURCHASE and transaction.requested_category != "":
-				if randf() > 0.5:
-					transaction.requested_category = ""
-
+			var preferred_cats: Array[String] = data.get_chapter_preferred_categories(chapter)
+			var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
+			var prefer_hint: bool = data.has_riddle_preference()
 			var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
 
-			if transaction.requested_category != "":
-				var prefer_hint: bool = data.has_riddle_preference()
-				var item := OrderItemPicker.any_for_category(transaction.requested_category, sm.current_tier, prefer_hint)
-				if item:
-					transaction.desired_items.append(item)
-					transaction.best_item_name = item.item_name
-				else:
-					transaction.requested_category = ""
-
+			# Build general store pool (always filtering out excluded categories)
 			var pool: Array[ItemData] = []
 			var selection_roll := randf()
 			if selection_roll < DISPLAY_POOL_CHANCE:
 				var display_pool := InventoryManager.get_items_available_on_display()
 				for item in display_pool:
-					if OrderItemPicker.is_unlocked(item, sm.current_tier) and item.can_be_sold:
+					if OrderItemPicker.is_unlocked(item, sm.current_tier) and item.can_be_sold and not (item.category in excluded_cats):
 						pool.append(item)
 
 			if selection_roll >= DISPLAY_POOL_CHANCE or pool.is_empty():
 				for item in InventoryManager.get_all_items():
-					if item.tier <= sm.current_tier + 1 and item.can_be_sold:
+					if item.tier <= sm.current_tier + 1 and item.can_be_sold and not (item.category in excluded_cats):
 						pool.append(item)
 
-				if data.has_riddle_preference():
+				if prefer_hint:
 					var hint_pool := pool.filter(func(i: ItemData) -> bool: return i.item_hint != "")
 					if not hint_pool.is_empty():
 						pool = hint_pool
 
-			var remaining_items: int = target_item_count - transaction.desired_items.size()
 			var current_max_tiers := OrderItemPicker.max_tier_per_category(sm.current_tier)
-			for _i in range(remaining_items):
+			for _i in range(target_item_count):
+				var use_preferred: bool = not preferred_cats.is_empty() and (
+					transaction.transaction_type != TransactionContext.Type.PURCHASE or randf() <= 0.5
+				)
+				if use_preferred:
+					var pref_item := OrderItemPicker.any_for_categories(preferred_cats, sm.current_tier, prefer_hint, excluded_cats)
+					if pref_item:
+						transaction.desired_items.append(pref_item)
+						if transaction.requested_category == "":
+							transaction.requested_category = pref_item.category
+							transaction.best_item_name = pref_item.item_name
+						continue
+
 				if not pool.is_empty():
 					var item := OrderItemPicker.pick_weighted(pool, sm.current_tier, current_max_tiers)
 					if transaction.upgrade_to_best_tier:
 						var best := OrderItemPicker.best_for_category(item.category, sm.current_tier, item)
-						if best:
+						if best and not (best.category in excluded_cats):
 							item = best
 					transaction.desired_items.append(item)
 				else:
-					var fallback := OrderItemPicker.random_orderable(sm.current_tier)
+					var fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
 					if fallback:
 						transaction.desired_items.append(fallback)
 
 			if transaction.desired_items.is_empty() and transaction.transaction_type != TransactionContext.Type.VISIT:
-				var fallback := OrderItemPicker.random_orderable(sm.current_tier)
+				var fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
 				if fallback:
 					transaction.desired_items.append(fallback)
 

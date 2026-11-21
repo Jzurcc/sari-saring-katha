@@ -60,21 +60,57 @@ func is_collector() -> bool:
 
 @export_group("Chapter Overrides")
 
-## Per-chapter item category for purchase requests (index = chapter number, 0-based).
-## Leave a slot empty ("") to use the standard random selection for that chapter.
-## Example: ["cigarette", "cigarette", "bottle", "cigarette", "candy"]
-@export var chapter_categories: Array[String] = []
+## Per-chapter item category preferences and exclusions (index = chapter number, 0-based).
+## Each entry is a PackedStringArray of category names (e.g. ["snack", "bottle", "!candy"]).
+## Prefix a category with "!" to exclude it from the customer's orders (including general pool rolls).
+## Leave an entry empty ([]) to use the standard random selection with no exclusions.
+## After finishing all chapters, the customer retains the last entry's preferences/exclusions.
+@export var chapter_categories: Array[PackedStringArray] = []
 
 ## Which story chapters are "visit-only" (customer talks but doesn't buy).
 ## Index = chapter number (0-based). True = this chapter is visit-only.
 ## Example: [true, true, true, true, false] = first 4 chapters are visits only.
 @export var visit_story_chapters: Array[bool] = []
 
-## Returns the category override for a given chapter, or "" if none.
+## Returns the raw category list for a given chapter, clamping to the last entry
+## so customers retain their final preferences/exclusions after their story ends.
+func _get_chapter_category_list(chapter: int) -> PackedStringArray:
+	if chapter_categories.is_empty():
+		return PackedStringArray()
+	var idx := clampi(chapter, 0, chapter_categories.size() - 1)
+	return chapter_categories[idx]
+
+## Returns all positive (preferred) categories for a given chapter, resolved via OrderItemPicker aliases.
+func get_chapter_preferred_categories(chapter: int) -> Array[String]:
+	var result: Array[String] = []
+	for raw_token in _get_chapter_category_list(chapter):
+		var token := raw_token.strip_edges()
+		if token.is_empty() or token.begins_with("!"):
+			continue
+		for mapped in OrderItemPicker.mapped_categories(token):
+			if not result.has(mapped):
+				result.append(mapped)
+	return result
+
+## Returns all "!category" excluded categories for a given chapter, resolved via OrderItemPicker aliases.
+func get_chapter_excluded_categories(chapter: int) -> Array[String]:
+	var result: Array[String] = []
+	for raw_token in _get_chapter_category_list(chapter):
+		var token := raw_token.strip_edges()
+		if not token.begins_with("!"):
+			continue
+		var cat_name := token.substr(1).strip_edges()
+		if cat_name.is_empty():
+			continue
+		for mapped in OrderItemPicker.mapped_categories(cat_name):
+			if not result.has(mapped):
+				result.append(mapped)
+	return result
+
+## Returns the first preferred category for a given chapter, or "" if none.
 func get_chapter_category(chapter: int) -> String:
-	if chapter_categories.is_empty() or chapter >= chapter_categories.size():
-		return ""
-	return chapter_categories[chapter]
+	var prefs := get_chapter_preferred_categories(chapter)
+	return prefs[0] if not prefs.is_empty() else ""
 
 ## Returns true if the given chapter should be treated as a visit-only story chapter.
 func is_visit_story_chapter(chapter: int) -> bool:
