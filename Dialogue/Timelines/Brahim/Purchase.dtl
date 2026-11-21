@@ -33,6 +33,8 @@ if {Transaction_SatisfyVar} <= 50:
 	Brahim: Transaction committed. The data is validated. Salamat.
 else:
 	Brahim: High throughput vibes detected. My internal build feels much more stable now.
+if {Global_TipActive}:
+	Brahim: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

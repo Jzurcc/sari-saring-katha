@@ -65,6 +65,7 @@ static func sync_transaction(
 	Dialogic.VAR.set_variable("Global_RumorType", transaction.rumor_type)
 	Dialogic.VAR.set_variable("Global_EventRumorActive", 1.0 if transaction.event_rumor_active else 0.0)
 	Dialogic.VAR.set_variable("Global_EventRumorText", transaction.event_rumor_text)
+	Dialogic.VAR.set_variable("Global_TipActive", false)
 
 	# --- Random Variety Rolls (rolled fresh for each new transaction) ---
 	Dialogic.VAR.set_variable("Transaction_GreetingVar", randf() * 100.0)

@@ -36,6 +36,8 @@ if {Transaction_WantsDebt}:
 		KuyaKap: I'll just come back when I have the change. [pause=0.4] Mag-iingat ka!
 else:
 	KuyaKap: Salamat, apo. [pause=0.4] You really have your Lola's touch with keeping this place alive.
+	if {Global_TipActive}:
+		KuyaKap: Aba, that was quite cheap. Keep the change po!
 [signal arg="story_success"]
 [end_timeline]
 

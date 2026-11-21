@@ -35,6 +35,8 @@ if {Transaction_SatisfyVar} <= 50:
 	Rodel: Excellent. [pause=0.4] A successful exchange. My thank-currents to you, Ambassador.
 else:
 	Rodel: My hydro-stasis is stabilized for now. [pause=0.5] May the tides of your commerce remain high.
+if {Global_TipActive}:
+	Rodel: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

@@ -163,6 +163,7 @@ variables={
 "Global_RumorType": 0.0,
 "Global_StockStatus": "",
 "Global_TimeOfDayPhase": "",
+"Global_TipActive": false,
 "Global_TodayQuota": 0.0,
 "PriceVar": 0.0,
 "Stats": {

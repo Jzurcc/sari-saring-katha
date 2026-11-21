@@ -146,6 +146,8 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 
 		VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
 		var wants_debt: bool = context.wants_debt if context else false
+		if item.item_data.current_step < 0 and not wants_debt:
+			Dialogic.VAR.set_variable("Global_TipActive", true)
 		EventBus.transaction_completed.emit(item.item_data, true, wants_debt, c_path)
 
 		if not item.is_transient:

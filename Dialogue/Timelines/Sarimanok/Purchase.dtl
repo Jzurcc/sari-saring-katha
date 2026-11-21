@@ -88,6 +88,8 @@ else:
 			Sarimanok: A most efficient transaction! My compliments to the proprietor. [shake]Ba-kawk![/shake]
 		else:
 			Sarimanok: Delightful. I shall pen a resplendent review in the local journals. Good day!
+	if {Global_TipActive}:
+		Sarimanok: Aba, that was quite cheap. Keep the change po!
 [signal arg="story_success"]
 [end_timeline]
 
