@@ -4,6 +4,8 @@ extends RefCounted
 ## Manages in-game time (5:00 AM to 12:00 AM Midnight), customer wait limits,
 ## closing-time signals, and TimeOfDay sky/shadow updates.
 
+signal fast_forward_finished
+
 const DAY_START_HOUR := 5.0
 const MENU_THEME_HOUR := 16.89 ## Golden hour aesthetic for Main Menu
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
@@ -58,43 +60,15 @@ func on_customer_arrived() -> void:
 	else:
 		LogManager.info("DayClock", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Paused: %s)" % [wait_limit_time, str(was_paused_by_limit)])
 
-## Called the instant a customer's end dialogue finishes (right before they walk out).
-## Smoothly eases time forward to half of their 4-hour window (+2h from arrival) if finished early.
-func on_customer_leaving() -> void:
-	if not is_customer_present:
-		return
+func is_fast_forwarding() -> bool:
+	return _is_fast_forwarding
 
+func on_customer_dismissed() -> void:
+	is_customer_present = false
 	var limit_time := wait_limit_time
 	var was_paused := was_paused_by_limit
 	was_paused_by_limit = false
 	wait_limit_time = -1.0
-
-	if current_display_time >= CLOSING_HOUR:
-		return
-
-	if was_paused:
-		set_clock_running(true)
-		LogManager.info("DayClock", "Customer leaving after +4h pause. Resuming clock.")
-		return
-
-	if limit_time > 0.0:
-		var half_window_target := limit_time - (CUSTOMER_TIME_WINDOW_HOURS - CUSTOMER_FAST_FORWARD_HOURS)
-		var clamped_target := minf(half_window_target, CLOSING_HOUR)
-		if clamped_target > current_display_time + 0.02:
-			_start_fast_forward(clamped_target)
-		else:
-			LogManager.debug("DayClock", "Customer served past +2h halfway mark (%.2f >= %.2f). No time skip." % [current_display_time, half_window_target])
-
-func on_customer_dismissed() -> void:
-	# Fallback in case on_customer_leaving() wasn't called yet
-	if wait_limit_time > 0.0 or was_paused_by_limit:
-		on_customer_leaving()
-
-	is_customer_present = false
-
-	if _is_fast_forwarding:
-		# Closing-time emit will be handled by _on_fast_forward_finished once the sweep completes
-		return
 
 	if current_display_time >= CLOSING_HOUR:
 		if is_clock_running:
@@ -104,6 +78,20 @@ func on_customer_dismissed() -> void:
 			current_display_time = HARD_STOP_HOUR
 			apply_display_time(HARD_STOP_HOUR)
 		EventBus.closing_time_reached.emit()
+		return
+
+	if was_paused:
+		set_clock_running(true)
+		LogManager.info("DayClock", "Customer left after +4h pause. Resuming clock.")
+		return
+
+	if limit_time > 0.0:
+		var half_window_target := limit_time - (CUSTOMER_TIME_WINDOW_HOURS - CUSTOMER_FAST_FORWARD_HOURS)
+		var clamped_target := minf(half_window_target, CLOSING_HOUR)
+		if clamped_target > current_display_time + 0.02:
+			_start_fast_forward(clamped_target)
+		else:
+			LogManager.debug("DayClock", "Customer served past +2h halfway mark (%.2f >= %.2f). No time skip." % [current_display_time, half_window_target])
 
 func _start_fast_forward(target_time: float) -> void:
 	_cancel_fast_forward(false)
@@ -146,8 +134,10 @@ func _on_fast_forward_finished(target_time: float) -> void:
 			EventBus.closing_time_reached.emit()
 	else:
 		set_clock_running(true)
+	fast_forward_finished.emit()
 
 func _cancel_fast_forward(snap_to_target: bool) -> void:
+	var was_running := _is_fast_forwarding
 	if _fast_forward_tween and _fast_forward_tween.is_valid():
 		_fast_forward_tween.kill()
 	_fast_forward_tween = null
@@ -157,6 +147,8 @@ func _cancel_fast_forward(snap_to_target: bool) -> void:
 		set_clock_running(current_display_time < CLOSING_HOUR)
 	_is_fast_forwarding = false
 	_fast_forward_target = -1.0
+	if was_running:
+		fast_forward_finished.emit()
 
 func get_effective_display_time() -> float:
 	if _is_fast_forwarding and _fast_forward_target > current_display_time:

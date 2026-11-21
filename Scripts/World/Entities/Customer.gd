@@ -300,10 +300,6 @@ func _leave_store(completion_signal: Signal) -> void:
 	_is_resolving = true
 	_clear_outline()
 	InventoryManager.decrement_cooldown()
-
-	# Trigger time-skip right as the customer's end dialogue finishes (before walk-out)
-	if is_instance_valid(StoryManager):
-		StoryManager.on_customer_leaving(self)
 	
 	# Point toward the custom exit marker and let _process handle the walk
 	target_position = _exit_position

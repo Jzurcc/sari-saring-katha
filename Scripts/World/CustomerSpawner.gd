@@ -198,11 +198,21 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	# Check if we have a pending tier unlock now that the counter is clear
 	StoryManager.process_pending_unlock()
 
+	# Wait for the post-departure time-skip timelapse to finish before starting the inter-customer delay
+	if StoryManager.clock.is_fast_forwarding():
+		await StoryManager.clock.fast_forward_finished
+		if not is_inside_tree():
+			_is_spawning = false
+			return
+
 	var delay = randf_range(0.0, 1.5)
 	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 
 	await get_tree().create_timer(delay).timeout
+	if not is_inside_tree():
+		_is_spawning = false
+		return
 	_is_spawning = false
 	_spawn_next_customer()
 
