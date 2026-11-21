@@ -11,9 +11,75 @@
 [ext_resource type="Resource" uid="uid://csh0cxkt44aci" path="res://Dialogue/Timelines/Danilo/Visit.dtl" id="danilo_visit"]
 [ext_resource type="Resource" uid="uid://cjllu4anoqql8" path="res://Dialogue/Timelines/Danilo/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="arc_data"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Free Real Estate"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Cough"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Midnight Flight"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Private Conversation"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Highway"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Too Bright"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_6"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Pale Ledger"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_7"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Daligmata - the reveal"
+is_visit_only = true
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_8"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The First Purchase - Arc Finale"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arc_script")
+arc_name = "Arc 1: The Watcher in the Shade"
+purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_purchase")])
+visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_visit")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arc_script")
+arc_name = "Arc 2: The Weight of Many Eyes"
+purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_purchase")])
+visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_visit")])
+
+[sub_resource type="Resource" id="arc_2"]
+script = ExtResource("arc_script")
+arc_name = "Arc 3: The Guardian's Gaze"
 purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_purchase")])
 visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_visit")])
 
@@ -23,11 +89,9 @@ character_name = "Danilo"
 sprite_texture = ExtResource("5_png")
 dialogic_character = ExtResource("1_dch")
 story_timeline = ExtResource("story_res")
-max_story_chapters = 9
-chapter_categories = Array[PackedStringArray]([PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack"), PackedStringArray("snack")])
-visit_story_chapters = Array[bool]([true, true, true, true, true, true, true, true, false])
-character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_data")])
-arc_names = Array[String](["Arc 1: The Watcher in the Shade", "Arc 2: The Weight of Many Eyes", "Arc 3: The Guardian's Gaze"])
-chapter_names = Array[String](["The Free Real Estate", "The Cough", "The Midnight Flight", "The Private Conversation", "The Highway", "Too Bright", "The Pale Ledger", "The Daligmata - the reveal", "The First Purchase - Arc Finale"])
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_wav")
+spreads_rumors = true
+purchase_only_on_final_chapter = true
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
+character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

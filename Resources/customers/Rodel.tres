@@ -11,9 +11,68 @@
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://dp41iwukbcg12" path="res://Dialogue/Timelines/Rodel/Purchase.dtl" id="rodel_purchase"]
 [ext_resource type="Resource" uid="uid://b5rduauht166t" path="res://Dialogue/Timelines/Rodel/Visit.dtl" id="rodel_visit"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="arcdata_script"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Atmosphere of Sand"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Choice of Salt"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Metal Coffins"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Cracking Shield"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Forked Tide"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Echo of Emptiness"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_6"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Terrestrial Rations"
+categories = PackedStringArray("frozen")
+
+[sub_resource type="Resource" id="chapter_7"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Ambassador's Choice"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_8"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Rains of Farewell"
+is_visit_only = true
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
+arc_name = "Arc 1: The Abrasive World"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 2: The Drying Search"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
+
+[sub_resource type="Resource" id="arc_2"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 3: The Final Current"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
 
@@ -25,12 +84,8 @@ dialogic_character = ExtResource("1_eplk6")
 unlock_tier = 2
 dialogue_blip_volume = -4.0
 story_timeline = ExtResource("11_hxk1p")
-max_story_chapters = 9
-chapter_categories = Array[PackedStringArray]([PackedStringArray("bottle"), PackedStringArray("snack"), PackedStringArray("bottle"), PackedStringArray("bottle"), PackedStringArray("snack"), PackedStringArray("bottle"), PackedStringArray("frozen"), PackedStringArray("bottle"), PackedStringArray()])
-visit_story_chapters = Array[bool]([false, false, false, false, false, false, false, false, true])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
-arc_names = Array[String](["Arc 1: The Abrasive World", "Arc 2: The Drying Search", "Arc 3: The Final Current"])
-chapter_names = Array[String](["The Atmosphere of Sand", "The Choice of Salt", "The Metal Coffins", "The Cracking Shield", "The Forked Tide", "Echo of Emptiness", "The Terrestrial Rations", "Ambassador's Choice", "The Rains of Farewell"])
 sprite_scale = 0.4
 speech_marker_height_ratio = 0.55
 dialogue_blip_sound = ExtResource("2_7nk2y")
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

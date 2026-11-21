@@ -11,9 +11,68 @@
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Resource" uid="uid://bkxgcd1fe4pf" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
 [ext_resource type="Resource" uid="uid://crmfh6krc8b5c" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="arcdata_script"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Arrival"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Plan"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Arc 1 Recount"
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Burnout"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Arc 2 Scouting"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Arc 2 Recount"
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="chapter_6"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Realization"
+categories = PackedStringArray("snack")
+
+[sub_resource type="Resource" id="chapter_7"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Choice"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_8"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Final Step"
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
+arc_name = "Arc 1: The Viral Scout"
+purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
+visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 2: The Viewfinder's Limit"
+purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
+visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
+
+[sub_resource type="Resource" id="arc_2"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 3: The Path Forward"
 purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
 visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
 
@@ -25,10 +84,7 @@ dialogic_character = ExtResource("1_6cmda")
 unlock_tier = 3
 dialogue_blip_volume = -5.0
 story_timeline = ExtResource("4_timeline")
-max_story_chapters = 9
-chapter_categories = Array[PackedStringArray]([PackedStringArray("bottle"), PackedStringArray("snack"), PackedStringArray("pack"), PackedStringArray("bottle"), PackedStringArray("snack"), PackedStringArray("pack"), PackedStringArray("snack"), PackedStringArray("bottle"), PackedStringArray("pack")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
-arc_names = Array[String](["Arc 1: The Viral Scout", "Arc 2: The Viewfinder's Limit", "Arc 3: The Path Forward"])
-chapter_names = Array[String](["The Arrival", "The Plan", "Arc 1 Recount", "Burnout", "Arc 2 Scouting", "Arc 2 Recount", "The Realization", "The Choice", "The Final Step"])
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("2_0aich")
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

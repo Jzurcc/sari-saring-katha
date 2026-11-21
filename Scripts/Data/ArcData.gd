@@ -4,8 +4,8 @@ extends Resource
 ## One narrative arc's worth of generic character assets.
 ## Assigned to CustomerData.character_arcs (index 0 = Arc 1, etc.)
 
-## The pool of items this character buys during generic purchase interactions.
-@export var filler_items: Array[ItemData] = []
+## Display name of this narrative arc (e.g. "Arc 1: The Watcher in the Shade").
+@export var arc_name: String = ""
 
 ## Pool of purchase-oriented timelines (character requests an item).
 @export var purchase_timelines: Array[DialogicTimeline] = []

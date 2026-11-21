@@ -197,14 +197,15 @@ static func build_transaction_context(
 
 	# Assign Desired Items
 	if transaction.transaction_type != TransactionContext.Type.VISIT and not transaction.is_visit_story:
-		var pinned_request := data.get_chapter_request(chapter)
-		if pinned_request != null:
-			for entry in pinned_request.items:
-				var item: ItemData = entry.item if "item" in entry else entry
-				var item_auto_upgrade: bool = entry.auto_upgrade if "auto_upgrade" in entry else false
+		var pinned_items := data.get_chapter_pinned_items(chapter)
+		if not pinned_items.is_empty():
+			var upgrade_all: bool = data.get_chapter_upgrade_all_pinned(chapter)
+			for entry in pinned_items:
+				var item: ItemData = entry.item if entry else null
+				var item_auto_upgrade: bool = entry.auto_upgrade if entry else false
 
 				if item:
-					if item_auto_upgrade or pinned_request.upgrade_all or item.tier > sm.current_tier:
+					if item_auto_upgrade or upgrade_all or item.tier > sm.current_tier:
 						var best_in_cat := OrderItemPicker.best_for_category(item.category, sm.current_tier, item)
 						item = best_in_cat if best_in_cat else OrderItemPicker.random_orderable(sm.current_tier)
 					if item:

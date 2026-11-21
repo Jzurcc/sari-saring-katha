@@ -11,9 +11,68 @@
 [ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="purchase_dtl"]
 [ext_resource type="Resource" uid="uid://chi8ndhwuhd3c" path="res://Dialogue/Timelines/ReynaMayari/Story.dtl" id="story_dtl"]
 [ext_resource type="Resource" uid="uid://c5ftr0ohic643" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="visit_dtl"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="arcdata_script"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Inherited Burden"
+categories = PackedStringArray("cigarette")
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "A Routine Visit"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Black Rice Confession"
+categories = PackedStringArray("cigarette")
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Real Reason"
+categories = PackedStringArray("candy")
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Silence of Biringan"
+categories = PackedStringArray("cigarette")
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The One-Eyed Child"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_6"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Almost Done"
+categories = PackedStringArray("candy")
+
+[sub_resource type="Resource" id="chapter_7"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Ledger Closes"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_8"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Patron of the Moon"
+categories = PackedStringArray("sachet")
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
+arc_name = "Arc 1: The Silver Tribute"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 2: Cracks in the Spire"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
+
+[sub_resource type="Resource" id="arc_2"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 3: Patron of the Moon"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
 
@@ -25,10 +84,8 @@ dialogic_character = ExtResource("1_w2e88")
 unlock_tier = 99
 dialogue_blip_volume = -6.0
 story_timeline = ExtResource("story_dtl")
-max_story_chapters = 9
-chapter_categories = Array[PackedStringArray]([PackedStringArray("cigarette"), PackedStringArray("bottle"), PackedStringArray("cigarette"), PackedStringArray("candy"), PackedStringArray("cigarette"), PackedStringArray("bottle"), PackedStringArray("candy"), PackedStringArray("bottle"), PackedStringArray("sachet")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
-arc_names = Array[String](["Arc 1: The Silver Tribute", "Arc 2: Cracks in the Spire", "Arc 3: Patron of the Moon"])
-chapter_names = Array[String](["The Inherited Burden", "A Routine Visit", "The Black Rice Confession", "The Real Reason", "The Silence of Biringan", "The One-Eyed Child", "Almost Done", "The Ledger Closes", "The Patron of the Moon"])
 sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("2_1p4eh")
+is_nightly_collector = true
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

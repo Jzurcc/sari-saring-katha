@@ -7,29 +7,26 @@ const DEFAULT_VISIT_TIMELINE = preload("res://Dialogue/Timelines/Generic/Visit.d
 ## The display name of the character (can contain spaces).
 @export var character_name: String
 
-## Returns a stable ID based on the filename (e.g. "KuyaKap.tres" -> "kuyakap").
-func get_clean_id() -> String:
-	return resource_path.get_file().get_basename().to_lower()
-
-## The sprite sheet / texture displayed for this customer in the 3D world.
-@export var sprite_texture: Texture2D
-## The Dialogic Character resource (.dch) for this customer
-@export var dialogic_character: DialogicCharacter
-
 ## The tier at which this customer starts appearing in the game.
 @export var unlock_tier: int = 1
 
+## The Dialogic Character resource (.dch) for this customer.
+@export var dialogic_character: DialogicCharacter
+
+@export_group("Visuals")
+## The sprite sheet / texture displayed for this customer in the 3D world.
+@export var sprite_texture: Texture2D
+## Multiplier applied to the 3D sprite scale.
+@export var sprite_scale: float = 1.0
+## Vertical ratio for the speech bubble position relative to total height (0.0 to 1.0).
+## 0.75 is the default standard for most characters.
+@export var speech_marker_height_ratio: float = 0.75
+
 @export_group("Audio")
+## The sound played once per dialogue text bubble (e.g., KuyaKap's blip).
+@export var dialogue_blip_sound: AudioStream
 ## Volume offset for dialogue blips (e.g. 5.0 for louder, -5.0 for quieter).
 @export var dialogue_blip_volume: float = 0.0
-
-@export_group("Story Progression")
-## The single timeline file that handles all story chapters for this character.
-@export var story_timeline: DialogicTimeline
-
-## The total number of story chapters (episodes) available in this character's story_timeline. 
-## Set to 0 if the character has no main story arc.
-@export var max_story_chapters: int = 0
 
 @export_group("Behavior Traits")
 ## If true, this customer prefers items with riddles/hints (e.g. Buboy).
@@ -43,47 +40,92 @@ func get_clean_id() -> String:
 ## If true, this character only appears as the nightly quota collector, bypassing day spawns (e.g. Reyna Mayari).
 @export var is_nightly_collector: bool = false
 
+@export_group("Story & Arcs")
+## The single timeline file that handles all story chapters for this character.
+@export var story_timeline: DialogicTimeline
+
+## Ordered list of story chapters (0-indexed).
+## Each ChapterData holds its name, visit-only flag, category preferences/exclusions,
+## prerequisites, and optional pinned items.
+## After finishing all chapters, the customer retains the last chapter's category preferences/exclusions.
+@export var chapters: Array[ChapterData] = []
+
+## Per-arc generic assets. Index 0 = Arc 1 (chapters 0-2), 1 = Arc 2 (3-5), 2 = Arc 3 (6-8).
+## Add or remove entries here to support any number of arcs — no code changes needed.
+@export var character_arcs: Array[ArcData] = []
+
+## Total number of story chapters for this character (derived from chapters.size()).
+var max_story_chapters: int:
+	get:
+		return chapters.size()
+
+## Returns a stable ID based on the filename (e.g. "KuyaKap.tres" -> "kuyakap").
+func get_clean_id() -> String:
+	return resource_path.get_file().get_basename().to_lower()
+
+# ---------------------------------------------------------------------------
+# Behavior Trait Queries
+# ---------------------------------------------------------------------------
+
 func has_riddle_preference() -> bool:
-	return prefers_riddles or get_clean_id() == "buboy"
+	return prefers_riddles
 
 func can_request_utang() -> bool:
-	return requests_utang or get_clean_id() == "manangana"
+	return requests_utang
 
 func can_spread_rumors() -> bool:
-	return spreads_rumors or get_clean_id() == "danilo"
+	return spreads_rumors
 
 func is_visit_only_until_final_chapter() -> bool:
-	return purchase_only_on_final_chapter or get_clean_id() == "danilo"
+	return purchase_only_on_final_chapter
 
 func is_collector() -> bool:
-	return is_nightly_collector or get_clean_id() == "reynamayari"
+	return is_nightly_collector
 
-@export_group("Chapter Overrides")
+# ---------------------------------------------------------------------------
+# Chapter Helpers
+# ---------------------------------------------------------------------------
 
-## Per-chapter item category preferences and exclusions (index = chapter number, 0-based).
-## Each entry is a PackedStringArray of category names (e.g. ["snack", "bottle", "!candy"]).
-## Prefix a category with "!" to exclude it from the customer's orders (including general pool rolls).
-## Leave an entry empty ([]) to use the standard random selection with no exclusions.
-## After finishing all chapters, the customer retains the last entry's preferences/exclusions.
-@export var chapter_categories: Array[PackedStringArray] = []
+## Returns the ChapterData at `chapter` (strict bounds; returns null if out of range).
+func get_chapter(chapter: int) -> ChapterData:
+	if chapter < 0 or chapter >= chapters.size():
+		return null
+	return chapters[chapter]
 
-## Which story chapters are "visit-only" (customer talks but doesn't buy).
-## Index = chapter number (0-based). True = this chapter is visit-only.
-## Example: [true, true, true, true, false] = first 4 chapters are visits only.
-@export var visit_story_chapters: Array[bool] = []
+## Returns the ChapterData at `chapter`, clamping to the last entry so customers
+## retain their final preferences/exclusions after finishing their story.
+func get_chapter_clamped(chapter: int) -> ChapterData:
+	if chapters.is_empty():
+		return null
+	return chapters[clampi(chapter, 0, chapters.size() - 1)]
 
-## Returns the raw category list for a given chapter, clamping to the last entry
-## so customers retain their final preferences/exclusions after their story ends.
-func _get_chapter_category_list(chapter: int) -> PackedStringArray:
-	if chapter_categories.is_empty():
-		return PackedStringArray()
-	var idx := clampi(chapter, 0, chapter_categories.size() - 1)
-	return chapter_categories[idx]
+func get_chapter_name(chapter: int) -> String:
+	var ch := get_chapter(chapter)
+	return ch.chapter_name if ch else ""
+
+func is_visit_story_chapter(chapter: int) -> bool:
+	var ch := get_chapter(chapter)
+	return ch.is_visit_only if ch else false
+
+func get_chapter_prerequisites(chapter: int) -> StoryPrerequisiteGroup:
+	var ch := get_chapter(chapter)
+	return ch.prerequisites if ch else null
+
+func get_chapter_pinned_items(chapter: int) -> Array[ChapterItemEntry]:
+	var ch := get_chapter(chapter)
+	return ch.pinned_items if ch else ([] as Array[ChapterItemEntry])
+
+func get_chapter_upgrade_all_pinned(chapter: int) -> bool:
+	var ch := get_chapter(chapter)
+	return ch.upgrade_all_pinned if ch else false
 
 ## Returns all positive (preferred) categories for a given chapter, resolved via OrderItemPicker aliases.
 func get_chapter_preferred_categories(chapter: int) -> Array[String]:
 	var result: Array[String] = []
-	for raw_token in _get_chapter_category_list(chapter):
+	var ch := get_chapter_clamped(chapter)
+	if not ch:
+		return result
+	for raw_token in ch.categories:
 		var token := raw_token.strip_edges()
 		if token.is_empty() or token.begins_with("!"):
 			continue
@@ -95,7 +137,10 @@ func get_chapter_preferred_categories(chapter: int) -> Array[String]:
 ## Returns all "!category" excluded categories for a given chapter, resolved via OrderItemPicker aliases.
 func get_chapter_excluded_categories(chapter: int) -> Array[String]:
 	var result: Array[String] = []
-	for raw_token in _get_chapter_category_list(chapter):
+	var ch := get_chapter_clamped(chapter)
+	if not ch:
+		return result
+	for raw_token in ch.categories:
 		var token := raw_token.strip_edges()
 		if not token.begins_with("!"):
 			continue
@@ -112,60 +157,8 @@ func get_chapter_category(chapter: int) -> String:
 	var prefs := get_chapter_preferred_categories(chapter)
 	return prefs[0] if not prefs.is_empty() else ""
 
-## Returns true if the given chapter should be treated as a visit-only story chapter.
-func is_visit_story_chapter(chapter: int) -> bool:
-	if visit_story_chapters.is_empty() or chapter >= visit_story_chapters.size():
-		return false
-	return visit_story_chapters[chapter]
-
-## Optional prerequisites for each story chapter. 
-## Index matches story_timelines index. If empty or null at an index, no requirements.
-@export var story_prerequisites: Array[StoryPrerequisiteGroup] = []
-
-## Per-chapter item overrides for story visits. Index = chapter number (0–8).
-## Each ChapterItems entry holds an Array[ItemData] the customer will request that chapter.
-## If the array is shorter than max_story_chapters, or the entry at the current
-## chapter index is null/empty, the system falls back to the normal random item shuffle.
-@export var chapter_request_items: Array = []
-
-## Returns the pinned ChapterItems for a given story chapter, or null
-## if that chapter should use the normal random shuffle.
-func get_chapter_request(chapter: int) -> ChapterItems:
-	if chapter_request_items.is_empty() or chapter >= chapter_request_items.size():
-		return null
-	var entry = chapter_request_items[chapter]
-	if not (entry is ChapterItems) or entry.items.is_empty():
-		return null
-	return entry
-
-
-
-
-## Per-arc generic assets. Index 0 = Arc 1 (chapters 0-2), 1 = Arc 2 (3-5), 2 = Arc 3 (6-8).
-## Add or remove entries here to support any number of arcs — no code changes needed.
-@export var character_arcs: Array[ArcData] = []
-
-@export_group("Narrative UI")
-## Names for the narrative arcs (e.g. index 0 = ARC 1).
-@export var arc_names: Array[String] = []
-
-## Names for the individual story chapters (0-indexed).
-@export var chapter_names: Array[String] = []
-
-
-## Multiplier applied to the 3D sprite scale.
-@export var sprite_scale: float = 1.0
-
-## Vertical ratio for the speech bubble position relative to total height (0.0 to 1.0).
-## 0.75 is the default standard for most characters.
-@export var speech_marker_height_ratio: float = 0.75
-
-## The sound played once per dialogue text bubble (e.g., KuyaKap's blip)
-@export var dialogue_blip_sound: AudioStream
-
 # ---------------------------------------------------------------------------
-# Arc helpers — all caller code goes through these; never index character_arcs
-# directly so fallback logic is always applied.
+# Arc Helpers
 # ---------------------------------------------------------------------------
 
 ## Returns the 0-based arc index for a given story chapter (floor(chapter / 3)).
@@ -178,36 +171,17 @@ func _get_arc(chapter: int) -> ArcData:
 	if character_arcs.is_empty():
 		return null
 	var idx: int = mini(get_arc_index(chapter), character_arcs.size() - 1)
-	# Walk backward until we find a non-null entry
 	while idx >= 0:
 		if character_arcs[idx] != null:
 			return character_arcs[idx]
 		idx -= 1
 	return null
 
-func get_filler_items(chapter: int) -> Array[ItemData]:
-	var arc := _get_arc(chapter)
-	if not arc:
-		return [] as Array[ItemData]
-	var result: Array[ItemData] = []
-	for item in arc.filler_items:
-		if item is ItemData:
-			result.append(item)
-	return result
-
-## Returns an aggregated list of filler items from the current arc and all previous arcs.
-func get_cumulative_filler_items(chapter: int) -> Array[ItemData]:
-	var result: Array[ItemData] = []
-	var max_arc_idx = get_arc_index(chapter)
-	
-	for i in range(max_arc_idx + 1):
-		var arc = _get_arc(i * 3) # Sample arc at the start of its chapter range
-		if arc:
-			for item in arc.filler_items:
-				if item is ItemData and not result.has(item):
-					result.append(item)
-	return result
-
+func get_arc_name(arc_index: int) -> String:
+	if arc_index < 0 or arc_index >= character_arcs.size():
+		return ""
+	var arc := character_arcs[arc_index]
+	return arc.arc_name if arc else ""
 
 func get_purchase_timelines(chapter: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(chapter)
@@ -217,10 +191,10 @@ func get_purchase_timelines(chapter: int) -> Array[DialogicTimeline]:
 	for tl in arc.purchase_timelines:
 		if tl is DialogicTimeline:
 			result.append(tl)
-	
+
 	if result.is_empty():
 		result.append(DEFAULT_PURCHASE_TIMELINE)
-		
+
 	return result
 
 func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
@@ -233,9 +207,9 @@ func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
 			result.append(tl)
 		else:
 			LogManager.warn("CustomerData", "Null visit timeline found in arc for %s" % character_name)
-			
+
 	if result.is_empty():
 		LogManager.info("CustomerData", "No visit timelines for %s chapter %d, falling back to generic." % [character_name, chapter])
 		result.append(DEFAULT_VISIT_TIMELINE)
-		
+
 	return result

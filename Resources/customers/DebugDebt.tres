@@ -11,8 +11,12 @@
 [ext_resource type="Resource" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="5_bunqy"]
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_img"]
 [ext_resource type="Script" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="10_54nu8"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="Resource_jm54j"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("1_8pid7")
 purchase_timelines = Array[ExtResource("3_aryar")]([ExtResource("4_nkqv3")])
 visit_timelines = Array[ExtResource("3_aryar")]([ExtResource("5_bunqy")])
@@ -24,7 +28,7 @@ character_name = "Debt Debugger"
 sprite_texture = ExtResource("5_img")
 dialogic_character = ExtResource("3_dch")
 story_timeline = ExtResource("4_timeline")
-max_story_chapters = 1
-character_arcs = Array[ExtResource("1_8pid7")]([SubResource("Resource_jm54j")])
 sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("1_blip")
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0")])
+character_arcs = Array[ExtResource("1_8pid7")]([SubResource("arc_0")])

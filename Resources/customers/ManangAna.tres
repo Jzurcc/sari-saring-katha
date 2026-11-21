@@ -11,9 +11,68 @@
 [ext_resource type="Resource" uid="uid://bpb60ibkybakm" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
 [ext_resource type="Resource" uid="uid://dc1yt6iiwlltd" path="res://Dialogue/Timelines/ManangAna/Story.dtl" id="mana_story"]
 [ext_resource type="Resource" uid="uid://dw2evopysv3yc" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="arcdata_script"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Introduction"
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Bottomless Pits"
+categories = PackedStringArray("can")
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Friends with Kap"
+categories = PackedStringArray("bottle")
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The First Ask"
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Double Shifts and Detergent"
+categories = PackedStringArray("sachet")
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Breaking Point"
+categories = PackedStringArray("sachet")
+
+[sub_resource type="Resource" id="chapter_6"]
+script = ExtResource("chapterdata_script")
+chapter_name = "A Deep Breath"
+categories = PackedStringArray("can")
+
+[sub_resource type="Resource" id="chapter_7"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Cleared"
+is_visit_only = true
+
+[sub_resource type="Resource" id="chapter_8"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Feast"
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
+arc_name = "Arc 1: The Weight of Many Mouths"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 2: Secrets of the Night Flight"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
+
+[sub_resource type="Resource" id="arc_2"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 3: A Balanced Table"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
 
@@ -23,11 +82,8 @@ character_name = "Manang Ana"
 sprite_texture = ExtResource("5_4587l")
 dialogic_character = ExtResource("1_m676v")
 story_timeline = ExtResource("mana_story")
-max_story_chapters = 9
-chapter_categories = Array[PackedStringArray]([PackedStringArray("pack"), PackedStringArray("can"), PackedStringArray("bottle"), PackedStringArray("pack"), PackedStringArray("sachet"), PackedStringArray("sachet"), PackedStringArray("can"), PackedStringArray(), PackedStringArray("pack")])
-visit_story_chapters = Array[bool]([false, false, false, false, false, false, false, true, false])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arcdata_script")])
-arc_names = Array[String](["Arc 1: The Weight of Many Mouths", "Arc 2: Secrets of the Night Flight", "Arc 3: A Balanced Table"])
-chapter_names = Array[String](["The Introduction", "The Bottomless Pits", "Friends with Kap", "The First Ask", "Double Shifts and Detergent", "The Breaking Point", "A Deep Breath", "Cleared", "The Feast"])
 sprite_scale = 0.35
 dialogue_blip_sound = ExtResource("2_n8hjk")
+requests_utang = true
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

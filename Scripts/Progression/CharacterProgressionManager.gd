@@ -202,9 +202,10 @@ func pick_character_weighted(candidates: Array[CustomerData]) -> CustomerData:
 
 ## Returns true if the given chapter's prerequisites are met.
 func is_story_chapter_available(customer: CustomerData, chapter: int) -> bool:
-	if chapter >= customer.story_prerequisites.size() or customer.story_prerequisites[chapter] == null:
+	var prereq := customer.get_chapter_prerequisites(chapter)
+	if prereq == null:
 		return true
-	return customer.story_prerequisites[chapter].is_met(_get_story_manager())
+	return prereq.is_met(_get_story_manager())
 
 # ---------------------------------------------------------------------------
 # Persistence
