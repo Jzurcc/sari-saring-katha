@@ -302,35 +302,86 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 		demand_lbl.add_theme_color_override("font_color", Color(0.98, 0.78, 0.28))
 		sub_hbox.add_child(demand_lbl)
 
-	# Stepper Control HBox
+	# Framed Stepper Pill (separate bordered box with hover highlight + wheel scrolling)
+	var stepper_box := PanelContainer.new()
+	stepper_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	stepper_box.mouse_filter = Control.MOUSE_FILTER_STOP
+	stepper_box.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	var stepper_normal := StyleBoxFlat.new()
+	stepper_normal.bg_color = Color(0.08, 0.075, 0.07, 1.0)
+	stepper_normal.set_corner_radius_all(8)
+	stepper_normal.content_margin_left = 6
+	stepper_normal.content_margin_right = 6
+	stepper_normal.content_margin_top = 5
+	stepper_normal.content_margin_bottom = 5
+	stepper_normal.border_width_left = 2
+	stepper_normal.border_width_top = 2
+	stepper_normal.border_width_right = 2
+	stepper_normal.border_width_bottom = 2
+	stepper_normal.border_color = Color(0.28, 0.26, 0.23, 1.0)
+
+	var stepper_hover: StyleBoxFlat = stepper_normal.duplicate()
+	stepper_hover.bg_color = Color(0.15, 0.145, 0.13, 1.0)
+	stepper_hover.border_color = UIStyle.COLOR_CARD_SELECTED
+
+	stepper_box.add_theme_stylebox_override("panel", stepper_normal)
+	hbox.add_child(stepper_box)
+
 	var stepper_hbox := HBoxContainer.new()
 	stepper_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	stepper_hbox.add_theme_constant_override("separation", 8)
-	hbox.add_child(stepper_hbox)
+	stepper_hbox.mouse_filter = Control.MOUSE_FILTER_PASS
+	stepper_box.add_child(stepper_hbox)
 
 	var minus_btn := Button.new()
 	minus_btn.text = "−"
-	minus_btn.custom_minimum_size = Vector2(38, 38)
+	minus_btn.custom_minimum_size = Vector2(36, 36)
 	minus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	minus_btn.focus_mode = Control.FOCUS_NONE
 	UIStyle.style_button(minus_btn, Color(0.3, 0.3, 0.3), Color.WHITE, 20.0, 6)
 	minus_btn.pressed.connect(func(): _adjust_step(item, -1))
 	stepper_hbox.add_child(minus_btn)
 
 	var pips_lbl := Label.new()
-	pips_lbl.custom_minimum_size = Vector2(165, 38)
+	pips_lbl.custom_minimum_size = Vector2(165, 36)
 	pips_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pips_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	pips_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 	pips_lbl.add_theme_font_override("font", FONT_INDER)
 	pips_lbl.add_theme_font_size_override("font_size", 22)
 	stepper_hbox.add_child(pips_lbl)
 
 	var plus_btn := Button.new()
 	plus_btn.text = "+"
-	plus_btn.custom_minimum_size = Vector2(38, 38)
+	plus_btn.custom_minimum_size = Vector2(36, 36)
 	plus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	plus_btn.focus_mode = Control.FOCUS_NONE
 	UIStyle.style_button(plus_btn, UIStyle.COLOR_CONFIRM, Color.WHITE, 20.0, 6)
 	plus_btn.pressed.connect(func(): _adjust_step(item, 1))
 	stepper_hbox.add_child(plus_btn)
+
+	# Wire hover highlight + mouse-wheel price stepping across the stepper pill & its children
+	var on_stepper_wheel := func(event: InputEvent, ctrl: Control):
+		if event is InputEventMouseButton and event.pressed:
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				_adjust_step(item, 1)
+				ctrl.accept_event()
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				_adjust_step(item, -1)
+				ctrl.accept_event()
+
+	var update_hover := func():
+		if not is_instance_valid(stepper_box):
+			return
+		var local_mouse := stepper_box.get_local_mouse_position()
+		var inside := Rect2(Vector2.ZERO, stepper_box.size).has_point(local_mouse)
+		stepper_box.add_theme_stylebox_override("panel", stepper_hover if inside else stepper_normal)
+
+	for ctrl in [stepper_box, minus_btn, pips_lbl, plus_btn]:
+		ctrl.gui_input.connect(on_stepper_wheel.bind(ctrl))
+		ctrl.mouse_entered.connect(func(): stepper_box.add_theme_stylebox_override("panel", stepper_hover))
+		ctrl.mouse_exited.connect(update_hover)
 
 	# Price & Step Readout VBox
 	var price_vbox := VBoxContainer.new()
