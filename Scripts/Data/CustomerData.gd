@@ -39,6 +39,8 @@ const DEFAULT_VISIT_TIMELINE = preload("res://Dialogue/Timelines/Generic/Visit.d
 @export var purchase_only_on_final_chapter: bool = false
 ## If true, this character only appears as the nightly quota collector, bypassing day spawns (e.g. Reyna Mayari).
 @export var is_nightly_collector: bool = false
+## Relative spawn weight for regular visits and story selection (1.0 = normal, <1.0 = less common).
+@export_range(0.05, 5.0, 0.05) var spawn_weight: float = 1.0
 
 @export_group("Story & Arcs")
 ## The single timeline file that handles all story chapters for this character.

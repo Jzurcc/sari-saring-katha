@@ -7,6 +7,7 @@ extends Node
 signal events_changed(active_events: Array[StoreEventData])
 
 const EVENTS_DIR := "res://Resources/events"
+const DAILY_EVENT_CHANCE := 0.55
 
 var _available_events: Dictionary = {} # event_id -> StoreEventData
 var _active_events: Array[StoreEventData] = []
@@ -43,18 +44,27 @@ func _on_day_started(_day_number: int) -> void:
 	roll_daily_events()
 
 ## Rolls a random daily market event that begins in a pending state until Danilo announces it.
+## Not every day has an event (controlled by DAILY_EVENT_CHANCE; Day 1 is always quiet).
 func roll_daily_events() -> void:
 	_active_events.clear()
 	_pending_event = null
+	_daily_encounter_count = 0
+	_announcement_encounter_slot = 1
+	_has_rolled_for_day = true
+
 	var pool := _available_events.values().duplicate()
-	if pool.is_empty():
+	if pool.is_empty() or (is_instance_valid(StoryManager) and StoryManager.day <= 1):
+		LogManager.info("StoreEventManager", "Quiet day (Day 1 or no events configured).")
+		events_changed.emit(_active_events)
+		return
+
+	if randf() > DAILY_EVENT_CHANCE:
+		LogManager.info("StoreEventManager", "Quiet day — no market event rolled today.")
 		events_changed.emit(_active_events)
 		return
 
 	pool.shuffle()
 	_pending_event = pool[0]
-	_has_rolled_for_day = true
-	_daily_encounter_count = 0
 	_announcement_encounter_slot = randi_range(1, 4)
 	LogManager.info("StoreEventManager", "Daily event queued for Danilo's announcement (Encounter #%d): %s" % [_announcement_encounter_slot, _pending_event.event_name])
 	events_changed.emit(_active_events)

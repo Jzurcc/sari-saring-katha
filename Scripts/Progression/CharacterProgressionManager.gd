@@ -178,8 +178,8 @@ func _get_unlocked_characters_from(all_chars: Array, current_tier: int, current_
 	return unlocked
 
 
-## Picks a character from candidates using focus-character weighting.
-## Focus character has 30% chance; others split the remaining 70%.
+## Picks a character from candidates using focus-character and per-character spawn_weight weighting.
+## Focus character has 30% chance; others split the remaining 70% proportional to spawn_weight.
 func pick_character_weighted(candidates: Array[CustomerData]) -> CustomerData:
 	if candidates.is_empty():
 		return null
@@ -194,10 +194,27 @@ func pick_character_weighted(candidates: Array[CustomerData]) -> CustomerData:
 		if randf() < 0.3:
 			return focus_char
 		else:
-			var others := candidates.filter(func(c): return c != focus_char)
-			return others.pick_random()
+			var others: Array[CustomerData] = []
+			for c in candidates:
+				if c != focus_char:
+					others.append(c)
+			return _pick_by_spawn_weight(others)
 
-	return candidates.pick_random()
+	return _pick_by_spawn_weight(candidates)
+
+func _pick_by_spawn_weight(pool: Array[CustomerData]) -> CustomerData:
+	if pool.is_empty():
+		return null
+	var total_weight: float = 0.0
+	for c in pool:
+		total_weight += maxf(0.05, c.spawn_weight)
+	var roll: float = randf() * total_weight
+	var acc: float = 0.0
+	for c in pool:
+		acc += maxf(0.05, c.spawn_weight)
+		if roll <= acc:
+			return c
+	return pool[-1]
 
 
 ## Returns true if the given chapter's prerequisites are met.
