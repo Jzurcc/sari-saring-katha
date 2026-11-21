@@ -88,7 +88,7 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 		
 		# If the customer wants to pay via Utang (debt), they won't give us cash yet.
 		if wants_debt and customer_path != "":
-			StoryManager.record_debt(customer_path, _last_earning)
+			StoryManager.queue_pending_debt(customer_path, _last_earning)
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 

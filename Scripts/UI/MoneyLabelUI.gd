@@ -3,8 +3,9 @@ class_name MoneyLabelUI
 
 const COLOR_GAIN := Color("#7EE081")
 const COLOR_SPEND := Color("#F07167")
+const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
 const POPUP_HOLD_SEC := 4.5
-const POPUP_STACK_STEP := 28.0
+const POPUP_STACK_STEP := 36.0
 
 var is_shaking: bool = false
 var original_color: Color
@@ -59,12 +60,11 @@ func _on_money_changed(amount: float) -> void:
 		
 	_last_amount = amount
 
-func _format_delta(diff: float) -> String:
-	var sign_str := "+" if diff > 0.0 else "-"
+func _format_amount_number(diff: float) -> String:
 	var abs_val := absf(diff)
 	if is_equal_approx(abs_val, roundf(abs_val)):
-		return "%s₱%d" % [sign_str, int(roundf(abs_val))]
-	return "%s₱%.2f" % [sign_str, abs_val]
+		return "%d" % int(roundf(abs_val))
+	return "%.2f" % abs_val
 
 func _spawn_delta_popup(diff: float) -> void:
 	var container := get_parent() as Control
@@ -79,31 +79,59 @@ func _spawn_delta_popup(diff: float) -> void:
 	for ref in _active_popups:
 		if not ref:
 			continue
-		var old_lbl: Label = ref.get_ref() as Label
-		if old_lbl != null and is_instance_valid(old_lbl) and old_lbl.is_inside_tree():
+		var old_popup: Control = ref.get_ref() as Control
+		if old_popup != null and is_instance_valid(old_popup) and old_popup.is_inside_tree():
 			still_valid.append(ref)
-			var nudge: Tween = old_lbl.create_tween()
-			nudge.tween_property(old_lbl, "position:y", old_lbl.position.y + POPUP_STACK_STEP, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			var nudge: Tween = old_popup.create_tween()
+			nudge.tween_property(old_popup, "position:y", old_popup.position.y + POPUP_STACK_STEP, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_active_popups = still_valid
 
-	var popup := Label.new()
-	popup.text = _format_delta(diff)
+	var is_gain := diff > 0.0
+	var fg_color := COLOR_GAIN if is_gain else COLOR_SPEND
+	var outline_color := Color(0.05, 0.08, 0.05, 0.92) if is_gain else Color(0.14, 0.04, 0.04, 0.92)
+	var font_res := get_theme_font("font")
+	if not font_res:
+		font_res = UIStyle.FONT_INDER
+
+	var base_size := get_theme_font_size("font_size")
+	var popup_size := clampi(int(roundf(base_size * 0.95)), 24, 34) if base_size > 0 else 28
+
+	var popup := HBoxContainer.new()
+	popup.add_theme_constant_override("separation", 3)
+	popup.alignment = BoxContainer.ALIGNMENT_BEGIN
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	popup.z_index = 20
 
-	var is_gain := diff > 0.0
-	var font_res := get_theme_font("font")
-	if font_res:
-		popup.add_theme_font_override("font", font_res)
-	else:
-		popup.add_theme_font_override("font", UIStyle.FONT_INDER)
+	var sign_lbl := Label.new()
+	sign_lbl.text = "+" if is_gain else "-"
+	sign_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sign_lbl.add_theme_font_override("font", font_res)
+	sign_lbl.add_theme_font_size_override("font_size", popup_size)
+	sign_lbl.add_theme_color_override("font_color", fg_color)
+	sign_lbl.add_theme_color_override("font_outline_color", outline_color)
+	sign_lbl.add_theme_constant_override("outline_size", 5)
+	popup.add_child(sign_lbl)
 
-	var base_size := get_theme_font_size("font_size")
-	var popup_size := clampi(int(roundf(base_size * 0.78)), 18, 28) if base_size > 0 else 22
-	popup.add_theme_font_size_override("font_size", popup_size)
-	popup.add_theme_color_override("font_color", COLOR_GAIN if is_gain else COLOR_SPEND)
-	popup.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.05, 0.92) if is_gain else Color(0.14, 0.04, 0.04, 0.92))
-	popup.add_theme_constant_override("outline_size", 4)
+	var icon_rect := TextureRect.new()
+	icon_rect.texture = PESO_ICON
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var icon_px := float(popup_size) * 0.85
+	icon_rect.custom_minimum_size = Vector2(icon_px, icon_px)
+	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_rect.modulate = fg_color
+	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	popup.add_child(icon_rect)
+
+	var num_lbl := Label.new()
+	num_lbl.text = _format_amount_number(diff)
+	num_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	num_lbl.add_theme_font_override("font", font_res)
+	num_lbl.add_theme_font_size_override("font_size", popup_size)
+	num_lbl.add_theme_color_override("font_color", fg_color)
+	num_lbl.add_theme_color_override("font_outline_color", outline_color)
+	num_lbl.add_theme_constant_override("outline_size", 5)
+	popup.add_child(num_lbl)
 
 	host.add_child(popup)
 	var popup_ref: WeakRef = weakref(popup)
@@ -129,9 +157,9 @@ func _spawn_delta_popup(diff: float) -> void:
 	tw.parallel().tween_property(popup, "position:y", -14.0, 0.75).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func():
 		_active_popups.erase(popup_ref)
-		var lbl: Label = popup_ref.get_ref() as Label
-		if lbl != null and is_instance_valid(lbl):
-			lbl.queue_free()
+		var node: Control = popup_ref.get_ref() as Control
+		if node != null and is_instance_valid(node):
+			node.queue_free()
 	)
 
 func _on_insufficient_funds() -> void:

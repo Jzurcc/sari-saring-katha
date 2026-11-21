@@ -1,5 +1,7 @@
 extends Node
 
+signal pending_debts_changed
+
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
@@ -40,6 +42,7 @@ var is_mayari_debt_active: bool = true
 var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 var customer_debts: Dictionary = {}
+var pending_debts: Array[Dictionary] = [] # [{ "customer_path": String, "amount": float }]
 var _save_requested: bool = false
 
 # --- Story Progression ---
@@ -274,6 +277,7 @@ func get_save_data() -> Dictionary:
 		"max_unlocked_tier": max_unlocked_tier,
 		"purchase_counter": purchase_counter,
 		"customer_debts": customer_debts.duplicate(),
+		"pending_debts": pending_debts.duplicate(true),
 		"pending_upgrade_tier": pending_upgrade_tier,
 		"pending_upgrade_cost": pending_upgrade_cost,
 		"has_mayari_visited": has_mayari_visited,
@@ -294,6 +298,14 @@ func load_save_data(data: Dictionary) -> void:
 	max_unlocked_tier = data.get("max_unlocked_tier", max_unlocked_tier)
 	purchase_counter = data.get("purchase_counter", purchase_counter)
 	customer_debts = data.get("customer_debts", {})
+	pending_debts.clear()
+	for entry in data.get("pending_debts", []):
+		if entry is Dictionary and entry.has("customer_path") and float(entry.get("amount", 0.0)) > 0.0:
+			pending_debts.append({
+				"customer_path": str(entry["customer_path"]),
+				"amount": float(entry["amount"])
+			})
+	pending_debts_changed.emit()
 	pending_upgrade_tier = data.get("pending_upgrade_tier", 0)
 	pending_upgrade_cost = data.get("pending_upgrade_cost", 0.0)
 	has_mayari_visited = data.get("has_mayari_visited", false)
@@ -342,6 +354,8 @@ func reset_state() -> void:
 	pending_upgrade_tier = 0
 	pending_upgrade_cost = 0.0
 	customer_debts = {}
+	pending_debts.clear()
+	pending_debts_changed.emit()
 	has_mayari_visited = false
 	is_mayari_debt_active = true
 	is_mayari_met = false
@@ -362,6 +376,36 @@ func get_collection_transaction() -> TransactionContext:
 func _on_debt_quota_met(was_successful: bool) -> void:
 	last_mayari_collection_successful = was_successful
 	_save_progression()
+
+func queue_pending_debt(customer_path: String, amount: float) -> void:
+	if customer_path == "" or amount <= 0.0:
+		return
+	# Combine with an existing unlogged entry for the same customer if present
+	for entry in pending_debts:
+		if str(entry.get("customer_path", "")) == customer_path:
+			entry["amount"] = float(entry.get("amount", 0.0)) + amount
+			LogManager.info("StoryManager", "Updated pending utang for %s: +%.2f (Pending: %.2f)" % [customer_path.get_file(), amount, float(entry["amount"])])
+			pending_debts_changed.emit()
+			_save_progression()
+			return
+	pending_debts.append({
+		"customer_path": customer_path,
+		"amount": amount
+	})
+	LogManager.info("StoryManager", "Queued pending utang for %s: %.2f (awaiting Loan Ledger entry)" % [customer_path.get_file(), amount])
+	pending_debts_changed.emit()
+	_save_progression()
+
+func has_pending_debts() -> bool:
+	return not pending_debts.is_empty()
+
+func commit_pending_debt(index: int) -> void:
+	if index < 0 or index >= pending_debts.size():
+		return
+	var entry: Dictionary = pending_debts[index]
+	pending_debts.remove_at(index)
+	record_debt(str(entry.get("customer_path", "")), float(entry.get("amount", 0.0)))
+	pending_debts_changed.emit()
 
 func record_debt(customer_path: String, amount: float) -> void:
 	var current = customer_debts.get(customer_path, 0.0)
