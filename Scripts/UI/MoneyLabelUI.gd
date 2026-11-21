@@ -10,7 +10,7 @@ var is_shaking: bool = false
 var original_color: Color
 var _last_amount: float = 0.0
 var _initialized: bool = false
-var _active_popups: Array[Label] = []
+var _active_popups: Array[WeakRef] = []
 
 func _ready() -> void:
 	EventBus.money_changed.connect(_on_money_changed)
@@ -75,10 +75,13 @@ func _spawn_delta_popup(diff: float) -> void:
 		return
 
 	# Gently nudge any existing active popups downward so rapid changes stack cleanly
-	var still_valid: Array[Label] = []
-	for old_lbl in _active_popups:
-		if is_instance_valid(old_lbl):
-			still_valid.append(old_lbl)
+	var still_valid: Array[WeakRef] = []
+	for ref in _active_popups:
+		if not ref:
+			continue
+		var old_lbl = ref.get_ref() as Label
+		if old_lbl != null and is_instance_valid(old_lbl) and old_lbl.is_inside_tree():
+			still_valid.append(ref)
 			var nudge := old_lbl.create_tween()
 			nudge.tween_property(old_lbl, "position:y", old_lbl.position.y + POPUP_STACK_STEP, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_active_popups = still_valid
@@ -103,7 +106,8 @@ func _spawn_delta_popup(diff: float) -> void:
 	popup.add_theme_constant_override("outline_size", 4)
 
 	host.add_child(popup)
-	_active_popups.append(popup)
+	var popup_ref := weakref(popup)
+	_active_popups.append(popup_ref)
 
 	var target_pos := Vector2(
 		container.position.x + 8.0,
@@ -126,9 +130,10 @@ func _spawn_delta_popup(diff: float) -> void:
 	tw.tween_property(popup, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_property(popup, "position:y", -12.0, 0.45).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(func():
-		_active_popups.erase(popup)
-		if is_instance_valid(popup):
-			popup.queue_free()
+		_active_popups.erase(popup_ref)
+		var lbl = popup_ref.get_ref() as Label
+		if lbl != null and is_instance_valid(lbl):
+			lbl.queue_free()
 	)
 
 func _on_insufficient_funds() -> void:
