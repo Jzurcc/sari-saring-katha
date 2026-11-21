@@ -1,34 +1,53 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/PriceLedgerOverlay.gd" id="1_script"]
 [ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dim"]
-bg_color = Color(0, 0, 0, 0.5)
+bg_color = Color(0, 0, 0, 0.55)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-content_margin_left = 18.0
-content_margin_top = 16.0
-content_margin_right = 18.0
-content_margin_bottom = 16.0
+content_margin_left = 22.0
+content_margin_top = 18.0
+content_margin_right = 22.0
+content_margin_bottom = 18.0
 bg_color = Color(0.08235294, 0.078431375, 0.07058824, 0.96862745)
 corner_radius_top_left = 11
 corner_radius_top_right = 11
 corner_radius_bottom_right = 11
 corner_radius_bottom_left = 11
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_left"]
-content_margin_left = 14.0
-content_margin_top = 14.0
-content_margin_right = 14.0
-content_margin_bottom = 14.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_events_panel"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.115, 0.11, 0.102, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.24, 0.22, 0.19, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_items_panel"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.78039217, 0.7176471, 0.5686275, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_x"]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_sep"]
+color = Color(0.8, 0.8, 0.8, 0.3)
 
 [node name="PriceLedgerOverlay" type="CanvasLayer"]
 layer = 50
@@ -49,17 +68,17 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -560.0
-offset_top = -325.0
-offset_right = 560.0
-offset_bottom = 325.0
+offset_left = -610.0
+offset_top = -355.0
+offset_right = 610.0
+offset_bottom = 355.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
 [node name="MainVBox" type="VBoxContainer" parent="BackgroundPanel"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 14
 
 [node name="HeaderHBox" type="HBoxContainer" parent="BackgroundPanel/MainVBox"]
 layout_mode = 2
@@ -69,9 +88,10 @@ theme_override_constants/separation = 14
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(0.92, 0.9, 0.78, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
 text = "STORE PRICE LEDGER"
+vertical_alignment = 1
 
 [node name="Spacer" type="Control" parent="BackgroundPanel/MainVBox/HeaderHBox"]
 layout_mode = 2
@@ -89,11 +109,11 @@ theme_override_constants/separation = 8
 
 [node name="CloseBtn" type="Button" parent="BackgroundPanel/MainVBox/HeaderHBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 20
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 1)
 theme_override_colors/font_hover_color = Color(1, 0.4, 0.4, 1)
 theme_override_styles/normal = SubResource("StyleBoxEmpty_x")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_x")
@@ -103,60 +123,65 @@ text = "✕"
 
 [node name="Separator" type="HSeparator" parent="BackgroundPanel/MainVBox"]
 layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_sep")
 
 [node name="ContentHBox" type="HBoxContainer" parent="BackgroundPanel/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 16
+theme_override_constants/separation = 18
 
 [node name="LeftPanel" type="PanelContainer" parent="BackgroundPanel/MainVBox/ContentHBox"]
-custom_minimum_size = Vector2(340, 0)
+custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_left")
+theme_override_styles/panel = SubResource("StyleBoxFlat_events_panel")
 
 [node name="EventsVBox" type="VBoxContainer" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="EventsHeaderLabel" type="Label" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel/EventsVBox"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 17
-theme_override_colors/font_color = Color(0.12, 0.1, 0.08, 1)
-text = "MARKET NEWS & RUMORS"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
+text = "MARKET NEWS"
 
 [node name="EventsSubLabel" type="Label" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel/EventsVBox"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 12
-theme_override_colors/font_color = Color(0.35, 0.3, 0.25, 1)
-text = "Daily conditions and observations from the road"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.72, 0.7, 0.65, 1)
+text = "Daily conditions and rumors from the road"
+autowrap_mode = 3
 
 [node name="LeftSep" type="HSeparator" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel/EventsVBox"]
 layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_sep")
 
 [node name="EventsScroll" type="ScrollContainer" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel/EventsVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
 [node name="EventsList" type="VBoxContainer" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel/EventsVBox/EventsScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="RightPanel" type="PanelContainer" parent="BackgroundPanel/MainVBox/ContentHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_items_panel")
 
 [node name="ItemsScroll" type="ScrollContainer" parent="BackgroundPanel/MainVBox/ContentHBox/RightPanel"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
 [node name="ItemsList" type="VBoxContainer" parent="BackgroundPanel/MainVBox/ContentHBox/RightPanel/ItemsScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
+theme_override_constants/separation = 10

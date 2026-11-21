@@ -45,8 +45,9 @@ func _setup_tabs() -> void:
 	for cat in CATEGORIES:
 		var btn := Button.new()
 		btn.text = cat.label
+		btn.custom_minimum_size = Vector2(74, 38)
 		btn.add_theme_font_override("font", FONT_INDER)
-		btn.add_theme_font_size_override("font_size", 16)
+		btn.add_theme_font_size_override("font_size", 17)
 		btn.pressed.connect(func(): _select_tab(cat.id))
 		tab_container.add_child(btn)
 
@@ -54,7 +55,7 @@ func _setup_tabs() -> void:
 
 func _apply_styles() -> void:
 	title_label.add_theme_font_override("font", FONT_INDER)
-	title_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78))
+	title_label.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 
 func _on_ledger_toggled(opened: bool) -> void:
 	if opened:
@@ -76,6 +77,7 @@ func open_ledger() -> void:
 		AudioManager.play_sfx("tab_switch")
 
 	show()
+	_update_tab_styles()
 	refresh_events()
 	refresh_catalog()
 
@@ -97,11 +99,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _select_tab(tab_id: String) -> void:
+	if tab_id != "all" and not _has_owned_items_for_tab(tab_id):
+		return
 	_current_tab = tab_id
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("tab_switch")
 	_update_tab_styles()
 	refresh_catalog()
+
+func _has_owned_items_for_tab(tab_id: String) -> bool:
+	for item in InventoryManager._items:
+		if item and item.can_be_sold and item.tier <= StoryManager.current_tier and _matches_tab_id(item, tab_id):
+			return true
+	return false
 
 func _update_tab_styles() -> void:
 	var tabs := tab_container.get_children()
@@ -110,8 +120,9 @@ func _update_tab_styles() -> void:
 		if not btn:
 			continue
 		var cat_id: String = CATEGORIES[i].id
+		var is_locked := (cat_id != "all") and not _has_owned_items_for_tab(cat_id)
 		var is_active := (cat_id == _current_tab)
-		UIStyle.style_tab_button(btn, is_active, false, 15.0)
+		UIStyle.style_tab_button(btn, is_active, is_locked, 17.0)
 
 # ─── Daily Market Events Panel ────────────────────────────────────────────────
 
@@ -124,43 +135,47 @@ func refresh_events() -> void:
 		active_events = StoreEventManager.get_active_events()
 
 	if active_events.is_empty():
+		var empty_card := PanelContainer.new()
+		var empty_style := UIStyle.create_flat_stylebox(Color(0.16, 0.15, 0.135, 1.0), 8, 16, 16)
+		empty_card.add_theme_stylebox_override("panel", empty_style)
+
 		var empty_lbl := Label.new()
-		empty_lbl.text = "The neighborhood is quiet today.\nMarket demand and prices are stable."
+		empty_lbl.text = "The neighborhood is quiet today.\n\nMarket demand and prices are stable."
 		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		empty_lbl.add_theme_font_override("font", FONT_INDER)
-		empty_lbl.add_theme_font_size_override("font_size", 14)
-		empty_lbl.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2, 0.8))
-		events_list.add_child(empty_lbl)
+		empty_lbl.add_theme_font_size_override("font_size", 17)
+		empty_lbl.add_theme_color_override("font_color", Color(0.75, 0.73, 0.68, 0.95))
+		empty_card.add_child(empty_lbl)
+		events_list.add_child(empty_card)
 		return
 
 	for event in active_events:
 		var card := PanelContainer.new()
-		var card_style := StyleBoxFlat.new()
-		card_style.bg_color = Color(0.94, 0.92, 0.86)
-		card_style.set_corner_radius_all(6)
-		card_style.set_content_margin_all(10)
-		card_style.border_width_left = 3
-		card_style.border_color = Color(0.85, 0.55, 0.2)
+		var card_style := UIStyle.create_flat_stylebox(Color(0.16, 0.15, 0.135, 1.0), 8, 16, 14)
+		card_style.border_width_left = 4
+		card_style.border_color = UIStyle.COLOR_CARD_SELECTED
 		card.add_theme_stylebox_override("panel", card_style)
 
 		var vbox := VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 4)
+		vbox.add_theme_constant_override("separation", 8)
 		card.add_child(vbox)
 
 		# Event Name
 		var name_lbl := Label.new()
 		name_lbl.text = event.event_name
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.add_theme_font_override("font", FONT_INDER)
-		name_lbl.add_theme_font_size_override("font_size", 15)
-		name_lbl.add_theme_color_override("font_color", Color(0.12, 0.12, 0.12))
+		name_lbl.add_theme_font_size_override("font_size", 21)
+		name_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 		vbox.add_child(name_lbl)
 
 		# Modifier summary
 		var mod_lbl := Label.new()
-		mod_lbl.text = "Demand: %.1fx | Tolerance: +%d steps" % [event.demand_multiplier, event.tolerance_offset]
+		mod_lbl.text = "Demand: %.1fx   •   Tolerance: +%d steps" % [event.demand_multiplier, event.tolerance_offset]
+		mod_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		mod_lbl.add_theme_font_override("font", FONT_INDER)
-		mod_lbl.add_theme_font_size_override("font_size", 12)
-		mod_lbl.add_theme_color_override("font_color", Color(0.7, 0.4, 0.1))
+		mod_lbl.add_theme_font_size_override("font_size", 15)
+		mod_lbl.add_theme_color_override("font_color", UIStyle.COLOR_TAB_ACTIVE)
 		vbox.add_child(mod_lbl)
 
 		# Rumor Quote
@@ -169,8 +184,8 @@ func refresh_events() -> void:
 			rumor_lbl.text = "“%s”" % event.rumor_text
 			rumor_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			rumor_lbl.add_theme_font_override("font", FONT_INDER)
-			rumor_lbl.add_theme_font_size_override("font_size", 12)
-			rumor_lbl.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
+			rumor_lbl.add_theme_font_size_override("font_size", 16)
+			rumor_lbl.add_theme_color_override("font_color", Color(0.92, 0.9, 0.84))
 			vbox.add_child(rumor_lbl)
 
 		events_list.add_child(card)
@@ -182,22 +197,26 @@ func refresh_catalog() -> void:
 		child.queue_free()
 	_item_rows.clear()
 
+	# Only display sellable items from tiers the player currently OWNS
+	var owned_tier: int = StoryManager.current_tier
 	var all_items: Array[ItemData] = InventoryManager._items
 	var filtered_items: Array[ItemData] = []
 
 	for item in all_items:
 		if not item or not item.can_be_sold:
 			continue
+		if item.tier > owned_tier:
+			continue
 		if _matches_tab(item):
 			filtered_items.append(item)
 
 	if filtered_items.is_empty():
 		var empty_lbl := Label.new()
-		empty_lbl.text = "No items in this category."
+		empty_lbl.text = "No owned items in this category yet."
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty_lbl.add_theme_font_override("font", FONT_INDER)
-		empty_lbl.add_theme_font_size_override("font_size", 16)
-		empty_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		empty_lbl.add_theme_font_size_override("font_size", 19)
+		empty_lbl.add_theme_color_override("font_color", Color(0.2, 0.18, 0.15))
 		items_list.add_child(empty_lbl)
 		return
 
@@ -206,28 +225,40 @@ func refresh_catalog() -> void:
 		items_list.add_child(row)
 
 func _matches_tab(item: ItemData) -> bool:
-	if _current_tab == "all":
+	return _matches_tab_id(item, _current_tab)
+
+func _matches_tab_id(item: ItemData, tab_id: String) -> bool:
+	if tab_id == "all":
 		return true
-	if _current_tab == "other":
+	if tab_id == "other":
 		return item.category != "snack" and item.category != "sachet" and item.category != "can" and item.category != "bottle"
-	return item.category == _current_tab
+	return item.category == tab_id
 
 func _create_product_row(item: ItemData) -> PanelContainer:
 	var row := PanelContainer.new()
+	row.custom_minimum_size = Vector2(0, 76)
 	var row_style := StyleBoxFlat.new()
-	row_style.bg_color = Color(0.14, 0.13, 0.12, 0.95)
-	row_style.set_corner_radius_all(6)
-	row_style.set_content_margin_all(8)
+	row_style.bg_color = Color(0.115, 0.11, 0.102, 0.97)
+	row_style.set_corner_radius_all(8)
+	row_style.content_margin_left = 14
+	row_style.content_margin_right = 16
+	row_style.content_margin_top = 10
+	row_style.content_margin_bottom = 10
+	row_style.border_width_left = 2
+	row_style.border_width_top = 2
+	row_style.border_width_right = 2
+	row_style.border_width_bottom = 2
+	row_style.border_color = Color(0.22, 0.2, 0.17, 1.0)
 	row.add_theme_stylebox_override("panel", row_style)
 
 	var hbox := HBoxContainer.new()
-	hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
-	hbox.add_theme_constant_override("separation", 12)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 14)
 	row.add_child(hbox)
 
 	# Product Icon
 	var icon_rect := TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(44, 44)
+	icon_rect.custom_minimum_size = Vector2(56, 56)
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_rect.texture = item.texture
@@ -235,28 +266,29 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 
 	# Name & Info VBox
 	var info_vbox := VBoxContainer.new()
-	info_vbox.custom_minimum_size = Vector2(170, 0)
+	info_vbox.custom_minimum_size = Vector2(180, 0)
 	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_vbox.add_theme_constant_override("separation", 2)
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 4)
 	hbox.add_child(info_vbox)
 
 	var name_lbl := Label.new()
 	name_lbl.text = item.item_name
 	name_lbl.add_theme_font_override("font", FONT_INDER)
-	name_lbl.add_theme_font_size_override("font_size", 16)
-	name_lbl.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78))
+	name_lbl.add_theme_font_size_override("font_size", 20)
+	name_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 	info_vbox.add_child(name_lbl)
 
 	# Subline: Cost + In Demand tag
 	var sub_hbox := HBoxContainer.new()
-	sub_hbox.add_theme_constant_override("separation", 8)
+	sub_hbox.add_theme_constant_override("separation", 10)
 	info_vbox.add_child(sub_hbox)
 
 	var cost_lbl := Label.new()
-	cost_lbl.text = "Cost: ₱%.2f" % item.price
+	cost_lbl.text = "Base: ₱%.2f" % item.price
 	cost_lbl.add_theme_font_override("font", FONT_INDER)
-	cost_lbl.add_theme_font_size_override("font_size", 12)
-	cost_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	cost_lbl.add_theme_font_size_override("font_size", 15)
+	cost_lbl.add_theme_color_override("font_color", Color(0.72, 0.7, 0.65))
 	sub_hbox.add_child(cost_lbl)
 
 	var in_demand: bool = false
@@ -264,55 +296,59 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 		in_demand = StoreEventManager.is_item_in_demand(item)
 	if in_demand:
 		var demand_lbl := Label.new()
-		demand_lbl.text = "[IN DEMAND]"
+		demand_lbl.text = "★ IN DEMAND"
 		demand_lbl.add_theme_font_override("font", FONT_INDER)
-		demand_lbl.add_theme_font_size_override("font_size", 12)
-		demand_lbl.add_theme_color_override("font_color", Color(0.95, 0.75, 0.28))
+		demand_lbl.add_theme_font_size_override("font_size", 14)
+		demand_lbl.add_theme_color_override("font_color", Color(0.98, 0.78, 0.28))
 		sub_hbox.add_child(demand_lbl)
 
 	# Stepper Control HBox
 	var stepper_hbox := HBoxContainer.new()
-	stepper_hbox.add_theme_constant_override("separation", 6)
+	stepper_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	stepper_hbox.add_theme_constant_override("separation", 8)
 	hbox.add_child(stepper_hbox)
 
 	var minus_btn := Button.new()
-	minus_btn.text = " - "
-	minus_btn.custom_minimum_size = Vector2(32, 32)
-	UIStyle.style_button(minus_btn, Color(0.3, 0.3, 0.3), Color.WHITE, 16.0, 4)
+	minus_btn.text = "−"
+	minus_btn.custom_minimum_size = Vector2(38, 38)
+	minus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UIStyle.style_button(minus_btn, Color(0.3, 0.3, 0.3), Color.WHITE, 20.0, 6)
 	minus_btn.pressed.connect(func(): _adjust_step(item, -1))
 	stepper_hbox.add_child(minus_btn)
 
 	var pips_lbl := Label.new()
-	pips_lbl.custom_minimum_size = Vector2(140, 32)
+	pips_lbl.custom_minimum_size = Vector2(165, 38)
 	pips_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pips_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	pips_lbl.add_theme_font_override("font", FONT_INDER)
-	pips_lbl.add_theme_font_size_override("font_size", 18)
+	pips_lbl.add_theme_font_size_override("font_size", 22)
 	stepper_hbox.add_child(pips_lbl)
 
 	var plus_btn := Button.new()
-	plus_btn.text = " + "
-	plus_btn.custom_minimum_size = Vector2(32, 32)
-	UIStyle.style_button(plus_btn, Color(0.494, 0.761, 0.573), Color.WHITE, 16.0, 4)
+	plus_btn.text = "+"
+	plus_btn.custom_minimum_size = Vector2(38, 38)
+	plus_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	UIStyle.style_button(plus_btn, UIStyle.COLOR_CONFIRM, Color.WHITE, 20.0, 6)
 	plus_btn.pressed.connect(func(): _adjust_step(item, 1))
 	stepper_hbox.add_child(plus_btn)
 
 	# Price & Step Readout VBox
 	var price_vbox := VBoxContainer.new()
-	price_vbox.custom_minimum_size = Vector2(130, 0)
+	price_vbox.custom_minimum_size = Vector2(138, 0)
 	price_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	price_vbox.add_theme_constant_override("separation", 2)
 	hbox.add_child(price_vbox)
 
 	var price_lbl := Label.new()
 	price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	price_lbl.add_theme_font_override("font", FONT_INDER)
-	price_lbl.add_theme_font_size_override("font_size", 20)
+	price_lbl.add_theme_font_size_override("font_size", 23)
 	price_vbox.add_child(price_lbl)
 
 	var step_info_lbl := Label.new()
 	step_info_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	step_info_lbl.add_theme_font_override("font", FONT_INDER)
-	step_info_lbl.add_theme_font_size_override("font_size", 11)
+	step_info_lbl.add_theme_font_size_override("font_size", 14)
 	price_vbox.add_child(step_info_lbl)
 
 	_item_rows[item] = {
