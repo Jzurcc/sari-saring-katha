@@ -45,15 +45,19 @@ var _pending_delivery_items: Dictionary = {}
 var _pending_call_action: String = ""
 
 # Incoming Upgrade Call State
-const INCOMING_CALL_RING_DURATION := 6.0
+const INCOMING_CALL_RING_DURATION := 10.0
 var is_incoming_upgrade_call: bool = false
 var _has_missed_upgrade_call: bool = false
 var _incoming_call_items: Array[ItemData] = []
 var _incoming_call_session_id: int = 0
+var _ring_ui_layer: CanvasLayer = null
+var _ring_ui_panel: PanelContainer = null
+var _ring_hover_tween: Tween = null
 
 func _ready() -> void:
 	_sfx_player = AudioStreamPlayer.new()
 	add_child(_sfx_player)
+	_sfx_player.finished.connect(_on_sfx_finished)
 	
 	add_to_group("persist")
 	
@@ -91,24 +95,120 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 
 	LogManager.info("MarioManager", "Incoming upgrade call ringing for %.1fs (%d items)." % [INCOMING_CALL_RING_DURATION, _incoming_call_items.size()])
 	get_tree().call_group("nokia_phone", "set_ringing", true)
+	_show_incoming_call_banner()
 	_play_sfx(sfx_dial)
 
 	await get_tree().create_timer(INCOMING_CALL_RING_DURATION).timeout
 	if ring_session != _incoming_call_session_id or not is_incoming_upgrade_call:
 		return
 
-	# Player ignored the call for 6 seconds — stop ringing cleanly and remember for next manual call
+	# Player ignored the call for 10 seconds — stop ringing cleanly and remember for next manual call
 	_stop_incoming_ring()
 	_has_missed_upgrade_call = true
 	LogManager.info("MarioManager", "Incoming upgrade call timed out (ignored by player). Queued missed-call follow-up.")
 
+func _on_sfx_finished() -> void:
+	if is_incoming_upgrade_call and _is_in_main_game():
+		_play_sfx(sfx_dial)
+
 func _stop_incoming_ring() -> void:
 	is_incoming_upgrade_call = false
 	_incoming_call_session_id += 1
+	_hide_incoming_call_banner()
 	if _sfx_player and _sfx_player.playing:
 		_sfx_player.stop()
 	if get_tree():
 		get_tree().call_group("nokia_phone", "set_ringing", false)
+
+func _show_incoming_call_banner() -> void:
+	_hide_incoming_call_banner(true)
+
+	_ring_ui_layer = CanvasLayer.new()
+	_ring_ui_layer.layer = 90
+	add_child(_ring_ui_layer)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring_ui_layer.add_child(root)
+
+	var center := CenterContainer.new()
+	center.anchor_left = 0.0
+	center.anchor_right = 1.0
+	center.anchor_top = 0.0
+	center.anchor_bottom = 0.0
+	center.offset_top = 84.0
+	center.offset_bottom = 148.0
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+
+	_ring_ui_panel = PanelContainer.new()
+	_ring_ui_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := UIStyle.create_flat_stylebox(Color(0.082, 0.078, 0.071, 0.92), 12, 22, 12)
+	style.border_color = UIStyle.COLOR_TAB_ACTIVE
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	_ring_ui_panel.add_theme_stylebox_override("panel", style)
+	center.add_child(_ring_ui_panel)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring_ui_panel.add_child(hbox)
+
+	var dot := Label.new()
+	dot.text = "●"
+	dot.add_theme_font_size_override("font_size", 18)
+	dot.add_theme_color_override("font_color", UIStyle.COLOR_TAB_ACTIVE)
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(dot)
+
+	var lbl := Label.new()
+	lbl.text = "Someone's calling on the phone."
+	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	lbl.add_theme_font_size_override("font_size", 19)
+	lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(lbl)
+
+	# Fade in and start gentle hovering bob + indicator pulse
+	_ring_ui_panel.modulate.a = 0.0
+	var fade_in := create_tween()
+	fade_in.tween_property(_ring_ui_panel, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE)
+
+	_ring_hover_tween = create_tween().set_loops()
+	_ring_hover_tween.set_parallel(true)
+	_ring_hover_tween.tween_property(center, "offset_top", 78.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_ring_hover_tween.tween_property(dot, "modulate:a", 0.35, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_ring_hover_tween.chain().set_parallel(true)
+	_ring_hover_tween.tween_property(center, "offset_top", 90.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_ring_hover_tween.tween_property(dot, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _hide_incoming_call_banner(immediate: bool = false) -> void:
+	if _ring_hover_tween and _ring_hover_tween.is_valid():
+		_ring_hover_tween.kill()
+	_ring_hover_tween = null
+
+	if not is_instance_valid(_ring_ui_layer):
+		_ring_ui_layer = null
+		_ring_ui_panel = null
+		return
+
+	var layer_to_free := _ring_ui_layer
+	var panel_to_fade := _ring_ui_panel
+	_ring_ui_layer = null
+	_ring_ui_panel = null
+
+	if immediate or not is_instance_valid(panel_to_fade):
+		layer_to_free.queue_free()
+		return
+
+	var fade_out := create_tween()
+	fade_out.tween_property(panel_to_fade, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE)
+	fade_out.tween_callback(layer_to_free.queue_free)
 
 func _format_upgrade_items_list(items: Array[ItemData]) -> String:
 	var names: Array[String] = []
