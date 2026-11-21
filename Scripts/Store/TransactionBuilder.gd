@@ -322,10 +322,10 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		var effective_step: int = item_step - tolerance
 		if effective_step > max_effective_step:
 			max_effective_step = effective_step
-		if effective_step >= 2:
+		if effective_step >= 3:
 			has_overpriced = true
 
-	# 40% chance to trigger haggle / price-sensitivity dialogue when effective step >= 2
+	# 40% chance to trigger price-sensitivity dialogue when effective step >= 3
 	var high_price_active: bool = has_overpriced and (randf() < 0.40)
 
 	# Stock Status
