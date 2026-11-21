@@ -113,7 +113,10 @@ func get_chapter_prerequisites(chapter: int) -> StoryPrerequisiteGroup:
 
 func get_chapter_pinned_items(chapter: int) -> Array[ChapterItemEntry]:
 	var ch := get_chapter(chapter)
-	return ch.pinned_items if ch else ([] as Array[ChapterItemEntry])
+	if ch:
+		return ch.pinned_items
+	var empty: Array[ChapterItemEntry] = []
+	return empty
 
 func get_chapter_upgrade_all_pinned(chapter: int) -> bool:
 	var ch := get_chapter(chapter)
@@ -185,9 +188,10 @@ func get_arc_name(arc_index: int) -> String:
 
 func get_purchase_timelines(chapter: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(chapter)
-	if not arc:
-		return [DEFAULT_PURCHASE_TIMELINE] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
+	if not arc:
+		result.append(DEFAULT_PURCHASE_TIMELINE)
+		return result
 	for tl in arc.purchase_timelines:
 		if tl is DialogicTimeline:
 			result.append(tl)
@@ -199,9 +203,10 @@ func get_purchase_timelines(chapter: int) -> Array[DialogicTimeline]:
 
 func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
 	var arc := _get_arc(chapter)
-	if not arc:
-		return [DEFAULT_VISIT_TIMELINE] as Array[DialogicTimeline]
 	var result: Array[DialogicTimeline] = []
+	if not arc:
+		result.append(DEFAULT_VISIT_TIMELINE)
+		return result
 	for tl in arc.visit_timelines:
 		if tl != null:
 			result.append(tl)
