@@ -437,6 +437,15 @@ func _on_customer_satisfied(customer) -> void:
 	if customer != null:
 		clock.on_customer_dismissed()
 
+func on_customer_leaving(customer: Customer) -> void:
+	if customer == null:
+		return
+	# Ignore secondary/guest customers leaving so only the primary encounter advances time
+	var primary = _get_current_customer()
+	if primary != null and customer != primary:
+		return
+	clock.on_customer_leaving()
+
 func _on_customer_arrived(customer: Customer) -> void:
 	if customer != null:
 		clock.on_customer_arrived()

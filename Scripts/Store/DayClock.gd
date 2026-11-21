@@ -9,7 +9,8 @@ const MENU_THEME_HOUR := 16.89 ## Golden hour aesthetic for Main Menu
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
 const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
-const CUSTOMER_TIME_WINDOW_HOURS := 3.0
+const CUSTOMER_TIME_WINDOW_HOURS := 4.0
+const CUSTOMER_FAST_FORWARD_HOURS := 2.0
 
 var current_display_time: float = MENU_THEME_HOUR
 var is_clock_running: bool = false
@@ -57,12 +58,43 @@ func on_customer_arrived() -> void:
 	else:
 		LogManager.info("DayClock", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Paused: %s)" % [wait_limit_time, str(was_paused_by_limit)])
 
-func on_customer_dismissed() -> void:
-	is_customer_present = false
-	var target_time := wait_limit_time
+## Called the instant a customer's end dialogue finishes (right before they walk out).
+## Smoothly eases time forward to half of their 4-hour window (+2h from arrival) if finished early.
+func on_customer_leaving() -> void:
+	if not is_customer_present:
+		return
+
+	var limit_time := wait_limit_time
 	var was_paused := was_paused_by_limit
 	was_paused_by_limit = false
 	wait_limit_time = -1.0
+
+	if current_display_time >= CLOSING_HOUR:
+		return
+
+	if was_paused:
+		set_clock_running(true)
+		LogManager.info("DayClock", "Customer leaving after +4h pause. Resuming clock.")
+		return
+
+	if limit_time > 0.0:
+		var half_window_target := limit_time - (CUSTOMER_TIME_WINDOW_HOURS - CUSTOMER_FAST_FORWARD_HOURS)
+		var clamped_target := minf(half_window_target, CLOSING_HOUR)
+		if clamped_target > current_display_time + 0.02:
+			_start_fast_forward(clamped_target)
+		else:
+			LogManager.debug("DayClock", "Customer served past +2h halfway mark (%.2f >= %.2f). No time skip." % [current_display_time, half_window_target])
+
+func on_customer_dismissed() -> void:
+	# Fallback in case on_customer_leaving() wasn't called yet
+	if wait_limit_time > 0.0 or was_paused_by_limit:
+		on_customer_leaving()
+
+	is_customer_present = false
+
+	if _is_fast_forwarding:
+		# Closing-time emit will be handled by _on_fast_forward_finished once the sweep completes
+		return
 
 	if current_display_time >= CLOSING_HOUR:
 		if is_clock_running:
@@ -72,13 +104,6 @@ func on_customer_dismissed() -> void:
 			current_display_time = HARD_STOP_HOUR
 			apply_display_time(HARD_STOP_HOUR)
 		EventBus.closing_time_reached.emit()
-	elif was_paused:
-		set_clock_running(true)
-		LogManager.info("DayClock", "Customer left. Resuming clock.")
-	elif target_time > current_display_time + 0.02:
-		var clamped_target := minf(target_time, CLOSING_HOUR)
-		if clamped_target > current_display_time + 0.02:
-			_start_fast_forward(clamped_target)
 
 func _start_fast_forward(target_time: float) -> void:
 	_cancel_fast_forward(false)
@@ -89,7 +114,7 @@ func _start_fast_forward(target_time: float) -> void:
 
 	var start_time := current_display_time
 	var remaining := target_time - start_time
-	var duration := clampf(remaining * 0.7, 0.6, 2.0)
+	var duration := clampf(remaining * 1.6, 1.5, 3.5)
 
 	_is_fast_forwarding = true
 	_fast_forward_target = target_time
@@ -99,7 +124,7 @@ func _start_fast_forward(target_time: float) -> void:
 
 	_fast_forward_tween = _tree_owner.create_tween()
 	_fast_forward_tween.tween_method(_apply_fast_forward_time, start_time, target_time, duration) \
-		.set_trans(Tween.TRANS_CUBIC) \
+		.set_trans(Tween.TRANS_SINE) \
 		.set_ease(Tween.EASE_IN_OUT)
 	_fast_forward_tween.tween_callback(_on_fast_forward_finished.bind(target_time))
 
@@ -114,10 +139,11 @@ func _on_fast_forward_finished(target_time: float) -> void:
 	current_display_time = target_time
 	apply_display_time(target_time)
 
-	if current_display_time >= CLOSING_HOUR and not is_customer_present:
+	if current_display_time >= CLOSING_HOUR:
 		set_clock_running(false)
-		LogManager.info("DayClock", "Fast-forward reached Closing Time (8 PM). Pausing clock.")
-		EventBus.closing_time_reached.emit()
+		if not is_customer_present:
+			LogManager.info("DayClock", "Fast-forward reached Closing Time (8 PM). Pausing clock.")
+			EventBus.closing_time_reached.emit()
 	else:
 		set_clock_running(true)
 
@@ -158,10 +184,10 @@ func _on_tod_time_changed(t: float) -> void:
 		return
 	current_display_time = t
 	
-	# 1. Customer Wait Limit: Pause time if someone's been here for 3 hours
+	# 1. Customer Wait Limit: Pause time if someone's been here for 4 hours
 	if wait_limit_time > 0 and current_display_time >= wait_limit_time:
 		if is_clock_running:
-			LogManager.info("DayClock", "Customer wait limit reached (+3h). Pausing clock.")
+			LogManager.info("DayClock", "Customer wait limit reached (+4h). Pausing clock.")
 			set_clock_running(false)
 			was_paused_by_limit = true
 		wait_limit_time = -1.0
