@@ -189,6 +189,29 @@ func _on_asterisk_pressed() -> void:
 	_trigger_store_menu()
 
 func _trigger_store_menu() -> void:
+	# Special Tutorial Step 4: play ringtone, close phone, and turn around to face Uncle Mario
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	if gm and gm.tutorial and gm.tutorial.is_waiting_for_phone_call():
+		if _is_calling:
+			return
+		_is_calling = true
+		if screen_label:
+			screen_label.text = "Calling Mario..."
+		var ring_player := AudioStreamPlayer.new()
+		ring_player.bus = "SFX"
+		ring_player.stream = MarioManager.sfx_dial
+		add_child(ring_player)
+		ring_player.play()
+		await get_tree().create_timer(1.4).timeout
+		if is_instance_valid(ring_player):
+			ring_player.stop()
+			ring_player.queue_free()
+		_is_calling = false
+		_on_close_pressed()
+		if is_instance_valid(gm) and gm.tutorial:
+			gm.tutorial.complete_tutorial_phone_call()
+		return
+
 	# Block if already in a call or restocking is active
 	if _is_calling or MarioManager.is_restocking_active:
 		return

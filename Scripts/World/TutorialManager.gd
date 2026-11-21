@@ -40,6 +40,10 @@ func can_pickup_item() -> bool:
 func can_accept_guided_item() -> bool:
 	return is_tutorial_task_active and current_tutorial_task_id in ["allow_sale_early", "wait_for_sale"]
 
+## Returns true if the tutorial is currently asking the player to test-call Mario on the Nokia phone.
+func is_waiting_for_phone_call() -> bool:
+	return is_tutorial_task_active and current_tutorial_task_id == "wait_for_tutorial_call"
+
 ## Returns true if wrong-item feedback should be suppressed because a non-sale guided task is active.
 func should_suppress_wrong_item_feedback(ctx: TransactionContext) -> bool:
 	if ctx == null or not ctx.is_guided_tutorial:
@@ -109,15 +113,30 @@ func handle_dialogic_signal(argument: String) -> bool:
 	elif argument == "wait_for_pricing_tutorial":
 		_start_tutorial_task_timed(3.0, "Adjust prices with Scroll Wheel, or press L for the Price Ledger.")
 		return true
-	elif argument == "wait_for_price_increase" or argument == "wait_for_profit_increase":
-		_start_tutorial_task("wait_for_price_increase", "Adjust an item's price step.", EventBus.price_increased)
+	elif argument == "wait_for_price_change" or argument == "wait_for_price_increase" or argument == "wait_for_profit_increase":
+		is_blocking_pickup = false
+		_start_tutorial_task("wait_for_price_change", "Press ALT, hover an item on the shelf, and scroll to adjust its price.", EventBus.price_increased)
+		if not EventBus.price_decreased.is_connected(_on_tutorial_task_completed):
+			EventBus.price_decreased.connect(_on_tutorial_task_completed, CONNECT_ONE_SHOT)
 		return true
 	elif argument == "wait_for_pickup":
 		is_blocking_pickup = false
 		_start_tutorial_task("wait_for_pickup", "Left-Click an Anoba to pick it up.", EventBus.drag_started)
 		return true
 	elif argument == "wait_for_sale":
-		_start_tutorial_task("wait_for_sale", "Drag the item onto Uncle Mario to sell it.", EventBus.transaction_completed)
+		is_blocking_pickup = false
+		_start_tutorial_task("wait_for_sale", "Left-click an Anoba on the shelf, then click Uncle Mario to sell it.", EventBus.transaction_completed)
+		return true
+	elif argument == "wait_for_tutorial_call":
+		is_blocking_pickup = true
+		is_tutorial_task_active = true
+		current_tutorial_task_id = "wait_for_tutorial_call"
+		Dialogic.paused = true
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		var layout = Dialogic.Styles.get_layout_node()
+		if layout:
+			layout.hide()
+		EventBus.helper_prompt_requested.emit("Click the Nokia phone behind you, dial MARIO + top-right button (or press *).", true)
 		return true
 	elif argument == "wait_look_at_fridge":
 		_start_tutorial_task_timed(3.0, "Look at the Refrigerator.")
@@ -139,6 +158,34 @@ func handle_dialogic_signal(argument: String) -> bool:
 
 func complete_active_task() -> void:
 	_on_tutorial_task_completed()
+
+## Called by NokiaUI after the tutorial ringtone finishes: closes prompt, turns the player
+## around to face Uncle Mario standing right at the counter, and resumes his punchline.
+func complete_tutorial_phone_call() -> void:
+	if not is_waiting_for_phone_call():
+		return
+
+	is_tutorial_task_active = false
+	current_tutorial_task_id = ""
+	is_blocking_pickup = false
+	EventBus.helper_prompt_requested.emit("", false)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+	if is_instance_valid(gm) and gm.is_inside_tree():
+		var player = gm.get_tree().get_first_node_in_group("player")
+		var spawner = gm.get_tree().get_first_node_in_group("customer_spawner")
+		if is_instance_valid(player) and is_instance_valid(spawner) and is_instance_valid(spawner.current_customer) and player.has_method("face_node"):
+			await player.face_node(spawner.current_customer, 0.55)
+		else:
+			await gm.get_tree().create_timer(0.4).timeout
+
+	if not is_instance_valid(gm) or not gm.is_inside_tree():
+		return
+
+	var layout = Dialogic.Styles.get_layout_node()
+	if layout:
+		layout.show()
+	Dialogic.paused = false
 
 func _start_tutorial_task(task_id: String, prompt: String, completion_signal: Signal) -> void:
 	is_tutorial_task_active = true
@@ -188,6 +235,8 @@ func _on_tutorial_task_completed(arg1 = null, _b = null, _c = null, _d = null) -
 
 	if _current_task_signal and not _current_task_signal.is_null() and _current_task_signal.is_connected(_on_tutorial_task_completed):
 		_current_task_signal.disconnect(_on_tutorial_task_completed)
+	if EventBus.price_decreased.is_connected(_on_tutorial_task_completed):
+		EventBus.price_decreased.disconnect(_on_tutorial_task_completed)
 
 	is_tutorial_task_active = false
 	current_tutorial_task_id = ""

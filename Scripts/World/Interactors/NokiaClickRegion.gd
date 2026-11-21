@@ -44,10 +44,14 @@ func get_visual_nodes() -> Array[Node3D]:
 		result.append(m)
 	return result
 
+func _is_tutorial_phone_task_active() -> bool:
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	return gm != null and gm.tutorial != null and gm.tutorial.is_waiting_for_phone_call()
+
 func on_hover(is_hovered: bool) -> void:
 	if is_hovered:
 		var color = default_outline_color
-		if MarioManager.is_mario_physically_present:
+		if MarioManager.is_mario_physically_present and not _is_tutorial_phone_task_active():
 			color = Color.RED
 		_apply_outline(color)
 	else:
@@ -57,10 +61,12 @@ func on_interact() -> void:
 	if _is_ui_open:
 		return
 
-	if Dialogic.current_timeline != null:
+	var is_tutorial_call := _is_tutorial_phone_task_active()
+
+	if Dialogic.current_timeline != null and not is_tutorial_call:
 		return # Block call while someone is already talking
 		
-	if MarioManager.is_mario_physically_present:
+	if MarioManager.is_mario_physically_present and not is_tutorial_call:
 		print("[Nokia] Blocked: Uncle Mario is physically present.")
 		AudioManager.play_sfx("error")
 		return
