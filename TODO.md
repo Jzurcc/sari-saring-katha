@@ -53,3 +53,44 @@
 - [ ] **More Music:** Expand morning, afternoon, dusk, and character-specific soundtracks.
 - [ ] **Cutscenes:** Add dedicated story/milestone cutscenes.
 - [ ] **Handwritten Dialogue Rework:** Polish and rewrite character dialogues for stronger voice, warmth, and cultural authenticity.
+
+---
+
+## Design Notes & Discussion
+
+### 1. Custom Signage & Poster Reflected in the Main Menu
+- **Why it hits hard:** Seeing *your* hand-drawn sari-sari sign and storefront poster on the Main Menu every time you launch the game turns the store from a level into *your* tindahan.
+- **UX tip for non-artists:** Pair freehand drawing (a few brush sizes + 6–8 marker/paint colors + undo/clear) with quick **sari-sari stamps/presets** (e.g., *"SARI-SARI STORE"*, *"ICE FOR SALE"*, *"LOAD HERE"*, *"BAWAL UTANG"*, stars/hearts) so players who don't draw can still make something funny and personal in 30 seconds.
+- **Tech note:** Save both canvases as `.png` files in `user://` and load them onto the storefront mesh materials in both `MainGame` and `MainMenu`.
+
+### 2. Refrigerator Coldness & Upgrades
+- **Why it works:** Every Filipino player instantly relates to *"isara mo yung ref, sayang kuryente!"* — it turns opening the fridge into a quick, memorable micro-ritual.
+- **Balance tip:** Instead of permanently ruining item value if a player forgets once, consider a **temporary "Lukewarm" penalty** (e.g., below 25% coldness, chilled items lose ~20% value/appeal while warm, and automatically recover once the door is closed and coldness regenerates). Pairing the UI bar with subtle audio/visual cues (hum pitch shift or fading frost) makes it feel physical.
+
+### 3. Living Storefront (*Tambayan*), Side-by-Side Customers & Autonomous Banter
+- **Standout feature:** A real sari-sari store is a neighborhood *tambayan*, not a drive-thru. Letting visitors linger on the side while a buyer steps up to the main counter makes the barangay feel genuinely alive.
+- **Clean architecture:** Generalize `CustomerSpawner`'s `current_customer` + `guest_customer` into a small multi-slot counter (**Main Buyer Slot** + **Side Tambay Slot(s)**). That single system unlocks **both** lingering visitors **and** multi-character Duwende groups at once!
+- **Autonomous banter:** Keep NPC-to-NPC exchanges as short, non-blocking floating speech bubbles (1–2 lines) so they add warmth without interrupting the player while they're dragging items or pricing shelves.
+
+### 4. Folklore Journal & Relationship (Familiarity) System
+- **Chapters vs. Familiarity:** Keep **Familiarity separate from story chapters**, with soft bridges between them:
+  - *Chapters* pace the scripted narrative arc.
+  - *Familiarity* reflects day-to-day treatment (fair/low prices, honoring utang, quick service, chitchat with lingering visitors, completing favors).
+- **Ways to lose familiarity (beyond rejection):** Repeatedly overcharging at `+3`, refusing utang during a vulnerable beat, or repeatedly handing the wrong item.
+- **Rewarding payoffs:** Higher familiarity can unlock **deeper real-life Philippine folklore trivia** in the Journal, better tips/tolerance, occasional neighbor gifts (like Manang Ana's adobo), and **ending/epilogue variations** (who shows up for you at the end).
+
+### 5. Non-Purchase Quests & Filipino Cultural Minigames
+Great fits that stay grounded at the counter and reuse existing mechanics:
+- **Nokia *Paload* (E-Load):** Customer reads out a number/promo and you dial it on the Nokia keypad you already built!
+- **Neighbor Errands / Message Passing:** *"Can you hand this to Kuya Kap when he passes by?"* — simple item/message handoffs that make the neighborhood feel interconnected.
+- ***Barya-barya* / Exact Change:** Occasional big bill (₱100 / ₱500) requiring quick change-making.
+- **Expanded *Bugtong* (Riddles):** Folklore-themed Filipino riddles with bonus familiarity/tips.
+
+### 6. Persistent Cross-Character Choices
+- Introduce a lightweight global **Neighborhood Flags** dictionary (e.g., `world_flags["helped_ana_utang"] = true`) persisted in `StoryManager` and queryable in Dialogic.
+- Even 6–10 key flags referenced by *other* characters (*"Manang Ana told me you let her put dinner on her tab..."*) create huge narrative payoff without ballooning dialogue trees.
+
+### 7. Suggested Build Order (Highest Impact First)
+1. **Store Ownership Polish:** Buyable Trash Can & Cats → Fridge Coldness Bar & Upgrades → Custom Signage & Poster (synced to Main Menu).
+2. **Depth & Education:** Folklore Journal + Familiarity System → Global Cross-Character Choice Flags.
+3. **Signature Barangay Life:** Multi-slot *Tambayan* (lingering visitors + side-by-side buyers + autonomous banter + Duwende groups) → Cultural Minigames (starting with Nokia *Paload*) → More Events, Music, Cutscenes & Dialogue Rework.
