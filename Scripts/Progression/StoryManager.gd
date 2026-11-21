@@ -287,6 +287,7 @@ func get_save_data() -> Dictionary:
 		"current_display_time": clock.get_effective_display_time(),
 		"is_clock_running": is_clock_running or clock._is_fast_forwarding,
 		"wait_limit_time": wait_limit_time,
+		"active_time_window_hours": clock.active_time_window_hours,
 		"was_paused_by_limit": was_paused_by_limit,
 		"is_customer_present": is_customer_present,
 		"_last_notified_tier": _last_notified_tier,
@@ -315,6 +316,7 @@ func load_save_data(data: Dictionary) -> void:
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
 	is_clock_running = data.get("is_clock_running", false)
 	wait_limit_time = data.get("wait_limit_time", -1.0)
+	clock.active_time_window_hours = float(data.get("active_time_window_hours", DayClock.CUSTOMER_TIME_WINDOW_HOURS))
 	was_paused_by_limit = data.get("was_paused_by_limit", false)
 	is_customer_present = data.get("is_customer_present", false)
 	_last_notified_tier = data.get("_last_notified_tier", 0)
@@ -497,7 +499,11 @@ func _on_customer_satisfied(customer) -> void:
 
 func _on_customer_arrived(customer: Customer) -> void:
 	if customer != null:
-		clock.on_customer_arrived()
+		var is_visit := false
+		if customer.transaction_context:
+			is_visit = customer.transaction_context.transaction_type == TransactionContext.Type.VISIT \
+				or customer.transaction_context.is_visit_story
+		clock.on_customer_arrived(is_visit)
 
 func _on_customer_dismissed(customer: Customer) -> void:
 	if customer != null:
