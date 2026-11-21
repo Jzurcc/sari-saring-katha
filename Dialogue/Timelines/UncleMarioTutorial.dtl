@@ -1,29 +1,31 @@
-UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving in, ah?
+﻿UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving in, ah?
 UncleMario: Your [i]Lola[/i] would be proud seeing you behind that counter.
 UncleMario: Need a quick rundown of the store, or are you ready to run this place on your own? (Use mouse wheel or arrow keys to choose)
 - Help me out, Uncle
 	UncleMario: [i][wave]Mabuti.[/wave][/i] Let's keep it quick!
-	UncleMario: First — pricing! Press [i]ALT[/i] to toggle your pricing lens, look at any product on the shelf, and scroll to adjust its price steps.
-	UncleMario: You can also press [i]L[/i] anytime to open your full Store Price Ledger.
-	UncleMario: Go ahead and try adjusting the price of an [color=#0f6e2f]Anoba[/color] on the shelf to your left!
-	[signal arg="wait_for_price_change"]
-	UncleMario: Nice! Lower steps earn generous tips from customers, while maxing prices out might get a few complaints — so find a good balance, ah?
-	UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], I'm starving! Grab one from the shelf and hand it to me!
-	[signal arg="wait_for_sale"]
-	UncleMario: [wave]Crunch crunch...[/wave] Ahh! That hits the spot.
-	UncleMario: Over to your right is the Refrigerator for cold drinks and frozen goods. Click the handle to open it!
-	[signal arg="wait_for_fridge"]
-	UncleMario: Just remember to close it after — and there's a trash can nearby if you ever need to toss extra stock.
-	UncleMario: Last thing! Whenever you run low on stock, use the Nokia phone behind you.
-	UncleMario: Type [i]MARIO[/i] on the keypad and press the top-right button — or just press the asterisk (*) shortcut.
-	UncleMario: Go on, give it a test call right now!
-	[signal arg="wait_for_tutorial_call"]
-	UncleMario: [shake]Brrring... brrring...[/shake] [pause=0.5]...Ahem.
-	UncleMario: Haha! Why are you calling me, [i]'nak[/i]? I'm standing right here in front of you!
-	UncleMario: At least you know it works! Oh — and right beside the phone is the Debt Notebook for any customers asking for [color=#0f6e2f]utang[/color].
-	jump SuccessOutro
-- "[Skip Tutorial] I know the drill."
-	jump SkipOutro
+- Nah, I'm good!
+	UncleMario: [i]Naku, anak[/i]. [shake]You're not![/shake]
+	UncleMario: Let's start from the beginning.
+UncleMario: First... pricing! Press [i]ALT[/i] to toggle your pricing lens, look at any product on the shelf, and scroll to adjust its price steps.
+UncleMario: Go ahead and try adjusting the price of an [color=#0f6e2f]Anoba[/color] on the shelf to your left!
+[signal arg="wait_for_price_change"]
+UncleMario: Nice! 
+UncleMario: You can also press [i]L[/i] anytime to open your full Store Price Ledger.
+UncleMario: Remember, lower prices earn generous tips from customers, while higher prices might get a few complaints — so pick your choice, ah!
+UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], I'm starving! Grab one from the shelf and hand it to me!
+[signal arg="wait_for_sale"]
+UncleMario: [wave]Crunch crunch...[/wave] Ahh! That hits the spot.
+UncleMario: Over to your right is the Refrigerator for cold drinks and frozen goods. Click the handle to open it!
+[signal arg="wait_for_fridge"]
+UncleMario: Just remember to close it after — and there's a trash can nearby if you ever need to toss extra stock.
+UncleMario: Last thing! Whenever you run low on stock, use the Nokia phone behind you.
+UncleMario: Type [i]MARIO[/i] on the keypad and press the top-right button — or just press the asterisk (*) shortcut.
+UncleMario: Go on, give it a test call right now!
+[signal arg="wait_for_tutorial_call"]
+UncleMario: Haha!
+UncleMario: I'm standing right here in front of you, [i]'nak[/i]!
+UncleMario: At least you know it works! Oh — and right beside the phone is the Debt Notebook for any customers asking for [color=#0f6e2f]utang[/color].
+jump SuccessOutro
 
 label Satisfy
 label SuccessOutro

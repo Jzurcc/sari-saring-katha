@@ -47,16 +47,13 @@
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
-[ext_resource type="Resource" uid="uid://bw5rcxfc4rw5d" path="res://Resources/items/candycontainer/Mix.tres" id="cc_mix"]
-[ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
-[ext_resource type="Resource" uid="uid://dxicfamgebq1j" path="res://Resources/items/candycontainer/Mentor.tres" id="cc_mentor"]
-[ext_resource type="Resource" uid="uid://cbsrv36cx7m4r" path="res://Resources/items/candycontainer/Pocha.tres" id="cc_pocha"]
-[ext_resource type="Resource" uid="uid://wm1gpkw3glu2" path="res://Resources/items/sachetcontainers/Aryel.tres" id="sc_aryel"]
-[ext_resource type="Resource" uid="uid://b1a3e2b3icb32" path="res://Resources/items/sachetcontainers/Kopimo.tres" id="sc_kopimo"]
-[ext_resource type="Resource" uid="uid://cv3kc6f1s6724" path="res://Resources/items/sachetcontainers/KneesToes.tres" id="sc_kneestoes"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
+[ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
+[ext_resource type="Resource" uid="uid://dxicfamgebq1j" path="res://Resources/items/candycontainer/Mentor.tres" id="cc_mentor"]
+[ext_resource type="Resource" uid="uid://bw5rcxfc4rw5d" path="res://Resources/items/candycontainer/Mix.tres" id="cc_mix"]
+[ext_resource type="Resource" uid="uid://cbsrv36cx7m4r" path="res://Resources/items/candycontainer/Pocha.tres" id="cc_pocha"]
 [ext_resource type="Script" uid="uid://dat4ifi3tvfs" path="res://Scripts/UI/CrosshairUI.gd" id="ch_scr"]
 [ext_resource type="Script" uid="uid://c1qdiinw1x0fr" path="res://Scripts/World/CustomerSpawner.gd" id="cs_scr"]
 [ext_resource type="Script" uid="uid://dmr2hly48pbkb" path="res://Scripts/UI/DayTimeUI.gd" id="dt_scr"]
@@ -72,6 +69,9 @@
 [ext_resource type="Script" uid="uid://oq2ueyehis8b" path="res://Scripts/UI/NowPlayingIndicator.gd" id="nowplaying_scr"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
 [ext_resource type="Script" uid="uid://f458ogc2hvl" path="res://Scripts/UI/SaveIndicator.gd" id="save_scr"]
+[ext_resource type="Resource" uid="uid://wm1gpkw3glu2" path="res://Resources/items/sachetcontainers/Aryel.tres" id="sc_aryel"]
+[ext_resource type="Resource" uid="uid://cv3kc6f1s6724" path="res://Resources/items/sachetcontainers/KneesToes.tres" id="sc_kneestoes"]
+[ext_resource type="Resource" uid="uid://b1a3e2b3icb32" path="res://Resources/items/sachetcontainers/Kopimo.tres" id="sc_kopimo"]
 [ext_resource type="Script" uid="uid://c4nyxybw28ti4" path="res://Scripts/Components/TrashInteractable.gd" id="trash_scr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -503,11 +503,11 @@ min_unlock_tier = 10
 container_item = ExtResource("cc_mentor")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CandyContainer_Mentor" unique_id=394685186]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.799263)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.20955849)
 shape = SubResource("BoxShape3D_candy")
 
 [node name="Sprite3D" type="Sprite3D" parent="CandyContainer_Mentor" unique_id=394685187]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.6620235)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.07231903)
 cast_shadow = 0
 billboard = 1
 shaded = true

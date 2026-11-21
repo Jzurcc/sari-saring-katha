@@ -1,17 +1,16 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://5wed2x0mq7a7"]
 
 [ext_resource type="Resource" uid="uid://bl2eb1507afc7" path="res://Dialogue/Timelines/Rodel.dch" id="1_eplk6"]
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="1_t5u8x"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="2_2gefu"]
 [ext_resource type="AudioStream" uid="uid://cqrmcgu0suu0x" path="res://Audio/DialogueBlips/Rodel.wav" id="2_7nk2y"]
+[ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_hxk1p"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://bqhf8bb28mylt" path="res://Assets/characters/sprites/Rodel.png" id="5_xkoom"]
-[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="9_t70ho"]
 [ext_resource type="Resource" uid="uid://dwi4bgdufy8s8" path="res://Dialogue/Timelines/Rodel/Story.dtl" id="11_hxk1p"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://dp41iwukbcg12" path="res://Dialogue/Timelines/Rodel/Purchase.dtl" id="rodel_purchase"]
 [ext_resource type="Resource" uid="uid://b5rduauht166t" path="res://Dialogue/Timelines/Rodel/Visit.dtl" id="rodel_visit"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -57,6 +56,7 @@ categories = PackedStringArray("bottle")
 script = ExtResource("chapterdata_script")
 chapter_name = "The Rains of Farewell"
 is_visit_only = true
+categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
@@ -79,13 +79,13 @@ visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
 [resource]
 script = ExtResource("2_2gefu")
 character_name = "Rodel"
-sprite_texture = ExtResource("5_xkoom")
-dialogic_character = ExtResource("1_eplk6")
 unlock_tier = 2
-dialogue_blip_volume = -4.0
-story_timeline = ExtResource("11_hxk1p")
+dialogic_character = ExtResource("1_eplk6")
+sprite_texture = ExtResource("5_xkoom")
 sprite_scale = 0.4
 speech_marker_height_ratio = 0.55
 dialogue_blip_sound = ExtResource("2_7nk2y")
+dialogue_blip_volume = -4.0
+story_timeline = ExtResource("11_hxk1p")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

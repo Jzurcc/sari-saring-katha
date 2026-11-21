@@ -1,17 +1,16 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://bhoa02e77866v"]
 
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="1_4e7ft"]
 [ext_resource type="Resource" uid="uid://clx0mg7ky65sq" path="res://Dialogue/Timelines/ReynaMayari.dch" id="1_w2e88"]
 [ext_resource type="AudioStream" uid="uid://cuyl4xi7b1i1v" path="res://Audio/DialogueBlips/ReynaMayari.wav" id="2_1p4eh"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="2_e2ncc"]
+[ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_rfb6u"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
-[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="9_b7yu0"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="purchase_dtl"]
 [ext_resource type="Resource" uid="uid://chi8ndhwuhd3c" path="res://Dialogue/Timelines/ReynaMayari/Story.dtl" id="story_dtl"]
 [ext_resource type="Resource" uid="uid://c5ftr0ohic643" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="visit_dtl"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -79,13 +78,13 @@ visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
 [resource]
 script = ExtResource("2_e2ncc")
 character_name = "Reyna Mayari"
-sprite_texture = ExtResource("5_uua7o")
-dialogic_character = ExtResource("1_w2e88")
 unlock_tier = 99
-dialogue_blip_volume = -6.0
-story_timeline = ExtResource("story_dtl")
+dialogic_character = ExtResource("1_w2e88")
+sprite_texture = ExtResource("5_uua7o")
 sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("2_1p4eh")
+dialogue_blip_volume = -6.0
 is_nightly_collector = true
+story_timeline = ExtResource("story_dtl")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
