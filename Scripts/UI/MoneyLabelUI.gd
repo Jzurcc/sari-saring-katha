@@ -1,9 +1,16 @@
 extends Label
 class_name MoneyLabelUI
 
+const COLOR_GAIN := Color("#7EE081")
+const COLOR_SPEND := Color("#F07167")
+const POPUP_HOLD_SEC := 1.5
+const POPUP_STACK_STEP := 28.0
+
 var is_shaking: bool = false
 var original_color: Color
 var _last_amount: float = 0.0
+var _initialized: bool = false
+var _active_popups: Array[Label] = []
 
 func _ready() -> void:
 	EventBus.money_changed.connect(_on_money_changed)
@@ -13,9 +20,17 @@ func _ready() -> void:
 
 func _on_money_changed(amount: float) -> void:
 	text = "%.2f" % amount
+
+	# Skip delta popup and SFX on the initial startup / save-load balance sync
+	if not _initialized:
+		_initialized = true
+		_last_amount = amount
+		return
+
+	var diff: float = amount - _last_amount
 	var container = get_parent()
 	
-	if amount > _last_amount:
+	if diff > 0.005:
 		# Gain juice
 		EventBus.request_sfx.emit("money_gain")
 		add_theme_color_override("font_color", Color("#A8E5A1")) # Soft green
@@ -31,7 +46,8 @@ func _on_money_changed(amount: float) -> void:
 		reset_tween.tween_callback(func():
 			add_theme_color_override("font_color", original_color)
 		)
-	elif amount < _last_amount:
+		_spawn_delta_popup(diff)
+	elif diff < -0.005:
 		# Spent money fade
 		add_theme_color_override("font_color", Color("#E5A1A1")) # Soft red
 		var tween = create_tween()
@@ -39,8 +55,81 @@ func _on_money_changed(amount: float) -> void:
 		tween.tween_callback(func():
 			add_theme_color_override("font_color", original_color)
 		)
+		_spawn_delta_popup(diff)
 		
 	_last_amount = amount
+
+func _format_delta(diff: float) -> String:
+	var sign_str := "+" if diff > 0.0 else "-"
+	var abs_val := absf(diff)
+	if is_equal_approx(abs_val, roundf(abs_val)):
+		return "%s₱%d" % [sign_str, int(roundf(abs_val))]
+	return "%s₱%.2f" % [sign_str, abs_val]
+
+func _spawn_delta_popup(diff: float) -> void:
+	var container := get_parent() as Control
+	if not is_instance_valid(container):
+		return
+	var host := container.get_parent()
+	if not is_instance_valid(host):
+		return
+
+	# Gently nudge any existing active popups downward so rapid changes stack cleanly
+	var still_valid: Array[Label] = []
+	for old_lbl in _active_popups:
+		if is_instance_valid(old_lbl):
+			still_valid.append(old_lbl)
+			var nudge := old_lbl.create_tween()
+			nudge.tween_property(old_lbl, "position:y", old_lbl.position.y + POPUP_STACK_STEP, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_active_popups = still_valid
+
+	var popup := Label.new()
+	popup.text = _format_delta(diff)
+	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	popup.z_index = 20
+
+	var is_gain := diff > 0.0
+	var font_res := get_theme_font("font")
+	if font_res:
+		popup.add_theme_font_override("font", font_res)
+	else:
+		popup.add_theme_font_override("font", UIStyle.FONT_INDER)
+
+	var base_size := get_theme_font_size("font_size")
+	var popup_size := clampi(int(roundf(base_size * 0.78)), 18, 28) if base_size > 0 else 22
+	popup.add_theme_font_size_override("font_size", popup_size)
+	popup.add_theme_color_override("font_color", COLOR_GAIN if is_gain else COLOR_SPEND)
+	popup.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.05, 0.92) if is_gain else Color(0.14, 0.04, 0.04, 0.92))
+	popup.add_theme_constant_override("outline_size", 4)
+
+	host.add_child(popup)
+	_active_popups.append(popup)
+
+	var target_pos := Vector2(
+		container.position.x + 8.0,
+		container.position.y + container.size.y + 4.0
+	)
+	popup.position = target_pos + Vector2(0.0, -8.0)
+	popup.modulate.a = 0.0
+	popup.scale = Vector2(0.75, 0.75)
+
+	var tw := popup.create_tween()
+	# Pop-in
+	tw.set_parallel(true)
+	tw.tween_property(popup, "modulate:a", 1.0, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(popup, "position:y", target_pos.y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(popup, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Hold for 1.5s
+	tw.chain().tween_interval(POPUP_HOLD_SEC)
+	# Fade and float away
+	tw.chain().set_parallel(true)
+	tw.tween_property(popup, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(popup, "position:y", -12.0, 0.45).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(func():
+		_active_popups.erase(popup)
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
 
 func _on_insufficient_funds() -> void:
 	EventBus.request_sfx.emit("error")
