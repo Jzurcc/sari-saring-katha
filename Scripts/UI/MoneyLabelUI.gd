@@ -118,18 +118,16 @@ func _spawn_delta_popup(diff: float) -> void:
 	popup.scale = Vector2(0.75, 0.75)
 
 	var tw := popup.create_tween()
-	# Pop-in
-	tw.set_parallel(true)
+	# Pop-in (0.22s)
 	tw.tween_property(popup, "modulate:a", 1.0, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.tween_property(popup, "position:y", target_pos.y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(popup, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# Hold for 1.5s
-	tw.chain().tween_interval(POPUP_HOLD_SEC)
-	# Fade and float away
-	tw.chain().set_parallel(true)
-	tw.tween_property(popup, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.tween_property(popup, "position:y", -12.0, 0.45).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.chain().tween_callback(func():
+	tw.parallel().tween_property(popup, "position:y", target_pos.y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(popup, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Hold fully opaque for POPUP_HOLD_SEC (4.5s)
+	tw.tween_interval(POPUP_HOLD_SEC)
+	# Smooth fade and float away (0.75s)
+	tw.tween_property(popup, "modulate:a", 0.0, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(popup, "position:y", -14.0, 0.75).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_callback(func():
 		_active_popups.erase(popup_ref)
 		var lbl: Label = popup_ref.get_ref() as Label
 		if lbl != null and is_instance_valid(lbl):
