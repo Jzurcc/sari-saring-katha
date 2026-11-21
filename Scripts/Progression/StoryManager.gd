@@ -484,6 +484,7 @@ func refresh_desires() -> void:
 	var old_type = transaction.transaction_type
 	var old_timeline = transaction.timeline
 	var old_visit_story = transaction.is_visit_story
+	var old_items: Array[ItemData] = transaction.desired_items.duplicate()
 	
 	transaction.desired_items.clear()
 	_build_transaction_context(transaction, customer.customer_data, old_type == TransactionContext.Type.STORY)
@@ -492,8 +493,20 @@ func refresh_desires() -> void:
 	transaction.transaction_type = old_type
 	transaction.timeline = old_timeline
 	transaction.is_visit_story = old_visit_story
+
+	# Guard: if _build_transaction_context rolled VISIT during a PURCHASE refresh,
+	# desired_items would be left empty — restore the previous items so the customer
+	# never rejects the exact items they asked for.
+	if old_type != TransactionContext.Type.VISIT and not old_visit_story and transaction.desired_items.is_empty():
+		if not old_items.is_empty():
+			transaction.desired_items.assign(old_items)
+		else:
+			var fallback := OrderItemPicker.random_orderable(current_tier)
+			if fallback:
+				transaction.desired_items.append(fallback)
 	
 	upgrade_desires()
+	EventBus.customer_order_updated.emit(customer.customer_data.character_name, transaction.desired_items, transaction.is_riddle)
 	LogManager.info("StoryManager", "REFRESH: %s -> %s" % [old_desires, Dialogic.VAR.get_variable("Transaction_ItemWants", "")])
 	LogManager.info("StoryManager", "Desires refreshed and upgraded via signal.")
 
