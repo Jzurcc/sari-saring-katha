@@ -12,6 +12,8 @@ var _available_events: Dictionary = {} # event_id -> StoreEventData
 var _active_events: Array[StoreEventData] = []
 var _pending_event: StoreEventData = null
 var _has_rolled_for_day: bool = false
+var _daily_encounter_count: int = 0
+var _announcement_encounter_slot: int = 1
 
 func _ready() -> void:
 	add_to_group("persist")
@@ -52,11 +54,16 @@ func roll_daily_events() -> void:
 	pool.shuffle()
 	_pending_event = pool[0]
 	_has_rolled_for_day = true
-	LogManager.info("StoreEventManager", "Daily event queued for Danilo's announcement: %s" % _pending_event.event_name)
+	_daily_encounter_count = 0
+	_announcement_encounter_slot = randi_range(1, 4)
+	LogManager.info("StoreEventManager", "Daily event queued for Danilo's announcement (Encounter #%d): %s" % [_announcement_encounter_slot, _pending_event.event_name])
 	events_changed.emit(_active_events)
 
+func record_encounter() -> void:
+	_daily_encounter_count += 1
+
 func has_pending_announcement() -> bool:
-	return _pending_event != null
+	return _pending_event != null and _daily_encounter_count >= _announcement_encounter_slot
 
 func get_pending_event() -> StoreEventData:
 	return _pending_event
@@ -119,7 +126,9 @@ func get_save_data() -> Dictionary:
 	return {
 		"active_event_ids": ids,
 		"pending_event_id": _pending_event.event_id if _pending_event else "",
-		"has_rolled_for_day": _has_rolled_for_day
+		"has_rolled_for_day": _has_rolled_for_day,
+		"daily_encounter_count": _daily_encounter_count,
+		"announcement_encounter_slot": _announcement_encounter_slot
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -134,14 +143,18 @@ func load_save_data(data: Dictionary) -> void:
 	if not pending_id.is_empty() and _available_events.has(pending_id):
 		_pending_event = _available_events[pending_id]
 	_has_rolled_for_day = data.get("has_rolled_for_day", false)
+	_daily_encounter_count = int(data.get("daily_encounter_count", 0))
+	_announcement_encounter_slot = clampi(int(data.get("announcement_encounter_slot", 1)), 1, 4)
 	events_changed.emit(_active_events)
-	LogManager.info("StoreEventManager", "Restored %d active events and pending (%s) from save." % [
-		_active_events.size(), pending_id
+	LogManager.info("StoreEventManager", "Restored %d active events and pending (%s, slot %d/%d) from save." % [
+		_active_events.size(), pending_id, _daily_encounter_count, _announcement_encounter_slot
 	])
 
 func reset_state() -> void:
 	_active_events.clear()
 	_pending_event = null
 	_has_rolled_for_day = false
+	_daily_encounter_count = 0
+	_announcement_encounter_slot = 1
 	events_changed.emit(_active_events)
 

@@ -98,6 +98,9 @@ static func _has_available_story_chapter(c: CustomerData) -> bool:
 	return chapter < c.max_story_chapters and c.story_timeline != null and CharacterProgressionManager.is_story_chapter_available(c, chapter)
 
 static func select_character(sm: Node) -> Dictionary:
+	if is_instance_valid(StoreEventManager):
+		StoreEventManager.record_encounter()
+
 	var char_data: CustomerData = null
 	var force_story: bool = false
 
