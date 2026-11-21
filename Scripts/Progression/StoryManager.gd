@@ -245,8 +245,8 @@ func get_save_data() -> Dictionary:
 		"is_mayari_debt_active": is_mayari_debt_active,
 		"is_mayari_met": is_mayari_met,
 		"last_mayari_collection_successful": last_mayari_collection_successful,
-		"current_display_time": _current_display_time,
-		"is_clock_running": is_clock_running,
+		"current_display_time": clock.get_effective_display_time(),
+		"is_clock_running": is_clock_running or clock._is_fast_forwarding,
 		"wait_limit_time": wait_limit_time,
 		"was_paused_by_limit": was_paused_by_limit,
 		"is_customer_present": is_customer_present,
@@ -388,14 +388,19 @@ func _on_customer_satisfied(customer) -> void:
 			CharacterProgressionManager.record_encounter(customer.customer_data.resource_path)
 		LogManager.info("StoryManager", "Guided tutorial encounter successfully completed and saved.")
 
-func _on_customer_arrived(_customer: Customer) -> void:
-	clock.on_customer_arrived()
+	if customer != null:
+		clock.on_customer_dismissed()
 
-func _on_customer_dismissed(_customer: Customer) -> void:
-	clock.on_customer_dismissed()
-	_set_last_customer_info(_customer)
+func _on_customer_arrived(customer: Customer) -> void:
+	if customer != null:
+		clock.on_customer_arrived()
+
+func _on_customer_dismissed(customer: Customer) -> void:
+	if customer != null:
+		clock.on_customer_dismissed()
+	_set_last_customer_info(customer)
 	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Unhappy")
-	_process_story_cooldown(_customer)
+	_process_story_cooldown(customer)
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer == null:
