@@ -155,8 +155,13 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		item.notify_placed()
 		item.play_give_animation()
 
-		var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
-		on_item_delivered(customer, is_whole_order_done)
+		var gm_guided: GameManager = null
+		if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
+			gm_guided = _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
+		var is_guided: bool = (context != null and context.is_guided_tutorial) or (gm_guided != null and gm_guided.tutorial != null and gm_guided.tutorial.is_guided_timeline_active())
+		if not is_guided:
+			var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
+			on_item_delivered(customer, is_whole_order_done)
 		return true
 	else:
 		# If given an item before greeting, trigger greeting instead of WrongItem.

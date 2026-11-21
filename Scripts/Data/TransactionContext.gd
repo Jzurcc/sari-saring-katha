@@ -159,6 +159,15 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.story_advanced = data.get("story_advanced", false)
 	ctx.is_guided_tutorial = data.get("is_guided_tutorial", false)
 	ctx.blocks_phone_call = data.get("blocks_phone_call", false)
+
+	# Self-heal restored Uncle Mario tutorial saves that lack desired_items or is_guided_tutorial
+	if ctx.customer_data and ctx.customer_data.get_clean_id() == "unclemario":
+		ctx.is_guided_tutorial = true
+		ctx.blocks_phone_call = true
+		if ctx.desired_items.is_empty() and ResourceLoader.exists("res://Resources/items/snack/Anoba.tres"):
+			var anoba_res = load("res://Resources/items/snack/Anoba.tres")
+			if anoba_res:
+				ctx.desired_items.append(anoba_res)
 	
 	if not ctx.desired_items.is_empty() or not ctx.delivered_items.is_empty():
 		LogManager.info("TransactionContext", "Restored: %d desired, %d delivered items." % [ctx.desired_items.size(), ctx.delivered_items.size()])
