@@ -216,7 +216,7 @@ func refresh_catalog() -> void:
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty_lbl.add_theme_font_override("font", FONT_INDER)
 		empty_lbl.add_theme_font_size_override("font_size", 19)
-		empty_lbl.add_theme_color_override("font_color", Color(0.2, 0.18, 0.15))
+		empty_lbl.add_theme_color_override("font_color", Color(0.75, 0.73, 0.68))
 		items_list.add_child(empty_lbl)
 		return
 
@@ -238,7 +238,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 	var row := PanelContainer.new()
 	row.custom_minimum_size = Vector2(0, 76)
 	var row_style := StyleBoxFlat.new()
-	row_style.bg_color = Color(0.115, 0.11, 0.102, 0.97)
+	row_style.bg_color = Color(0.165, 0.158, 0.145, 1.0)
 	row_style.set_corner_radius_all(8)
 	row_style.content_margin_left = 14
 	row_style.content_margin_right = 16
@@ -248,7 +248,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 	row_style.border_width_top = 2
 	row_style.border_width_right = 2
 	row_style.border_width_bottom = 2
-	row_style.border_color = Color(0.22, 0.2, 0.17, 1.0)
+	row_style.border_color = Color(0.27, 0.25, 0.22, 1.0)
 	row.add_theme_stylebox_override("panel", row_style)
 
 	var hbox := HBoxContainer.new()
