@@ -249,6 +249,11 @@ func spawn_mayari_for_collection() -> void:
 		return
 	
 	_is_spawning = true
+
+	# Ensure tonight's quota is always calculated and synced to Dialogic before Mayari spawns
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	if gm:
+		gm.prepare_nightly_quota()
 	
 	# Request the special collection transaction from StoryManager
 	var transaction = StoryManager.get_collection_transaction()

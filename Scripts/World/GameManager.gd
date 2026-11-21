@@ -193,6 +193,8 @@ func _on_dialogic_signal(argument: String) -> void:
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 
 func _handle_deduct_quota() -> void:
+	if _pending_quota <= 0.0:
+		prepare_nightly_quota()
 	var quota := _pending_quota
 	var was_successful := deduct_money(quota)
 	
@@ -220,17 +222,20 @@ func _handle_deduct_quota() -> void:
 	
 	EventBus.debt_quota_met.emit(was_successful)
 
-func _on_closing_time_reached() -> void:
+## Calculates and syncs today's nightly quota to Dialogic before Mayari arrives.
+func prepare_nightly_quota() -> float:
 	_pending_quota = get_quota_for_day(quota_day)
-	var was_successful = money >= _pending_quota
-	
+	var was_successful := money >= _pending_quota
 	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
 	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
 	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
-	
-	LogManager.info("GameManager", "Store Closed. Pre-calculated Quota (Day %d): %.2f, Success: %s" % [
+	LogManager.info("GameManager", "Prepared Nightly Quota (Quota Day %d): %.2f, Can Pay: %s" % [
 		quota_day, _pending_quota, was_successful
 	])
+	return _pending_quota
+
+func _on_closing_time_reached() -> void:
+	prepare_nightly_quota()
 
 func _input(event: InputEvent) -> void:
 	if tutorial and tutorial.handle_input(event, get_viewport()):
