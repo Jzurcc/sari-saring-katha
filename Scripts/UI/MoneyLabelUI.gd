@@ -3,7 +3,7 @@ class_name MoneyLabelUI
 
 const COLOR_GAIN := Color("#7EE081")
 const COLOR_SPEND := Color("#F07167")
-const POPUP_HOLD_SEC := 1.5
+const POPUP_HOLD_SEC := 4.5
 const POPUP_STACK_STEP := 28.0
 
 var is_shaking: bool = false
