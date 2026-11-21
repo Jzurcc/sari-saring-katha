@@ -9,6 +9,7 @@ type = 3
 item_name = "Knees & Toes"
 texture = ExtResource("2_tex")
 price = 8.0
+can_be_sold = false
 category = "sachet"
 tier = 4
 item_hint = "cleans my feet"

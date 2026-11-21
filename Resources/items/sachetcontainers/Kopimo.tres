@@ -8,6 +8,7 @@ script = ExtResource("1_item")
 type = 3
 item_name = "Kopimo"
 texture = ExtResource("2_tex")
+can_be_sold = false
 category = "sachet"
 tier = 7
 item_hint = "isn't my cofee"

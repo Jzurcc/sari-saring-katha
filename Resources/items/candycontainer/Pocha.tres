@@ -8,6 +8,7 @@ script = ExtResource("1_item")
 item_name = "Pocha"
 texture = ExtResource("2_tex")
 price = 0.5
+can_be_sold = false
 category = "candycontainer"
 tier = 10
 display_height_meters = 0.35
