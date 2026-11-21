@@ -194,8 +194,6 @@ func start_incoming_answer() -> void:
 	if _is_calling:
 		return
 	_is_calling = true
-	if screen_label:
-		screen_label.text = "Uncle Mario"
 	_move_to_side()
 
 	if not phone_anchor:
@@ -216,8 +214,6 @@ func _trigger_store_menu() -> void:
 		if _is_calling:
 			return
 		_is_calling = true
-		if screen_label:
-			screen_label.text = "Calling Mario..."
 		var ring_player := AudioStreamPlayer.new()
 		ring_player.bus = "SFX"
 		ring_player.stream = MarioManager.sfx_dial
