@@ -132,39 +132,20 @@ func _show_incoming_call_banner() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ring_ui_layer.add_child(root)
 
-	var center := CenterContainer.new()
-	center.anchor_left = 0.0
-	center.anchor_right = 1.0
-	center.anchor_top = 0.0
-	center.anchor_bottom = 0.0
-	center.offset_top = 84.0
-	center.offset_bottom = 148.0
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(center)
-
 	_ring_ui_panel = PanelContainer.new()
+	_ring_ui_panel.anchor_left = 1.0
+	_ring_ui_panel.anchor_right = 1.0
+	_ring_ui_panel.anchor_top = 1.0
+	_ring_ui_panel.anchor_bottom = 1.0
+	_ring_ui_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_ring_ui_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_ring_ui_panel.offset_right = -28.0
+	_ring_ui_panel.offset_bottom = -28.0
 	_ring_ui_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := UIStyle.create_flat_stylebox(Color(0.082, 0.078, 0.071, 0.92), 12, 22, 12)
-	style.border_color = UIStyle.COLOR_TAB_ACTIVE
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
+
+	var style := UIStyle.create_flat_stylebox(Color(0.082, 0.078, 0.071, 0.92), 10, 22, 14)
 	_ring_ui_panel.add_theme_stylebox_override("panel", style)
-	center.add_child(_ring_ui_panel)
-
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 12)
-	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ring_ui_panel.add_child(hbox)
-
-	var dot := Label.new()
-	dot.text = "●"
-	dot.add_theme_font_size_override("font_size", 18)
-	dot.add_theme_color_override("font_color", UIStyle.COLOR_TAB_ACTIVE)
-	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hbox.add_child(dot)
+	root.add_child(_ring_ui_panel)
 
 	var lbl := Label.new()
 	lbl.text = "Someone's calling on the phone."
@@ -172,20 +153,21 @@ func _show_incoming_call_banner() -> void:
 	lbl.add_theme_font_size_override("font_size", 19)
 	lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hbox.add_child(lbl)
+	_ring_ui_panel.add_child(lbl)
 
-	# Fade in and start gentle hovering bob + indicator pulse
+	# Toast slide-in from bottom-right + gentle hover bob
 	_ring_ui_panel.modulate.a = 0.0
-	var fade_in := create_tween()
-	fade_in.tween_property(_ring_ui_panel, "modulate:a", 1.0, 0.3).set_trans(Tween.TRANS_SINE)
-
-	_ring_hover_tween = create_tween().set_loops()
-	_ring_hover_tween.set_parallel(true)
-	_ring_hover_tween.tween_property(center, "offset_top", 78.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_ring_hover_tween.tween_property(dot, "modulate:a", 0.35, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_ring_hover_tween.chain().set_parallel(true)
-	_ring_hover_tween.tween_property(center, "offset_top", 90.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_ring_hover_tween.tween_property(dot, "modulate:a", 1.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_ring_ui_panel.offset_bottom = 12.0
+	var enter_tw := create_tween()
+	enter_tw.tween_property(_ring_ui_panel, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE)
+	enter_tw.parallel().tween_property(_ring_ui_panel, "offset_bottom", -28.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	enter_tw.tween_callback(func():
+		if not is_instance_valid(_ring_ui_panel):
+			return
+		_ring_hover_tween = create_tween().set_loops()
+		_ring_hover_tween.tween_property(_ring_ui_panel, "offset_bottom", -33.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_ring_hover_tween.tween_property(_ring_ui_panel, "offset_bottom", -25.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	)
 
 func _hide_incoming_call_banner(immediate: bool = false) -> void:
 	if _ring_hover_tween and _ring_hover_tween.is_valid():
