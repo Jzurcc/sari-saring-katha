@@ -165,6 +165,7 @@ variables={
 "Global_TimeOfDayPhase": "",
 "Global_TipActive": false,
 "Global_TodayQuota": 0.0,
+"Global_UpgradeItemsList": "",
 "PriceVar": 0.0,
 "Stats": {
 "Affinity": {},

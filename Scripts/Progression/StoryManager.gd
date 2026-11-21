@@ -192,6 +192,9 @@ func process_pending_unlock() -> void:
 	# Always offer the NEXT sequential upgrade for purchase
 	pending_upgrade_tier = current_tier + 1
 	pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
+
+	# Refresh Uncle Mario's delivery cooldown so he is immediately ready
+	InventoryManager.customers_needed_for_delivery = 0
 	
 	# But the notification highlights the specific tier that was JUST unlocked
 	var notify_tier = _last_tier_unlocked_notification if _last_tier_unlocked_notification > 0 else pending_upgrade_tier

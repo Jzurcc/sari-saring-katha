@@ -38,3 +38,10 @@ elif {Variation} == 2.0:
 else:
 	UncleMario: Alright, here's your order. I've placed the bags near the door. [pause=0.5] Don't work too hard, [i]anak[/i]. See you around!
 [end_timeline]
+
+label UpgradeCall
+UncleMario: Uy, [i]anak[/i]! Good thing you picked up!
+UncleMario: I just got a fresh batch of next-tier stock ready to be bought for your store!
+UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
+UncleMario: Go ahead and check out the catalog — I've got the upgrade package ready for you right now!
+[end_timeline]

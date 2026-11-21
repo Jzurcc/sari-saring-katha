@@ -188,6 +188,25 @@ func _on_asterisk_pressed() -> void:
 	_play_button_sound("asterisk")
 	_trigger_store_menu()
 
+func start_incoming_answer() -> void:
+	if _is_calling:
+		return
+	_is_calling = true
+	if screen_label:
+		screen_label.text = "Uncle Mario"
+	_move_to_side()
+
+	if not phone_anchor:
+		phone_anchor = get_tree().root.find_child("PhoneMarker3D", true, false) as Node3D
+
+	if not phone_anchor:
+		push_error("[NokiaUI] No phone_anchor found for incoming call!")
+		_is_calling = false
+		return
+
+	MarioManager.call_ended.connect(_on_mario_call_finished, CONNECT_ONE_SHOT)
+	MarioManager.answer_incoming_upgrade_call(phone_anchor)
+
 func _trigger_store_menu() -> void:
 	# Special Tutorial Step 4: play ringtone, close phone, and turn around to face Uncle Mario
 	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager

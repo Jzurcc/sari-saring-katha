@@ -43,6 +43,12 @@ var _call_session_id: int = 0
 var _delivery_session_id: int = 0
 var _pending_delivery_items: Dictionary = {}
 
+# Incoming Upgrade Call State
+const INCOMING_CALL_RING_DURATION := 6.0
+var is_incoming_upgrade_call: bool = false
+var _incoming_call_items: Array[ItemData] = []
+var _incoming_call_session_id: int = 0
+
 func _ready() -> void:
 	_sfx_player = AudioStreamPlayer.new()
 	add_child(_sfx_player)
@@ -60,12 +66,74 @@ func _ready() -> void:
 	
 	# Restore bags when the game session actually begins
 	EventBus.day_started.connect(_on_day_started)
+	# Ring the player when a new tier upgrade becomes available
+	EventBus.upgrade_available.connect(_on_upgrade_available)
 
 func _is_in_main_game() -> bool:
 	return get_tree() != null and get_tree().current_scene != null and get_tree().current_scene.name == "MainGame"
 
 func _restore_audio_bus() -> void:
 	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Master")
+
+func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData]) -> void:
+	if not _is_in_main_game() or is_restocking_active or _is_calling:
+		return
+
+	_incoming_call_items = items.duplicate()
+	is_incoming_upgrade_call = true
+	_incoming_call_session_id += 1
+	var ring_session := _incoming_call_session_id
+
+	LogManager.info("MarioManager", "Incoming upgrade call ringing for %.1fs (%d items)." % [INCOMING_CALL_RING_DURATION, _incoming_call_items.size()])
+	get_tree().call_group("nokia_phone", "set_ringing", true)
+	_play_sfx(sfx_dial)
+
+	await get_tree().create_timer(INCOMING_CALL_RING_DURATION).timeout
+	if ring_session != _incoming_call_session_id or not is_incoming_upgrade_call:
+		return
+
+	# Player ignored the call for 6 seconds — stop ringing cleanly
+	_stop_incoming_ring()
+	LogManager.info("MarioManager", "Incoming upgrade call timed out (ignored by player).")
+
+func _stop_incoming_ring() -> void:
+	is_incoming_upgrade_call = false
+	_incoming_call_session_id += 1
+	if _sfx_player and _sfx_player.playing:
+		_sfx_player.stop()
+	if get_tree():
+		get_tree().call_group("nokia_phone", "set_ringing", false)
+
+func _format_upgrade_items_list(items: Array[ItemData]) -> String:
+	var names: Array[String] = []
+	for item in items:
+		if item and item.can_be_sold:
+			names.append("[color=#0f6e2f]%s[/color]" % item.item_name)
+	if names.is_empty():
+		return "brand new products for your store!"
+	if names.size() == 1:
+		return names[0] + "!"
+	var joined := ""
+	for i in range(names.size()):
+		if i == names.size() - 1:
+			joined += "and " + names[i] + "!"
+		else:
+			joined += names[i] + "... [pause=0.35]"
+	return joined
+
+func answer_incoming_upgrade_call(anchor: Node) -> void:
+	_stop_incoming_ring()
+	_is_calling = true
+	is_restocking_active = true
+	_current_anchor = anchor
+	_call_session_id += 1
+
+	var list_str := _format_upgrade_items_list(_incoming_call_items)
+	Dialogic.VAR.set_variable("Global_UpgradeItemsList", list_str)
+	_incoming_call_items.clear()
+
+	LogManager.info("MarioManager", "Player answered Mario's upgrade call → Label: UpgradeCall")
+	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(true), "UpgradeCall")
 
 # ── CALL LOGIC ───────────────────────────────────────────────────────
 
