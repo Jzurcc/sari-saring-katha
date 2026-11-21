@@ -131,7 +131,7 @@ func _spawn_delta_popup(diff: float) -> void:
 	tw.tween_property(popup, "position:y", -12.0, 0.45).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.chain().tween_callback(func():
 		_active_popups.erase(popup_ref)
-		var lbl = popup_ref.get_ref() as Label
+		var lbl: Label = popup_ref.get_ref() as Label
 		if lbl != null and is_instance_valid(lbl):
 			lbl.queue_free()
 	)
