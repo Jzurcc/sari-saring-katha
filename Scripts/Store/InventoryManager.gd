@@ -351,13 +351,17 @@ func load_save_data(data: Dictionary) -> void:
 		if item:
 			var id = item.get_clean_id()
 			item.is_manually_priced = _configured_item_ids.get(id, false)
-			if saved_steps.has(path):
-				item.current_step = int(saved_steps[path])
+			if not item.is_manually_priced:
+				# Unconfigured / default items always stay at Step 0
+				item.current_step = 0
+				item.selling_price = item.get_price_for_step(0)
+			elif saved_steps.has(path):
+				item.current_step = clampi(int(saved_steps[path]), -3, 3)
 				item.selling_price = item.get_price_for_step(item.current_step)
 			else:
-				# Legacy save: migrate float price to closest discrete step
-				item.selling_price = float(saved_prices[path])
-				item.current_step = item.get_step_from_price(item.selling_price)
+				# Legacy save: migrate manually set float price to closest discrete step
+				var saved_p := float(saved_prices[path])
+				item.current_step = 0 if saved_p <= 0.0 else item.get_step_from_price(saved_p)
 				item.selling_price = item.get_price_for_step(item.current_step)
 			
 	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
