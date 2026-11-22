@@ -336,13 +336,29 @@ func _get_background_hangout_points() -> Array[Vector3]:
 	var dir_back: Vector3 = - pos_data.approach_dir
 	var side: Vector3 = pos_data.side_offset
 
-	var p1: Vector3 = target_global + dir_back * randf_range(1.9, 2.7) + side * randf_range(-1.9, 1.9)
-	var p2_side: float = randf_range(-1.9, 1.9)
-	# Bias second stroll point to the opposite side so movement is noticeable
-	if absf(p2_side) < 0.5:
-		p2_side = 1.4 if randf() < 0.5 else -1.4
-	var p2: Vector3 = target_global + dir_back * randf_range(2.0, 2.8) + side * p2_side
-	return [p1, p2]
+	var points: Array[Vector3] = []
+	var waypoint_count := randi_range(3, 5)
+	var prev_side := randf_range(-2.6, 2.6)
+	var prev_back := randf_range(1.9, 3.2)
+	points.append(target_global + dir_back * prev_back + side * prev_side)
+
+	for _i in range(waypoint_count - 1):
+		var is_long_stroll := randf() < 0.60
+		var next_side: float
+		if is_long_stroll:
+			# Cross-street / wider stroll (2.2m to 4.4m shift)
+			var dir_sign := -1.0 if prev_side >= 0.0 else 1.0
+			next_side = clampf(prev_side + dir_sign * randf_range(2.2, 4.4), -3.8, 3.8)
+		else:
+			# Short casual hop nearby (0.8m to 1.6m shift)
+			var hop_sign := 1.0 if randf() < 0.5 else -1.0
+			next_side = clampf(prev_side + hop_sign * randf_range(0.8, 1.6), -3.8, 3.8)
+		var next_back := randf_range(1.8, 3.6)
+		points.append(target_global + dir_back * next_back + side * next_side)
+		prev_side = next_side
+		prev_back = next_back
+
+	return points
 
 func _on_customer_started_leaving(customer: Customer) -> void:
 	if customer == null or customer == guest_customer:

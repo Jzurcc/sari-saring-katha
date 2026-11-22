@@ -350,15 +350,18 @@ func enter_lingering_mode(hangout_points: Array[Vector3]) -> void:
 func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> void:
 	if not is_inside_tree():
 		return
-	# Chill at first background spot
-	await get_tree().create_timer(randf_range(9.0, 16.0)).timeout
+
+	# Pause briefly at the first spot, then stroll between 2–4 more background spots
+	await get_tree().create_timer(randf_range(4.0, 7.5)).timeout
 	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 		return
 
-	# Optional gentle stroll to a second background spot (~65% chance)
-	if hangout_points.size() > 1 and randf() < 0.65:
-		target_position = hangout_points[1]
-		await get_tree().create_timer(randf_range(8.0, 14.0)).timeout
+	for i in range(1, hangout_points.size()):
+		if randf() > 0.85 and i >= 2:
+			break
+		target_position = hangout_points[i]
+		# Give them time to walk there + pause briefly before the next stroll
+		await get_tree().create_timer(randf_range(4.5, 8.5)).timeout
 		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 			return
 
