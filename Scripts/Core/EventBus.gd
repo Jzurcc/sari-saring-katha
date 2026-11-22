@@ -29,12 +29,14 @@ signal transaction_started(item: ItemData)
 signal transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool, customer_path: String)
 @warning_ignore("unused_signal")
 signal tray_item_placed(item: DraggableItem, tray_global_pos: Vector3)
+@warning_ignore("unused_signal")
+signal customer_item_offered(customer: Customer, item: DraggableItem, drop_global_pos: Vector3)
 
 # --- Orders and HUD ---
 @warning_ignore("unused_signal")
 signal customer_order_updated(customer_name: String, items: Array[ItemData], is_riddle: bool)
 @warning_ignore("unused_signal")
-signal customer_order_cleared()
+signal customer_order_cleared(customer_name: String)
 
 # --- Progression ---
 @warning_ignore("unused_signal")

@@ -189,18 +189,13 @@ func end_drag() -> void:
 		else:
 			if is_refill and collider.is_in_group("dispenser_containers") and collider.has_method("receive_refill"):
 				success = collider.receive_refill(_dragged_item)
-			elif collider.is_in_group("transaction_tray") and collider.has_method("receive_item"):
-				collider.receive_item(_dragged_item)
-				success = true
 			elif collider.is_in_group("trash") and collider.has_method("receive_item"):
 				collider.receive_item(_dragged_item)
 				success = true
 			elif collider is Customer:
-				# Redirect the drop to the standard transaction tray logic
-				var tray_nodes = get_tree().get_nodes_in_group("transaction_tray")
-				if tray_nodes.size() > 0 and tray_nodes[0].has_method("receive_item"):
-					tray_nodes[0].receive_item(_dragged_item)
-					success = true
+				EventBus.request_sfx.emit("drop")
+				EventBus.customer_item_offered.emit(collider as Customer, _dragged_item, result.position)
+				success = true
 			elif collider.is_in_group("shelf_drop_zone"):
 				# The drop zone Area3D's parent is the ShelfSurface
 				var shelf_surface := collider.get_parent()

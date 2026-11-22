@@ -6,16 +6,37 @@ class_name CustomerSpawner
 ## timeline_ended fires EXACTLY ONCE per timeline (confirmed from Dialogic source)
 const DialoguePhase = TransactionSession.Phase
 
+const MAX_COUNTER_SLOTS := 3
+const SLOT_SPACING := 1.28
+const LINGER_CHANCE := 0.55
+const MAX_LINGERING_VISITORS := 2
+const SMALLTALK_RETURN_CHANCE := 0.50
+
 @export var customer_scene: PackedScene = preload("res://Scenes/Customer.tscn")
 @export var spawn_pos: NodePath
 @export var target_pos: NodePath
 @export var exit_pos: NodePath
+## Number of active counter slots (1..3). Default 3 for playtesting; future Cat Upgrades will gate 1 -> 2 -> 3.
+@export_range(1, 3) var max_unlocked_slots: int = 3
 
 var session: TransactionSession = TransactionSession.new()
 
+## 3 shared counter slots: 0 = Center, 1 = Left, 2 = Right
+var counter_slots: Array[Customer] = [null, null, null]
+## Background visitors hanging out in the tambayan area (do NOT occupy counter slots)
+var lingering_visitors: Array[Customer] = []
+
+## Backward-compatible active customer accessor (returns active dialogue customer or first occupied slot)
 var current_customer: Customer:
-	get: return session.current_customer
-	set(val): session.current_customer = val
+	get:
+		if is_instance_valid(session.current_customer):
+			return session.current_customer
+		for c in counter_slots:
+			if is_instance_valid(c):
+				return c
+		return null
+	set(val):
+		session.current_customer = val
 
 var guest_customer: Customer:
 	get: return session.guest_customer
@@ -27,14 +48,18 @@ var _dialogue_phase: TransactionSession.Phase:
 
 var _is_spawning: bool = false
 var _is_nokia_open: bool = false
+var _wave_id: int = 0
+var _is_exclusive_wave: bool = false
+var _is_transitioning_wave: bool = false
 
 var is_paused: bool = false:
 	set(value):
 		is_paused = value
-		if not is_paused and current_customer == null and not _is_spawning:
+		if not is_paused and not has_any_counter_customer() and not _is_spawning and not _is_transitioning_wave:
 			_spawn_next_customer()
 
-var _pending_restore_transaction: TransactionContext = null
+## Pending restored slot entries: Array[{ "slot": int, "ctx": TransactionContext, "greeted": bool }]
+var _pending_restore_slots: Array[Dictionary] = []
 
 func _ready() -> void:
 	LogManager.debug("CustomerSpawner", "_ready() START")
@@ -52,23 +77,61 @@ func _ready() -> void:
 	EventBus.nokia_closed.connect(_on_nokia_closed)
 	EventBus.closing_time_reached.connect(_on_closing_time_reached)
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
+	EventBus.customer_item_offered.connect(_on_customer_item_offered)
 	EventBus.tray_item_placed.connect(_on_tray_item_placed)
 	LogManager.debug("CustomerSpawner", "_ready() END")
 
+func set_max_unlocked_slots(count: int) -> void:
+	max_unlocked_slots = clampi(count, 1, MAX_COUNTER_SLOTS)
+	LogManager.info("CustomerSpawner", "Max unlocked counter slots set to %d" % max_unlocked_slots)
+
+func has_any_counter_customer() -> bool:
+	for c in counter_slots:
+		if is_instance_valid(c) and not c._is_resolving:
+			return true
+	return false
+
+func has_other_counter_customers(excluding: Customer) -> bool:
+	for c in counter_slots:
+		if is_instance_valid(c) and c != excluding and not c._is_resolving:
+			return true
+	return false
+
+func get_present_character_paths() -> Array[String]:
+	var paths: Array[String] = []
+	for c in counter_slots:
+		if is_instance_valid(c) and c.customer_data and not (c.customer_data.resource_path in paths):
+			paths.append(c.customer_data.resource_path)
+	for v in lingering_visitors:
+		if is_instance_valid(v) and v.customer_data and not (v.customer_data.resource_path in paths):
+			paths.append(v.customer_data.resource_path)
+	if is_instance_valid(guest_customer) and guest_customer.customer_data:
+		if not (guest_customer.customer_data.resource_path in paths):
+			paths.append(guest_customer.customer_data.resource_path)
+	return paths
+
+func _find_open_slot(prefer_side: bool = false) -> int:
+	var order: Array[int] = [1, 2, 0] if prefer_side else [0, 1, 2]
+	for idx in order:
+		if idx < max_unlocked_slots and not is_instance_valid(counter_slots[idx]):
+			return idx
+	return -1
+
 func _on_day_started(_day: int) -> void:
 	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
+	_dismiss_all_lingering_visitors()
 	_spawn_next_customer()
 
 func _spawn_next_customer() -> void:
 	if _is_spawning:
 		LogManager.debug("CustomerSpawner", "_spawn_next_customer() IGNORED: Spawn already in progress.")
 		return
-		
-	if current_customer:
-		LogManager.debug("CustomerSpawner", "_spawn_next_customer() ABORTED: customer already present!")
+
+	if has_any_counter_customer():
+		LogManager.debug("CustomerSpawner", "_spawn_next_customer() ABORTED: counter already occupied.")
 		return
 
-	LogManager.debug("CustomerSpawner", "_spawn_next_customer() CALLED. is_paused=%s, current_customer=%s, _is_spawning=%s" % [is_paused, current_customer != null, _is_spawning])
+	LogManager.debug("CustomerSpawner", "_spawn_next_customer() CALLED. is_paused=%s, _is_spawning=%s" % [is_paused, _is_spawning])
 	if is_paused:
 		LogManager.debug("CustomerSpawner", "Aborting spawn: store is paused.")
 		return
@@ -80,141 +143,348 @@ func _spawn_next_customer() -> void:
 		return
 
 	_is_spawning = true
-	
-	var transaction: TransactionContext = null
-	if _pending_restore_transaction:
-		transaction = _pending_restore_transaction
-		_pending_restore_transaction = null
-		LogManager.info("CustomerSpawner", "Using restored transaction for next spawn: %s" % transaction.customer_data.character_name)
-		
-		# RE-SYNC: Ensure StoryManager (and Dialogic) has the correct string data
-		# for this restored transaction before the greeting starts.
-		StoryManager.update_transaction_item_string(transaction)
-	else:
-		transaction = StoryManager.get_next_transaction()
+	_wave_id += 1
+	var my_wave_id := _wave_id
+	_is_exclusive_wave = false
 
+	# Case 1: Restore multi-slot customers from save
+	if not _pending_restore_slots.is_empty():
+		var restored_entries := _pending_restore_slots.duplicate(true)
+		_pending_restore_slots.clear()
+		await get_tree().create_timer(1.2).timeout
+		if not is_inside_tree() or my_wave_id != _wave_id:
+			_is_spawning = false
+			return
+		var first_customer: Customer = null
+		for entry in restored_entries:
+			var slot_idx: int = clampi(int(entry.get("slot", 0)), 0, MAX_COUNTER_SLOTS - 1)
+			var ctx: TransactionContext = entry.get("ctx") as TransactionContext
+			if ctx == null or ctx.customer_data == null:
+				continue
+			if is_instance_valid(counter_slots[slot_idx]):
+				slot_idx = _find_open_slot(false)
+				if slot_idx == -1:
+					continue
+			StoryManager.update_transaction_item_string(ctx)
+			var spawned := _spawn_customer_into_slot(ctx, slot_idx)
+			if first_customer == null:
+				first_customer = spawned
+		if is_instance_valid(first_customer):
+			session.current_customer = first_customer
+		_is_spawning = false
+		return
+
+	# Case 2: Fresh Wave Start — spawn primary customer into Center slot (0)
+	var exclude_paths := get_present_character_paths()
+	var transaction: TransactionContext = StoryManager.get_next_transaction(exclude_paths, false)
 	if transaction == null:
-		# No characters configured — nothing to spawn
 		_is_spawning = false
 		_end_day()
 		return
 
-	var type_name: String = ([" STORY", "PURCHASE", "VISIT "])[transaction.transaction_type]
+	_log_incoming_transaction(transaction, 0)
+
+	await get_tree().create_timer(2.0).timeout
+	if not is_inside_tree() or my_wave_id != _wave_id:
+		_is_spawning = false
+		return
+
+	var primary := _spawn_customer_into_slot(transaction, 0)
+	session.current_customer = primary
+
+	# Exclusive scenes (tutorial, two-character story, collector) stay solo
+	_is_exclusive_wave = transaction.is_guided_tutorial \
+		or transaction.secondary_customer_data != null \
+		or (transaction.customer_data != null and transaction.customer_data.is_collector())
+
+	_is_spawning = false
+
+	# Wave / Burst Pacing: schedule staggered joiners into side slots (1..max_unlocked_slots-1)
+	if not _is_exclusive_wave and max_unlocked_slots > 1 and not StoryManager.is_past_closing_time():
+		var wave_size := _roll_wave_size()
+		if wave_size > 1:
+			_schedule_wave_joiners(my_wave_id, wave_size - 1)
+
+func _roll_wave_size() -> int:
+	if max_unlocked_slots <= 1:
+		return 1
+	var r := randf()
+	if max_unlocked_slots == 2:
+		return 2 if r < 0.55 else 1
+	# max_unlocked_slots == 3: 25% solo, 45% pair, 30% full 3-person rush
+	if r < 0.25:
+		return 1
+	elif r < 0.70:
+		return 2
+	return 3
+
+func _schedule_wave_joiners(my_wave_id: int, joiner_count: int) -> void:
+	for _i in range(joiner_count):
+		var delay := randf_range(4.0, 7.5)
+		await get_tree().create_timer(delay).timeout
+		if not is_inside_tree() or my_wave_id != _wave_id:
+			return
+		if is_paused or _is_exclusive_wave or StoryManager.is_past_closing_time():
+			return
+		if not has_any_counter_customer():
+			# Primary already finished before joiner arrived — wave is over
+			return
+		var slot_idx := _find_open_slot(true)
+		if slot_idx == -1:
+			return
+		var exclude_paths := get_present_character_paths()
+		var joiner_tx := StoryManager.get_next_transaction(exclude_paths, true)
+		if joiner_tx == null:
+			return
+		_log_incoming_transaction(joiner_tx, slot_idx)
+		_spawn_customer_into_slot(joiner_tx, slot_idx)
+
+func _log_incoming_transaction(transaction: TransactionContext, slot_idx: int) -> void:
+	var type_name: String = (["STORY", "PURCHASE", "VISIT"])[transaction.transaction_type]
 	var item_list: Array[String] = []
 	for item in transaction.desired_items:
 		item_list.append(item.item_name)
-	LogManager.info("Customer", "Incoming transaction: Character=%s, Type=%s, Wants=%s" % [
+	LogManager.info("Customer", "Incoming [Slot %d]: Character=%s, Type=%s, Wants=%s" % [
+		slot_idx,
 		transaction.customer_data.get_clean_id(),
 		type_name,
 		", ".join(item_list) if item_list.size() > 0 else "(nothing — visit)"
 	])
 
-	await get_tree().create_timer(2.0).timeout
+func _spawn_customer_into_slot(transaction: TransactionContext, slot_idx: int) -> Customer:
+	var has_guest := transaction.secondary_customer_data != null
+	var pos_data := _calculate_positions(has_guest, slot_idx)
+	var spawn_global: Vector3 = pos_data.spawn_pos
+	var target_global: Vector3 = pos_data.target_pos
+	var exit_global: Vector3 = pos_data.exit_pos
+	var final_target: Vector3 = pos_data.primary_target
 
-	var pos_data = _calculate_positions(transaction.secondary_customer_data != null)
-	var spawn_global = pos_data.spawn_pos
-	var target_global = pos_data.target_pos
-	var exit_global = pos_data.exit_pos
-	var final_target = pos_data.primary_target
-	
 	# If the customer is Kuya Kap, offset him back so he doesn't hit his head on the roof.
-	if transaction.customer_data.get_clean_id() == "kuyakap":
-		var dir_back = (spawn_global - target_global).normalized()
+	if transaction.customer_data and transaction.customer_data.get_clean_id() == "kuyakap":
+		var dir_back := (spawn_global - target_global).normalized()
 		final_target += (dir_back * 0.7)
 
-	current_customer = _create_customer(transaction, spawn_global, final_target, exit_global)
+	var customer := _create_customer(transaction, spawn_global, final_target, exit_global)
+	customer.slot_index = slot_idx
+	counter_slots[slot_idx] = customer
 
-	# Spawn Guest Customer if present
-	if transaction.secondary_customer_data:
-		var guest_context = TransactionContext.new()
+	# Spawn Guest Customer if present (exclusive two-character story scene)
+	if has_guest:
+		var guest_context := TransactionContext.new()
 		guest_context.customer_data = transaction.secondary_customer_data
-		guest_context.transaction_type = TransactionContext.Type.VISIT # Guests don't buy (for now)
-		
-		var guest_target = pos_data.guest_target
-		
+		guest_context.transaction_type = TransactionContext.Type.VISIT
+
+		var guest_target: Vector3 = pos_data.guest_target
 		guest_customer = customer_scene.instantiate()
 		get_parent().add_child(guest_customer)
 		guest_customer.global_position = spawn_global
 		guest_customer.setup(guest_context, guest_target, exit_global, transaction.guest_spawns_later)
-		
-		# Allow clicking the guest to also start the main dialogue
 		guest_customer.clicked.connect(_on_guest_clicked)
-		
-		# Guest doesn't trigger logic, they are just there for dialogue
 		LogManager.info("Customer", "Guest spawned: %s" % transaction.secondary_customer_data.get_clean_id())
 
-	EventBus.customer_spawned.emit(current_customer)
-	_is_spawning = false
+	EventBus.customer_spawned.emit(customer)
+	return customer
 
-func _calculate_positions(has_guest: bool) -> Dictionary:
+func _calculate_positions(has_guest: bool, slot_idx: int = 0) -> Dictionary:
 	if not spawn_pos or not target_pos:
 		return {}
 
-	var spawn_global = get_node(spawn_pos).global_position
-	# Note: We don't randomize Z here to keep it deterministic during load
-	var target_global = get_node(target_pos).global_position
-	var exit_global = get_node(exit_pos).global_position if exit_pos else spawn_global
-	
-	var approach_dir = (target_global - spawn_global).normalized()
-	var side_offset = Vector3(-approach_dir.z, 0, approach_dir.x) # Left perpendicular
-	
-	var primary_target = target_global
-	var guest_target = target_global
-	
+	var spawn_global: Vector3 = get_node(spawn_pos).global_position
+	var target_global: Vector3 = get_node(target_pos).global_position
+	var exit_global: Vector3 = get_node(exit_pos).global_position if exit_pos else spawn_global
+
+	var approach_dir := (target_global - spawn_global).normalized()
+	var side_offset := Vector3(-approach_dir.z, 0, approach_dir.x) # Left perpendicular
+
+	var primary_target := target_global
+	var guest_target := target_global
+
 	if has_guest:
 		primary_target = target_global + (side_offset * -0.9) # Shift Primary to Right
-		guest_target = target_global + (side_offset * 0.9) # Shift Guest to Left
-		
+		guest_target = target_global + (side_offset * 0.9)    # Shift Guest to Left
+	elif slot_idx == 1:
+		primary_target = target_global + (side_offset * SLOT_SPACING)  # Left slot
+	elif slot_idx == 2:
+		primary_target = target_global + (side_offset * -SLOT_SPACING) # Right slot
+
 	return {
 		"spawn_pos": spawn_global,
 		"target_pos": target_global,
 		"exit_pos": exit_global,
 		"primary_target": primary_target,
-		"guest_target": guest_target
+		"guest_target": guest_target,
+		"approach_dir": approach_dir,
+		"side_offset": side_offset
 	}
 
+func _get_background_hangout_points() -> Array[Vector3]:
+	var pos_data := _calculate_positions(false, 0)
+	if pos_data.is_empty():
+		return []
+	var target_global: Vector3 = pos_data.target_pos
+	var dir_back: Vector3 = -pos_data.approach_dir
+	var side: Vector3 = pos_data.side_offset
+
+	var p1: Vector3 = target_global + dir_back * randf_range(1.9, 2.7) + side * randf_range(-1.9, 1.9)
+	var p2_side: float = randf_range(-1.9, 1.9)
+	# Bias second stroll point to the opposite side so movement is noticeable
+	if absf(p2_side) < 0.5:
+		p2_side = 1.4 if randf() < 0.5 else -1.4
+	var p2: Vector3 = target_global + dir_back * randf_range(2.0, 2.8) + side * p2_side
+	return [p1, p2]
+
 func _on_customer_dismissed(customer: Customer) -> void:
-	if customer == null:
+	if customer == null or customer.is_lingering_departure:
 		return
 
-	if customer != current_customer and customer != guest_customer:
+	if customer == guest_customer:
+		guest_customer = null
 		return
 
-	# RACE GUARD: Both customer_satisfied AND customer_dismissed route here.
-	# Lock _is_spawning NOW — before the await — so the second signal fire
-	# is rejected by _spawn_next_customer()'s guard instead of racing it.
-	if _is_spawning:
-		LogManager.debug("CustomerSpawner", "_on_customer_dismissed: already spawning — ignoring duplicate signal.")
-		return
-	_is_spawning = true
+	var removed_from_slot := false
+	for i in range(counter_slots.size()):
+		if counter_slots[i] == customer:
+			counter_slots[i] = null
+			removed_from_slot = true
+			break
 
-	if is_instance_valid(guest_customer):
+	if not removed_from_slot:
+		return
+
+	if session.current_customer == customer:
+		session.current_customer = null
+
+	if is_instance_valid(guest_customer) and not has_any_counter_customer():
 		guest_customer.dismiss()
 		guest_customer = null
-	current_customer = null
 
-	EventBus.customer_order_cleared.emit()
+	EventBus.customer_order_cleared.emit(customer.get_order_hud_key())
+
+	# If other customers are still at the counter, keep the wave alive
+	if has_any_counter_customer():
+		return
+
+	_on_wave_cleared()
+
+func _on_wave_cleared() -> void:
+	if _is_transitioning_wave:
+		return
+	_is_transitioning_wave = true
+
+	# Cancel any unspawned joiners for the finished wave
+	_wave_id += 1
+	_is_exclusive_wave = false
 
 	# Check if we have a pending tier unlock now that the counter is clear
 	StoryManager.process_pending_unlock()
 
-	# Wait for the post-departure time-skip timelapse to finish before starting the inter-customer delay
+	# Wait for the single post-wave time-skip timelapse to finish
 	if StoryManager.clock.is_fast_forwarding():
 		await StoryManager.clock.fast_forward_finished
 		if not is_inside_tree():
-			_is_spawning = false
+			_is_transitioning_wave = false
 			return
 
-	var delay = randf_range(0.0, 1.5)
+	var delay := randf_range(0.4, 1.4)
 	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 
 	await get_tree().create_timer(delay).timeout
 	if not is_inside_tree():
-		_is_spawning = false
+		_is_transitioning_wave = false
 		return
-	_is_spawning = false
-	_spawn_next_customer()
+
+	_is_transitioning_wave = false
+	if not has_any_counter_customer():
+		_spawn_next_customer()
+
+# ── Lingering Visitors (Tambayan) ────────────────────────────────────────────
+
+func handle_social_visit_finished(customer: Customer) -> void:
+	if not is_instance_valid(customer):
+		return
+
+	var ctx := customer.transaction_context
+	var can_linger: bool = not StoryManager.is_past_closing_time() \
+		and not _is_exclusive_wave \
+		and lingering_visitors.size() < MAX_LINGERING_VISITORS \
+		and ctx != null \
+		and not ctx.is_guided_tutorial \
+		and not ctx.is_visit_story \
+		and (customer.customer_data == null or not customer.customer_data.is_collector()) \
+		and randf() < LINGER_CHANCE
+
+	if not can_linger:
+		customer.dismiss()
+		return
+
+	# Release their counter slot so new customers can arrive while they hang out in the background
+	for i in range(counter_slots.size()):
+		if counter_slots[i] == customer:
+			counter_slots[i] = null
+			break
+
+	if session.current_customer == customer:
+		session.current_customer = null
+
+	lingering_visitors.append(customer)
+	if not customer.lingering_ready_to_return.is_connected(_on_lingering_ready_to_return):
+		customer.lingering_ready_to_return.connect(_on_lingering_ready_to_return)
+	if not customer.lingering_departed.is_connected(_on_lingering_departed):
+		customer.lingering_departed.connect(_on_lingering_departed)
+
+	InventoryManager.decrement_cooldown()
+	LogManager.info("CustomerSpawner", "%s is lingering in the background (slot freed)." % customer.get_order_hud_key())
+	customer.enter_lingering_mode(_get_background_hangout_points())
+
+	# If freeing this visitor's slot emptied the counter, close out the wave & trigger soft timeskip
+	if not has_any_counter_customer():
+		StoryManager.clock.on_customer_dismissed()
+		_on_wave_cleared()
+
+func _on_lingering_ready_to_return(customer: Customer) -> void:
+	if not is_instance_valid(customer) or customer._is_resolving:
+		return
+
+	if StoryManager.is_past_closing_time() or _is_exclusive_wave or is_paused or _is_transitioning_wave:
+		customer.leave_from_lingering()
+		return
+
+	var open_slot := _find_open_slot(true)
+	if open_slot != -1 and randf() < SMALLTALK_RETURN_CHANCE:
+		var pos_data := _calculate_positions(false, open_slot)
+		var slot_target: Vector3 = pos_data.primary_target
+		if customer.customer_data and customer.customer_data.get_clean_id() == "kuyakap":
+			var dir_back: Vector3 = (pos_data.spawn_pos - pos_data.target_pos).normalized()
+			slot_target += dir_back * 0.7
+		counter_slots[open_slot] = customer
+		LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d for smalltalk." % [customer.get_order_hud_key(), open_slot])
+		customer.return_to_counter_for_smalltalk(open_slot, slot_target)
+	else:
+		LogManager.info("CustomerSpawner", "Lingering visitor %s leaving directly from background." % customer.get_order_hud_key())
+		customer.leave_from_lingering()
+
+func _on_lingering_departed(customer: Customer) -> void:
+	lingering_visitors.erase(customer)
+	var was_on_counter := false
+	for i in range(counter_slots.size()):
+		if counter_slots[i] == customer:
+			counter_slots[i] = null
+			was_on_counter = true
+			break
+	if session.current_customer == customer:
+		session.current_customer = null
+	if was_on_counter and not has_any_counter_customer() and not _is_spawning and not _is_transitioning_wave and not is_paused:
+		_spawn_next_customer()
+
+func _dismiss_all_lingering_visitors() -> void:
+	var to_leave := lingering_visitors.duplicate()
+	for v in to_leave:
+		if is_instance_valid(v):
+			v.leave_from_lingering()
+	lingering_visitors.clear()
+
+# ── Interaction & Session Forwarding ─────────────────────────────────────────
 
 func _process(delta: float) -> void:
 	session.update_watchdog(delta)
@@ -245,26 +515,34 @@ func start_dialogue(timeline, customer: Customer, phase: TransactionSession.Phas
 func _on_dialogue_ended() -> void:
 	session.on_dialogue_ended()
 
-func _on_tray_item_placed(item: DraggableItem, tray_pos: Vector3) -> void:
-	session.process_item_placed(item, tray_pos)
+func _on_customer_item_offered(customer: Customer, item: DraggableItem, drop_pos: Vector3) -> void:
+	session.process_item_placed(item, drop_pos, customer)
 
+func _on_tray_item_placed(item: DraggableItem, tray_pos: Vector3) -> void:
+	session.process_item_placed(item, tray_pos, current_customer)
+
+# ── Closing Time & Mayari ────────────────────────────────────────────────────
 
 func _on_closing_time_reached() -> void:
+	_dismiss_all_lingering_visitors()
 	# If time hit 8 PM and no one is at the counter, spawn Mayari immediately.
-	if current_customer == null and not _is_spawning:
+	if not has_any_counter_customer() and not _is_spawning:
 		spawn_mayari_for_collection()
 
 func spawn_mayari_for_collection() -> void:
-	if _is_spawning or current_customer != null:
+	if _is_spawning or has_any_counter_customer():
 		return
-	
+
+	_dismiss_all_lingering_visitors()
 	_is_spawning = true
+	_wave_id += 1
+	_is_exclusive_wave = true
 
 	# Ensure tonight's quota is always calculated and synced to Dialogic before Mayari spawns
 	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
 	if gm:
 		gm.prepare_nightly_quota()
-	
+
 	# Request the special collection transaction from StoryManager
 	var transaction = StoryManager.get_collection_transaction()
 	if transaction == null:
@@ -275,13 +553,19 @@ func spawn_mayari_for_collection() -> void:
 	LogManager.info("Customer", "Incoming Debt Collection: Character=Reyna Mayari, Type=VISIT (Collection)")
 
 	await get_tree().create_timer(1.5).timeout
+	if not is_inside_tree():
+		_is_spawning = false
+		return
 
-	var spawn_global = get_node(spawn_pos).global_position
-	var target_global = get_node(target_pos).global_position
-	
-	current_customer = _create_customer(transaction, spawn_global, target_global)
+	var spawn_global: Vector3 = get_node(spawn_pos).global_position
+	var target_global: Vector3 = get_node(target_pos).global_position
 
-	EventBus.customer_spawned.emit(current_customer)
+	var mayari := _create_customer(transaction, spawn_global, target_global)
+	mayari.slot_index = 0
+	counter_slots[0] = mayari
+	session.current_customer = mayari
+
+	EventBus.customer_spawned.emit(mayari)
 	_is_spawning = false
 
 ## Emit day_ended when no more customers will come today.
@@ -293,7 +577,6 @@ func _on_nokia_opened() -> void:
 
 func _on_nokia_closed() -> void:
 	_is_nokia_open = false
-
 
 # ── Persistence ──────────────────────────────────────────────────────────────
 
@@ -308,35 +591,60 @@ func _is_completed_order(ctx: TransactionContext) -> bool:
 	return ctx.original_count > 0 and ctx.desired_items.is_empty() and not ctx.delivered_items.is_empty()
 
 func get_save_data() -> Dictionary:
-	var data := {}
-	
-	if is_instance_valid(current_customer) and current_customer.transaction_context:
-		var is_already_done: bool = current_customer._is_resolving \
-			or session.phase == TransactionSession.Phase.SATISFIED \
-			or _is_completed_order(current_customer.transaction_context)
+	var data := {
+		"max_unlocked_slots": max_unlocked_slots
+	}
+	var saved_slots: Array[Dictionary] = []
+
+	for i in range(counter_slots.size()):
+		var c := counter_slots[i]
+		if not is_instance_valid(c) or not c.transaction_context:
+			continue
+		if c.is_lingering_visitor or c.is_returning_for_smalltalk or c.is_lingering_departure:
+			continue
+		var is_already_done: bool = c._is_resolving \
+			or c.dialogue_phase == TransactionSession.Phase.SATISFIED \
+			or _is_completed_order(c.transaction_context)
 		if not is_already_done:
-			data["current_customer"] = current_customer.transaction_context.to_dict()
-			data["current_greeted"] = current_customer.has_been_greeted
-		
+			saved_slots.append({
+				"slot": i,
+				"ctx": c.transaction_context.to_dict(),
+				"greeted": c.has_been_greeted
+			})
+
+	if not saved_slots.is_empty():
+		data["slots"] = saved_slots
+
 	if is_instance_valid(guest_customer) and guest_customer.transaction_context:
 		if not guest_customer._is_resolving:
 			data["guest_customer"] = guest_customer.transaction_context.to_dict()
 			data["guest_greeted"] = guest_customer.has_been_greeted
-		
+
 	return data
 
 func load_save_data(data: Dictionary) -> void:
-	# IMPORTANT: Do NOT restore _dialogue_phase from save.
-	# The customer will do a fresh walk-in, so the phase must start as NONE.
-	# Restoring a stale phase (e.g. GREETING or SOCIAL_VISIT) would permanently
-	# block the click guard at _on_customer_clicked() line 286, making the
-	# re-spawned customer unclickable. This was the root cause of the tutorial bug.
 	_dialogue_phase = DialoguePhase.NONE
-	session._greeting_interrupted = false # Also reset: interruption state is irrelevant after a reload
-	
-	if data.has("current_customer"):
-		var ctx_data = data["current_customer"]
-		var ctx = TransactionContext.from_dict(ctx_data)
+	session._greeting_interrupted = false
+	_pending_restore_slots.clear()
+
+	if data.has("max_unlocked_slots"):
+		max_unlocked_slots = clampi(int(data["max_unlocked_slots"]), 1, MAX_COUNTER_SLOTS)
+
+	# New multi-slot save format
+	if data.has("slots") and data["slots"] is Array:
+		for entry in data["slots"]:
+			if not (entry is Dictionary) or not entry.has("ctx"):
+				continue
+			var ctx := TransactionContext.from_dict(entry["ctx"])
+			if ctx and ctx.customer_data and not _is_completed_order(ctx):
+				_pending_restore_slots.append({
+					"slot": int(entry.get("slot", 0)),
+					"ctx": ctx,
+					"greeted": bool(entry.get("greeted", false))
+				})
+	# Backward compatibility for legacy single-customer saves
+	elif data.has("current_customer"):
+		var ctx := TransactionContext.from_dict(data["current_customer"])
 		if ctx and ctx.customer_data:
 			if _is_completed_order(ctx):
 				LogManager.info("CustomerSpawner", "Skipping already-completed restored customer (%s); spawning next." % ctx.customer_data.character_name)
@@ -344,34 +652,40 @@ func load_save_data(data: Dictionary) -> void:
 				StoryManager.clock.wait_limit_time = -1.0
 				StoryManager.clock.was_paused_by_limit = false
 			else:
-				_pending_restore_transaction = ctx
-				LogManager.info("CustomerSpawner", "Queuing restored customer for fresh walk-in: %s" % ctx.customer_data.character_name)
-				
-				# Delay slightly to ensure self is ready, then trigger spawn
-				get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
-				return
+				_pending_restore_slots.append({
+					"slot": 0,
+					"ctx": ctx,
+					"greeted": bool(data.get("current_greeted", false))
+				})
 
-	# If no active customer was at the counter at save time, resume customer spawning
+	if not _pending_restore_slots.is_empty():
+		LogManager.info("CustomerSpawner", "Queuing %d restored customer(s) for fresh walk-in." % _pending_restore_slots.size())
+		get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
+		return
+
+	# If no active customer was at the counter at save time, resume spawning or closing sequence
 	if not StoryManager.is_past_closing_time():
 		get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
 	elif not StoryManager.has_mayari_visited:
 		get_tree().create_timer(1.0).timeout.connect(spawn_mayari_for_collection)
 	else:
-		# Save was captured after Mayari already finished collecting at closing time
 		LogManager.info("CustomerSpawner", "Loaded past closing time with Mayari already visited. Triggering end-of-day transition.")
 		get_tree().create_timer(1.0).timeout.connect(_end_day)
 
 func reset_state() -> void:
-	_pending_restore_transaction = null
-	current_customer = null
+	_pending_restore_slots.clear()
+	_wave_id += 1
+	_is_exclusive_wave = false
+	_is_transitioning_wave = false
+	for i in range(counter_slots.size()):
+		counter_slots[i] = null
+	lingering_visitors.clear()
+	session.current_customer = null
 	guest_customer = null
 	_is_spawning = false
 	_dialogue_phase = DialoguePhase.NONE
 	session._greeting_interrupted = false
 	LogManager.info("CustomerSpawner", "State reset for New Game.")
-
-	# If no customer to restore, handle guest restoration (optional, usually guest is with primary)
-
 
 func _create_customer(transaction: TransactionContext, spawn: Vector3, target: Vector3, exit: Vector3 = Vector3.ZERO) -> Customer:
 	var customer: Customer = customer_scene.instantiate()
@@ -386,8 +700,15 @@ func _create_customer(transaction: TransactionContext, spawn: Vector3, target: V
 func _on_character_speaking(data: CustomerData) -> void:
 	if not data:
 		return
-		
-	var target_id = data.get_clean_id()
-	for c in [current_customer, guest_customer]:
-		if c and c.customer_data and c.customer_data.get_clean_id() == target_id:
+
+	var target_id := data.get_clean_id()
+	var candidates: Array[Customer] = []
+	for c in counter_slots:
+		if is_instance_valid(c):
+			candidates.append(c)
+	if is_instance_valid(guest_customer):
+		candidates.append(guest_customer)
+
+	for c in candidates:
+		if c.customer_data and c.customer_data.get_clean_id() == target_id:
 			c.play_speak_animation()

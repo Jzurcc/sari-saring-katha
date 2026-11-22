@@ -10,6 +10,7 @@ enum Phase {
 	TALK,
 	SATISFIED,
 	SOCIAL_VISIT,
+	SMALLTALK,
 	WRONG_ITEM,
 	REPAYMENT
 }
@@ -57,30 +58,48 @@ func on_customer_arrived(customer: Customer) -> void:
 		generic_char_res.display_name = InventoryManager.current_character_name
 
 func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
-	if Dialogic.current_timeline != null or customer.transaction_context == null:
+	if Dialogic.current_timeline != null or customer == null or customer.transaction_context == null:
 		return
-	if not customer.is_waiting:
+	if not customer.is_waiting or customer._is_resolving or customer.is_lingering_visitor:
+		return
+
+	if phase != Phase.NONE and phase != Phase.SATISFIED:
+		return
+
+	if MarioManager.is_restocking_active or is_nokia_open:
+		return
+
+	# Switch active dialogue focus to the clicked customer and sync their Dialogic vars
+	current_customer = customer
+	_sync_customer_dialogic_vars(customer)
+
+	# Returning lingering visitor smalltalk
+	if customer.is_returning_for_smalltalk:
+		var st_timeline = customer.transaction_context.timeline
+		var st_path = st_timeline.resource_path if st_timeline is Resource else st_timeline
+		var st_label := ""
+		if StoryManager.is_label_in_timeline(st_path, "Smalltalk"):
+			st_label = "Smalltalk"
+		elif StoryManager.is_label_in_timeline(st_path, "Talk"):
+			st_label = "Talk"
+		elif StoryManager.is_label_in_timeline(st_path, "Greeting"):
+			st_label = "Greeting"
+		phase = Phase.SMALLTALK
+		customer.dialogue_phase = Phase.SMALLTALK
+		start_dialogue(st_timeline, customer, Phase.SMALLTALK, st_label)
 		return
 
 	# Repayment preamble check
 	if customer.transaction_context.is_repaying and customer.transaction_context.repayment_amount > 0.0:
 		customer.transaction_context.is_repaying = false
 		phase = Phase.REPAYMENT
+		customer.dialogue_phase = Phase.REPAYMENT
 		var repay_timeline = customer.transaction_context.timeline
 		var timeline_path = repay_timeline.resource_path if repay_timeline is Resource else repay_timeline
 		if StoryManager.is_label_in_timeline(timeline_path, "Repayment"):
 			start_dialogue(repay_timeline, customer, Phase.REPAYMENT, "Repayment")
 		else:
 			start_dialogue("res://Dialogue/Timelines/Generic/Repayment.dtl", customer, Phase.REPAYMENT)
-		return
-
-	if phase != Phase.NONE and phase != Phase.SATISFIED:
-		return
-
-	if customer.has_method("_is_resolving") and customer._is_resolving:
-		return
-
-	if MarioManager.is_restocking_active or is_nokia_open:
 		return
 
 	var timeline = customer.transaction_context.timeline
@@ -100,37 +119,53 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 		if StoryManager.is_label_in_timeline(timeline_path, "Greeting"):
 			label = "Greeting"
 	else:
-		if not customer.has_been_greeted or _greeting_interrupted:
+		if not customer.has_been_greeted or customer.greeting_interrupted or _greeting_interrupted:
 			var timeline_path = timeline.resource_path if timeline is Resource else timeline
 			if Dialogic.VAR.get_variable("Global_RumorActive") and StoryManager.is_label_in_timeline(timeline_path, "Rumor"):
 				label = "Rumor"
 			else:
 				label = "Greeting"
 			phase = Phase.GREETING
+			customer.greeting_interrupted = false
 			_greeting_interrupted = false
 		else:
 			label = "Talk"
 			phase = Phase.TALK
 
+	customer.dialogue_phase = phase
 	start_dialogue(timeline, customer, phase, label)
 
-## Resolves an item placed on the transaction tray.
+func _sync_customer_dialogic_vars(customer: Customer) -> void:
+	if not is_instance_valid(customer) or not customer.transaction_context or not customer.customer_data:
+		return
+	var char_data := customer.customer_data
+	var chapter: int = CharacterProgressionManager.get_chapter(char_data.resource_path)
+	var branch_value: float = CharacterProgressionManager.get_branch(char_data.resource_path)
+	var current_arc: float = float(char_data.get_arc_index(chapter) + 1)
+	DialogicBridge.sync_transaction(customer.transaction_context, chapter, branch_value, current_arc)
+	update_item_names(customer)
+
+## Resolves an item offered directly to a specific customer.
 ## Validates the customer state, checks the item against requirements,
 ## triggers audio/visual feedback, updates inventory/progression,
 ## and transitions dialogue state accordingly.
-func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZERO) -> bool:
+func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZERO, target_customer: Customer = null) -> bool:
 	if item == null or item.item_data == null:
 		return false
 
 	EventBus.transaction_started.emit(item.item_data)
 
-	if not is_instance_valid(current_customer) or not current_customer.is_waiting:
-		LogManager.debug("TransactionSession", "No customer waiting, dropping item")
+	var customer: Customer = target_customer if is_instance_valid(target_customer) else current_customer
+	if not is_instance_valid(customer) or not customer.is_waiting or customer.is_lingering_visitor:
+		LogManager.debug("TransactionSession", "No valid waiting customer for item drop, returning item")
 		item.show_visuals()
 		item.return_to_start()
 		return false
 
-	var customer: Customer = current_customer
+	# Bind active focus to the customer receiving the item
+	current_customer = customer
+	_sync_customer_dialogic_vars(customer)
+
 	var context: TransactionContext = customer.transaction_context
 	var is_correct: bool = customer.check_item(item.item_data)
 	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
@@ -228,7 +263,7 @@ func start_dialogue(timeline, customer: Customer, in_phase: Phase = Phase.NONE, 
 
 	if in_phase in [Phase.TALK, Phase.SATISFIED]:
 		if is_instance_valid(customer) and customer.transaction_context:
-			EventBus.customer_order_updated.emit(customer.customer_data.character_name, customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
+			EventBus.customer_order_updated.emit(customer.get_order_hud_key(), customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
 
 	var final_label = label
 	if final_label != "":
@@ -403,26 +438,39 @@ func _resolve_phase_transition(ending_phase: Phase) -> void:
 			_dismiss_guest_if_present()
 			if is_instance_valid(current_customer) and current_customer.is_waiting:
 				current_customer.has_been_greeted = true
-				current_customer.dismiss()
+				current_customer.dialogue_phase = Phase.NONE
+				if is_instance_valid(_tree_owner) and _tree_owner.has_method("handle_social_visit_finished"):
+					_tree_owner.handle_social_visit_finished(current_customer)
+				else:
+					current_customer.dismiss()
+
+		Phase.SMALLTALK:
+			if is_instance_valid(current_customer):
+				current_customer.dialogue_phase = Phase.NONE
+				current_customer.leave_from_lingering()
 
 		Phase.SATISFIED:
 			_dismiss_guest_if_present()
 			if is_instance_valid(current_customer):
+				current_customer.dialogue_phase = Phase.NONE
 				current_customer.satisfy()
 
 		Phase.GREETING:
 			if is_instance_valid(current_customer) and current_customer.transaction_context:
 				var t = current_customer.transaction_context
 				if t.transaction_type == TransactionContext.Type.STORY and t.is_visit_story:
+					current_customer.dialogue_phase = Phase.NONE
 					current_customer.satisfy()
 					return
 			if is_instance_valid(current_customer):
 				current_customer.has_been_greeted = true
+				current_customer.dialogue_phase = Phase.NONE
 				if current_customer.transaction_context:
-					EventBus.customer_order_updated.emit(InventoryManager.current_character_name, current_customer.transaction_context.desired_items, current_customer.transaction_context.is_riddle)
+					EventBus.customer_order_updated.emit(current_customer.get_order_hud_key(), current_customer.transaction_context.desired_items, current_customer.transaction_context.is_riddle)
 
 		Phase.WRONG_ITEM:
-			pass
+			if is_instance_valid(current_customer):
+				current_customer.dialogue_phase = Phase.NONE
 
 func update_watchdog(delta: float) -> void:
 	if phase != Phase.NONE and phase != Phase.SATISFIED:

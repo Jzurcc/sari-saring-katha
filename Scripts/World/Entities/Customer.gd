@@ -5,6 +5,8 @@ extends WorldInteractor
 signal satisfied(customer: Customer)
 signal arrived(customer: Customer)
 signal clicked(customer: Customer)
+signal lingering_ready_to_return(customer: Customer)
+signal lingering_departed(customer: Customer)
 
 @export var movement_speed: float = 2.0
 var target_position: Vector3
@@ -13,6 +15,17 @@ var is_hovered: bool = false
 var has_been_greeted: bool = false
 var customer_data: CustomerData = null
 var transaction_context: TransactionContext
+
+# Multi-slot & per-customer dialogue state
+var slot_index: int = -1
+var dialogue_phase: TransactionSession.Phase = TransactionSession.Phase.NONE
+var greeting_interrupted: bool = false
+
+# Lingering Visitor (Tambayan) state
+var is_lingering_visitor: bool = false
+var is_returning_for_smalltalk: bool = false
+var is_lingering_departure: bool = false
+var _linger_session_id: int = 0
 
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
@@ -131,10 +144,14 @@ func _process(delta: float) -> void:
 		
 		# Allow movement if not resolving OR if we are explicitly leaving
 		if not _is_resolving or is_leaving:
-			var speed = movement_speed if not is_leaving else movement_speed * 1.5
+			var speed = movement_speed
+			if is_leaving:
+				speed = movement_speed * 1.5
+			elif is_lingering_visitor:
+				speed = movement_speed * 0.65
 			global_position = global_position.move_toward(target_position, speed * delta)
 			
-			if not is_leaving and distance < 0.1:
+			if not is_leaving and not is_lingering_visitor and distance < 0.1:
 				arrived_at_counter()
 		
 		# Procedure Bouncy Walk Logic
@@ -289,6 +306,76 @@ func pulse_color(color: Color, duration: float = 0.5) -> void:
 	tween.tween_property(body_sprite, "modulate", Color.WHITE, duration * 0.7) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
+func get_order_hud_key() -> String:
+	if customer_data:
+		return customer_data.character_name if customer_data.character_name != "" else customer_data.get_clean_id()
+	return name
+
+func enter_lingering_mode(hangout_points: Array[Vector3]) -> void:
+	if _is_resolving:
+		return
+	is_lingering_visitor = true
+	is_returning_for_smalltalk = false
+	is_waiting = false
+	slot_index = -1
+	_clear_outline()
+	_linger_session_id += 1
+	var my_session := _linger_session_id
+
+	if not hangout_points.is_empty():
+		target_position = hangout_points[0]
+
+	_run_linger_routine(hangout_points, my_session)
+
+func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> void:
+	if not is_inside_tree():
+		return
+	# Chill at first background spot
+	await get_tree().create_timer(randf_range(9.0, 16.0)).timeout
+	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
+		return
+
+	# Optional gentle stroll to a second background spot (~65% chance)
+	if hangout_points.size() > 1 and randf() < 0.65:
+		target_position = hangout_points[1]
+		await get_tree().create_timer(randf_range(8.0, 14.0)).timeout
+		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
+			return
+
+	lingering_ready_to_return.emit(self)
+
+func return_to_counter_for_smalltalk(new_slot: int, slot_target: Vector3) -> void:
+	if _is_resolving:
+		return
+	_linger_session_id += 1
+	var my_session := _linger_session_id
+	is_lingering_visitor = false
+	is_returning_for_smalltalk = true
+	slot_index = new_slot
+	is_waiting = false
+	target_position = slot_target
+
+	# Gracefully leave on their own if player doesn't click them for smalltalk
+	_run_smalltalk_wait_timeout(my_session)
+
+func _run_smalltalk_wait_timeout(my_session: int) -> void:
+	if not is_inside_tree():
+		return
+	await get_tree().create_timer(22.0).timeout
+	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id:
+		return
+	if is_returning_for_smalltalk and not _is_resolving and Dialogic.current_timeline == null:
+		leave_from_lingering()
+
+func leave_from_lingering() -> void:
+	if _is_resolving:
+		return
+	_linger_session_id += 1
+	is_lingering_visitor = false
+	is_returning_for_smalltalk = false
+	is_lingering_departure = true
+	await _leave_store(lingering_departed)
+
 func satisfy() -> void:
 	await _leave_store(EventBus.customer_satisfied)
 
@@ -296,11 +383,14 @@ func satisfy() -> void:
 func _leave_store(completion_signal: Signal) -> void:
 	# Immediately mark as no longer waiting so nothing else can interact with
 	# or dismiss this customer while the exit animation plays.
+	_linger_session_id += 1
 	is_waiting = false
+	is_lingering_visitor = false
 	_is_resolving = true
 	_clear_outline()
-	EventBus.customer_order_cleared.emit()
-	InventoryManager.decrement_cooldown()
+	EventBus.customer_order_cleared.emit(get_order_hud_key())
+	if not is_lingering_departure:
+		InventoryManager.decrement_cooldown()
 	
 	# Point toward the custom exit marker and let _process handle the walk
 	target_position = _exit_position

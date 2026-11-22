@@ -369,8 +369,8 @@ func reset_state() -> void:
 	clock.reset_state()
 	SaveManager.delete_save()
 
-func get_next_transaction() -> TransactionContext:
-	return TransactionBuilder.build_next_transaction(self)
+func get_next_transaction(exclude_paths: Array[String] = [], is_wave_joiner: bool = false) -> TransactionContext:
+	return TransactionBuilder.build_next_transaction(self, exclude_paths, is_wave_joiner)
 
 func get_collection_transaction() -> TransactionContext:
 	return TransactionBuilder.build_collection_transaction(self)
@@ -478,6 +478,9 @@ func _on_customer_satisfied(customer) -> void:
 	if _processed_satisfied_customers.size() > 5:
 		_processed_satisfied_customers.pop_front()
 
+	if customer != null and customer.is_lingering_departure:
+		return
+
 	_set_last_customer_info(customer)
 	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Happy")
 	
@@ -494,23 +497,39 @@ func _on_customer_satisfied(customer) -> void:
 			CharacterProgressionManager.record_encounter(customer.customer_data.resource_path)
 		LogManager.info("StoryManager", "Guided tutorial encounter successfully completed and saved.")
 
-	if customer != null:
+	if customer != null and not _has_other_counter_customers(customer):
 		clock.on_customer_dismissed()
 
 func _on_customer_arrived(customer: Customer) -> void:
-	if customer != null:
-		var is_visit := false
-		if customer.transaction_context:
-			is_visit = customer.transaction_context.transaction_type == TransactionContext.Type.VISIT \
-				or customer.transaction_context.is_visit_story
+	if customer == null or customer.is_lingering_visitor or customer.is_returning_for_smalltalk:
+		return
+	var is_visit := false
+	if customer.transaction_context:
+		is_visit = customer.transaction_context.transaction_type == TransactionContext.Type.VISIT \
+			or customer.transaction_context.is_visit_story
+	# Start the wave clock window only when the counter transitions from empty -> occupied.
+	if not clock.is_customer_present:
 		clock.on_customer_arrived(is_visit)
+	elif not is_visit and clock.active_time_window_hours < DayClock.CUSTOMER_TIME_WINDOW_HOURS:
+		# A buyer joined a visit wave: widen the wave patience window to standard 4h
+		clock.active_time_window_hours = DayClock.CUSTOMER_TIME_WINDOW_HOURS
 
 func _on_customer_dismissed(customer: Customer) -> void:
-	if customer != null:
+	if customer != null and customer.is_lingering_departure:
+		return
+	if customer != null and not _has_other_counter_customers(customer):
 		clock.on_customer_dismissed()
 	_set_last_customer_info(customer)
 	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Unhappy")
 	_process_story_cooldown(customer)
+
+func _has_other_counter_customers(leaving_customer: Customer) -> bool:
+	var spawners = get_tree().get_nodes_in_group("customer_spawner")
+	if spawners.size() > 0:
+		var spawner = spawners[0]
+		if spawner and spawner.has_method("has_other_counter_customers"):
+			return spawner.has_other_counter_customers(leaving_customer)
+	return false
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer == null:

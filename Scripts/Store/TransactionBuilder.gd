@@ -19,17 +19,18 @@ const DISPLAY_POOL_CHANCE := 0.6
 const STORY_ROLL_CHANCE := 0.25
 const LOW_STOCK_THRESHOLD := 10
 
-static func build_next_transaction(sm: Node) -> TransactionContext:
-	# 1. Special Encounters (Tutorial / Kuya Kap Day 1 injection)
-	var special_transaction := inject_special_customer(sm)
-	if special_transaction:
-		return special_transaction
+static func build_next_transaction(sm: Node, exclude_paths: Array[String] = [], is_wave_joiner: bool = false) -> TransactionContext:
+	# 1. Special Encounters (Tutorial / Kuya Kap Day 1 injection) — primary wave slot only
+	if not is_wave_joiner:
+		var special_transaction := inject_special_customer(sm)
+		if special_transaction:
+			return special_transaction
 
 	if sm.available_characters.is_empty():
 		return null
 
 	# 2. Character Selection via Progression Manager
-	var selection := select_character(sm)
+	var selection := select_character(sm, exclude_paths, is_wave_joiner)
 	var char_data: CustomerData = selection["customer"]
 	var force_story: bool = selection["force_story"]
 
@@ -42,7 +43,10 @@ static func build_next_transaction(sm: Node) -> TransactionContext:
 	transaction.customer_data = char_data
 
 	# 3. Build context & choose timeline
-	build_transaction_context(sm, transaction, char_data, force_story)
+	build_transaction_context(sm, transaction, char_data, force_story, not is_wave_joiner)
+	if is_wave_joiner:
+		# Wave joiners never drag in a second guest
+		transaction.secondary_customer_data = null
 
 	# 4. Independent Feature Rolls (Awareness, Riddle, Price, Debt)
 	apply_feature_rolls(sm, transaction)
@@ -59,8 +63,9 @@ static func build_next_transaction(sm: Node) -> TransactionContext:
 	var branch_value: float = CharacterProgressionManager.get_branch(char_data.resource_path)
 	var current_arc: float = float(char_data.get_arc_index(chapter) + 1)
 
-	# 5. Sync to Dialogic
-	DialogicBridge.sync_transaction(transaction, chapter, branch_value, current_arc)
+	# 5. Sync to Dialogic only for the primary customer (joiners sync on click)
+	if not is_wave_joiner:
+		DialogicBridge.sync_transaction(transaction, chapter, branch_value, current_arc)
 
 	return transaction
 
@@ -97,14 +102,30 @@ static func _has_available_story_chapter(c: CustomerData) -> bool:
 	var chapter: int = CharacterProgressionManager.get_chapter(c.resource_path)
 	return chapter < c.max_story_chapters and c.story_timeline != null and CharacterProgressionManager.is_story_chapter_available(c, chapter)
 
-static func select_character(sm: Node) -> Dictionary:
-	if is_instance_valid(StoreEventManager):
+static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wave_joiner: bool = false) -> Dictionary:
+	if not is_wave_joiner and is_instance_valid(StoreEventManager):
 		StoreEventManager.record_encounter()
 
 	var char_data: CustomerData = null
 	var force_story: bool = false
 
 	var unlocked: Array[CustomerData] = CharacterProgressionManager.get_unlocked_characters(sm.current_tier, sm.day)
+	if not exclude_paths.is_empty():
+		unlocked = unlocked.filter(func(c: CustomerData) -> bool:
+			return c != null and not (c.resource_path in exclude_paths)
+		)
+	if unlocked.is_empty():
+		return {"customer": null, "force_story": false}
+
+	# Wave joiners pick directly from non-collector unlocked neighbors for organic side bustle
+	if is_wave_joiner:
+		var joiner_pool := unlocked.filter(func(c: CustomerData) -> bool:
+			return not c.is_collector() and c.resource_path != sm.last_character_path
+		)
+		if joiner_pool.is_empty():
+			joiner_pool = unlocked.filter(func(c: CustomerData) -> bool: return not c.is_collector())
+		char_data = CharacterProgressionManager.pick_character_weighted(joiner_pool)
+		return {"customer": char_data, "force_story": false}
 
 	# Priority 0: Forced First-Time Encounters (Ignores Cooldown)
 	var new_characters := unlocked.filter(func(c: CustomerData) -> bool:
@@ -163,7 +184,8 @@ static func build_transaction_context(
 	sm: Node,
 	transaction: TransactionContext,
 	data: CustomerData,
-	force_story: bool = false
+	force_story: bool = false,
+	allow_story: bool = true
 ) -> void:
 	transaction.is_riddle = false
 	transaction.wants_debt = false
@@ -171,9 +193,9 @@ static func build_transaction_context(
 	var chapter: int = CharacterProgressionManager.get_chapter(data.resource_path)
 	var story_pending: bool = chapter < data.max_story_chapters and data.story_timeline != null
 	var is_collector: bool = data.is_collector()
-	var story_available: bool = story_pending and CharacterProgressionManager.is_story_chapter_available(data, chapter)
+	var story_available: bool = allow_story and story_pending and CharacterProgressionManager.is_story_chapter_available(data, chapter)
 
-	if not force_story and data.get_clean_id() == "danilo" and is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
+	if allow_story and not force_story and data.get_clean_id() == "danilo" and is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
 		var pending_event: StoreEventData = StoreEventManager.get_pending_event()
 		if pending_event:
 			transaction.transaction_type = TransactionContext.Type.VISIT
