@@ -178,22 +178,18 @@ func _create_row(customer_name: String) -> Dictionary:
 	))
 	badge_holder.add_child(dot_small)
 
-	# 2. Right Pill Capsule holding the requested item wells
+	# 2. Right Rectangular Box holding the requested items (like before, paired with the medallion)
 	var pill_panel := PanelContainer.new()
 	pill_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pill_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pill_panel.z_index = 1
-	var pill_style := _make_circle_style(
-		Color(0.08, 0.07, 0.06, 0.88),
-		Color(0.85, 0.72, 0.48, 0.38),
-		2,
-		999,
-		12
-	)
-	pill_style.content_margin_left = 24.0
-	pill_style.content_margin_right = 16.0
-	pill_style.content_margin_top = 8.0
-	pill_style.content_margin_bottom = 8.0
+	var pill_style := StyleBoxFlat.new()
+	pill_style.bg_color = Color(0.0, 0.0, 0.0, 0.65)
+	pill_style.set_corner_radius_all(16)
+	pill_style.content_margin_left = 26.0
+	pill_style.content_margin_right = 18.0
+	pill_style.content_margin_top = 12.0
+	pill_style.content_margin_bottom = 12.0
 	pill_panel.add_theme_stylebox_override("panel", pill_style)
 	row.add_child(pill_panel)
 
@@ -283,20 +279,6 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool) -
 	rect_container.custom_minimum_size = Vector2(WELL_SIZE, WELL_SIZE)
 	rect_container.clip_contents = false
 	rect_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	# Soft circular well behind each item
-	var well := Panel.new()
-	well.name = "ItemWell"
-	well.size = Vector2(WELL_SIZE, WELL_SIZE)
-	well.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	well.add_theme_stylebox_override("panel", _make_circle_style(
-		Color(1.0, 0.95, 0.85, 0.07),
-		Color(1.0, 0.92, 0.76, 0.12),
-		1,
-		999,
-		0
-	))
-	rect_container.add_child(well)
 
 	var icon := TextureRect.new()
 	icon.name = "ItemIcon"
