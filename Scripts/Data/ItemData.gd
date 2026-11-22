@@ -63,11 +63,12 @@ func get_visual_aspect() -> float:
 		return float(rect.size.x) / float(rect.size.y)
 	return 1.0
 
-## Calculates the peso increment per step for this product based on wholesale cost and tier.
-## Formula: 20% of cost for Tier 1, +5% per extra tier. Minimum 2.0 pesos.
+## Calculates the peso increment per step for this product based on wholesale cost.
+## Candies (<= 3.0): 1.50 per step. Regular items: 3.0 + 15% of wholesale cost (snapped to 0.50).
 func get_step_increment() -> float:
-	var step_pct: float = 0.20 + float(max(1, tier) - 1) * 0.05
-	return max(2.0, snapped(price * step_pct, 0.5))
+	if price <= 3.0:
+		return 1.5
+	return snapped(3.0 + price * 0.15, 0.5)
 
 ## Calculates the selling price for a given discrete step (-3 to +3).
 ## Step 0 = wholesale cost (price). Negative steps sell at a loss.
