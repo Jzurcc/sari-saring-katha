@@ -458,7 +458,7 @@ func _create_cat_upgrade_bar(item: ItemData, target_level: int) -> PanelContaine
 	var slots: int = int(item.get_meta("slots", target_level + 1))
 	var sub_lbl := Label.new()
 	sub_lbl.add_theme_font_size_override("font_size", 13)
-	sub_lbl.text = "Counter Slots: %d  •  Pettable store cat" % slots
+	sub_lbl.text = "Counter Slots: %d  •  Pettable store cat" % slots if target_level == 1 else "Counter Slots: %d  •  Well-fed lucky cat" % slots
 	sub_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
 	info_vbox.add_child(sub_lbl)
 
@@ -487,7 +487,7 @@ func _create_cat_upgrade_bar(item: ItemData, target_level: int) -> PanelContaine
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
 	else:
-		status_lbl.text = "ADOPT CAT %d FIRST" % (target_level - 1)
+		status_lbl.text = "ADOPT CAT FIRST"
 		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
 	right_vbox.add_child(status_lbl)
 
@@ -596,11 +596,16 @@ func _update_detail_panel(item: ItemData) -> void:
 		for child in unlocks_list.get_children():
 			child.queue_free()
 
-		for line in [
+		var lines: Array[String] = [
 			"• Simultaneous Counter Slots: %d → %d neighbors" % [prev_slots, next_slots],
 			"• Pettable store cat lounges on the counter top shelf",
 			"• Click your store cat anytime for lucky meows"
-		]:
+		] if c_lvl == 1 else [
+			"• Simultaneous Counter Slots: %d → %d neighbors" % [prev_slots, next_slots],
+			"• Keeps Mingming well-fed and extra welcoming",
+			"• Attracts lively 3-neighbor rushes to your counter"
+		]
+		for line in lines:
 			var stat_lbl := Label.new()
 			stat_lbl.text = line
 			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

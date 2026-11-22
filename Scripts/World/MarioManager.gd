@@ -43,6 +43,8 @@ var _call_session_id: int = 0
 var _delivery_session_id: int = 0
 var _pending_delivery_items: Dictionary = {}
 var _pending_call_action: String = ""
+var _delivery_dialogue_queue: Array[String] = []
+var _delivery_said_also: bool = false
 
 # Incoming Upgrade Call State
 const INCOMING_CALL_RING_DURATION := 10.0
@@ -215,6 +217,8 @@ func answer_incoming_upgrade_call(anchor: Node) -> void:
 	_is_calling = true
 	is_restocking_active = true
 	_pending_call_action = ""
+	_delivery_dialogue_queue.clear()
+	_delivery_said_also = false
 	_current_anchor = anchor
 	_call_session_id += 1
 
@@ -245,6 +249,8 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	_is_calling = true
 	is_restocking_active = true
 	_pending_call_action = ""
+	_delivery_dialogue_queue.clear()
+	_delivery_said_also = false
 	_current_anchor = anchor
 	_call_session_id += 1
 	var session_id := _call_session_id
@@ -302,10 +308,26 @@ func _on_dialogic_signal(arg: String) -> void:
 			_pending_call_action = "upgrade"
 		"mario_cancel_call":
 			_pending_call_action = "cancel"
+		"mario_delivery_next":
+			_advance_delivery_dialogue_in_place()
+
+func _advance_delivery_dialogue_in_place() -> void:
+	if _delivery_dialogue_queue.is_empty():
+		_delivery_said_also = false
+		return
+	if not _delivery_said_also and StoryManager.is_label_in_timeline(TIMELINE_PATH, "StoreUpgradeAlso"):
+		_delivery_said_also = true
+		Dialogic.Jump.jump_to_label("StoreUpgradeAlso")
+		return
+	_delivery_said_also = false
+	var next_label: String = _delivery_dialogue_queue.pop_front()
+	Dialogic.Jump.jump_to_label(next_label)
 
 func _on_call_dialogue_ended(success: bool) -> void:
 	var action := _pending_call_action
 	_pending_call_action = ""
+	_delivery_dialogue_queue.clear()
+	_delivery_said_also = false
 	var final_success := success
 	if success and action == "cancel":
 		final_success = false
@@ -325,6 +347,8 @@ func cancel_restock() -> void:
 	LogManager.info("MarioManager", "Restock cancelled by player or system.")
 	_call_session_id += 1
 	_pending_call_action = ""
+	_delivery_dialogue_queue.clear()
+	_delivery_said_also = false
 	is_restocking_active = false
 	_is_calling = false
 	_current_anchor = null
@@ -419,7 +443,10 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	EventBus.customer_arrived.emit(null)
 
 	var dialogue_queue := _build_delivery_dialogue_queue(items_to_restock)
-	_play_delivery_dialogue_queue(dialogue_queue, items_to_restock, session_id, 0)
+	var first_label: String = dialogue_queue.pop_front()
+	_delivery_dialogue_queue = dialogue_queue
+	_delivery_said_also = false
+	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock, session_id), first_label)
 
 func _build_delivery_dialogue_queue(items_to_restock: Dictionary) -> Array[String]:
 	var queue: Array[String] = []
@@ -443,23 +470,6 @@ func _build_delivery_dialogue_queue(items_to_restock: Dictionary) -> Array[Strin
 	if queue.is_empty():
 		queue.append("Delivery")
 	return queue
-
-func _play_delivery_dialogue_queue(queue: Array[String], items_to_restock: Dictionary, session_id: int, idx: int) -> void:
-	if idx >= queue.size() or session_id != _delivery_session_id or not _is_in_main_game() or not is_instance_valid(_delivery_sprite):
-		_on_delivery_dialogue_ended(items_to_restock, session_id)
-		return
-
-	var label: String = queue[idx]
-	if idx > 0:
-		# For subsequent queued upgrades, use the "<Label>Followup" variant if present, or bridge with "StoreUpgradeAlso"
-		var followup_label := label + "Followup"
-		if StoryManager.is_label_in_timeline(TIMELINE_PATH, followup_label):
-			_start_dialogue(TIMELINE_PATH, _delivery_sprite, _play_delivery_dialogue_queue.bind(queue, items_to_restock, session_id, idx + 1), followup_label)
-			return
-		elif StoryManager.is_label_in_timeline(TIMELINE_PATH, "StoreUpgradeAlso"):
-			_start_dialogue(TIMELINE_PATH, _delivery_sprite, _start_dialogue.bind(TIMELINE_PATH, _delivery_sprite, _play_delivery_dialogue_queue.bind(queue, items_to_restock, session_id, idx + 1), label), "StoreUpgradeAlso")
-			return
-	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _play_delivery_dialogue_queue.bind(queue, items_to_restock, session_id, idx + 1), label)
 
 
 ## Immediately commits any in-flight paid order so stock, tier upgrades, and bags are never lost on save/exit.
@@ -537,7 +547,9 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if highest_cat_lvl > StoryManager.cat_upgrade_level:
 		StoryManager.purchase_cat_upgrade(highest_cat_lvl)
 		if spawn_in_tree:
-			EventBus.show_notification.emit("New Store Cat!", "%s joined your store! (%d Counter Slots)" % [highest_cat_name, StoryManager.get_max_counter_slots()], "purchase")
+			var notif_title := "New Store Cat!" if highest_cat_lvl == 1 else "Cat Upgraded!"
+			var notif_msg := "%s joined your store! (%d Counter Slots)" if highest_cat_lvl == 1 else "%s delivered! (%d Counter Slots)"
+			EventBus.show_notification.emit(notif_title, notif_msg % [highest_cat_name, StoryManager.get_max_counter_slots()], "purchase")
 		LogManager.info("MarioManager", "Store cat upgrade installed on Mario arrival: Level %d (%s)" % [highest_cat_lvl, highest_cat_name])
 
 	# Handle Tier Advancement and Samples
@@ -724,6 +736,8 @@ func reset_state() -> void:
 	_call_session_id += 1
 	_delivery_session_id += 1
 	_pending_call_action = ""
+	_delivery_dialogue_queue.clear()
+	_delivery_said_also = false
 	_stop_incoming_ring()
 	_has_missed_upgrade_call = false
 	_incoming_call_items.clear()

@@ -134,7 +134,7 @@ func purchase_fridge_upgrade(level: int) -> void:
 const CAT_UPGRADE_SPECS: Array[Dictionary] = [
 	{ "level": 0, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time." },
 	{ "level": 1, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once." },
-	{ "level": 2, "name": "Cat Buddy: Tala", "cost": 180.0, "slots": 3, "desc": "Adopt Tala to keep Mingming company! Unlocks all 3 counter slots for lively neighborhood rushes." },
+	{ "level": 2, "name": "Cat Food", "cost": 180.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots." },
 ]
 var cat_upgrade_level: int = 0
 var _cat_upgrade_item_cache: Dictionary = {}

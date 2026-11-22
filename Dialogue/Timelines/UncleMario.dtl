@@ -45,6 +45,7 @@ elif {Variation} == 2.0:
 	UncleMario: Delivery is here! Everything's stocked up. Stay alert, okay? The night is still young, but don't overwork.
 else:
 	UncleMario: Alright, here's your order. I've placed the bags near the door. [pause=0.5] Don't work too hard, [i]anak[/i]. See you around!
+[signal arg="mario_delivery_next"]
 [end_timeline]
 
 label UpgradeCall
@@ -81,30 +82,22 @@ UncleMario: I've got the upgrade package ready for you right now — want to tak
 
 label StoreUpgradeDelivery
 UncleMario: I've upgraded your store! Ingat anak.
-[end_timeline]
-
-label StoreUpgradeDeliveryFollowup
-UncleMario: Also... I've upgraded your store! Ingat anak.
+[signal arg="mario_delivery_next"]
 [end_timeline]
 
 label StoreUpgradeAlso
 UncleMario: Also...
+[signal arg="mario_delivery_next"]
 [end_timeline]
 
 label CatUpgradeDelivery1
 UncleMario: Look who I found sneaking near my tricycle — this is Mingming!
 UncleMario: Neighbors love dropping by when there's a sleepy cat on the shelf. Looks like your counter can handle two customers at once now, anak!
-[end_timeline]
-
-label CatUpgradeDelivery1Followup
-UncleMario: Also... look who came riding in with me — little Mingming! Now two neighbors can gather by your counter at once, anak!
+[signal arg="mario_delivery_next"]
 [end_timeline]
 
 label CatUpgradeDelivery2
-UncleMario: Special passenger today! Meet Tala — Mingming's new buddy for the top shelf!
-UncleMario: With two lucky cats watching the tindahan, your whole counter is wide open for three customers at once! Ingat, anak!
-[end_timeline]
-
-label CatUpgradeDelivery2Followup
-UncleMario: Also... I brought Tala along so Mingming has a friend! Three neighbors can hang out at your counter at once now, anak!
+UncleMario: Brought a big bag of premium cat food for Mingming!
+UncleMario: A well-fed lucky cat brings the whole barangay to your counter — three neighbors can line up at once now, anak!
+[signal arg="mario_delivery_next"]
 [end_timeline]
