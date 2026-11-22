@@ -212,9 +212,14 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 			pips += "◦  "
 	step_pips_label.text = pips.strip_edges()
 
-	# Comparison readout & coloring
-	var diff: float = final_price - base_price
-	if step > 0:
+	# Comparison readout & coloring (reflects active warm penalty on fridge items)
+	var diff: float = display_price - base_price
+	if is_warm_now:
+		var sign_prefix := "+" if diff >= 0.0 else "-"
+		comparison_label.text = "%s₱%.2f (was ₱%.2f)" % [sign_prefix, absf(diff), final_price]
+		comparison_label.add_theme_color_override("font_color", Color("#FF9566"))
+		step_pips_label.add_theme_color_override("font_color", Color("#FF9566"))
+	elif step > 0:
 		comparison_label.text = "+₱%.2f" % diff
 		var factor = float(step) / 3.0
 		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.35, 0.2), factor)
