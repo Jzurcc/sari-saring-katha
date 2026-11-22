@@ -82,3 +82,11 @@ UncleMario: I've got the upgrade package ready for you right now — want to tak
 label StoreUpgradeDelivery
 UncleMario: I've upgraded your store! Ingat anak.
 [end_timeline]
+
+label StoreUpgradeDeliveryFollowup
+UncleMario: Also... I've upgraded your store! Ingat anak.
+[end_timeline]
+
+label StoreUpgradeAlso
+UncleMario: Also...
+[end_timeline]

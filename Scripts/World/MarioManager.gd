@@ -413,19 +413,53 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 		flush_pending_delivery()
 		return
 	
-	# 3. Delivery Dialogue
+	# 3. Delivery Dialogue (supports queued multi-upgrade dialogues bridged with "Also...")
 	_current_anchor = _delivery_sprite
 	
 	EventBus.customer_arrived.emit(null)
 
-	var is_store_upgrade_only := false
+	var dialogue_queue := _build_delivery_dialogue_queue(items_to_restock)
+	_play_delivery_dialogue_queue(dialogue_queue, items_to_restock, session_id, 0)
+
+func _build_delivery_dialogue_queue(items_to_restock: Dictionary) -> Array[String]:
+	var queue: Array[String] = []
+	var has_bag_delivery := false
+
 	for d_item in items_to_restock.keys():
-		if d_item and d_item.get_meta("is_fridge_upgrade", false):
-			is_store_upgrade_only = true
-			break
-	var delivery_label := "StoreUpgradeDelivery" if is_store_upgrade_only else "Delivery"
-	
-	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock, session_id), delivery_label)
+		if d_item == null:
+			continue
+		if d_item.get_meta("is_fridge_upgrade", false) or d_item.get_meta("is_store_prop_upgrade", false):
+			var custom_label: String = str(d_item.get_meta("delivery_dialogue_label", ""))
+			var resolved := "StoreUpgradeDelivery"
+			if custom_label != "" and StoryManager.is_label_in_timeline(TIMELINE_PATH, custom_label):
+				resolved = custom_label
+			if not (resolved in queue):
+				queue.append(resolved)
+		else:
+			has_bag_delivery = true
+
+	if has_bag_delivery:
+		queue.push_front("Delivery")
+	if queue.is_empty():
+		queue.append("Delivery")
+	return queue
+
+func _play_delivery_dialogue_queue(queue: Array[String], items_to_restock: Dictionary, session_id: int, idx: int) -> void:
+	if idx >= queue.size() or session_id != _delivery_session_id or not _is_in_main_game() or not is_instance_valid(_delivery_sprite):
+		_on_delivery_dialogue_ended(items_to_restock, session_id)
+		return
+
+	var label: String = queue[idx]
+	if idx > 0:
+		# For subsequent queued upgrades, use the "<Label>Followup" variant if present, or bridge with "StoreUpgradeAlso"
+		var followup_label := label + "Followup"
+		if StoryManager.is_label_in_timeline(TIMELINE_PATH, followup_label):
+			_start_dialogue(TIMELINE_PATH, _delivery_sprite, _play_delivery_dialogue_queue.bind(queue, items_to_restock, session_id, idx + 1), followup_label)
+			return
+		elif StoryManager.is_label_in_timeline(TIMELINE_PATH, "StoreUpgradeAlso"):
+			_start_dialogue(TIMELINE_PATH, _delivery_sprite, _start_dialogue.bind(TIMELINE_PATH, _delivery_sprite, _play_delivery_dialogue_queue.bind(queue, items_to_restock, session_id, idx + 1), label), "StoreUpgradeAlso")
+			return
+	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _play_delivery_dialogue_queue.bind(queue, items_to_restock, session_id, idx + 1), label)
 
 
 ## Immediately commits any in-flight paid order so stock, tier upgrades, and bags are never lost on save/exit.
@@ -461,14 +495,15 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items_to_bag: Array[ItemData] = []
 	var upgrade_delivered := false
 	var target_tier := 1
+	var highest_fridge_lvl := StoryManager.fridge_upgrade_level
+	var highest_fridge_name := ""
 
 	for item in items.keys():
 		if item.get_meta("is_fridge_upgrade", false):
 			var target_lvl: int = int(item.get_meta("fridge_level", 1))
-			StoryManager.purchase_fridge_upgrade(target_lvl)
-			if spawn_in_tree:
-				EventBus.show_notification.emit("Fridge Upgraded!", "%s installed." % item.item_name, "purchase")
-			LogManager.info("MarioManager", "Fridge upgrade installed on Mario arrival: Level %d (%s)" % [target_lvl, item.item_name])
+			if target_lvl > highest_fridge_lvl:
+				highest_fridge_lvl = target_lvl
+				highest_fridge_name = item.item_name
 			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
@@ -483,6 +518,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			else:
 				items_to_bag.append(item)
 	
+	# Apply highest queued fridge upgrade cleanly
+	if highest_fridge_lvl > StoryManager.fridge_upgrade_level:
+		StoryManager.purchase_fridge_upgrade(highest_fridge_lvl)
+		if spawn_in_tree:
+			EventBus.show_notification.emit("Fridge Upgraded!", "%s installed." % highest_fridge_name, "purchase")
+		LogManager.info("MarioManager", "Fridge upgrade installed on Mario arrival: Level %d (%s)" % [highest_fridge_lvl, highest_fridge_name])
+
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:
 		while StoryManager.current_tier < target_tier:

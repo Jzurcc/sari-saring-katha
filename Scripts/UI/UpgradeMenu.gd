@@ -15,7 +15,8 @@ signal menu_close_requested
 @onready var cancel_btn: Button = %CancelBtn
 @onready var confirm_btn: Button = %ConfirmBtn
 
-var _selected_upgrade: ItemData = null
+var _focused_upgrade: ItemData = null
+var _queued_upgrades: Array[ItemData] = []
 var _card_map: Dictionary = {} # ItemData -> PanelContainer
 
 func _ready() -> void:
@@ -40,17 +41,23 @@ func _on_catalog_refresh_requested() -> void:
 func open_menu() -> void:
 	show()
 	_animate_entrance()
-	_selected_upgrade = null
+	_focused_upgrade = null
+	_queued_upgrades.clear()
 	_populate_upgrades()
 
-	# Auto-select the next purchasable tier if available
+	# Auto-focus the next purchasable tier (or next fridge upgrade) without auto-queueing
 	var next_tier := StoryManager.current_tier + 1
 	if next_tier <= StoryManager.max_unlocked_tier and next_tier <= 10:
 		var next_item := StoryManager.get_tier_upgrade_item(next_tier)
 		if next_item and _card_map.has(next_item):
-			_select_upgrade(next_item)
-	else:
-		_clear_detail_panel()
+			_focus_upgrade(next_item)
+			return
+	if StoryManager.fridge_upgrade_level < 3:
+		var next_fridge := StoryManager.get_fridge_upgrade_item(StoryManager.fridge_upgrade_level + 1)
+		if next_fridge and _card_map.has(next_fridge):
+			_focus_upgrade(next_fridge)
+			return
+	_clear_detail_panel()
 
 func _animate_entrance() -> void:
 	modulate.a = 0.0
@@ -98,6 +105,26 @@ func _get_tier_sellable_items(tier: int) -> Array[ItemData]:
 			result.append(item)
 	return result
 
+func _get_effective_tier() -> int:
+	var eff := StoryManager.current_tier
+	for q in _queued_upgrades:
+		if q.get_meta("is_upgrade", false):
+			eff = maxi(eff, int(q.get_meta("target_tier", eff)))
+	return eff
+
+func _get_effective_fridge_level() -> int:
+	var eff := StoryManager.fridge_upgrade_level
+	for q in _queued_upgrades:
+		if q.get_meta("is_fridge_upgrade", false):
+			eff = maxi(eff, int(q.get_meta("fridge_level", eff)))
+	return eff
+
+func _get_queued_total_cost() -> float:
+	var total := 0.0
+	for q in _queued_upgrades:
+		total += q.price
+	return total
+
 func _create_upgrade_bar(item: ItemData, target_tier: int) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0, 74)
@@ -105,12 +132,15 @@ func _create_upgrade_bar(item: ItemData, target_tier: int) -> PanelContainer:
 	card.focus_mode = Control.FOCUS_NONE
 
 	var owned: bool = target_tier <= StoryManager.current_tier
+	var is_queued: bool = item in _queued_upgrades
 	var unlocked: bool = target_tier <= StoryManager.max_unlocked_tier
-	var is_next_available: bool = (not owned) and unlocked and (target_tier == StoryManager.current_tier + 1)
+	var is_next_available: bool = (not owned) and unlocked and (target_tier == _get_effective_tier() + 1)
 
 	var bg_col := UIStyle.COLOR_CARD_BG
 	if owned:
 		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif is_queued:
+		bg_col = Color(0.14, 0.28, 0.16, 0.95)
 	elif not is_next_available:
 		bg_col = UIStyle.COLOR_TAB_LOCKED
 
@@ -193,6 +223,9 @@ func _create_upgrade_bar(item: ItemData, target_tier: int) -> PanelContainer:
 	if owned:
 		status_lbl.text = "OWNED"
 		status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+	elif is_queued:
+		status_lbl.text = "QUEUED ✓"
+		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
 	elif is_next_available:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
@@ -209,7 +242,7 @@ func _create_upgrade_bar(item: ItemData, target_tier: int) -> PanelContainer:
 		icon.modulate = Color(1, 1, 1, 0.5)
 		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	elif is_next_available:
+	elif is_queued or is_next_available:
 		icon.modulate = Color(1, 1, 1, 1)
 		card.modulate = Color(1, 1, 1, 1)
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -230,11 +263,14 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 	card.focus_mode = Control.FOCUS_NONE
 
 	var owned: bool = target_level <= StoryManager.fridge_upgrade_level
-	var is_next_available: bool = (not owned) and (target_level == StoryManager.fridge_upgrade_level + 1)
+	var is_queued: bool = item in _queued_upgrades
+	var is_next_available: bool = (not owned) and (target_level == _get_effective_fridge_level() + 1)
 
 	var bg_col := UIStyle.COLOR_CARD_BG
 	if owned:
 		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif is_queued:
+		bg_col = Color(0.14, 0.28, 0.16, 0.95)
 	elif not is_next_available:
 		bg_col = UIStyle.COLOR_TAB_LOCKED
 
@@ -303,6 +339,9 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 	if owned:
 		status_lbl.text = "OWNED"
 		status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+	elif is_queued:
+		status_lbl.text = "QUEUED ✓"
+		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
 	elif is_next_available:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
@@ -315,7 +354,7 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 		icon.modulate = Color(1, 1, 1, 0.5)
 		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	elif is_next_available:
+	elif is_queued or is_next_available:
 		icon.modulate = Color(1, 1, 1, 1)
 		card.modulate = Color(1, 1, 1, 1)
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -332,25 +371,69 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 func _on_card_clicked(event: InputEvent, item: ItemData) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		AudioManager.play_sfx("interact")
-		_select_upgrade(item)
+		_toggle_queue_upgrade(item)
 
-func _select_upgrade(item: ItemData) -> void:
-	_selected_upgrade = item
+func _toggle_queue_upgrade(item: ItemData) -> void:
+	if item in _queued_upgrades:
+		# Remove item and cascade-remove any higher dependent tier/fridge level in the queue
+		_queued_upgrades.erase(item)
+		if item.get_meta("is_upgrade", false):
+			var removed_tier: int = int(item.get_meta("target_tier", 1))
+			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
+				return not q.get_meta("is_upgrade", false) or int(q.get_meta("target_tier", 1)) < removed_tier
+			)
+		elif item.get_meta("is_fridge_upgrade", false):
+			var removed_lvl: int = int(item.get_meta("fridge_level", 1))
+			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
+				return not q.get_meta("is_fridge_upgrade", false) or int(q.get_meta("fridge_level", 1)) < removed_lvl
+			)
+	else:
+		_queued_upgrades.append(item)
 
-	# Update selection border highlight
+	_populate_upgrades()
+	_focus_upgrade(item)
+
+func _focus_upgrade(item: ItemData) -> void:
+	_focused_upgrade = item
+
+	# Update selection border highlight (gold for focused, green-gold for queued)
 	for u_item in _card_map.keys():
 		var c: PanelContainer = _card_map[u_item]
 		if not is_instance_valid(c):
 			continue
 		var s := c.get_theme_stylebox("panel") as StyleBoxFlat
 		if s:
-			s.border_color = UIStyle.COLOR_CARD_SELECTED if u_item == item else UIStyle.COLOR_CARD_BORDER
-			s.border_width_left = 3 if u_item == item else 2
-			s.border_width_top = 3 if u_item == item else 2
-			s.border_width_right = 3 if u_item == item else 2
-			s.border_width_bottom = 3 if u_item == item else 2
+			var is_focused: bool = (u_item == item)
+			var is_queued: bool = (u_item in _queued_upgrades)
+			if is_focused:
+				s.border_color = UIStyle.COLOR_CARD_SELECTED
+				s.set_border_width_all(3)
+			elif is_queued:
+				s.border_color = Color("#8BF08E")
+				s.set_border_width_all(3)
+			else:
+				s.border_color = UIStyle.COLOR_CARD_BORDER
+				s.set_border_width_all(2)
 
 	_update_detail_panel(item)
+	_refresh_confirm_summary()
+
+func _refresh_confirm_summary() -> void:
+	var total := _get_queued_total_cost()
+	if total_amount_label:
+		if _queued_upgrades.size() > 1:
+			total_amount_label.text = "₱%.2f (%d)" % [total, _queued_upgrades.size()]
+		else:
+			total_amount_label.text = "₱%.2f" % total
+
+	var can_confirm := (not _queued_upgrades.is_empty()) and (_get_money() >= total)
+	if confirm_btn:
+		confirm_btn.disabled = not can_confirm
+		confirm_btn.text = "Order (%d)" % _queued_upgrades.size() if _queued_upgrades.size() > 1 else "Confirm"
+		if can_confirm:
+			UIStyle.style_button(confirm_btn, UIStyle.COLOR_CONFIRM, Color.WHITE, 18.0)
+		else:
+			UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT, 18.0)
 
 func _update_detail_panel(item: ItemData) -> void:
 	if item.get_meta("is_fridge_upgrade", false):
@@ -474,58 +557,51 @@ func _on_cancel_pressed() -> void:
 	_close_upgrade_screen()
 
 func _on_confirm_pressed() -> void:
-	if _selected_upgrade == null:
+	if _queued_upgrades.is_empty():
 		return
 	if confirm_btn:
 		confirm_btn.disabled = true
 
-	# Direct validation for Refrigerator Upgrades (not limited by shelf capacity) — Uncle Mario still drives up to install!
-	if _selected_upgrade.get_meta("is_fridge_upgrade", false):
-		var f_cost := _selected_upgrade.price
-		var target_lvl: int = int(_selected_upgrade.get_meta("fridge_level", 1))
-		if target_lvl != StoryManager.fridge_upgrade_level + 1:
-			if confirm_btn:
-				confirm_btn.disabled = false
-			return
-		if _get_money() < f_cost:
-			EventBus.insufficient_funds.emit()
-			if confirm_btn:
-				confirm_btn.disabled = false
-			return
-		AudioManager.play_sfx("purchase")
-		var gm_f = get_tree().get_nodes_in_group("game_manager")
-		if gm_f.size() > 0 and gm_f[0].has_method("deduct_money"):
-			gm_f[0].deduct_money(f_cost)
-		var fridge_delivery: Dictionary = { _selected_upgrade: 1 }
-		upgrade_purchase_confirmed.emit(f_cost, _selected_upgrade)
-		_close_upgrade_screen()
-		MarioManager.start_delivery(fridge_delivery)
-		return
-
-	var order := RestockOrder.new()
-	var check := order.can_add(_selected_upgrade, _get_money())
-	if not check.ok:
-		if check.title != "":
-			EventBus.show_notification.emit(check.title, check.message, check.sfx)
-		if check.sfx != "":
-			AudioManager.play_sfx(check.sfx)
-		elif check.error == "insufficient_funds":
-			EventBus.insufficient_funds.emit()
+	var total_cost := _get_queued_total_cost()
+	if _get_money() < total_cost:
+		EventBus.insufficient_funds.emit()
 		if confirm_btn:
 			confirm_btn.disabled = false
 		return
 
-	var cost := _selected_upgrade.price
+	# Validate tier-package upgrades through RestockOrder (shelf capacity & tier sequence)
+	var order := RestockOrder.new()
+	var remaining_budget := _get_money()
+	for q_item in _queued_upgrades:
+		if q_item.get_meta("is_fridge_upgrade", false):
+			remaining_budget -= q_item.price
+			continue
+		var check := order.can_add(q_item, remaining_budget)
+		if not check.ok:
+			if check.title != "":
+				EventBus.show_notification.emit(check.title, check.message, check.sfx)
+			if check.sfx != "":
+				AudioManager.play_sfx(check.sfx)
+			elif check.error == "insufficient_funds":
+				EventBus.insufficient_funds.emit()
+			if confirm_btn:
+				confirm_btn.disabled = false
+			return
+		order.add_item(q_item)
+
 	AudioManager.play_sfx("purchase")
 
 	var gm_nodes = get_tree().get_nodes_in_group("game_manager")
-	if gm_nodes.size() > 0:
-		var gm = gm_nodes[0]
-		if gm.has_method("deduct_money"):
-			gm.deduct_money(cost)
+	if gm_nodes.size() > 0 and gm_nodes[0].has_method("deduct_money"):
+		gm_nodes[0].deduct_money(total_cost)
 
-	var delivery_items: Dictionary = { _selected_upgrade: 1 }
-	upgrade_purchase_confirmed.emit(cost, _selected_upgrade)
+	var delivery_items: Dictionary = {}
+	for q_item in _queued_upgrades:
+		delivery_items[q_item] = 1
+
+	var first_item: ItemData = _queued_upgrades[0]
+	_queued_upgrades.clear()
+	upgrade_purchase_confirmed.emit(total_cost, first_item)
 	_close_upgrade_screen()
 	MarioManager.start_delivery(delivery_items)
 
