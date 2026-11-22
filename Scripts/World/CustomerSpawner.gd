@@ -7,9 +7,9 @@ class_name CustomerSpawner
 const DialoguePhase = TransactionSession.Phase
 
 const MAX_COUNTER_SLOTS := 3
-const LINGER_CHANCE := 0.55
+const LINGER_CHANCE := 0.70
 const MAX_LINGERING_VISITORS := 2
-const SMALLTALK_RETURN_CHANCE := 0.50
+const SMALLTALK_RETURN_CHANCE := 0.60
 
 @export var customer_scene: PackedScene = preload("res://Scenes/Customer.tscn")
 @export var spawn_pos: NodePath
@@ -55,6 +55,7 @@ var _wave_id: int = 0
 var _is_exclusive_wave: bool = false
 var _is_transitioning_wave: bool = false
 var _next_arrival_order: int = 0
+var _leaving_customers_count: int = 0
 
 var is_paused: bool = false:
 	set(value):
@@ -99,6 +100,8 @@ func has_other_counter_customers(excluding: Customer) -> bool:
 	for c in counter_slots:
 		if is_instance_valid(c) and c != excluding and not c._is_resolving:
 			return true
+	if _leaving_customers_count > 1:
+		return true
 	return false
 
 func get_present_character_paths() -> Array[String]:
@@ -309,9 +312,9 @@ func _calculate_positions(has_guest: bool, slot_idx: int = 0) -> Dictionary:
 
 	if has_guest:
 		primary_target = target_global + (side_offset * -0.9) # Shift Primary to Right
-		guest_target = target_global + (side_offset * 0.9)    # Shift Guest to Left
+		guest_target = target_global + (side_offset * 0.9) # Shift Guest to Left
 	elif slot_idx == 1:
-		primary_target = target_global + (side_offset * slot_side_spacing) - (approach_dir * side_slot_depth_offset)  # Left slot (slightly back)
+		primary_target = target_global + (side_offset * slot_side_spacing) - (approach_dir * side_slot_depth_offset) # Left slot (slightly back)
 	elif slot_idx == 2:
 		primary_target = target_global + (side_offset * -slot_side_spacing) - (approach_dir * side_slot_depth_offset) # Right slot (slightly back)
 
@@ -330,7 +333,7 @@ func _get_background_hangout_points() -> Array[Vector3]:
 	if pos_data.is_empty():
 		return []
 	var target_global: Vector3 = pos_data.target_pos
-	var dir_back: Vector3 = -pos_data.approach_dir
+	var dir_back: Vector3 = - pos_data.approach_dir
 	var side: Vector3 = pos_data.side_offset
 
 	var p1: Vector3 = target_global + dir_back * randf_range(1.9, 2.7) + side * randf_range(-1.9, 1.9)
@@ -342,12 +345,24 @@ func _get_background_hangout_points() -> Array[Vector3]:
 	return [p1, p2]
 
 func _on_customer_started_leaving(customer: Customer) -> void:
-	if customer == null:
+	if customer == null or customer == guest_customer:
 		return
-	if counter_slots[0] == customer and has_other_counter_customers(customer):
-		counter_slots[0] = null
-		if session.current_customer == customer:
-			session.current_customer = null
+
+	var vacated_slot := -1
+	for i in range(counter_slots.size()):
+		if counter_slots[i] == customer:
+			counter_slots[i] = null
+			vacated_slot = i
+			break
+
+	if vacated_slot != -1 and not customer.is_lingering_departure:
+		_leaving_customers_count += 1
+
+	if session.current_customer == customer:
+		session.current_customer = null
+
+	# Immediately promote the earliest side customer into Center as soon as Center starts leaving
+	if vacated_slot == 0 and has_any_counter_customer():
 		_promote_earliest_side_customer_to_center()
 
 func _on_customer_dismissed(customer: Customer) -> void:
@@ -358,15 +373,13 @@ func _on_customer_dismissed(customer: Customer) -> void:
 		guest_customer = null
 		return
 
-	var removed_from_slot := false
+	if _leaving_customers_count > 0:
+		_leaving_customers_count = maxi(0, _leaving_customers_count - 1)
+
 	for i in range(counter_slots.size()):
 		if counter_slots[i] == customer:
 			counter_slots[i] = null
-			removed_from_slot = true
 			break
-
-	if not removed_from_slot:
-		return
 
 	if session.current_customer == customer:
 		session.current_customer = null
@@ -377,9 +390,11 @@ func _on_customer_dismissed(customer: Customer) -> void:
 
 	EventBus.customer_order_cleared.emit(customer.get_order_hud_key())
 
-	# If other customers are still at the counter, promote the earliest side customer to Center if Center opened
+	# If other customers are still at the counter (or still walking out), keep the wave alive
 	if has_any_counter_customer():
 		_promote_earliest_side_customer_to_center()
+		return
+	if _leaving_customers_count > 0:
 		return
 
 	_on_wave_cleared()
@@ -731,6 +746,7 @@ func reset_state() -> void:
 	_wave_id += 1
 	_is_exclusive_wave = false
 	_is_transitioning_wave = false
+	_leaving_customers_count = 0
 	for i in range(counter_slots.size()):
 		counter_slots[i] = null
 	lingering_visitors.clear()

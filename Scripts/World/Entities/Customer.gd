@@ -33,6 +33,9 @@ var _linger_session_id: int = 0
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var _exit_position: Vector3 = Vector3.ZERO
+var _exit_stepback_pos: Vector3 = Vector3.ZERO
+var _using_exit_stepback: bool = false
+var _approach_back_dir: Vector3 = Vector3(-1, 0, 0)
 var _delayed_target: Vector3 = Vector3.ZERO
 var _walk_timer: float = 0.0
 var _last_pos: Vector3 = Vector3.ZERO
@@ -56,6 +59,9 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 	_spawn_position = global_position
 	# If no specific exit is provided, return to spawn by default
 	_exit_position = exit if exit != Vector3.ZERO else _spawn_position
+	var flat_back := Vector3(_spawn_position.x - target.x, 0.0, _spawn_position.z - target.z)
+	if flat_back.length_squared() > 0.001:
+		_approach_back_dir = flat_back.normalized()
 	
 	transaction_context = context
 	if transaction_context:
@@ -143,20 +149,23 @@ func _process(delta: float) -> void:
 	# Movement logic
 	if not is_waiting or _is_repositioning:
 		var distance = global_position.distance_to(target_position)
-		var is_leaving = _is_resolving and target_position == _exit_position
+		var is_leaving = _is_resolving and (target_position == _exit_position or _using_exit_stepback)
 		
 		# Allow movement if not resolving OR if we are explicitly leaving
 		if not _is_resolving or is_leaving:
 			var speed = movement_speed
 			if is_leaving:
-				speed = movement_speed * 1.5
+				speed = movement_speed * 1.55
 			elif is_lingering_visitor:
 				speed = movement_speed * 0.65
 			elif _is_repositioning:
-				speed = movement_speed * 0.9
+				speed = movement_speed * 1.15
 			global_position = global_position.move_toward(target_position, speed * delta)
 			
-			if _is_repositioning:
+			if _using_exit_stepback and distance < 0.25:
+				_using_exit_stepback = false
+				target_position = _exit_position
+			elif _is_repositioning:
 				if distance < 0.05:
 					global_position = target_position
 					_is_repositioning = false
@@ -392,13 +401,19 @@ func _leave_store(completion_signal: Signal) -> void:
 	is_lingering_visitor = false
 	_is_resolving = true
 	_clear_outline()
+	if body_sprite:
+		body_sprite.sorting_offset = -1.5
 	EventBus.customer_order_cleared.emit(get_order_hud_key())
 	started_leaving.emit(self)
 	if not is_lingering_departure:
 		InventoryManager.decrement_cooldown()
 	
-	# Point toward the custom exit marker and let _process handle the walk
-	target_position = _exit_position
+	# Step back behind the counter line first so leaving customers walk behind waiting neighbors
+	var to_exit := Vector3(_exit_position.x - global_position.x, 0.0, _exit_position.z - global_position.z)
+	var exit_dir := to_exit.normalized() if to_exit.length_squared() > 0.001 else Vector3.ZERO
+	_exit_stepback_pos = global_position + (_approach_back_dir * 1.35) + (exit_dir * 0.75)
+	_using_exit_stepback = true
+	target_position = _exit_stepback_pos
 	
 	var exit_tween = create_tween()
 	exit_tween.tween_interval(2.0)
