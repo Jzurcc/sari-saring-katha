@@ -2,6 +2,21 @@ extends CanvasLayer
 
 const RIDDLE_ICON = preload("res://icon.svg")
 const ICON_SIZE := 84
+const PORTRAIT_SIZE := 72
+
+const PORTRAIT_MAP := {
+	"brahim": preload("res://Assets/characters/portraits/Brahim Face.png"),
+	"buboy": preload("res://Assets/characters/portraits/Buboy Face.png"),
+	"danilo": preload("res://Assets/characters/portraits/Danilo Face.png"),
+	"kuyakap": preload("res://Assets/characters/portraits/Kuya_Kap Face.png"),
+	"manangana": preload("res://Assets/characters/portraits/ManangAna Face.png"),
+	"reynamayari": preload("res://Assets/characters/portraits/ReynaMayari Face.png"),
+	"rodel": preload("res://Assets/characters/portraits/Rodel Face.png"),
+	"rosalyn": preload("res://Assets/characters/portraits/Rosalyn Face.png"),
+	"sarimanok": preload("res://Assets/characters/portraits/Sarimanok Face.png"),
+	"tk": preload("res://Assets/characters/portraits/TK Face.png"),
+	"unclemario": preload("res://Assets/characters/portraits/UncleMario Face.png"),
+}
 
 @onready var panel_container: PanelContainer = %PanelContainer
 @onready var rows_container: VBoxContainer = %RowsContainer
@@ -64,22 +79,39 @@ func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle:
 	for item in checklist:
 		_add_item_icon(items_box, item, is_riddle)
 
+func _get_portrait_texture(customer_name: String) -> Texture2D:
+	var norm := customer_name.to_lower().replace(".", "").replace(" ", "").replace("_", "").replace("-", "")
+	if PORTRAIT_MAP.has(norm):
+		return PORTRAIT_MAP[norm]
+	return null
+
 func _create_row(customer_name: String) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
 	row.add_theme_constant_override("separation", 12)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var name_lbl := Label.new()
-	name_lbl.text = customer_name
-	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	name_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	name_lbl.add_theme_font_size_override("font_size", 18)
-	name_lbl.add_theme_color_override("font_color", Color(0.96, 0.92, 0.80, 0.95))
-	name_lbl.add_theme_color_override("font_outline_color", Color(0.06, 0.05, 0.04, 0.9))
-	name_lbl.add_theme_constant_override("outline_size", 4)
-	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(name_lbl)
+	var portrait_tex := _get_portrait_texture(customer_name)
+	if portrait_tex != null:
+		var portrait_rect := TextureRect.new()
+		portrait_rect.texture = portrait_tex
+		portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait_rect.custom_minimum_size = Vector2(PORTRAIT_SIZE, PORTRAIT_SIZE)
+		portrait_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(portrait_rect)
+	else:
+		var name_lbl := Label.new()
+		name_lbl.text = customer_name
+		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		name_lbl.add_theme_font_size_override("font_size", 18)
+		name_lbl.add_theme_color_override("font_color", Color(0.96, 0.92, 0.80, 0.95))
+		name_lbl.add_theme_color_override("font_outline_color", Color(0.06, 0.05, 0.04, 0.9))
+		name_lbl.add_theme_constant_override("outline_size", 4)
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(name_lbl)
 
 	var items_box := HBoxContainer.new()
 	items_box.alignment = BoxContainer.ALIGNMENT_END
