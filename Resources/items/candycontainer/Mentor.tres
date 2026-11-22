@@ -10,6 +10,6 @@ texture = ExtResource("2_tex")
 price = 1.0
 can_be_sold = false
 category = "candycontainer"
-tier = 10
+tier = 2
 display_height_meters = 0.6
 opaque_rect = Rect2i(109, 17, 273, 474)

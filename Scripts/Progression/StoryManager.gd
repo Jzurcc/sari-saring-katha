@@ -325,6 +325,12 @@ func load_save_data(data: Dictionary) -> void:
 	if data.has("placed_containers"):
 		for p in data["placed_containers"]:
 			placed_containers.append(str(p))
+		# Recovery for saves that passed a tier before a container prop's tier metadata was fixed
+		for path in CONTAINER_PROP_PATHS:
+			if ResourceLoader.exists(path):
+				var res := load(path) as ItemData
+				if res and res.tier < current_tier and not (res.resource_path in placed_containers):
+					placed_containers.append(res.resource_path)
 	else:
 		# Backward compatibility for older saves: treat already-unlocked tier containers as placed
 		for path in CONTAINER_PROP_PATHS:
