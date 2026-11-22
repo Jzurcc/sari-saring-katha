@@ -33,7 +33,23 @@ func _ready() -> void:
 
 	EventBus.customer_order_updated.connect(_on_order_updated)
 	EventBus.customer_order_cleared.connect(_on_order_cleared)
+	EventBus.transaction_completed.connect(_on_transaction_completed)
 	EventBus.tier_advanced.connect(_on_tier_advanced)
+
+func _on_transaction_completed(_item: ItemData, was_correct: bool, _wants_debt: bool, customer_path: String) -> void:
+	if was_correct or customer_path == "":
+		return
+	var matched_key := _find_row_key_by_path(customer_path)
+	if matched_key != "" and _rows.has(matched_key):
+		_pulse_row_rejected(_rows[matched_key], false)
+
+func _find_row_key_by_path(customer_path: String) -> String:
+	var file_id := customer_path.get_file().get_basename().to_lower().replace("_", "").replace(" ", "")
+	for key in _rows.keys():
+		var norm_key := str(key).to_lower().replace(".", "").replace(" ", "").replace("_", "").replace("-", "")
+		if norm_key == file_id:
+			return str(key)
+	return ""
 
 func _on_tier_advanced(_new_tier: int, _source: String) -> void:
 	if not is_visible_hud:
@@ -271,7 +287,58 @@ func _pulse_medallion_happy(entry: Dictionary) -> void:
 		glow_tw.tween_property(ring, "modulate", Color(0.82, 1.35, 0.88, 1.0), 0.10).set_trans(Tween.TRANS_SINE)
 		glow_tw.tween_property(ring, "modulate", Color.WHITE, 0.28).set_trans(Tween.TRANS_SINE)
 
-func _remove_row(customer_name: String, fulfilled_celebration: bool = false) -> void:
+func _pulse_row_rejected(entry: Dictionary, spawn_cross: bool = false) -> void:
+	var row := entry.get("row") as Control
+	var badge := entry.get("badge_holder") as Control
+	var ring := entry.get("ring_panel") as Panel
+	var items_box := entry.get("items_box") as HBoxContainer
+
+	if is_instance_valid(ring):
+		var glow_tw := ring.create_tween()
+		glow_tw.tween_property(ring, "modulate", Color(1.55, 0.45, 0.42, 1.0), 0.09).set_trans(Tween.TRANS_SINE)
+		glow_tw.tween_property(ring, "modulate", Color.WHITE, 0.32).set_trans(Tween.TRANS_SINE)
+
+	if is_instance_valid(items_box):
+		var item_tint := items_box.create_tween()
+		item_tint.tween_property(items_box, "modulate", Color(1.45, 0.50, 0.48, 1.0), 0.09).set_trans(Tween.TRANS_SINE)
+		item_tint.tween_property(items_box, "modulate", Color.WHITE, 0.32).set_trans(Tween.TRANS_SINE)
+
+	if is_instance_valid(row):
+		var shake := row.create_tween()
+		shake.tween_property(row, "position:x", -9.0, 0.045).as_relative().set_trans(Tween.TRANS_SINE)
+		shake.tween_property(row, "position:x", 16.0, 0.055).as_relative().set_trans(Tween.TRANS_SINE)
+		shake.tween_property(row, "position:x", -12.0, 0.055).as_relative().set_trans(Tween.TRANS_SINE)
+		shake.tween_property(row, "position:x", 5.0, 0.05).as_relative().set_trans(Tween.TRANS_SINE)
+
+	if spawn_cross and is_instance_valid(badge):
+		_spawn_reject_cross(badge)
+
+func _spawn_reject_cross(source_control: Control) -> void:
+	var host := get_node_or_null("Control") as Control
+	if not is_instance_valid(host) or not is_instance_valid(source_control):
+		return
+	var center := source_control.get_global_rect().get_center()
+	var cross := Label.new()
+	cross.text = "✕"
+	cross.add_theme_font_override("font", UIStyle.FONT_INDER)
+	cross.add_theme_font_size_override("font_size", 32)
+	cross.add_theme_color_override("font_color", Color("#FF6B6B"))
+	cross.add_theme_color_override("font_outline_color", Color(0.18, 0.03, 0.03, 0.95))
+	cross.add_theme_constant_override("outline_size", 6)
+	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cross.position = center - Vector2(12, 20)
+	cross.pivot_offset = Vector2(12, 18)
+	cross.scale = Vector2(0.3, 0.3)
+	host.add_child(cross)
+
+	var tw := cross.create_tween()
+	tw.tween_property(cross, "scale", Vector2(1.18, 1.18), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(cross, "position:y", center.y - 34.0, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.18)
+	tw.tween_property(cross, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(cross.queue_free)
+
+func _remove_row(customer_name: String, fulfilled_celebration: bool = false, rejected_anim: bool = false) -> void:
 	if not _rows.has(customer_name):
 		return
 	var entry: Dictionary = _rows[customer_name]
@@ -287,16 +354,19 @@ func _remove_row(customer_name: String, fulfilled_celebration: bool = false) -> 
 				if is_instance_valid(child) and not child.get_meta("is_popping", false):
 					_pop_and_remove_item(child)
 		_pulse_medallion_happy(entry)
-		exit_delay = 0.34
+		exit_delay = 0.52
+	elif rejected_anim:
+		_pulse_row_rejected(entry, true)
+		exit_delay = 0.26
 
 	if is_instance_valid(row):
 		row.pivot_offset = Vector2(row.size.x, row.size.y * 0.5)
 		var tw := create_tween()
 		if exit_delay > 0.0:
 			tw.tween_interval(exit_delay)
-		tw.tween_property(row, "modulate:a", 0.0, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-		tw.parallel().tween_property(row, "scale", Vector2(0.86, 0.86), 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-		tw.parallel().tween_property(row, "position:x", 90.0, 0.26).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tw.tween_property(row, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(row, "scale", Vector2(0.86, 0.86), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(row, "position:x", 90.0, 0.28).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 		tw.tween_callback(func():
 			if is_instance_valid(row):
 				row.queue_free()
@@ -442,9 +512,11 @@ func _spawn_fulfill_burst(source_control: Control) -> void:
 	host.add_child(check)
 
 	var ctw := check.create_tween()
-	ctw.tween_property(check, "scale", Vector2(1.2, 1.2), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	ctw.parallel().tween_property(check, "position:y", center.y - 46.0, 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	ctw.tween_property(check, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
+	ctw.tween_property(check, "scale", Vector2(1.22, 1.22), 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	ctw.parallel().tween_property(check, "position:y", center.y - 44.0, 0.34).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	ctw.tween_interval(0.28)
+	ctw.tween_property(check, "modulate:a", 0.0, 0.34).set_trans(Tween.TRANS_SINE)
+	ctw.parallel().tween_property(check, "position:y", -12.0, 0.34).as_relative().set_trans(Tween.TRANS_SINE)
 	ctw.tween_callback(check.queue_free)
 
 	# 5 mini gold/green sparkle dots bursting outward
@@ -455,7 +527,7 @@ func _spawn_fulfill_burst(source_control: Control) -> void:
 	]
 	for i in range(5):
 		var angle := (TAU / 5.0) * float(i) + randf_range(-0.3, 0.3)
-		var dist := randf_range(28.0, 48.0)
+		var dist := randf_range(30.0, 50.0)
 		var dot := Panel.new()
 		var sz := randf_range(7.0, 11.0)
 		dot.size = Vector2(sz, sz)
@@ -467,9 +539,9 @@ func _spawn_fulfill_burst(source_control: Control) -> void:
 
 		var target := center + Vector2(cos(angle), sin(angle)) * dist - dot.pivot_offset
 		var dtw := dot.create_tween().set_parallel(true)
-		dtw.tween_property(dot, "position", target, 0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		dtw.tween_property(dot, "scale", Vector2.ZERO, 0.36).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		dtw.tween_property(dot, "modulate:a", 0.0, 0.36).set_trans(Tween.TRANS_SINE)
+		dtw.tween_property(dot, "position", target, 0.48).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		dtw.tween_property(dot, "scale", Vector2.ZERO, 0.48).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		dtw.tween_property(dot, "modulate:a", 0.0, 0.48).set_trans(Tween.TRANS_SINE)
 		dtw.chain().tween_callback(dot.queue_free)
 
 func _pop_and_remove_item(child: Control) -> void:
@@ -491,16 +563,21 @@ func _pop_and_remove_item(child: Control) -> void:
 	_spawn_fulfill_burst(child)
 
 	var spin_dir := 1.0 if randf() < 0.5 else -1.0
-	var tw := create_tween().set_parallel(true)
+	var tw := create_tween()
+	# Phase 1: Readable green-gold pop & playful spin while fully opaque
 	if anim_target:
-		tw.tween_property(anim_target, "modulate", Color(0.75, 1.45, 0.85, 1.0), 0.12).set_trans(Tween.TRANS_SINE)
-		tw.tween_property(anim_target, "scale", Vector2(1.42, 1.42), 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(anim_target, "position:y", -24.0, 0.24).as_relative().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		tw.tween_property(anim_target, "rotation_degrees", spin_dir * 16.0, 0.24).as_relative().set_trans(Tween.TRANS_SINE)
-	tw.tween_property(child, "modulate:a", 0.0, 0.24).set_delay(0.06).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(child, "custom_minimum_size:x", 0.0, 0.34).set_delay(0.08).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(anim_target, "modulate", Color(0.75, 1.42, 0.85, 1.0), 0.14).set_trans(Tween.TRANS_SINE)
+		tw.parallel().tween_property(anim_target, "scale", Vector2(1.28, 1.28), 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(anim_target, "position:y", -18.0, 0.24).as_relative().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(anim_target, "rotation_degrees", spin_dir * 14.0, 0.24).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# Phase 2: Smooth glide fade-out and gentle slot collapse
+	tw.tween_property(child, "modulate:a", 0.0, 0.30).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	if anim_target:
+		tw.parallel().tween_property(anim_target, "position:y", -10.0, 0.30).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(anim_target, "scale", Vector2(0.85, 0.85), 0.30).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(child, "custom_minimum_size:x", 0.0, 0.34).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
 
-	tw.chain().tween_callback(func():
+	tw.tween_callback(func():
 		if is_instance_valid(child):
 			child.queue_free()
 	)
@@ -510,7 +587,9 @@ func _on_order_cleared(customer_name: String = "") -> void:
 		_rows.clear()
 		_hide_hud()
 	else:
-		_remove_row(customer_name)
+		# If the customer still had unfulfilled items in the HUD when leaving, play the red rejection animation
+		var had_unfulfilled := _rows.has(customer_name) and not (_rows[customer_name].get("items", []) as Array).is_empty()
+		_remove_row(customer_name, false, had_unfulfilled)
 
 func _show_hud() -> void:
 	if is_visible_hud:
