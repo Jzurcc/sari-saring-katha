@@ -212,12 +212,7 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 				EventBus.transaction_completed.emit(item.item_data, false, wants_debt, c_path)
 				on_wrong_item_given(customer)
 
-				# Keep item in hand so it doesn't just vanish or jump
-				if DragManager and item.item_data and item.item_data.texture:
-					DragManager.call_deferred("start_drag", item, item.item_data.texture)
-					return false
-
-		# Return item to its shelf slot if not consumed or kept in hand
+		# Return rejected item straight back to its shelf slot / container / bag instead of keeping it in hand
 		if item:
 			item.show_visuals()
 			item.return_to_start()
