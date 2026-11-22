@@ -25,6 +25,8 @@ var _game_manager: GameManager = null
 # Scroll sensitivity accumulator (1 scroll notch = 1 discrete price step)
 var _scroll_event_count: int = 0
 const SCROLL_THRESHOLD: int = 1
+var _was_lmb_pressed: bool = false
+var _last_fridge_toggle_frame: int = -1
 
 func _ready() -> void:
 	if interaction_range <= 0.0:
@@ -125,6 +127,16 @@ func _physics_process(_delta: float) -> void:
 			current_hovered.on_hover(true)
 		_last_hovered = current_hovered
 
+	# Allow opening/closing the refrigerator door during active dialogue even if Dialogic's layout consumes MOUSE_BUTTON_LEFT
+	var lmb_now := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	if lmb_now and not _was_lmb_pressed and Dialogic.current_timeline != null:
+		if is_instance_valid(_last_hovered) and _last_hovered.is_in_group("fridge_door"):
+			var frame := Engine.get_physics_frames()
+			if frame != _last_fridge_toggle_frame:
+				_last_fridge_toggle_frame = frame
+				_last_hovered.on_interact()
+	_was_lmb_pressed = lmb_now
+
 func _input(event: InputEvent) -> void:
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
 		return
@@ -136,16 +148,17 @@ func _input(event: InputEvent) -> void:
 	var gm := _game_manager
 	var allow_interaction: bool = gm.tutorial.can_interact_with_world() if (gm and gm.tutorial) else (Dialogic.current_timeline == null)
 	if not allow_interaction:
-		# Allow closing an open refrigerator door even while dialogue is active
-		if not DragManager.is_dragging \
-			and event is InputEventMouseButton \
+		# Allow opening/closing the refrigerator door even while dialogue is active
+		if event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_LEFT \
 			and event.pressed \
 			and is_instance_valid(_last_hovered) \
-			and _last_hovered.has_method("can_close_during_dialogue") \
-			and _last_hovered.can_close_during_dialogue():
-			get_viewport().set_input_as_handled()
-			_last_hovered.on_interact()
+			and _last_hovered.is_in_group("fridge_door"):
+			var frame := Engine.get_physics_frames()
+			if frame != _last_fridge_toggle_frame:
+				_last_fridge_toggle_frame = frame
+				get_viewport().set_input_as_handled()
+				_last_hovered.on_interact()
 		return
 
 	# Pricing Mode Toggle (Alt) - Always allowed regardless of dialogue
