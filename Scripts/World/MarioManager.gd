@@ -417,8 +417,15 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	_current_anchor = _delivery_sprite
 	
 	EventBus.customer_arrived.emit(null)
+
+	var is_store_upgrade_only := false
+	for d_item in items_to_restock.keys():
+		if d_item and d_item.get_meta("is_fridge_upgrade", false):
+			is_store_upgrade_only = true
+			break
+	var delivery_label := "StoreUpgradeDelivery" if is_store_upgrade_only else "Delivery"
 	
-	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock, session_id), "Delivery")
+	_start_dialogue(TIMELINE_PATH, _delivery_sprite, _on_delivery_dialogue_ended.bind(items_to_restock, session_id), delivery_label)
 
 
 ## Immediately commits any in-flight paid order so stock, tier upgrades, and bags are never lost on save/exit.
@@ -438,7 +445,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false):
+		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -456,6 +463,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var target_tier := 1
 
 	for item in items.keys():
+		if item.get_meta("is_fridge_upgrade", false):
+			var target_lvl: int = int(item.get_meta("fridge_level", 1))
+			StoryManager.purchase_fridge_upgrade(target_lvl)
+			if spawn_in_tree:
+				EventBus.show_notification.emit("Fridge Upgraded!", "%s installed." % item.item_name, "purchase")
+			LogManager.info("MarioManager", "Fridge upgrade installed on Mario arrival: Level %d (%s)" % [target_lvl, item.item_name])
+			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
 			target_tier = max(target_tier, item.get_meta("target_tier", 1))

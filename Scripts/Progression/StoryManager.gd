@@ -79,10 +79,10 @@ var _upgrade_item_cache: Dictionary = {}
 # --- Refrigerator Coldness & Upgrades ---
 ## Level 0 = stock fridge; Levels 1..3 = Magnetic Door Gasket, Heavy-Duty Insulation, Inverter Frost Compressor.
 const FRIDGE_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 10.0, "desc": "Standard sari-sari fridge." },
-	{ "level": 1, "name": "Magnetic Door Gasket", "cost": 120.0, "drain_sec": 10.0, "regen_sec": 7.5, "desc": "Seals cold leaks when the door swings open." },
-	{ "level": 2, "name": "Heavy-Duty Insulation", "cost": 240.0, "drain_sec": 14.0, "regen_sec": 5.5, "desc": "Thick thermal lining keeps chilled stock frosty longer." },
-	{ "level": 3, "name": "Inverter Frost Compressor", "cost": 420.0, "drain_sec": 20.0, "regen_sec": 3.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
+	{ "level": 0, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 14.0, "desc": "Standard sari-sari fridge." },
+	{ "level": 1, "name": "Magnetic Door Gasket", "cost": 75.0, "drain_sec": 14.0, "regen_sec": 11.0, "desc": "Seals cold leaks when the door swings open." },
+	{ "level": 2, "name": "Heavy-Duty Insulation", "cost": 140.0, "drain_sec": 24.0, "regen_sec": 8.5, "desc": "Thick thermal lining keeps chilled stock frosty longer." },
+	{ "level": 3, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 36.0, "regen_sec": 6.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
 ]
 const FRIDGE_WARM_VALUE_MULTIPLIER := 0.75
 

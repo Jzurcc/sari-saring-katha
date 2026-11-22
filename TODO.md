@@ -27,8 +27,8 @@
 ## 2. Refrigerator Coldness & Upgrades
 - [x] **Coldness Meter UI:** Display a center-right animated striped coldness bar whenever the refrigerator is open or regenerating back to 100%.
 - [x] **Cold Escape & Temporary Warmth Penalty:** Leaving the fridge open drains coldness over time (`7s` default); when depleted, fridge items temporarily lose 25% value until closed and chilled back to 100%.
-- [x] **Cold Regeneration:** Closing the refrigerator stops cold loss and regenerates coldness back to full (`10s` default), restoring full item value at 100%.
-- [x] **Refrigerator Upgrades:** Added 3 sequential fridge upgrades in the Upgrade menu (*Magnetic Door Gasket*, *Heavy-Duty Insulation*, *Inverter Frost Compressor*) that slow cold loss and speed up cooling recovery.
+- [x] **Cold Regeneration:** Closing the refrigerator stops cold loss and regenerates coldness back to full (`14s` default), restoring full item value at 100%.
+- [x] **Refrigerator Upgrades:** Added 3 sequential fridge upgrades in the Upgrade menu (*Magnetic Door Gasket*, *Heavy-Duty Insulation*, *Inverter Frost Compressor*) delivered/installed by Uncle Mario, strongly extending cold retention (`7s → 14s → 24s → 36s`) and speeding up recovery (`14s → 11s → 8.5s → 6.5s`).
 
 ## 3. Mythical Journal & Relationship System
 - [ ] **Folklore Journal / Compendium:** Build an in-game journal tracking each mythical neighbor's story progression alongside real-life Philippine folklore trivia for educational value.

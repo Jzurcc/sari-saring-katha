@@ -479,7 +479,7 @@ func _on_confirm_pressed() -> void:
 	if confirm_btn:
 		confirm_btn.disabled = true
 
-	# Direct validation & instant install for Refrigerator Upgrades (not limited by shelf capacity)
+	# Direct validation for Refrigerator Upgrades (not limited by shelf capacity) — Uncle Mario still drives up to install!
 	if _selected_upgrade.get_meta("is_fridge_upgrade", false):
 		var f_cost := _selected_upgrade.price
 		var target_lvl: int = int(_selected_upgrade.get_meta("fridge_level", 1))
@@ -496,10 +496,10 @@ func _on_confirm_pressed() -> void:
 		var gm_f = get_tree().get_nodes_in_group("game_manager")
 		if gm_f.size() > 0 and gm_f[0].has_method("deduct_money"):
 			gm_f[0].deduct_money(f_cost)
-		StoryManager.purchase_fridge_upgrade(target_lvl)
-		EventBus.show_notification.emit("Fridge Upgraded!", "%s installed." % _selected_upgrade.item_name, "purchase")
-		MarioManager.cancel_restock()
+		var fridge_delivery: Dictionary = { _selected_upgrade: 1 }
+		upgrade_purchase_confirmed.emit(f_cost, _selected_upgrade)
 		_close_upgrade_screen()
+		MarioManager.start_delivery(fridge_delivery)
 		return
 
 	var order := RestockOrder.new()

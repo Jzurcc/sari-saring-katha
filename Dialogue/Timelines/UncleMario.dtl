@@ -78,3 +78,7 @@ UncleMario: I've got the upgrade package ready for you right now — want to tak
 	[signal arg="mario_cancel_call"]
 	UncleMario: Sige, take your time! Just ring me up whenever you're ready to expand.
 [end_timeline]
+
+label StoreUpgradeDelivery
+UncleMario: I've upgraded your store! Ingat anak.
+[end_timeline]
