@@ -343,7 +343,6 @@ func _on_confirm_pressed() -> void:
 	var delivery_items: Dictionary = { _selected_upgrade: 1 }
 	upgrade_purchase_confirmed.emit(cost, _selected_upgrade)
 	_close_upgrade_screen()
-	InventoryManager.start_delivery_cooldown()
 	MarioManager.start_delivery(delivery_items)
 
 func _get_money() -> float:
