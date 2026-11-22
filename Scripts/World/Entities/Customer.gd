@@ -182,12 +182,6 @@ func _process(delta: float) -> void:
 			var speed_factor = 10.0
 			var amplitude = 0.08
 			var sway_amount = 0.05
-			
-			if _is_resolving:
-				speed_factor = 6.0
-				amplitude = 0.04
-				sway_amount = 0.02
-				
 			body_sprite.position.y = abs(sin(_walk_timer * speed_factor)) * amplitude
 			body_sprite.rotation.z = sin(_walk_timer * speed_factor * 0.5) * sway_amount
 		else:
