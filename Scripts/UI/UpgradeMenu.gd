@@ -73,6 +73,24 @@ func _populate_upgrades() -> void:
 		upgrade_list_container.add_child(card)
 		_card_map[item] = card
 
+	# Refrigerator Upgrades section
+	var fridge_header := Label.new()
+	fridge_header.text = "REFRIGERATOR UPGRADES"
+	fridge_header.add_theme_font_override("font", UIStyle.FONT_INDER)
+	fridge_header.add_theme_font_size_override("font_size", 15)
+	fridge_header.add_theme_color_override("font_color", Color("#8CE6FF"))
+	var hdr_margin := MarginContainer.new()
+	hdr_margin.add_theme_constant_override("margin_top", 10)
+	hdr_margin.add_theme_constant_override("margin_bottom", 2)
+	hdr_margin.add_child(fridge_header)
+	upgrade_list_container.add_child(hdr_margin)
+
+	for lvl in range(1, 4):
+		var f_item := StoryManager.get_fridge_upgrade_item(lvl)
+		var f_card := _create_fridge_upgrade_bar(f_item, lvl)
+		upgrade_list_container.add_child(f_card)
+		_card_map[f_item] = f_card
+
 func _get_tier_sellable_items(tier: int) -> Array[ItemData]:
 	var result: Array[ItemData] = []
 	for item in InventoryManager.get_all_items():
@@ -205,6 +223,112 @@ func _create_upgrade_bar(item: ItemData, target_tier: int) -> PanelContainer:
 
 	return card
 
+func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 74)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.focus_mode = Control.FOCUS_NONE
+
+	var owned: bool = target_level <= StoryManager.fridge_upgrade_level
+	var is_next_available: bool = (not owned) and (target_level == StoryManager.fridge_upgrade_level + 1)
+
+	var bg_col := UIStyle.COLOR_CARD_BG
+	if owned:
+		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif not is_next_available:
+		bg_col = UIStyle.COLOR_TAB_LOCKED
+
+	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 14
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 14)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(hbox)
+
+	var icon_frame := PanelContainer.new()
+	icon_frame.custom_minimum_size = Vector2(54, 54)
+	icon_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_frame.add_theme_stylebox_override("panel", UIStyle.create_flat_stylebox(Color(0.05, 0.16, 0.22, 0.55), 6, 4, 4))
+	hbox.add_child(icon_frame)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if item.texture:
+		icon.texture = item.texture
+	icon_frame.add_child(icon)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(info_vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = item.item_name
+	name_lbl.add_theme_font_size_override("font_size", 19)
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
+	info_vbox.add_child(name_lbl)
+
+	var drain_s: float = float(item.get_meta("drain_sec", 10.0))
+	var regen_s: float = float(item.get_meta("regen_sec", 7.5))
+	var sub_lbl := Label.new()
+	sub_lbl.add_theme_font_size_override("font_size", 13)
+	sub_lbl.text = "Cold lasts %.0fs open  •  Recovers in %.1fs closed" % [drain_s, regen_s]
+	sub_lbl.add_theme_color_override("font_color", Color(0.75, 0.94, 1.0, 0.92))
+	info_vbox.add_child(sub_lbl)
+
+	var right_vbox := VBoxContainer.new()
+	right_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(right_vbox)
+
+	var price_lbl := Label.new()
+	price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	price_lbl.add_theme_font_size_override("font_size", 17)
+	price_lbl.text = "₱%.2f" % item.price
+	price_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT if is_next_available else Color(0.85, 0.85, 0.85, 0.9))
+	right_vbox.add_child(price_lbl)
+
+	var status_lbl := Label.new()
+	status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	status_lbl.add_theme_font_size_override("font_size", 12)
+	if owned:
+		status_lbl.text = "OWNED"
+		status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+	elif is_next_available:
+		status_lbl.text = "AVAILABLE"
+		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	else:
+		status_lbl.text = "BUY LVL %d FIRST" % (target_level - 1)
+		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
+	right_vbox.add_child(status_lbl)
+
+	if owned:
+		icon.modulate = Color(1, 1, 1, 0.5)
+		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	elif is_next_available:
+		icon.modulate = Color(1, 1, 1, 1)
+		card.modulate = Color(1, 1, 1, 1)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.gui_input.connect(_on_card_clicked.bind(item))
+	else:
+		icon.modulate = Color(0.35, 0.45, 0.5, 0.8)
+		card.modulate = Color(0.7, 0.7, 0.7, 0.85)
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+
+	return card
+
 func _on_card_clicked(event: InputEvent, item: ItemData) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		AudioManager.play_sfx("interact")
@@ -229,6 +353,43 @@ func _select_upgrade(item: ItemData) -> void:
 	_update_detail_panel(item)
 
 func _update_detail_panel(item: ItemData) -> void:
+	if item.get_meta("is_fridge_upgrade", false):
+		var lvl: int = int(item.get_meta("fridge_level", 1))
+		var prev_spec: Dictionary = StoryManager.FRIDGE_UPGRADE_SPECS[lvl - 1]
+		var next_spec: Dictionary = StoryManager.FRIDGE_UPGRADE_SPECS[lvl]
+		if detail_icon:
+			detail_icon.texture = item.texture
+		if detail_name:
+			detail_name.text = item.item_name
+		if detail_subtitle:
+			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
+
+		for child in unlocks_list.get_children():
+			child.queue_free()
+
+		for line in [
+			"• Cold Retention: %.0fs → %.0fs open" % [float(prev_spec["drain_sec"]), float(next_spec["drain_sec"])],
+			"• Cooling Recovery: %.1fs → %.1fs closed" % [float(prev_spec["regen_sec"]), float(next_spec["regen_sec"])],
+			"• Protects chilled & frozen stock from -25% warmth loss"
+		]:
+			var stat_lbl := Label.new()
+			stat_lbl.text = line
+			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			stat_lbl.add_theme_font_size_override("font_size", 15)
+			stat_lbl.add_theme_color_override("font_color", Color("#C9F3FF"))
+			unlocks_list.add_child(stat_lbl)
+
+		if total_amount_label:
+			total_amount_label.text = "₱%.2f" % item.price
+		var can_afford_f := _get_money() >= item.price
+		if confirm_btn:
+			confirm_btn.disabled = not can_afford_f
+			if can_afford_f:
+				UIStyle.style_button(confirm_btn, UIStyle.COLOR_CONFIRM, Color.WHITE, 18.0)
+			else:
+				UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT, 18.0)
+		return
+
 	var target_tier: int = item.get_meta("target_tier", 2)
 	if detail_icon:
 		detail_icon.texture = item.texture
@@ -317,6 +478,29 @@ func _on_confirm_pressed() -> void:
 		return
 	if confirm_btn:
 		confirm_btn.disabled = true
+
+	# Direct validation & instant install for Refrigerator Upgrades (not limited by shelf capacity)
+	if _selected_upgrade.get_meta("is_fridge_upgrade", false):
+		var f_cost := _selected_upgrade.price
+		var target_lvl: int = int(_selected_upgrade.get_meta("fridge_level", 1))
+		if target_lvl != StoryManager.fridge_upgrade_level + 1:
+			if confirm_btn:
+				confirm_btn.disabled = false
+			return
+		if _get_money() < f_cost:
+			EventBus.insufficient_funds.emit()
+			if confirm_btn:
+				confirm_btn.disabled = false
+			return
+		AudioManager.play_sfx("purchase")
+		var gm_f = get_tree().get_nodes_in_group("game_manager")
+		if gm_f.size() > 0 and gm_f[0].has_method("deduct_money"):
+			gm_f[0].deduct_money(f_cost)
+		StoryManager.purchase_fridge_upgrade(target_lvl)
+		EventBus.show_notification.emit("Fridge Upgraded!", "%s installed." % _selected_upgrade.item_name, "purchase")
+		MarioManager.cancel_restock()
+		_close_upgrade_screen()
+		return
 
 	var order := RestockOrder.new()
 	var check := order.can_add(_selected_upgrade, _get_money())

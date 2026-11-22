@@ -76,6 +76,59 @@ var pending_upgrade_tier: int = 0
 var pending_upgrade_cost: float = 0.0
 var _upgrade_item_cache: Dictionary = {}
 
+# --- Refrigerator Coldness & Upgrades ---
+## Level 0 = stock fridge; Levels 1..3 = Magnetic Door Gasket, Heavy-Duty Insulation, Inverter Frost Compressor.
+const FRIDGE_UPGRADE_SPECS: Array[Dictionary] = [
+	{ "level": 0, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 10.0, "desc": "Standard sari-sari fridge." },
+	{ "level": 1, "name": "Magnetic Door Gasket", "cost": 120.0, "drain_sec": 10.0, "regen_sec": 7.5, "desc": "Seals cold leaks when the door swings open." },
+	{ "level": 2, "name": "Heavy-Duty Insulation", "cost": 240.0, "drain_sec": 14.0, "regen_sec": 5.5, "desc": "Thick thermal lining keeps chilled stock frosty longer." },
+	{ "level": 3, "name": "Inverter Frost Compressor", "cost": 420.0, "drain_sec": 20.0, "regen_sec": 3.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
+]
+const FRIDGE_WARM_VALUE_MULTIPLIER := 0.75
+
+var fridge_upgrade_level: int = 0
+var fridge_coldness: float = 100.0
+var is_fridge_warm: bool = false
+var _fridge_upgrade_item_cache: Dictionary = {}
+
+func get_fridge_drain_rate() -> float:
+	var lvl := clampi(fridge_upgrade_level, 0, FRIDGE_UPGRADE_SPECS.size() - 1)
+	return 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["drain_sec"])
+
+func get_fridge_regen_rate() -> float:
+	var lvl := clampi(fridge_upgrade_level, 0, FRIDGE_UPGRADE_SPECS.size() - 1)
+	return 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["regen_sec"])
+
+func get_fridge_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, FRIDGE_UPGRADE_SPECS.size() - 1)
+	if _fridge_upgrade_item_cache.has(lvl):
+		return _fridge_upgrade_item_cache[lvl]
+	var spec: Dictionary = FRIDGE_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "fridge_upgrade"
+	if ResourceLoader.exists("res://Assets/items/icons/2_bottle_water.png"):
+		item.texture = load("res://Assets/items/icons/2_bottle_water.png")
+	item.set_meta("is_fridge_upgrade", true)
+	item.set_meta("fridge_level", lvl)
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("drain_sec", float(spec["drain_sec"]))
+	item.set_meta("regen_sec", float(spec["regen_sec"]))
+	_fridge_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_fridge_upgrade(level: int) -> void:
+	var target := clampi(level, 1, FRIDGE_UPGRADE_SPECS.size() - 1)
+	if target <= fridge_upgrade_level:
+		return
+	fridge_upgrade_level = target
+	LogManager.info("StoryManager", "Fridge upgraded to Level %d (%s)" % [fridge_upgrade_level, FRIDGE_UPGRADE_SPECS[fridge_upgrade_level]["name"]])
+	EventBus.fridge_upgraded.emit(fridge_upgrade_level)
+	_save_progression()
+
 ## Physical container equipment props delivered in plastic bags on tier upgrades.
 const CONTAINER_PROP_PATHS: Array[String] = [
 	"res://Resources/items/candycontainer/Mix.tres",
@@ -292,6 +345,9 @@ func get_save_data() -> Dictionary:
 		"is_customer_present": is_customer_present,
 		"_last_notified_tier": _last_notified_tier,
 		"placed_containers": placed_containers.duplicate(),
+		"fridge_upgrade_level": fridge_upgrade_level,
+		"fridge_coldness": fridge_coldness,
+		"is_fridge_warm": is_fridge_warm,
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -320,6 +376,11 @@ func load_save_data(data: Dictionary) -> void:
 	was_paused_by_limit = data.get("was_paused_by_limit", false)
 	is_customer_present = data.get("is_customer_present", false)
 	_last_notified_tier = data.get("_last_notified_tier", 0)
+	fridge_upgrade_level = clampi(int(data.get("fridge_upgrade_level", 0)), 0, FRIDGE_UPGRADE_SPECS.size() - 1)
+	fridge_coldness = clampf(float(data.get("fridge_coldness", 100.0)), 0.0, 100.0)
+	is_fridge_warm = bool(data.get("is_fridge_warm", false))
+	if fridge_coldness >= 100.0:
+		is_fridge_warm = false
 
 	placed_containers.clear()
 	if data.has("placed_containers"):
@@ -380,6 +441,9 @@ func reset_state() -> void:
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0
 	placed_containers.clear()
+	fridge_upgrade_level = 0
+	fridge_coldness = 100.0
+	is_fridge_warm = false
 	clock.reset_state()
 	SaveManager.delete_save()
 

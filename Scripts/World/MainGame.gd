@@ -64,6 +64,11 @@ func _ready() -> void:
 		var hud_instance = hud_scene.instantiate()
 		add_child(hud_instance)
 
+	# Instantiate Refrigerator Coldness Meter HUD
+	var fridge_hud := FridgeColdnessHUD.new()
+	fridge_hud.name = "FridgeColdnessHUD"
+	add_child(fridge_hud)
+
 	LogManager.debug("MainGame", "_ready() END")
 
 func _input(event: InputEvent) -> void:

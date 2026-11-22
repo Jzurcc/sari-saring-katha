@@ -25,10 +25,10 @@
 - [ ] **Storefront Poster Upgrade & Main Menu Reflection:** Add an upgradeable poster in front of the store and persist both the signage and poster art so the player's customizations visibly appear on the Main Menu storefront.
 
 ## 2. Refrigerator Coldness & Upgrades
-- [ ] **Coldness Meter UI:** Display a coldness bar in the UI whenever the refrigerator is opened.
-- [ ] **Cold Escape & Value Decay:** Leaving the fridge open drains coldness over time; items left inside while coldness is depleted slowly lose value.
-- [ ] **Cold Regeneration:** Closing the refrigerator stops value decay and gradually regenerates coldness back to full.
-- [ ] **Refrigerator Upgrades:** Add fridge upgrades in the Upgrade menu that slow down cold loss while open and increase cold regeneration speed while closed.
+- [x] **Coldness Meter UI:** Display a center-right animated striped coldness bar whenever the refrigerator is open or regenerating back to 100%.
+- [x] **Cold Escape & Temporary Warmth Penalty:** Leaving the fridge open drains coldness over time (`7s` default); when depleted, fridge items temporarily lose 25% value until closed and chilled back to 100%.
+- [x] **Cold Regeneration:** Closing the refrigerator stops cold loss and regenerates coldness back to full (`10s` default), restoring full item value at 100%.
+- [x] **Refrigerator Upgrades:** Added 3 sequential fridge upgrades in the Upgrade menu (*Magnetic Door Gasket*, *Heavy-Duty Insulation*, *Inverter Frost Compressor*) that slow cold loss and speed up cooling recovery.
 
 ## 3. Mythical Journal & Relationship System
 - [ ] **Folklore Journal / Compendium:** Build an in-game journal tracking each mythical neighbor's story progression alongside real-life Philippine folklore trivia for educational value.

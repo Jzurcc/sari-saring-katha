@@ -85,6 +85,11 @@ func _finish_initialization() -> void:
 func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bool, customer_path: String) -> void:
 	if was_correct and item:
 		_last_earning = item.get_final_price()
+
+		# Temporary warmth penalty: fridge items lose 25% value while fridge coldness is depleted
+		if item.type == ItemData.ItemType.FRIDGE and StoryManager.is_fridge_warm:
+			_last_earning = maxf(1.0, snapped(_last_earning * StoryManager.FRIDGE_WARM_VALUE_MULTIPLIER, 0.5))
+			LogManager.info("GameManager", "Warm fridge penalty applied to %s (-25%% -> %.2f)" % [item.item_name, _last_earning])
 		
 		# If the customer wants to pay via Utang (debt), they won't give us cash yet.
 		if wants_debt and customer_path != "":

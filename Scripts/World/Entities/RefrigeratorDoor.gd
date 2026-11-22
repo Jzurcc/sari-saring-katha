@@ -32,6 +32,27 @@ func _ready() -> void:
 	add_to_group("fridge_surfaces")
 	_resolve_pivot()
 	_build_outline_material()
+	set_process(true)
+	# Sync initial coldness state to HUD
+	EventBus.fridge_coldness_changed.emit(StoryManager.fridge_coldness, is_open, StoryManager.is_fridge_warm)
+
+func _process(delta: float) -> void:
+	var prev_cold := StoryManager.fridge_coldness
+	var prev_warm := StoryManager.is_fridge_warm
+
+	if is_open:
+		if StoryManager.fridge_coldness > 0.0:
+			StoryManager.fridge_coldness = maxf(0.0, StoryManager.fridge_coldness - StoryManager.get_fridge_drain_rate() * delta)
+			if StoryManager.fridge_coldness <= 0.0:
+				StoryManager.is_fridge_warm = true
+	else:
+		if StoryManager.fridge_coldness < 100.0:
+			StoryManager.fridge_coldness = minf(100.0, StoryManager.fridge_coldness + StoryManager.get_fridge_regen_rate() * delta)
+			if StoryManager.fridge_coldness >= 100.0:
+				StoryManager.is_fridge_warm = false
+
+	if not is_equal_approx(prev_cold, StoryManager.fridge_coldness) or prev_warm != StoryManager.is_fridge_warm:
+		EventBus.fridge_coldness_changed.emit(StoryManager.fridge_coldness, is_open, StoryManager.is_fridge_warm)
 
 
 func _resolve_pivot() -> void:
@@ -87,7 +108,9 @@ func toggle_open() -> void:
 		EventBus.refrigerator_opened.emit()
 		EventBus.request_sfx.emit("refrigerator_open")
 	else:
+		EventBus.refrigerator_closed.emit()
 		EventBus.request_sfx.emit("refrigerator_close")
+	EventBus.fridge_coldness_changed.emit(StoryManager.fridge_coldness, is_open, StoryManager.is_fridge_warm)
 	
 	# VFX: Cold Mist
 	if is_open:
