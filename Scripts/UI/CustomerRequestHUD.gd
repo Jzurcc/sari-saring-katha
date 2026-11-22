@@ -1,11 +1,11 @@
 extends CanvasLayer
 
-const ITEM_HEIGHT := 116.0
-const ITEM_MIN_WIDTH := 48.0
-const ITEM_MAX_WIDTH := 124.0
-const RIDDLE_SIZE := 98.0
-const PORTRAIT_RING_SIZE := 116
-const PORTRAIT_IMG_SIZE := 126
+const ITEM_HEIGHT := 76.0
+const ITEM_MIN_WIDTH := 34.0
+const ITEM_MAX_WIDTH := 82.0
+const RIDDLE_SIZE := 64.0
+const PORTRAIT_RING_SIZE := 76
+const PORTRAIT_IMG_SIZE := 92
 
 const PORTRAIT_MAP := {
 	"brahim": preload("res://Assets/characters/portraits/Brahim Face.png"),
@@ -104,13 +104,62 @@ func _make_circle_style(bg: Color, border: Color, border_w: int, radius: int = 9
 func _create_row(customer_name: String) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_theme_constant_override("separation", -14)
+	row.add_theme_constant_override("separation", -10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# 1. Left Character Medallion (Overlaps onto the order capsule with higher z_index)
+	# 1. Left Side: Floating items resting along a sleek bottom shelf-line bar
+	var items_margin := MarginContainer.new()
+	items_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	items_margin.add_theme_constant_override("margin_left", 14)
+	items_margin.add_theme_constant_override("margin_right", 20)
+	items_margin.add_theme_constant_override("margin_top", 2)
+	items_margin.add_theme_constant_override("margin_bottom", 8)
+
+	# Full-rect background layer inside PanelContainer so bottom_bar keeps its bottom-only anchors
+	var bar_layer := Control.new()
+	bar_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var bottom_bar := Panel.new()
+	bottom_bar.anchor_left = 0.0
+	bottom_bar.anchor_right = 1.0
+	bottom_bar.anchor_top = 1.0
+	bottom_bar.anchor_bottom = 1.0
+	bottom_bar.offset_top = -16.0
+	bottom_bar.offset_bottom = -2.0
+	bottom_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bar_style := StyleBoxFlat.new()
+	bar_style.bg_color = Color(0.07, 0.06, 0.05, 0.80)
+	bar_style.border_color = Color(0.88, 0.72, 0.42, 0.48)
+	bar_style.border_width_top = 2
+	bar_style.border_width_bottom = 1
+	bar_style.border_width_left = 1
+	bar_style.border_width_right = 1
+	bar_style.set_corner_radius_all(999)
+	bar_style.shadow_color = Color(0.0, 0.0, 0.0, 0.35)
+	bar_style.shadow_size = 6
+	bar_style.shadow_offset = Vector2(0, 3)
+	bottom_bar.add_theme_stylebox_override("panel", bar_style)
+	bar_layer.add_child(bottom_bar)
+
+	var shelf_container := PanelContainer.new()
+	shelf_container.size_flags_vertical = Control.SIZE_SHRINK_END
+	shelf_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shelf_container.z_index = 1
+	shelf_container.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	shelf_container.add_child(bar_layer)
+	shelf_container.add_child(items_margin)
+	row.add_child(shelf_container)
+
+	var items_box := HBoxContainer.new()
+	items_box.alignment = BoxContainer.ALIGNMENT_END
+	items_box.add_theme_constant_override("separation", 12)
+	items_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	items_margin.add_child(items_box)
+
+	# 2. Right Side: Compact Character Portrait Medallion (overlapping onto the right end of the bar)
 	var badge_holder := Control.new()
 	badge_holder.custom_minimum_size = Vector2(PORTRAIT_RING_SIZE, PORTRAIT_RING_SIZE)
-	badge_holder.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	badge_holder.size_flags_vertical = Control.SIZE_SHRINK_END
 	badge_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	badge_holder.z_index = 3
 	row.add_child(badge_holder)
@@ -122,17 +171,16 @@ func _create_row(customer_name: String) -> Dictionary:
 	var ring_style := _make_circle_style(
 		Color(0.13, 0.10, 0.08, 0.96),
 		Color(0.88, 0.72, 0.42, 0.85),
-		3,
+		2,
 		999,
-		12
+		10
 	)
 	ring_panel.add_theme_stylebox_override("panel", ring_style)
 	badge_holder.add_child(ring_panel)
 
-	# Subtle inner warm glow ring
 	var inner_ring := Panel.new()
-	inner_ring.size = Vector2(PORTRAIT_RING_SIZE - 10, PORTRAIT_RING_SIZE - 10)
-	inner_ring.position = Vector2(5, 5)
+	inner_ring.size = Vector2(PORTRAIT_RING_SIZE - 8, PORTRAIT_RING_SIZE - 8)
+	inner_ring.position = Vector2(4, 4)
 	inner_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner_ring.add_theme_stylebox_override("panel", _make_circle_style(
 		Color(0.20, 0.15, 0.11, 0.65),
@@ -150,7 +198,6 @@ func _create_row(customer_name: String) -> Dictionary:
 		portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait_rect.size = Vector2(PORTRAIT_IMG_SIZE, PORTRAIT_IMG_SIZE)
-		# Pop slightly above the medallion top for a modern layered character badge feel
 		var offset := (PORTRAIT_RING_SIZE - PORTRAIT_IMG_SIZE) * 0.5
 		portrait_rect.position = Vector2(offset, offset - 3.0)
 		portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -162,15 +209,15 @@ func _create_row(customer_name: String) -> Dictionary:
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.size = Vector2(PORTRAIT_RING_SIZE, PORTRAIT_RING_SIZE)
 		name_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		name_lbl.add_theme_font_size_override("font_size", 24)
+		name_lbl.add_theme_font_size_override("font_size", 20)
 		name_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		badge_holder.add_child(name_lbl)
 
-	# Thought-bubble connector dots bridging medallion to order capsule
+	# Small connector dot on the left side of the medallion bridging into the shelf-line
 	var dot_small := Panel.new()
-	dot_small.size = Vector2(8, 8)
-	dot_small.position = Vector2(PORTRAIT_RING_SIZE - 5, PORTRAIT_RING_SIZE * 0.5 - 4)
+	dot_small.size = Vector2(7, 7)
+	dot_small.position = Vector2(-2, PORTRAIT_RING_SIZE - 13)
 	dot_small.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dot_small.add_theme_stylebox_override("panel", _make_circle_style(
 		Color(0.88, 0.72, 0.42, 0.90),
@@ -180,27 +227,6 @@ func _create_row(customer_name: String) -> Dictionary:
 		0
 	))
 	badge_holder.add_child(dot_small)
-
-	# 2. Right Rectangular Box holding the requested items (like before, paired with the medallion)
-	var pill_panel := PanelContainer.new()
-	pill_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	pill_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pill_panel.z_index = 1
-	var pill_style := StyleBoxFlat.new()
-	pill_style.bg_color = Color(0.0, 0.0, 0.0, 0.65)
-	pill_style.set_corner_radius_all(16)
-	pill_style.content_margin_left = 30.0
-	pill_style.content_margin_right = 22.0
-	pill_style.content_margin_top = 14.0
-	pill_style.content_margin_bottom = 14.0
-	pill_panel.add_theme_stylebox_override("panel", pill_style)
-	row.add_child(pill_panel)
-
-	var items_box := HBoxContainer.new()
-	items_box.alignment = BoxContainer.ALIGNMENT_END
-	items_box.add_theme_constant_override("separation", 16)
-	items_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pill_panel.add_child(items_box)
 
 	rows_container.add_child(row)
 
@@ -293,7 +319,7 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 			label.size = riddle_badge.size
 			label.add_theme_font_override("font", UIStyle.FONT_INDER)
 			label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62, 1.0))
-			label.add_theme_font_size_override("font_size", 56)
+			label.add_theme_font_size_override("font_size", 38)
 			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			riddle_badge.add_child(label)
 			rect_container.add_child(riddle_badge)
