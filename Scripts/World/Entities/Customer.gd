@@ -195,10 +195,17 @@ func check_item(item: ItemData) -> bool:
 	# --- Guided Tutorial Encounter ---
 	# Guided tutorial encounters use VISIT to bypass regular greeting logic,
 	# and delegate item acceptance to TutorialManager when a sale task is active.
-	if transaction_context and transaction_context.is_guided_tutorial:
-		var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	var is_guided: bool = (transaction_context and transaction_context.is_guided_tutorial) or (gm and gm.tutorial and gm.tutorial.is_guided_timeline_active())
+	if is_guided:
 		if gm and gm.tutorial and gm.tutorial.can_accept_guided_item():
-			if transaction_context.fulfill_item(item):
+			var accepted: bool = false
+			if transaction_context and not transaction_context.desired_items.is_empty():
+				accepted = transaction_context.fulfill_item(item)
+			elif item and item.get_clean_id() == "anoba":
+				# Fallback for restored tutorial saves where desired_items was empty
+				accepted = true
+			if accepted:
 				_on_item_accepted(item)
 				gm.tutorial.complete_active_task()
 				return true
@@ -292,6 +299,7 @@ func _leave_store(completion_signal: Signal) -> void:
 	is_waiting = false
 	_is_resolving = true
 	_clear_outline()
+	EventBus.customer_order_cleared.emit()
 	InventoryManager.decrement_cooldown()
 	
 	# Point toward the custom exit marker and let _process handle the walk

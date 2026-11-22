@@ -90,6 +90,8 @@ if {Transaction_WantsDebt}:
 		Customer: I'll come back when I have my money. [pause=0.4] Thanks anyway!
 else:
 	Customer: Thank you so much! [pause=0.4] This is exactly what I needed.
+	if {Global_TipActive}:
+		Customer: Aba, that was quite cheap. Keep the change po!
 	Customer: Sige po, I'll head out now. Ingat!
 [signal arg="story_success"]
 [end_timeline]

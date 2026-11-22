@@ -34,6 +34,8 @@ if {Transaction_SatisfyVar} <= 50:
 	TK: Based. [pause=0.4] This is going straight into the 'Essential Gear' highlight.
 else:
 	TK: Phew! [pause=0.5] Feeling the energy again. Thanks for the restock, fam.
+if {Global_TipActive}:
+	TK: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

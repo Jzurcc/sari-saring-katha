@@ -1,5 +1,5 @@
 label Greeting
-[signal arg="refresh_desires"]
+# [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: The Atmosphere of Sand
 	Rodel: Greetings, Keeper of the Dry Shelves. [pause=0.5] I find the atmosphere here remarkably... [pause=0.4] abrasive. 

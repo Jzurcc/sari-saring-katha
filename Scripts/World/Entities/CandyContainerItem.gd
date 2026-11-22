@@ -24,9 +24,17 @@ func get_available_items() -> Array[ItemData]:
 					items.append(candy)
 	return items
 
+func _has_uninspected_items() -> bool:
+	for candy in possible_candies:
+		if candy and not InventoryManager.is_item_inspected(candy):
+			return true
+	return false
+
 func update_pricing_ui() -> void:
 	if possible_candies.is_empty() or not is_hovered or not _pricing_mode_active:
 		return
+	for candy in possible_candies:
+		InventoryManager.mark_item_inspected(candy)
 	var ref_item = possible_candies[0]
 	if is_instance_valid(PricingOverlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
@@ -49,11 +57,18 @@ func _check_unlock_status() -> void:
 		within_range = false
 		
 	_is_unlocked = within_range
-	visible = _is_unlocked
-	process_mode = Node.PROCESS_MODE_INHERIT if _is_unlocked else Node.PROCESS_MODE_DISABLED
+	_apply_visibility_state()
+
+func accepts_refill(item: ItemData) -> bool:
+	if not is_placed_and_active() or item == null:
+		return false
+	for candy in possible_candies:
+		if candy == item or (candy != null and candy.resource_path != "" and candy.resource_path == item.resource_path):
+			return true
+	return false
 
 func on_interact() -> void:
-	if not _is_unlocked or DragManager.is_dragging:
+	if not is_placed_and_active() or DragManager.is_dragging:
 		return
 	
 	_update_local_stock()

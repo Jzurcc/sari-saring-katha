@@ -43,6 +43,8 @@ if {Transaction_SatisfyVar} <= 50:
 	Danilo: Salamat, boss. [pause=0.4] See you on the high ground!
 else:
 	Danilo: Perfect. Exact change. [pause=0.5] I'll tell the guys at the tricycle stand you're doing a great job.
+if {Global_TipActive}:
+	Danilo: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

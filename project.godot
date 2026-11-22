@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Sari-Saring Katha"
 config/description="A cozy, point-and-click first-person sari-sari store simulator set in the remote Philippine town of Karimlan."
-config/version="0.9"
+config/version="0.11.0"
 run/main_scene="uid://b46bhnivkyc61"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="uid://bev8adkrkd4qd"
@@ -42,6 +42,7 @@ VisualEffectManager="*res://Scripts/World/VisualEffectManager.gd"
 PricingOverlay="*res://Scripts/UI/PricingOverlay.gd"
 LogManager="*res://Scripts/Core/LogManager.gd"
 CharacterProgressionManager="*res://Scripts/Progression/CharacterProgressionManager.gd"
+StoreEventManager="*res://Scripts/Store/StoreEventManager.gd"
 
 [debug_draw_3d]
 
@@ -150,6 +151,8 @@ audio/channel_defaults={
 }
 variables={
 "Global_AwarenessActive": 0.0,
+"Global_EventRumorActive": false,
+"Global_EventRumorText": "",
 "Global_HasEnoughMoney": 0.0,
 "Global_HighPriceActive": 0.0,
 "Global_LastCustomer": "",
@@ -160,7 +163,9 @@ variables={
 "Global_RumorType": 0.0,
 "Global_StockStatus": "",
 "Global_TimeOfDayPhase": "",
+"Global_TipActive": false,
 "Global_TodayQuota": 0.0,
+"Global_UpgradeItemsList": "",
 "PriceVar": 0.0,
 "Stats": {
 "Affinity": {},

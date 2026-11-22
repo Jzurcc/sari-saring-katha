@@ -30,7 +30,10 @@ var tutorial: TutorialManager
 
 # --- Debt System (Dynamic) ---
 func get_quota_for_day(q_day: int) -> float:
-	return 50.0 + (q_day - 1) * 15.0
+	var step := float(maxi(0, q_day - 1))
+	var linear_base := 50.0 + step * 15.0
+	var scaled := linear_base * (1.0 + 0.03 * step)
+	return roundf(scaled / 5.0) * 5.0
 
 func _ready() -> void:
 	LogManager.info("GameManager", "_ready() START")
@@ -85,14 +88,21 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 		
 		# If the customer wants to pay via Utang (debt), they won't give us cash yet.
 		if wants_debt and customer_path != "":
-			StoryManager.record_debt(customer_path, _last_earning)
+			StoryManager.queue_pending_debt(customer_path, _last_earning)
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
+		# Tip Windfall on Loss Leaders (step <= -1)
+		var tip: float = 0.0
+		if item.current_step < 0 and not wants_debt:
+			tip = snapped(float(abs(item.current_step)) * 1.5 + 1.0, 1.0)
+			_last_earning += tip
+			LogManager.info("GameManager", "Loss leader discount rewarded with a tip of +₱%.2f!" % tip)
+
 		money += _last_earning
 		EventBus.money_changed.emit(money)
-		LogManager.info("GameManager", "Sold %s for %.2f (Base: %.2f, Price: %.2f). TOTAL: %.2f" % [
-			item.item_name, _last_earning, item.price, item.get_final_price(), money
+		LogManager.info("GameManager", "Sold %s for %.2f (Base: %.2f, Price: %.2f, Tip: %.2f). TOTAL: %.2f" % [
+			item.item_name, _last_earning, item.price, item.get_final_price(), tip, money
 		])
 
 func _on_utang_accepted(_customer: Customer) -> void:
@@ -172,20 +182,28 @@ func _on_dialogic_signal(argument: String) -> void:
 		return
 		
 	elif argument == "repay_debt":
-		var amount = Dialogic.VAR.get_variable("Transaction_RepaymentAmount")
+		var amount: float = float(Dialogic.VAR.get_variable("Transaction_RepaymentAmount", 0.0))
+		if amount <= 0.0:
+			return
 		money += amount
 		EventBus.money_changed.emit(money)
-		
+		Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
+		Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
 		var spawners = get_tree().get_nodes_in_group("customer_spawner")
 		if spawners.size() > 0:
 			var spawner := spawners[0] as CustomerSpawner
 			var customer = spawner.current_customer
 			if customer and customer.customer_data:
-				StoryManager.clear_debt(customer.customer_data.resource_path)
+				if customer.transaction_context:
+					customer.transaction_context.is_repaying = false
+					customer.transaction_context.repayment_amount = 0.0
+				StoryManager.reduce_debt(customer.customer_data.resource_path, amount)
 		
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 
 func _handle_deduct_quota() -> void:
+	if _pending_quota <= 0.0:
+		prepare_nightly_quota()
 	var quota := _pending_quota
 	var was_successful := deduct_money(quota)
 	
@@ -213,17 +231,20 @@ func _handle_deduct_quota() -> void:
 	
 	EventBus.debt_quota_met.emit(was_successful)
 
-func _on_closing_time_reached() -> void:
+## Calculates and syncs today's nightly quota to Dialogic before Mayari arrives.
+func prepare_nightly_quota() -> float:
 	_pending_quota = get_quota_for_day(quota_day)
-	var was_successful = money >= _pending_quota
-	
+	var was_successful := money >= _pending_quota
 	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
 	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
 	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
-	
-	LogManager.info("GameManager", "Store Closed. Pre-calculated Quota (Day %d): %.2f, Success: %s" % [
+	LogManager.info("GameManager", "Prepared Nightly Quota (Quota Day %d): %.2f, Can Pay: %s" % [
 		quota_day, _pending_quota, was_successful
 	])
+	return _pending_quota
+
+func _on_closing_time_reached() -> void:
+	prepare_nightly_quota()
 
 func _input(event: InputEvent) -> void:
 	if tutorial and tutorial.handle_input(event, get_viewport()):

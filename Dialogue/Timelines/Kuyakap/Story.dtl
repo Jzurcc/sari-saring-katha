@@ -1,5 +1,5 @@
 label Greeting
-[signal arg="refresh_desires"]
+# [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The New Face"
 	KuyaKap: Oh.[pause=0.8] .[pause=0.8] .[pause=0.8]  so the rumors were true. [pause=0.8]A fresh pair of eyes behind the counter.

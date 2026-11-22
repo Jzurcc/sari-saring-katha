@@ -71,6 +71,8 @@ static func pick_weighted(pool: Array[ItemData], current_tier: int, max_tiers_by
 				weight = BEST_IN_CATEGORY_BASE_WEIGHT + float(item.tier) * BEST_IN_CATEGORY_TIER_BONUS
 			else:
 				weight = max(OLDER_TIER_FLOOR_WEIGHT, 1.0 - float(gap) * OLDER_TIER_DECAY)
+		if is_instance_valid(StoreEventManager):
+			weight *= StoreEventManager.get_item_demand_multiplier(item)
 		weights.append(weight)
 		total_weight += weight
 
@@ -108,11 +110,21 @@ static func best_for_category(cat: String, current_tier: int, current_item: Item
 
 
 ## Any sellable item (up to next tier) in the category, weighted; falls back to any orderable item.
-static func any_for_category(cat: String, current_tier: int, prefer_hint: bool = false) -> ItemData:
-	var categories := mapped_categories(cat)
+static func any_for_category(cat: String, current_tier: int, prefer_hint: bool = false, excluded_categories: Array[String] = []) -> ItemData:
+	return any_for_categories([cat], current_tier, prefer_hint, excluded_categories)
+
+
+## Any sellable item (up to next tier) matching any category in `cats`, minus `excluded_categories`.
+static func any_for_categories(cats: Array[String], current_tier: int, prefer_hint: bool = false, excluded_categories: Array[String] = []) -> ItemData:
+	var categories: Array[String] = []
+	for cat in cats:
+		for mapped in mapped_categories(cat):
+			if not categories.has(mapped) and not (mapped in excluded_categories):
+				categories.append(mapped)
+
 	var pool: Array[ItemData] = []
 	for item in InventoryManager.get_all_items():
-		if item.category in categories and item.tier <= current_tier + 1 and item.can_be_sold:
+		if item.category in categories and not (item.category in excluded_categories) and item.tier <= current_tier + 1 and item.can_be_sold:
 			pool.append(item)
 
 	if prefer_hint:
@@ -122,29 +134,42 @@ static func any_for_category(cat: String, current_tier: int, prefer_hint: bool =
 
 	var item := pick_weighted(pool, current_tier, max_tier_per_category(current_tier))
 	if not item:
-		LogManager.warn("OrderItemPicker", "Category Search FAILURE: '%s'. Attempting global fallback." % cat)
-		item = random_orderable(current_tier)
+		LogManager.warn("OrderItemPicker", "Category Search FAILURE: '%s'. Attempting global fallback." % str(cats))
+		item = random_orderable(current_tier, excluded_categories)
 	return item
 
 
-## Random unlocked sellable item. Falls back to any sellable item so dialogue never
-## gets an empty "something" request.
-static func random_orderable(current_tier: int) -> ItemData:
+## Random unlocked sellable item, respecting `excluded_categories` unless no other items exist.
+static func random_orderable(current_tier: int, excluded_categories: Array[String] = []) -> ItemData:
 	var all_unlocked: Array[ItemData] = []
+	var all_unlocked_unfiltered: Array[ItemData] = []
 	var absolute_fallback: Array[ItemData] = []
+	var absolute_fallback_unfiltered: Array[ItemData] = []
 
 	for item in InventoryManager.get_all_items():
 		if item.can_be_sold:
-			absolute_fallback.append(item)
+			var is_excluded: bool = item.category in excluded_categories
+			absolute_fallback_unfiltered.append(item)
+			if not is_excluded:
+				absolute_fallback.append(item)
 			if is_unlocked(item, current_tier):
-				all_unlocked.append(item)
+				all_unlocked_unfiltered.append(item)
+				if not is_excluded:
+					all_unlocked.append(item)
 
 	if not all_unlocked.is_empty():
 		return all_unlocked.pick_random()
 
+	if not all_unlocked_unfiltered.is_empty():
+		return all_unlocked_unfiltered.pick_random()
+
 	if not absolute_fallback.is_empty():
 		push_warning("[OrderItemPicker] No Tier %d items unlocked. Falling back to absolute random item pool." % current_tier)
 		return absolute_fallback.pick_random()
+
+	if not absolute_fallback_unfiltered.is_empty():
+		push_warning("[OrderItemPicker] No Tier %d items unlocked. Falling back to unfiltered absolute random item pool." % current_tier)
+		return absolute_fallback_unfiltered.pick_random()
 
 	push_warning("[OrderItemPicker] No sellable items available at all for fallback filler.")
 	return null

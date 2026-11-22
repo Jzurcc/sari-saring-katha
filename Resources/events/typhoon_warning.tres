@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "typhoon_warning"
+event_name = "Typhoon Warning"
+description = "A storm is heading this way. Neighbors are preparing to stock up on canned goods, instant noodles, and warm coffee."
+rumor_text = "Psst. Boss. Heavy clouds rolling in over the hills. Word from the terminal is Signal No. 1 tonight. Everyone's gonna be rushing for canned goods and coffee before the rain hits."
+affected_categories = ["can", "sachet"]
+affected_items = []
+demand_multiplier = 2.5
+tolerance_offset = 2

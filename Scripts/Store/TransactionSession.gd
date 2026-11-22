@@ -63,7 +63,7 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 		return
 
 	# Repayment preamble check
-	if customer.transaction_context.is_repaying:
+	if customer.transaction_context.is_repaying and customer.transaction_context.repayment_amount > 0.0:
 		customer.transaction_context.is_repaying = false
 		phase = Phase.REPAYMENT
 		var repay_timeline = customer.transaction_context.timeline
@@ -146,6 +146,8 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 
 		VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
 		var wants_debt: bool = context.wants_debt if context else false
+		if item.item_data.current_step < 0 and not wants_debt:
+			Dialogic.VAR.set_variable("Global_TipActive", true)
 		EventBus.transaction_completed.emit(item.item_data, true, wants_debt, c_path)
 
 		if not item.is_transient:
@@ -153,8 +155,13 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		item.notify_placed()
 		item.play_give_animation()
 
-		var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
-		on_item_delivered(customer, is_whole_order_done)
+		var gm_guided: GameManager = null
+		if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
+			gm_guided = _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
+		var is_guided: bool = (context != null and context.is_guided_tutorial) or (gm_guided != null and gm_guided.tutorial != null and gm_guided.tutorial.is_guided_timeline_active())
+		if not is_guided:
+			var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
+			on_item_delivered(customer, is_whole_order_done)
 		return true
 	else:
 		# If given an item before greeting, trigger greeting instead of WrongItem.
@@ -284,6 +291,9 @@ func on_dialogic_signal(argument: String) -> void:
 	elif argument == "partial_dismiss" or argument == "story_success":
 		_is_partial_success = true
 		_pending_dismiss = true
+	elif argument == "event_announced":
+		if is_instance_valid(StoreEventManager):
+			StoreEventManager.mark_event_announced()
 	elif argument == "utang_accepted":
 		EventBus.utang_accepted.emit(current_customer)
 	elif argument == "utang_rejected":
@@ -302,20 +312,32 @@ func on_dialogic_signal(argument: String) -> void:
 	elif argument == "setup_repay_full":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			var path = current_customer.customer_data.resource_path
-			var debt = StoryManager.customer_debts.get(path, 0.0)
-			current_customer.transaction_context.is_repaying = true
-			current_customer.transaction_context.repayment_amount = debt
-			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
-			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", debt)
+			var debt: float = float(StoryManager.customer_debts.get(path, 0.0))
+			if debt > 0.0:
+				current_customer.transaction_context.is_repaying = true
+				current_customer.transaction_context.repayment_amount = debt
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", debt)
+			else:
+				current_customer.transaction_context.is_repaying = false
+				current_customer.transaction_context.repayment_amount = 0.0
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
 	elif argument == "setup_repay_half":
 		if is_instance_valid(current_customer) and current_customer.transaction_context:
 			var path = current_customer.customer_data.resource_path
-			var debt = StoryManager.customer_debts.get(path, 0.0)
-			var half = floor(debt / 2.0)
-			current_customer.transaction_context.is_repaying = true
-			current_customer.transaction_context.repayment_amount = half
-			Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
-			Dialogic.VAR.set_variable("Transaction_RepaymentAmount", half)
+			var debt: float = float(StoryManager.customer_debts.get(path, 0.0))
+			var half: float = floor(debt / 2.0) if debt >= 2.0 else debt
+			if half > 0.0:
+				current_customer.transaction_context.is_repaying = true
+				current_customer.transaction_context.repayment_amount = half
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 1.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", half)
+			else:
+				current_customer.transaction_context.is_repaying = false
+				current_customer.transaction_context.repayment_amount = 0.0
+				Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
+				Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
 	elif argument == "spawn_guest":
 		if is_instance_valid(guest_customer) and guest_customer.has_method("trigger_arrival"):
 			guest_customer.trigger_arrival()
@@ -356,6 +378,10 @@ func on_dialogue_ended() -> void:
 	var ending_phase := phase
 	phase = Phase.NONE
 	_current_timeline_path = ""
+
+	if is_instance_valid(current_customer) and current_customer.transaction_context:
+		if current_customer.transaction_context.event_rumor_active and is_instance_valid(StoreEventManager):
+			StoreEventManager.mark_event_announced(current_customer.transaction_context.pending_event_id)
 
 	if _pending_dismiss:
 		_pending_dismiss = false

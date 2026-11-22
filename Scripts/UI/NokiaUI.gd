@@ -90,8 +90,8 @@ func _animate_exit_and_free() -> void:
 
 
 func _scan_and_connect_nodes(node: Node) -> void:
-	# Skip the RestockMenu subtree entirely — its buttons are NOT Nokia keys
-	if node.name == "RestockMenu":
+	# Skip the RestockMenu and UpgradeMenu subtrees — their buttons are NOT Nokia keys
+	if node.name == "RestockMenu" or node.name == "UpgradeMenu":
 		return
 	
 	# Find the Nokia screen label
@@ -99,6 +99,8 @@ func _scan_and_connect_nodes(node: Node) -> void:
 		screen_label = node
 		screen_label.text = ""
 	elif node is Button:
+		# Prevent Space/Enter during Dialogic dialogue from re-activating focused Nokia keypad buttons
+		node.focus_mode = Control.FOCUS_NONE
 		var btn_name = node.name.to_lower()
 		match btn_name:
 			"clear":
@@ -188,7 +190,45 @@ func _on_asterisk_pressed() -> void:
 	_play_button_sound("asterisk")
 	_trigger_store_menu()
 
+func start_incoming_answer() -> void:
+	if _is_calling:
+		return
+	_is_calling = true
+	_move_to_side()
+
+	if not phone_anchor:
+		phone_anchor = get_tree().root.find_child("PhoneMarker3D", true, false) as Node3D
+
+	if not phone_anchor:
+		push_error("[NokiaUI] No phone_anchor found for incoming call!")
+		_is_calling = false
+		return
+
+	MarioManager.call_ended.connect(_on_mario_call_finished, CONNECT_ONE_SHOT)
+	MarioManager.answer_incoming_upgrade_call(phone_anchor)
+
 func _trigger_store_menu() -> void:
+	# Special Tutorial Step 4: play ringtone, close phone, and turn around to face Uncle Mario
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	if gm and gm.tutorial and gm.tutorial.is_waiting_for_phone_call():
+		if _is_calling:
+			return
+		_is_calling = true
+		var ring_player := AudioStreamPlayer.new()
+		ring_player.bus = "SFX"
+		ring_player.stream = MarioManager.sfx_dial
+		add_child(ring_player)
+		ring_player.play()
+		await get_tree().create_timer(1.4).timeout
+		if is_instance_valid(ring_player):
+			ring_player.stop()
+			ring_player.queue_free()
+		_is_calling = false
+		_on_close_pressed()
+		if is_instance_valid(gm) and gm.tutorial:
+			gm.tutorial.complete_tutorial_phone_call()
+		return
+
 	# Block if already in a call or restocking is active
 	if _is_calling or MarioManager.is_restocking_active:
 		return
@@ -210,26 +250,30 @@ func _trigger_store_menu() -> void:
 	MarioManager.call_ended.connect(_on_mario_call_finished, CONNECT_ONE_SHOT)
 	MarioManager.initiate_call(phone_anchor, bypass_cooldown)
 
-func _on_mario_call_finished(success: bool) -> void:
-	print("[NokiaUI] Mario call finished. Success: ", success)
+func _on_mario_call_finished(success: bool, action: String = "restock") -> void:
+	print("[NokiaUI] Mario call finished. Success: ", success, " Action: ", action)
 	_is_calling = false
 	
 	if success:
-		var actual_menu = store_menu if store_menu else get_node_or_null("RestockMenu")
-		if actual_menu:
-			actual_menu.visible = true
-			if actual_menu.has_method("open_menu"):
-				actual_menu.open_menu()
+		var target_menu: Control = null
+		if action == "upgrade":
+			target_menu = get_node_or_null("UpgradeMenu")
+		else:
+			target_menu = store_menu if store_menu else get_node_or_null("RestockMenu")
+		if target_menu:
+			target_menu.visible = true
+			if target_menu.has_method("open_menu"):
+				target_menu.open_menu()
 			
-			# NEW: Set focus to a button in the store menu to prevent keyboard/Space leak to the Nokia background 
-			var default_btn = actual_menu.get_node_or_null("%AllBtn") 
+			# Set focus to a button in the menu to prevent keyboard/Space leak to the Nokia background
+			var default_btn = target_menu.get_node_or_null("%AllBtn")
 			if default_btn:
 				default_btn.grab_focus()
 				
 			_move_to_side()
 	else:
-		# If call failed or was cancelled by Mario, wait a bit then close
-		pass
+		# CallRest, Busy, or Nevermind — close the phone cleanly after Mario finishes talking
+		_on_close_pressed()
 
 func _update_screen() -> void:
 	if not screen_label:

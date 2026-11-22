@@ -2,8 +2,13 @@ extends WorldInteractor
 
 @export var notebook_ui_scene: PackedScene
 
+const BLINK_COLOR := Color(1.0, 0.85, 0.15, 1.0)
+const BLINK_DIM_COLOR := Color(1.0, 0.85, 0.15, 0.12)
+
 var _meshes: Array[MeshInstance3D] = []
 var _is_ui_open: bool = false
+var _is_hovered: bool = false
+var _blink_tween: Tween = null
 
 func _ready() -> void:
 	add_to_group("notebook_item")
@@ -12,6 +17,44 @@ func _ready() -> void:
 	outline_width = 64.0
 	outline_shader = preload("res://Shaders/outline.gdshader")
 	_collect_meshes()
+	StoryManager.pending_debts_changed.connect(_refresh_blink_state)
+	EventBus.customer_satisfied.connect(_on_customer_left)
+	EventBus.customer_dismissed.connect(_on_customer_left)
+	_refresh_blink_state()
+
+func _on_customer_left(_customer: Customer) -> void:
+	_refresh_blink_state()
+
+func _refresh_blink_state() -> void:
+	if _is_hovered:
+		_stop_blink()
+		_apply_outline(BLINK_COLOR if StoryManager.has_pending_debts() else default_outline_color)
+		return
+
+	if StoryManager.has_pending_debts() and Dialogic.current_timeline == null:
+		_start_blink()
+	else:
+		_stop_blink()
+		_remove_outline()
+
+func _start_blink() -> void:
+	if _blink_tween and _blink_tween.is_valid():
+		return
+	_apply_outline(BLINK_COLOR)
+	if not _outline_mat:
+		return
+	_blink_tween = create_tween().set_loops()
+	_blink_tween.tween_method(_set_blink_color, BLINK_DIM_COLOR, BLINK_COLOR, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_blink_tween.tween_method(_set_blink_color, BLINK_COLOR, BLINK_DIM_COLOR, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _set_blink_color(col: Color) -> void:
+	if _outline_mat:
+		_outline_mat.set_shader_parameter("outline_color", col)
+
+func _stop_blink() -> void:
+	if _blink_tween and _blink_tween.is_valid():
+		_blink_tween.kill()
+	_blink_tween = null
 
 func _collect_meshes() -> void:
 	var notebook_root = get_node_or_null("../notebook")
@@ -35,10 +78,8 @@ func get_visual_nodes() -> Array[Node3D]:
 	return result
 
 func on_hover(is_hovered: bool) -> void:
-	if is_hovered:
-		_apply_outline(default_outline_color)
-	else:
-		_remove_outline()
+	_is_hovered = is_hovered
+	_refresh_blink_state()
 
 func on_interact() -> void:
 	if _is_ui_open:
@@ -60,3 +101,4 @@ func _on_notebook_ui_closed() -> void:
 	_is_ui_open = false
 	# Restore first-person input
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_refresh_blink_state()

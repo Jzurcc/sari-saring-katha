@@ -266,6 +266,8 @@ else:
 	Buboy: Hehe!
 	Buboy: Perfect!
 	Buboy: Mama will be so happy!
+	if {Global_TipActive}:
+		Buboy: Aba, that was quite cheap. Keep the change po!
 	Buboy: Thank you, po!
 	Buboy: Hehe!
 	Buboy: Come on, [i]Damulag[/i]! Let's go home!

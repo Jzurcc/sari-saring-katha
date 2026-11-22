@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "summer_heat"
+event_name = "Intense Heatwave"
+description = "Blistering afternoon heat. Trike drivers and kids are desperate for cold drinks, juices, and sweet candy."
+rumor_text = "Whew. Boss, it's brutal out there today. Even the stray dogs are hiding under the jeepneys. Anyone passing by is gonna want cold drinks and candy to cool down."
+affected_categories = ["bottle", "candy"]
+affected_items = []
+demand_multiplier = 2.5
+tolerance_offset = 2

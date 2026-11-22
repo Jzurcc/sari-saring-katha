@@ -198,11 +198,21 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	# Check if we have a pending tier unlock now that the counter is clear
 	StoryManager.process_pending_unlock()
 
+	# Wait for the post-departure time-skip timelapse to finish before starting the inter-customer delay
+	if StoryManager.clock.is_fast_forwarding():
+		await StoryManager.clock.fast_forward_finished
+		if not is_inside_tree():
+			_is_spawning = false
+			return
+
 	var delay = randf_range(0.0, 1.5)
 	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 
 	await get_tree().create_timer(delay).timeout
+	if not is_inside_tree():
+		_is_spawning = false
+		return
 	_is_spawning = false
 	_spawn_next_customer()
 
@@ -249,6 +259,11 @@ func spawn_mayari_for_collection() -> void:
 		return
 	
 	_is_spawning = true
+
+	# Ensure tonight's quota is always calculated and synced to Dialogic before Mayari spawns
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	if gm:
+		gm.prepare_nightly_quota()
 	
 	# Request the special collection transaction from StoryManager
 	var transaction = StoryManager.get_collection_transaction()
@@ -285,16 +300,28 @@ func _on_nokia_closed() -> void:
 func get_save_id() -> String:
 	return "customer_spawner"
 
+func _is_completed_order(ctx: TransactionContext) -> bool:
+	if ctx == null:
+		return false
+	if ctx.is_guided_tutorial or ctx.transaction_type == TransactionContext.Type.VISIT or ctx.is_visit_story:
+		return false
+	return ctx.original_count > 0 and ctx.desired_items.is_empty() and not ctx.delivered_items.is_empty()
+
 func get_save_data() -> Dictionary:
 	var data := {}
 	
 	if is_instance_valid(current_customer) and current_customer.transaction_context:
-		data["current_customer"] = current_customer.transaction_context.to_dict()
-		data["current_greeted"] = current_customer.has_been_greeted
+		var is_already_done: bool = current_customer._is_resolving \
+			or session.phase == TransactionSession.Phase.SATISFIED \
+			or _is_completed_order(current_customer.transaction_context)
+		if not is_already_done:
+			data["current_customer"] = current_customer.transaction_context.to_dict()
+			data["current_greeted"] = current_customer.has_been_greeted
 		
 	if is_instance_valid(guest_customer) and guest_customer.transaction_context:
-		data["guest_customer"] = guest_customer.transaction_context.to_dict()
-		data["guest_greeted"] = guest_customer.has_been_greeted
+		if not guest_customer._is_resolving:
+			data["guest_customer"] = guest_customer.transaction_context.to_dict()
+			data["guest_greeted"] = guest_customer.has_been_greeted
 		
 	return data
 
@@ -311,12 +338,18 @@ func load_save_data(data: Dictionary) -> void:
 		var ctx_data = data["current_customer"]
 		var ctx = TransactionContext.from_dict(ctx_data)
 		if ctx and ctx.customer_data:
-			_pending_restore_transaction = ctx
-			LogManager.info("CustomerSpawner", "Queuing restored customer for fresh walk-in: %s" % ctx.customer_data.character_name)
-			
-			# Delay slightly to ensure self is ready, then trigger spawn
-			get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
-			return
+			if _is_completed_order(ctx):
+				LogManager.info("CustomerSpawner", "Skipping already-completed restored customer (%s); spawning next." % ctx.customer_data.character_name)
+				StoryManager.clock.is_customer_present = false
+				StoryManager.clock.wait_limit_time = -1.0
+				StoryManager.clock.was_paused_by_limit = false
+			else:
+				_pending_restore_transaction = ctx
+				LogManager.info("CustomerSpawner", "Queuing restored customer for fresh walk-in: %s" % ctx.customer_data.character_name)
+				
+				# Delay slightly to ensure self is ready, then trigger spawn
+				get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
+				return
 
 	# If no active customer was at the counter at save time, resume customer spawning
 	if not StoryManager.is_past_closing_time():

@@ -41,6 +41,8 @@ if {Transaction_SatisfyVar} <= 50:
 	ReynaMayari:  It is acceptable. Your service remains adequate under the eternal sun.
 else:
 	ReynaMayari: The Moon acknowledges your tribute. [pause=0.4] This will pair perfectly with my eternal solitude.
+if {Global_TipActive}:
+	ReynaMayari: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

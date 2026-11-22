@@ -1,33 +1,79 @@
 [gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://5wdftw82p7eg"]
 
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="1_h0x5s"]
-[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="2_euh2b"]
+[ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_5iw5y"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_5iw5y"]
 [ext_resource type="Resource" uid="uid://c3uougawddnkw" path="res://Dialogue/Timelines/Brahim.dch" id="5_8rogq"]
 [ext_resource type="AudioStream" uid="uid://dilg88qhh1swl" path="res://Audio/DialogueBlips/Brahim.wav" id="6_e6vk5"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="7_poydn"]
 [ext_resource type="Texture2D" uid="uid://d3fat3af8p2k6" path="res://Assets/characters/sprites/Brahim.png" id="8_sw35w"]
-[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="9_u5mhi"]
 [ext_resource type="Resource" uid="uid://deblnveoir8f0" path="res://Dialogue/Timelines/Brahim/Story.dtl" id="10_story"]
 [ext_resource type="Resource" uid="uid://d2bs58pcxejrb" path="res://Dialogue/Timelines/Brahim/Purchase.dtl" id="brahim_purchase"]
 [ext_resource type="Resource" uid="uid://dgxmsapgmuqq3" path="res://Dialogue/Timelines/Brahim/Visit.dtl" id="brahim_visit"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
-[sub_resource type="Resource" id="arcdata_script"]
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("frozen")
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("can")
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("frozen")
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("can")
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="chapter_6"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("frozen")
+
+[sub_resource type="Resource" id="chapter_7"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("candy")
+
+[sub_resource type="Resource" id="chapter_8"]
+script = ExtResource("chapterdata_script")
+categories = PackedStringArray("pack")
+
+[sub_resource type="Resource" id="arc_0"]
 script = ExtResource("1_h0x5s")
+arc_name = "Arc 1: Low-Resolution Reality"
+purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
+visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("1_h0x5s")
+arc_name = "Arc 2: Debugging the Forest"
+purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
+visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
+
+[sub_resource type="Resource" id="arc_2"]
+script = ExtResource("1_h0x5s")
+arc_name = "Arc 3: System Stable"
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
 visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
 
 [resource]
 script = ExtResource("7_poydn")
 character_name = "Brahim"
-sprite_texture = ExtResource("8_sw35w")
 dialogic_character = ExtResource("5_8rogq")
-dialogue_blip_volume = -3.0
-story_timeline = ExtResource("10_story")
-max_story_chapters = 9
-chapter_categories = Array[String](["frozen", "can", "pack", "frozen", "can", "pack", "frozen", "candy", "pack"])
-character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arcdata_script")])
-arc_names = Array[String](["Arc 1: Low-Resolution Reality", "Arc 2: Debugging the Forest", "Arc 3: System Stable"])
-chapter_names = Array[String](["", "", "", "", "", "", "", "", ""])
+sprite_texture = ExtResource("8_sw35w")
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("6_e6vk5")
+dialogue_blip_volume = -3.0
+story_timeline = ExtResource("10_story")
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
+character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

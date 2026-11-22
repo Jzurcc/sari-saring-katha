@@ -22,9 +22,9 @@ var _last_hovered: WorldInteractor = null
 # Cached node references
 var _game_manager: GameManager = null
 
-# Scroll sensitivity accumulator (taking more scroll notches per 0.50 increment)
+# Scroll sensitivity accumulator (1 scroll notch = 1 discrete price step)
 var _scroll_event_count: int = 0
-const SCROLL_THRESHOLD: int = 3
+const SCROLL_THRESHOLD: int = 1
 
 func _ready() -> void:
 	if interaction_range <= 0.0:
@@ -39,6 +39,15 @@ func _ready() -> void:
 	_q_customer.collide_with_areas = true
 	_q_customer.collide_with_bodies = false
 	_q_customer.collision_mask = LAYER_CUSTOMERS
+
+	EventBus.drag_ended.connect(_on_drag_ended)
+
+func _on_drag_ended(_item: DraggableItem, _dropped_successfully: bool) -> void:
+	# Force fresh hover + pricing lens evaluation on the next frame after dropping an item
+	if is_instance_valid(_last_hovered):
+		_last_hovered.on_hover(false)
+		_last_hovered.set_pricing_ui_active(false)
+	_last_hovered = null
 
 	call_deferred("_cache_node_refs")
 
@@ -83,12 +92,16 @@ func _physics_process(_delta: float) -> void:
 	var current_hovered: WorldInteractor = null
 
 	if DragManager.is_dragging:
-		# When dragging, completely ignore items so we don't highlight shelves/containers.
-		# Only allow hovering over the customer to indicate they can receive the item,
-		# or the trash bin for deletion.
-		if hit_customer:
+		# When dragging, highlight valid drop targets:
+		# customer, trash bin, blinking container placement slot, or a matching placed dispenser for refills.
+		var dragged_data: ItemData = DragManager.get_dragged_item_data()
+		if hit_item and hit_item.collider.is_in_group("container_drop_slot"):
+			current_hovered = _resolve_interactor(hit_item.collider)
+		elif hit_item and hit_item.collider.is_in_group("dispenser_containers") and hit_item.collider.has_method("accepts_refill") and hit_item.collider.accepts_refill(dragged_data):
+			current_hovered = _resolve_interactor(hit_item.collider)
+		elif hit_customer and not DispenserContainerItem.is_container_prop(dragged_data):
 			current_hovered = _resolve_interactor(hit_customer.collider)
-		elif hit_item and hit_item.collider.is_in_group("trash"):
+		elif hit_item and hit_item.collider.is_in_group("trash") and not DispenserContainerItem.is_container_prop(dragged_data):
 			current_hovered = _resolve_interactor(hit_item.collider)
 	else:
 		# Items take priority when they are in front of the customer,
@@ -104,10 +117,10 @@ func _physics_process(_delta: float) -> void:
 	if current_hovered != _last_hovered:
 		if is_instance_valid(_last_hovered):
 			_last_hovered.on_hover(false)
+			_last_hovered.set_pricing_ui_active(false)
 		if is_instance_valid(current_hovered):
+			current_hovered.set_pricing_ui_active(pricing_mode_active)
 			current_hovered.on_hover(true)
-			if pricing_mode_active:
-				current_hovered.set_pricing_ui_active(pricing_mode_active)
 		_last_hovered = current_hovered
 
 func _input(event: InputEvent) -> void:
@@ -133,13 +146,25 @@ func _input(event: InputEvent) -> void:
 			_last_hovered.set_pricing_ui_active(pricing_mode_active)
 		return
 
+	# Price Ledger Toggle (L)
+	var is_ledger_press := false
+	if event.is_action_pressed("toggle_ledger") and not event.echo:
+		is_ledger_press = true
+	elif event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_L or event.keycode == KEY_L):
+		is_ledger_press = true
+
+	if is_ledger_press and allow_interaction:
+		EventBus.price_ledger_toggled.emit(true)
+		get_viewport().set_input_as_handled()
+		return
+
 	# Pricing Adjustments (Direct Price Mode)
 	if pricing_mode_active and is_instance_valid(_last_hovered):
 		var delta := 0.0
 		if event.is_action_pressed("price_up"):
-			delta = 0.5
+			delta = 1.0
 		elif event.is_action_pressed("price_down"):
-			delta = -0.5
+			delta = -1.0
 
 		if delta != 0.0:
 			var trigger_adj := false

@@ -1,5 +1,7 @@
 extends Node
 
+signal pending_debts_changed
+
 ## StoryManager — manages story progression and builds customer transactions.
 ## The clock runs freely from DAY_START_HOUR to CLOSING_HOUR with no event slots.
 
@@ -40,6 +42,7 @@ var is_mayari_debt_active: bool = true
 var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 var customer_debts: Dictionary = {}
+var pending_debts: Array[Dictionary] = [] # [{ "customer_path": String, "amount": float }]
 var _save_requested: bool = false
 
 # --- Story Progression ---
@@ -72,6 +75,38 @@ func get_required_purchases_for_next_tier() -> int:
 var pending_upgrade_tier: int = 0
 var pending_upgrade_cost: float = 0.0
 var _upgrade_item_cache: Dictionary = {}
+
+## Physical container equipment props delivered in plastic bags on tier upgrades.
+const CONTAINER_PROP_PATHS: Array[String] = [
+	"res://Resources/items/candycontainer/Mix.tres",
+	"res://Resources/items/candycontainer/Chubs.tres",
+	"res://Resources/items/candycontainer/Mentor.tres",
+	"res://Resources/items/candycontainer/Pocha.tres",
+	"res://Resources/items/sachetcontainers/KneesToes.tres",
+	"res://Resources/items/sachetcontainers/Kopimo.tres",
+	"res://Resources/items/sachetcontainers/Aryel.tres",
+]
+var placed_containers: Array[String] = []
+
+func is_container_placed(resource_path: String) -> bool:
+	return resource_path != "" and resource_path in placed_containers
+
+func mark_container_placed(resource_path: String) -> void:
+	if resource_path == "":
+		return
+	if resource_path not in placed_containers:
+		placed_containers.append(resource_path)
+		_save_progression()
+
+func get_unplaced_containers_for_tier(tier: int) -> Array[ItemData]:
+	var result: Array[ItemData] = []
+	for path in CONTAINER_PROP_PATHS:
+		if not ResourceLoader.exists(path):
+			continue
+		var res := load(path) as ItemData
+		if res and res.tier == tier and not is_container_placed(res.resource_path):
+			result.append(res)
+	return result
 
 @export_group("Transaction Probabilities")
 ## Chance (0.0 to 1.0) that a customer will start with a rumor.
@@ -147,7 +182,10 @@ func advance_tier(source: String = "Manual") -> void:
 	EventBus.tier_advanced.emit(current_tier, source)
 
 func get_upgrade_cost(target_tier: int) -> float:
-	return 80.0 + float(target_tier - 2) * 20.0
+	var step := float(maxi(0, target_tier - 2))
+	var linear_base := 80.0 + step * 20.0
+	var scaled := linear_base * (1.0 + 0.05 * step)
+	return roundf(scaled / 5.0) * 5.0
 
 ## Returns a virtual ItemData representating a store upgrade for a specific tier.
 func get_tier_upgrade_item(target_tier: int) -> ItemData:
@@ -192,6 +230,9 @@ func process_pending_unlock() -> void:
 	# Always offer the NEXT sequential upgrade for purchase
 	pending_upgrade_tier = current_tier + 1
 	pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
+
+	# Refresh Uncle Mario's delivery cooldown so he is immediately ready
+	InventoryManager.customers_needed_for_delivery = 0
 	
 	# But the notification highlights the specific tier that was JUST unlocked
 	var notify_tier = _last_tier_unlocked_notification if _last_tier_unlocked_notification > 0 else pending_upgrade_tier
@@ -236,18 +277,21 @@ func get_save_data() -> Dictionary:
 		"max_unlocked_tier": max_unlocked_tier,
 		"purchase_counter": purchase_counter,
 		"customer_debts": customer_debts.duplicate(),
+		"pending_debts": pending_debts.duplicate(true),
 		"pending_upgrade_tier": pending_upgrade_tier,
 		"pending_upgrade_cost": pending_upgrade_cost,
 		"has_mayari_visited": has_mayari_visited,
 		"is_mayari_debt_active": is_mayari_debt_active,
 		"is_mayari_met": is_mayari_met,
 		"last_mayari_collection_successful": last_mayari_collection_successful,
-		"current_display_time": _current_display_time,
-		"is_clock_running": is_clock_running,
+		"current_display_time": clock.get_effective_display_time(),
+		"is_clock_running": is_clock_running or clock._is_fast_forwarding,
 		"wait_limit_time": wait_limit_time,
+		"active_time_window_hours": clock.active_time_window_hours,
 		"was_paused_by_limit": was_paused_by_limit,
 		"is_customer_present": is_customer_present,
 		"_last_notified_tier": _last_notified_tier,
+		"placed_containers": placed_containers.duplicate(),
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -255,6 +299,14 @@ func load_save_data(data: Dictionary) -> void:
 	max_unlocked_tier = data.get("max_unlocked_tier", max_unlocked_tier)
 	purchase_counter = data.get("purchase_counter", purchase_counter)
 	customer_debts = data.get("customer_debts", {})
+	pending_debts.clear()
+	for entry in data.get("pending_debts", []):
+		if entry is Dictionary and entry.has("customer_path") and float(entry.get("amount", 0.0)) > 0.0:
+			pending_debts.append({
+				"customer_path": str(entry["customer_path"]),
+				"amount": float(entry["amount"])
+			})
+	pending_debts_changed.emit()
 	pending_upgrade_tier = data.get("pending_upgrade_tier", 0)
 	pending_upgrade_cost = data.get("pending_upgrade_cost", 0.0)
 	has_mayari_visited = data.get("has_mayari_visited", false)
@@ -264,9 +316,22 @@ func load_save_data(data: Dictionary) -> void:
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
 	is_clock_running = data.get("is_clock_running", false)
 	wait_limit_time = data.get("wait_limit_time", -1.0)
+	clock.active_time_window_hours = float(data.get("active_time_window_hours", DayClock.CUSTOMER_TIME_WINDOW_HOURS))
 	was_paused_by_limit = data.get("was_paused_by_limit", false)
 	is_customer_present = data.get("is_customer_present", false)
 	_last_notified_tier = data.get("_last_notified_tier", 0)
+
+	placed_containers.clear()
+	if data.has("placed_containers"):
+		for p in data["placed_containers"]:
+			placed_containers.append(str(p))
+	else:
+		# Backward compatibility for older saves: treat already-unlocked tier containers as placed
+		for path in CONTAINER_PROP_PATHS:
+			if ResourceLoader.exists(path):
+				var res := load(path) as ItemData
+				if res and res.tier <= current_tier:
+					placed_containers.append(res.resource_path)
 
 	CharacterProgressionManager.migrate_from_story_manager_save(data)
 	DialogicBridge.sync_global(day, current_tier, max_unlocked_tier, 1)
@@ -291,6 +356,8 @@ func reset_state() -> void:
 	pending_upgrade_tier = 0
 	pending_upgrade_cost = 0.0
 	customer_debts = {}
+	pending_debts.clear()
+	pending_debts_changed.emit()
 	has_mayari_visited = false
 	is_mayari_debt_active = true
 	is_mayari_met = false
@@ -298,6 +365,7 @@ func reset_state() -> void:
 	_last_tier_unlocked_notification = 0
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0
+	placed_containers.clear()
 	clock.reset_state()
 	SaveManager.delete_save()
 
@@ -311,11 +379,52 @@ func _on_debt_quota_met(was_successful: bool) -> void:
 	last_mayari_collection_successful = was_successful
 	_save_progression()
 
+func queue_pending_debt(customer_path: String, amount: float) -> void:
+	if customer_path == "" or amount <= 0.0:
+		return
+	# Combine with an existing unlogged entry for the same customer if present
+	for entry in pending_debts:
+		if str(entry.get("customer_path", "")) == customer_path:
+			entry["amount"] = float(entry.get("amount", 0.0)) + amount
+			LogManager.info("StoryManager", "Updated pending utang for %s: +%.2f (Pending: %.2f)" % [customer_path.get_file(), amount, float(entry["amount"])])
+			pending_debts_changed.emit()
+			_save_progression()
+			return
+	pending_debts.append({
+		"customer_path": customer_path,
+		"amount": amount
+	})
+	LogManager.info("StoryManager", "Queued pending utang for %s: %.2f (awaiting Loan Ledger entry)" % [customer_path.get_file(), amount])
+	pending_debts_changed.emit()
+	_save_progression()
+
+func has_pending_debts() -> bool:
+	return not pending_debts.is_empty()
+
+func commit_pending_debt(index: int) -> void:
+	if index < 0 or index >= pending_debts.size():
+		return
+	var entry: Dictionary = pending_debts[index]
+	pending_debts.remove_at(index)
+	record_debt(str(entry.get("customer_path", "")), float(entry.get("amount", 0.0)))
+	pending_debts_changed.emit()
+
 func record_debt(customer_path: String, amount: float) -> void:
 	var current = customer_debts.get(customer_path, 0.0)
 	customer_debts[customer_path] = current + amount
 	LogManager.info("StoryManager", "Recorded Debt for %s: +%.2f (Total: %.2f)" % [customer_path.get_file(), amount, customer_debts[customer_path]])
 	_save_progression()
+
+func reduce_debt(customer_path: String, amount: float) -> void:
+	if not customer_debts.has(customer_path) or amount <= 0.0:
+		return
+	var remaining: float = float(customer_debts[customer_path]) - amount
+	if remaining <= 0.01:
+		clear_debt(customer_path)
+	else:
+		customer_debts[customer_path] = remaining
+		LogManager.info("StoryManager", "Debt REDUCED for %s: -%.2f (Remaining: %.2f)" % [customer_path.get_file(), amount, remaining])
+		_save_progression()
 
 func clear_debt(customer_path: String) -> void:
 	if customer_debts.has(customer_path):
@@ -385,14 +494,23 @@ func _on_customer_satisfied(customer) -> void:
 			CharacterProgressionManager.record_encounter(customer.customer_data.resource_path)
 		LogManager.info("StoryManager", "Guided tutorial encounter successfully completed and saved.")
 
-func _on_customer_arrived(_customer: Customer) -> void:
-	clock.on_customer_arrived()
+	if customer != null:
+		clock.on_customer_dismissed()
 
-func _on_customer_dismissed(_customer: Customer) -> void:
-	clock.on_customer_dismissed()
-	_set_last_customer_info(_customer)
+func _on_customer_arrived(customer: Customer) -> void:
+	if customer != null:
+		var is_visit := false
+		if customer.transaction_context:
+			is_visit = customer.transaction_context.transaction_type == TransactionContext.Type.VISIT \
+				or customer.transaction_context.is_visit_story
+		clock.on_customer_arrived(is_visit)
+
+func _on_customer_dismissed(customer: Customer) -> void:
+	if customer != null:
+		clock.on_customer_dismissed()
+	_set_last_customer_info(customer)
 	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Unhappy")
-	_process_story_cooldown(_customer)
+	_process_story_cooldown(customer)
 
 func _set_last_customer_info(customer: Customer) -> void:
 	if customer == null:
@@ -484,6 +602,7 @@ func refresh_desires() -> void:
 	var old_type = transaction.transaction_type
 	var old_timeline = transaction.timeline
 	var old_visit_story = transaction.is_visit_story
+	var old_items: Array[ItemData] = transaction.desired_items.duplicate()
 	
 	transaction.desired_items.clear()
 	_build_transaction_context(transaction, customer.customer_data, old_type == TransactionContext.Type.STORY)
@@ -492,8 +611,20 @@ func refresh_desires() -> void:
 	transaction.transaction_type = old_type
 	transaction.timeline = old_timeline
 	transaction.is_visit_story = old_visit_story
+
+	# Guard: if _build_transaction_context rolled VISIT during a PURCHASE refresh,
+	# desired_items would be left empty — restore the previous items so the customer
+	# never rejects the exact items they asked for.
+	if old_type != TransactionContext.Type.VISIT and not old_visit_story and transaction.desired_items.is_empty():
+		if not old_items.is_empty():
+			transaction.desired_items.assign(old_items)
+		else:
+			var fallback := OrderItemPicker.random_orderable(current_tier)
+			if fallback:
+				transaction.desired_items.append(fallback)
 	
 	upgrade_desires()
+	EventBus.customer_order_updated.emit(customer.customer_data.character_name, transaction.desired_items, transaction.is_riddle)
 	LogManager.info("StoryManager", "REFRESH: %s -> %s" % [old_desires, Dialogic.VAR.get_variable("Transaction_ItemWants", "")])
 	LogManager.info("StoryManager", "Desires refreshed and upgraded via signal.")
 

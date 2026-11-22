@@ -1,12 +1,20 @@
 label Call
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Oh hello? What is it again? You need more stock? Just give me the list and I'll bring it to you soon.
+	UncleMario: Oh hello? What is it again? You need more stock or are we expanding the store?
 elif {Variation} == 2.0:
-	UncleMario: Uy, [i]anak[/i]! Stock running low already? [pause=0.4] Don't worry, Uncle's got you covered. What do you need today?
+	UncleMario: Uy, [i]anak[/i]! Calling Uncle already? [pause=0.4] Don't worry, I've got you covered. What do you need today?
 else:
 	UncleMario: Hello? [pause=0.8] [shake rate=20 level=10]Yawn...[/shake] [pause=0.7] Oh, hello anak. I was just about to have my second coffee. Tell me what you need so I can get moving.
-
+- Restock my shelves.
+	[signal arg="mario_open_restock"]
+	UncleMario: Sige, just send me the list and I'll bring it right over!
+- Let's upgrade the store.
+	[signal arg="mario_open_upgrade"]
+	UncleMario: Oho, expanding already? Let's take a look at the upgrade packages!
+- Nevermind, wrong dial!
+	[signal arg="mario_cancel_call"]
+	UncleMario: Haha, okay lang, [i]anak[/i]! Just call me whenever you need anything.
 [end_timeline]
 
 label Busy
@@ -37,4 +45,36 @@ elif {Variation} == 2.0:
 	UncleMario: Delivery is here! Everything's stocked up. Stay alert, okay? The night is still young, but don't overwork.
 else:
 	UncleMario: Alright, here's your order. I've placed the bags near the door. [pause=0.5] Don't work too hard, [i]anak[/i]. See you around!
+[end_timeline]
+
+label UpgradeCall
+UncleMario: Uy, [i]anak[/i]! Good thing you picked up!
+UncleMario: I just got a fresh batch of next-tier stock ready to be bought for your store!
+UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
+UncleMario: I've got the upgrade package ready for you right now — want to take a look?
+- Let's check the store upgrades!
+	[signal arg="mario_open_upgrade"]
+	UncleMario: That's the spirit! Here's what we've got ready.
+- Actually, I just need to restock.
+	[signal arg="mario_open_restock"]
+	UncleMario: No problem, [i]anak[/i]! Send me your restock list instead.
+- Maybe later, Uncle.
+	[signal arg="mario_cancel_call"]
+	UncleMario: Sige, take your time! Just ring me up whenever you're ready to expand.
+[end_timeline]
+
+label MissedUpgradeCall
+UncleMario: Uy, [i]anak[/i]! I was just trying to call you earlier, ah! Must've been busy at the counter.
+UncleMario: Anyway, good thing you called back — I've got a fresh batch of next-tier stock ready to be bought for your store!
+UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
+UncleMario: I've got the upgrade package ready for you right now — want to take a look?
+- Let's check the store upgrades!
+	[signal arg="mario_open_upgrade"]
+	UncleMario: That's the spirit! Here's what we've got ready.
+- Actually, I just need to restock.
+	[signal arg="mario_open_restock"]
+	UncleMario: No problem, [i]anak[/i]! Send me your restock list instead.
+- Maybe later, Uncle.
+	[signal arg="mario_cancel_call"]
+	UncleMario: Sige, take your time! Just ring me up whenever you're ready to expand.
 [end_timeline]

@@ -98,6 +98,9 @@ static func _has_available_story_chapter(c: CustomerData) -> bool:
 	return chapter < c.max_story_chapters and c.story_timeline != null and CharacterProgressionManager.is_story_chapter_available(c, chapter)
 
 static func select_character(sm: Node) -> Dictionary:
+	if is_instance_valid(StoreEventManager):
+		StoreEventManager.record_encounter()
+
 	var char_data: CustomerData = null
 	var force_story: bool = false
 
@@ -115,6 +118,15 @@ static func select_character(sm: Node) -> Dictionary:
 		force_story = true
 		LogManager.info("StoryManager", "FIRST ENCOUNTER: Forcing story for new character: %s" % char_data.get_clean_id())
 		return {"customer": char_data, "force_story": force_story}
+
+	# Priority 0.5: Pending Market Event Announcement (Danilo delivers the rumor!)
+	if is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
+		var danilo_candidates = unlocked.filter(func(c: CustomerData) -> bool: return c.get_clean_id() == "danilo")
+		if not danilo_candidates.is_empty():
+			char_data = danilo_candidates[0]
+			force_story = false
+			LogManager.info("StoryManager", "EVENT PENDING: Forcing Danilo to deliver market event rumor.")
+			return {"customer": char_data, "force_story": force_story}
 
 	# Priority 1: Cooldown is 0, check for available story chapters
 	if CharacterProgressionManager.global_story_cooldown <= 0:
@@ -161,7 +173,20 @@ static func build_transaction_context(
 	var is_collector: bool = data.is_collector()
 	var story_available: bool = story_pending and CharacterProgressionManager.is_story_chapter_available(data, chapter)
 
-	if (chapter == 0 or force_story) and story_available and not is_collector:
+	if not force_story and data.get_clean_id() == "danilo" and is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
+		var pending_event: StoreEventData = StoreEventManager.get_pending_event()
+		if pending_event:
+			transaction.transaction_type = TransactionContext.Type.VISIT
+			var visit_pool := data.get_visit_timelines(chapter)
+			if not visit_pool.is_empty():
+				transaction.timeline = visit_pool[0]
+			else:
+				transaction.timeline = load("res://Dialogue/Timelines/Danilo/Visit.dtl")
+			transaction.event_rumor_active = true
+			transaction.event_rumor_text = pending_event.rumor_text
+			transaction.pending_event_id = pending_event.event_id
+			LogManager.info("TransactionBuilder", "Configured Danilo visit to announce event: %s" % pending_event.event_name)
+	elif (chapter == 0 or force_story) and story_available and not is_collector:
 		transaction.transaction_type = TransactionContext.Type.STORY
 		transaction.timeline = data.story_timeline
 	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0 and not is_collector:
@@ -175,73 +200,72 @@ static func build_transaction_context(
 
 	# Assign Desired Items
 	if transaction.transaction_type != TransactionContext.Type.VISIT and not transaction.is_visit_story:
-		var pinned_request := data.get_chapter_request(chapter)
-		if pinned_request != null:
-			for entry in pinned_request.items:
-				var item: ItemData = entry.item if "item" in entry else entry
-				var item_auto_upgrade: bool = entry.auto_upgrade if "auto_upgrade" in entry else false
+		var pinned_items := data.get_chapter_pinned_items(chapter)
+		if not pinned_items.is_empty():
+			var upgrade_all: bool = data.get_chapter_upgrade_all_pinned(chapter)
+			for entry in pinned_items:
+				var item: ItemData = entry.item if entry else null
+				var item_auto_upgrade: bool = entry.auto_upgrade if entry else false
 
 				if item:
-					if item_auto_upgrade or pinned_request.upgrade_all or item.tier > sm.current_tier:
+					if item_auto_upgrade or upgrade_all or item.tier > sm.current_tier:
 						var best_in_cat := OrderItemPicker.best_for_category(item.category, sm.current_tier, item)
 						item = best_in_cat if best_in_cat else OrderItemPicker.random_orderable(sm.current_tier)
 					if item:
 						transaction.desired_items.append(item)
 		else:
-			var dynamic_cat := data.get_chapter_category(chapter)
-			if dynamic_cat != "":
-				transaction.requested_category = dynamic_cat
-
-			if transaction.transaction_type == TransactionContext.Type.PURCHASE and transaction.requested_category != "":
-				if randf() > 0.5:
-					transaction.requested_category = ""
-
+			var preferred_cats: Array[String] = data.get_chapter_preferred_categories(chapter)
+			var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
+			var prefer_hint: bool = data.has_riddle_preference()
 			var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
 
-			if transaction.requested_category != "":
-				var prefer_hint: bool = data.has_riddle_preference()
-				var item := OrderItemPicker.any_for_category(transaction.requested_category, sm.current_tier, prefer_hint)
-				if item:
-					transaction.desired_items.append(item)
-					transaction.best_item_name = item.item_name
-				else:
-					transaction.requested_category = ""
-
+			# Build general store pool (always filtering out excluded categories)
 			var pool: Array[ItemData] = []
 			var selection_roll := randf()
 			if selection_roll < DISPLAY_POOL_CHANCE:
 				var display_pool := InventoryManager.get_items_available_on_display()
 				for item in display_pool:
-					if OrderItemPicker.is_unlocked(item, sm.current_tier) and item.can_be_sold:
+					if OrderItemPicker.is_unlocked(item, sm.current_tier) and item.can_be_sold and not (item.category in excluded_cats):
 						pool.append(item)
 
 			if selection_roll >= DISPLAY_POOL_CHANCE or pool.is_empty():
 				for item in InventoryManager.get_all_items():
-					if item.tier <= sm.current_tier + 1 and item.can_be_sold:
+					if item.tier <= sm.current_tier + 1 and item.can_be_sold and not (item.category in excluded_cats):
 						pool.append(item)
 
-				if data.has_riddle_preference():
+				if prefer_hint:
 					var hint_pool := pool.filter(func(i: ItemData) -> bool: return i.item_hint != "")
 					if not hint_pool.is_empty():
 						pool = hint_pool
 
-			var remaining_items: int = target_item_count - transaction.desired_items.size()
 			var current_max_tiers := OrderItemPicker.max_tier_per_category(sm.current_tier)
-			for _i in range(remaining_items):
+			for _i in range(target_item_count):
+				var use_preferred: bool = not preferred_cats.is_empty() and (
+					transaction.transaction_type != TransactionContext.Type.PURCHASE or randf() <= 0.5
+				)
+				if use_preferred:
+					var pref_item := OrderItemPicker.any_for_categories(preferred_cats, sm.current_tier, prefer_hint, excluded_cats)
+					if pref_item:
+						transaction.desired_items.append(pref_item)
+						if transaction.requested_category == "":
+							transaction.requested_category = pref_item.category
+							transaction.best_item_name = pref_item.item_name
+						continue
+
 				if not pool.is_empty():
 					var item := OrderItemPicker.pick_weighted(pool, sm.current_tier, current_max_tiers)
 					if transaction.upgrade_to_best_tier:
 						var best := OrderItemPicker.best_for_category(item.category, sm.current_tier, item)
-						if best:
+						if best and not (best.category in excluded_cats):
 							item = best
 					transaction.desired_items.append(item)
 				else:
-					var fallback := OrderItemPicker.random_orderable(sm.current_tier)
+					var fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
 					if fallback:
 						transaction.desired_items.append(fallback)
 
 			if transaction.desired_items.is_empty() and transaction.transaction_type != TransactionContext.Type.VISIT:
-				var fallback := OrderItemPicker.random_orderable(sm.current_tier)
+				var fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
 				if fallback:
 					transaction.desired_items.append(fallback)
 
@@ -290,13 +314,22 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 	# Awareness
 	var awareness_active: bool = randf() < AWARENESS_CHANCE
 
-	# Price Sensitivity
-	var any_item_at_max: bool = false
+	# Price Sensitivity & Market Tolerance Evaluation
+	var has_overpriced: bool = false
+	var max_effective_step: int = -99
 	for item in transaction.desired_items:
-		if item.get_final_price() >= item.get_max_selling_price():
-			any_item_at_max = true
-			break
-	var high_price_active: bool = any_item_at_max and randf() < HIGH_PRICE_CHANCE
+		var item_step: int = item.current_step
+		var tolerance: int = 0
+		if is_instance_valid(StoreEventManager):
+			tolerance = StoreEventManager.get_item_tolerance_offset(item)
+		var effective_step: int = item_step - tolerance
+		if effective_step > max_effective_step:
+			max_effective_step = effective_step
+		if effective_step >= 3:
+			has_overpriced = true
+
+	# 40% chance to trigger price-sensitivity dialogue when effective step >= 3
+	var high_price_active: bool = has_overpriced and (randf() < 0.40)
 
 	# Stock Status
 	var total_stock: int = (

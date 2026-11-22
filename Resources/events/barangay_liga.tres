@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "barangay_liga"
+event_name = "Barangay Basketball Finals"
+description = "The championship game at the covered court is today. Expect thirsty and hungry players and spectators."
+rumor_text = "Uy, boss. Covered court is packed today. Championship match of the barangay league. Whole neighborhood's gonna be parched and looking for cold drinks and snacks after the buzzer."
+affected_categories = ["snack", "bottle"]
+affected_items = []
+demand_multiplier = 2.5
+tolerance_offset = 2

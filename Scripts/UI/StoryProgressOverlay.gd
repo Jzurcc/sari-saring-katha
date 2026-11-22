@@ -70,8 +70,9 @@ func _update_ui() -> void:
 			subtitle_label.text = _selected_character.character_name.to_upper() + " / ARCS"
 		View.CHAPTERS:
 			var arc_name = "ARC " + str(_selected_arc + 1)
-			if _selected_arc < _selected_character.arc_names.size() and _selected_character.arc_names[_selected_arc] != "":
-				arc_name = _selected_character.arc_names[_selected_arc].to_upper()
+			var custom_arc_name := _selected_character.get_arc_name(_selected_arc)
+			if custom_arc_name != "":
+				arc_name = custom_arc_name.to_upper()
 			subtitle_label.text = _selected_character.character_name.to_upper() + " / " + arc_name
 
 func _populate_characters() -> void:
@@ -119,10 +120,11 @@ func _populate_arcs() -> void:
 		var is_completed = floori(current_progress / 3.0) > i
 		
 		var arc_display_name = "ARC " + str(i + 1)
+		var custom_arc_name := _selected_character.get_arc_name(i)
 		if is_locked:
 			arc_display_name = "???"
-		elif i < _selected_character.arc_names.size() and _selected_character.arc_names[i] != "":
-			arc_display_name = _selected_character.arc_names[i]
+		elif custom_arc_name != "":
+			arc_display_name = custom_arc_name
 		
 		btn.setup(arc_display_name, is_locked, is_completed)
 		btn.pressed.connect(func(): _play_click(); _on_arc_selected(i))
@@ -153,10 +155,11 @@ func _populate_chapters() -> void:
 		var is_completed = current_progress > chapter_idx
 		
 		var chapter_display_name = "Chapter " + str(chapter_idx + 1)
+		var custom_chapter_name := _selected_character.get_chapter_name(chapter_idx)
 		if is_locked:
 			chapter_display_name = "???"
-		elif chapter_idx < _selected_character.chapter_names.size() and _selected_character.chapter_names[chapter_idx] != "":
-			chapter_display_name = _selected_character.chapter_names[chapter_idx]
+		elif custom_chapter_name != "":
+			chapter_display_name = custom_chapter_name
 		
 		btn.setup(chapter_display_name, is_locked, is_completed)
 

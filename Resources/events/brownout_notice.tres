@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "brownout_notice"
+event_name = "Scheduled Power Outage"
+description = "Power lines are getting serviced tonight. Expect a spike in demand for canned rations, matches, and cigarettes."
+rumor_text = "Psst. Boss. Overheard the linemen by the main road. Power's getting cut tonight for line repairs. Expect folks looking for canned food and smokes before it gets dark."
+affected_categories = ["can", "cigarette"]
+affected_items = []
+demand_multiplier = 2.0
+tolerance_offset = 2

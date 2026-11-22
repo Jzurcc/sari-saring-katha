@@ -29,6 +29,7 @@ const REMAPPABLE_ACTIONS = {
 	"crouch": "Crouch",
 	"sprint": "Sprint",
 	"pricing_lens": "Pricing Lens",
+	"toggle_ledger": "Price Ledger",
 	"price_up": "Increase Price",
 	"price_down": "Decrease Price",
 	"dialogic_default_action": "Advance Dialogue"
@@ -116,6 +117,10 @@ func _set_default_for_action(action: String) -> void:
 		"pricing_lens":
 			var e = InputEventKey.new()
 			e.physical_keycode = KEY_ALT
+			events.append(e)
+		"toggle_ledger":
+			var e = InputEventKey.new()
+			e.physical_keycode = KEY_L
 			events.append(e)
 		"price_up":
 			var e1 = InputEventKey.new()

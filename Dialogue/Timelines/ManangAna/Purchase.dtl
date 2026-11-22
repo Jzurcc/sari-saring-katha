@@ -47,6 +47,8 @@ if {Transaction_SatisfyVar} <= 50:
 	ManangAna:  Salamat, anak. You're a lifesaver.
 else:
 	ManangAna: Sige, I'll see you tomorrow. Make sure you're eating properly, ha? You look thin.
+if {Global_TipActive}:
+	ManangAna: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

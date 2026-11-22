@@ -33,7 +33,7 @@ func _on_upgrade_available(_new_tier: int, cost: float, items: Array[ItemData]) 
 	if control.visible: return
 
 	tier_label.text = "UPGRADE AVAILABLE (₱%.2f)" % cost
-	source_label.text = "Call Uncle Mario to expand your catalog!"
+	source_label.text = "Uncle Mario is calling you!"
 	
 	# Clear old items
 	for child in grid.get_children():

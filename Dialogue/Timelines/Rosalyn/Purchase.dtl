@@ -33,6 +33,8 @@ if {Transaction_SatisfyVar} <= 50:
 	Rosalyn: [wave]Oh... [pause=1.0] thank you. [pause=1.0] It's... [pause=1.0] it's very solid.[/wave]
 else:
 	Rosalyn: [wave]I have it. [pause=1.0] It's... [pause=1.0] it's warm. [pause=1.0] Thank you.[/wave]
+if {Global_TipActive}:
+	Rosalyn: Aba, that was quite cheap. Keep the change po!
 [end_timeline]
 
 label WrongItem

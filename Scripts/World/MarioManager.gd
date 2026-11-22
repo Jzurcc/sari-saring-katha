@@ -7,7 +7,7 @@ extends Node
 ## IMPORTANT: Dialogic.start(timeline, X) — X is a LABEL, not a style.
 ## Style must be set via Dialogic.Styles.load_style() BEFORE calling start().
 
-signal call_ended(success: bool)
+signal call_ended(success: bool, action: String)
 signal delivery_finished
 
 const MARIO_DATA_PATH = "res://Resources/customers/UncleMario.tres"
@@ -42,10 +42,22 @@ var _cached_bags_data: Array = []
 var _call_session_id: int = 0
 var _delivery_session_id: int = 0
 var _pending_delivery_items: Dictionary = {}
+var _pending_call_action: String = ""
+
+# Incoming Upgrade Call State
+const INCOMING_CALL_RING_DURATION := 10.0
+var is_incoming_upgrade_call: bool = false
+var _has_missed_upgrade_call: bool = false
+var _incoming_call_items: Array[ItemData] = []
+var _incoming_call_session_id: int = 0
+var _ring_ui_layer: CanvasLayer = null
+var _ring_ui_panel: PanelContainer = null
+var _ring_hover_tween: Tween = null
 
 func _ready() -> void:
 	_sfx_player = AudioStreamPlayer.new()
 	add_child(_sfx_player)
+	_sfx_player.finished.connect(_on_sfx_finished)
 	
 	add_to_group("persist")
 	
@@ -60,12 +72,158 @@ func _ready() -> void:
 	
 	# Restore bags when the game session actually begins
 	EventBus.day_started.connect(_on_day_started)
+	# Ring the player when a new tier upgrade becomes available
+	EventBus.upgrade_available.connect(_on_upgrade_available)
+	# Listen for Mario call choice signals from UncleMario.dtl
+	Dialogic.signal_event.connect(_on_dialogic_signal)
 
 func _is_in_main_game() -> bool:
 	return get_tree() != null and get_tree().current_scene != null and get_tree().current_scene.name == "MainGame"
 
 func _restore_audio_bus() -> void:
 	ProjectSettings.set_setting("dialogic/audio/type_sound_bus", "Master")
+
+func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData]) -> void:
+	if not _is_in_main_game() or is_restocking_active or _is_calling:
+		return
+
+	_incoming_call_items = items.duplicate()
+	is_incoming_upgrade_call = true
+	_has_missed_upgrade_call = false
+	_incoming_call_session_id += 1
+	var ring_session := _incoming_call_session_id
+
+	LogManager.info("MarioManager", "Incoming upgrade call ringing for %.1fs (%d items)." % [INCOMING_CALL_RING_DURATION, _incoming_call_items.size()])
+	get_tree().call_group("nokia_phone", "set_ringing", true)
+	_show_incoming_call_banner()
+	_play_sfx(sfx_dial)
+
+	await get_tree().create_timer(INCOMING_CALL_RING_DURATION).timeout
+	if ring_session != _incoming_call_session_id or not is_incoming_upgrade_call:
+		return
+
+	# Player ignored the call for 10 seconds — stop ringing cleanly and remember for next manual call
+	_stop_incoming_ring()
+	_has_missed_upgrade_call = true
+	LogManager.info("MarioManager", "Incoming upgrade call timed out (ignored by player). Queued missed-call follow-up.")
+
+func _on_sfx_finished() -> void:
+	if is_incoming_upgrade_call and _is_in_main_game():
+		_play_sfx(sfx_dial)
+
+func _stop_incoming_ring() -> void:
+	is_incoming_upgrade_call = false
+	_incoming_call_session_id += 1
+	_hide_incoming_call_banner()
+	if _sfx_player and _sfx_player.playing:
+		_sfx_player.stop()
+	if get_tree():
+		get_tree().call_group("nokia_phone", "set_ringing", false)
+
+func _show_incoming_call_banner() -> void:
+	_hide_incoming_call_banner(true)
+
+	_ring_ui_layer = CanvasLayer.new()
+	_ring_ui_layer.layer = 90
+	add_child(_ring_ui_layer)
+
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring_ui_layer.add_child(root)
+
+	_ring_ui_panel = PanelContainer.new()
+	_ring_ui_panel.anchor_left = 1.0
+	_ring_ui_panel.anchor_right = 1.0
+	_ring_ui_panel.anchor_top = 1.0
+	_ring_ui_panel.anchor_bottom = 1.0
+	_ring_ui_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_ring_ui_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_ring_ui_panel.offset_right = -28.0
+	_ring_ui_panel.offset_bottom = -28.0
+	_ring_ui_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style := UIStyle.create_flat_stylebox(Color(0.082, 0.078, 0.071, 0.92), 10, 22, 14)
+	_ring_ui_panel.add_theme_stylebox_override("panel", style)
+	root.add_child(_ring_ui_panel)
+
+	var lbl := Label.new()
+	lbl.text = "Someone's calling on the phone."
+	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	lbl.add_theme_font_size_override("font_size", 19)
+	lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring_ui_panel.add_child(lbl)
+
+	# Toast slide-in from bottom-right + gentle hover bob
+	_ring_ui_panel.modulate.a = 0.0
+	_ring_ui_panel.offset_bottom = 12.0
+	var enter_tw := create_tween()
+	enter_tw.tween_property(_ring_ui_panel, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE)
+	enter_tw.parallel().tween_property(_ring_ui_panel, "offset_bottom", -28.0, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	enter_tw.tween_callback(func():
+		if not is_instance_valid(_ring_ui_panel):
+			return
+		_ring_hover_tween = create_tween().set_loops()
+		_ring_hover_tween.tween_property(_ring_ui_panel, "offset_bottom", -33.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_ring_hover_tween.tween_property(_ring_ui_panel, "offset_bottom", -25.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	)
+
+func _hide_incoming_call_banner(immediate: bool = false) -> void:
+	if _ring_hover_tween and _ring_hover_tween.is_valid():
+		_ring_hover_tween.kill()
+	_ring_hover_tween = null
+
+	if not is_instance_valid(_ring_ui_layer):
+		_ring_ui_layer = null
+		_ring_ui_panel = null
+		return
+
+	var layer_to_free := _ring_ui_layer
+	var panel_to_fade := _ring_ui_panel
+	_ring_ui_layer = null
+	_ring_ui_panel = null
+
+	if immediate or not is_instance_valid(panel_to_fade):
+		layer_to_free.queue_free()
+		return
+
+	var fade_out := create_tween()
+	fade_out.tween_property(panel_to_fade, "modulate:a", 0.0, 0.25).set_trans(Tween.TRANS_SINE)
+	fade_out.tween_callback(layer_to_free.queue_free)
+
+func _format_upgrade_items_list(items: Array[ItemData]) -> String:
+	var names: Array[String] = []
+	for item in items:
+		if item and item.can_be_sold:
+			names.append("[color=#0f6e2f]%s[/color]" % item.item_name)
+	if names.is_empty():
+		return "brand new products for your store!"
+	if names.size() == 1:
+		return names[0] + "!"
+	var joined := ""
+	for i in range(names.size()):
+		if i == names.size() - 1:
+			joined += "and " + names[i] + "!"
+		else:
+			joined += names[i] + "... [pause=0.35]"
+	return joined
+
+func answer_incoming_upgrade_call(anchor: Node) -> void:
+	_stop_incoming_ring()
+	_has_missed_upgrade_call = false
+	_is_calling = true
+	is_restocking_active = true
+	_pending_call_action = ""
+	_current_anchor = anchor
+	_call_session_id += 1
+
+	var list_str := _format_upgrade_items_list(_incoming_call_items)
+	Dialogic.VAR.set_variable("Global_UpgradeItemsList", list_str)
+	_incoming_call_items.clear()
+
+	LogManager.info("MarioManager", "Player answered Mario's upgrade call → Label: UpgradeCall")
+	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(true), "UpgradeCall")
 
 # ── CALL LOGIC ───────────────────────────────────────────────────────
 
@@ -86,12 +244,14 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		return
 	_is_calling = true
 	is_restocking_active = true
+	_pending_call_action = ""
 	_current_anchor = anchor
 	_call_session_id += 1
 	var session_id := _call_session_id
 	
 	var label := "Call"
 	var success_expected := true
+	var is_missed_upgrade_followup := false
 	
 	# 1. Busy check: if a dialogue is ACTIVELY running (blocking the phone UI)
 	# If a customer is just waiting silently for an item, we are NOT busy.
@@ -104,6 +264,10 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		Dialogic.VAR.set_variable("Transaction_MarioRestCount", InventoryManager.customers_needed_for_delivery)
 		label = "CallRest"
 		success_expected = false
+	# 3. Missed upgrade call follow-up: player missed Mario's incoming upgrade call earlier
+	elif _has_missed_upgrade_call:
+		label = "MissedUpgradeCall"
+		is_missed_upgrade_followup = true
 	
 	LogManager.info("MarioManager", "Initiating call → Label: %s" % label)
 	
@@ -122,21 +286,45 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 		_restore_audio_bus()
 		return
 	
+	if is_missed_upgrade_followup:
+		var list_str := _format_upgrade_items_list(_incoming_call_items)
+		Dialogic.VAR.set_variable("Global_UpgradeItemsList", list_str)
+		_has_missed_upgrade_call = false
+		_incoming_call_items.clear()
+	
 	_start_dialogue(TIMELINE_PATH, anchor, _on_call_dialogue_ended.bind(success_expected), label)
 
+func _on_dialogic_signal(arg: String) -> void:
+	match arg:
+		"mario_open_restock":
+			_pending_call_action = "restock"
+		"mario_open_upgrade":
+			_pending_call_action = "upgrade"
+		"mario_cancel_call":
+			_pending_call_action = "cancel"
+
 func _on_call_dialogue_ended(success: bool) -> void:
-	LogManager.info("MarioManager", "Call dialogue ended. Success: %s" % str(success))
+	var action := _pending_call_action
+	_pending_call_action = ""
+	var final_success := success
+	if success and action == "cancel":
+		final_success = false
+	elif success and action == "":
+		action = "restock"
+
+	LogManager.info("MarioManager", "Call dialogue ended. Success: %s, Action: %s" % [str(final_success), action])
 	_is_calling = false
 	_restore_audio_bus()
 	
-	if not success:
+	if not final_success:
 		is_restocking_active = false
 	_current_anchor = null
-	call_ended.emit(success)
+	call_ended.emit(final_success, action)
 
 func cancel_restock() -> void:
 	LogManager.info("MarioManager", "Restock cancelled by player or system.")
 	_call_session_id += 1
+	_pending_call_action = ""
 	is_restocking_active = false
 	_is_calling = false
 	_current_anchor = null
@@ -247,8 +435,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items := _pending_delivery_items.duplicate()
 	_pending_delivery_items.clear()
 
-	# 1. Finalize Stock Immediately (Digital pool always has the total)
+	# 1. Finalize Stock Immediately for regular shelf/fridge items.
+	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
+		if item.get_meta("is_upgrade", false):
+			continue
+		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
+			continue
 		InventoryManager.add_stock(item, items[item])
 	
 	# 2. Plastic Bag Delivery Logic
@@ -257,6 +450,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var base_marker_pos: Vector3 = marker.global_position if marker else DEFAULT_PLASTIC_MARKER_POS
 	var plastic_scene = preload("res://Scenes/PlasticDeliveryItem.tscn")
 	
+	var containers_to_bag: Array[ItemData] = []
 	var items_to_bag: Array[ItemData] = []
 	var upgrade_delivered := false
 	var target_tier := 1
@@ -268,16 +462,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			LogManager.info("MarioManager", "Upgrade detected in delivery! Target Tier: %d" % target_tier)
 			continue
 
-		# Filter: Candies and Sachets bypass bags
-		if item.category == "candy" or item.category == "sachet" or item.type == ItemData.ItemType.CANDY_CONTAINER or item.type == ItemData.ItemType.SACHET_CONTAINER:
-			LogManager.debug("MarioManager", "Auto-stocking digital item: %s" % item.item_name)
-			continue
-		else:
-			LogManager.debug("MarioManager", "Adding to physical bag: %s" % item.item_name)
-			
-		# Everything else goes into bags
+		LogManager.debug("MarioManager", "Adding to physical bag: %s" % item.item_name)
 		for i in range(items[item]):
-			items_to_bag.append(item)
+			if DispenserContainerItem.is_container_prop(item):
+				containers_to_bag.append(item)
+			else:
+				items_to_bag.append(item)
 	
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:
@@ -285,22 +475,32 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			StoryManager.advance_tier("Mario Delivery")
 			var new_tier = StoryManager.current_tier
 			LogManager.info("MarioManager", "Processing unlocked samples for NEW Tier: %d" % new_tier)
+
+			# Pack any newly unlocked physical candy bowls / sachet strips first
+			var tier_containers := StoryManager.get_unplaced_containers_for_tier(new_tier)
+			for container_prop in tier_containers:
+				LogManager.info("MarioManager", "Packing physical container prop into bag: %s" % container_prop.item_name)
+				containers_to_bag.append(container_prop)
 			
 			var all_items = InventoryManager.get_all_items()
 			for i in all_items:
 				if i.tier == new_tier and i.can_be_sold:
 					LogManager.debug("MarioManager", "Unpacking 2 samples of: %s" % i.item_name)
-					InventoryManager.add_stock(i, 2)
-					
-					if not (i.type == ItemData.ItemType.CANDY_CONTAINER or i.type == ItemData.ItemType.SACHET_CONTAINER):
-						# Samples go into bags (2 units each)
-						items_to_bag.append(i)
-						items_to_bag.append(i)
+					if not DispenserContainerItem.is_dispenser_refill(i):
+						InventoryManager.add_stock(i, 2)
+					# All samples (including candies & sachets) go into physical bags (2 units each)
+					items_to_bag.append(i)
+					items_to_bag.append(i)
+	
+	# Pack containers first so the first bag(s) always yield unplaced containers before refills
+	var final_bag_items: Array[ItemData] = []
+	final_bag_items.append_array(containers_to_bag)
+	final_bag_items.append_array(items_to_bag)
 	
 	# Group items into batches of 5
 	var batch_size = 5
-	for i in range(0, items_to_bag.size(), batch_size):
-		var batch = items_to_bag.slice(i, i + batch_size)
+	for i in range(0, final_bag_items.size(), batch_size):
+		var batch = final_bag_items.slice(i, i + batch_size)
 		var offset := Vector3(
 			randf_range(-1.1, 1.1),
 			0.05, # Slight lift
@@ -452,6 +652,10 @@ func load_save_data(data: Dictionary) -> void:
 func reset_state() -> void:
 	_call_session_id += 1
 	_delivery_session_id += 1
+	_pending_call_action = ""
+	_stop_incoming_ring()
+	_has_missed_upgrade_call = false
+	_incoming_call_items.clear()
 	_pending_delivery_items.clear()
 	_cached_bags_data.clear()
 	is_restocking_active = false

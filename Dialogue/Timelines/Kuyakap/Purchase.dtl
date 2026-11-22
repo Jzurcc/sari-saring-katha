@@ -1,5 +1,5 @@
 label Greeting
-[signal arg="refresh_desires"]
+# [signal arg="refresh_desires"]
 KuyaKap: Magandang gabi, apo. [pause=0.4]
 if {Global_HighPriceActive}:
 	KuyaKap: Hala, apo. Parang medyo masakit ata sa bulsa 'to ngayon ah? [pause=0.3] Tumataas na talaga presyo ng bilihin.
@@ -36,6 +36,8 @@ if {Transaction_WantsDebt}:
 		KuyaKap: I'll just come back when I have the change. [pause=0.4] Mag-iingat ka!
 else:
 	KuyaKap: Salamat, apo. [pause=0.4] You really have your Lola's touch with keeping this place alive.
+	if {Global_TipActive}:
+		KuyaKap: Aba, that was quite cheap. Keep the change po!
 [signal arg="story_success"]
 [end_timeline]
 
