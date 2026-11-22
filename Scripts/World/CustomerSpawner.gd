@@ -356,6 +356,10 @@ func load_save_data(data: Dictionary) -> void:
 		get_tree().create_timer(1.0).timeout.connect(_spawn_next_customer)
 	elif not StoryManager.has_mayari_visited:
 		get_tree().create_timer(1.0).timeout.connect(spawn_mayari_for_collection)
+	else:
+		# Save was captured after Mayari already finished collecting at closing time
+		LogManager.info("CustomerSpawner", "Loaded past closing time with Mayari already visited. Triggering end-of-day transition.")
+		get_tree().create_timer(1.0).timeout.connect(_end_day)
 
 func reset_state() -> void:
 	_pending_restore_transaction = null

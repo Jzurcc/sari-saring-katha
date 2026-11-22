@@ -40,8 +40,9 @@ var is_quitting: bool = false
 
 func _ready() -> void:
 	# --- Save Triggers ---
-	# A) End of day
+	# A) End of day & start of new day
 	EventBus.day_ended.connect(_on_day_ended)
+	EventBus.day_started.connect(_on_day_started)
 	# C) Tier advance
 	EventBus.tier_advanced.connect(_on_tier_advanced)
 	# B) Customer departures (any outcome)
@@ -71,6 +72,10 @@ func _is_in_game() -> bool:
 
 func _on_day_ended(_day_number: int) -> void:
 	if _is_in_game():
+		force_save()
+
+func _on_day_started(day_number: int) -> void:
+	if _is_in_game() and day_number > 1:
 		force_save()
 
 func _on_tier_advanced(_new_tier: int = 0, _source: String = "") -> void:
