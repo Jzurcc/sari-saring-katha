@@ -34,6 +34,7 @@
 - [ ] **Folklore Journal / Compendium:** Build an in-game journal tracking each mythical neighbor's story progression alongside real-life Philippine folklore trivia for educational value.
 - [ ] **Customer Familiarity / Relationship System:** Track per-customer familiarity that grants tangible perks (higher tips, better price tolerance, special reactions) and can tie into story chapters or unlock multiple endings.
 - [ ] **Relationship Modifiers:** Expand ways to gain and lose familiarity beyond simple rejections (e.g., fair pricing, chitchat, honoring utang, fulfilling side requests, or neglecting/overcharging).
+- [ ] **Visual Relationship & Character Progression UI:** Add tangible visual UI elements for familiarity, relationship tiers, and character progression (e.g., familiarity bars/hearts, floating gain/loss & rank-up feedback during interactions, visible milestone badges, and end-of-day progression recaps) so players actively feel their bonds and progress growing each day—not just through dialogue.
 
 ## 4. Living Storefront & Multi-Customer Visits
 - [ ] **Lingering Visitors:** Allow visiting customers to hang out by the store for a while before wandering off instead of immediately leaving.
@@ -93,6 +94,7 @@
   - **Progressive Discovery:** Entries start as vague silhouettes/rumors on first meeting and unlock **regional origins** (Tagalog, Visayan, Bicolano, Maranao, etc.), **traditional beliefs/taboos** (e.g., *"Tabi-tabi po"* for Duwende, salt/garlic myths for Manananggal, turning shirts inside-out for Tikbalang), and **cultural/historical context** as you befriend them.
   - **Folklore Stamps & Doodles:** Unlockable hand-drawn sketches, polaroids, or sticker stamps in the margins when you finish a character's arc or hit max familiarity.
   - **Casual Trivia Callbacks:** Occasional playful quiz lines from Buboy or Danilo referencing real folklore facts you've unlocked in the journal for a bonus familiarity/tip boost.
+- **Visible Daily Progress (Beyond Dialogue):** Surface relationship and character progression through clear UI feedback—such as compact familiarity hearts/meters when a regular visits, subtle floating `+Familiarity` / rank-up popups after great service or favors, milestone/chapter progress indicators in the journal, and a quick end-of-day summary showing whose bond or arc moved forward that day.
 
 ### 5. Non-Purchase Quests & Filipino Cultural Minigames
 Great fits that stay grounded at the counter and reuse existing mechanics:
