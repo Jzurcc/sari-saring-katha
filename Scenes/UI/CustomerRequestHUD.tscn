@@ -2,16 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/CustomerRequestHUD.gd" id="1_script"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
-content_margin_left = 20.0
-content_margin_top = 16.0
-content_margin_right = 20.0
-content_margin_bottom = 16.0
-bg_color = Color(0, 0, 0, 0.65)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hud"]
 
 [node name="CustomerRequestHUD" type="CanvasLayer"]
 layer = 0
@@ -33,24 +24,25 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -120.0
-offset_top = -120.0
+offset_left = -160.0
+offset_top = -140.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 20
 
 [node name="PanelContainer" type="PanelContainer" parent="Control/MarginContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hud")
 
 [node name="RowsContainer" type="VBoxContainer" parent="Control/MarginContainer/PanelContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 10
+mouse_filter = 2
+theme_override_constants/separation = 14
 alignment = 2
-
