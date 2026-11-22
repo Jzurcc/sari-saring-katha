@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://wcnibayq5f8k" path="res://Assets/characters/sprites/Sarimanok.png" id="7_sprite"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="8_arcdata"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://c2s7pfyxbggpr" path="res://Dialogue/Timelines/Sarimanok/Purchase.dtl" id="smk_purchase"]
 [ext_resource type="Resource" uid="uid://br147rott8bhs" path="res://Dialogue/Timelines/Sarimanok/Story.dtl" id="smk_story"]
 [ext_resource type="Resource" uid="uid://dlcphfad8n24f" path="res://Dialogue/Timelines/Sarimanok/Visit.dtl" id="smk_visit"]

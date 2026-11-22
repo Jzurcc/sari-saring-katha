@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://dxyx405jevl77" path="res://Assets/characters/sprites/ManangAna.png" id="5_4587l"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://bpb60ibkybakm" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
 [ext_resource type="Resource" uid="uid://dc1yt6iiwlltd" path="res://Dialogue/Timelines/ManangAna/Story.dtl" id="mana_story"]
 [ext_resource type="Resource" uid="uid://dw2evopysv3yc" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]

@@ -10,7 +10,7 @@
 [ext_resource type="Resource" uid="uid://deblnveoir8f0" path="res://Dialogue/Timelines/Brahim/Story.dtl" id="10_story"]
 [ext_resource type="Resource" uid="uid://d2bs58pcxejrb" path="res://Dialogue/Timelines/Brahim/Purchase.dtl" id="brahim_purchase"]
 [ext_resource type="Resource" uid="uid://dgxmsapgmuqq3" path="res://Dialogue/Timelines/Brahim/Visit.dtl" id="brahim_visit"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")

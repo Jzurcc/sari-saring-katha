@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_4lb08"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="2_4srvu"]
 [ext_resource type="Texture2D" uid="uid://dbeuhl3lp3ih6" path="res://Assets/characters/sprites/UncleMario.png" id="4_pv788"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://xsm3rsyy30hc" path="res://Dialogue/Timelines/UncleMarioTutorial.dtl" id="tut_timeline"]
 
 [sub_resource type="Resource" id="chapter_0"]

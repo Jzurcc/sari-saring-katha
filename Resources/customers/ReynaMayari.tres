@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="purchase_dtl"]
 [ext_resource type="Resource" uid="uid://chi8ndhwuhd3c" path="res://Dialogue/Timelines/ReynaMayari/Story.dtl" id="story_dtl"]
 [ext_resource type="Resource" uid="uid://c5ftr0ohic643" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="visit_dtl"]

@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_djfwr"]
 [ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/characters/sprites/Kuya_Kap.png" id="6_5suku"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
 [ext_resource type="Resource" uid="uid://vd6vqcihb85s" path="res://Dialogue/Timelines/Kuyakap/Purchase.dtl" id="kuyakap_purchase"]
 [ext_resource type="Resource" uid="uid://d2xpnhja6r33a" path="res://Dialogue/Timelines/Kuyakap/Visit.dtl" id="kuyakap_visit"]

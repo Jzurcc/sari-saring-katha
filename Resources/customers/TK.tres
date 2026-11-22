@@ -8,7 +8,7 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="4_timeline_script"]
 [ext_resource type="Texture2D" uid="uid://dkniinpqcxqbj" path="res://Assets/characters/sprites/TK.png" id="5_0aich"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://bkxgcd1fe4pf" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
 [ext_resource type="Resource" uid="uid://crmfh6krc8b5c" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
 
