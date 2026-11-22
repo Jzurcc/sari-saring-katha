@@ -324,13 +324,12 @@ func load_save_data(data: Dictionary) -> void:
 	placed_containers.clear()
 	if data.has("placed_containers"):
 		for p in data["placed_containers"]:
-			placed_containers.append(str(p))
-		# Recovery for saves that passed a tier before a container prop's tier metadata was fixed
-		for path in CONTAINER_PROP_PATHS:
-			if ResourceLoader.exists(path):
-				var res := load(path) as ItemData
-				if res and res.tier < current_tier and not (res.resource_path in placed_containers):
-					placed_containers.append(res.resource_path)
+			var path_str := str(p)
+			if ResourceLoader.exists(path_str):
+				var res := load(path_str) as ItemData
+				if res and res.tier > current_tier:
+					continue
+			placed_containers.append(path_str)
 	else:
 		# Backward compatibility for older saves: treat already-unlocked tier containers as placed
 		for path in CONTAINER_PROP_PATHS:
@@ -338,6 +337,15 @@ func load_save_data(data: Dictionary) -> void:
 				var res := load(path) as ItemData
 				if res and res.tier <= current_tier:
 					placed_containers.append(res.resource_path)
+
+	# Refresh all 3D dispenser containers immediately and deferred so save loads on fresh startup
+	# always update container visibility after _ready() has already run with default tier=1 state.
+	if get_tree():
+		get_tree().call_group("dispenser_containers", "refresh_stock")
+		get_tree().process_frame.connect(func():
+			if get_tree():
+				get_tree().call_group("dispenser_containers", "refresh_stock")
+		, CONNECT_ONE_SHOT)
 
 	CharacterProgressionManager.migrate_from_story_manager_save(data)
 	DialogicBridge.sync_global(day, current_tier, max_unlocked_tier, 1)
