@@ -230,6 +230,13 @@ elif {Transaction_ItemWantsID} == "ngaragya":
 	Buboy: Like adobo! But in a tiny bag!
 	Buboy: Weird and super yummy! Hehe!
 
+elif {Transaction_ItemWantsID} == "utang":
+	Buboy: The green crunchy snack bag!
+	Buboy: There's a little farmer's hat on the big letter!
+	Buboy: And crunchy rings and a tiny vinegar bowl on the front!
+	Buboy: Mama laughed at the name because it's about owing money?
+	Buboy: I don't get the joke... I just like the crunchy rings! Hihi!
+
 elif {Transaction_ItemWantsID} == "champyon":
 	Buboy: Um...
 	Buboy: The small white sticks inside a box.
@@ -243,6 +250,13 @@ elif {Transaction_ItemWantsID} == "marboro":
 	Buboy: NOT the blue box! The RED one!
 	Buboy: There's another smoke box but this one is RED!
 	Buboy: You know! The red smoke box!
+
+elif {Transaction_ItemWantsID} == "mayti":
+	Buboy: The GREEN box!
+	Buboy: With the small white smoke sticks inside!
+	Buboy: NOT the red box! The green and white one with the big red letter!
+	Buboy: Papa says this one tastes cold like toothpaste?
+	Buboy: Why would smoke taste cold?! Adults are so weird. Hihi!
 
 elif {Transaction_ItemWantsID} == "coke":
 	Buboy: Ohhhh the dark bubbly drink!
