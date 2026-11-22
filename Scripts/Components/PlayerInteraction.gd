@@ -134,6 +134,16 @@ func _input(event: InputEvent) -> void:
 	var gm := _game_manager
 	var allow_interaction: bool = gm.tutorial.can_interact_with_world() if (gm and gm.tutorial) else (Dialogic.current_timeline == null)
 	if not allow_interaction:
+		# Allow closing an open refrigerator door even while dialogue is active
+		if not DragManager.is_dragging \
+			and event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT \
+			and event.pressed \
+			and is_instance_valid(_last_hovered) \
+			and _last_hovered.has_method("can_close_during_dialogue") \
+			and _last_hovered.can_close_during_dialogue():
+			get_viewport().set_input_as_handled()
+			_last_hovered.on_interact()
 		return
 
 	# Pricing Mode Toggle (Alt) - Always allowed regardless of dialogue

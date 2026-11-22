@@ -10,6 +10,10 @@ func on_hover(is_hovered: bool) -> void:
 	if door:
 		door.on_hover(is_hovered)
 
+func can_close_during_dialogue() -> bool:
+	var door := get_parent() as RefrigeratorDoor
+	return door != null and door.is_open
+
 func on_interact() -> void:
 	var door := get_parent() as RefrigeratorDoor
 	if door:
