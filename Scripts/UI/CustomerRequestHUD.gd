@@ -24,8 +24,10 @@ const PORTRAIT_MAP := {
 @onready var panel_container: PanelContainer = %PanelContainer
 @onready var rows_container: VBoxContainer = %RowsContainer
 
-var _rows: Dictionary = {} # customer_name -> { "row": Control, "items_box": HBoxContainer, "items": Array[ItemData], "is_riddle": bool }
+var _rows: Dictionary = {} # customer_name -> { "row": Control, ... }
 var _trimmed_tex_cache: Dictionary = {} # ItemData -> Texture2D
+var _hovered_row_key: String = ""
+var _hovered_is_dragging: bool = false
 var is_visible_hud: bool = false
 
 func _ready() -> void:
@@ -35,6 +37,7 @@ func _ready() -> void:
 	EventBus.customer_order_cleared.connect(_on_order_cleared)
 	EventBus.transaction_completed.connect(_on_transaction_completed)
 	EventBus.tier_advanced.connect(_on_tier_advanced)
+	EventBus.customer_hover_changed.connect(_on_customer_hover_changed)
 
 func _on_transaction_completed(_item: ItemData, was_correct: bool, _wants_debt: bool, customer_path: String) -> void:
 	if was_correct or customer_path == "":
@@ -257,14 +260,25 @@ func _create_row(customer_name: String) -> Dictionary:
 	bottom_bar.scale.x = 0.05
 	call_deferred("_unfurl_bottom_bar", bottom_bar)
 
-	return {
+	var entry := {
 		"row": row,
 		"items_box": items_box,
+		"shelf_container": shelf_container,
+		"bottom_bar": bottom_bar,
+		"bar_style": bar_style,
 		"badge_holder": badge_holder,
 		"ring_panel": ring_panel,
+		"ring_style": ring_style,
+		"hover_tween": null,
+		"entered": false,
 		"items": [],
 		"is_riddle": false
 	}
+	enter_tw.chain().tween_callback(func():
+		entry["entered"] = true
+		_refresh_row_hover_visuals()
+	)
+	return entry
 
 func _unfurl_bottom_bar(bar: Control) -> void:
 	if not is_instance_valid(bar):
@@ -343,6 +357,13 @@ func _remove_row(customer_name: String, fulfilled_celebration: bool = false, rej
 		return
 	var entry: Dictionary = _rows[customer_name]
 	_rows.erase(customer_name)
+	var old_hover_tw = entry.get("hover_tween", null)
+	if old_hover_tw and old_hover_tw.is_valid():
+		old_hover_tw.kill()
+	if _hovered_row_key == customer_name:
+		_hovered_row_key = ""
+		_hovered_is_dragging = false
+		_refresh_row_hover_visuals()
 
 	var row: Control = entry.get("row") as Control
 	var items_box: HBoxContainer = entry.get("items_box") as HBoxContainer
@@ -624,3 +645,59 @@ func _apply_sway(icon: Control) -> void:
 	icon.rotation_degrees = randf_range(-angle, angle)
 	tw.tween_property(icon, "rotation_degrees", angle, duration / 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(icon, "rotation_degrees", -angle, duration / 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _on_customer_hover_changed(customer: Customer, is_dragging: bool) -> void:
+	var next_key := customer.get_order_hud_key().strip_edges() if is_instance_valid(customer) else ""
+	if next_key != "" and not _rows.has(next_key):
+		next_key = ""
+	if next_key == _hovered_row_key and is_dragging == _hovered_is_dragging:
+		return
+	_hovered_row_key = next_key
+	_hovered_is_dragging = is_dragging if next_key != "" else false
+	_refresh_row_hover_visuals()
+
+func _refresh_row_hover_visuals() -> void:
+	var target_key := _hovered_row_key if (_hovered_row_key != "" and _rows.has(_hovered_row_key)) else ""
+	var highlight_col := Color("#8CF5A2") if _hovered_is_dragging else Color("#FFE082")
+	var resting_ring_col := Color(0.88, 0.72, 0.42, 0.85)
+	var resting_bar_col := Color(0.88, 0.72, 0.42, 0.48)
+	var resting_bar_bg := Color(0.07, 0.06, 0.05, 0.80)
+	var active_bar_bg := Color(0.11, 0.14, 0.10, 0.90) if _hovered_is_dragging else Color(0.13, 0.11, 0.08, 0.88)
+
+	for raw_key in _rows.keys():
+		var key := str(raw_key)
+		var entry: Dictionary = _rows[key]
+		if not entry.get("entered", false):
+			continue
+		var row := entry.get("row") as Control
+		var shelf := entry.get("shelf_container") as Control
+		var badge := entry.get("badge_holder") as Control
+		var ring_style := entry.get("ring_style") as StyleBoxFlat
+		var bar_style := entry.get("bar_style") as StyleBoxFlat
+		if not is_instance_valid(row):
+			continue
+
+		var old_tw = entry.get("hover_tween", null)
+		if old_tw and old_tw.is_valid():
+			old_tw.kill()
+
+		var is_target: bool = (target_key != "" and key == target_key)
+		var dim_other: bool = (target_key != "" and not is_target)
+
+		if ring_style:
+			ring_style.border_color = highlight_col if is_target else resting_ring_col
+			ring_style.set_border_width_all(3 if is_target else 2)
+		if bar_style:
+			bar_style.border_color = highlight_col if is_target else resting_bar_col
+			bar_style.bg_color = active_bar_bg if is_target else resting_bar_bg
+
+		var tw := create_tween().set_parallel(true)
+		entry["hover_tween"] = tw
+		tw.tween_property(row, "modulate:a", 0.76 if dim_other else 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+
+		if is_instance_valid(badge):
+			badge.pivot_offset = Vector2(PORTRAIT_RING_SIZE * 0.5, PORTRAIT_RING_SIZE * 0.5)
+			tw.tween_property(badge, "scale", Vector2(1.08, 1.08) if is_target else Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		if is_instance_valid(shelf):
+			shelf.pivot_offset = Vector2(shelf.size.x, shelf.size.y * 0.5)
+			tw.tween_property(shelf, "scale", Vector2(1.03, 1.03) if is_target else Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

@@ -22,6 +22,8 @@ var guest_customer: Customer = null
 var _pending_dismiss: bool = false
 var _is_partial_success: bool = false
 var _greeting_interrupted: bool = false
+var _switching_customer_dialogue: bool = false
+var _switch_session_id: int = 0
 var _current_timeline_path: String = ""
 var _last_dialogue_frame: int = -1
 var _watchdog_elapsed: float = 0.0
@@ -40,6 +42,8 @@ func bind_encounter(primary: Customer, guest: Customer = null) -> void:
 	_pending_dismiss = false
 	_is_partial_success = false
 	_greeting_interrupted = false
+	_switching_customer_dialogue = false
+	_switch_session_id += 1
 	_current_timeline_path = ""
 	_watchdog_elapsed = 0.0
 
@@ -50,6 +54,8 @@ func unbind_encounter() -> void:
 	_pending_dismiss = false
 	_is_partial_success = false
 	_greeting_interrupted = false
+	_switching_customer_dialogue = false
+	_switch_session_id += 1
 	_current_timeline_path = ""
 
 func on_customer_arrived(customer: Customer) -> void:
@@ -58,7 +64,7 @@ func on_customer_arrived(customer: Customer) -> void:
 		generic_char_res.display_name = InventoryManager.current_character_name
 
 func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
-	if Dialogic.current_timeline != null or customer == null or customer.transaction_context == null:
+	if _switching_customer_dialogue or Dialogic.current_timeline != null or customer == null or customer.transaction_context == null:
 		return
 	if not customer.is_waiting or customer._is_resolving or customer.is_lingering_visitor:
 		return
@@ -159,9 +165,38 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		item.return_to_start()
 		return false
 
-	# Bind active focus to the customer receiving the item
-	current_customer = customer
-	_sync_customer_dialogic_vars(customer)
+	# Never interrupt Uncle Mario dialogue or an in-progress cross-customer dialogue switch
+	if (Dialogic.current_timeline != null and "UncleMario.dtl" in Dialogic.current_timeline.resource_path) or _switching_customer_dialogue:
+		item.show_visuals()
+		item.return_to_start()
+		return false
+
+	# Guard against double-drops onto a customer whose order is already finishing Satisfy dialogue
+	if customer.dialogue_phase == Phase.SATISFIED or (customer == current_customer and phase == Phase.SATISFIED):
+		item.show_visuals()
+		item.return_to_start()
+		return false
+
+	var needs_switch: bool = (Dialogic.current_timeline != null and is_instance_valid(current_customer) and current_customer != customer)
+	var prev_customer: Customer = null
+	var prev_phase: Phase = Phase.NONE
+	var prev_pending_dismiss: bool = false
+	var prev_partial_success: bool = false
+
+	if needs_switch:
+		prev_customer = current_customer
+		prev_phase = phase
+		prev_pending_dismiss = _pending_dismiss
+		prev_partial_success = _is_partial_success
+		_switching_customer_dialogue = true
+		phase = Phase.NONE
+		_current_timeline_path = ""
+		_pending_dismiss = false
+		_is_partial_success = false
+	else:
+		# Bind active focus to the customer receiving the item
+		current_customer = customer
+		_sync_customer_dialogic_vars(customer)
 
 	var context: TransactionContext = customer.transaction_context
 	var is_correct: bool = customer.check_item(item.item_data)
@@ -179,6 +214,8 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
 		var wants_debt: bool = context.wants_debt if context else false
 		if item.item_data.current_step < 0 and not wants_debt:
+			if context:
+				context.tip_active = true
 			Dialogic.VAR.set_variable("Global_TipActive", true)
 		EventBus.transaction_completed.emit(item.item_data, true, wants_debt, c_path)
 
@@ -191,15 +228,21 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
 			gm_guided = _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
 		var is_guided: bool = (context != null and context.is_guided_tutorial) or (gm_guided != null and gm_guided.tutorial != null and gm_guided.tutorial.is_guided_timeline_active())
-		if not is_guided:
+		if needs_switch:
+			if not is_guided and context:
+				EventBus.customer_order_updated.emit(customer.get_order_hud_key(), context.desired_items, context.is_riddle)
+			var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
+			_finish_switch_and_start(prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success, customer, true, is_whole_order_done, is_guided)
+		elif not is_guided:
 			var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
 			on_item_delivered(customer, is_whole_order_done)
 		return true
 	else:
+		var trigger_wrong_dialogue := false
 		# If given an item before greeting, trigger greeting instead of WrongItem.
 		if not customer.has_been_greeted:
 			LogManager.debug("TransactionSession", "Item given before greeting. Triggering greeting instead of WrongItem.")
-			on_wrong_item_given(customer)
+			trigger_wrong_dialogue = true
 		else:
 			var gm: GameManager = null
 			if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
@@ -210,15 +253,53 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 			else:
 				var wants_debt: bool = context.wants_debt if context else false
 				EventBus.transaction_completed.emit(item.item_data, false, wants_debt, c_path)
-				on_wrong_item_given(customer)
+				trigger_wrong_dialogue = true
 
 		# Return rejected item straight back to its shelf slot / container / bag instead of keeping it in hand
 		if item:
 			item.show_visuals()
 			item.return_to_start()
+
+		if needs_switch:
+			_finish_switch_and_start(prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success, customer, false, false, not trigger_wrong_dialogue)
+		elif trigger_wrong_dialogue:
+			on_wrong_item_given(customer)
 		return false
 
+func _finish_switch_and_start(
+	prev_customer: Customer,
+	prev_phase: Phase,
+	prev_pending_dismiss: bool,
+	prev_partial_success: bool,
+	next_customer: Customer,
+	was_correct: bool,
+	is_whole_order_done: bool,
+	skip_next_dialogue: bool
+) -> void:
+	_switch_session_id += 1
+	var my_switch_id := _switch_session_id
+	if Dialogic.current_timeline != null:
+		await Dialogic.end_timeline(true)
+	if my_switch_id != _switch_session_id:
+		return
+
+	_switching_customer_dialogue = false
+	_last_dialogue_frame = -1
+	_finish_dialogue_for_customer(prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+
+	if skip_next_dialogue or not is_instance_valid(next_customer) or not next_customer.is_waiting or next_customer._is_resolving:
+		return
+
+	current_customer = next_customer
+	_sync_customer_dialogic_vars(next_customer)
+	if was_correct:
+		on_item_delivered(next_customer, is_whole_order_done)
+	else:
+		on_wrong_item_given(next_customer)
+
 func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
+	if _switching_customer_dialogue:
+		return
 	update_item_names(customer)
 	if Dialogic.current_timeline != null:
 		var active_path = Dialogic.current_timeline.resource_path
@@ -230,6 +311,8 @@ func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 					EventBus.customer_order_updated.emit(customer.get_order_hud_key(), customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
 				Dialogic.Jump.jump_to_label(jump_label)
 				phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
+				if is_instance_valid(customer):
+					customer.dialogue_phase = phase
 				return
 
 	var next_phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
@@ -237,12 +320,16 @@ func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 	start_dialogue(customer.transaction_context.timeline, customer, next_phase, target_label)
 
 func on_wrong_item_given(customer: Customer) -> void:
+	if _switching_customer_dialogue:
+		return
 	if not customer.has_been_greeted:
 		on_customer_clicked(customer, false)
 	else:
 		start_dialogue(customer.transaction_context.timeline, customer, Phase.WRONG_ITEM, "WrongItem")
 
 func start_dialogue(timeline, customer: Customer, in_phase: Phase = Phase.NONE, label: String = "") -> void:
+	if _switching_customer_dialogue:
+		return
 	if timeline == null or (timeline is String and timeline.is_empty()):
 		return
 	if not is_instance_valid(customer) or not customer.is_waiting:
@@ -253,6 +340,7 @@ func start_dialogue(timeline, customer: Customer, in_phase: Phase = Phase.NONE, 
 	_last_dialogue_frame = Engine.get_frames_drawn()
 
 	phase = in_phase
+	customer.dialogue_phase = in_phase
 	_current_timeline_path = timeline.resource_path if timeline is Resource else timeline
 
 	if in_phase in [Phase.TALK, Phase.SATISFIED]:
@@ -375,6 +463,9 @@ func on_dialogic_signal(argument: String) -> void:
 			guest_customer.trigger_arrival()
 
 func on_dialogue_ended() -> void:
+	if _switching_customer_dialogue:
+		return
+
 	if SaveManager.is_quitting:
 		phase = Phase.NONE
 		_current_timeline_path = ""
@@ -408,72 +499,79 @@ func on_dialogue_ended() -> void:
 		return
 
 	var ending_phase := phase
+	var was_pending_dismiss := _pending_dismiss
+	var was_partial_success := _is_partial_success
+	var target := current_customer
+
 	phase = Phase.NONE
 	_current_timeline_path = ""
+	_pending_dismiss = false
+	_is_partial_success = false
 
-	if is_instance_valid(current_customer) and current_customer.transaction_context:
-		if current_customer.transaction_context.event_rumor_active and is_instance_valid(StoreEventManager):
-			StoreEventManager.mark_event_announced(current_customer.transaction_context.pending_event_id)
+	_finish_dialogue_for_customer(target, ending_phase, was_pending_dismiss, was_partial_success)
 
-	if _pending_dismiss:
-		_pending_dismiss = false
+func _finish_dialogue_for_customer(target: Customer, ending_phase: Phase, was_pending_dismiss: bool, was_partial_success: bool) -> void:
+	if is_instance_valid(target) and target.transaction_context:
+		if target.transaction_context.event_rumor_active and is_instance_valid(StoreEventManager):
+			StoreEventManager.mark_event_announced(target.transaction_context.pending_event_id)
+
+	if was_pending_dismiss:
 		# Visit.dtl files emit [signal arg="story_success"] at the end of Greeting;
-		# route SOCIAL_VISIT completions through _resolve_phase_transition so lingering triggers!
-		if ending_phase == Phase.SOCIAL_VISIT and _is_partial_success:
-			_is_partial_success = false
-			_resolve_phase_transition(ending_phase)
+		# route SOCIAL_VISIT completions through _resolve_phase_transition_for so lingering triggers!
+		if ending_phase == Phase.SOCIAL_VISIT and was_partial_success:
+			_resolve_phase_transition_for(target, ending_phase)
 			return
-		if is_instance_valid(current_customer):
+		if is_instance_valid(target):
 			_dismiss_guest_if_present()
-			var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
-			if _is_partial_success or (delivered != null and delivered > 0):
-				current_customer.satisfy()
+			target.dialogue_phase = Phase.NONE
+			var has_delivered: bool = target.transaction_context != null and not target.transaction_context.delivered_items.is_empty()
+			if was_partial_success or has_delivered:
+				target.satisfy()
 			else:
-				current_customer.dismiss()
-			_is_partial_success = false
+				target.dismiss()
 		return
 
-	_resolve_phase_transition(ending_phase)
+	_resolve_phase_transition_for(target, ending_phase)
 
-func _resolve_phase_transition(ending_phase: Phase) -> void:
+func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> void:
 	match ending_phase:
 		Phase.SOCIAL_VISIT:
 			_dismiss_guest_if_present()
-			if is_instance_valid(current_customer) and current_customer.is_waiting:
-				current_customer.has_been_greeted = true
-				current_customer.dialogue_phase = Phase.NONE
+			if is_instance_valid(target) and target.is_waiting:
+				target.has_been_greeted = true
+				target.dialogue_phase = Phase.NONE
 				if is_instance_valid(_tree_owner) and _tree_owner.has_method("handle_social_visit_finished"):
-					_tree_owner.handle_social_visit_finished(current_customer)
+					_tree_owner.handle_social_visit_finished(target)
 				else:
-					current_customer.dismiss()
+					target.dismiss()
 
 		Phase.SMALLTALK:
-			if is_instance_valid(current_customer):
-				current_customer.dialogue_phase = Phase.NONE
-				current_customer.leave_from_lingering()
+			if is_instance_valid(target):
+				target.dialogue_phase = Phase.NONE
+				target.leave_from_lingering()
 
 		Phase.SATISFIED:
 			_dismiss_guest_if_present()
-			if is_instance_valid(current_customer):
-				current_customer.dialogue_phase = Phase.NONE
-				current_customer.satisfy()
+			if is_instance_valid(target):
+				target.dialogue_phase = Phase.NONE
+				target.satisfy()
 
 		Phase.GREETING:
-			if is_instance_valid(current_customer) and current_customer.transaction_context:
-				var t = current_customer.transaction_context
+			if is_instance_valid(target) and target.transaction_context:
+				var t = target.transaction_context
 				if t.transaction_type == TransactionContext.Type.STORY and t.is_visit_story:
-					current_customer.dialogue_phase = Phase.NONE
-					current_customer.satisfy()
+					target.dialogue_phase = Phase.NONE
+					target.satisfy()
 					return
-			if is_instance_valid(current_customer):
-				current_customer.has_been_greeted = true
-				current_customer.dialogue_phase = Phase.NONE
-				if current_customer.transaction_context:
-					EventBus.customer_order_updated.emit(current_customer.get_order_hud_key(), current_customer.transaction_context.desired_items, current_customer.transaction_context.is_riddle)
+			if is_instance_valid(target):
+				target.has_been_greeted = true
+				target.dialogue_phase = Phase.NONE
+				if target.transaction_context:
+					EventBus.customer_order_updated.emit(target.get_order_hud_key(), target.transaction_context.desired_items, target.transaction_context.is_riddle)
 
-		Phase.WRONG_ITEM:
-			if is_instance_valid(current_customer):
-				current_customer.dialogue_phase = Phase.NONE
+		Phase.WRONG_ITEM, Phase.TALK:
+			if is_instance_valid(target):
+				target.dialogue_phase = Phase.NONE
 
 func update_watchdog(delta: float) -> void:
 	if phase != Phase.NONE and phase != Phase.SATISFIED:

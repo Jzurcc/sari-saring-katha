@@ -20,7 +20,7 @@
 ---
 
 ## 1. Store Upgrades & Customization
-- [ ] **Buyable Store Props (Trash Can & Cats):** Move the trash can and store cats out of the default starting store and into the Upgrade menu as unlockable/purchasable store upgrades.
+- [~] **Buyable Store Props (Trash Can & Cats):** **Store Cats (`Mingming` & `Tala`) are now buyable upgrades in the Upgrade Menu (`1 → 2 → 3` counter slots)**; the Trash Can still needs to be moved out of the starting store into UpgradeMenu.
 - [ ] **Custom Store Signage Upgrade:** Add an upgrade that unlocks a drawing canvas where the player can paint their own giant rectangular signage mounted on top of the store.
 - [ ] **Storefront Poster Upgrade & Main Menu Reflection:** Add an upgradeable poster in front of the store and persist both the signage and poster art so the player's customizations visibly appear on the Main Menu storefront.
 
@@ -37,9 +37,9 @@
 - [ ] **Visual Relationship & Character Progression UI:** Add tangible visual UI elements for familiarity, relationship tiers, and character progression (e.g., familiarity bars/hearts, floating gain/loss & rank-up feedback during interactions, visible milestone badges, and end-of-day progression recaps) so players actively feel their bonds and progress growing each day—not just through dialogue.
 
 ## 4. Living Storefront & Multi-Customer Visits
-- [ ] **Lingering Visitors:** Allow visiting customers to hang out by the store for a while before wandering off instead of immediately leaving.
-- [ ] **Simultaneous Side-by-Side Customers:** Let the next buying or visiting customer walk up alongside a lingering visitor so multiple neighbors can be at the counter at once.
-- [ ] **Ambient Chitchat & Cross-NPC Banter:** Let the player click lingering visitors for small talk / familiarity gains between sales, and allow present NPCs to exchange short autonomous lines with each other without player input.
+- [x] **Lingering Visitors:** Visiting customers hang out around the store and stroll between spots before leaving or returning for smalltalk.
+- [x] **Simultaneous Side-by-Side Customers:** Up to 3 counter slots (`1 → 2 → 3` unlocked via Store Cat upgrades) with wave/burst pacing and immediate center-slot promotion.
+- [~] **Ambient Chitchat & Cross-NPC Banter:** **Smalltalk with returning lingering visitors is implemented**; still need familiarity gains and autonomous NPC-to-NPC banter bubbles without player input.
 
 ## 5. Quests, Minigames & Tactile Interactions
 - [ ] **Expanded Customer Objectives:** Introduce non-purchase tasks, cultural minigames, and interactive favors beyond simply handing over products.

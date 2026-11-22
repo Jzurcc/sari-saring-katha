@@ -479,7 +479,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false):
+		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -497,6 +497,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var target_tier := 1
 	var highest_fridge_lvl := StoryManager.fridge_upgrade_level
 	var highest_fridge_name := ""
+	var highest_cat_lvl := StoryManager.cat_upgrade_level
+	var highest_cat_name := ""
 
 	for item in items.keys():
 		if item.get_meta("is_fridge_upgrade", false):
@@ -504,6 +506,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			if target_lvl > highest_fridge_lvl:
 				highest_fridge_lvl = target_lvl
 				highest_fridge_name = item.item_name
+			continue
+		if item.get_meta("is_cat_upgrade", false):
+			var target_cat: int = int(item.get_meta("cat_level", 1))
+			if target_cat > highest_cat_lvl:
+				highest_cat_lvl = target_cat
+				highest_cat_name = item.item_name
 			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
@@ -524,6 +532,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 		if spawn_in_tree:
 			EventBus.show_notification.emit("Fridge Upgraded!", "%s installed." % highest_fridge_name, "purchase")
 		LogManager.info("MarioManager", "Fridge upgrade installed on Mario arrival: Level %d (%s)" % [highest_fridge_lvl, highest_fridge_name])
+
+	# Apply highest queued store cat upgrade cleanly
+	if highest_cat_lvl > StoryManager.cat_upgrade_level:
+		StoryManager.purchase_cat_upgrade(highest_cat_lvl)
+		if spawn_in_tree:
+			EventBus.show_notification.emit("New Store Cat!", "%s joined your store! (%d Counter Slots)" % [highest_cat_name, StoryManager.get_max_counter_slots()], "purchase")
+		LogManager.info("MarioManager", "Store cat upgrade installed on Mario arrival: Level %d (%s)" % [highest_cat_lvl, highest_cat_name])
 
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:

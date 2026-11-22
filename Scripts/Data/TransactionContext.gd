@@ -38,6 +38,10 @@ var is_visit_story: bool = false
 var story_advanced: bool = false
 var is_guided_tutorial: bool = false
 var blocks_phone_call: bool = false
+var tip_active: bool = false
+var high_price_active: bool = false
+var awareness_active: bool = false
+var stock_status: String = "Normal"
 
 func _is_match(item: ItemData, desired: ItemData) -> bool:
 	return (
@@ -108,7 +112,11 @@ func to_dict() -> Dictionary:
 		"is_visit_story": is_visit_story,
 		"story_advanced": story_advanced,
 		"is_guided_tutorial": is_guided_tutorial,
-		"blocks_phone_call": blocks_phone_call
+		"blocks_phone_call": blocks_phone_call,
+		"tip_active": tip_active,
+		"high_price_active": high_price_active,
+		"awareness_active": awareness_active,
+		"stock_status": stock_status
 	}
 
 static func from_dict(data: Dictionary) -> TransactionContext:
@@ -159,6 +167,10 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.story_advanced = data.get("story_advanced", false)
 	ctx.is_guided_tutorial = data.get("is_guided_tutorial", false)
 	ctx.blocks_phone_call = data.get("blocks_phone_call", false)
+	ctx.tip_active = data.get("tip_active", false)
+	ctx.high_price_active = data.get("high_price_active", false)
+	ctx.awareness_active = data.get("awareness_active", false)
+	ctx.stock_status = str(data.get("stock_status", "Normal"))
 
 	# Self-heal restored Uncle Mario tutorial saves that lack desired_items or is_guided_tutorial
 	if ctx.customer_data and ctx.customer_data.get_clean_id() == "unclemario":

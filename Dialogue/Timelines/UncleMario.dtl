@@ -90,3 +90,21 @@ UncleMario: Also... I've upgraded your store! Ingat anak.
 label StoreUpgradeAlso
 UncleMario: Also...
 [end_timeline]
+
+label CatUpgradeDelivery1
+UncleMario: Look who I found sneaking near my tricycle — this is Mingming!
+UncleMario: Neighbors love dropping by when there's a sleepy cat on the shelf. Looks like your counter can handle two customers at once now, anak!
+[end_timeline]
+
+label CatUpgradeDelivery1Followup
+UncleMario: Also... look who came riding in with me — little Mingming! Now two neighbors can gather by your counter at once, anak!
+[end_timeline]
+
+label CatUpgradeDelivery2
+UncleMario: Special passenger today! Meet Tala — Mingming's new buddy for the top shelf!
+UncleMario: With two lucky cats watching the tindahan, your whole counter is wide open for three customers at once! Ingat, anak!
+[end_timeline]
+
+label CatUpgradeDelivery2Followup
+UncleMario: Also... I brought Tala along so Mingming has a friend! Three neighbors can hang out at your counter at once now, anak!
+[end_timeline]

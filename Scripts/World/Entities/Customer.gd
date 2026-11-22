@@ -1,6 +1,8 @@
 class_name Customer
 extends WorldInteractor
 
+const AttentionBadge3D = preload("res://Scripts/World/Entities/CustomerAttentionBadge3D.gd")
+
 @warning_ignore("unused_signal")
 signal satisfied(customer: Customer)
 signal arrived(customer: Customer)
@@ -13,13 +15,19 @@ signal lingering_departed(customer: Customer)
 var target_position: Vector3
 var is_waiting: bool = false
 var is_hovered: bool = false
-var has_been_greeted: bool = false
+var _is_drag_hovered: bool = false
+var has_been_greeted: bool = false:
+	set(val):
+		if has_been_greeted != val:
+			has_been_greeted = val
+			_update_attention_badge()
 var customer_data: CustomerData = null
 var transaction_context: TransactionContext
 
 # Multi-slot & per-customer dialogue state
 var slot_index: int = -1
 var arrival_order: int = 0
+var is_guest_customer: bool = false
 var dialogue_phase: TransactionSession.Phase = TransactionSession.Phase.NONE
 var greeting_interrupted: bool = false
 var _is_repositioning: bool = false
@@ -43,14 +51,25 @@ var _last_pos: Vector3 = Vector3.ZERO
 @onready var body_sprite: Sprite3D = $Body
 var _outline_material: ShaderMaterial = null
 var _visual_tween: Tween = null
+var _hover_scale_tween: Tween = null
+var _attention_badge: AttentionBadge3D = null
+var _was_dialogue_open: bool = false
 
 
 func _ready() -> void:
 	super._ready()
-	# Place customers on layer 5 (value 16) so PlayerInteraction can detect
-	# them with a dedicated raycast that passes through counters and items.
+	_was_dialogue_open = Dialogic.current_timeline != null
+	_sync_collision_layer()
+
+
+func _sync_collision_layer() -> void:
+	# Layer 5 (value 16) allows PlayerInteraction to raycast customers through counters.
+	# Disable while walking in, resolving/leaving, or lingering so non-active customers never block neighbor clicks or drops.
+	var interactable := is_waiting and not _is_resolving and not is_lingering_visitor
 	collision_layer = 0
-	set_collision_layer_value(5, true)
+	set_collision_layer_value(5, interactable)
+	if not interactable and is_hovered:
+		on_hover(false)
 
 
 
@@ -116,6 +135,18 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 
 		# Ensure the root node stays at unit scale.
 		self.scale = Vector3.ONE
+
+		# Floating attention indicator ("!" when ungreeted, "..." when returning for smalltalk)
+		_attention_badge = AttentionBadge3D.new()
+		add_child(_attention_badge)
+		var badge_y := 1.8
+		if customer_data.sprite_texture:
+			badge_y = (customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale) + 0.24
+		elif speech_marker:
+			badge_y = speech_marker.position.y + 0.55
+		_attention_badge.position = Vector3(0.0, badge_y, 0.0)
+		_attention_badge.set_base_y(badge_y)
+		_update_attention_badge()
 		
 		if transaction_context and transaction_context.blocks_phone_call:
 			MarioManager.is_mario_physically_present = true
@@ -142,6 +173,11 @@ func on_interact() -> void:
 		EventBus.customer_clicked.emit(self)
 
 func _process(delta: float) -> void:
+	var dialogue_open := Dialogic.current_timeline != null
+	if dialogue_open != _was_dialogue_open:
+		_was_dialogue_open = dialogue_open
+		_update_attention_badge()
+
 	# Skip movement and arrival while waiting at the counter OR while a
 	# resolve/dismiss animation is playing. Without the _is_resolving check,
 	# dismiss() sets is_waiting=false on the same frame, _process resumes,
@@ -191,7 +227,9 @@ func _process(delta: float) -> void:
 
 func arrived_at_counter() -> void:
 	is_waiting = true
+	_sync_collision_layer()
 	_update_outline()
+	_update_attention_badge()
 	
 	# Landing Thud (Squash and Stretch)
 	if body_sprite:
@@ -338,7 +376,9 @@ func enter_lingering_mode(hangout_points: Array[Vector3]) -> void:
 	is_returning_for_smalltalk = false
 	is_waiting = false
 	slot_index = -1
+	_sync_collision_layer()
 	_clear_outline()
+	_update_attention_badge()
 	_linger_session_id += 1
 	var my_session := _linger_session_id
 
@@ -375,6 +415,8 @@ func return_to_counter_for_smalltalk(new_slot: int, slot_target: Vector3) -> voi
 	is_returning_for_smalltalk = true
 	slot_index = new_slot
 	is_waiting = false
+	_sync_collision_layer()
+	_update_attention_badge()
 	target_position = slot_target
 
 func leave_from_lingering() -> void:
@@ -397,7 +439,9 @@ func _leave_store(completion_signal: Signal) -> void:
 	is_waiting = false
 	is_lingering_visitor = false
 	_is_resolving = true
+	_sync_collision_layer()
 	_clear_outline()
+	_update_attention_badge()
 	if body_sprite:
 		body_sprite.sorting_offset = -1.5
 	EventBus.customer_order_cleared.emit(get_order_hud_key())
@@ -429,6 +473,8 @@ func _leave_store(completion_signal: Signal) -> void:
 
 func reject() -> void:
 	_is_resolving = true
+	_sync_collision_layer()
+	_update_attention_badge()
 	EventBus.request_sfx.emit("error")
 	
 	# VISUAL: Disappointed Squash and Stretch + Shiver
@@ -468,7 +514,9 @@ func reject() -> void:
 	# Reset state
 	if is_waiting:
 		_is_resolving = false
+	_sync_collision_layer()
 	_update_outline()
+	_update_attention_badge()
 	
 
 
@@ -477,27 +525,87 @@ func reject() -> void:
 func dismiss() -> void:
 	await _leave_store(EventBus.customer_dismissed)
 
+func _update_attention_badge() -> void:
+	if not is_instance_valid(_attention_badge):
+		return
+	if not is_waiting or _is_resolving or is_lingering_visitor or is_guest_customer or Dialogic.current_timeline != null:
+		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)
+	elif is_returning_for_smalltalk:
+		_attention_badge.set_mode(AttentionBadge3D.Mode.SMALLTALK)
+	elif not has_been_greeted:
+		_attention_badge.set_mode(AttentionBadge3D.Mode.UNGREETED)
+	else:
+		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)
+
+## Returns true when this customer is ready to receive a dragged item handover.
+## Intentionally never checks specific desired items so riddles stay unspoiled.
+func can_receive_item_handover() -> bool:
+	if not is_waiting or _is_resolving or is_lingering_visitor or is_returning_for_smalltalk:
+		return false
+	if dialogue_phase == TransactionSession.Phase.SATISFIED:
+		return false
+	var gm := get_tree().get_first_node_in_group("game_manager") as GameManager
+	var is_guided: bool = (transaction_context and transaction_context.is_guided_tutorial) or (gm and gm.tutorial and gm.tutorial.is_guided_timeline_active())
+	if is_guided:
+		return gm != null and gm.tutorial != null and gm.tutorial.can_accept_guided_item()
+	if not has_been_greeted or transaction_context == null:
+		return false
+	if transaction_context.transaction_type == TransactionContext.Type.VISIT or transaction_context.is_visit_story:
+		return false
+	return true
+
+func set_drag_hover(active: bool) -> void:
+	if _is_drag_hovered == active:
+		return
+	_is_drag_hovered = active
+	_update_outline()
+	_update_drag_hover_scale()
+
 ## Show or hide the hover outline on the customer sprite.
 ## Only shows when the customer is actively waiting and can be interacted with.
 func on_hover(hovered: bool) -> void:
 	is_hovered = hovered
+	if not hovered:
+		_is_drag_hovered = false
 	_update_outline()
+	_update_drag_hover_scale()
+	var emitted_customer: Customer = self if (hovered and is_waiting and not _is_resolving) else null
+	EventBus.customer_hover_changed.emit(emitted_customer, _is_drag_hovered)
 
 func _update_outline() -> void:
-	if is_hovered and is_waiting:
+	if is_hovered and is_waiting and not _is_resolving:
 		if _outline_material == null and body_sprite and body_sprite.texture:
 			_outline_material = ShaderMaterial.new()
 			_outline_material.shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")
 			_outline_material.set_shader_parameter("albedo_texture", body_sprite.texture)
-			_outline_material.set_shader_parameter("outline_color", Color.WHITE)
-			_outline_material.set_shader_parameter("outline_width", 16.0)
 			# Match the Sprite3D's billboard = 2 (Fixed Y) so the outline never
 			# tilts when the player looks up or down.
 			_outline_material.set_shader_parameter("fixed_y_billboard", true)
+		if _outline_material:
+			if _is_drag_hovered:
+				if can_receive_item_handover():
+					_outline_material.set_shader_parameter("outline_color", Color("#8CF5A2"))
+					_outline_material.set_shader_parameter("outline_width", 20.0)
+				else:
+					_outline_material.set_shader_parameter("outline_color", Color(0.88, 0.72, 0.42, 0.85))
+					_outline_material.set_shader_parameter("outline_width", 14.0)
+			else:
+				_outline_material.set_shader_parameter("outline_color", Color.WHITE)
+				_outline_material.set_shader_parameter("outline_width", 16.0)
 		if body_sprite:
 			body_sprite.material_overlay = _outline_material
 	else:
 		_clear_outline()
+
+func _update_drag_hover_scale() -> void:
+	if not body_sprite or (_visual_tween and _visual_tween.is_valid() and _visual_tween.is_running()):
+		return
+	if _hover_scale_tween and _hover_scale_tween.is_valid():
+		_hover_scale_tween.kill()
+	var base := _get_base_sprite_scale()
+	var target := base * 1.035 if (is_hovered and _is_drag_hovered and can_receive_item_handover()) else base
+	_hover_scale_tween = create_tween()
+	_hover_scale_tween.tween_property(body_sprite, "scale", target, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _clear_outline() -> void:
 	if body_sprite:

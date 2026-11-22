@@ -20,6 +20,8 @@ signal customer_dismissed(customer: Customer)
 signal dialogue_character_speaking(customer_data: CustomerData)
 @warning_ignore("unused_signal")
 signal customer_clicked(customer: Customer)
+@warning_ignore("unused_signal")
+signal customer_hover_changed(customer: Customer, is_dragging: bool)
 
 
 # --- Transactions ---
@@ -104,6 +106,8 @@ signal refrigerator_closed()
 signal fridge_coldness_changed(coldness: float, is_open: bool, is_warm: bool)
 @warning_ignore("unused_signal")
 signal fridge_upgraded(new_level: int)
+@warning_ignore("unused_signal")
+signal cat_upgraded(new_level: int)
 @warning_ignore("unused_signal")
 signal helper_prompt_requested(text: String, is_active: bool)
 @warning_ignore("unused_signal")

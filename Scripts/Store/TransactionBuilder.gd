@@ -388,6 +388,10 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 	elif total_stock < LOW_STOCK_THRESHOLD:
 		stock_status = "Low"
 
+	transaction.awareness_active = awareness_active
+	transaction.high_price_active = high_price_active
+	transaction.stock_status = stock_status
+
 	Dialogic.VAR.set_variable("Global_AwarenessActive", 1.0 if awareness_active else 0.0)
 	Dialogic.VAR.set_variable("Global_HighPriceActive", 1.0 if high_price_active else 0.0)
 	Dialogic.VAR.set_variable("Global_StockStatus", stock_status)

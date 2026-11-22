@@ -26,6 +26,7 @@ var _game_manager: GameManager = null
 var _scroll_event_count: int = 0
 const SCROLL_THRESHOLD: int = 1
 var _was_lmb_pressed: bool = false
+var _was_dragging: bool = false
 var _last_fridge_toggle_frame: int = -1
 
 func _ready() -> void:
@@ -50,6 +51,8 @@ func _on_drag_ended(_item: DraggableItem, _dropped_successfully: bool) -> void:
 		_last_hovered.on_hover(false)
 		_last_hovered.set_pricing_ui_active(false)
 	_last_hovered = null
+	_was_dragging = false
+	EventBus.customer_hover_changed.emit(null, false)
 
 	call_deferred("_cache_node_refs")
 
@@ -74,6 +77,8 @@ func _physics_process(_delta: float) -> void:
 		if is_instance_valid(_last_hovered):
 			_last_hovered.on_hover(false)
 			_last_hovered = null
+			EventBus.customer_hover_changed.emit(null, false)
+		_was_dragging = DragManager.is_dragging
 		return
 
 	var center := get_viewport().get_visible_rect().size / 2.0
@@ -123,9 +128,17 @@ func _physics_process(_delta: float) -> void:
 			_last_hovered.on_hover(false)
 			_last_hovered.set_pricing_ui_active(false)
 		if is_instance_valid(current_hovered):
+			if current_hovered is Customer:
+				(current_hovered as Customer).set_drag_hover(DragManager.is_dragging)
 			current_hovered.set_pricing_ui_active(pricing_mode_active)
 			current_hovered.on_hover(true)
 		_last_hovered = current_hovered
+	elif current_hovered is Customer and DragManager.is_dragging != _was_dragging:
+		var hovered_cust := current_hovered as Customer
+		hovered_cust.set_drag_hover(DragManager.is_dragging)
+		EventBus.customer_hover_changed.emit(hovered_cust, DragManager.is_dragging)
+
+	_was_dragging = DragManager.is_dragging
 
 	# Allow opening/closing the refrigerator door during active dialogue even if Dialogic's layout consumes MOUSE_BUTTON_LEFT
 	var lmb_now := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)

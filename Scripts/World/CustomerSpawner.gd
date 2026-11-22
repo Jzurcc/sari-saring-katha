@@ -15,8 +15,8 @@ const SMALLTALK_RETURN_CHANCE := 0.60
 @export var spawn_pos: NodePath
 @export var target_pos: NodePath
 @export var exit_pos: NodePath
-## Number of active counter slots (1..3). Default 3 for playtesting; future Cat Upgrades will gate 1 -> 2 -> 3.
-@export_range(1, 3) var max_unlocked_slots: int = 3
+## Number of active counter slots (1..3), gated by Store Cat upgrades (0 -> 1 slot, 1 -> 2, 2 -> 3).
+@export_range(1, 3) var max_unlocked_slots: int = 1
 ## Lateral distance from Center slot to Left/Right side slots along the counter.
 @export var slot_side_spacing: float = 1.95
 ## How far back (away from the counter) Left and Right slots stand relative to Center.
@@ -85,7 +85,12 @@ func _ready() -> void:
 	EventBus.dialogue_character_speaking.connect(_on_character_speaking)
 	EventBus.customer_item_offered.connect(_on_customer_item_offered)
 	EventBus.tray_item_placed.connect(_on_tray_item_placed)
+	EventBus.cat_upgraded.connect(_on_cat_upgraded)
+	set_max_unlocked_slots(StoryManager.get_max_counter_slots())
 	LogManager.debug("CustomerSpawner", "_ready() END")
+
+func _on_cat_upgraded(_new_level: int) -> void:
+	set_max_unlocked_slots(StoryManager.get_max_counter_slots())
 
 func set_max_unlocked_slots(count: int) -> void:
 	max_unlocked_slots = clampi(count, 1, MAX_COUNTER_SLOTS)
@@ -146,6 +151,8 @@ func _spawn_next_customer() -> void:
 		LogManager.debug("CustomerSpawner", "Aborting spawn: store is paused.")
 		return
 
+	max_unlocked_slots = StoryManager.get_max_counter_slots()
+
 	# Closing time check
 	if StoryManager.is_past_closing_time():
 		LogManager.info("CustomerSpawner", "Store is closing. Spawning Mayari for collection.")
@@ -177,6 +184,7 @@ func _spawn_next_customer() -> void:
 					continue
 			StoryManager.update_transaction_item_string(ctx)
 			var spawned := _spawn_customer_into_slot(ctx, slot_idx)
+			spawned.has_been_greeted = bool(entry.get("greeted", false))
 			if first_customer == null:
 				first_customer = spawned
 		if is_instance_valid(first_customer):
@@ -288,6 +296,7 @@ func _spawn_customer_into_slot(transaction: TransactionContext, slot_idx: int) -
 
 		var guest_target: Vector3 = pos_data.guest_target
 		guest_customer = customer_scene.instantiate()
+		guest_customer.is_guest_customer = true
 		get_parent().add_child(guest_customer)
 		guest_customer.global_position = spawn_global
 		guest_customer.setup(guest_context, guest_target, exit_global, transaction.guest_spawns_later)
@@ -583,6 +592,8 @@ func _process(delta: float) -> void:
 func _on_customer_arrived(customer: Customer) -> void:
 	EventBus.customer_arrived.emit(customer)
 	session.on_customer_arrived(customer)
+	if is_instance_valid(customer) and customer.has_been_greeted and customer.transaction_context and not customer.transaction_context.desired_items.is_empty() and not customer.is_returning_for_smalltalk:
+		EventBus.customer_order_updated.emit(customer.get_order_hud_key(), customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
 
 func _on_customer_finished(customer: Customer) -> void:
 	session.on_item_delivered(customer, true)
@@ -718,8 +729,7 @@ func load_save_data(data: Dictionary) -> void:
 	session._greeting_interrupted = false
 	_pending_restore_slots.clear()
 
-	if data.has("max_unlocked_slots"):
-		max_unlocked_slots = clampi(int(data["max_unlocked_slots"]), 1, MAX_COUNTER_SLOTS)
+	max_unlocked_slots = StoryManager.get_max_counter_slots()
 
 	# New multi-slot save format
 	if data.has("slots") and data["slots"] is Array:
@@ -778,6 +788,7 @@ func reset_state() -> void:
 	_is_spawning = false
 	_dialogue_phase = DialoguePhase.NONE
 	session._greeting_interrupted = false
+	max_unlocked_slots = StoryManager.get_max_counter_slots()
 	LogManager.info("CustomerSpawner", "State reset for New Game.")
 
 func _create_customer(transaction: TransactionContext, spawn: Vector3, target: Vector3, exit: Vector3 = Vector3.ZERO) -> Customer:

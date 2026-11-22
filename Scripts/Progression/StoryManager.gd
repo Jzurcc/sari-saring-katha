@@ -130,6 +130,51 @@ func purchase_fridge_upgrade(level: int) -> void:
 	EventBus.fridge_upgraded.emit(fridge_upgrade_level)
 	_save_progression()
 
+# --- Store Cats (Counter Slots 1 -> 2 -> 3) ---
+const CAT_UPGRADE_SPECS: Array[Dictionary] = [
+	{ "level": 0, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time." },
+	{ "level": 1, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once." },
+	{ "level": 2, "name": "Cat Buddy: Tala", "cost": 180.0, "slots": 3, "desc": "Adopt Tala to keep Mingming company! Unlocks all 3 counter slots for lively neighborhood rushes." },
+]
+var cat_upgrade_level: int = 0
+var _cat_upgrade_item_cache: Dictionary = {}
+
+func get_max_counter_slots() -> int:
+	return clampi(1 + cat_upgrade_level, 1, 3)
+
+func get_cat_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, CAT_UPGRADE_SPECS.size() - 1)
+	if _cat_upgrade_item_cache.has(lvl):
+		return _cat_upgrade_item_cache[lvl]
+	var spec: Dictionary = CAT_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "cat_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/cat.png"):
+		item.texture = load("res://Assets/ui/cat.png")
+	item.set_meta("is_cat_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("cat_level", lvl)
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("slots", int(spec["slots"]))
+	item.set_meta("delivery_dialogue_label", "CatUpgradeDelivery%d" % lvl)
+	_cat_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_cat_upgrade(level: int) -> void:
+	var target := clampi(level, 1, CAT_UPGRADE_SPECS.size() - 1)
+	if target <= cat_upgrade_level:
+		return
+	cat_upgrade_level = target
+	LogManager.info("StoryManager", "Store Cat upgraded to Level %d (%s, %d counter slots)" % [cat_upgrade_level, CAT_UPGRADE_SPECS[cat_upgrade_level]["name"], get_max_counter_slots()])
+	EventBus.cat_upgraded.emit(cat_upgrade_level)
+	if get_tree():
+		get_tree().call_group("store_cats", "refresh_visibility", true)
+	_save_progression()
+
 ## Physical container equipment props delivered in plastic bags on tier upgrades.
 const CONTAINER_PROP_PATHS: Array[String] = [
 	"res://Resources/items/candycontainer/Mix.tres",
@@ -349,6 +394,7 @@ func get_save_data() -> Dictionary:
 		"fridge_upgrade_level": fridge_upgrade_level,
 		"fridge_coldness": fridge_coldness,
 		"is_fridge_warm": is_fridge_warm,
+		"cat_upgrade_level": cat_upgrade_level,
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -382,6 +428,7 @@ func load_save_data(data: Dictionary) -> void:
 	is_fridge_warm = bool(data.get("is_fridge_warm", false))
 	if fridge_coldness >= FRIDGE_WARM_RECOVER_THRESHOLD:
 		is_fridge_warm = false
+	cat_upgrade_level = clampi(int(data.get("cat_upgrade_level", 0)), 0, CAT_UPGRADE_SPECS.size() - 1)
 
 	placed_containers.clear()
 	if data.has("placed_containers"):
@@ -404,9 +451,11 @@ func load_save_data(data: Dictionary) -> void:
 	# always update container visibility after _ready() has already run with default tier=1 state.
 	if get_tree():
 		get_tree().call_group("dispenser_containers", "refresh_stock")
+		get_tree().call_group("store_cats", "refresh_visibility", false)
 		get_tree().process_frame.connect(func():
 			if get_tree():
 				get_tree().call_group("dispenser_containers", "refresh_stock")
+				get_tree().call_group("store_cats", "refresh_visibility", false)
 		, CONNECT_ONE_SHOT)
 
 	CharacterProgressionManager.migrate_from_story_manager_save(data)
@@ -445,6 +494,7 @@ func reset_state() -> void:
 	fridge_upgrade_level = 0
 	fridge_coldness = 100.0
 	is_fridge_warm = false
+	cat_upgrade_level = 0
 	clock.reset_state()
 	SaveManager.delete_save()
 
