@@ -5,7 +5,7 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hud"]
 
 [node name="CustomerRequestHUD" type="CanvasLayer"]
-layer = 0
+layer = -1
 script = ExtResource("1_script")
 
 [node name="Control" type="Control" parent="."]
