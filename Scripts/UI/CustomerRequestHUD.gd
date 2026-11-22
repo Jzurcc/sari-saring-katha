@@ -35,12 +35,6 @@ func _ready() -> void:
 	EventBus.customer_order_cleared.connect(_on_order_cleared)
 	EventBus.tier_advanced.connect(_on_tier_advanced)
 
-func _process(_delta: float) -> void:
-	# Hide order previews whenever any modal menu (Restock, Upgrade, Ledger, Pause, Notebook) unlocks the cursor
-	var in_gameplay := Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED
-	if visible != in_gameplay:
-		visible = in_gameplay
-
 func _on_tier_advanced(_new_tier: int, _source: String) -> void:
 	if not is_visible_hud:
 		return
