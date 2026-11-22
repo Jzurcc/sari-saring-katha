@@ -1,9 +1,9 @@
 extends CanvasLayer
 
-const ITEM_HEIGHT := 76.0
-const ITEM_MIN_WIDTH := 34.0
-const ITEM_MAX_WIDTH := 82.0
-const RIDDLE_SIZE := 64.0
+const ITEM_HEIGHT := 92.0
+const ITEM_MIN_WIDTH := 40.0
+const ITEM_MAX_WIDTH := 96.0
+const RIDDLE_SIZE := 74.0
 const PORTRAIT_RING_SIZE := 76
 const PORTRAIT_IMG_SIZE := 92
 
@@ -116,10 +116,10 @@ func _create_row(customer_name: String) -> Dictionary:
 	# 1. Left Side: Floating items resting along a sleek bottom shelf-line bar
 	var items_margin := MarginContainer.new()
 	items_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	items_margin.add_theme_constant_override("margin_left", 14)
-	items_margin.add_theme_constant_override("margin_right", 20)
+	items_margin.add_theme_constant_override("margin_left", 16)
+	items_margin.add_theme_constant_override("margin_right", 22)
 	items_margin.add_theme_constant_override("margin_top", 2)
-	items_margin.add_theme_constant_override("margin_bottom", 8)
+	items_margin.add_theme_constant_override("margin_bottom", 10)
 
 	# Full-rect background layer inside PanelContainer so bottom_bar keeps its bottom-only anchors
 	var bar_layer := Control.new()
@@ -158,7 +158,7 @@ func _create_row(customer_name: String) -> Dictionary:
 
 	var items_box := HBoxContainer.new()
 	items_box.alignment = BoxContainer.ALIGNMENT_END
-	items_box.add_theme_constant_override("separation", 12)
+	items_box.add_theme_constant_override("separation", 14)
 	items_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	items_margin.add_child(items_box)
 
@@ -219,20 +219,6 @@ func _create_row(customer_name: String) -> Dictionary:
 		name_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
 		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		badge_holder.add_child(name_lbl)
-
-	# Small connector dot on the left side of the medallion bridging into the shelf-line
-	var dot_small := Panel.new()
-	dot_small.size = Vector2(7, 7)
-	dot_small.position = Vector2(-2, PORTRAIT_RING_SIZE - 13)
-	dot_small.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dot_small.add_theme_stylebox_override("panel", _make_circle_style(
-		Color(0.88, 0.72, 0.42, 0.90),
-		Color.TRANSPARENT,
-		0,
-		999,
-		0
-	))
-	badge_holder.add_child(dot_small)
 
 	rows_container.add_child(row)
 
@@ -325,7 +311,7 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 			label.size = riddle_badge.size
 			label.add_theme_font_override("font", UIStyle.FONT_INDER)
 			label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62, 1.0))
-			label.add_theme_font_size_override("font_size", 38)
+			label.add_theme_font_size_override("font_size", 44)
 			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			riddle_badge.add_child(label)
 			rect_container.add_child(riddle_badge)
