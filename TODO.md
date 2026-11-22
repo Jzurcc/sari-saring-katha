@@ -58,6 +58,10 @@
 ## 8. Economy & Reyna Mayari Tally Rework
 - [ ] **Player-Chosen Tally Contributions & Goal System:** Rework Reyna Mayari's nightly tally so the player decides how much money they want to contribute each night toward an overall goal they need to reach, instead of a fixed mandatory nightly deduction.
 
+## 9. Restocking UX & Inventory Clarity
+- [ ] **Prerequisite — Visible Current Stock in Restock Menu:** Display each product's current owned/shelf stock (e.g. `Stock: 1 / 5` or `OUT OF STOCK` badge) directly on every Restock Menu card and detail view so players immediately know what they already have while shopping.
+- [ ] **Restocking Decision-Fatigue Overhaul:** Introduce clarity and convenience systems so restocking doesn't feel confusing or overwhelming as the catalog grows (e.g., **Low Stock / Out of Stock** filter or priority sorting, **"In Demand / Event"** highlights, **Quick Restock / Fill Low Stock** one-click preset bundles, and clear shelf/fridge capacity bars).
+
 ---
 
 ## Design Notes & Discussion
@@ -112,3 +116,11 @@ Great fits that stay grounded at the counter and reuse existing mechanics:
 1. **Store Ownership Polish:** Buyable Trash Can & Cats → Fridge Coldness Bar & Upgrades → Custom Signage & Poster (synced to Main Menu).
 2. **Depth & Education:** Folklore Journal + Familiarity System → Global Cross-Character Choice Flags.
 3. **Signature Barangay Life:** Multi-slot *Tambayan* (lingering visitors + side-by-side buyers + autonomous banter + Duwende groups) → Cultural Minigames (starting with Nokia *Paload*) → More Events, Music, Cutscenes & Dialogue Rework.
+
+### 8. Restocking UX & Reducing Decision Fatigue
+- **The Problem:** Once Tiers 3–10 unlock dozens of products across categories, opening the Restock Menu without knowing what's empty on your shelves creates instant decision fatigue.
+- **Prerequisite:** Show live **current stock vs. cap** (`0/5 OUT`, `1/5 LOW`, `5/5 FULL`) directly on every item card in `RestockMenu` before adding smarter restocking tools.
+- **High-Impact Systems to Reduce Friction:**
+  - **"Needs Restock" / Low-Stock Tab:** One dedicated view showing only `0` or low-stock items (plus any active Market Event `[IN DEMAND]` items) sorted by urgency.
+  - **One-Click "Fill Low Stock" / Smart Restock Suggestions:** Auto-queues a balanced basket of your out-of-stock/low items within your current budget that you can tweak before confirming.
+  - **Shelf & Fridge Capacity Meters:** Visual bar showing remaining Shelf vs. Fridge slots as you add items so you never hit surprise `"Shelf is full!"` errors.
