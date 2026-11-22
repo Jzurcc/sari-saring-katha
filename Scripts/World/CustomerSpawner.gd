@@ -7,7 +7,6 @@ class_name CustomerSpawner
 const DialoguePhase = TransactionSession.Phase
 
 const MAX_COUNTER_SLOTS := 3
-const SLOT_SPACING := 1.28
 const LINGER_CHANCE := 0.55
 const MAX_LINGERING_VISITORS := 2
 const SMALLTALK_RETURN_CHANCE := 0.50
@@ -18,6 +17,10 @@ const SMALLTALK_RETURN_CHANCE := 0.50
 @export var exit_pos: NodePath
 ## Number of active counter slots (1..3). Default 3 for playtesting; future Cat Upgrades will gate 1 -> 2 -> 3.
 @export_range(1, 3) var max_unlocked_slots: int = 3
+## Lateral distance from Center slot to Left/Right side slots along the counter.
+@export var slot_side_spacing: float = 1.95
+## How far back (away from the counter) Left and Right slots stand relative to Center.
+@export var side_slot_depth_offset: float = 0.75
 
 var session: TransactionSession = TransactionSession.new()
 
@@ -305,9 +308,9 @@ func _calculate_positions(has_guest: bool, slot_idx: int = 0) -> Dictionary:
 		primary_target = target_global + (side_offset * -0.9) # Shift Primary to Right
 		guest_target = target_global + (side_offset * 0.9)    # Shift Guest to Left
 	elif slot_idx == 1:
-		primary_target = target_global + (side_offset * SLOT_SPACING)  # Left slot
+		primary_target = target_global + (side_offset * slot_side_spacing) - (approach_dir * side_slot_depth_offset)  # Left slot (slightly back)
 	elif slot_idx == 2:
-		primary_target = target_global + (side_offset * -SLOT_SPACING) # Right slot
+		primary_target = target_global + (side_offset * -slot_side_spacing) - (approach_dir * side_slot_depth_offset) # Right slot (slightly back)
 
 	return {
 		"spawn_pos": spawn_global,
