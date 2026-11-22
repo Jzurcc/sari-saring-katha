@@ -282,3 +282,146 @@ Grouped by what this guide says drives retention, mapped to Filipino-folklore fl
 The Gemini guide is a strong *genre* reference and its best contribution is the **nested reward loops + Zeigarnik hook + hybrid scripted/procedural + dialogue-through-action** framework. But on its own it would give us a polished generic shop sim.
 
 What will make *Sari-Saring Katha* feel **alive** is combining that scaffolding with something no other game on that list has: **a folklore rulebook the player learns by working the counter**, a **neighborhood that remembers how you treat it**, and a **store that physically becomes yours**. The tactile foundation is already done — the next wins are almost all about *the shape of the day* and *the world's memory*, not more items or more tiers.
+
+
+---
+
+# Part 6: Discussion — What This Guide Means for *Sari-Saring Katha*
+
+*(Added after reading this guide against the current build, [TODO.md](../../TODO.md), and my earlier [shopkeeper_engagement_research.md](shopkeeper_engagement_research.md).)*
+
+## 6.1 Honest Assessment of This Guide
+
+**Where it is clearly stronger than my first research doc** — and why it exposed gaps:
+
+| This guide covers | My earlier doc missed or only skimmed | Why it matters for us |
+|---|---|---|
+| **Nested reward frequencies** (micro / meso / macro) | I only described "prep → rush → exhale" | Gives us an *audit tool*: we can check every layer has a payoff |
+| **Zeigarnik effect** (unfinished tasks pull players back) | Not mentioned | Explains *why* "just one more day" works and how to engineer it ethically |
+| **Dialogue-through-action** with *hidden threshold variables* (VA-11 Hall-A's Karmotrine) | I stated "the drink is the dialogue" without the mechanism | The mechanism is directly reusable for us (see 6.3) |
+| **Hybrid scripted + procedural** (*Papers, Please*: 2–3 handcrafted encounters/day + procedural entrants under *escalating daily rules*) | Not mentioned | Our biggest structural opportunity (see 6.2) |
+| **Loop cadence rule** (one full loop ≈ 3–7 min) | Not mentioned | We can measure ourselves against it |
+| **Opaque-mechanics pitfall** (players alt-tab to wikis) | Not mentioned | We already hide tolerance/complaint logic from players |
+| **Rigid experimentation blockers** (*Tavern Talk*) | Not mentioned | Wrong items currently just give a `WrongItem` line |
+| **Narrative/minigame pacing clash** (15–30 s drink assembly) | Only touched on click fatigue | Gives a concrete budget for any minigame we add |
+| **Supply-side gambling** (opening your own stock) | Not mentioned | A genuinely novel hook for a tingi store |
+
+**Where I would push back or qualify it:**
+- **"Graduated automation" is the wrong late-game answer for us.** It fits *Supermarket Simulator*'s hypermarket fantasy. A sari-sari store is **intimate and tiny by design**; hiring staff would erode the one-person-and-the-neighborhood fantasy. Our late-game "evolution" should come from *new rules, new neighbors, and new kinds of requests* — not from removing the player from the counter. (Optional exception: a *single* named helper — e.g., Mario's nephew — as a story beat, not a system.)
+- **"Co-op" and "tech trees" are mostly irrelevant.** Skip them.
+- **Source quality is uneven.** Several claims (e.g., exact loop minutes) come from a blog analysis, not a controlled study. Treat the 3–7 minute rule as a *heuristic*, not law.
+- **It is genre-generic.** Nothing in it tells us how to be *Filipino* or *folkloric*. That is our differentiator and has to come from us (see 6.4).
+
+## 6.2 Where Sari-Saring Katha Already Stands (Audit Against the Checklist)
+
+| Checklist item | Status | Notes |
+|---|---|---|
+| Tactile core action | ✅ Strong | Drag items, bag pickup, plastic crinkle, ALT pricing lens, delta popups, impact dust |
+| Reward layers | 🟡 Partial | Micro ✅ (SFX, popups) / Meso 🟡 (tiers, upgrades) / **Macro ❌** (no finale, Mayari quota is still a flat tax) |
+| Loop cadence (3–7 min) | 🟡 Unmeasured | A day is 4–8 customers (~1–2 min each) ≈ **8–15 real minutes** — likely over the heuristic; needs a "mid-day beat" or a clearer day-end exhale |
+| Customer variety (regulars + procedural) | ✅ Good | Story chapters + generic purchase/visit |
+| Cryptic orders | 🟡 Partial | Buboy riddles exist; most customers still ask literally |
+| Ownership / personalization | ❌ Weak | No drawn signage, decor, radio, or playlist choice yet |
+| Secondary hook | ❌ Missing | No signature twist beyond pricing |
+| Endgame curve | ❌ Missing | After Tier 10 nothing evolves |
+| Legible, tolerant failure | 🟡 Mixed | Pricing steps are legible (✅), but *why* a customer complained/left is opaque (❌); Mayari's quota can hard-fail |
+| Experimentation rewarded | ❌ Missing | A wrong item = generic `WrongItem` line |
+| Day-end "exhale" / Zeigarnik hook | ❌ Missing | Sleep overlay shows a folklore quote only — no recap, no cliffhanger |
+
+**Summary:** the *feel* of a single transaction is already excellent. What's missing is almost everything **around** the transaction: the day's shape, the world's memory, and a reason to care at hour 10.
+
+## 6.3 The Single Biggest Idea: Turn Folklore Into the *Rules Layer*
+
+*Papers, Please* works because **the rulebook is the game**. *VA-11 Hall-A* works because **the drink is the dialogue**. We have something neither has: a whole mythology with built-in taboos, tells, and weaknesses — and the player *already* has a Journal planned.
+
+### "Tabi-Tabi Po" — Folklore Rules as Diegetic Deduction
+- Each mythical neighbor has **traits/taboos** the player discovers through play and records in the Journal (the *Strange Horticulture* reference-book loop): a Duwende expects a courteous *"tabi-tabi po"* line; a Kapre's smoke/cigarette etiquette; a Manananggal who only visits at night and is startled by bright light/garlic; a Tikbalang spooked by certain items.
+- **Daily "Barangay Ordinance" / Lola's Rule** (the *Papers, Please* escalating-rule mechanic): each day introduces one small, readable rule (*"Walang tinda ng bawang ngayong Biyernes"*, *"Pag may Duwende, doblehin ang sukli—baka bumalik na may dalang sama ng loob"*). Rules **stack gradually** instead of dumping everything on Day 1.
+- **Tolerant failure:** breaking a taboo costs *familiarity and a funny reaction*, never a soft-lock. Players learn from it and write it in the Journal.
+
+### Dialogue-Through-Action (VA-11 Hall-A pattern, applied to our counter)
+We already have *price step* as a hidden expression of attitude. Extend it so **how you serve is how you speak**:
+- **Price as tone:** Undercharge/free (*libre*) = warmth; overcharge = coldness — already partly modeled via tips and complaints; formalize it as a hidden **per-customer "Warmth" variable** feeding Familiarity.
+- **Optional extras = hidden thresholds:** an unprompted *pahabol* (free candy), a *sukli* rounded in the customer's favor, or handing a hot drink *before* they ask — each nudges a hidden variable that unlocks guarded confessions (exactly Karmotrine's role).
+- **Wrong item as experimentation:** hand Manang Ana the wrong item *on purpose* and get a unique, funny reaction instead of a dead-end `WrongItem` — reward curiosity (fixes the *Tavern Talk* pitfall).
+
+### Reading-the-Customer Feedback (fixes "opaque mechanics")
+- Replace silent tolerance logic with **diegetic thought cues**: a small *"Mahal naman…"* / *"Sakto lang."* bubble or sprite emote when a price lands outside tolerance, and log it in the Ledger as a one-line note. This is the *Moonlighter* "read the face" pattern and costs very little to implement given the existing 7-step pricing.
+
+## 6.4 Making the Store "Alive" — A Concrete Menu of Ideas
+
+Grouped by what this guide says drives retention, mapped to Filipino-folklore flavor, and rated by effort (**S**mall / **M**edium / **L**arge).
+
+### A. Make the Day Have a *Shape* (Zeigarnik + 3–7 min cadence)
+| Idea | Effort | Why |
+|---|---|---|
+| **Day-End "Tindahan Tally" screen** — earnings, tips, new familiarity hearts, new Journal entries, *and one teaser line* ("Si Danilo mukhang may dalang balita bukas…") | **S–M** | The cheapest, highest-impact "exhale" + cliffhanger |
+| **Mid-day beat** — a scripted *"Tanghaling Tapat"* lull event (radio announcement, brownout, sudden *ulan*) that splits the day into two ~5 min halves | **M** | Brings loop cadence in line with the heuristic and adds variety |
+| **2–3 marquee encounters per day** (hand-authored) + procedural filler under that day's rule | **M** | The proven *Papers, Please* hybrid |
+| **Day-start "Diyaryo / Radyo" bulletin** (events + rule + one rumor) | **S** | Diegetic worldbuilding feed; replaces a menu with flavor |
+
+### B. Give the Counter a Secondary Hook (what no clone has)
+| Idea | Effort | Why / Folklore tie-in |
+|---|---|---|
+| **"Pabola / Pa-raffle Jar"** — a supply-side gamble: spend a few of your own tingi sachets/candies on a lucky draw for rare *folk charms* or collectibles (the *TCG Card Shop* "open your own stock" tension) | **M** | Sell steady vs. gamble for a windfall |
+| **Nokia *Paload*** (already planned) | **M** | Reuses the keypad; a pure tactile micro-ritual |
+| **Neighbor Parcels / Pa-receive** (planned, tie to the online-delivery myth character) | **M** | A *holding* mechanic that persists across customers — a natural Zeigarnik hook |
+| **"Bugtong Corner"** — riddles that award bonus warmth, reusing Buboy's `item_hint` system | **S** | Already partly built; broaden beyond Buboy |
+| **Offerings / *Handog*** — leaving a small treat at the doorstep for Duwende/Kapre at night, which subtly shifts that night's rumors/tips | **S–M** | Pure folklore ritual, tiny UI footprint, strong theme |
+
+### C. Make the World Remember (macro payoff / late-game purpose)
+| Idea | Effort | Why |
+|---|---|---|
+| **Neighborhood Flags** (a global dictionary other characters reference) | **S (engine) / M (writing)** | Cross-character persistence the guide credits for *Tavern Talk*'s feel |
+| **Visible store reactions to Familiarity** — a neighbor leaves a *regalo* (tapestry, jar, photo) that physically appears in the store | **M** | The *Tavern Talk* "completed quests give decorations" loop; doubles as personalization |
+| **Reyna Mayari goal rework** (planned) as the *macro goal* the whole game builds toward | **M** | Fixes "money stops mattering" at its root |
+| **Multiple endings keyed to Familiarity + Mayari outcome** | **L** | The real "hour 15" reason to keep playing |
+
+### D. Ownership & Personalization (cheap, high attachment)
+| Idea | Effort |
+|---|---|
+| Counter **radio** that cycles BGM and doubles as the day-start bulletin | **S** |
+| Drawn **signage/poster** reflected on the Main Menu (already planned) | **M** |
+| **Cat/Trash can as purchases** (already planned) | **S** |
+
+### E. Polish Targeted at What Players Actually Notice
+- **Pitch/volume-randomized SFX pools** for every repeated sound (plastic, drop, pickup, coin) — verify the `SFXPool` already randomizes.
+- **Customer idle/reaction animations** (fidget when waiting, hop when pleased, shiver on a steep markup) — we have a squash-and-stretch pass; add an *emote layer* (heart/sweat/!/?).
+- **Hit-stop (2–3 frames) on high-impact moments** (big sale, tier unlock, upgrade delivery) used sparingly.
+- **Upgrade the juice with the upgrade** — higher tiers = louder/chunkier SFX and bigger particle bursts, so progression is *felt*, not just read.
+
+## 6.5 Risks & Things I Would Not Do
+
+1. **Don't build all of 6.4.** Each new system multiplies writing/QA cost. The *Tambayan*, Journal, Familiarity, and Flags **share** the same infrastructure (multi-slot counter + per-customer state) — build those once, then hang minigames off them.
+2. **Don't let minigames break the 15–30 s rule.** Anything that interrupts conversation (Paload, parcels, riddles) must be **bite-sized**; deeper ones (Pabola) should be **optional between customers**, never mid-dialogue.
+3. **Don't punish with soft-locks.** Mayari's rework should make failure *consequence-rich but recoverable* (less trust, a worse epilogue branch — not Game Over).
+4. **Don't dump rules.** Escalate one ordinance at a time. The guide's own warning about cognitive load applies doubly to a folklore ruleset with many creatures.
+5. **Don't skip the pillar of legibility.** Every new mechanic needs a diegetic explanation (Journal note, thought cue, Ledger line) — this guide's #2 pitfall is *exactly* "players alt-tab to a wiki."
+
+## 6.6 Recommended Priority Order (Revised From the Earlier TODO)
+
+**Phase 1 — Give the Day a Shape (low risk, huge feel):**
+1. Day-End *Tindahan Tally* + teaser line.
+2. Day-start *Diyaryo/Radyo* bulletin (events + one rule + one rumor).
+3. Customer thought-cue emotes (fixes opaque pricing feedback).
+4. Wrong-item experimentation reactions for a handful of regulars.
+
+**Phase 2 — Make the World Remember (the retention engine):**
+5. Familiarity system + hidden Warmth variable.
+6. Neighborhood Flags + a first set of cross-character callbacks.
+7. Folklore Journal (reference-book loop) tied to Familiarity unlocks.
+8. Reyna Mayari goal rework as the macro objective.
+
+**Phase 3 — Make the Counter Unique:**
+9. *Tambayan* multi-slot counter (lingering visitors + Duwende groups + autonomous banter).
+10. Folklore-rules layer (*Tabi-Tabi Po* taboos + daily ordinance).
+11. Secondary hook (*Pabola* jar and/or Neighbor Parcels / *Paload*).
+12. Ownership pass (radio, signage/poster, regalo decorations).
+
+**Phase 4 — Payoff:** Endings, cutscenes, more music, dialogue rewrite.
+
+## 6.7 Bottom Line
+
+The Gemini guide is a strong *genre* reference and its best contribution is the **nested reward loops + Zeigarnik hook + hybrid scripted/procedural + dialogue-through-action** framework. But on its own it would give us a polished generic shop sim.
+
+What will make *Sari-Saring Katha* feel **alive** is combining that scaffolding with something no other game on that list has: **a folklore rulebook the player learns by working the counter**, a **neighborhood that remembers how you treat it**, and a **store that physically becomes yours**. The tactile foundation is already done — the next wins are almost all about *the shape of the day* and *the world's memory*, not more items or more tiers.
