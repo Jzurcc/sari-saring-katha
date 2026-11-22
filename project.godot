@@ -94,6 +94,7 @@ directories/dtl_directory={
 "Sarimanok/Purchase": "res://Dialogue/Timelines/Sarimanok/Purchase.dtl",
 "Sarimanok/Story": "res://Dialogue/Timelines/Sarimanok/Story.dtl",
 "Sarimanok/Visit": "res://Dialogue/Timelines/Sarimanok/Visit.dtl",
+"Smalltalk": "res://Dialogue/Timelines/Generic/Smalltalk.dtl",
 "Story": "res://Dialogue/Timelines/Brahim/Story.dtl",
 "TK/Purchase": "res://Dialogue/Timelines/TK/Purchase.dtl",
 "TK/Story": "res://Dialogue/Timelines/TK/Story.dtl",

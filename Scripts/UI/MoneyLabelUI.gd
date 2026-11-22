@@ -152,8 +152,8 @@ func _spawn_delta_popup(diff: float) -> void:
 	# Hold fully opaque for POPUP_HOLD_SEC (2.1s)
 	tw.tween_interval(POPUP_HOLD_SEC)
 	# Smooth fade and float away (0.45s)
-	tw.tween_property(popup, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(popup, "position:y", -14.0, 0.45).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(popup, "modulate:a", 0.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(popup, "position:y", -14.0, 0.65).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func():
 		_active_popups.erase(popup_ref)
 		var node: Control = popup_ref.get_ref() as Control
