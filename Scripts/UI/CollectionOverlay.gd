@@ -29,6 +29,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func open() -> void:
+	if get_tree() and get_tree().current_scene and get_tree().current_scene.name == "MainMenu":
+		SaveManager.load_menu_progression()
 	show()
 	_hide_details()
 	_populate_collection()

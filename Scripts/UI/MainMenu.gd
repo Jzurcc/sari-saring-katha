@@ -60,6 +60,10 @@ func _ready() -> void:
 	var continue_btn = buttons.get_node_or_null("Continue")
 	var new_game_btn = buttons.get_node("NewGame")
 	var can_continue = continue_btn != null and SaveManager.has_save()
+
+	# Sync saved tier and character progression so Collection & Characters reflect the save
+	if SaveManager.has_save():
+		SaveManager.load_menu_progression()
 	
 	if continue_btn:
 		continue_btn.visible = can_continue

@@ -348,6 +348,14 @@ func load_save_data(data: Dictionary) -> void:
 				clock._time_of_day_node.game_time_enabled = is_clock_running
 		, CONNECT_ONE_SHOT)
 
+## Lightweight progression sync for Main Menu overlays (Collection / Characters).
+## Restores tier & day metadata without modifying TimeOfDay or starting the clock.
+func load_menu_progression_data(data: Dictionary) -> void:
+	day = int(data.get("day", day))
+	current_tier = int(data.get("current_tier", current_tier))
+	max_unlocked_tier = int(data.get("max_unlocked_tier", max_unlocked_tier))
+	CharacterProgressionManager.migrate_from_story_manager_save(data)
+
 func reset_state() -> void:
 	day = 1
 	current_tier = 1

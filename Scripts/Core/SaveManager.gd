@@ -223,6 +223,33 @@ func request_load() -> void:
 	LogManager.info("SaveManager", "Game loaded successfully. Keys: %s" % str(master_save.keys()))
 
 
+## Lightweight load used on the Main Menu so Collection and Characters overlays
+## reflect the player's saved progression without disturbing the menu sky or clock.
+func load_menu_progression() -> void:
+	if not has_save():
+		return
+
+	var master_save := _read_from_disk()
+	if master_save.is_empty():
+		return
+
+	if is_instance_valid(CharacterProgressionManager) and master_save.has("CharacterProgressionManager"):
+		CharacterProgressionManager.load_save_data(master_save["CharacterProgressionManager"])
+
+	var story_data: Dictionary = {}
+	if master_save.has("StoryManager"):
+		story_data = master_save["StoryManager"]
+	elif master_save.has("progression"):
+		story_data = master_save["progression"]
+
+	if is_instance_valid(StoryManager) and not story_data.is_empty():
+		StoryManager.load_menu_progression_data(story_data)
+
+	LogManager.info("SaveManager", "Menu progression synced from save (Tier %d, %d characters progressed)." % [
+		StoryManager.current_tier, CharacterProgressionManager.character_story_states.size()
+	])
+
+
 ## Returns true if a save file or backup exists on disk.
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
