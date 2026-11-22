@@ -417,6 +417,12 @@ func on_dialogue_ended() -> void:
 
 	if _pending_dismiss:
 		_pending_dismiss = false
+		# Visit.dtl files emit [signal arg="story_success"] at the end of Greeting;
+		# route SOCIAL_VISIT completions through _resolve_phase_transition so lingering triggers!
+		if ending_phase == Phase.SOCIAL_VISIT and _is_partial_success:
+			_is_partial_success = false
+			_resolve_phase_transition(ending_phase)
+			return
 		if is_instance_valid(current_customer):
 			_dismiss_guest_if_present()
 			var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
