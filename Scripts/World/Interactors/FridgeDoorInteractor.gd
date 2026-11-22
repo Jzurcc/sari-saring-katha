@@ -5,6 +5,10 @@
 ## on_interact calls up to the parent RefrigeratorDoor node.
 extends WorldInteractor
 
+func _ready() -> void:
+	super._ready()
+	add_to_group("fridge_door")
+
 func on_hover(is_hovered: bool) -> void:
 	var door := get_parent() as RefrigeratorDoor
 	if door:

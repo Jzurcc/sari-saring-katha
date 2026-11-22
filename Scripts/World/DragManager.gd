@@ -160,6 +160,22 @@ func end_drag() -> void:
 	if not _is_dragging:
 		return
 
+	var camera := get_viewport().get_camera_3d()
+	if not camera:
+		_is_dragging = false
+		set_process(false)
+		_dragged_texture_rect.hide()
+		_cleanup_ghost()
+		_cancel_drag()
+		return
+
+	var result := _get_drag_raycast_result()
+
+	# Allow toggling the refrigerator door (open/close) while still holding the dragged item!
+	if result and result.collider and result.collider.is_in_group("fridge_door") and result.collider.has_method("on_interact"):
+		result.collider.on_interact()
+		return
+
 	_is_dragging = false
 	set_process(false)
 	_dragged_texture_rect.hide()
@@ -167,12 +183,6 @@ func end_drag() -> void:
 	var success = false
 	_cleanup_ghost()
 
-	var camera := get_viewport().get_camera_3d()
-	if not camera:
-		_cancel_drag()
-		return
-
-	var result := _get_drag_raycast_result()
 	var dragged_data: ItemData = _dragged_item.item_data if is_instance_valid(_dragged_item) else null
 	var is_container_prop := DispenserContainerItem.is_container_prop(dragged_data)
 	var is_refill := DispenserContainerItem.is_dispenser_refill(dragged_data)

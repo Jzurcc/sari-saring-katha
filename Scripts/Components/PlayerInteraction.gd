@@ -97,6 +97,8 @@ func _physics_process(_delta: float) -> void:
 		var dragged_data: ItemData = DragManager.get_dragged_item_data()
 		if hit_item and hit_item.collider.is_in_group("container_drop_slot"):
 			current_hovered = _resolve_interactor(hit_item.collider)
+		elif hit_item and hit_item.collider.is_in_group("fridge_door"):
+			current_hovered = _resolve_interactor(hit_item.collider)
 		elif hit_item and hit_item.collider.is_in_group("dispenser_containers") and hit_item.collider.has_method("accepts_refill") and hit_item.collider.accepts_refill(dragged_data):
 			current_hovered = _resolve_interactor(hit_item.collider)
 		elif hit_customer and not DispenserContainerItem.is_container_prop(dragged_data):
