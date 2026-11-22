@@ -1,7 +1,9 @@
 extends CanvasLayer
 
-const ICON_SIZE := 80
-const WELL_SIZE := 88
+const ITEM_HEIGHT := 92.0
+const ITEM_MIN_WIDTH := 36.0
+const ITEM_MAX_WIDTH := 96.0
+const RIDDLE_SIZE := 78.0
 const PORTRAIT_RING_SIZE := 96
 const PORTRAIT_IMG_SIZE := 104
 
@@ -23,6 +25,7 @@ const PORTRAIT_MAP := {
 @onready var rows_container: VBoxContainer = %RowsContainer
 
 var _rows: Dictionary = {} # customer_name -> { "row": Control, "items_box": HBoxContainer, "items": Array[ItemData], "is_riddle": bool }
+var _trimmed_tex_cache: Dictionary = {} # ItemData -> Texture2D
 var is_visible_hud: bool = false
 
 func _ready() -> void:
@@ -188,14 +191,14 @@ func _create_row(customer_name: String) -> Dictionary:
 	pill_style.set_corner_radius_all(16)
 	pill_style.content_margin_left = 26.0
 	pill_style.content_margin_right = 18.0
-	pill_style.content_margin_top = 12.0
-	pill_style.content_margin_bottom = 12.0
+	pill_style.content_margin_top = 10.0
+	pill_style.content_margin_bottom = 10.0
 	pill_panel.add_theme_stylebox_override("panel", pill_style)
 	row.add_child(pill_panel)
 
 	var items_box := HBoxContainer.new()
 	items_box.alignment = BoxContainer.ALIGNMENT_END
-	items_box.add_theme_constant_override("separation", 10)
+	items_box.add_theme_constant_override("separation", 12)
 	items_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pill_panel.add_child(items_box)
 
@@ -234,19 +237,47 @@ func _remove_row(customer_name: String) -> void:
 	if _rows.is_empty():
 		_hide_hud()
 
+func _get_trimmed_item_texture(item: ItemData) -> Texture2D:
+	if not item or not item.texture:
+		return null
+	if _trimmed_tex_cache.has(item):
+		return _trimmed_tex_cache[item]
+	var used_rect: Rect2i = item.get_used_rect()
+	if used_rect.has_area():
+		var atlas := AtlasTexture.new()
+		atlas.atlas = item.texture
+		atlas.region = Rect2(used_rect)
+		_trimmed_tex_cache[item] = atlas
+		return atlas
+	_trimmed_tex_cache[item] = item.texture
+	return item.texture
+
+func _get_slot_size_for_item(item: ItemData, is_riddle: bool) -> Vector2:
+	if is_riddle:
+		return Vector2(RIDDLE_SIZE + 4.0, ITEM_HEIGHT)
+	var aspect := item.get_visual_aspect() if item else 1.0
+	var width := clampf(ITEM_HEIGHT * aspect, ITEM_MIN_WIDTH, ITEM_MAX_WIDTH)
+	return Vector2(width, ITEM_HEIGHT)
+
 func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bool) -> void:
 	var icon := rect_container.get_node_or_null("ItemIcon") as TextureRect
 	var riddle_badge := rect_container.get_node_or_null("RiddleBadge") as Control
 	if not icon:
 		return
 
+	var slot_size := _get_slot_size_for_item(item, is_riddle)
+	rect_container.custom_minimum_size = slot_size
+	icon.size = slot_size
+	icon.pivot_offset = slot_size * 0.5
+	icon.position = Vector2.ZERO
+
 	if is_riddle:
 		icon.hide()
 		if not riddle_badge:
 			riddle_badge = Panel.new()
 			riddle_badge.name = "RiddleBadge"
-			riddle_badge.size = Vector2(ICON_SIZE - 6, ICON_SIZE - 6)
-			riddle_badge.position = Vector2((WELL_SIZE - (ICON_SIZE - 6)) * 0.5, (WELL_SIZE - (ICON_SIZE - 6)) * 0.5)
+			riddle_badge.size = Vector2(RIDDLE_SIZE, RIDDLE_SIZE)
+			riddle_badge.position = Vector2((slot_size.x - RIDDLE_SIZE) * 0.5, (slot_size.y - RIDDLE_SIZE) * 0.5)
 			riddle_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			riddle_badge.add_theme_stylebox_override("panel", _make_circle_style(
 				Color(0.16, 0.13, 0.10, 0.95),
@@ -271,12 +302,13 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 		if riddle_badge:
 			riddle_badge.hide()
 		icon.show()
-		icon.texture = item.texture
+		icon.texture = _get_trimmed_item_texture(item)
 		icon.modulate = Color(0.2, 0.2, 0.2, 1) if item.tier > StoryManager.current_tier else Color.WHITE
 
 func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool) -> void:
+	var slot_size := _get_slot_size_for_item(item, is_riddle)
 	var rect_container := Control.new()
-	rect_container.custom_minimum_size = Vector2(WELL_SIZE, WELL_SIZE)
+	rect_container.custom_minimum_size = slot_size
 	rect_container.clip_contents = false
 	rect_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -284,9 +316,9 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool) -
 	icon.name = "ItemIcon"
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.size = Vector2(ICON_SIZE, ICON_SIZE)
-	icon.pivot_offset = Vector2(ICON_SIZE * 0.5, ICON_SIZE * 0.5)
-	icon.position = Vector2((WELL_SIZE - ICON_SIZE) * 0.5, (WELL_SIZE - ICON_SIZE) * 0.5)
+	icon.size = slot_size
+	icon.pivot_offset = slot_size * 0.5
+	icon.position = Vector2.ZERO
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	rect_container.add_child(icon)
