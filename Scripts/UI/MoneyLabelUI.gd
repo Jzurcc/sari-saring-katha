@@ -5,7 +5,7 @@ const COLOR_GAIN := Color("#7EE081")
 const COLOR_SPEND := Color("#F07167")
 const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
 const POPUP_HOLD_SEC := 4.5
-const POPUP_STACK_STEP := 36.0
+const POPUP_STACK_STEP := 40.0
 
 var is_shaking: bool = false
 var original_color: Color
@@ -116,7 +116,7 @@ func _spawn_delta_popup(diff: float) -> void:
 	icon_rect.texture = PESO_ICON
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var icon_px := float(popup_size) * 0.85
+	var icon_px := float(popup_size) * 1.25
 	icon_rect.custom_minimum_size = Vector2(icon_px, icon_px)
 	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE

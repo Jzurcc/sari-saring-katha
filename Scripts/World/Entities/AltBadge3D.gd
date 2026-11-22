@@ -1,23 +1,53 @@
 class_name AltBadge3D
 extends Label3D
 
-## Compact 3D "ALT" badge attached to the bottom-right of uninspected items/containers.
-## Gently pulses (enlarges and shrinks) until the player inspects the item with ALT.
+## Compact 3D "Alt" badge attached to the bottom-right of uninspected items/containers.
+## Gently pulses (enlarges and shrinks) until the player inspects the item with Alt.
+
+static var _circle_tex: ImageTexture = null
 
 var _pulse_tween: Tween = null
+var _bg_sprite: Sprite3D = null
+
+static func _get_circle_texture() -> ImageTexture:
+	if _circle_tex != null:
+		return _circle_tex
+	const SIZE := 128
+	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
+	var center := Vector2(SIZE * 0.5, SIZE * 0.5)
+	var radius := SIZE * 0.47
+	var edge := 2.0
+	for y in SIZE:
+		for x in SIZE:
+			var dist := Vector2(x + 0.5, y + 0.5).distance_to(center)
+			var alpha := clampf((radius - dist) / edge, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
+	_circle_tex = ImageTexture.create_from_image(img)
+	return _circle_tex
 
 func _ready() -> void:
-	text = "ALT"
+	text = "Alt"
 	font = UIStyle.FONT_INDER
 	font_size = 28
 	pixel_size = 0.0022
 	modulate = Color(1.0, 0.94, 0.72, 1.0)
-	outline_modulate = Color(0.08, 0.07, 0.06, 0.98)
-	outline_size = 14
+	outline_modulate = Color(0.08, 0.07, 0.06, 0.95)
+	outline_size = 10
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	shaded = false
 	render_priority = 12
 	outline_render_priority = 11
+
+	_bg_sprite = Sprite3D.new()
+	_bg_sprite.texture = _get_circle_texture()
+	_bg_sprite.pixel_size = 0.00128
+	_bg_sprite.modulate = Color(0.06, 0.06, 0.08, 0.72)
+	_bg_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_bg_sprite.shaded = false
+	_bg_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
+	_bg_sprite.render_priority = 10
+	add_child(_bg_sprite)
+
 	_start_pulse()
 
 func _start_pulse() -> void:
