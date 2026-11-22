@@ -54,6 +54,9 @@
 - [ ] **Cutscenes:** Add dedicated story/milestone cutscenes.
 - [ ] **Handwritten Dialogue Rework:** Polish and rewrite character dialogues for stronger voice, warmth, and cultural authenticity.
 
+## 8. Economy & Reyna Mayari Tally Rework
+- [ ] **Player-Chosen Tally Contributions & Goal System:** Rework Reyna Mayari's nightly tally so the player decides how much money they want to contribute each night toward an overall goal they need to reach, instead of a fixed mandatory nightly deduction.
+
 ---
 
 ## Design Notes & Discussion
