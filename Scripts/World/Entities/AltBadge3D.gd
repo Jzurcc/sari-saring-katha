@@ -21,29 +21,30 @@ static func _get_circle_texture() -> ImageTexture:
 		for x in SIZE:
 			var dist := Vector2(x + 0.5, y + 0.5).distance_to(center)
 			var alpha := clampf((radius - dist) / edge, 0.0, 1.0)
-			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
+			img.set_pixel(x, y, Color(0.05, 0.05, 0.07, alpha * 0.82))
 	_circle_tex = ImageTexture.create_from_image(img)
 	return _circle_tex
 
 func _ready() -> void:
 	text = "Alt"
 	font = UIStyle.FONT_INDER
-	font_size = 28
-	pixel_size = 0.0022
+	font_size = 36
+	pixel_size = 0.0026
 	modulate = Color(1.0, 0.94, 0.72, 1.0)
-	outline_modulate = Color(0.08, 0.07, 0.06, 0.95)
-	outline_size = 10
+	outline_modulate = Color(0.06, 0.05, 0.04, 0.95)
+	outline_size = 11
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	shaded = false
+	no_depth_test = true
 	render_priority = 12
 	outline_render_priority = 11
 
 	_bg_sprite = Sprite3D.new()
 	_bg_sprite.texture = _get_circle_texture()
-	_bg_sprite.pixel_size = 0.00128
-	_bg_sprite.modulate = Color(0.06, 0.06, 0.08, 0.72)
+	_bg_sprite.pixel_size = 0.0018
 	_bg_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bg_sprite.shaded = false
+	_bg_sprite.no_depth_test = true
 	_bg_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 	_bg_sprite.render_priority = 10
 	add_child(_bg_sprite)
