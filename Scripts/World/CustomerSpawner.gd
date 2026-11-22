@@ -56,6 +56,7 @@ var _is_exclusive_wave: bool = false
 var _is_transitioning_wave: bool = false
 var _next_arrival_order: int = 0
 var _leaving_customers_count: int = 0
+var _lingering_counter_departures: Dictionary = {}
 
 var is_paused: bool = false:
 	set(value):
@@ -371,8 +372,10 @@ func _on_customer_started_leaving(customer: Customer) -> void:
 			vacated_slot = i
 			break
 
-	if vacated_slot != -1 and not customer.is_lingering_departure:
+	if vacated_slot != -1:
 		_leaving_customers_count += 1
+		if customer.is_lingering_departure:
+			_lingering_counter_departures[customer] = true
 
 	if session.current_customer == customer:
 		session.current_customer = null
@@ -548,7 +551,7 @@ func _on_lingering_ready_to_return(customer: Customer) -> void:
 
 func _on_lingering_departed(customer: Customer) -> void:
 	lingering_visitors.erase(customer)
-	var was_on_counter := false
+	var was_on_counter: bool = _lingering_counter_departures.erase(customer)
 	for i in range(counter_slots.size()):
 		if counter_slots[i] == customer:
 			counter_slots[i] = null
@@ -557,10 +560,13 @@ func _on_lingering_departed(customer: Customer) -> void:
 	if session.current_customer == customer:
 		session.current_customer = null
 	if was_on_counter:
+		if _leaving_customers_count > 0:
+			_leaving_customers_count = maxi(0, _leaving_customers_count - 1)
 		if has_any_counter_customer():
 			_promote_earliest_side_customer_to_center()
-		elif not _is_spawning and not _is_transitioning_wave and not is_paused:
-			_spawn_next_customer()
+		elif _leaving_customers_count == 0:
+			StoryManager.clock.on_customer_dismissed()
+			_on_wave_cleared()
 
 func _dismiss_all_lingering_visitors() -> void:
 	var to_leave := lingering_visitors.duplicate()
@@ -763,6 +769,7 @@ func reset_state() -> void:
 	_is_exclusive_wave = false
 	_is_transitioning_wave = false
 	_leaving_customers_count = 0
+	_lingering_counter_departures.clear()
 	for i in range(counter_slots.size()):
 		counter_slots[i] = null
 	lingering_visitors.clear()
