@@ -286,6 +286,28 @@ static func build_transaction_context(
 					if fallback:
 						transaction.desired_items.append(fallback)
 
+			# If a purchase order picked a candy, sachet, or tier-scaled cheap item,
+			# roll a chance to add +1 (45%) or +2 (20%) bonus items directly from the regular pool.
+			if transaction.transaction_type == TransactionContext.Type.PURCHASE and not transaction.desired_items.is_empty():
+				var triggers_bonus := false
+				for picked in transaction.desired_items:
+					if OrderItemPicker.is_cheap_or_small_item(picked, sm.current_tier):
+						triggers_bonus = true
+						break
+				if triggers_bonus:
+					var bonus_count := OrderItemPicker.roll_cheap_item_bonus_count()
+					for _b in range(bonus_count):
+						if transaction.desired_items.size() >= 4:
+							break
+						if not pool.is_empty():
+							var bonus_item := OrderItemPicker.pick_weighted(pool, sm.current_tier, current_max_tiers)
+							if bonus_item:
+								transaction.desired_items.append(bonus_item)
+						else:
+							var bonus_fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
+							if bonus_fallback:
+								transaction.desired_items.append(bonus_fallback)
+
 			if transaction.desired_items.is_empty() and transaction.transaction_type != TransactionContext.Type.VISIT:
 				var fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
 				if fallback:

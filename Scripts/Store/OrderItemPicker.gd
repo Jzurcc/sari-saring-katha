@@ -10,7 +10,7 @@ extends RefCounted
 const NEXT_TIER_WEIGHT := 0.5
 const BEST_IN_CATEGORY_BASE_WEIGHT := 1.0
 const BEST_IN_CATEGORY_TIER_BONUS := 0.1
-const OLDER_TIER_DECAY := 0.25
+const OLDER_TIER_DECAY := 0.15
 const OLDER_TIER_FLOOR_WEIGHT := 0.2
 
 
@@ -173,6 +173,31 @@ static func random_orderable(current_tier: int, excluded_categories: Array[Strin
 
 	push_warning("[OrderItemPicker] No sellable items available at all for fallback filler.")
 	return null
+
+
+## Returns the wholesale price threshold considered "cheap" at the given tier.
+## Scales from 9.0 at Tier 1 up to 22.5 at Tier 10 (+1.5 per tier).
+static func cheap_threshold_for_tier(current_tier: int) -> float:
+	return 9.0 + float(maxi(0, current_tier - 1)) * 1.5
+
+
+## Returns true if the item is a candy, sachet, or falls within the tier-scaled cheap threshold.
+static func is_cheap_or_small_item(item: ItemData, current_tier: int) -> bool:
+	if item == null:
+		return false
+	if item.category == "candy" or item.category == "sachet":
+		return true
+	return item.price <= cheap_threshold_for_tier(current_tier)
+
+
+## Rolls 0, 1 (45% chance), or 2 (20% chance) bonus items when an order starts with a candy, sachet, or cheap item.
+static func roll_cheap_item_bonus_count() -> int:
+	var roll := randf()
+	if roll < 0.20:
+		return 2
+	if roll < 0.65:
+		return 1
+	return 0
 
 
 ## How many items a purchase order contains.
