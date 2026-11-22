@@ -226,7 +226,7 @@ func _roll_wave_size() -> int:
 
 func _schedule_wave_joiners(my_wave_id: int, joiner_count: int) -> void:
 	for _i in range(joiner_count):
-		var delay := randf_range(4.0, 7.5)
+		var delay := randf_range(2.0, 6.5)
 		await get_tree().create_timer(delay).timeout
 		if not is_inside_tree() or my_wave_id != _wave_id:
 			return
