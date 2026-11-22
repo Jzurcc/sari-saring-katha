@@ -18,8 +18,10 @@ var transaction_context: TransactionContext
 
 # Multi-slot & per-customer dialogue state
 var slot_index: int = -1
+var arrival_order: int = 0
 var dialogue_phase: TransactionSession.Phase = TransactionSession.Phase.NONE
 var greeting_interrupted: bool = false
+var _is_repositioning: bool = false
 
 # Lingering Visitor (Tambayan) state
 var is_lingering_visitor: bool = false
@@ -138,7 +140,7 @@ func _process(delta: float) -> void:
 	# dismiss() sets is_waiting=false on the same frame, _process resumes,
 	# and arrived_at_counter() fires a second time → double dialogue.
 	# Movement logic
-	if not is_waiting:
+	if not is_waiting or _is_repositioning:
 		var distance = global_position.distance_to(target_position)
 		var is_leaving = _is_resolving and target_position == _exit_position
 		
@@ -149,9 +151,15 @@ func _process(delta: float) -> void:
 				speed = movement_speed * 1.5
 			elif is_lingering_visitor:
 				speed = movement_speed * 0.65
+			elif _is_repositioning:
+				speed = movement_speed * 0.9
 			global_position = global_position.move_toward(target_position, speed * delta)
 			
-			if not is_leaving and not is_lingering_visitor and distance < 0.1:
+			if _is_repositioning:
+				if distance < 0.05:
+					global_position = target_position
+					_is_repositioning = false
+			elif not is_leaving and not is_lingering_visitor and distance < 0.1:
 				arrived_at_counter()
 		
 		# Procedure Bouncy Walk Logic
@@ -305,6 +313,14 @@ func pulse_color(color: Color, duration: float = 0.5) -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_property(body_sprite, "modulate", Color.WHITE, duration * 0.7) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+func move_to_slot(new_slot: int, new_target: Vector3) -> void:
+	if _is_resolving or is_lingering_visitor:
+		return
+	slot_index = new_slot
+	target_position = new_target
+	if is_waiting:
+		_is_repositioning = true
 
 func get_order_hud_key() -> String:
 	if customer_data:

@@ -20,7 +20,7 @@ const SMALLTALK_RETURN_CHANCE := 0.50
 ## Lateral distance from Center slot to Left/Right side slots along the counter.
 @export var slot_side_spacing: float = 1.95
 ## How far back (away from the counter) Left and Right slots stand relative to Center.
-@export var side_slot_depth_offset: float = 0.75
+@export var side_slot_depth_offset: float = 0.35
 
 var session: TransactionSession = TransactionSession.new()
 
@@ -54,6 +54,7 @@ var _is_nokia_open: bool = false
 var _wave_id: int = 0
 var _is_exclusive_wave: bool = false
 var _is_transitioning_wave: bool = false
+var _next_arrival_order: int = 0
 
 var is_paused: bool = false:
 	set(value):
@@ -271,6 +272,8 @@ func _spawn_customer_into_slot(transaction: TransactionContext, slot_idx: int) -
 
 	var customer := _create_customer(transaction, spawn_global, final_target, exit_global)
 	customer.slot_index = slot_idx
+	_next_arrival_order += 1
+	customer.arrival_order = _next_arrival_order
 	counter_slots[slot_idx] = customer
 
 	# Spawn Guest Customer if present (exclusive two-character story scene)
@@ -365,11 +368,41 @@ func _on_customer_dismissed(customer: Customer) -> void:
 
 	EventBus.customer_order_cleared.emit(customer.get_order_hud_key())
 
-	# If other customers are still at the counter, keep the wave alive
+	# If other customers are still at the counter, promote the earliest side customer to Center if Center opened
 	if has_any_counter_customer():
+		_promote_earliest_side_customer_to_center()
 		return
 
 	_on_wave_cleared()
+
+func _promote_earliest_side_customer_to_center() -> void:
+	if is_instance_valid(counter_slots[0]) or _is_exclusive_wave:
+		return
+
+	var best_slot := -1
+	var best_customer: Customer = null
+	for idx in [1, 2]:
+		var c := counter_slots[idx]
+		if not is_instance_valid(c) or c._is_resolving or c.is_lingering_visitor:
+			continue
+		if best_customer == null or c.arrival_order < best_customer.arrival_order:
+			best_customer = c
+			best_slot = idx
+
+	if best_customer == null or best_slot == -1:
+		return
+
+	counter_slots[best_slot] = null
+	counter_slots[0] = best_customer
+
+	var pos_data := _calculate_positions(false, 0)
+	var center_target: Vector3 = pos_data.primary_target
+	if best_customer.customer_data and best_customer.customer_data.get_clean_id() == "kuyakap":
+		var dir_back: Vector3 = (pos_data.spawn_pos - pos_data.target_pos).normalized()
+		center_target += dir_back * 0.7
+
+	LogManager.info("CustomerSpawner", "Promoting %s from Slot %d -> Center (Slot 0)." % [best_customer.get_order_hud_key(), best_slot])
+	best_customer.move_to_slot(0, center_target)
 
 func _on_wave_cleared() -> void:
 	if _is_transitioning_wave:
@@ -446,6 +479,8 @@ func handle_social_visit_finished(customer: Customer) -> void:
 	if not has_any_counter_customer():
 		StoryManager.clock.on_customer_dismissed()
 		_on_wave_cleared()
+	else:
+		_promote_earliest_side_customer_to_center()
 
 func _on_lingering_ready_to_return(customer: Customer) -> void:
 	if not is_instance_valid(customer) or customer._is_resolving:
@@ -463,6 +498,8 @@ func _on_lingering_ready_to_return(customer: Customer) -> void:
 			var dir_back: Vector3 = (pos_data.spawn_pos - pos_data.target_pos).normalized()
 			slot_target += dir_back * 0.7
 		counter_slots[open_slot] = customer
+		_next_arrival_order += 1
+		customer.arrival_order = _next_arrival_order
 		LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d for smalltalk." % [customer.get_order_hud_key(), open_slot])
 		customer.return_to_counter_for_smalltalk(open_slot, slot_target)
 	else:
@@ -479,8 +516,11 @@ func _on_lingering_departed(customer: Customer) -> void:
 			break
 	if session.current_customer == customer:
 		session.current_customer = null
-	if was_on_counter and not has_any_counter_customer() and not _is_spawning and not _is_transitioning_wave and not is_paused:
-		_spawn_next_customer()
+	if was_on_counter:
+		if has_any_counter_customer():
+			_promote_earliest_side_customer_to_center()
+		elif not _is_spawning and not _is_transitioning_wave and not is_paused:
+			_spawn_next_customer()
 
 func _dismiss_all_lingering_visitors() -> void:
 	var to_leave := lingering_visitors.duplicate()
