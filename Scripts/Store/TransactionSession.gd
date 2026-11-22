@@ -75,18 +75,15 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 
 	# Returning lingering visitor smalltalk
 	if customer.is_returning_for_smalltalk:
+		Dialogic.VAR.set_variable("Transaction_VisitVar", randf() * 100.0)
 		var st_timeline = customer.transaction_context.timeline
 		var st_path = st_timeline.resource_path if st_timeline is Resource else st_timeline
-		var st_label := ""
-		if StoryManager.is_label_in_timeline(st_path, "Smalltalk"):
-			st_label = "Smalltalk"
-		elif StoryManager.is_label_in_timeline(st_path, "Talk"):
-			st_label = "Talk"
-		elif StoryManager.is_label_in_timeline(st_path, "Greeting"):
-			st_label = "Greeting"
 		phase = Phase.SMALLTALK
 		customer.dialogue_phase = Phase.SMALLTALK
-		start_dialogue(st_timeline, customer, Phase.SMALLTALK, st_label)
+		if StoryManager.is_label_in_timeline(st_path, "Smalltalk"):
+			start_dialogue(st_timeline, customer, Phase.SMALLTALK, "Smalltalk")
+		else:
+			start_dialogue("res://Dialogue/Timelines/Generic/Smalltalk.dtl", customer, Phase.SMALLTALK, "Smalltalk")
 		return
 
 	# Repayment preamble check

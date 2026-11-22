@@ -17,3 +17,21 @@ elif {Transaction_CurrentArc} == 3.0:
 
 [signal arg="story_success"]
 [end_timeline]
+
+label Smalltalk
+if {Transaction_CurrentArc} == 1.0:
+	if {Transaction_VisitVar} <= 50:
+		Sarimanok: [shake]Ba-kawk![/shake] [pause=0.3] [shake]Kawk![/shake]
+	else:
+		Sarimanok: [shake]Brr-kawk![/shake]
+elif {Transaction_CurrentArc} == 2.0:
+	if {Transaction_VisitVar} <= 50:
+		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It puffs its feathers proudly after its stroll and gives you a polite nod)[/color][/wave]
+	else:
+		Sarimanok: [shake]Kawk-kawk...[/shake][input][wave][color=#145263] (It hops once in front of the counter, satisfied with its neighborhood inspection)[/color][/wave]
+else:
+	if {Transaction_VisitVar} <= 50:
+		Sarimanok: A splendid little promenade outside your shop, proprietor. [pause=0.3] I shall take my leave now. Ba-kawk!
+	else:
+		Sarimanok: One must never rush a proper afternoon stroll. [pause=0.3] Until our next meeting, good shopkeeper!
+[end_timeline]

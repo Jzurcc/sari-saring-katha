@@ -8,3 +8,12 @@ else:
 [signal arg="story_success"]
 [end_timeline]
 
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	ManangAna: Hay salamat, that little breather helped so much, anak. [pause=0.3]
+	ManangAna: Back to the laundry mountain I go! Hehe, ingat ka rito ha?
+else:
+	ManangAna: Okay, okay, break time is over before the kids notice I'm gone. [pause=0.4]
+	ManangAna: Thank you for letting this tita tambay for a bit, anak. See you later!
+[end_timeline]
+

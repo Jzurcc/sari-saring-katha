@@ -16,3 +16,12 @@ else:
 [signal arg="story_success"]
 [end_timeline]
 
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	ReynaMayari: I have lingered long enough in your mortal lamplight. [pause=0.4]
+	ReynaMayari: Keep your shelves worthy of my gaze, child of the soil. Farewell.
+else:
+	ReynaMayari: The quiet hum of your little storefront is... [pause=0.4] unexpectedly soothing.
+	ReynaMayari: I shall depart now. Tend to your duties well.
+[end_timeline]
+

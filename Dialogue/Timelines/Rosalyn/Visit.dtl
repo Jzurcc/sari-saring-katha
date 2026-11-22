@@ -7,3 +7,12 @@ else:
 	Rosalyn: [wave]Most things don't look. [pause=1.0] Thank you for... [pause=1.0] um... [pause=1.0] keeping the door open.[/wave]
 [signal arg="story_success"]
 [end_timeline]
+
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	Rosalyn: [wave]Thank you for letting me... [pause=0.8] stay in the warm light for a bit.[/wave]
+	Rosalyn: [wave]I should drift along now... [pause=0.8] take care of yourself, okay?[/wave]
+else:
+	Rosalyn: [wave]It was nice... [pause=0.8] just listening to the store from out there.[/wave]
+	Rosalyn: [wave]I'll go now... [pause=0.8] thank you for seeing me.[/wave]
+[end_timeline]

@@ -8,3 +8,12 @@ else:
 [signal arg="story_success"]
 [end_timeline]
 
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	Rodel: Even on dry land, the stillness outside your counter is... [pause=0.4] surprisingly tolerable, Ambassador.
+	Rodel: I shall return to the deeper currents now. Farewell.
+else:
+	Rodel: Your neighbors pass like schools of noisy minnows... [pause=0.4] yet there is warmth here.
+	Rodel: I take my leave of your stone fortress, Ambassador. Until next time.
+[end_timeline]
+

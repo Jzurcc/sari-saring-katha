@@ -8,3 +8,12 @@ else:
 [signal arg="story_success"]
 [end_timeline]
 
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	TK: Okay, just reviewed the footage I shot out front—[pause=0.3] absolute cinema, fam!
+	TK: Gonna go edit this before the lighting fades. Catch you on the next upload!
+else:
+	TK: Yo, hanging out by your store is low-key the best vibe in the barangay. [pause=0.3]
+	TK: Alright, gotta bounce and film the outro. Stay peak!
+[end_timeline]
+

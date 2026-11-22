@@ -1,0 +1,17 @@
+label Smalltalk
+if {Transaction_VisitVar} < 20:
+	Customer: Sige po, aalis na rin ako. [pause=0.3] Sarap lang tumambay dito sa harap ng tindahan mo!
+	Customer: Ingat palagi ha? Balik ako mamaya!
+elif {Transaction_VisitVar} < 40:
+	Customer: Uy, mauuna na ako. [pause=0.3] Nakapahinga rin kahit saglit.
+	Customer: Good luck sa benta ngayong araw!
+elif {Transaction_VisitVar} < 60:
+	Customer: Ang aliwalas talaga dito sa inyo... [pause=0.4] pero kailangan ko nang umuwi.
+	Customer: Salamat sa kwentuhan, see you around!
+elif {Transaction_VisitVar} < 80:
+	Customer: Ayun, tapos na ang pahinga ko. [pause=0.3] Baka hanapin na ako sa bahay!
+	Customer: Sige po, ingat diyan sa tindahan!
+else:
+	Customer: Napasarap ang tambay ko rito ah, haha! [pause=0.3]
+	Customer: Lakad na ako. Kita-kits bukas!
+[end_timeline]

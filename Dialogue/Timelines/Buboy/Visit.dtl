@@ -10,3 +10,12 @@ else:
 [signal arg="story_success"]
 [end_timeline]
 
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	Buboy: Hehe! I counted seven clouds while waiting out there! [pause=0.3]
+	Buboy: One of them looked like a giant pancit canton! Okay, gotta zoom! Vroom!
+else:
+	Buboy: Boss! My legs are all charged up again! [pause=0.3]
+	Buboy: I'm gonna race the wind back to the mango tree! Bye-bye!
+[end_timeline]
+

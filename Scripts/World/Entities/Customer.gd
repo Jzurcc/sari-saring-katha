@@ -364,24 +364,11 @@ func return_to_counter_for_smalltalk(new_slot: int, slot_target: Vector3) -> voi
 	if _is_resolving:
 		return
 	_linger_session_id += 1
-	var my_session := _linger_session_id
 	is_lingering_visitor = false
 	is_returning_for_smalltalk = true
 	slot_index = new_slot
 	is_waiting = false
 	target_position = slot_target
-
-	# Gracefully leave on their own if player doesn't click them for smalltalk
-	_run_smalltalk_wait_timeout(my_session)
-
-func _run_smalltalk_wait_timeout(my_session: int) -> void:
-	if not is_inside_tree():
-		return
-	await get_tree().create_timer(22.0).timeout
-	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id:
-		return
-	if is_returning_for_smalltalk and not _is_resolving and Dialogic.current_timeline == null:
-		leave_from_lingering()
 
 func leave_from_lingering() -> void:
 	if _is_resolving:

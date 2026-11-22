@@ -23,3 +23,12 @@ else:
 [signal arg="story_success"]
 [end_timeline]
 
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	Danilo: All clear down the street, boss. [pause=0.3] Just did a quick sweep while standing out there.
+	Danilo: [color=#8B6855]Nothing suspicious—except maybe how good your shop smells.[/color] Catch you later, 'no?
+else:
+	Danilo: Alright, boss, I'm heading back to my post. [pause=0.3]
+	Danilo: Good view of the barangay from right here. Stay sharp, ha?
+[end_timeline]
+

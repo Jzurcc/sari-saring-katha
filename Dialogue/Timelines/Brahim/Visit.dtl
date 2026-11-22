@@ -7,3 +7,12 @@ else:
 	Brahim: It's a stable build, Karimlan. I'm glad I migrated my data here.
 [signal arg="story_success"]
 [end_timeline]
+
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	Brahim: Idle cycle complete. [pause=0.3] Hanging out in front of your store really clears the cache.
+	Brahim: Disconnecting for now, Karimlan. Keep the uptime steady.
+else:
+	Brahim: Ambient diagnostics look solid out here. Zero packet loss in the barangay breeze. [pause=0.3]
+	Brahim: I'll log off and head back. See you on the next sync.
+[end_timeline]

@@ -7,3 +7,12 @@ else:
 	KuyaKap: They say the new face at the sari-sari store is a good one. [pause=0.5] I told them I already knew that. [pause=0.3] Stay strong, anak.
 [signal arg="story_success"]
 [end_timeline]
+
+label Smalltalk
+if {Transaction_VisitVar} <= 50:
+	KuyaKap: Hoho, caught my breath out there by the breeze. [pause=0.4] Good spot you've got here, apo.
+	KuyaKap: I'll head back to my tree now. Don't forget to rest your feet too, anak.
+else:
+	KuyaKap: Nice watching the street from your shade for a bit. [pause=0.3] Reminds me of the old days.
+	KuyaKap: Take care of the store, apo. I'll be around if you need a hand.
+[end_timeline]
