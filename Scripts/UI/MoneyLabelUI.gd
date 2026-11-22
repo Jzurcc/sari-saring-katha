@@ -4,7 +4,7 @@ class_name MoneyLabelUI
 const COLOR_GAIN := Color("#7EE081")
 const COLOR_SPEND := Color("#F07167")
 const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
-const POPUP_HOLD_SEC := 4.5
+const POPUP_HOLD_SEC := 2.1
 const POPUP_STACK_STEP := 40.0
 
 var is_shaking: bool = false
@@ -97,7 +97,7 @@ func _spawn_delta_popup(diff: float) -> void:
 	var popup_size := clampi(int(roundf(base_size * 0.95)), 24, 34) if base_size > 0 else 28
 
 	var popup := HBoxContainer.new()
-	popup.add_theme_constant_override("separation", 3)
+	popup.add_theme_constant_override("separation", -2)
 	popup.alignment = BoxContainer.ALIGNMENT_BEGIN
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	popup.z_index = 20
@@ -149,11 +149,11 @@ func _spawn_delta_popup(diff: float) -> void:
 	tw.tween_property(popup, "modulate:a", 1.0, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "position:y", target_pos.y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# Hold fully opaque for POPUP_HOLD_SEC (4.5s)
+	# Hold fully opaque for POPUP_HOLD_SEC (2.1s)
 	tw.tween_interval(POPUP_HOLD_SEC)
-	# Smooth fade and float away (0.75s)
-	tw.tween_property(popup, "modulate:a", 0.0, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(popup, "position:y", -14.0, 0.75).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	# Smooth fade and float away (0.45s)
+	tw.tween_property(popup, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(popup, "position:y", -14.0, 0.45).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func():
 		_active_popups.erase(popup_ref)
 		var node: Control = popup_ref.get_ref() as Control
