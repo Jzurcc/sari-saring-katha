@@ -36,6 +36,11 @@ else:
 	[end_timeline]
 
 
+label Partial
+ReynaMayari: Satisfactory. [pause=0.3] Now present the {Transaction_ItemWants} to complete your tribute.
+[end_timeline]
+
+
 label Satisfy
 if {Transaction_SatisfyVar} <= 50:
 	ReynaMayari:  It is acceptable. Your service remains adequate under the eternal sun.

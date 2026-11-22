@@ -53,6 +53,16 @@ elif {Transaction_CurrentArc} == 3.0:
 	[end_timeline]
 
 
+label Partial
+if {Transaction_CurrentArc} == 1.0:
+	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It tucks the item under a wing and pecks impatiently for the {Transaction_ItemWants})[/color][/wave]
+elif {Transaction_CurrentArc} == 2.0:
+	Sarimanok: [shake]Ba-kawk.[/shake][input][wave][color=#145263] (It nods once, then gestures with a golden talon toward the {Transaction_ItemWants})[/color][/wave]
+else:
+	Sarimanok: Splendid start. Now, let us not forget the {Transaction_ItemWants} on my order.
+[end_timeline]
+
+
 label Satisfy
 if {Transaction_WantsDebt}:
 	# Sarimanok is highly capitalist, he wouldn't ask for debt. If he does, it's a corporate loan!

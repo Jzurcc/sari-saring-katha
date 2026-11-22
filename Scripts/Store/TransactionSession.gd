@@ -219,17 +219,19 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		return false
 
 func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
+	update_item_names(customer)
 	if Dialogic.current_timeline != null:
 		var active_path = Dialogic.current_timeline.resource_path
 		var target_path = customer.transaction_context.timeline.resource_path if customer.transaction_context.timeline is Resource else customer.transaction_context.timeline
 		if active_path == target_path:
 			var jump_label := "Satisfy" if is_whole_order_done else "Partial"
 			if StoryManager.is_label_in_timeline(target_path, jump_label):
+				if is_instance_valid(customer) and customer.transaction_context:
+					EventBus.customer_order_updated.emit(customer.get_order_hud_key(), customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
 				Dialogic.Jump.jump_to_label(jump_label)
 				phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
 				return
 
-	update_item_names(customer)
 	var next_phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
 	var target_label = "Satisfy" if is_whole_order_done else "Partial"
 	start_dialogue(customer.transaction_context.timeline, customer, next_phase, target_label)
@@ -262,7 +264,10 @@ func start_dialogue(timeline, customer: Customer, in_phase: Phase = Phase.NONE, 
 		var exists = StoryManager.is_label_in_timeline(_current_timeline_path, final_label)
 		if not exists:
 			if final_label == "Partial":
-				final_label = "Satisfy"
+				# Never fall back Partial -> Satisfy, or multi-item customers will dismiss early!
+				phase = Phase.NONE
+				_current_timeline_path = ""
+				return
 			elif final_label == "Satisfy":
 				final_label = ""
 

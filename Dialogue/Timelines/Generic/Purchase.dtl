@@ -75,6 +75,10 @@ else:
 	[signal arg="story_success"]
 	[end_timeline]
 
+label Partial
+Customer: Salamat! [pause=0.3] I still need the [color=#0f6e2f]{Transaction_ItemWants}[/color] as well po.
+[end_timeline]
+
 label Satisfy
 if {Transaction_WantsDebt}:
 	Customer: Thank you so much! [pause=0.5]
