@@ -5,6 +5,7 @@ extends WorldInteractor
 signal satisfied(customer: Customer)
 signal arrived(customer: Customer)
 signal clicked(customer: Customer)
+signal started_leaving(customer: Customer)
 signal lingering_ready_to_return(customer: Customer)
 signal lingering_departed(customer: Customer)
 
@@ -392,6 +393,7 @@ func _leave_store(completion_signal: Signal) -> void:
 	_is_resolving = true
 	_clear_outline()
 	EventBus.customer_order_cleared.emit(get_order_hud_key())
+	started_leaving.emit(self)
 	if not is_lingering_departure:
 		InventoryManager.decrement_cooldown()
 	

@@ -341,6 +341,15 @@ func _get_background_hangout_points() -> Array[Vector3]:
 	var p2: Vector3 = target_global + dir_back * randf_range(2.0, 2.8) + side * p2_side
 	return [p1, p2]
 
+func _on_customer_started_leaving(customer: Customer) -> void:
+	if customer == null:
+		return
+	if counter_slots[0] == customer and has_other_counter_customers(customer):
+		counter_slots[0] = null
+		if session.current_customer == customer:
+			session.current_customer = null
+		_promote_earliest_side_customer_to_center()
+
 func _on_customer_dismissed(customer: Customer) -> void:
 	if customer == null or customer.is_lingering_departure:
 		return
@@ -740,6 +749,7 @@ func _create_customer(transaction: TransactionContext, spawn: Vector3, target: V
 	customer.arrived.connect(_on_customer_arrived)
 	customer.clicked.connect(_on_customer_clicked)
 	customer.satisfied.connect(_on_customer_finished)
+	customer.started_leaving.connect(_on_customer_started_leaving)
 	return customer
 
 func _on_character_speaking(data: CustomerData) -> void:
