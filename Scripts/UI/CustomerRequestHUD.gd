@@ -1,11 +1,11 @@
 extends CanvasLayer
 
-const ITEM_HEIGHT := 92.0
-const ITEM_MIN_WIDTH := 36.0
-const ITEM_MAX_WIDTH := 96.0
-const RIDDLE_SIZE := 78.0
-const PORTRAIT_RING_SIZE := 96
-const PORTRAIT_IMG_SIZE := 104
+const ITEM_HEIGHT := 116.0
+const ITEM_MIN_WIDTH := 48.0
+const ITEM_MAX_WIDTH := 124.0
+const RIDDLE_SIZE := 98.0
+const PORTRAIT_RING_SIZE := 116
+const PORTRAIT_IMG_SIZE := 126
 
 const PORTRAIT_MAP := {
 	"brahim": preload("res://Assets/characters/portraits/Brahim Face.png"),
@@ -189,16 +189,16 @@ func _create_row(customer_name: String) -> Dictionary:
 	var pill_style := StyleBoxFlat.new()
 	pill_style.bg_color = Color(0.0, 0.0, 0.0, 0.65)
 	pill_style.set_corner_radius_all(16)
-	pill_style.content_margin_left = 26.0
-	pill_style.content_margin_right = 18.0
-	pill_style.content_margin_top = 10.0
-	pill_style.content_margin_bottom = 10.0
+	pill_style.content_margin_left = 30.0
+	pill_style.content_margin_right = 22.0
+	pill_style.content_margin_top = 14.0
+	pill_style.content_margin_bottom = 14.0
 	pill_panel.add_theme_stylebox_override("panel", pill_style)
 	row.add_child(pill_panel)
 
 	var items_box := HBoxContainer.new()
 	items_box.alignment = BoxContainer.ALIGNMENT_END
-	items_box.add_theme_constant_override("separation", 12)
+	items_box.add_theme_constant_override("separation", 16)
 	items_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pill_panel.add_child(items_box)
 
@@ -293,7 +293,7 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 			label.size = riddle_badge.size
 			label.add_theme_font_override("font", UIStyle.FONT_INDER)
 			label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62, 1.0))
-			label.add_theme_font_size_override("font_size", 44)
+			label.add_theme_font_size_override("font_size", 56)
 			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			riddle_badge.add_child(label)
 			rect_container.add_child(riddle_badge)
