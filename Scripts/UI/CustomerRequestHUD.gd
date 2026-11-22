@@ -104,14 +104,14 @@ func _make_circle_style(bg: Color, border: Color, border_w: int, radius: int = 9
 func _create_row(customer_name: String) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_END
-	row.add_theme_constant_override("separation", -10)
+	row.add_theme_constant_override("separation", 10)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# 1. Left Side: Floating items resting along a sleek bottom shelf-line bar
 	var items_margin := MarginContainer.new()
 	items_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	items_margin.add_theme_constant_override("margin_left", 16)
-	items_margin.add_theme_constant_override("margin_right", 22)
+	items_margin.add_theme_constant_override("margin_right", 16)
 	items_margin.add_theme_constant_override("margin_top", 2)
 	items_margin.add_theme_constant_override("margin_bottom", 10)
 
