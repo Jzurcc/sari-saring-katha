@@ -111,7 +111,9 @@ func get_present_character_paths() -> Array[String]:
 	return paths
 
 func _find_open_slot(prefer_side: bool = false) -> int:
-	var order: Array[int] = [1, 2, 0] if prefer_side else [0, 1, 2]
+	var order: Array[int] = [0, 1, 2]
+	if prefer_side:
+		order = [1, 2, 0]
 	for idx in order:
 		if idx < max_unlocked_slots and not is_instance_valid(counter_slots[idx]):
 			return idx
