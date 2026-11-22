@@ -48,7 +48,8 @@ func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle:
 		key = "Customer"
 
 	if items.is_empty():
-		_remove_row(key)
+		# All items fulfilled! Pop remaining icons with celebration burst, then slide the row out
+		_remove_row(key, true)
 		return
 
 	_show_hud()
@@ -69,6 +70,7 @@ func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle:
 		if not child.get_meta("is_popping", false):
 			active_children.append(child)
 
+	var fulfilled_any := false
 	# Match right-to-left so leftmost duplicate pops first
 	for i in range(active_children.size() - 1, -1, -1):
 		var child: Control = active_children[i]
@@ -78,10 +80,16 @@ func _on_order_updated(customer_name: String, items: Array[ItemData], is_riddle:
 			_update_icon_visuals(child, bound_item, is_riddle)
 			checklist.remove_at(match_idx)
 		else:
+			fulfilled_any = true
 			_pop_and_remove_item(child)
 
+	if fulfilled_any:
+		_pulse_medallion_happy(entry)
+
+	var stagger_idx := 0
 	for item in checklist:
-		_add_item_icon(items_box, item, is_riddle)
+		_add_item_icon(items_box, item, is_riddle, float(stagger_idx) * 0.075)
+		stagger_idx += 1
 
 func _get_portrait_texture(customer_name: String) -> Texture2D:
 	var norm := customer_name.to_lower().replace(".", "").replace(" ", "").replace("_", "").replace("-", "")
@@ -216,37 +224,86 @@ func _create_row(customer_name: String) -> Dictionary:
 
 	rows_container.add_child(row)
 
-	# Springy entrance animation per customer pill
+	# Juicy entrance: portrait pops & tilts in, bottom shelf-bar unfurls, row glides in from right
 	row.modulate.a = 0.0
-	badge_holder.scale = Vector2(0.6, 0.6)
 	badge_holder.pivot_offset = Vector2(PORTRAIT_RING_SIZE * 0.5, PORTRAIT_RING_SIZE * 0.5)
-	var tw := create_tween().set_parallel(true)
-	tw.tween_property(row, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
-	tw.tween_property(badge_holder, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	badge_holder.scale = Vector2(0.35, 0.35)
+	badge_holder.rotation_degrees = -12.0
+	shelf_container.modulate.a = 0.0
+
+	var enter_tw := create_tween().set_parallel(true)
+	enter_tw.tween_property(row, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
+	enter_tw.tween_property(badge_holder, "scale", Vector2.ONE, 0.38).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	enter_tw.tween_property(badge_holder, "rotation_degrees", 0.0, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	enter_tw.tween_property(shelf_container, "modulate:a", 1.0, 0.26).set_delay(0.05).set_trans(Tween.TRANS_SINE)
+
+	# Animate bottom bar unfurling horizontally once layout computes its width
+	bottom_bar.scale.x = 0.05
+	call_deferred("_unfurl_bottom_bar", bottom_bar)
 
 	return {
 		"row": row,
 		"items_box": items_box,
+		"badge_holder": badge_holder,
+		"ring_panel": ring_panel,
 		"items": [],
 		"is_riddle": false
 	}
 
-func _remove_row(customer_name: String) -> void:
+func _unfurl_bottom_bar(bar: Control) -> void:
+	if not is_instance_valid(bar):
+		return
+	bar.pivot_offset = Vector2(bar.size.x, bar.size.y * 0.5)
+	var tw := bar.create_tween()
+	tw.tween_property(bar, "scale:x", 1.0, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _pulse_medallion_happy(entry: Dictionary) -> void:
+	var badge := entry.get("badge_holder") as Control
+	var ring := entry.get("ring_panel") as Panel
+	if is_instance_valid(badge):
+		badge.pivot_offset = Vector2(PORTRAIT_RING_SIZE * 0.5, PORTRAIT_RING_SIZE * 0.5)
+		var tw := badge.create_tween()
+		tw.tween_property(badge, "scale", Vector2(1.18, 0.86), 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(badge, "scale", Vector2(0.95, 1.08), 0.11).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(badge, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	if is_instance_valid(ring):
+		var glow_tw := ring.create_tween()
+		glow_tw.tween_property(ring, "modulate", Color(0.82, 1.35, 0.88, 1.0), 0.10).set_trans(Tween.TRANS_SINE)
+		glow_tw.tween_property(ring, "modulate", Color.WHITE, 0.28).set_trans(Tween.TRANS_SINE)
+
+func _remove_row(customer_name: String, fulfilled_celebration: bool = false) -> void:
 	if not _rows.has(customer_name):
 		return
 	var entry: Dictionary = _rows[customer_name]
 	_rows.erase(customer_name)
 
 	var row: Control = entry.get("row") as Control
+	var items_box: HBoxContainer = entry.get("items_box") as HBoxContainer
+	var exit_delay := 0.0
+
+	if fulfilled_celebration:
+		if is_instance_valid(items_box):
+			for child in items_box.get_children():
+				if is_instance_valid(child) and not child.get_meta("is_popping", false):
+					_pop_and_remove_item(child)
+		_pulse_medallion_happy(entry)
+		exit_delay = 0.34
+
 	if is_instance_valid(row):
+		row.pivot_offset = Vector2(row.size.x, row.size.y * 0.5)
 		var tw := create_tween()
-		tw.tween_property(row, "modulate:a", 0.0, 0.18).set_trans(Tween.TRANS_SINE)
+		if exit_delay > 0.0:
+			tw.tween_interval(exit_delay)
+		tw.tween_property(row, "modulate:a", 0.0, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(row, "scale", Vector2(0.86, 0.86), 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(row, "position:x", 90.0, 0.26).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 		tw.tween_callback(func():
 			if is_instance_valid(row):
 				row.queue_free()
+			if _rows.is_empty():
+				_hide_hud()
 		)
-
-	if _rows.is_empty():
+	elif _rows.is_empty():
 		_hide_hud()
 
 func _get_trimmed_item_texture(item: ItemData) -> Texture2D:
@@ -317,7 +374,7 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 		icon.texture = _get_trimmed_item_texture(item)
 		icon.modulate = Color(0.2, 0.2, 0.2, 1) if item.tier > StoryManager.current_tier else Color.WHITE
 
-func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool) -> void:
+func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool, stagger_delay: float = 0.0) -> void:
 	var slot_size := _get_slot_size_for_item(item, is_riddle)
 	var rect_container := Control.new()
 	rect_container.custom_minimum_size = slot_size
@@ -341,11 +398,79 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool) -
 	rect_container.set_meta("item_data", item)
 	rect_container.set_meta("is_popping", false)
 
-	icon.scale = Vector2.ZERO
-	var tw := create_tween()
-	tw.tween_property(icon, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var anim_target: Control = rect_container.get_node_or_null("RiddleBadge") as Control if is_riddle else icon
+	if not is_instance_valid(anim_target):
+		anim_target = icon
+	var base_y := anim_target.position.y
+	anim_target.pivot_offset = anim_target.size * 0.5
+	anim_target.scale = Vector2(0.35, 1.35)
+	anim_target.position.y = base_y - 20.0
+	anim_target.modulate.a = 0.0
 
-	_apply_sway(icon)
+	var tw := anim_target.create_tween()
+	if stagger_delay > 0.0:
+		tw.tween_interval(stagger_delay)
+	# Drop in with squash-and-stretch landing
+	tw.tween_property(anim_target, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(anim_target, "position:y", base_y, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(anim_target, "scale", Vector2(1.14, 0.88), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(anim_target, "scale", Vector2(0.96, 1.05), 0.10).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(anim_target, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func():
+		if is_instance_valid(anim_target):
+			_apply_sway(anim_target)
+	)
+
+func _spawn_fulfill_burst(source_control: Control) -> void:
+	var host := get_node_or_null("Control") as Control
+	if not is_instance_valid(host) or not is_instance_valid(source_control):
+		return
+	var center := source_control.get_global_rect().get_center()
+
+	# Floating green-gold checkmark
+	var check := Label.new()
+	check.text = "✓"
+	check.add_theme_font_override("font", UIStyle.FONT_INDER)
+	check.add_theme_font_size_override("font_size", 34)
+	check.add_theme_color_override("font_color", Color("#8BF08E"))
+	check.add_theme_color_override("font_outline_color", Color(0.05, 0.12, 0.06, 0.95))
+	check.add_theme_constant_override("outline_size", 6)
+	check.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	check.position = center - Vector2(14, 22)
+	check.pivot_offset = Vector2(14, 20)
+	check.scale = Vector2(0.3, 0.3)
+	host.add_child(check)
+
+	var ctw := check.create_tween()
+	ctw.tween_property(check, "scale", Vector2(1.2, 1.2), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	ctw.parallel().tween_property(check, "position:y", center.y - 46.0, 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	ctw.tween_property(check, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
+	ctw.tween_callback(check.queue_free)
+
+	# 5 mini gold/green sparkle dots bursting outward
+	var spark_colors: Array[Color] = [
+		Color(1.0, 0.92, 0.55, 1.0),
+		Color(0.55, 0.95, 0.62, 1.0),
+		Color(1.0, 0.98, 0.85, 1.0)
+	]
+	for i in range(5):
+		var angle := (TAU / 5.0) * float(i) + randf_range(-0.3, 0.3)
+		var dist := randf_range(28.0, 48.0)
+		var dot := Panel.new()
+		var sz := randf_range(7.0, 11.0)
+		dot.size = Vector2(sz, sz)
+		dot.pivot_offset = dot.size * 0.5
+		dot.position = center - dot.pivot_offset
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dot.add_theme_stylebox_override("panel", _make_circle_style(spark_colors[i % spark_colors.size()], Color.TRANSPARENT, 0, 999, 0))
+		host.add_child(dot)
+
+		var target := center + Vector2(cos(angle), sin(angle)) * dist - dot.pivot_offset
+		var dtw := dot.create_tween().set_parallel(true)
+		dtw.tween_property(dot, "position", target, 0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		dtw.tween_property(dot, "scale", Vector2.ZERO, 0.36).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		dtw.tween_property(dot, "modulate:a", 0.0, 0.36).set_trans(Tween.TRANS_SINE)
+		dtw.chain().tween_callback(dot.queue_free)
 
 func _pop_and_remove_item(child: Control) -> void:
 	if child.get_child_count() == 0:
@@ -353,19 +478,27 @@ func _pop_and_remove_item(child: Control) -> void:
 		return
 
 	child.set_meta("is_popping", true)
+	var riddle_badge := child.get_node_or_null("RiddleBadge") as Control
 	var icon := child.get_node_or_null("ItemIcon") as Control
-	if not icon:
-		icon = child.get_child(0) as Control
+	var anim_target: Control = riddle_badge if (is_instance_valid(riddle_badge) and riddle_badge.visible) else icon
+	if not is_instance_valid(anim_target):
+		anim_target = child.get_child(0) as Control
 
-	if icon and icon.get_meta("sway_tween", null):
-		var sw_tw = icon.get_meta("sway_tween")
+	if anim_target and anim_target.get_meta("sway_tween", null):
+		var sw_tw = anim_target.get_meta("sway_tween")
 		sw_tw.kill()
 
+	_spawn_fulfill_burst(child)
+
+	var spin_dir := 1.0 if randf() < 0.5 else -1.0
 	var tw := create_tween().set_parallel(true)
-	if icon:
-		tw.tween_property(icon, "scale", Vector2(1.65, 1.65), 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(child, "modulate:a", 0.0, 0.18)
-	tw.tween_property(child, "custom_minimum_size:x", 0, 0.32).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if anim_target:
+		tw.tween_property(anim_target, "modulate", Color(0.75, 1.45, 0.85, 1.0), 0.12).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(anim_target, "scale", Vector2(1.42, 1.42), 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(anim_target, "position:y", -24.0, 0.24).as_relative().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.tween_property(anim_target, "rotation_degrees", spin_dir * 16.0, 0.24).as_relative().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(child, "modulate:a", 0.0, 0.24).set_delay(0.06).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(child, "custom_minimum_size:x", 0.0, 0.34).set_delay(0.08).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN_OUT)
 
 	tw.chain().tween_callback(func():
 		if is_instance_valid(child):
