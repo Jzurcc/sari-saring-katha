@@ -48,7 +48,7 @@ func _process(delta: float) -> void:
 	else:
 		if StoryManager.fridge_coldness < 100.0:
 			StoryManager.fridge_coldness = minf(100.0, StoryManager.fridge_coldness + StoryManager.get_fridge_regen_rate() * delta)
-			if StoryManager.fridge_coldness >= 100.0:
+			if StoryManager.fridge_coldness >= StoryManager.FRIDGE_WARM_RECOVER_THRESHOLD:
 				StoryManager.is_fridge_warm = false
 
 	if not is_equal_approx(prev_cold, StoryManager.fridge_coldness) or prev_warm != StoryManager.is_fridge_warm:

@@ -84,11 +84,12 @@ func _build_ui() -> void:
 	_fill_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_holder.add_child(_fill_clip)
 
-	# Inner fill bar (grows from bottom up)
+	# Inner fill bar (grows from bottom up; CLIP_CHILDREN_AND_DRAW masks stripes cleanly inside rounded corners)
 	_fill_panel = Panel.new()
 	_fill_panel.position = Vector2.ZERO
 	_fill_panel.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
 	_fill_panel.clip_contents = true
+	_fill_panel.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
 	_fill_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fill_style := StyleBoxFlat.new()
 	fill_style.bg_color = COLOR_ICE

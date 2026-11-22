@@ -85,6 +85,7 @@ const FRIDGE_UPGRADE_SPECS: Array[Dictionary] = [
 	{ "level": 3, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 36.0, "regen_sec": 6.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
 ]
 const FRIDGE_WARM_VALUE_MULTIPLIER := 0.75
+const FRIDGE_WARM_RECOVER_THRESHOLD := 50.0
 
 var fridge_upgrade_level: int = 0
 var fridge_coldness: float = 100.0
@@ -379,7 +380,7 @@ func load_save_data(data: Dictionary) -> void:
 	fridge_upgrade_level = clampi(int(data.get("fridge_upgrade_level", 0)), 0, FRIDGE_UPGRADE_SPECS.size() - 1)
 	fridge_coldness = clampf(float(data.get("fridge_coldness", 100.0)), 0.0, 100.0)
 	is_fridge_warm = bool(data.get("is_fridge_warm", false))
-	if fridge_coldness >= 100.0:
+	if fridge_coldness >= FRIDGE_WARM_RECOVER_THRESHOLD:
 		is_fridge_warm = false
 
 	placed_containers.clear()

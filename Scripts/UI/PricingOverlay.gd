@@ -7,11 +7,17 @@ var price_label: Label
 var comparison_label: Label
 var step_pips_label: Label
 var in_demand_label: Label
+var chill_status_label: Label
 var stock_label: Label
 var pricing_panel: PanelContainer
 var left_arrow: Label
 var right_arrow: Label
 var _current_item: ItemData
+var _last_basis_pos: Vector3 = Vector3.ZERO
+var _last_is_container: bool = false
+var _last_custom_name: String = ""
+var _last_stock_text: String = ""
+var _last_warm_state: bool = false
 
 const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
@@ -25,13 +31,13 @@ func _ready() -> void:
 
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
-	pricing_viewport.size = Vector2(420, 250)
+	pricing_viewport.size = Vector2(420, 280)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
 	pricing_panel = PanelContainer.new()
 	pricing_viewport.add_child(pricing_panel)
-	pricing_panel.size = Vector2(420, 250)
+	pricing_panel.size = Vector2(420, 280)
 	pricing_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var style := StyleBoxFlat.new()
@@ -59,6 +65,13 @@ func _ready() -> void:
 	in_demand_label.add_theme_color_override("font_color", Color(0.95, 0.75, 0.28))
 	vbox.add_child(in_demand_label)
 	in_demand_label.hide()
+
+	# Fridge Temperature Badge (Chilled / Frozen / Warm -25%)
+	chill_status_label = Label.new()
+	chill_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chill_status_label.add_theme_font_size_override("font_size", 20)
+	vbox.add_child(chill_status_label)
+	chill_status_label.hide()
 
 	name_label = Label.new()
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -125,6 +138,7 @@ func _ready() -> void:
 	
 	if INDER_FONT:
 		in_demand_label.add_theme_font_override("font", INDER_FONT)
+		chill_status_label.add_theme_font_override("font", INDER_FONT)
 		name_label.add_theme_font_override("font", INDER_FONT)
 		price_label.add_theme_font_override("font", INDER_FONT)
 		step_pips_label.add_theme_font_override("font", INDER_FONT)
@@ -145,7 +159,14 @@ func _ready() -> void:
 	pricing_ui.render_priority = 100 # Ensure on top
 	add_child(pricing_ui)
 
+	EventBus.fridge_coldness_changed.connect(_on_fridge_coldness_changed)
 	hide_ui()
+
+func _on_fridge_coldness_changed(_coldness: float, _is_open: bool, is_warm: bool) -> void:
+	if is_warm != _last_warm_state:
+		_last_warm_state = is_warm
+		if _current_item and _current_item.type == ItemData.ItemType.FRIDGE and pricing_ui.visible:
+			show_item(_current_item, _last_basis_pos, _last_is_container, _last_custom_name, _last_stock_text)
 
 func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool = false, custom_name: String = "", stock_text: String = "") -> void:
 	if not item_data:
@@ -154,13 +175,33 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		return
 	
 	_current_item = item_data
+	_last_basis_pos = basis_position
+	_last_is_container = is_container
+	_last_custom_name = custom_name
+	_last_stock_text = stock_text
+	_last_warm_state = StoryManager.is_fridge_warm
 		
 	var final_price: float = item_data.get_final_price()
 	var base_price: float = item_data.price
 	var step: int = item_data.current_step
+	var is_fridge_item: bool = item_data.type == ItemData.ItemType.FRIDGE
+	var is_warm_now: bool = is_fridge_item and StoryManager.is_fridge_warm
+	var display_price: float = maxf(1.0, snapped(final_price * StoryManager.FRIDGE_WARM_VALUE_MULTIPLIER, 0.5)) if is_warm_now else final_price
 
 	name_label.text = custom_name if custom_name != "" else item_data.item_name
-	price_label.text = "₱%.2f" % [final_price]
+	price_label.text = "₱%.2f" % [display_price]
+	price_label.add_theme_color_override("font_color", Color("#FF9566") if is_warm_now else Color(0.92, 0.9, 0.78))
+
+	if is_fridge_item:
+		if is_warm_now:
+			chill_status_label.text = "[WARM -25%]"
+			chill_status_label.add_theme_color_override("font_color", Color("#FF7A45"))
+		else:
+			chill_status_label.text = "[FROZEN]" if item_data.category == "frozen" else "[CHILLED]"
+			chill_status_label.add_theme_color_override("font_color", Color("#7BE6FF"))
+		chill_status_label.show()
+	else:
+		chill_status_label.hide()
 
 	# 7-Step Circle Track: • for selected and ◦ for not selected
 	var pips := ""

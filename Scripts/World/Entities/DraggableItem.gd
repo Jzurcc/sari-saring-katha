@@ -37,6 +37,8 @@ func _ready() -> void:
 		billboard_collision = false
 		if not InventoryManager.item_inspected.is_connected(_on_item_inspected):
 			InventoryManager.item_inspected.connect(_on_item_inspected)
+		if not EventBus.fridge_coldness_changed.is_connected(_on_fridge_coldness_changed):
+			EventBus.fridge_coldness_changed.connect(_on_fridge_coldness_changed)
 	
 	if item_data:
 		setup(item_data)
@@ -135,6 +137,22 @@ func setup(data: ItemData, local_transform: Transform3D = Transform3D.IDENTITY, 
 		_rendered_h = rendered_h
 
 	_refresh_alt_badge()
+	_update_fridge_tint()
+
+func _on_fridge_coldness_changed(_coldness: float, _is_open: bool, _is_warm: bool) -> void:
+	_update_fridge_tint()
+
+func _update_fridge_tint() -> void:
+	if Engine.is_editor_hint() or not sprite or not item_data:
+		return
+	if item_data.type != ItemData.ItemType.FRIDGE:
+		return
+	if StoryManager.is_fridge_warm:
+		# Subtle warm amber/thawed recolor while the fridge warmth penalty is active
+		sprite.modulate = Color(1.0, 0.76, 0.58, 1.0)
+	else:
+		# Crisp cool tint while properly chilled/frozen
+		sprite.modulate = Color(0.92, 0.98, 1.0, 1.0)
 
 
 
@@ -258,6 +276,7 @@ func show_visuals() -> void:
 	if sprite:
 		sprite.show()
 		_refresh_alt_badge()
+		_update_fridge_tint()
 	else:
 		push_error("[DraggableItem] Cannot show visuals: Sprite3D is missing!")
 
