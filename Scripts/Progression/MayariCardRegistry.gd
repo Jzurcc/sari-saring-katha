@@ -169,7 +169,7 @@ static func draw_three_cards(tally_tier: String) -> Array[Dictionary]:
 
 	var picked: Array[Dictionary] = []
 	match tally_tier:
-		"generous":
+		"generous", "cleared":
 			for i in range(mini(3, favor_pool.size())):
 				picked.append(favor_pool[i])
 		"shortfall":

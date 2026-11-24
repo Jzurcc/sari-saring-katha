@@ -603,10 +603,6 @@ func _on_confirm_pressed() -> void:
 	if not is_inside_tree():
 		return
 
-	if _confirmed_tier == "cleared":
-		await _fade_out_and_finish("")
-		return
-
 	_launch_card_draft()
 
 # ── Beat 3: Tactile Tarot Moon-Card Draft ────────────────────────────────────
@@ -623,6 +619,10 @@ func _launch_card_draft() -> void:
 	_float_time = 0.0
 
 	match _confirmed_tier:
+		"cleared":
+			_draft_whisper_lbl.text = "THE PACT IS SEALED"
+			_draft_whisper_lbl.add_theme_color_override("font_color", COL_GOLD)
+			_draft_sub_lbl.text = "Three lunar blessings. Claim your reward for tomorrow."
 		"generous":
 			_draft_whisper_lbl.text = "FAVOR OF BIRINGAN"
 			_draft_whisper_lbl.add_theme_color_override("font_color", COL_GOLD)

@@ -265,7 +265,6 @@ func _handle_open_tally_offer() -> void:
 	if tier == "cleared" or StoryManager.tally_total_paid >= StoryManager.TALLY_GOAL - 0.01:
 		StoryManager.tally_total_paid = StoryManager.TALLY_GOAL
 		StoryManager.is_mayari_debt_active = false
-		StoryManager.pending_mayari_card = ""
 		var mayari_path := "res://Resources/customers/ReynaMayari.tres"
 		while CharacterProgressionManager.get_chapter(mayari_path) < 8:
 			CharacterProgressionManager.advance_story_direct(mayari_path)
