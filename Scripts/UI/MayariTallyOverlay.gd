@@ -308,19 +308,18 @@ void fragment() {
 		if paid_x > pad + 2.0:
 			draw_line(Vector2(paid_x, BAR_Y - 2.0), Vector2(paid_x, BAR_Y + BAR_H + 2.0), Color(1.0, 0.94, 0.80, 0.65), 1.5, true)
 
-		# Thin vertical FAIR & LAVISH threshold lines + collision-free peso indicators below
+		# Thin vertical threshold lines & diamond pips below the bar (no text labels)
 		var show_min := min_thresh > 0.0 and total_paid + min_thresh < g - 0.01
 		var show_gen := gen_thresh > min_thresh + 0.01 and total_paid + gen_thresh < g - 0.01
 		var min_x := _ratio_to_x((total_paid + min_thresh) / g)
 		var gen_x := _ratio_to_x((total_paid + gen_thresh) / g)
-		var close_pair := show_min and show_gen and (gen_x - min_x) < 118.0
 
 		if show_min:
 			var reached_min := current_offer >= min_thresh - 0.01
-			_draw_threshold(min_x, "FAIR", int(roundf(min_thresh)), reached_min, Color(0.98, 0.92, 0.76, 1.0), -1 if close_pair else 0)
+			_draw_threshold_pip(min_x, reached_min, Color(0.98, 0.92, 0.76, 1.0))
 		if show_gen:
 			var reached_gen := current_offer >= gen_thresh - 0.01
-			_draw_threshold(gen_x, "LAVISH", int(roundf(gen_thresh)), reached_gen, Color(1.0, 0.93, 0.68, 1.0), 1 if close_pair else 0)
+			_draw_threshold_pip(gen_x, reached_gen, Color(1.0, 0.93, 0.68, 1.0))
 
 		# Connector stem from floating readout down into glowing diamond handlebar thumb
 		draw_line(Vector2(cur_x, BAR_Y - 8.0), Vector2(cur_x, BAR_Y), Color(border_color.r, border_color.g, border_color.b, 0.72), 1.5, true)
@@ -329,38 +328,10 @@ void fragment() {
 		_draw_diamond(ptr_c, 7.8, fill_color.lightened(0.20))
 		_draw_diamond(ptr_c, 3.4, Color(1.0, 0.97, 0.90, 0.96))
 
-	func _draw_threshold(x: float, prefix: String, amount: int, reached: bool, lit_col: Color, align_bias: int) -> void:
+	func _draw_threshold_pip(x: float, reached: bool, lit_col: Color) -> void:
 		var line_col := lit_col if reached else Color(0.78, 0.72, 0.62, 0.44)
 		draw_line(Vector2(x, BAR_Y - 4.0), Vector2(x, BAR_Y + BAR_H + 11.0), line_col, 1.5, true)
-		_draw_diamond(Vector2(x, BAR_Y + BAR_H + 11.0), 3.3, line_col)
-		var lbl_col := lit_col if reached else Color(0.76, 0.70, 0.60, 0.66)
-		var font := UIStyle.FONT_INDER
-		var font_sz := 12
-		var prefix_txt := prefix + " · "
-		var num_txt := "%d" % amount
-		var icon_sz := 11.0
-		var gap := 2.0
-		var pre_w := font.get_string_size(prefix_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_sz).x
-		var num_w := font.get_string_size(num_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_sz).x
-		var total_w := pre_w + (icon_sz + gap if peso_tex else 0.0) + num_w
-
-		var start_x: float
-		if align_bias < 0:
-			# Pull cleanly left of the FAIR tick so it never collides with LAVISH
-			start_x = clampf(x - total_w - 6.0, 0.0, maxf(0.0, size.x - total_w))
-		elif align_bias > 0:
-			# Push cleanly right of the LAVISH tick so it never collides with FAIR
-			start_x = clampf(x + 6.0, 0.0, maxf(0.0, size.x - total_w))
-		else:
-			start_x = clampf(x - total_w * 0.5, 0.0, maxf(0.0, size.x - total_w))
-
-		var y := BAR_Y + BAR_H + 29.0
-		draw_string(font, Vector2(start_x, y), prefix_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_sz, lbl_col)
-		var cx := start_x + pre_w
-		if peso_tex:
-			draw_texture_rect(peso_tex, Rect2(cx, y - icon_sz + 2.0, icon_sz, icon_sz), false, Color(1, 1, 1, lbl_col.a))
-			cx += icon_sz + gap
-		draw_string(font, Vector2(cx, y), num_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_sz, lbl_col)
+		_draw_diamond(Vector2(x, BAR_Y + BAR_H + 11.0), 3.6, line_col)
 
 	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
 		draw_colored_polygon(PackedVector2Array([
@@ -391,12 +362,6 @@ var _mayari_portrait: TextureRect
 var _header_title_lbl: Label
 var _header_sub_lbl: Label
 
-# Shared Top Prompt Row
-var _frame_prompt_lbl: Label
-var _tier_badge: PanelContainer
-var _tier_badge_style: StyleBoxFlat
-var _tier_badge_lbl: Label
-
 # Shared 3 Card Slots (EXACT same size & position in Beat 1 and Beat 2!)
 var _card_slots: Array[Control] = []
 var _shadow_rows: Array[Dictionary] = []
@@ -425,12 +390,7 @@ func setup(player_money: float, total_paid: float, goal: float, min_amount: floa
 	_generous_amount = generous_amount
 	var remaining := maxf(0.0, _goal - _total_paid)
 	_max_offer = minf(_player_money, remaining)
-	if _player_money >= remaining and remaining <= _generous_amount:
-		_current_offer = remaining
-	elif _player_money >= _min_amount:
-		_current_offer = _min_amount
-	else:
-		_current_offer = floorf(_max_offer / 5.0) * 5.0
+	_current_offer = 0.0
 
 func _ready() -> void:
 	layer = 110
@@ -540,32 +500,6 @@ func _build_ui() -> void:
 	main_col.add_theme_constant_override("separation", 10)
 	_center_frame.add_child(main_col)
 
-	# Top prompt row (shared by Beat 1 & Beat 2)
-	var prompt_row := HBoxContainer.new()
-	prompt_row.add_theme_constant_override("separation", 10)
-	main_col.add_child(prompt_row)
-
-	_frame_prompt_lbl = Label.new()
-	_frame_prompt_lbl.text = "TOMORROW'S HAND:"
-	_frame_prompt_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_frame_prompt_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_frame_prompt_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_frame_prompt_lbl.add_theme_font_size_override("font_size", 20)
-	_frame_prompt_lbl.add_theme_color_override("font_color", COL_CREAM)
-	prompt_row.add_child(_frame_prompt_lbl)
-
-	_tier_badge = PanelContainer.new()
-	_tier_badge_style = UIStyle.create_flat_stylebox(Color(0.11, 0.095, 0.08, 0.94), 6, 12, 3)
-	_tier_badge_style.border_color = COL_TIER_FAIR
-	_tier_badge_style.set_border_width_all(1)
-	_tier_badge.add_theme_stylebox_override("panel", _tier_badge_style)
-	prompt_row.add_child(_tier_badge)
-
-	_tier_badge_lbl = Label.new()
-	_tier_badge_lbl.add_theme_font_override("font", _bold_font)
-	_tier_badge_lbl.add_theme_font_size_override("font_size", 13)
-	_tier_badge.add_child(_tier_badge_lbl)
-
 	# 3 Shared Card Slots — IDENTICAL height & position in Beat 1 (shadow) and Beat 2 (revealed)
 	var slots_col := VBoxContainer.new()
 	slots_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -600,7 +534,7 @@ func _build_ui() -> void:
 	_unified_gauge = UnifiedLedgerGauge.new()
 	_unified_gauge.peso_tex = PESO_ICON
 	_unified_gauge.bold_font = _bold_font
-	_unified_gauge.custom_minimum_size = Vector2(0, 88)
+	_unified_gauge.custom_minimum_size = Vector2(0, 74)
 	_unified_gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_unified_gauge.value_changed.connect(_on_slider_changed)
 	_unified_gauge.nudge_requested.connect(_nudge_offer)
@@ -789,7 +723,6 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 
 	var accent: Color = COL_TIER_FAIR
 	var accent_bright: Color = COL_TIER_FAIR_BRIGHT
-	var badge_txt := "☽ FAIR"
 	var shadow_title := "UNREVEALED FATE"
 	var shadow_desc := "Each card rolls 55% Omen or 45% Favor — choose 1 of 3."
 	var shadow_tag := "55% OMEN"
@@ -803,7 +736,6 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 		"cleared":
 			accent = COL_TIER_SEALED
 			accent_bright = COL_TIER_SEALED_BRIGHT
-			badge_txt = "✦ SEALED"
 			shadow_title = "FINAL BLESSING"
 			shadow_desc = "The Silver Ledger is sealed — choose 1 of 3 guaranteed Favors."
 			shadow_tag = "100% FAVOR"
@@ -815,7 +747,6 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 		"generous":
 			accent = COL_TIER_LAVISH
 			accent_bright = COL_TIER_LAVISH_BRIGHT
-			badge_txt = "★ LAVISH"
 			shadow_title = "UNREVEALED FAVOR"
 			shadow_desc = "A generous lunar blessing awaits — choose 1 of 3 Favors."
 			shadow_tag = "100% FAVOR"
@@ -827,7 +758,6 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 		"balanced":
 			accent = COL_TIER_FAIR
 			accent_bright = COL_TIER_FAIR_BRIGHT
-			badge_txt = "☽ FAIR"
 			shadow_title = "UNREVEALED FATE"
 			shadow_desc = "Each card rolls 55% Omen or 45% Favor — choose 1 of 3."
 			shadow_tag = "55% OMEN"
@@ -836,11 +766,10 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			shadow_tag_sub_col = COL_TIER_LAVISH_BRIGHT
 			shadow_bg = Color(0.062, 0.060, 0.066, 0.94)
 			shadow_q = "?"
-			_confirm_btn.text = "Offer Tribute"
+			_confirm_btn.text = "Offer Fairly"
 		_:
 			accent = COL_TIER_MEAGER
 			accent_bright = COL_TIER_MEAGER_BRIGHT
-			badge_txt = "◌ MEAGER"
 			shadow_title = "UNREVEALED OMEN"
 			shadow_desc = "An uneasy lunar trial awaits — choose 1 of 3 Omens."
 			shadow_tag = "100% OMEN"
@@ -848,17 +777,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			shadow_tag_col = accent_bright
 			shadow_bg = Color(0.048, 0.062, 0.090, 0.94)
 			shadow_q = "?"
-			_confirm_btn.text = "Offer Nothing" if _current_offer <= 0.01 else "Offer Meager"
-
-	_tier_badge_lbl.text = badge_txt
-	_tier_badge_lbl.add_theme_color_override("font_color", accent_bright)
-	_tier_badge_style.border_color = Color(accent.r, accent.g, accent.b, 0.72)
-	_tier_badge_style.bg_color = Color(
-		lerpf(0.075, accent.r * 0.22, 0.35),
-		lerpf(0.070, accent.g * 0.20, 0.35),
-		lerpf(0.066, accent.b * 0.20, 0.35),
-		0.94
-	)
+			_confirm_btn.text = "Offer Nothing" if _current_offer <= 0.01 else "Offer Meagerly"
 
 	var tier_changed := (_last_tier != "" and tier != _last_tier)
 	for i in range(_shadow_rows.size()):
@@ -941,17 +860,15 @@ func _on_confirm_pressed() -> void:
 	_confirmed_tier = _evaluate_tier(_confirmed_offer)
 	EventBus.request_sfx.emit("money_decrease" if _confirmed_offer > 0.0 else "interact")
 
-	# Fade out the bottom gauge dock, tier badge, and overlapping CTA while keeping the 3 slots locked in place!
+	# Fade out the bottom gauge dock and overlapping CTA while keeping the 3 slots locked in place!
 	var fade_tw := create_tween().set_parallel(true)
 	fade_tw.tween_property(_gauge_dock, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
-	fade_tw.tween_property(_tier_badge, "modulate:a", 0.0, 0.20).set_trans(Tween.TRANS_SINE)
 	fade_tw.tween_property(_confirm_btn, "modulate:a", 0.0, 0.20).set_trans(Tween.TRANS_SINE)
 	await fade_tw.finished
 	if not is_inside_tree():
 		return
 
 	_confirm_btn.visible = false
-	_tier_badge.visible = false
 	_gauge_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_launch_hades_card_flip()
@@ -966,7 +883,6 @@ func _launch_hades_card_flip() -> void:
 	_hovered_idx = -1
 	_cards_ready = false
 
-	_frame_prompt_lbl.text = "CHOOSE ONE:"
 	match _confirmed_tier:
 		"cleared":
 			_header_title_lbl.text = "T H E   P A C T   I S   S E A L E D"
