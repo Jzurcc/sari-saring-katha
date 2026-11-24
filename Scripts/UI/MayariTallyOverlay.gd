@@ -484,11 +484,11 @@ func _build_ui() -> void:
 
 	# ── 2. SHARED HADES CENTER FRAME (Exact same 3 card slots across Beat 1 -> Beat 2!) ──
 	_center_frame = PanelContainer.new()
-	_center_frame.anchor_left = 0.24
-	_center_frame.anchor_right = 0.80
-	_center_frame.anchor_top = 0.165
-	_center_frame.anchor_bottom = 0.905
-	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 26, 16)
+	_center_frame.anchor_left = 0.255
+	_center_frame.anchor_right = 0.785
+	_center_frame.anchor_top = 0.175
+	_center_frame.anchor_bottom = 0.855
+	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
 	frame_style.border_color = Color(0.835, 0.624, 0.278, 0.78)
 	frame_style.set_border_width_all(2)
 	frame_style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
@@ -512,7 +512,7 @@ func _build_ui() -> void:
 		var slot := MarginContainer.new()
 		slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		slot.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		slot.custom_minimum_size = Vector2(0, 118)
+		slot.custom_minimum_size = Vector2(0, 102)
 		slots_col.add_child(slot)
 		_card_slots.append(slot)
 
@@ -542,10 +542,10 @@ func _build_ui() -> void:
 
 	# ── 3. BOTTOM-RIGHT OVERLAPPING OFFER BUTTON (Straddling the frame's bottom border!) ──
 	_confirm_btn = Button.new()
-	_confirm_btn.anchor_left = 0.80
-	_confirm_btn.anchor_right = 0.80
-	_confirm_btn.anchor_top = 0.905
-	_confirm_btn.anchor_bottom = 0.905
+	_confirm_btn.anchor_left = 0.785
+	_confirm_btn.anchor_right = 0.785
+	_confirm_btn.anchor_top = 0.855
+	_confirm_btn.anchor_bottom = 0.855
 	_confirm_btn.offset_left = -246.0
 	_confirm_btn.offset_right = -18.0
 	_confirm_btn.offset_top = -24.0
@@ -601,7 +601,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 
 	# Same footprint as Beat 2's HadesEmblem so the flip lines up seamlessly!
 	var diamond := MysteryDiamond.new()
-	diamond.custom_minimum_size = Vector2(96, 96)
+	diamond.custom_minimum_size = Vector2(88, 88)
 	diamond.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	hbox.add_child(diamond)
 
@@ -968,7 +968,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
-	emblem.custom_minimum_size = Vector2(96, 96)
+	emblem.custom_minimum_size = Vector2(88, 88)
 	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	emblem.accent = accent
