@@ -11,6 +11,7 @@ duration = 1.35
 ease_type = 1
 height_arc = 0.35
 target_opacity = 1.0
+opacity_fade_fraction = 0.18
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")

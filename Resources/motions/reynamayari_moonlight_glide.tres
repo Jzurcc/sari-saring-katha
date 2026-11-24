@@ -8,6 +8,7 @@ script = ExtResource("2_step")
 duration = 2.35
 ease_type = 1
 target_opacity = 1.0
+opacity_fade_fraction = 0.35
 
 [sub_resource type="Resource" id="exit_1"]
 script = ExtResource("2_step")

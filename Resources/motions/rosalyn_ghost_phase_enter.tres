@@ -8,7 +8,8 @@ script = ExtResource("2_step")
 local_offset = Vector3(0, 0.12, 0.45)
 duration = 1.15
 ease_type = 1
-target_opacity = 0.42
+target_opacity = 0.6
+opacity_fade_fraction = 0.35
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")

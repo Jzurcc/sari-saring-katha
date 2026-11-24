@@ -326,6 +326,8 @@ func _process(delta: float) -> void:
 			var pos := _step_start_pos.lerp(_step_end_pos, eased_t)
 			if absf(step.height_arc) > 0.001:
 				pos.y += sin(raw_t * PI) * step.height_arc
+			if absf(step.side_arc) > 0.001:
+				pos += _side_offset * (sin(raw_t * PI) * step.side_arc)
 			_owner_node.global_position = pos
 
 			if step.target_opacity >= 0.0:
@@ -361,7 +363,7 @@ func _process(delta: float) -> void:
 			State.ENTERING:
 				if _default_fade_in_active:
 					_default_fade_in_timer += delta
-					var ft := clampf(_default_fade_in_timer / 0.5, 0.0, 1.0)
+					var ft := clampf(_default_fade_in_timer / 0.22, 0.0, 1.0)
 					set_opacity(lerpf(_default_fade_in_from, get_idle_opacity(), ft))
 					if ft >= 1.0:
 						_default_fade_in_active = false

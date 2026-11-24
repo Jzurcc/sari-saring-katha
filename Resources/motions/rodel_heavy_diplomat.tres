@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://cht0bca2bs3d4"]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
 
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
 [ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
@@ -6,24 +6,41 @@
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
 anchor = 1
-local_offset = Vector3(0, 0, -0.2)
-duration = 1.75
-ease_type = 1
+local_offset = Vector3(0.65, 0, -1.1)
+duration = 1.05
+transition = 1
+ease_type = 2
+side_arc = 0.85
 target_opacity = 1.0
-pause_after = 0.85
-pause_random_extra = 0.5
+opacity_fade_fraction = 0.18
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")
-duration = 1.45
-target_opacity = 1.0
+anchor = 1
+local_offset = Vector3(-0.65, 0, 0.45)
+duration = 1.05
+transition = 1
+ease_type = 2
+side_arc = -0.95
+
+[sub_resource type="Resource" id="enter_3"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0, 0)
+duration = 0.95
+transition = 1
+ease_type = 2
+side_arc = 0.65
 
 [resource]
 script = ExtResource("1_profile")
-profile_name = "Rodel Heavy Diplomat"
-locomotion_style = 3
-base_speed = 1.55
-bob_frequency = 7.5
-bob_amplitude = 0.055
-sway_amount = 0.035
-enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
+profile_name = "Rodel Curved Mermaid Walk"
+locomotion_style = 0
+base_speed = 1.75
+bob_frequency = 7.2
+bob_amplitude = 0.045
+sway_amount = 0.095
+idle_opacity = 1.0
+play_landing_thud = true
+start_opacity = 0.0
+enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2"), SubResource("enter_3")])

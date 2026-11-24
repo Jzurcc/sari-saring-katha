@@ -11,7 +11,7 @@ duration = 1.05
 transition = 1
 ease_type = 2
 target_opacity = 1.0
-opacity_fade_fraction = 0.25
+opacity_fade_fraction = 0.16
 pause_after = 0.25
 pause_random_extra = 0.15
 

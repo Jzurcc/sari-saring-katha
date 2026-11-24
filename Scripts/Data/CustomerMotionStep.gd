@@ -30,6 +30,8 @@ enum Anchor {
 
 ## Extra parabolic Y arc added during travel (sin(t * PI) * height_arc). Great for swoops/hops.
 @export var height_arc: float = 0.0
+## Extra lateral S-curve arc added along storefront side axis (sin(t * PI) * side_arc). Great for sinuous curves.
+@export var side_arc: float = 0.0
 
 ## Target sprite alpha (0.0..1.0) to smoothly interpolate to over this step. -1.0 keeps current alpha.
 @export_range(-1.0, 1.0, 0.01) var target_opacity: float = -1.0
