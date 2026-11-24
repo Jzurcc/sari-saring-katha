@@ -217,7 +217,8 @@ func start_exit() -> void:
 			_direct_target = _exit_pos
 		else:
 			_using_exit_stepback = true
-			_direct_target = _owner_node.global_position - (_approach_dir * 1.35) + (exit_dir * 0.75)
+			# Peel away from the counter on a sloped diagonal toward the exit rather than backing straight up
+			_direct_target = _owner_node.global_position - (_approach_dir * 0.75) + (exit_dir * 1.65)
 
 
 func start_ambient_cameo() -> void:
@@ -396,7 +397,7 @@ func _process(delta: float) -> void:
 				var speed := _get_base_speed() * 1.55
 				_owner_node.global_position = _owner_node.global_position.move_toward(_direct_target, speed * delta)
 				is_moving = _owner_node.global_position.distance_to(_last_pos) > 0.0005
-				if _using_exit_stepback and _owner_node.global_position.distance_to(_direct_target) < 0.25:
+				if _using_exit_stepback and _owner_node.global_position.distance_to(_direct_target) < 0.55:
 					_using_exit_stepback = false
 					_direct_target = _exit_pos
 				if _exit_fade_started:
