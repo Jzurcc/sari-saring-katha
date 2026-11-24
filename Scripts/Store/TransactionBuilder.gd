@@ -449,6 +449,7 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	if sm.is_tally_cleared():
 		if chapter == 8 and chapter < data.max_story_chapters:
 			transaction.transaction_type = TransactionContext.Type.STORY
+			transaction.is_visit_story = true
 			transaction.timeline = data.story_timeline
 			DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
 			sm.has_mayari_visited = true
@@ -468,6 +469,7 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 
 	if should_play_story:
 		transaction.transaction_type = TransactionContext.Type.STORY
+		transaction.is_visit_story = true
 		transaction.timeline = data.story_timeline
 	else:
 		transaction.transaction_type = TransactionContext.Type.VISIT
