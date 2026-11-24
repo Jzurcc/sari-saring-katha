@@ -11,6 +11,9 @@
 [ext_resource type="Resource" uid="uid://c5xtxtkwciuu5" path="res://Dialogue/Timelines/Buboy/Visit.dtl" id="buboy_visit"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://c3sj15wq5i3pc" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Resource" path="res://Resources/motions/buboy_skip_dash.tres" id="motion_buboy_skip"]
+[ext_resource type="Resource" path="res://Resources/motions/buboy_cameo_zoom.tres" id="motion_buboy_cameo"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -98,4 +101,6 @@ prefers_riddles = true
 story_timeline = ExtResource("story_timeline")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8"), SubResource("chapter_9")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2"), SubResource("arc_3")])
+default_motion = ExtResource("motion_buboy_skip")
+ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_buboy_cameo")])
 metadata/_custom_type_script = "res://Scripts/Data/CustomerData.gd"

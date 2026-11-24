@@ -11,6 +11,9 @@
 [ext_resource type="Resource" uid="uid://d2xpnhja6r33a" path="res://Dialogue/Timelines/Kuyakap/Visit.dtl" id="kuyakap_visit"]
 [ext_resource type="Resource" uid="uid://b5ajudb37ubvf" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Resource" path="res://Resources/motions/kuyakap_heavy_stroll.tres" id="motion_kuyakap_stroll"]
+[ext_resource type="Resource" path="res://Resources/motions/kuyakap_cameo_stroll.tres" id="motion_kuyakap_cameo"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -85,3 +88,5 @@ dialogue_blip_sound = ExtResource("1_g8i5g")
 story_timeline = ExtResource("story_res")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+default_motion = ExtResource("motion_kuyakap_stroll")
+ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_kuyakap_cameo")])

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+profile_name = "Kuya Kap Heavy Stroll"
+locomotion_style = 3
+base_speed = 1.45
+bob_frequency = 7.2
+bob_amplitude = 0.06
+sway_amount = 0.045
+idle_opacity = 1.0
+play_landing_thud = true
+start_opacity = 0.0

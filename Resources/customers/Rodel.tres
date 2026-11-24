@@ -11,6 +11,9 @@
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://dp41iwukbcg12" path="res://Dialogue/Timelines/Rodel/Purchase.dtl" id="rodel_purchase"]
 [ext_resource type="Resource" uid="uid://b5rduauht166t" path="res://Dialogue/Timelines/Rodel/Visit.dtl" id="rodel_visit"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Resource" path="res://Resources/motions/rodel_heavy_diplomat.tres" id="motion_rodel_diplomat"]
+[ext_resource type="Resource" path="res://Resources/motions/rodel_cameo_patrol.tres" id="motion_rodel_cameo"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -89,3 +92,5 @@ dialogue_blip_volume = -4.0
 story_timeline = ExtResource("11_hxk1p")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+default_motion = ExtResource("motion_rodel_diplomat")
+ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_rodel_cameo")])

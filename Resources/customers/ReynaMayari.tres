@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="purchase_dtl"]
 [ext_resource type="Resource" uid="uid://chi8ndhwuhd3c" path="res://Dialogue/Timelines/ReynaMayari/Story.dtl" id="story_dtl"]
 [ext_resource type="Resource" uid="uid://c5ftr0ohic643" path="res://Dialogue/Timelines/ReynaMayari/Visit.dtl" id="visit_dtl"]
+[ext_resource type="Resource" path="res://Resources/motions/reynamayari_moonlight_glide.tres" id="motion_mayari_glide"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -88,3 +89,4 @@ is_nightly_collector = true
 story_timeline = ExtResource("story_dtl")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+default_motion = ExtResource("motion_mayari_glide")

@@ -11,6 +11,9 @@
 [ext_resource type="Resource" uid="uid://c2s7pfyxbggpr" path="res://Dialogue/Timelines/Sarimanok/Purchase.dtl" id="smk_purchase"]
 [ext_resource type="Resource" uid="uid://br147rott8bhs" path="res://Dialogue/Timelines/Sarimanok/Story.dtl" id="smk_story"]
 [ext_resource type="Resource" uid="uid://dlcphfad8n24f" path="res://Dialogue/Timelines/Sarimanok/Visit.dtl" id="smk_visit"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Resource" path="res://Resources/motions/sarimanok_flap_swoop.tres" id="motion_smk_flap"]
+[ext_resource type="Resource" path="res://Resources/motions/sarimanok_cameo_swoop.tres" id="motion_smk_cameo"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -90,3 +93,5 @@ dialogue_blip_volume = -6.0
 story_timeline = ExtResource("smk_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("8_arcdata")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+default_motion = ExtResource("motion_smk_flap")
+ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_smk_cameo")])

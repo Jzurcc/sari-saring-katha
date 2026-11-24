@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+
+[sub_resource type="Resource" id="step_1"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0, -2.6)
+duration = 4.2
+transition = 0
+ease_type = 2
+target_opacity = 1.0
+
+[sub_resource type="Resource" id="step_2"]
+script = ExtResource("2_step")
+anchor = 6
+local_offset = Vector3(0, 0, 0)
+duration = 4.4
+transition = 0
+ease_type = 2
+target_opacity = 0.0
+
+[resource]
+script = ExtResource("1_profile")
+profile_name = "Kuya Kap Cameo Stroll"
+locomotion_style = 3
+base_speed = 1.4
+bob_frequency = 7.0
+bob_amplitude = 0.06
+sway_amount = 0.045
+play_landing_thud = false
+override_start_anchor = true
+start_anchor = 5
+start_offset = Vector3(0, 0, 0)
+start_opacity = 0.0
+enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2")])
+bypass_default_exit_stepback = true

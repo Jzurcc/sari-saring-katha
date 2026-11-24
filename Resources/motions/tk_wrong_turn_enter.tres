@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+
+[sub_resource type="Resource" id="enter_1"]
+script = ExtResource("2_step")
+anchor = 1
+local_offset = Vector3(1.65, 0, -0.3)
+duration = 1.35
+transition = 1
+ease_type = 1
+target_opacity = 1.0
+pause_after = 0.75
+pause_random_extra = 0.4
+
+[sub_resource type="Resource" id="enter_2"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0, 0)
+duration = 1.25
+transition = 1
+ease_type = 2
+target_opacity = 1.0
+
+[resource]
+script = ExtResource("1_profile")
+profile_name = "TK Wrong Turn Enter"
+locomotion_style = 0
+base_speed = 2.35
+bob_frequency = 11.0
+bob_amplitude = 0.085
+sway_amount = 0.055
+idle_opacity = 1.0
+play_landing_thud = true
+start_opacity = 0.0
+enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
