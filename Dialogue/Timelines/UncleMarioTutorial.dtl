@@ -17,8 +17,11 @@ UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], I'm starving! Grab one fro
 UncleMario: [wave]Crunch crunch...[/wave] Ahh! That hits the spot.
 UncleMario: Over to your right is the Refrigerator for cold drinks and frozen goods. Click the handle to open it!
 [signal arg="wait_for_fridge"]
-UncleMario: Just remember to close it after — and there's a trash can nearby if you ever need to toss extra stock.
-UncleMario: Last thing! Whenever you run low on stock, use the Nokia phone behind you.
+UncleMario: See that coldness bar? Don't leave the door open too long, or the cold escapes and chilled goods lose value until it cools back down!
+UncleMario: Go ahead and close the fridge door now!
+[signal arg="wait_for_fridge_close"]
+UncleMario: Nice! Keeping that door shut saves your profits.
+UncleMario: Last thing! Whenever you run low on stock — or want to upgrade your store with new tiers, fridge parts, a trash can, or even a lucky cat — use the Nokia phone behind you.
 UncleMario: Type [i]MARIO[/i] on the keypad and press the top-right button — or just press the asterisk (*) shortcut.
 UncleMario: Go on, give it a test call right now!
 [signal arg="wait_for_tutorial_call"]

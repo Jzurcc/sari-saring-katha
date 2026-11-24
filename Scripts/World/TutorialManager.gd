@@ -104,6 +104,9 @@ func handle_dialogic_signal(argument: String) -> bool:
 	elif argument == "wait_for_fridge":
 		_start_tutorial_task("wait_for_fridge", "Click the handle to open the Refrigerator.", EventBus.refrigerator_opened)
 		return true
+	elif argument == "wait_for_fridge_close":
+		_start_tutorial_task("wait_for_fridge_close", "Click the handle to close the Refrigerator.", EventBus.refrigerator_closed)
+		return true
 	elif argument == "wait_for_pricing":
 		is_blocking_pickup = false
 		_start_tutorial_task("wait_for_pricing", "Press ALT or L to check prices.", EventBus.pricing_mode_changed)

@@ -175,6 +175,39 @@ func purchase_cat_upgrade(level: int) -> void:
 		get_tree().call_group("store_cats", "refresh_visibility", true)
 	_save_progression()
 
+# --- Store Props (Trash Can) ---
+const TRASH_CAN_COST := 45.0
+var has_trash_can: bool = false
+var _trash_can_upgrade_item: ItemData = null
+
+func get_trash_can_upgrade_item() -> ItemData:
+	if _trash_can_upgrade_item != null:
+		return _trash_can_upgrade_item
+	var item := ItemData.new()
+	item.item_name = "Store Trash Can"
+	item.price = TRASH_CAN_COST
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "store_prop"
+	if ResourceLoader.exists("res://Assets/ui/trash.png"):
+		item.texture = load("res://Assets/ui/trash.png")
+	item.set_meta("is_trash_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("upgrade_desc", "A sturdy bin in the corner for tossing unwanted or extra stock.")
+	item.set_meta("delivery_dialogue_label", "TrashCanUpgradeDelivery")
+	_trash_can_upgrade_item = item
+	return item
+
+func purchase_trash_can_upgrade() -> void:
+	if has_trash_can:
+		return
+	has_trash_can = true
+	LogManager.info("StoryManager", "Store Trash Can unlocked.")
+	EventBus.trash_can_unlocked.emit()
+	if get_tree():
+		get_tree().call_group("trash", "refresh_visibility", true)
+	_save_progression()
+
 ## Physical container equipment props delivered in plastic bags on tier upgrades.
 const CONTAINER_PROP_PATHS: Array[String] = [
 	"res://Resources/items/candycontainer/Mix.tres",
@@ -395,6 +428,7 @@ func get_save_data() -> Dictionary:
 		"fridge_coldness": fridge_coldness,
 		"is_fridge_warm": is_fridge_warm,
 		"cat_upgrade_level": cat_upgrade_level,
+		"has_trash_can": has_trash_can,
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -429,6 +463,7 @@ func load_save_data(data: Dictionary) -> void:
 	if fridge_coldness >= FRIDGE_WARM_RECOVER_THRESHOLD:
 		is_fridge_warm = false
 	cat_upgrade_level = clampi(int(data.get("cat_upgrade_level", 0)), 0, CAT_UPGRADE_SPECS.size() - 1)
+	has_trash_can = bool(data.get("has_trash_can", false))
 
 	placed_containers.clear()
 	if data.has("placed_containers"):
@@ -452,10 +487,12 @@ func load_save_data(data: Dictionary) -> void:
 	if get_tree():
 		get_tree().call_group("dispenser_containers", "refresh_stock")
 		get_tree().call_group("store_cats", "refresh_visibility", false)
+		get_tree().call_group("trash", "refresh_visibility", false)
 		get_tree().process_frame.connect(func():
 			if get_tree():
 				get_tree().call_group("dispenser_containers", "refresh_stock")
 				get_tree().call_group("store_cats", "refresh_visibility", false)
+				get_tree().call_group("trash", "refresh_visibility", false)
 		, CONNECT_ONE_SHOT)
 
 	CharacterProgressionManager.migrate_from_story_manager_save(data)
@@ -495,6 +532,7 @@ func reset_state() -> void:
 	fridge_coldness = 100.0
 	is_fridge_warm = false
 	cat_upgrade_level = 0
+	has_trash_can = false
 	clock.reset_state()
 	SaveManager.delete_save()
 

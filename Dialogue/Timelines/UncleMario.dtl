@@ -101,3 +101,9 @@ UncleMario: Brought a big bag of premium cat food for Mingming!
 UncleMario: A well-fed lucky cat brings the whole barangay to your counter — three neighbors can line up at once now, anak!
 [signal arg="mario_delivery_next"]
 [end_timeline]
+
+label TrashCanUpgradeDelivery
+UncleMario: Dropped off a sturdy trash can in the corner for you, anak!
+UncleMario: Just toss any extra or unwanted stock right in whenever you need to clear shelf space.
+[signal arg="mario_delivery_next"]
+[end_timeline]

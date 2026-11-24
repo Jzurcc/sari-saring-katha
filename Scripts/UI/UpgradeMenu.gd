@@ -62,6 +62,11 @@ func open_menu() -> void:
 		if next_cat and _card_map.has(next_cat):
 			_focus_upgrade(next_cat)
 			return
+	if not StoryManager.has_trash_can:
+		var trash_item := StoryManager.get_trash_can_upgrade_item()
+		if trash_item and _card_map.has(trash_item):
+			_focus_upgrade(trash_item)
+			return
 	_clear_detail_panel()
 
 func _animate_entrance() -> void:
@@ -103,9 +108,9 @@ func _populate_upgrades() -> void:
 		upgrade_list_container.add_child(f_card)
 		_card_map[f_item] = f_card
 
-	# Store Cats (Counter Slots) section
+	# Store Props & Cats section
 	var cat_header := Label.new()
-	cat_header.text = "STORE CATS (COUNTER SLOTS)"
+	cat_header.text = "STORE PROPS & CATS"
 	cat_header.add_theme_font_override("font", UIStyle.FONT_INDER)
 	cat_header.add_theme_font_size_override("font_size", 15)
 	cat_header.add_theme_color_override("font_color", Color("#FFD98A"))
@@ -114,6 +119,11 @@ func _populate_upgrades() -> void:
 	cat_hdr_margin.add_theme_constant_override("margin_bottom", 2)
 	cat_hdr_margin.add_child(cat_header)
 	upgrade_list_container.add_child(cat_hdr_margin)
+
+	var trash_item := StoryManager.get_trash_can_upgrade_item()
+	var trash_card := _create_trash_upgrade_bar(trash_item)
+	upgrade_list_container.add_child(trash_card)
+	_card_map[trash_item] = trash_card
 
 	for lvl in range(1, 3):
 		var c_item := StoryManager.get_cat_upgrade_item(lvl)
@@ -398,6 +408,105 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 
 	return card
 
+func _create_trash_upgrade_bar(item: ItemData) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 74)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.focus_mode = Control.FOCUS_NONE
+
+	var owned: bool = StoryManager.has_trash_can
+	var is_queued: bool = item in _queued_upgrades
+
+	var bg_col := UIStyle.COLOR_CARD_BG
+	if owned:
+		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif is_queued:
+		bg_col = Color(0.14, 0.28, 0.16, 0.95)
+
+	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 14
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 14)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(hbox)
+
+	var icon_frame := PanelContainer.new()
+	icon_frame.custom_minimum_size = Vector2(54, 54)
+	icon_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_frame.add_theme_stylebox_override("panel", UIStyle.create_flat_stylebox(Color(0.24, 0.17, 0.08, 0.55), 6, 4, 4))
+	hbox.add_child(icon_frame)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if item.texture:
+		icon.texture = item.texture
+	icon_frame.add_child(icon)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(info_vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = item.item_name
+	name_lbl.add_theme_font_size_override("font_size", 19)
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
+	info_vbox.add_child(name_lbl)
+
+	var sub_lbl := Label.new()
+	sub_lbl.add_theme_font_size_override("font_size", 13)
+	sub_lbl.text = "Discard unwanted or extra shelf stock anytime"
+	sub_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+	info_vbox.add_child(sub_lbl)
+
+	var right_vbox := VBoxContainer.new()
+	right_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(right_vbox)
+
+	var price_lbl := Label.new()
+	price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	price_lbl.add_theme_font_size_override("font_size", 17)
+	price_lbl.text = "₱%.2f" % item.price
+	price_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT if not owned else Color(0.85, 0.85, 0.85, 0.9))
+	right_vbox.add_child(price_lbl)
+
+	var status_lbl := Label.new()
+	status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	status_lbl.add_theme_font_size_override("font_size", 12)
+	if owned:
+		status_lbl.text = "OWNED"
+		status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+	elif is_queued:
+		status_lbl.text = "QUEUED ✓"
+		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
+	else:
+		status_lbl.text = "AVAILABLE"
+		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	right_vbox.add_child(status_lbl)
+
+	if owned:
+		icon.modulate = Color(1, 1, 1, 0.5)
+		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	else:
+		icon.modulate = Color(1, 1, 1, 1)
+		card.modulate = Color(1, 1, 1, 1)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.gui_input.connect(_on_card_clicked.bind(item))
+
+	return card
+
 func _create_cat_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0, 74)
@@ -582,6 +691,30 @@ func _refresh_confirm_summary() -> void:
 			UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT, 18.0)
 
 func _update_detail_panel(item: ItemData) -> void:
+	if item.get_meta("is_trash_upgrade", false):
+		if detail_icon:
+			detail_icon.texture = item.texture
+		if detail_name:
+			detail_name.text = item.item_name
+		if detail_subtitle:
+			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
+
+		for child in unlocks_list.get_children():
+			child.queue_free()
+
+		for line in [
+			"• Places a clickable trash bin in the corner of your store",
+			"• Drop any extra or unwanted item into it to clear shelf space",
+			"• Delivered immediately by Uncle Mario"
+		]:
+			var stat_lbl := Label.new()
+			stat_lbl.text = line
+			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			stat_lbl.add_theme_font_size_override("font_size", 15)
+			stat_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+			unlocks_list.add_child(stat_lbl)
+		return
+
 	if item.get_meta("is_cat_upgrade", false):
 		var c_lvl: int = int(item.get_meta("cat_level", 1))
 		var prev_slots: int = int(StoryManager.CAT_UPGRADE_SPECS[c_lvl - 1]["slots"])
@@ -751,7 +884,7 @@ func _on_confirm_pressed() -> void:
 	var order := RestockOrder.new()
 	var remaining_budget := _get_money()
 	for q_item in _queued_upgrades:
-		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false):
+		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false):
 			remaining_budget -= q_item.price
 			continue
 		var check := order.can_add(q_item, remaining_budget)

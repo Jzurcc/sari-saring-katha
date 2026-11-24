@@ -489,7 +489,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false):
+		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -509,6 +509,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_fridge_name := ""
 	var highest_cat_lvl := StoryManager.cat_upgrade_level
 	var highest_cat_name := ""
+	var unlock_trash_can := false
 
 	for item in items.keys():
 		if item.get_meta("is_fridge_upgrade", false):
@@ -522,6 +523,9 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			if target_cat > highest_cat_lvl:
 				highest_cat_lvl = target_cat
 				highest_cat_name = item.item_name
+			continue
+		if item.get_meta("is_trash_upgrade", false):
+			unlock_trash_can = true
 			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
@@ -551,6 +555,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			var notif_msg := "%s joined your store! (%d Counter Slots)" if highest_cat_lvl == 1 else "%s delivered! (%d Counter Slots)"
 			EventBus.show_notification.emit(notif_title, notif_msg % [highest_cat_name, StoryManager.get_max_counter_slots()], "purchase")
 		LogManager.info("MarioManager", "Store cat upgrade installed on Mario arrival: Level %d (%s)" % [highest_cat_lvl, highest_cat_name])
+
+	if unlock_trash_can and not StoryManager.has_trash_can:
+		StoryManager.purchase_trash_can_upgrade()
+		if spawn_in_tree:
+			EventBus.show_notification.emit("Store Prop Delivered!", "Store Trash Can placed in your shop.", "purchase")
+		LogManager.info("MarioManager", "Store Trash Can delivered on Mario arrival.")
 
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:

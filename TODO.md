@@ -20,7 +20,7 @@
 ---
 
 ## 1. Store Upgrades & Customization
-- [~] **Buyable Store Props (Trash Can & Cats):** **Store Cat (`Mingming`) & `Cat Food` are now buyable upgrades in the Upgrade Menu (`1 → 2 → 3` counter slots)**; the Trash Can still needs to be moved out of the starting store into UpgradeMenu.
+- [x] **Buyable Store Props (Trash Can & Cats):** Moved the Store Trash Can (`₱45`) and Store Cat (`Mingming`, `₱85`) + `Cat Food` (`₱180`) out of the starting store into the Upgrade Menu (with Uncle Mario delivery & counter-slot unlocks `1 → 2 → 3`).
 - [ ] **Custom Store Signage Upgrade:** Add an upgrade that unlocks a drawing canvas where the player can paint their own giant rectangular signage mounted on top of the store.
 - [ ] **Storefront Poster Upgrade & Main Menu Reflection:** Add an upgradeable poster in front of the store and persist both the signage and poster art so the player's customizations visibly appear on the Main Menu storefront.
 

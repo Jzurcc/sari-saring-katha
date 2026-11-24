@@ -17,9 +17,36 @@ func _ready() -> void:
 	# Default outline color for trash could be a slight red or just white
 	default_outline_color = Color(1.0, 0.8, 0.8)
 
+	EventBus.trash_can_unlocked.connect(_on_trash_can_unlocked)
+	refresh_visibility(false)
+
+func _on_trash_can_unlocked() -> void:
+	refresh_visibility(true)
+
+func refresh_visibility(play_pop_in: bool = false) -> void:
+	var was_visible := visible
+	var unlocked := StoryManager.has_trash_can
+	visible = unlocked
+	monitoring = unlocked
+	monitorable = unlocked
+	collision_layer = 1 if unlocked else 0
+
+	var body_col := get_node_or_null("TrashPhysicsBody/CollisionShape3D") as CollisionShape3D
+	if body_col:
+		body_col.disabled = not unlocked
+
+	if not unlocked:
+		on_hover(false)
+		return
+
+	if not was_visible and play_pop_in:
+		_play_trash_animation()
+		if VisualEffectManager.has_method("spawn_impact_dust"):
+			VisualEffectManager.spawn_impact_dust(global_position + Vector3(0, 0.35, 0))
+
 ## Called when an item is dropped onto this Area3D.
 func receive_item(item: DraggableItem) -> void:
-	if not item: return
+	if not visible or not item: return
 	
 	# 1. Game Feel: Squash and Stretch
 	_play_trash_animation()
@@ -39,6 +66,8 @@ func receive_item(item: DraggableItem) -> void:
 	item.play_disappear_animation()
 
 func on_interact() -> void:
+	if not visible:
+		return
 	if EventBus.has_signal("request_sfx"):
 		EventBus.request_sfx.emit("trash")
 	_play_trash_animation()
