@@ -10,9 +10,10 @@ const MAX_COUNTER_SLOTS := 3
 const LINGER_CHANCE := 0.70
 const MAX_LINGERING_VISITORS := 2
 const SMALLTALK_RETURN_CHANCE := 0.60
-const AMBIENT_CAMEO_MIN_INTERVAL := 24.0
-const AMBIENT_CAMEO_MAX_INTERVAL := 48.0
-const MAX_ACTIVE_AMBIENT_CAMEOS := 1
+const AMBIENT_CAMEO_MIN_INTERVAL := 26.0
+const AMBIENT_CAMEO_MAX_INTERVAL := 50.0
+const AMBIENT_CAMEO_TRIGGER_CHANCE := 0.72
+const MAX_ACTIVE_AMBIENT_CAMEOS := 3
 
 @export var customer_scene: PackedScene = preload("res://Scenes/Customer.tscn")
 @export var spawn_pos: NodePath
@@ -611,6 +612,24 @@ func _run_ambient_cameo_loop(my_session: int) -> void:
 		await get_tree().create_timer(wait_s).timeout
 		if not is_inside_tree() or my_session != _ambient_cameo_session_id:
 			return
+		# Leave natural quiet stretches so the street never feels overly busy
+		if randf() > AMBIENT_CAMEO_TRIGGER_CHANCE:
+			continue
+		# Weighted burst: 78% single, 18% pair, 4% rare triple ("busy barangay" moment)
+		var roll := randf()
+		var burst_count := 1
+		if roll >= 0.96:
+			burst_count = 3
+		elif roll >= 0.78:
+			burst_count = 2
+		_spawn_ambient_cameo_burst(my_session, burst_count)
+
+func _spawn_ambient_cameo_burst(my_session: int, count: int) -> void:
+	for i in range(count):
+		if i > 0:
+			await get_tree().create_timer(randf_range(1.4, 2.8)).timeout
+			if not is_inside_tree() or my_session != _ambient_cameo_session_id:
+				return
 		_try_spawn_ambient_cameo()
 
 func _try_spawn_ambient_cameo() -> void:
