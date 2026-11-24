@@ -226,6 +226,9 @@ func _handle_open_tally_offer() -> void:
 
 	var timeline_path := Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
 	Dialogic.paused = true
+	var dialog_layout = Dialogic.Styles.get_layout_node()
+	if is_instance_valid(dialog_layout):
+		dialog_layout.hide()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	var overlay := MayariTallyOverlayScript.new()
@@ -243,8 +246,10 @@ func _handle_open_tally_offer() -> void:
 	if not is_inside_tree():
 		return
 
-	# Restore FPS captured mouse mode as soon as the tally & card draft overlay closes
+	# Restore FPS captured mouse mode and Dialogic layout as soon as the tally & card draft overlay closes
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if is_instance_valid(dialog_layout):
+		dialog_layout.show()
 
 	var offer_amount: float = float(result[0])
 	var tier: String = str(result[1])

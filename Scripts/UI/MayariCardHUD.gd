@@ -79,9 +79,9 @@ func _on_card_changed(card_id: String) -> void:
 		return
 
 	var is_fav := MayariCardRegistry.is_favor(card_id)
-	var accent := Color(0.98, 0.83, 0.42, 1.0) if is_fav else Color(0.95, 0.62, 0.68, 1.0)
-	_style.border_color = accent
-	_style.bg_color = Color(0.08, 0.11, 0.20, 0.90) if is_fav else Color(0.13, 0.08, 0.14, 0.90)
+	var accent := Color(1.0, 0.875, 0.56, 1.0) if is_fav else Color(0.95, 0.58, 0.54, 1.0)
+	_style.border_color = Color(0.835, 0.624, 0.278, 0.90) if is_fav else Color(0.84, 0.37, 0.36, 0.90)
+	_style.bg_color = Color(0.082, 0.074, 0.066, 0.92) if is_fav else Color(0.115, 0.068, 0.068, 0.92)
 
 	_sigil_lbl.text = str(card.get("sigil", "☽"))
 	_sigil_lbl.add_theme_color_override("font_color", accent)
