@@ -6,10 +6,10 @@
 script = ExtResource("1_profile")
 profile_name = "Sarimanok Brisk Strut"
 locomotion_style = 4
-base_speed = 2.6
-bob_frequency = 14.0
-bob_amplitude = 0.09
-sway_amount = 0.065
+base_speed = 4.6
+bob_frequency = 18.0
+bob_amplitude = 0.085
+sway_amount = 0.08
 idle_height_offset = 0.0
 idle_opacity = 1.0
 play_landing_thud = true
