@@ -206,7 +206,9 @@ func _pick_by_spawn_weight(pool: Array[CustomerData]) -> CustomerData:
 	if pool.is_empty():
 		return null
 	var sm := _get_story_manager()
-	var expected: Array[String] = sm.todays_expected_regulars if sm and "todays_expected_regulars" in sm else []
+	var expected: Array[String] = []
+	if sm and "todays_expected_regulars" in sm:
+		expected = sm.todays_expected_regulars
 	var total_weight: float = 0.0
 	for c in pool:
 		var w := maxf(0.05, c.spawn_weight)
