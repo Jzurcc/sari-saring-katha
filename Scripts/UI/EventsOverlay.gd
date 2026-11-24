@@ -18,46 +18,7 @@ const COL_BROWN_BORDER := Color(0.482, 0.306, 0.102, 0.9)
 const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_BOLD_CREAM := "#FFF6E5"
-
-class DiamondEmblem extends Control:
-	var accent: Color = Color(0.835, 0.624, 0.278, 1.0)
-	var accent_bright: Color = Color(1.0, 0.875, 0.56, 1.0)
-	var fill_color: Color = Color(0.14, 0.11, 0.08, 0.96)
-
-	func _draw() -> void:
-		var c := size * 0.5
-		var r := minf(size.x, size.y) * 0.46
-		var wedge := PackedVector2Array([
-			Vector2(0.0, 0.0),
-			Vector2(size.x * 0.62, 0.0),
-			Vector2(size.x * 0.98, size.y),
-			Vector2(0.0, size.y),
-		])
-		draw_colored_polygon(wedge, Color(accent.r, accent.g, accent.b, 0.20))
-
-		var outer := _diamond_pts(c, r)
-		draw_colored_polygon(outer, Color(0.04, 0.035, 0.03, 0.96))
-		draw_polyline(_closed_pts(outer), accent_bright, 2.5, true)
-
-		var inner := _diamond_pts(c, r * 0.84)
-		draw_colored_polygon(inner, fill_color)
-		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.78), 1.5, true)
-
-		for pt in outer:
-			draw_colored_polygon(_diamond_pts(pt, 3.5), accent_bright)
-
-	func _diamond_pts(center: Vector2, radius: float) -> PackedVector2Array:
-		return PackedVector2Array([
-			center + Vector2(0.0, -radius),
-			center + Vector2(radius, 0.0),
-			center + Vector2(0.0, radius),
-			center + Vector2(-radius, 0.0),
-		])
-
-	func _closed_pts(pts: PackedVector2Array) -> PackedVector2Array:
-		var closed := PackedVector2Array(pts)
-		closed.append(pts[0])
-		return closed
+const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 
 var is_open: bool = false
 var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
@@ -167,8 +128,8 @@ func _build_ui() -> void:
 
 	# Centered Hades frame
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.20
-	_frame.anchor_right = 0.80
+	_frame.anchor_left = 0.17
+	_frame.anchor_right = 0.83
 	_frame.anchor_top = 0.19
 	_frame.anchor_bottom = 0.90
 	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.95), 8, 26, 20)
@@ -294,61 +255,46 @@ func _event_sigil(event_id: String) -> String:
 		_: return "✦"
 
 func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
-	var cat_labels: PackedStringArray = []
+	var target_names: PackedStringArray = []
 	for cat in ev.affected_categories:
-		cat_labels.append(_category_display(cat))
-	var cats_str := ", ".join(cat_labels) if not cat_labels.is_empty() else "Featured Stock"
-	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, cats_str]
+		target_names.append(_category_display(cat))
+	if target_names.is_empty():
+		for it in ev.affected_items:
+			if it:
+				target_names.append(it.item_name)
+	var targets_str := ", ".join(target_names) if not target_names.is_empty() else "Featured Stock"
+	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
 	var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
-	var stats: Array[Dictionary] = [
-		{"label": "%s Demand:" % cats_str, "value": "+%d%%" % demand_pct, "tone": "pos"},
-		{"label": "Price Tolerance:", "value": "+%d Step%s" % [ev.tolerance_offset, "s" if ev.tolerance_offset != 1 else ""], "tone": "pos"},
+	var stats: Array = [
+		{"label": "%s Demand:" % targets_str, "value": "+%d%%" % demand_pct, "tone": "pos"},
+		{"label": "%s Price Tolerance:" % targets_str, "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
 	]
-	return _build_hades_card(
-		ev.event_name,
-		"EVENT",
-		_event_sigil(ev.event_id),
-		desc_rich,
-		stats,
-		COL_EVENT,
-		COL_EVENT_BRIGHT,
-		Color(0.095, 0.082, 0.064, 0.96)
-	)
+	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event")
 
 func _build_mayari_event_card(c_data: Dictionary) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
-	var accent := COL_GOLD if is_fav else COL_CHILL
-	var accent_bright := COL_GOLD_BRIGHT if is_fav else COL_CHILL_SOFT
-	var row_bg := Color(0.088, 0.078, 0.068, 0.96) if is_fav else Color(0.118, 0.068, 0.068, 0.96)
-	var tag := "BIRINGAN'S FAVOR" if is_fav else "BIRINGAN'S CHILL"
 	var desc_rich := str(c_data.get("description_rich", c_data.get("description", "")))
 	var stats: Array = c_data.get("stats", [])
 	return _build_hades_card(
 		str(c_data.get("title", "Moon Card")),
-		tag,
 		str(c_data.get("sigil", "☽")),
 		desc_rich,
 		stats,
-		accent,
-		accent_bright,
-		row_bg
+		"favor" if is_fav else "chill"
 	)
 
-func _build_hades_card(
-	title: String,
-	tag: String,
-	sigil: String,
-	desc_rich: String,
-	stats: Array,
-	accent: Color,
-	accent_bright: Color,
-	row_bg: Color
-) -> PanelContainer:
+func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String) -> PanelContainer:
+	var pal: Dictionary = HadesEmblem.palette(kind)
+	var accent: Color = pal["accent"]
+	var accent_bright: Color = pal["bright"]
+	var row_bg: Color = pal["bg"]
+	var tag: String = str(pal["tag"])
+
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0, 146)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 12)
-	style.border_color = Color(accent.r, accent.g, accent.b, 0.72)
+	style.border_color = Color(accent.r, accent.g, accent.b, 0.78)
 	style.border_width_left = 4
 	style.border_width_top = 1
 	style.border_width_right = 1
@@ -362,12 +308,11 @@ func _build_hades_card(
 	hbox.add_theme_constant_override("separation", 20)
 	card.add_child(hbox)
 
-	var emblem := DiamondEmblem.new()
-	emblem.custom_minimum_size = Vector2(106, 106)
+	var emblem := HadesEmblem.new()
+	emblem.custom_minimum_size = Vector2(138, 106)
 	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
-	emblem.fill_color = Color(accent.r * 0.28, accent.g * 0.21, accent.b * 0.14, 0.96)
 	hbox.add_child(emblem)
 
 	var sigil_lbl := Label.new()
@@ -399,9 +344,9 @@ func _build_hades_card(
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	tag_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	tag_lbl.add_theme_font_size_override("font_size", 15)
-	tag_lbl.add_theme_color_override("font_color", accent)
+	tag_lbl.add_theme_font_override("font", _bold_font)
+	tag_lbl.add_theme_font_size_override("font_size", 22)
+	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	top_line.add_child(tag_lbl)
 
 	var desc_rt := RichTextLabel.new()
@@ -428,7 +373,8 @@ func _build_hades_card(
 
 		var s_name := Label.new()
 		s_name.text = "▸ " + str(stat_dict.get("label", ""))
-		s_name.custom_minimum_size = Vector2(250, 0)
+		s_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		s_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
 		s_name.add_theme_font_size_override("font_size", 17)
 		s_name.add_theme_color_override("font_color", COL_CREAM)
@@ -436,6 +382,8 @@ func _build_hades_card(
 
 		var s_val := Label.new()
 		s_val.text = str(stat_dict.get("value", ""))
+		s_val.custom_minimum_size = Vector2(96, 0)
+		s_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		s_val.add_theme_font_override("font", _bold_font)
 		s_val.add_theme_font_size_override("font_size", 18)
 		var tone := str(stat_dict.get("tone", "pos"))

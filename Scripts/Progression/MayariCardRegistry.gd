@@ -37,7 +37,7 @@ const CARDS: Dictionary = {
 		"description": "Moonlit goodwill softens every haggle. Customers tolerate +1 higher price step on all items tomorrow.",
 		"description_rich": "Moonlit goodwill softens every [b]Haggle[/b]. Customers tolerate higher [b]Markups[/b] on all items tomorrow.",
 		"stats": [
-			{"label": "Price Tolerance:", "value": "+1 Step", "tone": "pos"},
+			{"label": "All Items Price Tolerance:", "value": "+1", "tone": "pos"},
 		],
 		"hud_short": "+1 Price Tolerance",
 	},
@@ -50,8 +50,8 @@ const CARDS: Dictionary = {
 		"description": "Cool lunar air lingers in your store. Your refrigerator loses coldness 40% slower and chills back 40% faster.",
 		"description_rich": "Cool lunar air lingers in your [b]Refrigerator[/b], keeping cold drinks chilled far longer.",
 		"stats": [
-			{"label": "Coldness Drain:", "value": "-40%", "tone": "pos"},
-			{"label": "Re-Chill Speed:", "value": "+40%", "tone": "pos"},
+			{"label": "Fridge Coldness Drain:", "value": "-40%", "tone": "pos"},
+			{"label": "Fridge Re-Chill Speed:", "value": "+40%", "tone": "pos"},
 		],
 		"hud_short": "Fridge Frost Blessing",
 	},
@@ -64,7 +64,7 @@ const CARDS: Dictionary = {
 		"description": "Gratitude shines bright under the silver spires. Earn a +₱3 Moonlight Tip on every satisfied cash sale tomorrow.",
 		"description_rich": "Gratitude shines under the silver spires. Earn a bonus [b]Moonlight Tip[/b] on every satisfied [b]Cash Sale[/b].",
 		"stats": [
-			{"label": "Bonus Tip Per Sale:", "value": "+₱3", "tone": "pos"},
+			{"label": "Tip Per Cash Sale:", "value": "+₱3", "tone": "pos"},
 		],
 		"hud_short": "+₱3 Moonlight Tips",
 	},
@@ -77,8 +77,8 @@ const CARDS: Dictionary = {
 		"description": "The moonlight clears the road for Uncle Mario: 10% off restock orders and deliveries arrive 1 customer sooner.",
 		"description_rich": "Moonlight clears the road for [b]Uncle Mario[/b], lowering [b]Restock[/b] costs and speeding up deliveries.",
 		"stats": [
-			{"label": "Restock Discount:", "value": "-10%", "tone": "pos"},
-			{"label": "Delivery Arrival:", "value": "1 Customer Faster", "tone": "pos"},
+			{"label": "Restock Cost:", "value": "-10%", "tone": "pos"},
+			{"label": "Delivery Waiting Time:", "value": "-1 Customer", "tone": "pos"},
 		],
 		"hud_short": "10% Off Restock & Fast Mario",
 	},
@@ -91,7 +91,7 @@ const CARDS: Dictionary = {
 		"description": "Biringan's abundance slips into your delivery bags. Every restock delivery tomorrow includes 1–2 free bonus items.",
 		"description_rich": "Biringan's abundance slips into your [b]Delivery Bags[/b], adding free [b]Bonus Stock[/b] to every drop.",
 		"stats": [
-			{"label": "Free Items Per Delivery:", "value": "+1–2 Units", "tone": "pos"},
+			{"label": "Free Items Per Delivery:", "value": "+1–2", "tone": "pos"},
 		],
 		"hud_short": "Bonus Restock Items",
 	},
@@ -104,7 +104,7 @@ const CARDS: Dictionary = {
 		"description": "Mayari holds nightfall at bay. Your sari-sari store stays open until 10:00 PM tomorrow for extra customer waves.",
 		"description_rich": "Mayari holds [b]Nightfall[/b] at bay, extending your [b]Store Hours[/b] for extra customer waves.",
 		"stats": [
-			{"label": "Closing Time:", "value": "10:00 PM (+2 Hrs)", "tone": "pos"},
+			{"label": "Closing Time:", "value": "10:00 PM", "tone": "pos"},
 		],
 		"hud_short": "Open Until 10:00 PM",
 	},
@@ -117,7 +117,7 @@ const CARDS: Dictionary = {
 		"description": "Neighbors arrive with bigger cravings. Customers are much more likely to ask for 2–3 items per visit tomorrow.",
 		"description_rich": "Neighbors arrive with bigger cravings, placing larger [b]Multi-Item Orders[/b] throughout the day.",
 		"stats": [
-			{"label": "Customer Basket Size:", "value": "2–3 Items", "tone": "pos"},
+			{"label": "Items Per Customer Order:", "value": "2–3", "tone": "pos"},
 		],
 		"hud_short": "Bigger Customer Orders",
 	},
@@ -145,7 +145,7 @@ const CARDS: Dictionary = {
 		"description": "A tasteful haunting. Eerie gusts swing your refrigerator door open 1–2 times tomorrow — shut it before stock warms!",
 		"description_rich": "A tasteful haunting. Eerie gusts swing your [b]Refrigerator Door[/b] open — shut it before stock warms!",
 		"stats": [
-			{"label": "Haunted Fridge Gusts:", "value": "1–2x Tomorrow", "tone": "neg"},
+			{"label": "Refrigerator Door Gusts:", "value": "1–2", "tone": "neg"},
 		],
 		"hud_short": "Haunted Fridge Gusts",
 	},
@@ -158,7 +158,7 @@ const CARDS: Dictionary = {
 		"description": "Uneasy neighbors won't accept steep markups (-1 tolerance), but the mist draws customers 20% faster for quick sales.",
 		"description_rich": "Uneasy neighbors resist steep [b]Markups[/b], yet the silver mist draws [b]Customers[/b] in faster.",
 		"stats": [
-			{"label": "Price Tolerance:", "value": "-1 Step", "tone": "neg"},
+			{"label": "All Items Price Tolerance:", "value": "-1", "tone": "neg"},
 			{"label": "Customer Foot Traffic:", "value": "+20%", "tone": "pos"},
 		],
 		"hud_short": "-1 Tol · +20% Foot Traffic",
@@ -172,8 +172,8 @@ const CARDS: Dictionary = {
 		"description": "Customers are pickier on markups (-1 tolerance), yet Mario knocks 15% off wholesale stock. \"Bare shelves embarrass my ledger.\"",
 		"description_rich": "Neighbors are pickier on [b]Markups[/b], yet [b]Uncle Mario[/b] knocks down wholesale [b]Restock[/b] prices.",
 		"stats": [
-			{"label": "Price Tolerance:", "value": "-1 Step", "tone": "neg"},
-			{"label": "Restock Discount:", "value": "-15%", "tone": "pos"},
+			{"label": "All Items Price Tolerance:", "value": "-1", "tone": "neg"},
+			{"label": "Restock Cost:", "value": "-15%", "tone": "pos"},
 		],
 		"hud_short": "-1 Tol · 15% Off Restock",
 	},
@@ -186,7 +186,7 @@ const CARDS: Dictionary = {
 		"description": "The Pale Queen summons twilight ahead of schedule. Your store closes at 6:30 PM tomorrow instead of 8:00 PM.",
 		"description_rich": "The Pale Queen summons [b]Twilight[/b] ahead of schedule, cutting your [b]Store Hours[/b] short.",
 		"stats": [
-			{"label": "Closing Time:", "value": "6:30 PM (-1.5 Hrs)", "tone": "neg"},
+			{"label": "Closing Time:", "value": "6:30 PM", "tone": "neg"},
 		],
 		"hud_short": "Early Close (6:30 PM)",
 	},
@@ -199,7 +199,7 @@ const CARDS: Dictionary = {
 		"description": "An uncanny hush blankets Karimlan. No daily Neighborhood Events or demand surges will occur tomorrow.",
 		"description_rich": "An uncanny hush blankets Karimlan. All daily [b]Neighborhood Events[/b] and demand surges are silenced.",
 		"stats": [
-			{"label": "Neighborhood Events:", "value": "None Tomorrow", "tone": "neg"},
+			{"label": "Neighborhood Events:", "value": "None", "tone": "neg"},
 		],
 		"hud_short": "No Events Today",
 	},

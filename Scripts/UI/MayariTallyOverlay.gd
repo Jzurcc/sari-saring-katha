@@ -11,6 +11,7 @@ extends CanvasLayer
 signal completed(offer_amount: float, tier: String, selected_card_id: String)
 
 const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayari.png"
+const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 
 # Sari-Saring Katha Brand Palette (matches OptionsOverlay / CustomerRequestHUD / UIStyle)
 const COL_ESPRESSO := Color(0.082, 0.074, 0.066, 0.94)
@@ -26,53 +27,6 @@ const COL_SEALED := Color(1.0, 0.95, 0.82, 1.0)
 const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)       # Luminous Hades-style green for buffs
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)       # Warm coral-red for penalties
 const COL_BOLD_CREAM := "#FFF6E5"
-
-## Custom Hades-style rotated diamond emblem with ornate double border & diagonal backing.
-class DiamondEmblem extends Control:
-	var accent: Color = Color(0.835, 0.624, 0.278, 1.0)
-	var accent_bright: Color = Color(1.0, 0.875, 0.56, 1.0)
-	var fill_color: Color = Color(0.14, 0.11, 0.08, 0.96)
-
-	func _draw() -> void:
-		var c := size * 0.5
-		var r := minf(size.x, size.y) * 0.46
-
-		# Subtle Hades-style diagonal accent wedge behind the diamond
-		var wedge := PackedVector2Array([
-			Vector2(0.0, 0.0),
-			Vector2(size.x * 0.62, 0.0),
-			Vector2(size.x * 0.98, size.y),
-			Vector2(0.0, size.y),
-		])
-		draw_colored_polygon(wedge, Color(accent.r, accent.g, accent.b, 0.20))
-
-		# Outer dark bevel diamond
-		var outer := _diamond_pts(c, r)
-		draw_colored_polygon(outer, Color(0.04, 0.035, 0.03, 0.96))
-		draw_polyline(_closed_pts(outer), accent_bright, 2.5, true)
-
-		# Inner filled diamond
-		var inner := _diamond_pts(c, r * 0.84)
-		draw_colored_polygon(inner, fill_color)
-		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.78), 1.5, true)
-
-		# Subtle decorative pips at the 4 diamond vertices
-		var pip_r := 3.5
-		for pt in outer:
-			draw_colored_polygon(_diamond_pts(pt, pip_r), accent_bright)
-
-	func _diamond_pts(center: Vector2, radius: float) -> PackedVector2Array:
-		return PackedVector2Array([
-			center + Vector2(0.0, -radius),
-			center + Vector2(radius, 0.0),
-			center + Vector2(0.0, radius),
-			center + Vector2(-radius, 0.0),
-		])
-
-	func _closed_pts(pts: PackedVector2Array) -> PackedVector2Array:
-		var closed := PackedVector2Array(pts)
-		closed.append(pts[0])
-		return closed
 
 var _bold_font: FontVariation
 
@@ -686,9 +640,10 @@ func _launch_hades_card_stack() -> void:
 
 func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
-	var accent := COL_GOLD if is_fav else COL_CHILL
-	var accent_bright := COL_GOLD_BRIGHT if is_fav else COL_CHILL_SOFT
-	var row_bg := Color(0.088, 0.078, 0.068, 0.95) if is_fav else Color(0.115, 0.068, 0.068, 0.95)
+	var pal: Dictionary = HadesEmblem.palette("favor" if is_fav else "chill")
+	var accent: Color = pal["accent"]
+	var accent_bright: Color = pal["bright"]
+	var row_bg: Color = pal["bg"]
 
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0, 146)
@@ -716,13 +671,13 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.add_child(hbox)
 
 	# Left Hades-style rotated diamond emblem with upright centered sigil
-	var emblem := DiamondEmblem.new()
-	emblem.custom_minimum_size = Vector2(106, 106)
+	var emblem := HadesEmblem.new()
+	emblem.custom_minimum_size = Vector2(138, 106)
 	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
-	emblem.fill_color = Color(accent.r * 0.28, accent.g * 0.21, accent.b * 0.14, 0.96)
+	emblem.fill_color = Color(0.0, 0.0, 0.0, 0.0)
 	hbox.add_child(emblem)
 
 	var sigil_lbl := Label.new()
@@ -759,9 +714,9 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var rarity_lbl := Label.new()
 	rarity_lbl.text = "FAVOR" if is_fav else "CHILL"
 	rarity_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	rarity_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	rarity_lbl.add_theme_font_size_override("font_size", 17)
-	rarity_lbl.add_theme_color_override("font_color", accent)
+	rarity_lbl.add_theme_font_override("font", _bold_font)
+	rarity_lbl.add_theme_font_size_override("font_size", 22)
+	rarity_lbl.add_theme_color_override("font_color", accent_bright)
 	rarity_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(rarity_lbl)
 
@@ -804,7 +759,8 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 			var s_name := Label.new()
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
-			s_name.custom_minimum_size = Vector2(240, 0)
+			s_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			s_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
 			s_name.add_theme_font_size_override("font_size", 17)
 			s_name.add_theme_color_override("font_color", COL_CREAM)
@@ -813,6 +769,8 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 			var s_val := Label.new()
 			s_val.text = str(stat_dict.get("value", ""))
+			s_val.custom_minimum_size = Vector2(96, 0)
+			s_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 			s_val.add_theme_font_override("font", _bold_font)
 			s_val.add_theme_font_size_override("font_size", 18)
 			var tone := str(stat_dict.get("tone", "pos"))

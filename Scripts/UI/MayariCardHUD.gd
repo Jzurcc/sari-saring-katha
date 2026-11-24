@@ -5,6 +5,7 @@ extends CanvasLayer
 ## active Neighborhood Events and Reyna Mayari Moon Cards, paired with a [K] keycap.
 ## Pressing K opens the full Hades-styled Neighborhood Events overlay.
 
+const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 const COL_EVENT := Color(0.95, 0.65, 0.24, 1.0)
 const COL_EVENT_BRIGHT := Color(1.0, 0.84, 0.48, 1.0)
 const COL_FAVOR := Color(0.835, 0.624, 0.278, 1.0)
@@ -85,7 +86,8 @@ func _refresh_icons() -> void:
 	# 1. Active Neighborhood Events
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
-			_add_diamond(_event_sigil(ev.event_id), COL_EVENT, COL_EVENT_BRIGHT)
+			var pe: Dictionary = HadesEmblem.palette("event")
+			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"])
 			count += 1
 
 	# 2. Active Reyna Mayari Moon Card
@@ -93,8 +95,9 @@ func _refresh_icons() -> void:
 		var card := MayariCardRegistry.get_card(StoryManager.active_mayari_card)
 		if not card.is_empty():
 			var is_fav := MayariCardRegistry.is_favor(StoryManager.active_mayari_card)
-			var acc := COL_FAVOR if is_fav else COL_CHILL
-			var acc_b := COL_FAVOR_BRIGHT if is_fav else COL_CHILL_BRIGHT
+			var pc: Dictionary = HadesEmblem.palette("favor" if is_fav else "chill")
+			var acc: Color = pc["accent"]
+			var acc_b: Color = pc["bright"]
 			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b)
 			count += 1
 
