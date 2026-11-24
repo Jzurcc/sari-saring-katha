@@ -28,7 +28,6 @@ var _root: Control
 var _backdrop: ColorRect
 var _banner: PanelContainer
 var _frame: PanelContainer
-var _count_lbl: Label
 var _cards_vbox: VBoxContainer
 
 func _ready() -> void:
@@ -74,7 +73,7 @@ func _build_ui() -> void:
 	bv.add_child(title_row)
 
 	var left_pad := Control.new()
-	left_pad.custom_minimum_size = Vector2(140, 0)
+	left_pad.custom_minimum_size = Vector2(44, 0)
 	title_row.add_child(left_pad)
 
 	var title_lbl := Label.new()
@@ -89,17 +88,9 @@ func _build_ui() -> void:
 	title_row.add_child(title_lbl)
 
 	var right_h := HBoxContainer.new()
-	right_h.custom_minimum_size = Vector2(140, 0)
+	right_h.custom_minimum_size = Vector2(44, 0)
 	right_h.alignment = BoxContainer.ALIGNMENT_END
-	right_h.add_theme_constant_override("separation", 10)
 	title_row.add_child(right_h)
-
-	_count_lbl = Label.new()
-	_count_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_count_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_count_lbl.add_theme_font_size_override("font_size", 16)
-	_count_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	right_h.add_child(_count_lbl)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
@@ -212,8 +203,6 @@ func _populate_cards() -> void:
 		if not card.is_empty():
 			_cards_vbox.add_child(_build_mayari_event_card(card))
 			total_active += 1
-
-	_count_lbl.text = "Day %d · %d Active" % [StoryManager.day, total_active]
 
 	if total_active == 0:
 		var empty_box := PanelContainer.new()
