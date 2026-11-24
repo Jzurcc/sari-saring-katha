@@ -9,7 +9,7 @@ const DialoguePhase = TransactionSession.Phase
 const MAX_COUNTER_SLOTS := 3
 const LINGER_CHANCE := 0.70
 const MAX_LINGERING_VISITORS := 2
-const SMALLTALK_RETURN_CHANCE := 0.85
+const SMALLTALK_RETURN_CHANCE := 0.90
 const AMBIENT_CAMEO_MIN_INTERVAL := 26.0
 const AMBIENT_CAMEO_MAX_INTERVAL := 50.0
 const AMBIENT_CAMEO_TRIGGER_CHANCE := 0.72
@@ -173,6 +173,10 @@ func _spawn_next_customer() -> void:
 	if StoryManager.is_past_closing_time():
 		LogManager.info("CustomerSpawner", "Store is closing. Spawning Mayari for collection.")
 		spawn_mayari_for_collection()
+		return
+
+	# If a lingering visitor in the tambayan is waiting to return for smalltalk, let them step up first!
+	if _try_return_waiting_lingering_visitor():
 		return
 
 	_is_spawning = true
@@ -444,6 +448,7 @@ func _on_customer_dismissed(customer: Customer) -> void:
 	# If other customers are still at the counter (or still walking out), keep the wave alive
 	if has_any_counter_customer():
 		_promote_earliest_side_customer_to_center()
+		_try_return_waiting_lingering_visitor()
 		return
 	if _leaving_customers_count > 0:
 		return
@@ -563,25 +568,58 @@ func _on_lingering_ready_to_return(customer: Customer) -> void:
 	if not is_instance_valid(customer) or customer._is_resolving:
 		return
 
-	if StoryManager.is_past_closing_time() or _is_exclusive_wave or is_paused or _is_transitioning_wave:
+	if StoryManager.is_past_closing_time() or is_paused:
+		customer.leave_from_lingering()
+		return
+
+	if randf() >= SMALLTALK_RETURN_CHANCE:
+		LogManager.info("CustomerSpawner", "Lingering visitor %s leaving directly from background." % customer.get_order_hud_key())
 		customer.leave_from_lingering()
 		return
 
 	var open_slot := _find_open_slot(true)
-	if open_slot != -1 and randf() < SMALLTALK_RETURN_CHANCE:
-		var pos_data := _calculate_positions(false, open_slot)
-		var slot_target: Vector3 = pos_data.primary_target
-		if customer.customer_data and customer.customer_data.get_clean_id() == "kuyakap":
-			var dir_back: Vector3 = (pos_data.spawn_pos - pos_data.target_pos).normalized()
-			slot_target += dir_back * 0.7
-		counter_slots[open_slot] = customer
-		_next_arrival_order += 1
-		customer.arrival_order = _next_arrival_order
-		LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d for smalltalk." % [customer.get_order_hud_key(), open_slot])
-		customer.return_to_counter_for_smalltalk(open_slot, slot_target)
-	else:
-		LogManager.info("CustomerSpawner", "Lingering visitor %s leaving directly from background." % customer.get_order_hud_key())
+	if open_slot != -1 and not _is_exclusive_wave and not _is_transitioning_wave:
+		_bring_lingering_visitor_to_counter(customer, open_slot)
+		return
+
+	# Counter is currently full or transitioning — wait in the tambayan for the next open slot!
+	customer.set_meta("ready_to_return_for_smalltalk", true)
+	LogManager.info("CustomerSpawner", "Lingering visitor %s waiting for an open counter slot to return for smalltalk." % customer.get_order_hud_key())
+	_expire_waiting_lingering_visitor(customer)
+
+func _expire_waiting_lingering_visitor(customer: Customer) -> void:
+	await get_tree().create_timer(16.0).timeout
+	if not is_instance_valid(customer) or not is_inside_tree() or customer._is_resolving:
+		return
+	if customer.is_lingering_visitor and customer.get_meta("ready_to_return_for_smalltalk", false):
+		customer.set_meta("ready_to_return_for_smalltalk", false)
+		LogManager.info("CustomerSpawner", "Lingering visitor %s waited too long for a slot and is heading home." % customer.get_order_hud_key())
 		customer.leave_from_lingering()
+
+func _try_return_waiting_lingering_visitor() -> bool:
+	if StoryManager.is_past_closing_time() or _is_exclusive_wave or is_paused:
+		return false
+	var open_slot := _find_open_slot(true)
+	if open_slot == -1:
+		return false
+	for v in lingering_visitors:
+		if is_instance_valid(v) and v.is_lingering_visitor and not v._is_resolving and v.get_meta("ready_to_return_for_smalltalk", false):
+			_bring_lingering_visitor_to_counter(v, open_slot)
+			return true
+	return false
+
+func _bring_lingering_visitor_to_counter(customer: Customer, open_slot: int) -> void:
+	customer.set_meta("ready_to_return_for_smalltalk", false)
+	var pos_data := _calculate_positions(false, open_slot)
+	var slot_target: Vector3 = pos_data.primary_target
+	if customer.customer_data and customer.customer_data.get_clean_id() == "kuyakap":
+		var dir_back: Vector3 = (pos_data.spawn_pos - pos_data.target_pos).normalized()
+		slot_target += dir_back * 0.7
+	counter_slots[open_slot] = customer
+	_next_arrival_order += 1
+	customer.arrival_order = _next_arrival_order
+	LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d for smalltalk." % [customer.get_order_hud_key(), open_slot])
+	customer.return_to_counter_for_smalltalk(open_slot, slot_target)
 
 func _on_lingering_departed(customer: Customer) -> void:
 	lingering_visitors.erase(customer)
