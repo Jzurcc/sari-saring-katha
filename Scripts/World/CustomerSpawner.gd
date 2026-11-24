@@ -9,7 +9,7 @@ const DialoguePhase = TransactionSession.Phase
 const MAX_COUNTER_SLOTS := 3
 const LINGER_CHANCE := 0.70
 const MAX_LINGERING_VISITORS := 2
-const SMALLTALK_RETURN_CHANCE := 0.90
+const SMALLTALK_RETURN_CHANCE := 0.75
 const AMBIENT_CAMEO_MIN_INTERVAL := 26.0
 const AMBIENT_CAMEO_MAX_INTERVAL := 50.0
 const AMBIENT_CAMEO_TRIGGER_CHANCE := 0.72
@@ -143,6 +143,20 @@ func _find_open_slot(prefer_side: bool = false) -> int:
 		order = [1, 2, 0]
 	for idx in order:
 		if idx < max_unlocked_slots and not is_instance_valid(counter_slots[idx]):
+			return idx
+	return -1
+
+## Finds an open counter slot for a lingering tambayan visitor returning for smalltalk.
+## Unlocks a hidden tambayan slot one ahead of the player's customer slots:
+## - 1 customer slot (no cat): prioritizes hidden Slot 1, falls back to Slot 0 if empty.
+## - 2 customer slots (cat unlocked): prioritizes hidden Slot 2, falls back to Slots 1, 0.
+## - 3 customer slots (fully unlocked): integrated with Slot 2, falls back to Slots 1, 0.
+func _find_open_slot_for_lingering() -> int:
+	var order: Array[int] = [1, 0] if max_unlocked_slots <= 1 else [2, 1, 0]
+	for idx in order:
+		if idx == 0 and _is_spawning:
+			continue
+		if not is_instance_valid(counter_slots[idx]):
 			return idx
 	return -1
 
@@ -463,7 +477,7 @@ func _promote_earliest_side_customer_to_center() -> void:
 	var best_customer: Customer = null
 	for idx in [1, 2]:
 		var c := counter_slots[idx]
-		if not is_instance_valid(c) or c._is_resolving or c.is_lingering_visitor:
+		if not is_instance_valid(c) or c._is_resolving or c.is_lingering_visitor or c.is_returning_for_smalltalk:
 			continue
 		if best_customer == null or c.arrival_order < best_customer.arrival_order:
 			best_customer = c
@@ -563,6 +577,7 @@ func handle_social_visit_finished(customer: Customer) -> void:
 		_on_wave_cleared()
 	else:
 		_promote_earliest_side_customer_to_center()
+		_try_return_waiting_lingering_visitor()
 
 func _on_lingering_ready_to_return(customer: Customer) -> void:
 	if not is_instance_valid(customer) or customer._is_resolving:
@@ -577,7 +592,7 @@ func _on_lingering_ready_to_return(customer: Customer) -> void:
 		customer.leave_from_lingering()
 		return
 
-	var open_slot := _find_open_slot(true)
+	var open_slot := _find_open_slot_for_lingering()
 	if open_slot != -1 and not _is_exclusive_wave and not _is_transitioning_wave:
 		_bring_lingering_visitor_to_counter(customer, open_slot)
 		return
@@ -599,14 +614,18 @@ func _expire_waiting_lingering_visitor(customer: Customer) -> void:
 func _try_return_waiting_lingering_visitor() -> bool:
 	if StoryManager.is_past_closing_time() or _is_exclusive_wave or is_paused:
 		return false
-	var open_slot := _find_open_slot(true)
-	if open_slot == -1:
-		return false
+	var returned_any := false
 	for v in lingering_visitors:
-		if is_instance_valid(v) and v.is_lingering_visitor and not v._is_resolving and v.get_meta("ready_to_return_for_smalltalk", false):
-			_bring_lingering_visitor_to_counter(v, open_slot)
-			return true
-	return false
+		if not is_instance_valid(v) or not v.is_lingering_visitor or v._is_resolving:
+			continue
+		if not v.get_meta("ready_to_return_for_smalltalk", false):
+			continue
+		var open_slot := _find_open_slot_for_lingering()
+		if open_slot == -1:
+			break
+		_bring_lingering_visitor_to_counter(v, open_slot)
+		returned_any = true
+	return returned_any
 
 func _bring_lingering_visitor_to_counter(customer: Customer, open_slot: int) -> void:
 	customer.set_meta("ready_to_return_for_smalltalk", false)
@@ -636,6 +655,7 @@ func _on_lingering_departed(customer: Customer) -> void:
 			_leaving_customers_count = maxi(0, _leaving_customers_count - 1)
 		if has_any_counter_customer():
 			_promote_earliest_side_customer_to_center()
+			_try_return_waiting_lingering_visitor()
 		elif _leaving_customers_count == 0:
 			StoryManager.clock.on_customer_dismissed()
 			_on_wave_cleared()
