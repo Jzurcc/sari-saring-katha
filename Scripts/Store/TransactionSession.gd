@@ -228,13 +228,14 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
 			gm_guided = _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
 		var is_guided: bool = (context != null and context.is_guided_tutorial) or (gm_guided != null and gm_guided.tutorial != null and gm_guided.tutorial.is_guided_timeline_active())
+		var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
+		if is_whole_order_done and not is_guided:
+			StoryManager.award_customer_completion_xp(customer)
 		if needs_switch:
 			if not is_guided and context:
 				EventBus.customer_order_updated.emit(customer.get_order_hud_key(), context.desired_items, context.is_riddle)
-			var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
 			_finish_switch_and_start(prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success, customer, true, is_whole_order_done, is_guided)
 		elif not is_guided:
-			var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
 			on_item_delivered(customer, is_whole_order_done)
 		return true
 	else:

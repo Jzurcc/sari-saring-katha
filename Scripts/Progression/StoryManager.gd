@@ -1047,6 +1047,26 @@ func is_item_unlocked(item: ItemData) -> bool:
 
 var _processed_satisfied_customers: Array[Customer] = []
 
+func award_customer_completion_xp(customer: Customer) -> void:
+	if not is_instance_valid(customer) or customer.is_lingering_departure:
+		return
+	if customer.get_meta("_xp_awarded", false):
+		return
+	if not customer.transaction_context or customer.transaction_context.is_guided_tutorial:
+		return
+	if customer.customer_data != null and customer.customer_data.is_collector():
+		return
+	customer.set_meta("_xp_awarded", true)
+	var ctx: TransactionContext = customer.transaction_context
+	if ctx.transaction_type == TransactionContext.Type.VISIT or ctx.is_visit_story:
+		add_player_xp(10, "Visit")
+	else:
+		var xp := 15 + maxi(0, ctx.original_count - 1) * 5
+		if ctx.is_riddle:
+			xp += 10
+		add_player_xp(xp, "Purchase")
+		purchase_counter += 1
+
 func _on_customer_satisfied(customer) -> void:
 	# Double-processing guard: ensure we don't process the same customer twice
 	if customer in _processed_satisfied_customers:
@@ -1064,22 +1084,14 @@ func _on_customer_satisfied(customer) -> void:
 	
 	_process_story_cooldown(customer)
 	
-	# Award Player XP for completed visits & purchases (never for guided tutorial or Mayari tally)
+	# Mark collector visited & fallback-award Player XP if not already awarded at last-item handover
 	if customer.transaction_context and not customer.transaction_context.is_guided_tutorial:
 		var is_collector_cust: bool = customer.customer_data != null and customer.customer_data.is_collector()
 		if is_collector_cust:
 			has_mayari_visited = true
 			is_mayari_met = true
 		else:
-			var ctx: TransactionContext = customer.transaction_context
-			if ctx.transaction_type == TransactionContext.Type.VISIT or ctx.is_visit_story:
-				add_player_xp(10, "Visit")
-			else:
-				var xp := 15 + maxi(0, ctx.original_count - 1) * 5
-				if ctx.is_riddle:
-					xp += 10
-				add_player_xp(xp, "Purchase")
-				purchase_counter += 1
+			award_customer_completion_xp(customer)
 		
 	# Tutorial Persistence: If this encounter was the guided tutorial, mark it complete now.
 	if customer.transaction_context and customer.transaction_context.is_guided_tutorial:

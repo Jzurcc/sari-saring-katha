@@ -519,6 +519,7 @@ func leave_from_lingering() -> void:
 	_leave_store(lingering_departed)
 
 func satisfy() -> void:
+	StoryManager.award_customer_completion_xp(self)
 	_leave_store(EventBus.customer_satisfied)
 
 
