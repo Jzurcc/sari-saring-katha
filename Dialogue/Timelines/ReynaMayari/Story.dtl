@@ -65,7 +65,7 @@ elif {Transaction_Chapter} == 3.0:
 	ReynaMayari: Your grandmother did not borrow money. [pause=0.4] She asked Biringan to keep the darker things of the forest away from this town.
 	ReynaMayari: The ones that do not answer to reason. The hollow, the hungry, the formless.
 	ReynaMayari: Every coin you pay keeps the boundary intact. [pause=0.5] You are not just running a store, child. You are keeping a wall standing.
-	ReynaMayari:  ...Those [color=#0f6e2f]{Transaction_ItemWants}[/color] on the third shelf. They are very... [pause=0.4] geometrically interesting for mortal confections.
+	ReynaMayari:  ...Those candies on the third shelf. They are very... [pause=0.4] geometrically interesting for mortal confections.
 	ReynaMayari:  I am studying them for strategic purposes. Produce the tally.
 	[signal arg="open_tally_offer"]
 	[wait time="0.5"]
@@ -92,7 +92,7 @@ elif {Transaction_Chapter} == 5.0:
 	ReynaMayari: He looked directly at me and said, with complete confidence, [pause=0.4] "Ate, nice cosplay."
 	ReynaMayari:  "Ate."
 	ReynaMayari:  I was preparing a mild haunting. A very tasteful one. [pause=0.3] Just some disembodied wind. Nothing permanent.
-	ReynaMayari: But then he held up one of your [color=#0f6e2f]{Transaction_ItemWants}[/color] and said it was "for the pretty moon lady."
+	ReynaMayari: But then he held up one of your snacks and said it was "for the pretty moon lady."
 	ReynaMayari:  I accepted the tribute. [pause=0.3] Because it was politically appropriate to do so. Not for any other reason.
 	ReynaMayari: Produce tonight's tally before I reconsider sparing you from the disembodied wind.
 	[signal arg="open_tally_offer"]
@@ -107,7 +107,7 @@ elif {Transaction_Chapter} == 6.0:
 	ReynaMayari: After which, my official obligations to this establishment conclude.
 	ReynaMayari:  I will no longer be required to visit this particular storefront. [pause=0.4] Which is, of course, completely fine.
 	ReynaMayari: The silence of Biringan is dignified. The eternal moonlight is restful. The Black Rice is... it is food.
-	ReynaMayari:  ...Are those [color=#0f6e2f]{Transaction_ItemWants}[/color] a new stock?
+	ReynaMayari:  ...Are those snacks on the shelf a new stock?
 	ReynaMayari:  Also irrelevant. Tally. Now. Let us finish this.
 	[signal arg="open_tally_offer"]
 	[wait time="0.5"]
@@ -131,7 +131,7 @@ elif {Transaction_Chapter} == 8.0:
 	# Chapter 9 — "The Patron of the Moon"
 	# She has fully dropped the act. Warmly embarrassed. Genuinely fond.
 	ReynaMayari: I am here on an inspection. [pause=0.5] A routine one.
-	ReynaMayari:  ...Alright. I may also be here because Biringan is very quiet tonight and someone left a trail of your [color=#0f6e2f]{Transaction_ItemWants}[/color] packets outside my gate.
+	ReynaMayari:  ...Alright. I may also be here because Biringan is very quiet tonight and someone left a trail of your candy wrappers outside my gate.
 	ReynaMayari: I have no proof that was intentional. [pause=0.3] But if I did, I would call it a masterful act of mortal diplomacy.
 	ReynaMayari:  Your grandmother used to leave a candle in the window on nights when the forest was restless. I would see it from the spires.
 	ReynaMayari:  She never asked for anything in return. She just kept the light on.
@@ -142,36 +142,36 @@ elif {Transaction_Chapter} == 8.0:
 	[end_timeline]
 
 label SuccessFirst
-ReynaMayari:  ...Acceptable.
-ReynaMayari: The first offering has been recorded in the ledger of Biringan.
-ReynaMayari:  Do not be late next time.
+ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos. ...Acceptable.
+ReynaMayari: Your first offering has been recorded in silver ink. [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain on the ledger.
+ReynaMayari:  Do not disappoint me tomorrow.
 [signal arg="story_success"]
 [end_timeline]
 
 label Generous
-ReynaMayari:  You gave more than required. [pause=0.5] ...That is unusual for a mortal.
-ReynaMayari:  It is noted in silver ink. May the moon favor your store tomorrow.
+ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos — more than I asked. [pause=0.5] ...That is unusual for a mortal.
+ReynaMayari:  Only [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. The silver spires remember generosity.
 [signal arg="story_success"]
 [end_timeline]
 
 label Success
 if {Transaction_SatisfyVar} <= 33:
-	ReynaMayari:  The balance is restored for now. [pause=0.3] The ledger is quiet.
+	ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos. The balance holds for now — [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain on the ledger.
 elif {Transaction_SatisfyVar} <= 66:
-	ReynaMayari:  A passable offering. [pause=0.3] The numbers are satisfied, if not by much.
+	ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos is a passable offering. [color=#b0c4de]{Global_TallyRemaining}[/color] left to settle.
 else:
-	ReynaMayari:  You honor the pact well, child. [pause=0.4] The ledger records your effort.
+	ReynaMayari:  You honor the pact well, child. [color=#f5d76e]{Global_TallyOffer}[/color] pesos recorded; [color=#b0c4de]{Global_TallyRemaining}[/color] remaining.
 [signal arg="story_success"]
 [end_timeline]
 
 label Shortfall
 label Angry
-if {Transaction_WrongItemVar} <= 50:
-	ReynaMayari: [wave blue]The ledger does not tolerate shortfalls.[/wave] [pause=0.5]
-	ReynaMayari: This is insufficient. Expect a chill over Karimlan tomorrow.
+if {Global_TallyOffer} <= 0:
+	ReynaMayari: [wave blue]Nothing at all tonight?[/wave] [pause=0.5] Not a single coin for the pact?
+	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos still weigh on this store. Expect a chill over Karimlan tomorrow.
 else:
-	ReynaMayari: [wave blue]This is an affront to the silver spires.[/wave] [pause=0.5]
-	ReynaMayari: Mind the ledger tomorrow, child. Do not test my patience.
+	ReynaMayari: [wave blue]Only {Global_TallyOffer} pesos?[/wave] [pause=0.5] That falls short of what the ledger expects.
+	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. Mind the ledger tomorrow, child.
 [end_timeline]
 
 label LedgerCleared

@@ -9,7 +9,7 @@ ReynaMayari: Tonight, I expect at least [color=#b0c4de]{Global_TallyMin}[/color]
 
 label Generous
 ReynaMayari: ...You offered [color=#f5d76e]{Global_TallyOffer}[/color] pesos. More than I asked. [pause=0.5]
-ReynaMayari: Unusual for a mortal. [pause=0.3] The silver spires remember generosity.
+ReynaMayari: Only [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. [pause=0.3] The silver spires remember generosity.
 if {Global_QuotaDay} == 2.0:
 	ReynaMayari: Actually, I've been meaning to see what your store offers by daylight.
 	ReynaMayari: Expect a visit from me soon. [pause=0.4]
@@ -17,9 +17,8 @@ ReynaMayari: Until tomorrow. [pause=0.3]
 [end_timeline]
 
 label Success
-ReynaMayari: I see you've been working hard. [pause=0.4]
-ReynaMayari: Your offering has been recorded in the Silver Ledger.
-ReynaMayari: Keep this up, and your grandmother's pact will be settled in no time. [pause=0.5]
+ReynaMayari: [color=#f5d76e]{Global_TallyOffer}[/color] pesos recorded in the Silver Ledger. [pause=0.4]
+ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain on your grandmother's pact.
 if {Global_QuotaDay} == 2.0:
 	ReynaMayari: Actually, I've been meaning to check what your store offers.
 	ReynaMayari: I think I will see what you have here tomorrow. [pause=0.5]
@@ -28,10 +27,12 @@ ReynaMayari: Until tomorrow. [pause=0.3]
 
 label Shortfall
 label Angry
-ReynaMayari: [wave blue]I am disappointed.[/wave] [pause=0.5]
-ReynaMayari: Tonight's offering falls short of what the ledger expects.
-ReynaMayari: Do not think my patience is infinite. [pause=0.4]
-ReynaMayari: Expect... [pause=0.3] a mild chill over Karimlan tomorrow.
+if {Global_TallyOffer} <= 0:
+	ReynaMayari: [wave blue]Nothing at all tonight?[/wave] [pause=0.5]
+	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos still stand unpaid. Expect a chill over Karimlan tomorrow.
+else:
+	ReynaMayari: [wave blue]Only {Global_TallyOffer} pesos.[/wave] [pause=0.5] That falls short of tonight's expectation.
+	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. Expect... [pause=0.3] a mild chill over Karimlan tomorrow.
 [end_timeline]
 
 label LedgerCleared
