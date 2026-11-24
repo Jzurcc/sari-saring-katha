@@ -29,6 +29,8 @@ var _backdrop: ColorRect
 var _banner: PanelContainer
 var _frame: PanelContainer
 var _cards_vbox: VBoxContainer
+var _callout_col: VBoxContainer
+var _callout_tween: Tween = null
 
 func _ready() -> void:
 	layer = 55
@@ -158,6 +160,18 @@ func _build_ui() -> void:
 	_cards_vbox.add_theme_constant_override("separation", 10)
 	scroll.add_child(_cards_vbox)
 
+	# Right-side Hades keyword callout stack (appears on card hover)
+	_callout_col = VBoxContainer.new()
+	_callout_col.anchor_left = 0.78
+	_callout_col.anchor_right = 0.985
+	_callout_col.anchor_top = 0.21
+	_callout_col.anchor_bottom = 0.85
+	_callout_col.add_theme_constant_override("separation", 10)
+	_callout_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_callout_col.visible = false
+	_callout_col.modulate.a = 0.0
+	_root.add_child(_callout_col)
+
 func _on_toggled(opened: bool) -> void:
 	if opened:
 		if is_open:
@@ -189,6 +203,7 @@ func close_overlay() -> void:
 	if not is_open:
 		return
 	is_open = false
+	_show_keyword_callouts([])
 	hide()
 	Input.mouse_mode = _previous_mouse_mode
 	if is_instance_valid(AudioManager):
@@ -269,27 +284,30 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 			if it:
 				target_names.append(it.item_name)
 	var targets_str := ", ".join(target_names) if not target_names.is_empty() else "Featured Stock"
-	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
+	var desc_rich := "%s Neighbors are actively seeking %s today." % [ev.description, targets_str]
 	var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
 	var stats: Array = [
 		{"label": "%s Demand:" % targets_str, "value": "+%d%%" % demand_pct, "tone": "pos"},
 		{"label": "%s Price Tolerance:" % targets_str, "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
 	]
-	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event")
+	var kws: Array = ["price_tolerance"] if ev.tolerance_offset != 0 else []
+	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws)
 
 func _build_mayari_event_card(c_data: Dictionary) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
 	var desc_rich := str(c_data.get("description_rich", c_data.get("description", "")))
 	var stats: Array = c_data.get("stats", [])
+	var kws: Array = c_data.get("keywords", [])
 	return _build_hades_card(
 		str(c_data.get("title", "Moon Card")),
 		str(c_data.get("sigil", "☽")),
 		desc_rich,
 		stats,
-		"favor" if is_fav else "chill"
+		"favor" if is_fav else "omen",
+		kws
 	)
 
-func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String) -> PanelContainer:
+func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, keywords: Array = []) -> PanelContainer:
 	var pal: Dictionary = HadesEmblem.palette(kind)
 	var accent: Color = pal["accent"]
 	var accent_bright: Color = pal["bright"]
@@ -369,30 +387,136 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	desc_rt.text = desc_rich.replace("[b]", "[b][color=%s]" % COL_BOLD_CREAM).replace("[/b]", "[/color][/b]")
 	text_col.add_child(desc_rt)
 
-	var stats_box := VBoxContainer.new()
-	stats_box.add_theme_constant_override("separation", 2)
-	text_col.add_child(stats_box)
-	for st in stats:
-		var stat_dict: Dictionary = st
-		var s_row := HBoxContainer.new()
-		s_row.add_theme_constant_override("separation", 12)
-		stats_box.add_child(s_row)
+	if stats.size() >= 3:
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 20)
+		grid.add_theme_constant_override("v_separation", 2)
+		grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(grid)
+		for st in stats:
+			var stat_dict: Dictionary = st
+			var s_row := HBoxContainer.new()
+			s_row.add_theme_constant_override("separation", 8)
+			s_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			grid.add_child(s_row)
 
-		var s_name := Label.new()
-		s_name.text = "▸ " + str(stat_dict.get("label", ""))
-		s_name.custom_minimum_size = Vector2(300, 0)
-		s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
-		s_name.add_theme_font_size_override("font_size", 17)
-		s_name.add_theme_color_override("font_color", COL_CREAM)
-		s_row.add_child(s_name)
+			var s_name := Label.new()
+			s_name.text = "▸ " + str(stat_dict.get("label", ""))
+			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+			s_name.add_theme_font_size_override("font_size", 15)
+			s_name.add_theme_color_override("font_color", COL_CREAM)
+			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_name)
 
-		var s_val := Label.new()
-		s_val.text = str(stat_dict.get("value", ""))
-		s_val.add_theme_font_override("font", _bold_font)
-		s_val.add_theme_font_size_override("font_size", 18)
-		var tone := str(stat_dict.get("tone", "pos"))
-		var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
-		s_val.add_theme_color_override("font_color", val_col)
-		s_row.add_child(s_val)
+			var s_val := Label.new()
+			s_val.text = str(stat_dict.get("value", ""))
+			s_val.add_theme_font_override("font", _bold_font)
+			s_val.add_theme_font_size_override("font_size", 16)
+			var tone := str(stat_dict.get("tone", "pos"))
+			var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+			s_val.add_theme_color_override("font_color", val_col)
+			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_val)
+	else:
+		var stats_box := VBoxContainer.new()
+		stats_box.add_theme_constant_override("separation", 1 if stats.size() == 2 else 2)
+		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(stats_box)
+		var lbl_sz := 16 if stats.size() == 2 else 18
+		var val_sz := 17 if stats.size() == 2 else 19
+		for st in stats:
+			var stat_dict: Dictionary = st
+			var s_row := HBoxContainer.new()
+			s_row.add_theme_constant_override("separation", 12)
+			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			stats_box.add_child(s_row)
+
+			var s_name := Label.new()
+			s_name.text = "▸ " + str(stat_dict.get("label", ""))
+			s_name.custom_minimum_size = Vector2(290, 0)
+			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+			s_name.add_theme_font_size_override("font_size", lbl_sz)
+			s_name.add_theme_color_override("font_color", COL_CREAM)
+			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_name)
+
+			var s_val := Label.new()
+			s_val.text = str(stat_dict.get("value", ""))
+			s_val.add_theme_font_override("font", _bold_font)
+			s_val.add_theme_font_size_override("font_size", val_sz)
+			var tone := str(stat_dict.get("tone", "pos"))
+			var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+			s_val.add_theme_color_override("font_color", val_col)
+			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_val)
+
+	if not keywords.is_empty():
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_entered.connect(_show_keyword_callouts.bind(keywords))
+		card.mouse_exited.connect(_show_keyword_callouts.bind([]))
 
 	return card
+
+func _show_keyword_callouts(keyword_ids: Array) -> void:
+	if not is_instance_valid(_callout_col):
+		return
+	if _callout_tween and _callout_tween.is_valid():
+		_callout_tween.kill()
+
+	for child in _callout_col.get_children():
+		_callout_col.remove_child(child)
+		child.queue_free()
+
+	var shown := 0
+	for kw_id in keyword_ids:
+		var info := MayariCardRegistry.get_keyword(str(kw_id))
+		if info.is_empty():
+			continue
+		var box := PanelContainer.new()
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.95), 6, 14, 10)
+		bs.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
+		bs.border_width_left = 3
+		bs.border_width_top = 1
+		bs.border_width_right = 1
+		bs.border_width_bottom = 1
+		bs.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+		bs.shadow_size = 12
+		box.add_theme_stylebox_override("panel", bs)
+
+		var bv := VBoxContainer.new()
+		bv.add_theme_constant_override("separation", 3)
+		bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(bv)
+
+		var kt := Label.new()
+		kt.text = str(info.get("title", ""))
+		kt.add_theme_font_override("font", _bold_font)
+		kt.add_theme_font_size_override("font_size", 15)
+		kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+		kt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bv.add_child(kt)
+
+		var kd := Label.new()
+		kd.text = str(info.get("desc", ""))
+		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
+		kd.add_theme_font_size_override("font_size", 13)
+		kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		kd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bv.add_child(kd)
+
+		_callout_col.add_child(box)
+		shown += 1
+
+	if shown == 0:
+		_callout_col.visible = false
+		_callout_col.modulate.a = 0.0
+		return
+
+	_callout_col.visible = true
+	_callout_col.modulate.a = 0.0
+	_callout_tween = create_tween()
+	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)

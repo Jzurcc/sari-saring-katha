@@ -26,8 +26,51 @@ const CARD_EARLY_DUSK := "early_dusk"
 const CARD_QUIET_ECLIPSE := "quiet_eclipse"
 const CARD_FADING_MEMORY := "fading_memory"
 
+## Core mechanical vocabulary for Hades-style hover side callouts.
+const KEYWORDS: Dictionary = {
+	"price_tolerance": {
+		"title": "PRICE TOLERANCE",
+		"desc": "How many price steps above base cost neighbors accept before refusing to buy.",
+	},
+	"fridge_coldness": {
+		"title": "FRIDGE COLDNESS",
+		"desc": "Keeps cold drinks & frozen stock fresh. If depleted, fridge items sell for 25% less.",
+	},
+	"cash_sale": {
+		"title": "CASH SALE",
+		"desc": "A purchase paid upfront in pesos — excludes Utang (credit) sales.",
+	},
+	"restock": {
+		"title": "RESTOCK",
+		"desc": "Wholesale stock ordered by calling Uncle Mario on the store phone.",
+	},
+	"bonus_stock": {
+		"title": "BONUS STOCK",
+		"desc": "Extra free items tucked into Uncle Mario's delivery bag, up to shelf capacity.",
+	},
+	"store_hours": {
+		"title": "STORE HOURS",
+		"desc": "Normally closes at 8:00 PM, after which Reyna Mayari arrives to collect.",
+	},
+	"multi_item_order": {
+		"title": "MULTI-ITEM ORDER",
+		"desc": "A neighbor requesting 2–3 items at once — grants +5 bonus Player XP per extra item.",
+	},
+	"player_xp": {
+		"title": "PLAYER XP",
+		"desc": "Earned from sales, visits, and stories to level up and unlock higher product tiers & upgrades.",
+	},
+	"neighborhood_events": {
+		"title": "NEIGHBORHOOD EVENTS",
+		"desc": "Daily Karimlan conditions that boost demand and Price Tolerance for specific categories.",
+	},
+}
+
+static func get_keyword(key: String) -> Dictionary:
+	return KEYWORDS.get(key, {})
+
 const CARDS: Dictionary = {
-	# ── Biringan's Favor (Buffs) ─────────────────────────────────────────
+	# ── Favor (Buffs) ────────────────────────────────────────────────────
 	CARD_SILVER_TOLERANCE: {
 		"id": CARD_SILVER_TOLERANCE,
 		"kind": KIND_FAVOR,
@@ -35,7 +78,8 @@ const CARDS: Dictionary = {
 		"sigil": "☽",
 		"tagline": "+1 Price Tolerance",
 		"description": "Moonlit goodwill softens every haggle. Customers tolerate +1 higher price step on all items tomorrow.",
-		"description_rich": "Moonlit goodwill softens every [b]Haggle[/b]. Customers tolerate higher [b]Markups[/b] on all items tomorrow.",
+		"description_rich": "Moonlit goodwill softens every haggle. Neighbors accept higher [b]Price Tolerance[/b] on all items tomorrow.",
+		"keywords": ["price_tolerance"],
 		"stats": [
 			{"label": "All Items Price Tolerance:", "value": "+1", "tone": "pos"},
 		],
@@ -48,7 +92,8 @@ const CARDS: Dictionary = {
 		"sigil": "❄",
 		"tagline": "40% Slower Fridge Drain",
 		"description": "Cool lunar air lingers in your store. Your refrigerator loses coldness 40% slower and chills back 40% faster.",
-		"description_rich": "Cool lunar air lingers in your [b]Refrigerator[/b], keeping cold drinks chilled far longer.",
+		"description_rich": "Cool lunar air lingers in your fridge, preserving [b]Fridge Coldness[/b] far longer.",
+		"keywords": ["fridge_coldness"],
 		"stats": [
 			{"label": "Fridge Coldness Drain:", "value": "-40%", "tone": "pos"},
 			{"label": "Fridge Re-Chill Speed:", "value": "+40%", "tone": "pos"},
@@ -62,7 +107,8 @@ const CARDS: Dictionary = {
 		"sigil": "✦",
 		"tagline": "+₱3 Tip Per Cash Sale",
 		"description": "Gratitude shines bright under the silver spires. Earn a +₱3 Moonlight Tip on every satisfied cash sale tomorrow.",
-		"description_rich": "Gratitude shines under the silver spires. Earn a bonus [b]Moonlight Tip[/b] on every satisfied [b]Cash Sale[/b].",
+		"description_rich": "Gratitude shines under the silver spires. Earn a bonus tip on every satisfied [b]Cash Sale[/b].",
+		"keywords": ["cash_sale"],
 		"stats": [
 			{"label": "Tip Per Cash Sale:", "value": "+₱3", "tone": "pos"},
 		],
@@ -75,7 +121,8 @@ const CARDS: Dictionary = {
 		"sigil": "»",
 		"tagline": "Faster Mario & 10% Off",
 		"description": "The moonlight clears the road for Uncle Mario: 10% off restock orders and deliveries arrive 1 customer sooner.",
-		"description_rich": "Moonlight clears the road for [b]Uncle Mario[/b], lowering [b]Restock[/b] costs and speeding up deliveries.",
+		"description_rich": "Moonlight clears the road for Uncle Mario, lowering [b]Restock[/b] costs and speeding up deliveries.",
+		"keywords": ["restock"],
 		"stats": [
 			{"label": "Restock Cost:", "value": "-10%", "tone": "pos"},
 			{"label": "Delivery Waiting Time:", "value": "-1 Customer", "tone": "pos"},
@@ -89,7 +136,8 @@ const CARDS: Dictionary = {
 		"sigil": "✧",
 		"tagline": "+1–2 Free Restock Units",
 		"description": "Biringan's abundance slips into your delivery bags. Every restock delivery tomorrow includes 1–2 free bonus items.",
-		"description_rich": "Biringan's abundance slips into your [b]Delivery Bags[/b], adding free [b]Bonus Stock[/b] to every drop.",
+		"description_rich": "Biringan's abundance slips into your delivery bags, adding free [b]Bonus Stock[/b] to every drop.",
+		"keywords": ["bonus_stock"],
 		"stats": [
 			{"label": "Free Items Per Delivery:", "value": "+1–2", "tone": "pos"},
 		],
@@ -102,7 +150,8 @@ const CARDS: Dictionary = {
 		"sigil": "☾",
 		"tagline": "Open Until 10:00 PM",
 		"description": "Mayari holds nightfall at bay. Your sari-sari store stays open until 10:00 PM tomorrow for extra customer waves.",
-		"description_rich": "Mayari holds [b]Nightfall[/b] at bay, extending your [b]Store Hours[/b] for extra customer waves.",
+		"description_rich": "Mayari holds nightfall at bay, extending your [b]Store Hours[/b] for extra customer waves.",
+		"keywords": ["store_hours"],
 		"stats": [
 			{"label": "Closing Time:", "value": "10:00 PM", "tone": "pos"},
 		],
@@ -116,6 +165,7 @@ const CARDS: Dictionary = {
 		"tagline": "2–3 Item Orders",
 		"description": "Neighbors arrive with bigger cravings. Customers are much more likely to ask for 2–3 items per visit tomorrow.",
 		"description_rich": "Neighbors arrive with bigger cravings, placing larger [b]Multi-Item Orders[/b] throughout the day.",
+		"keywords": ["multi_item_order"],
 		"stats": [
 			{"label": "Items Per Customer Order:", "value": "2–3", "tone": "pos"},
 		],
@@ -129,13 +179,14 @@ const CARDS: Dictionary = {
 		"tagline": "+50% Player XP",
 		"description": "Biringan's whispers carry your tindahan's name across Karimlan. Earn +50% Player XP from every sale, visit, and story tomorrow.",
 		"description_rich": "Biringan's whispers carry your tindahan's name across Karimlan. Earn extra [b]Player XP[/b] from every sale, visit, and story.",
+		"keywords": ["player_xp"],
 		"stats": [
 			{"label": "Player XP Earned:", "value": "+50%", "tone": "pos"},
 		],
 		"hud_short": "+50% Player XP",
 	},
 
-	# ── Biringan's Chill (Debuffs / Quirks) ──────────────────────────────
+	# ── Omen (Debuffs / Quirks) ──────────────────────────────────────────
 	CARD_DISEMBODIED_WIND: {
 		"id": CARD_DISEMBODIED_WIND,
 		"kind": KIND_CHILL,
@@ -143,7 +194,8 @@ const CARDS: Dictionary = {
 		"sigil": "〰",
 		"tagline": "Haunted Fridge Gusts",
 		"description": "A tasteful haunting. Eerie gusts swing your refrigerator door open 1–2 times tomorrow — shut it before stock warms!",
-		"description_rich": "A tasteful haunting. Eerie gusts swing your [b]Refrigerator Door[/b] open — shut it before stock warms!",
+		"description_rich": "A tasteful haunting. Eerie gusts swing your fridge door open — shut it before [b]Fridge Coldness[/b] drains!",
+		"keywords": ["fridge_coldness"],
 		"stats": [
 			{"label": "Refrigerator Door Gusts:", "value": "1–2", "tone": "neg"},
 		],
@@ -156,7 +208,8 @@ const CARDS: Dictionary = {
 		"sigil": "☁",
 		"tagline": "-1 Tolerance · 20% Faster Flow",
 		"description": "Uneasy neighbors won't accept steep markups (-1 tolerance), but the mist draws customers 20% faster for quick sales.",
-		"description_rich": "Uneasy neighbors resist steep [b]Markups[/b], yet the silver mist draws [b]Customers[/b] in faster.",
+		"description_rich": "Uneasy neighbors have lower [b]Price Tolerance[/b], yet the silver mist draws customers in faster.",
+		"keywords": ["price_tolerance"],
 		"stats": [
 			{"label": "All Items Price Tolerance:", "value": "-1", "tone": "neg"},
 			{"label": "Customer Foot Traffic:", "value": "+20%", "tone": "pos"},
@@ -170,7 +223,8 @@ const CARDS: Dictionary = {
 		"sigil": "❖",
 		"tagline": "-1 Tolerance · 15% Off Restock",
 		"description": "Customers are pickier on markups (-1 tolerance), yet Mario knocks 15% off wholesale stock. \"Bare shelves embarrass my ledger.\"",
-		"description_rich": "Neighbors are pickier on [b]Markups[/b], yet [b]Uncle Mario[/b] knocks down wholesale [b]Restock[/b] prices.",
+		"description_rich": "Neighbors have lower [b]Price Tolerance[/b], yet Uncle Mario knocks down wholesale [b]Restock[/b] prices.",
+		"keywords": ["price_tolerance", "restock"],
 		"stats": [
 			{"label": "All Items Price Tolerance:", "value": "-1", "tone": "neg"},
 			{"label": "Restock Cost:", "value": "-15%", "tone": "pos"},
@@ -184,7 +238,8 @@ const CARDS: Dictionary = {
 		"sigil": "◐",
 		"tagline": "Closes Early at 6:30 PM",
 		"description": "The Pale Queen summons twilight ahead of schedule. Your store closes at 6:30 PM tomorrow instead of 8:00 PM.",
-		"description_rich": "The Pale Queen summons [b]Twilight[/b] ahead of schedule, cutting your [b]Store Hours[/b] short.",
+		"description_rich": "The Pale Queen summons twilight ahead of schedule, cutting your [b]Store Hours[/b] short.",
+		"keywords": ["store_hours"],
 		"stats": [
 			{"label": "Closing Time:", "value": "6:30 PM", "tone": "neg"},
 		],
@@ -197,7 +252,8 @@ const CARDS: Dictionary = {
 		"sigil": "●",
 		"tagline": "No Neighborhood Events Today",
 		"description": "An uncanny hush blankets Karimlan. No daily Neighborhood Events or demand surges will occur tomorrow.",
-		"description_rich": "An uncanny hush blankets Karimlan. All daily [b]Neighborhood Events[/b] and demand surges are silenced.",
+		"description_rich": "An uncanny hush blankets Karimlan. All daily [b]Neighborhood Events[/b] are silenced.",
+		"keywords": ["neighborhood_events"],
 		"stats": [
 			{"label": "Neighborhood Events:", "value": "None", "tone": "neg"},
 		],
@@ -211,6 +267,7 @@ const CARDS: Dictionary = {
 		"tagline": "-35% Player XP",
 		"description": "Karimlan's mist dulls word of mouth. Earn 35% less Player XP from sales, visits, and stories tomorrow.",
 		"description_rich": "Karimlan's mist dulls word of mouth. Earn less [b]Player XP[/b] from every sale, visit, and story tomorrow.",
+		"keywords": ["player_xp"],
 		"stats": [
 			{"label": "Player XP Earned:", "value": "-35%", "tone": "neg"},
 		],

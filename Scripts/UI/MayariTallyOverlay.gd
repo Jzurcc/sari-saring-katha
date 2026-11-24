@@ -375,6 +375,8 @@ var _confirm_style: StyleBoxFlat
 # Beat 2: Revealed Hades Boon Rows (placed inside the exact same _card_slots!)
 var _card_rows: Array[PanelContainer] = []
 var _card_data_list: Array[Dictionary] = []
+var _callout_col: VBoxContainer
+var _callout_tween: Tween = null
 var _hovered_idx: int = -1
 var _card_picked: bool = false
 var _cards_ready: bool = false
@@ -578,6 +580,18 @@ func _build_ui() -> void:
 	_mayari_portrait.z_index = 10
 	_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_mayari_portrait)
+
+	# ── 5. RIGHT-SIDE HADES KEYWORD CALLOUT STACK (Appears on Beat 2 card hover) ──
+	_callout_col = VBoxContainer.new()
+	_callout_col.anchor_left = 0.795
+	_callout_col.anchor_right = 0.985
+	_callout_col.anchor_top = 0.21
+	_callout_col.anchor_bottom = 0.85
+	_callout_col.add_theme_constant_override("separation", 10)
+	_callout_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_callout_col.visible = false
+	_callout_col.modulate.a = 0.0
+	_root.add_child(_callout_col)
 
 func _create_preview_shadow_row(_index: int) -> Dictionary:
 	var card := PanelContainer.new()
@@ -1039,11 +1053,46 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 		hook_lbl.add_theme_color_override("font_color", COL_CREAM)
 		hook_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text_col.add_child(hook_lbl)
+	elif stats.size() >= 3:
+		# 2-column compact grid for 3-4 stat cards so card height stays uniform
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 20)
+		grid.add_theme_constant_override("v_separation", 2)
+		grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(grid)
+		for st in stats:
+			var stat_dict: Dictionary = st
+			var s_row := HBoxContainer.new()
+			s_row.add_theme_constant_override("separation", 8)
+			s_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			grid.add_child(s_row)
+
+			var s_name := Label.new()
+			s_name.text = "▸ " + str(stat_dict.get("label", ""))
+			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+			s_name.add_theme_font_size_override("font_size", 15)
+			s_name.add_theme_color_override("font_color", COL_CREAM)
+			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_name)
+
+			var s_val := Label.new()
+			s_val.text = str(stat_dict.get("value", ""))
+			s_val.add_theme_font_override("font", _bold_font)
+			s_val.add_theme_font_size_override("font_size", 16)
+			var tone := str(stat_dict.get("tone", "pos"))
+			var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+			s_val.add_theme_color_override("font_color", val_col)
+			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_val)
 	else:
 		var stats_box := VBoxContainer.new()
-		stats_box.add_theme_constant_override("separation", 2)
+		stats_box.add_theme_constant_override("separation", 1 if stats.size() == 2 else 2)
 		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text_col.add_child(stats_box)
+		var lbl_sz := 16 if stats.size() == 2 else 18
+		var val_sz := 17 if stats.size() == 2 else 19
 		for st in stats:
 			var stat_dict: Dictionary = st
 			var s_row := HBoxContainer.new()
@@ -1055,7 +1104,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
 			s_name.custom_minimum_size = Vector2(290, 0)
 			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
-			s_name.add_theme_font_size_override("font_size", 18)
+			s_name.add_theme_font_size_override("font_size", lbl_sz)
 			s_name.add_theme_color_override("font_color", COL_CREAM)
 			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			s_row.add_child(s_name)
@@ -1063,7 +1112,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 			var s_val := Label.new()
 			s_val.text = str(stat_dict.get("value", ""))
 			s_val.add_theme_font_override("font", _bold_font)
-			s_val.add_theme_font_size_override("font_size", 19)
+			s_val.add_theme_font_size_override("font_size", val_sz)
 			var tone := str(stat_dict.get("tone", "pos"))
 			var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
 			s_val.add_theme_color_override("font_color", val_col)
@@ -1081,8 +1130,10 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 	if is_hovered:
 		_hovered_idx = index
 		EventBus.request_sfx.emit("interact")
+		_show_keyword_callouts(_card_data_list[index].get("keywords", []))
 	elif _hovered_idx == index:
 		_hovered_idx = -1
+		_show_keyword_callouts([])
 
 	for i in range(_card_rows.size()):
 		var row := _card_rows[i]
@@ -1117,10 +1168,73 @@ func _on_row_gui_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_select_row(index)
 
+func _show_keyword_callouts(keyword_ids: Array) -> void:
+	if not is_instance_valid(_callout_col):
+		return
+	if _callout_tween and _callout_tween.is_valid():
+		_callout_tween.kill()
+
+	for child in _callout_col.get_children():
+		_callout_col.remove_child(child)
+		child.queue_free()
+
+	var shown := 0
+	for kw_id in keyword_ids:
+		var info := MayariCardRegistry.get_keyword(str(kw_id))
+		if info.is_empty():
+			continue
+		var box := PanelContainer.new()
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.95), 6, 14, 10)
+		bs.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
+		bs.border_width_left = 3
+		bs.border_width_top = 1
+		bs.border_width_right = 1
+		bs.border_width_bottom = 1
+		bs.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+		bs.shadow_size = 12
+		box.add_theme_stylebox_override("panel", bs)
+
+		var bv := VBoxContainer.new()
+		bv.add_theme_constant_override("separation", 3)
+		bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(bv)
+
+		var kt := Label.new()
+		kt.text = str(info.get("title", ""))
+		kt.add_theme_font_override("font", _bold_font)
+		kt.add_theme_font_size_override("font_size", 15)
+		kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+		kt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bv.add_child(kt)
+
+		var kd := Label.new()
+		kd.text = str(info.get("desc", ""))
+		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
+		kd.add_theme_font_size_override("font_size", 13)
+		kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		kd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bv.add_child(kd)
+
+		_callout_col.add_child(box)
+		shown += 1
+
+	if shown == 0:
+		_callout_col.visible = false
+		_callout_col.modulate.a = 0.0
+		return
+
+	_callout_col.visible = true
+	_callout_col.modulate.a = 0.0
+	_callout_tween = create_tween()
+	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+
 func _select_row(index: int) -> void:
 	if _card_picked or index < 0 or index >= _card_data_list.size():
 		return
 	_card_picked = true
+	_show_keyword_callouts([])
 	var chosen_data: Dictionary = _card_data_list[index]
 	var chosen_id := str(chosen_data.get("id", ""))
 	var is_fav := str(chosen_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
