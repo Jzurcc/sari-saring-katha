@@ -113,18 +113,32 @@ func on_interact() -> void:
 		_fade_out_and_destroy()
 		return
 		
-	# Always pop unplaced container props first so the player places the bowl/sachet strip before refills
+	# 1) Always pop unplaced container props in this bag first
 	var item_data: ItemData = null
-	var container_idx: int = -1
+	var pick_idx: int = -1
 	for i in range(items.size()):
 		if DispenserContainerItem.is_container_prop(items[i]):
-			container_idx = i
+			pick_idx = i
 			break
-	if container_idx >= 0:
-		item_data = items[container_idx]
-		items.remove_at(container_idx)
+
+	# 2) Otherwise prefer any regular item or a refill whose dispenser container is already placed
+	if pick_idx < 0:
+		for i in range(items.size() - 1, -1, -1):
+			if _is_item_ready_to_unpack(items[i]):
+				pick_idx = i
+				break
+
+	# 3) Soft fix: if this bag only holds refills whose container is still sitting in another bag,
+	#    seamlessly pull that container prop first so the player never unpacks a refill before its container!
+	if pick_idx < 0:
+		var pulled_container := _pull_matching_container_from_other_bag(items[items.size() - 1])
+		if pulled_container != null:
+			item_data = pulled_container
+		else:
+			item_data = items.pop_back()
 	else:
-		item_data = items.pop_back()
+		item_data = items[pick_idx]
+		items.remove_at(pick_idx)
 	
 	# Instantiate a DraggableItem
 	var drag_item: DraggableItem = DRAGGABLE_ITEM_SCENE.instantiate()
@@ -149,6 +163,48 @@ func on_interact() -> void:
 	# Visual feedback
 	if not items.is_empty():
 		_refresh_visuals()
+
+func _is_item_ready_to_unpack(item: ItemData) -> bool:
+	if not DispenserContainerItem.is_dispenser_refill(item):
+		return true
+	var tree := get_tree()
+	if not tree:
+		return true
+	var found_matching := false
+	for node in tree.get_nodes_in_group("dispenser_containers"):
+		var disp := node as DispenserContainerItem
+		if disp and disp.accepts_refill(item):
+			found_matching = true
+			if disp._is_placed:
+				return true
+	return not found_matching
+
+func _pull_matching_container_from_other_bag(refill_item: ItemData) -> ItemData:
+	var tree := get_tree()
+	if not tree:
+		return null
+	var target_container_item: ItemData = null
+	for node in tree.get_nodes_in_group("dispenser_containers"):
+		var disp := node as DispenserContainerItem
+		if disp and disp.accepts_refill(refill_item) and not disp._is_placed and disp.container_item:
+			target_container_item = disp.container_item
+			break
+	if target_container_item == null:
+		return null
+	for bag_node in tree.get_nodes_in_group("delivery_bag"):
+		var other_bag := bag_node as PlasticDeliveryItem
+		if not other_bag or other_bag == self:
+			continue
+		for i in range(other_bag.items.size()):
+			var cand := other_bag.items[i]
+			if cand and cand.resource_path == target_container_item.resource_path:
+				other_bag.items.remove_at(i)
+				if other_bag.items.is_empty() and other_bag.in_flight_count <= 0:
+					other_bag._fade_out_and_destroy()
+				else:
+					other_bag._refresh_visuals()
+				return cand
+	return null
 
 func receive_item(drag_item: DraggableItem) -> void:
 	if items.size() >= 5:
