@@ -366,14 +366,14 @@ func _on_item_accepted(item: ItemData) -> void:
 func pulse_color(color: Color, duration: float = 0.5) -> void:
 	if body_sprite == null: return
 	var tween = create_tween().set_parallel(true)
-	var tr: float = clampf(color.r * 1.2, 0.0, 1.0)
-	var tg: float = clampf(color.g * 1.2, 0.0, 1.0)
-	var tb: float = clampf(color.b * 1.2, 0.0, 1.0)
+	var target_r: float = clampf(color.r * 1.2, 0.0, 1.0)
+	var target_g: float = clampf(color.g * 1.2, 0.0, 1.0)
+	var target_b: float = clampf(color.b * 1.2, 0.0, 1.0)
 
 	# Tween RGB channels only so custom motion opacity (modulate.a) is always preserved
-	tween.tween_property(body_sprite, "modulate:r", tr, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(body_sprite, "modulate:g", tg, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(body_sprite, "modulate:b", tb, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(body_sprite, "modulate:r", target_r, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(body_sprite, "modulate:g", target_g, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(body_sprite, "modulate:b", target_b, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var back = tween.chain().set_parallel(true)
 	back.tween_property(body_sprite, "modulate:r", 1.0, duration * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	back.tween_property(body_sprite, "modulate:g", 1.0, duration * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)

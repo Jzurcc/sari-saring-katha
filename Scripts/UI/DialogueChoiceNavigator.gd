@@ -40,12 +40,12 @@ func _deserialize_input_event(data: Variant) -> InputEvent:
 		return null
 	if data.get("type") == "key":
 		var ev := InputEventKey.new()
-		ev.keycode = int(data.get("keycode", 0))
-		ev.physical_keycode = int(data.get("physical", 0))
+		ev.keycode = int(data.get("keycode", 0)) as Key
+		ev.physical_keycode = int(data.get("physical", 0)) as Key
 		return ev
 	elif data.get("type") == "mouse":
 		var ev := InputEventMouseButton.new()
-		ev.button_index = int(data.get("button_index", 0))
+		ev.button_index = int(data.get("button_index", 0)) as MouseButton
 		return ev
 	return null
 

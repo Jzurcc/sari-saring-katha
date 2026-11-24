@@ -225,8 +225,8 @@ func _create_row(customer_name: String) -> Dictionary:
 		portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait_rect.size = Vector2(PORTRAIT_IMG_SIZE, PORTRAIT_IMG_SIZE)
-		var offset := (PORTRAIT_RING_SIZE - PORTRAIT_IMG_SIZE) * 0.5
-		portrait_rect.position = Vector2(offset, offset - 3.0)
+		var img_offset := (PORTRAIT_RING_SIZE - PORTRAIT_IMG_SIZE) * 0.5
+		portrait_rect.position = Vector2(img_offset, img_offset - 3.0)
 		portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		badge_holder.add_child(portrait_rect)
 	else:
