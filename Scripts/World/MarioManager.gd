@@ -558,6 +558,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_bench_name := ""
 
 	for item in items.keys():
+		if _is_non_stock_upgrade(item):
+			StoryManager.record_daily_stat_int("upgrades_bought", 1)
 		if item.get_meta("is_fridge_upgrade", false):
 			var target_lvl: int = int(item.get_meta("fridge_level", 1))
 			if target_lvl > highest_fridge_lvl:

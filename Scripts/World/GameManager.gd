@@ -18,6 +18,7 @@ const END_OF_DAY_QUOTES = [
 
 @onready var sleep_overlay_scene = preload("res://Scenes/UI/SleepOverlay.tscn")
 const MayariTallyOverlayScript = preload("res://Scripts/UI/MayariTallyOverlay.gd")
+const DaySummaryOverlayScript = preload("res://Scripts/UI/DaySummaryOverlay.gd")
 const MayariCardHUDScript = preload("res://Scripts/UI/MayariCardHUD.gd")
 const PlayerXPHUDScript = preload("res://Scripts/UI/PlayerXPHUD.gd")
 const EventsOverlayScript = preload("res://Scripts/UI/EventsOverlay.gd")
@@ -30,6 +31,8 @@ var _last_earning: float = 0.0
 var _pending_quota: float = 0.0  # Quota for the day that just ended (cached before day increments)
 var _is_ending_day: bool = false
 var _is_tally_overlay_open: bool = false
+var _is_day_summary_open: bool = false
+var _day_summary_shown_for_day: int = -1
 var _mayari_card_hud: Node = null
 var _player_xp_hud: Node = null
 var _events_overlay: Node = null
@@ -112,10 +115,13 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 		# If the customer wants to pay via Utang (debt), they won't give us cash yet.
 		if wants_debt and customer_path != "":
 			StoryManager.queue_pending_debt(customer_path, _last_earning)
+			StoryManager.record_daily_item_sold(item.item_name)
+			StoryManager.record_daily_stat_int("utang_granted", 1)
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
 		# Tip Windfall on Loss Leaders (step <= -1) + Moonlight Tips Moon Card (+₱3)
+		var base_sale := _last_earning
 		var tip: float = 0.0
 		if item.current_step < 0 and not wants_debt:
 			tip = snapped(float(abs(item.current_step)) * 1.5 + 1.0, 1.0)
@@ -126,6 +132,10 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			_last_earning += 3.0
 			LogManager.info("GameManager", "Moonlight Tips card granted +₱3.00 bonus tip!")
 
+		StoryManager.record_daily_stat_add("cash_sales", base_sale)
+		if tip > 0.0:
+			StoryManager.record_daily_stat_add("tips_earned", tip)
+		StoryManager.record_daily_item_sold(item.item_name)
 		money += _last_earning
 		EventBus.money_changed.emit(money)
 		LogManager.info("GameManager", "Sold %s for %.2f (Base: %.2f, Price: %.2f, Tip: %.2f). TOTAL: %.2f" % [
@@ -135,9 +145,13 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 func _on_utang_accepted(_customer: Customer) -> void:
 	LogManager.info("GameManager", "Utang accepted! Transaction finalized with no immediate payment.")
 
-func deduct_money(amount: float) -> bool:
+func deduct_money(amount: float, is_mayari_tribute: bool = false) -> bool:
 	if money >= amount:
 		money -= amount
+		if is_mayari_tribute:
+			StoryManager.record_daily_stat_add("mayari_tribute", amount)
+		else:
+			StoryManager.record_daily_stat_add("spent_restock", amount)
 		EventBus.money_changed.emit(money)
 		EventBus.request_sfx.emit("money_decrease")
 		LogManager.info("GameManager", "Spent %.2f. Remaining: %.2f" % [amount, money])
@@ -146,12 +160,41 @@ func deduct_money(amount: float) -> bool:
 		LogManager.error("GameManager", "Tried to spend %.2f but only has %.2f!" % [amount, money])
 		return false
 
+func show_day_summary(show_mayari: bool = true) -> Dictionary:
+	if _is_day_summary_open:
+		return {"grade": "B", "quip": ""}
+	_is_day_summary_open = true
+	_day_summary_shown_for_day = StoryManager.day
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	var overlay := DaySummaryOverlayScript.new()
+	overlay.setup(StoryManager.day, StoryManager.ensure_daily_stats(), show_mayari)
+	add_child(overlay)
+
+	var res: Array = await overlay.completed
+	_is_day_summary_open = false
+	if not is_inside_tree():
+		return {"grade": "B", "quip": ""}
+
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	var grade: String = str(res[0]) if res.size() > 0 else "B"
+	var quip: String = str(res[1]) if res.size() > 1 else ""
+	Dialogic.VAR.set_variable("Global_DaySummaryQuip", quip)
+	return {"grade": grade, "quip": quip}
+
 func _on_day_ended(ended_day_number: int) -> void:
 	if _is_ending_day:
 		LogManager.warn("GameManager", "Duplicate day_ended signal ignored for Day %d." % ended_day_number)
 		return
 	_is_ending_day = true
 	LogManager.info("GameManager", "Day %d ended!" % ended_day_number)
+
+	# Show Day Summary if it wasn't already shown before Mayari's closing quip
+	if _day_summary_shown_for_day != ended_day_number:
+		await show_day_summary(false)
+		if not is_inside_tree():
+			_is_ending_day = false
+			return
 	
 	# 1. Start cinematic transition and fade music
 	AudioManager.fade_out_everything(2.0)
@@ -215,6 +258,7 @@ func _on_dialogic_signal(argument: String) -> void:
 		if amount <= 0.0:
 			return
 		money += amount
+		StoryManager.record_daily_stat_add("utang_repaid", amount)
 		EventBus.money_changed.emit(money)
 		Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
 		Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
@@ -275,13 +319,14 @@ func _handle_open_tally_offer() -> void:
 		selected_cards.append(str(selected_cards_raw))
 
 	if offer_amount > 0.0:
-		deduct_money(offer_amount)
+		deduct_money(offer_amount, true)
 
 	var prev_paid := StoryManager.tally_total_paid
 	StoryManager.tally_total_paid = minf(StoryManager.TALLY_GOAL, StoryManager.tally_total_paid + offer_amount)
 	for m in StoryManager.LEDGER_MILESTONES:
 		var m_amt := float(m["amount"])
 		if prev_paid < m_amt - 0.01 and StoryManager.tally_total_paid >= m_amt - 0.01:
+			StoryManager.record_daily_list_entry("milestones_unlocked", str(m["title"]), false)
 			EventBus.show_notification.emit("Ledger Milestone: %s!" % str(m["title"]), str(m["desc"]), "purchase")
 			LogManager.info("GameManager", "Unlocked Silver Ledger Milestone: %s (₱%.0f)" % [str(m["title"]), m_amt])
 

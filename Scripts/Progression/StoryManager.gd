@@ -62,6 +62,66 @@ var pending_mayari_card: String = ""
 var active_mayari_cards: Array[String] = []
 var pending_mayari_cards: Array[String] = []
 var last_tally_tier: String = "balanced"
+var daily_stats: Dictionary = {}
+
+func _make_empty_daily_stats() -> Dictionary:
+	return {
+		"cash_sales": 0.0,
+		"utang_repaid": 0.0,
+		"tips_earned": 0.0,
+		"spent_restock": 0.0,
+		"mayari_tribute": 0.0,
+		"buyers_served": 0,
+		"visits_served": 0,
+		"items_sold": 0,
+		"items_sold_counts": {},
+		"xp_earned": 0,
+		"level_ups": 0,
+		"story_chapters": [],
+		"arcs_completed": [],
+		"upgrades_bought": 0,
+		"utang_granted": 0,
+		"smalltalks_done": 0,
+		"returning_buyers": 0,
+		"sto_nino_taps": 0,
+		"milestones_unlocked": [],
+		"blessings_used": [],
+	}
+
+func reset_daily_stats() -> void:
+	daily_stats = _make_empty_daily_stats()
+
+func ensure_daily_stats() -> Dictionary:
+	if daily_stats.is_empty():
+		daily_stats = _make_empty_daily_stats()
+	else:
+		var defaults := _make_empty_daily_stats()
+		for k in defaults.keys():
+			if not daily_stats.has(k):
+				daily_stats[k] = defaults[k]
+	return daily_stats
+
+func record_daily_stat_add(key: String, delta: float) -> void:
+	var ds := ensure_daily_stats()
+	ds[key] = float(ds.get(key, 0.0)) + delta
+
+func record_daily_stat_int(key: String, delta: int = 1) -> void:
+	var ds := ensure_daily_stats()
+	ds[key] = int(ds.get(key, 0)) + delta
+
+func record_daily_item_sold(item_name: String) -> void:
+	var ds := ensure_daily_stats()
+	ds["items_sold"] = int(ds.get("items_sold", 0)) + 1
+	var counts: Dictionary = ds["items_sold_counts"]
+	counts[item_name] = int(counts.get(item_name, 0)) + 1
+
+func record_daily_list_entry(key: String, value: String, allow_duplicates: bool = true) -> void:
+	if value == "":
+		return
+	var ds := ensure_daily_stats()
+	var arr: Array = ds[key]
+	if allow_duplicates or not (value in arr):
+		arr.append(value)
 
 func get_tally_remaining() -> float:
 	return maxf(0.0, TALLY_GOAL - tally_total_paid)
@@ -211,6 +271,9 @@ func add_player_xp(base_amount: int, reason: String = "") -> void:
 		player_xp = 0
 
 	LogManager.info("StoryManager", "Player XP +%d (%s) -> Lv. %d (%d/%d)" % [gained, reason, player_level, player_xp, get_xp_for_next_level()])
+	record_daily_stat_int("xp_earned", gained)
+	if leveled_up:
+		record_daily_stat_int("level_ups", 1)
 	EventBus.player_xp_changed.emit(player_level, player_xp, get_xp_for_next_level(), gained, leveled_up)
 	_save_progression()
 
@@ -602,6 +665,9 @@ func activate_sto_nino_blessing() -> Array[String]:
 	sto_nino_blessing_all_day = is_all_day
 	sto_nino_blessing_start_hour = clock.current_display_time
 	sto_nino_blessing_end_hour = -1.0 if is_all_day else (clock.current_display_time + duration_h)
+	record_daily_stat_int("sto_nino_taps", 1)
+	for g_id in granted:
+		record_daily_list_entry("blessings_used", g_id, false)
 	LogManager.info("StoryManager", "Sto. Niño Blessing granted: %s (all_day=%s, start=%.2f, end=%.2f)" % [
 		str(granted), str(is_all_day), sto_nino_blessing_start_hour, sto_nino_blessing_end_hour
 	])
@@ -952,6 +1018,7 @@ func _on_day_started(new_day: int) -> void:
 		if not titles.is_empty():
 			call_deferred("_announce_active_mayari_cards", " · ".join(titles), " | ".join(taglines))
 	LogManager.info("StoryManager", "Day %d starts." % day)
+	reset_daily_stats()
 	todays_missed_items.clear()
 	_roll_daily_expected_regulars()
 	_roll_daily_sulit_deals()
@@ -1117,6 +1184,7 @@ func get_save_data() -> Dictionary:
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
 		"todays_sulit_deals": todays_sulit_deals.duplicate(),
 		"todays_missed_items": todays_missed_items.duplicate(),
+		"daily_stats": ensure_daily_stats().duplicate(true),
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -1200,6 +1268,9 @@ func load_save_data(data: Dictionary) -> void:
 	for p in data.get("todays_sulit_deals", []):
 		todays_sulit_deals.append(str(p))
 	todays_missed_items = data.get("todays_missed_items", {}).duplicate()
+	var loaded_ds = data.get("daily_stats", {})
+	daily_stats = loaded_ds.duplicate(true) if loaded_ds is Dictionary else _make_empty_daily_stats()
+	ensure_daily_stats()
 	ensure_daily_demand_rolled()
 
 	placed_containers.clear()
@@ -1291,6 +1362,7 @@ func reset_state() -> void:
 	todays_expected_regulars.clear()
 	todays_sulit_deals.clear()
 	todays_missed_items.clear()
+	reset_daily_stats()
 	clock.reset_state()
 	SaveManager.delete_save()
 
@@ -1439,6 +1511,10 @@ func _on_customer_satisfied(customer) -> void:
 			is_mayari_met = true
 		else:
 			award_customer_completion_xp(customer)
+			if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT or customer.transaction_context.is_visit_story:
+				record_daily_stat_int("visits_served", 1)
+			else:
+				record_daily_stat_int("buyers_served", 1)
 		
 	# Tutorial Persistence: If this encounter was the guided tutorial, mark it complete now.
 	if customer.transaction_context and customer.transaction_context.is_guided_tutorial:
@@ -1513,9 +1589,14 @@ func _set_last_customer_info(customer: Customer) -> void:
 func _process_story_cooldown(customer) -> void:
 	CharacterProgressionManager.process_story_cooldown(customer, last_mayari_collection_successful)
 
-func _on_story_advanced(character_path: String, _new_chapter: int) -> void:
+func _on_story_advanced(character_path: String, new_chapter: int) -> void:
 	if character_path.contains("ReynaMayari") or character_path.contains("UncleMario"):
 		return
+	var char_data := _get_character_data(character_path)
+	var char_name := char_data.character_name if char_data and char_data.character_name != "" else character_path.get_file().get_basename()
+	record_daily_list_entry("story_chapters", char_name, true)
+	if new_chapter > 0 and new_chapter % 3 == 0:
+		record_daily_list_entry("arcs_completed", char_name, false)
 	add_player_xp(20, "Story Chapter")
 
 func get_best_item_for_category(cat: String, current_item: ItemData = null) -> ItemData:

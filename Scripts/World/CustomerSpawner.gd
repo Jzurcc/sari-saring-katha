@@ -647,6 +647,7 @@ func _bring_lingering_visitor_to_counter(customer: Customer, open_slot: int) -> 
 		var buy_tx := TransactionBuilder.build_lingering_purchase_transaction(StoryManager, customer.customer_data)
 		if buy_tx != null:
 			lingering_visitors.erase(customer)
+			StoryManager.record_daily_stat_int("returning_buyers", 1)
 			LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d to BUY (%d item(s))!" % [
 				customer.get_order_hud_key(), open_slot, buy_tx.desired_items.size()
 			])

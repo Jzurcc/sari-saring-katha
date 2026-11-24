@@ -513,6 +513,30 @@ func on_dialogue_ended() -> void:
 
 	_finish_dialogue_for_customer(target, ending_phase, was_pending_dismiss, was_partial_success)
 
+func _should_intercept_mayari_summary(target: Customer) -> bool:
+	return is_instance_valid(target) \
+		and target.transaction_context != null \
+		and target.transaction_context.is_nightly_collection \
+		and not target.get_meta("mayari_summary_done", false)
+
+func _run_mayari_day_summary_and_quip(target: Customer) -> void:
+	if not is_instance_valid(target) or not is_instance_valid(_tree_owner):
+		return
+	target.set_meta("mayari_summary_done", true)
+	target.dialogue_phase = Phase.NONE
+	var gm := _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
+	if gm and gm.has_method("show_day_summary"):
+		var res: Dictionary = await gm.show_day_summary(true)
+		if not is_instance_valid(target) or not is_instance_valid(_tree_owner) or not _tree_owner.is_inside_tree():
+			return
+		var quip := str(res.get("quip", ""))
+		if quip != "" and ResourceLoader.exists("res://Dialogue/Timelines/mayari_day_summary_quip.dtl"):
+			Dialogic.VAR.set_variable("Global_DaySummaryQuip", quip)
+			start_dialogue("res://Dialogue/Timelines/mayari_day_summary_quip.dtl", target, Phase.SATISFIED)
+			return
+	if is_instance_valid(target):
+		target.satisfy()
+
 func _finish_dialogue_for_customer(target: Customer, ending_phase: Phase, was_pending_dismiss: bool, was_partial_success: bool) -> void:
 	if is_instance_valid(target) and target.transaction_context:
 		if target.transaction_context.event_rumor_active and is_instance_valid(StoreEventManager):
@@ -523,6 +547,9 @@ func _finish_dialogue_for_customer(target: Customer, ending_phase: Phase, was_pe
 		# route SOCIAL_VISIT completions through _resolve_phase_transition_for so lingering triggers!
 		if ending_phase == Phase.SOCIAL_VISIT and was_partial_success:
 			_resolve_phase_transition_for(target, ending_phase)
+			return
+		if _should_intercept_mayari_summary(target):
+			_run_mayari_day_summary_and_quip(target)
 			return
 		if is_instance_valid(target):
 			_dismiss_guest_if_present()
@@ -540,6 +567,9 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 	match ending_phase:
 		Phase.SOCIAL_VISIT:
 			_dismiss_guest_if_present()
+			if _should_intercept_mayari_summary(target):
+				_run_mayari_day_summary_and_quip(target)
+				return
 			if is_instance_valid(target) and target.is_waiting:
 				target.has_been_greeted = true
 				target.dialogue_phase = Phase.NONE
@@ -550,6 +580,7 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 
 		Phase.SMALLTALK:
 			if is_instance_valid(target):
+				StoryManager.record_daily_stat_int("smalltalks_done", 1)
 				var st_xp := StoryManager.get_bench_smalltalk_xp()
 				if st_xp > 0:
 					StoryManager.add_player_xp(st_xp, "Tambayan Smalltalk")
@@ -558,6 +589,9 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 
 		Phase.SATISFIED:
 			_dismiss_guest_if_present()
+			if _should_intercept_mayari_summary(target):
+				_run_mayari_day_summary_and_quip(target)
+				return
 			if is_instance_valid(target):
 				target.dialogue_phase = Phase.NONE
 				target.satisfy()
@@ -566,6 +600,9 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 			if is_instance_valid(target) and target.transaction_context:
 				var t = target.transaction_context
 				if t.transaction_type == TransactionContext.Type.STORY and t.is_visit_story:
+					if _should_intercept_mayari_summary(target):
+						_run_mayari_day_summary_and_quip(target)
+						return
 					target.dialogue_phase = Phase.NONE
 					target.satisfy()
 					return
