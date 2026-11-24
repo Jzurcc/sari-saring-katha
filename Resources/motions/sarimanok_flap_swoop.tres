@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://ch04nrjojccvx"]
 
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
 
 [resource]
 script = ExtResource("1_profile")
@@ -10,7 +11,3 @@ base_speed = 4.6
 bob_frequency = 18.0
 bob_amplitude = 0.085
 sway_amount = 0.08
-idle_height_offset = 0.0
-idle_opacity = 1.0
-play_landing_thud = true
-start_opacity = 0.0

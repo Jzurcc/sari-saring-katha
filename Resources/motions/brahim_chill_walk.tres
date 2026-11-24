@@ -1,15 +1,12 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://b5iqeqn565hx4"]
 
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="1_tamgg"]
 
 [resource]
 script = ExtResource("1_profile")
 profile_name = "Brahim Chill Walk"
-locomotion_style = 0
 base_speed = 1.85
 bob_frequency = 8.8
 bob_amplitude = 0.065
 sway_amount = 0.04
-idle_opacity = 1.0
-play_landing_thud = true
-start_opacity = 0.0

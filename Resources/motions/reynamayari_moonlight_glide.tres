@@ -5,9 +5,7 @@
 
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
-anchor = 2
 duration = 1.65
-transition = 1
 ease_type = 1
 target_opacity = 1.0
 opacity_fade_fraction = 0.16
@@ -17,7 +15,6 @@ script = ExtResource("2_step")
 anchor = 7
 local_offset = Vector3(0, 0, -1.8)
 duration = 1.55
-transition = 1
 ease_type = 0
 target_opacity = 0.0
 opacity_fade_fraction = 0.25
@@ -26,18 +23,11 @@ opacity_fade_at_end = true
 [resource]
 script = ExtResource("1_profile")
 profile_name = "Reyna Mayari Brisk Walk"
-locomotion_style = 0
 base_speed = 2.65
 bob_frequency = 10.5
 bob_amplitude = 0.055
 sway_amount = 0.03
-idle_height_offset = 0.0
-idle_bob_amplitude = 0.0
 idle_bob_speed = 0.0
-idle_sway_amount = 0.0
-idle_opacity = 1.0
-play_landing_thud = true
-start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1")])
 exit_steps = Array[ExtResource("2_step")]([SubResource("exit_1")])
 bypass_default_exit_stepback = true

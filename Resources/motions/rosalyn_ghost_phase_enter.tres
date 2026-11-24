@@ -5,21 +5,15 @@
 
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
-anchor = 2
 local_offset = Vector3(-0.9, 0.16, 0.75)
 duration = 1.4
-transition = 1
 ease_type = 1
 target_opacity = 0.78
 opacity_fade_fraction = 0.45
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")
-anchor = 2
-local_offset = Vector3(0, 0, 0)
 duration = 1.1
-transition = 1
-ease_type = 2
 target_opacity = 1.0
 
 [sub_resource type="Resource" id="exit_1"]
@@ -27,7 +21,6 @@ script = ExtResource("2_step")
 anchor = 3
 local_offset = Vector3(0, 0.45, 8.8)
 duration = 2.6
-transition = 1
 ease_type = 0
 target_opacity = 0.0
 opacity_fade_fraction = 0.35
@@ -45,15 +38,12 @@ idle_height_offset = 0.14
 idle_bob_amplitude = 0.055
 idle_bob_speed = 2.0
 idle_sway_amount = 0.015
-idle_opacity = 1.0
 idle_opacity_pulse_min = 0.78
-idle_opacity_pulse_max = 1.0
 idle_opacity_pulse_speed = 1.15
 play_landing_thud = false
 override_start_anchor = true
 start_anchor = 3
 start_offset = Vector3(-2.6, 0.22, 2.2)
-start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
 exit_steps = Array[ExtResource("2_step")]([SubResource("exit_1")])
 bypass_default_exit_stepback = true
