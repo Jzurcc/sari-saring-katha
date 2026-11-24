@@ -19,14 +19,40 @@ const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_BOLD_CREAM := "#FFF6E5"
 const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
+const CALENDAR_TEX_PATH := "res://Assets/ui/calendar_ui.jpg"
+const CALENDAR_FONT_PATH := "res://Assets/Fonts/Balete Trial/BaleteTrial-Bold.ttf"
+const CALENDAR_MONTHS: Array[String] = [
+	"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+	"JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+]
+const CALENDAR_START_MONTH_IDX := 7 # August (0-based)
+const CALENDAR_START_YEAR := 2013
+const CALENDAR_DAYS_PER_MONTH := 31
+const CAL_COL_EDGES: Array[float] = [0.0553, 0.1803, 0.3054, 0.4311, 0.5580, 0.6855, 0.8124, 0.9399]
+const CAL_ROW_EDGES: Array[float] = [0.4500, 0.5277, 0.6053, 0.6835, 0.7611, 0.8388]
+
+class DayHighlightMarker extends Control:
+	func _draw() -> void:
+		var r := Rect2(Vector2.ZERO, size).grow(-3.0)
+		if r.size.x <= 4.0 or r.size.y <= 4.0:
+			return
+		draw_rect(r, Color(0.95, 0.78, 0.22, 0.26), true)
+		draw_rect(r, Color(0.84, 0.16, 0.13, 0.92), false, 3.0)
+		draw_rect(r.grow(-2.5), Color(1.0, 0.92, 0.62, 0.55), false, 1.2)
 
 var is_open: bool = false
 var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 var _bold_font: FontVariation
+var _cal_bold_font: FontVariation
 
 var _root: Control
 var _backdrop: ColorRect
 var _banner: PanelContainer
+var _cal_holder: Control
+var _cal_year_left: Label
+var _cal_year_right: Label
+var _cal_month_lbl: Label
+var _cal_day_marker: DayHighlightMarker
 var _frame: PanelContainer
 var _cards_vbox: VBoxContainer
 var _callout_col: VBoxContainer
@@ -38,6 +64,13 @@ func _ready() -> void:
 	_bold_font = FontVariation.new()
 	_bold_font.base_font = UIStyle.FONT_INDER
 	_bold_font.variation_embolden = 0.65
+	_cal_bold_font = FontVariation.new()
+	if ResourceLoader.exists(CALENDAR_FONT_PATH):
+		_cal_bold_font.base_font = load(CALENDAR_FONT_PATH)
+	else:
+		_cal_bold_font.base_font = UIStyle.FONT_INDER
+	_cal_bold_font.variation_embolden = 0.35
+	_cal_bold_font.spacing_glyph = -2
 	_build_ui()
 	hide()
 	EventBus.events_overlay_toggled.connect(_on_toggled)
@@ -91,7 +124,7 @@ func _build_ui() -> void:
 	center_title.add_child(left_orn)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "N E I G H B O R H O O D   E V E N T S"
+	title_lbl.text = "C A L E N D A R   &   E V E N T S"
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	title_lbl.add_theme_font_size_override("font_size", 32)
@@ -129,17 +162,62 @@ func _build_ui() -> void:
 	right_h.add_child(close_btn)
 
 	var sub_lbl := Label.new()
-	sub_lbl.text = "Active conditions, rumors, and lunar omens across Karimlan today.  (Press K or Esc to close)"
+	sub_lbl.text = "Active conditions, rumors, and lunar omens across Karimlan today.  (Press C or Esc to close)"
 	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	sub_lbl.add_theme_font_size_override("font_size", 16)
 	sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	bv.add_child(sub_lbl)
 
-	# Centered Hades frame (exact same dimensions as MayariTallyOverlay: 0.53 wide x 0.68 tall)
+	# Left Side: Classic Filipino Sari-Sari Wall Calendar
+	_cal_holder = Control.new()
+	_cal_holder.anchor_left = 0.032
+	_cal_holder.anchor_right = 0.342
+	_cal_holder.anchor_top = 0.175
+	_cal_holder.anchor_bottom = 0.855
+	_root.add_child(_cal_holder)
+
+	var cal_aspect := AspectRatioContainer.new()
+	cal_aspect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cal_aspect.ratio = 1647.0 / 2022.0
+	cal_aspect.stretch_mode = AspectRatioContainer.STRETCH_FIT
+	cal_aspect.alignment_horizontal = AspectRatioContainer.ALIGNMENT_CENTER
+	cal_aspect.alignment_vertical = AspectRatioContainer.ALIGNMENT_CENTER
+	_cal_holder.add_child(cal_aspect)
+
+	var cal_frame := PanelContainer.new()
+	var cf_style := UIStyle.create_flat_stylebox(Color(0.05, 0.04, 0.035, 0.95), 4, 4, 4)
+	cf_style.border_color = Color(0.835, 0.624, 0.278, 0.78)
+	cf_style.set_border_width_all(2)
+	cf_style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
+	cf_style.shadow_size = 18
+	cal_frame.add_theme_stylebox_override("panel", cf_style)
+	cal_aspect.add_child(cal_frame)
+
+	var cal_tex_rect := TextureRect.new()
+	if ResourceLoader.exists(CALENDAR_TEX_PATH):
+		cal_tex_rect.texture = load(CALENDAR_TEX_PATH)
+	cal_tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cal_tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	cal_frame.add_child(cal_tex_rect)
+
+	# Year (left blue box), Month (center red box), Year (right blue box)
+	_cal_year_left = _make_calendar_banner_label(0.059, 0.271, 0.362, 0.411, 22)
+	cal_tex_rect.add_child(_cal_year_left)
+	_cal_month_lbl = _make_calendar_banner_label(0.283, 0.714, 0.362, 0.411, 24)
+	cal_tex_rect.add_child(_cal_month_lbl)
+	_cal_year_right = _make_calendar_banner_label(0.726, 0.939, 0.362, 0.411, 22)
+	cal_tex_rect.add_child(_cal_year_right)
+
+	# Current Day Highlight Box
+	_cal_day_marker = DayHighlightMarker.new()
+	_cal_day_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cal_tex_rect.add_child(_cal_day_marker)
+
+	# Center-Right Hades Events Frame
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.235
-	_frame.anchor_right = 0.765
+	_frame.anchor_left = 0.358
+	_frame.anchor_right = 0.808
 	_frame.anchor_top = 0.175
 	_frame.anchor_bottom = 0.855
 	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
@@ -162,8 +240,8 @@ func _build_ui() -> void:
 
 	# Right-side Hades keyword callout stack (appears on card hover)
 	_callout_col = VBoxContainer.new()
-	_callout_col.anchor_left = 0.78
-	_callout_col.anchor_right = 0.985
+	_callout_col.anchor_left = 0.820
+	_callout_col.anchor_right = 0.988
 	_callout_col.anchor_top = 0.21
 	_callout_col.anchor_bottom = 0.85
 	_callout_col.add_theme_constant_override("separation", 10)
@@ -171,6 +249,53 @@ func _build_ui() -> void:
 	_callout_col.visible = false
 	_callout_col.modulate.a = 0.0
 	_root.add_child(_callout_col)
+
+func _make_calendar_banner_label(al: float, ar: float, at: float, ab: float, font_sz: int) -> Label:
+	var lbl := Label.new()
+	lbl.anchor_left = al
+	lbl.anchor_right = ar
+	lbl.anchor_top = at
+	lbl.anchor_bottom = ab
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.clip_text = true
+	lbl.add_theme_font_override("font", _cal_bold_font)
+	lbl.add_theme_font_size_override("font_size", font_sz)
+	lbl.add_theme_color_override("font_color", Color(0.98, 0.96, 0.90, 1.0))
+	lbl.add_theme_color_override("font_outline_color", Color(0.08, 0.06, 0.05, 0.85))
+	lbl.add_theme_constant_override("outline_size", 2)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return lbl
+
+func _refresh_calendar_display() -> void:
+	var total_idx := maxi(0, StoryManager.day - 1)
+	var months_elapsed := total_idx / CALENDAR_DAYS_PER_MONTH
+	var day_in_month := (total_idx % CALENDAR_DAYS_PER_MONTH) + 1
+	var month_idx := (CALENDAR_START_MONTH_IDX + months_elapsed) % 12
+	var year_num := CALENDAR_START_YEAR + (CALENDAR_START_MONTH_IDX + months_elapsed) / 12
+
+	var year_str := str(year_num)
+	if is_instance_valid(_cal_year_left):
+		_cal_year_left.text = year_str
+	if is_instance_valid(_cal_year_right):
+		_cal_year_right.text = year_str
+	if is_instance_valid(_cal_month_lbl):
+		_cal_month_lbl.text = CALENDAR_MONTHS[month_idx]
+
+	if is_instance_valid(_cal_day_marker):
+		# Day 1 is at Tuesday (col 2, row 0) -> cell_idx = day_in_month + 1 (2..32)
+		var cell_idx := clampi(day_in_month + 1, 2, 32)
+		var col := cell_idx % 7
+		var row := cell_idx / 7
+		_cal_day_marker.anchor_left = CAL_COL_EDGES[col]
+		_cal_day_marker.anchor_right = CAL_COL_EDGES[col + 1]
+		_cal_day_marker.anchor_top = CAL_ROW_EDGES[row]
+		_cal_day_marker.anchor_bottom = CAL_ROW_EDGES[row + 1]
+		_cal_day_marker.offset_left = 0.0
+		_cal_day_marker.offset_right = 0.0
+		_cal_day_marker.offset_top = 0.0
+		_cal_day_marker.offset_bottom = 0.0
+		_cal_day_marker.queue_redraw()
 
 func _on_toggled(opened: bool) -> void:
 	if opened:
@@ -189,14 +314,17 @@ func open_overlay() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("tab_switch")
+	_refresh_calendar_display()
 	_populate_cards()
 	show()
 	_backdrop.modulate.a = 0.0
 	_frame.modulate.a = 0.0
 	_banner.modulate.a = 0.0
+	_cal_holder.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_property(_backdrop, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_banner, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_cal_holder, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_frame, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
 
 func close_overlay() -> void:
@@ -212,7 +340,7 @@ func close_overlay() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_open:
 		return
-	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_K or event.keycode == KEY_K)):
+	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_C or event.keycode == KEY_C)):
 		close_overlay()
 		get_viewport().set_input_as_handled()
 

@@ -168,7 +168,7 @@ func _refresh_icons() -> void:
 	ks.set_border_width_all(1)
 	key_panel.add_theme_stylebox_override("panel", ks)
 	var key_lbl := Label.new()
-	key_lbl.text = "K"
+	key_lbl.text = "C"
 	key_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	key_lbl.add_theme_font_size_override("font_size", 16)
 	key_lbl.add_theme_color_override("font_color", Color(1.0, 0.93, 0.78, 1.0))

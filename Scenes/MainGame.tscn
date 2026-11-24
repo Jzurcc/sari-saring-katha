@@ -50,6 +50,7 @@
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
+[ext_resource type="Script" path="res://Scripts/World/Interactors/CalendarInteractable.gd" id="calendar_interactable_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
@@ -800,6 +801,7 @@ omni_range = 16.923
 transform = Transform3D(0.033346135, -3.3714652e-08, 0.77449477, -1.0132097, -3.76951e-09, 0.02548969, 3.4778733e-09, -0.7749143, -3.382039e-08, -1.886975, 3.6841087, -4.6021547)
 
 [node name="CalendarInteractable" type="Area3D" parent="." unique_id=598540840]
+script = ExtResource("calendar_interactable_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CalendarInteractable" unique_id=173636890]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9007449, 3.6493435, -4.8787627)

@@ -60,7 +60,7 @@ func on_interact() -> void:
 			EventBus.show_notification.emit("Sto. Niño's Blessing Active", "Your Favors remain active for the rest of the day.", "interact")
 		else:
 			var rem := StoryManager.get_sto_nino_blessing_remaining_hours()
-			EventBus.show_notification.emit("Sto. Niño's Blessing Active", "Active for ~%.1fh more. Press [K] to inspect." % rem, "interact")
+			EventBus.show_notification.emit("Sto. Niño's Blessing Active", "Active for ~%.1fh more. Press [C] to inspect." % rem, "interact")
 		return
 
 	var granted := StoryManager.activate_sto_nino_blessing()

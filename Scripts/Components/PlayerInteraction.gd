@@ -197,8 +197,8 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# Neighborhood Events Menu Toggle (K)
-	if event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_K or event.keycode == KEY_K):
+	# Calendar & Events Menu Toggle (C)
+	if event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_C or event.keycode == KEY_C):
 		if allow_interaction:
 			EventBus.events_overlay_toggled.emit(true)
 			get_viewport().set_input_as_handled()
