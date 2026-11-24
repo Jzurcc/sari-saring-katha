@@ -42,6 +42,8 @@ var is_ambient_cameo: bool = false
 var _linger_session_id: int = 0
 
 var _is_resolving: bool = false
+var _pending_exit_signal: Signal
+var _has_pending_exit_signal: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var _exit_position: Vector3 = Vector3.ZERO
 var _delayed_target: Vector3 = Vector3.ZERO
@@ -69,6 +71,7 @@ func _ensure_motion_controller() -> void:
 	_motion.name = "MotionController"
 	add_child(_motion)
 	_motion.enter_finished.connect(_on_motion_enter_finished)
+	_motion.exit_finished.connect(_on_motion_exit_finished)
 	_motion.reposition_finished.connect(_on_motion_reposition_finished)
 	_motion.cameo_finished.connect(_on_motion_cameo_finished)
 
@@ -513,19 +516,23 @@ func leave_from_lingering() -> void:
 	is_lingering_visitor = false
 	is_returning_for_smalltalk = false
 	is_lingering_departure = true
-	await _leave_store(lingering_departed)
+	_leave_store(lingering_departed)
 
 func satisfy() -> void:
-	await _leave_store(EventBus.customer_satisfied)
+	_leave_store(EventBus.customer_satisfied)
 
 
 func _leave_store(completion_signal: Signal) -> void:
+	if _is_resolving:
+		return
 	# Immediately mark as no longer waiting so nothing else can interact with
 	# or dismiss this customer while the exit animation plays.
 	_linger_session_id += 1
 	is_waiting = false
 	is_lingering_visitor = false
 	_is_resolving = true
+	_pending_exit_signal = completion_signal
+	_has_pending_exit_signal = true
 	_sync_collision_layer()
 	_clear_outline()
 	_update_attention_badge()
@@ -538,15 +545,20 @@ func _leave_store(completion_signal: Signal) -> void:
 
 	if is_instance_valid(_motion):
 		_motion.start_exit()
-		await _motion.exit_finished
 	else:
-		await get_tree().create_timer(2.0).timeout
+		get_tree().create_timer(2.0).timeout.connect(_on_motion_exit_finished, CONNECT_ONE_SHOT)
+
+
+func _on_motion_exit_finished() -> void:
+	if not _has_pending_exit_signal:
+		return
+	_has_pending_exit_signal = false
 
 	if transaction_context and transaction_context.blocks_phone_call:
 		MarioManager.is_mario_physically_present = false
 
 	# Emit completion signal only once FULLY resolved (gone from the scene)
-	completion_signal.emit(self)
+	_pending_exit_signal.emit(self)
 	queue_free()
 
 
@@ -602,7 +614,7 @@ func reject() -> void:
 ## Called by CustomerSpawner after the player chooses "Refuse service".
 ## Plays a brief leaving animation then notifies the EventBus.
 func dismiss() -> void:
-	await _leave_store(EventBus.customer_dismissed)
+	_leave_store(EventBus.customer_dismissed)
 
 func _update_attention_badge() -> void:
 	if not is_instance_valid(_attention_badge):
