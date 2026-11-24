@@ -99,6 +99,12 @@ func get_restock_discount_multiplier() -> float:
 		return 0.90
 	return 1.0
 
+func get_item_restock_discount_multiplier(item: ItemData) -> float:
+	var mult := get_restock_discount_multiplier()
+	if item and is_item_on_sulit_deal(item):
+		mult *= 0.80
+	return mult
+
 func get_effective_closing_hour() -> float:
 	if has_mayari_card(MayariCardRegistry.CARD_MOON_HOLDS_SKY):
 		return 22.0
@@ -278,6 +284,168 @@ func purchase_trash_can_upgrade() -> void:
 		get_tree().call_group("trash", "refresh_visibility", true)
 	_save_progression()
 
+# --- Barangay Transistor Radio (Reveals Expected Regulars: 0 -> 1 -> 2 -> All) ---
+const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
+	{ "level": 0, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden." },
+	{ "level": 1, "name": "Pocket Transistor Radio", "cost": 55.0, "reveals": 1, "desc": "Tuned to Karimlan AM. Reveals 1 of today's Expected Regulars in the Restock Menu." },
+	{ "level": 2, "name": "Copper Antenna Radio", "cost": 110.0, "reveals": 2, "desc": "Boosted reception catches more street tsismis. Reveals 2 Expected Regulars each day." },
+	{ "level": 3, "name": "Vintage Barangay Boombox", "cost": 185.0, "reveals": 4, "desc": "Crystal-clear barangay intel! Reveals all of today's Expected Regulars in the Restock Menu." },
+]
+var radio_upgrade_level: int = 0
+var _radio_upgrade_item_cache: Dictionary = {}
+
+func get_revealed_regular_count() -> int:
+	var lvl := clampi(radio_upgrade_level, 0, RADIO_UPGRADE_SPECS.size() - 1)
+	return int(RADIO_UPGRADE_SPECS[lvl]["reveals"])
+
+func get_radio_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, RADIO_UPGRADE_SPECS.size() - 1)
+	if _radio_upgrade_item_cache.has(lvl):
+		return _radio_upgrade_item_cache[lvl]
+	var spec: Dictionary = RADIO_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "radio_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/nokia.png"):
+		item.texture = load("res://Assets/ui/nokia.png")
+	item.set_meta("is_radio_upgrade", true)
+	item.set_meta("radio_level", lvl)
+	item.set_meta("reveals", int(spec["reveals"]))
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	_radio_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_radio_upgrade(level: int) -> void:
+	var target := clampi(level, 1, RADIO_UPGRADE_SPECS.size() - 1)
+	if target <= radio_upgrade_level:
+		return
+	radio_upgrade_level = target
+	ensure_daily_demand_rolled()
+	LogManager.info("StoryManager", "Barangay Radio upgraded to Level %d (%s, reveals %d regulars)" % [radio_upgrade_level, RADIO_UPGRADE_SPECS[radio_upgrade_level]["name"], get_revealed_regular_count()])
+	EventBus.restock_catalog_refresh.emit()
+	_save_progression()
+
+# --- Uncle Mario's Wholesale Pass (Unlocks Daily Sulit Deals -20%) ---
+const MARIO_DEALS_COST := 90.0
+var has_mario_deals: bool = false
+var _mario_deals_upgrade_item: ItemData = null
+
+func get_mario_deals_upgrade_item() -> ItemData:
+	if _mario_deals_upgrade_item != null:
+		return _mario_deals_upgrade_item
+	var item := ItemData.new()
+	item.item_name = "Uncle Mario's Wholesale Pass"
+	item.price = MARIO_DEALS_COST
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "mario_deals_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/mario_tricycle.png"):
+		item.texture = load("res://Assets/ui/mario_tricycle.png")
+	item.set_meta("is_mario_deals_upgrade", true)
+	item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals: 2–3 random unlocked items are 20% off wholesale every morning.")
+	_mario_deals_upgrade_item = item
+	return item
+
+func purchase_mario_deals_upgrade() -> void:
+	if has_mario_deals:
+		return
+	has_mario_deals = true
+	if todays_sulit_deals.is_empty():
+		_roll_daily_sulit_deals()
+	LogManager.info("StoryManager", "Uncle Mario's Wholesale Pass unlocked (%d Sulit Deals active today)." % todays_sulit_deals.size())
+	EventBus.restock_catalog_refresh.emit()
+	_save_progression()
+
+# --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
+var todays_expected_regulars: Array[String] = []  # Array of CustomerData.resource_path (3-4 picked daily)
+var todays_sulit_deals: Array[String] = []        # Array of ItemData.resource_path (2-3 at -20% when unlocked)
+var todays_missed_items: Dictionary = {}          # ItemData.resource_path -> int missed count today
+
+func ensure_daily_demand_rolled() -> void:
+	if todays_expected_regulars.is_empty():
+		_roll_daily_expected_regulars()
+	if has_mario_deals and todays_sulit_deals.is_empty():
+		_roll_daily_sulit_deals()
+
+func _roll_daily_expected_regulars() -> void:
+	todays_expected_regulars.clear()
+	var pool: Array[CustomerData] = []
+	for c in available_characters:
+		if c and not c.is_collector() and c.unlock_tier <= current_tier:
+			pool.append(c)
+	pool.shuffle()
+	var count := mini(pool.size(), randi_range(3, 4))
+	for i in range(count):
+		todays_expected_regulars.append(pool[i].resource_path)
+	LogManager.info("StoryManager", "Rolled %d Expected Regulars for Day %d: %s" % [
+		todays_expected_regulars.size(),
+		day,
+		str(todays_expected_regulars.map(func(p: String): return p.get_file().get_basename()))
+	])
+
+func _roll_daily_sulit_deals() -> void:
+	todays_sulit_deals.clear()
+	if not has_mario_deals:
+		return
+	var pool: Array[ItemData] = []
+	for item in InventoryManager.get_all_items():
+		if item and item.can_be_sold and item.tier <= current_tier:
+			pool.append(item)
+	pool.shuffle()
+	var count := mini(pool.size(), randi_range(2, 3))
+	for i in range(count):
+		todays_sulit_deals.append(pool[i].resource_path)
+	LogManager.info("StoryManager", "Rolled %d Daily Sulit Deals (-20%%) for Day %d." % [todays_sulit_deals.size(), day])
+
+func get_revealed_expected_regulars() -> Array[CustomerData]:
+	ensure_daily_demand_rolled()
+	var limit := get_revealed_regular_count()
+	var result: Array[CustomerData] = []
+	if limit <= 0:
+		return result
+	for path in todays_expected_regulars:
+		if result.size() >= limit:
+			break
+		var c := _get_character_data(path)
+		if c:
+			result.append(c)
+	return result
+
+func is_item_on_sulit_deal(item: ItemData) -> bool:
+	if not has_mario_deals or not item:
+		return false
+	return item.resource_path in todays_sulit_deals
+
+func record_missed_item(item: ItemData) -> void:
+	if not item or not item.can_be_sold:
+		return
+	var p := item.resource_path
+	todays_missed_items[p] = int(todays_missed_items.get(p, 0)) + 1
+	LogManager.info("StoryManager", "Logged MISSED demand for %s (today: %d)" % [item.item_name, int(todays_missed_items[p])])
+
+func get_missed_count(item: ItemData) -> int:
+	if not item:
+		return 0
+	return int(todays_missed_items.get(item.resource_path, 0))
+
+func get_regulars_who_like_item(item: ItemData, only_revealed_today: bool = false) -> Array[CustomerData]:
+	var result: Array[CustomerData] = []
+	if not item:
+		return result
+	var cat := item.category.to_lower()
+	var source: Array[CustomerData] = get_revealed_expected_regulars() if only_revealed_today else []
+	if not only_revealed_today:
+		for c in available_characters:
+			if c and not c.is_collector() and c.unlock_tier <= current_tier:
+				source.append(c)
+	for c in source:
+		if cat in c.get_favorite_categories():
+			result.append(c)
+	return result
+
 ## Physical container equipment props delivered in plastic bags on tier upgrades.
 const CONTAINER_PROP_PATHS: Array[String] = [
 	"res://Resources/items/candycontainer/Mix.tres",
@@ -374,6 +542,9 @@ func _on_day_started(new_day: int) -> void:
 			LogManager.info("StoryManager", "Active Moon Card for Day %d: %s (%s)" % [day, str(card["title"]), prefix])
 			call_deferred("_announce_active_mayari_card", prefix, str(card["title"]), str(card["tagline"]))
 	LogManager.info("StoryManager", "Day %d starts." % day)
+	todays_missed_items.clear()
+	_roll_daily_expected_regulars()
+	_roll_daily_sulit_deals()
 	clock.on_day_started()
 
 func _announce_active_mayari_card(prefix: String, title: String, tagline: String) -> void:
@@ -519,6 +690,11 @@ func get_save_data() -> Dictionary:
 		"is_fridge_warm": is_fridge_warm,
 		"cat_upgrade_level": cat_upgrade_level,
 		"has_trash_can": has_trash_can,
+		"radio_upgrade_level": radio_upgrade_level,
+		"has_mario_deals": has_mario_deals,
+		"todays_expected_regulars": todays_expected_regulars.duplicate(),
+		"todays_sulit_deals": todays_sulit_deals.duplicate(),
+		"todays_missed_items": todays_missed_items.duplicate(),
 	}
 func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
@@ -560,6 +736,16 @@ func load_save_data(data: Dictionary) -> void:
 		is_fridge_warm = false
 	cat_upgrade_level = clampi(int(data.get("cat_upgrade_level", 0)), 0, CAT_UPGRADE_SPECS.size() - 1)
 	has_trash_can = bool(data.get("has_trash_can", false))
+	radio_upgrade_level = clampi(int(data.get("radio_upgrade_level", 0)), 0, RADIO_UPGRADE_SPECS.size() - 1)
+	has_mario_deals = bool(data.get("has_mario_deals", false))
+	todays_expected_regulars.clear()
+	for p in data.get("todays_expected_regulars", []):
+		todays_expected_regulars.append(str(p))
+	todays_sulit_deals.clear()
+	for p in data.get("todays_sulit_deals", []):
+		todays_sulit_deals.append(str(p))
+	todays_missed_items = data.get("todays_missed_items", {}).duplicate()
+	ensure_daily_demand_rolled()
 
 	placed_containers.clear()
 	if data.has("placed_containers"):
@@ -635,6 +821,11 @@ func reset_state() -> void:
 	is_fridge_warm = false
 	cat_upgrade_level = 0
 	has_trash_can = false
+	radio_upgrade_level = 0
+	has_mario_deals = false
+	todays_expected_regulars.clear()
+	todays_sulit_deals.clear()
+	todays_missed_items.clear()
 	clock.reset_state()
 	SaveManager.delete_save()
 
@@ -786,6 +977,10 @@ func _on_customer_arrived(customer: Customer) -> void:
 func _on_customer_dismissed(customer: Customer) -> void:
 	if customer != null and customer.is_lingering_departure:
 		return
+	if customer != null and customer.transaction_context:
+		for desired in customer.transaction_context.desired_items:
+			if desired and InventoryManager.get_total_item_stock(desired) <= 0:
+				record_missed_item(desired)
 	if customer != null and not _has_other_counter_customers(customer):
 		clock.on_customer_dismissed()
 	_set_last_customer_info(customer)

@@ -205,13 +205,21 @@ func pick_character_weighted(candidates: Array[CustomerData]) -> CustomerData:
 func _pick_by_spawn_weight(pool: Array[CustomerData]) -> CustomerData:
 	if pool.is_empty():
 		return null
+	var sm := _get_story_manager()
+	var expected: Array[String] = sm.todays_expected_regulars if sm and "todays_expected_regulars" in sm else []
 	var total_weight: float = 0.0
 	for c in pool:
-		total_weight += maxf(0.05, c.spawn_weight)
+		var w := maxf(0.05, c.spawn_weight)
+		if c.resource_path in expected:
+			w *= 2.2
+		total_weight += w
 	var roll: float = randf() * total_weight
 	var acc: float = 0.0
 	for c in pool:
-		acc += maxf(0.05, c.spawn_weight)
+		var w := maxf(0.05, c.spawn_weight)
+		if c.resource_path in expected:
+			w *= 2.2
+		acc += w
 		if roll <= acc:
 			return c
 	return pool[-1]

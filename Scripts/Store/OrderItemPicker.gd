@@ -114,6 +114,47 @@ static func any_for_category(cat: String, current_tier: int, prefer_hint: bool =
 	return any_for_categories([cat], current_tier, prefer_hint, excluded_categories)
 
 
+## Picks a sellable unlocked item from `cats`, applying a `stock_bias` (default 60%)
+## chance to choose from items the player currently has stocked in those categories.
+## Returns null if no unlocked items exist in `cats` yet (so caller can fall back cleanly).
+static func pick_from_categories_with_stock_bias(
+	cats: Array[String],
+	current_tier: int,
+	prefer_hint: bool = false,
+	excluded_categories: Array[String] = [],
+	stock_bias: float = 0.60
+) -> ItemData:
+	var categories: Array[String] = []
+	for cat in cats:
+		for mapped in mapped_categories(cat):
+			if not categories.has(mapped) and not (mapped in excluded_categories):
+				categories.append(mapped)
+	if categories.is_empty():
+		return null
+
+	var unlocked_pool: Array[ItemData] = []
+	var stocked_pool: Array[ItemData] = []
+	for item in InventoryManager.get_all_items():
+		if item.category in categories and not (item.category in excluded_categories) and item.tier <= current_tier and item.can_be_sold:
+			unlocked_pool.append(item)
+			if InventoryManager.get_total_item_stock(item) > 0:
+				stocked_pool.append(item)
+
+	if unlocked_pool.is_empty():
+		return null
+
+	var chosen_pool := unlocked_pool
+	if not stocked_pool.is_empty() and randf() < stock_bias:
+		chosen_pool = stocked_pool
+
+	if prefer_hint:
+		var hint_pool: Array[ItemData] = chosen_pool.filter(func(i: ItemData) -> bool: return i.item_hint != "")
+		if not hint_pool.is_empty():
+			chosen_pool = hint_pool
+
+	return pick_weighted(chosen_pool, current_tier, max_tier_per_category(current_tier))
+
+
 ## Any sellable item (up to next tier) matching any category in `cats`, minus `excluded_categories`.
 static func any_for_categories(cats: Array[String], current_tier: int, prefer_hint: bool = false, excluded_categories: Array[String] = []) -> ItemData:
 	var categories: Array[String] = []

@@ -36,10 +36,12 @@ func get_effective_unit_price(item: ItemData) -> float:
 	var is_upg: bool = item.get_meta("is_upgrade", false) \
 		or item.get_meta("is_fridge_upgrade", false) \
 		or item.get_meta("is_cat_upgrade", false) \
-		or item.get_meta("is_trash_upgrade", false)
+		or item.get_meta("is_trash_upgrade", false) \
+		or item.get_meta("is_radio_upgrade", false) \
+		or item.get_meta("is_mario_deals_upgrade", false)
 	if is_upg:
 		return item.price
-	var mult := StoryManager.get_restock_discount_multiplier()
+	var mult := StoryManager.get_item_restock_discount_multiplier(item)
 	if mult < 0.999:
 		return maxf(1.0, snapped(item.price * mult, 0.5))
 	return item.price

@@ -15,7 +15,9 @@ const GENERIC_VISIT_TIMELINE := "res://Dialogue/Timelines/Generic/Visit.dtl"
 const AWARENESS_CHANCE := 0.4
 const HIGH_PRICE_CHANCE := 0.5
 const REPAYMENT_CHANCE := 0.30
-const DISPLAY_POOL_CHANCE := 0.6
+const DISPLAY_POOL_CHANCE := 0.60
+const FAVORITE_CATEGORY_CHANCE := 0.70
+const STOCKED_ITEM_BIAS := 0.60
 const STORY_ROLL_CHANCE := 0.25
 const LOW_STOCK_THRESHOLD := 10
 
@@ -238,7 +240,8 @@ static func build_transaction_context(
 					if item:
 						transaction.desired_items.append(item)
 		else:
-			var preferred_cats: Array[String] = data.get_chapter_preferred_categories(chapter)
+			var chapter_preferred_cats: Array[String] = data.get_chapter_preferred_categories(chapter)
+			var favorite_cats: Array[String] = data.get_favorite_categories()
 			var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
 			var prefer_hint: bool = data.has_riddle_preference()
 			var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
@@ -266,16 +269,31 @@ static func build_transaction_context(
 
 			var current_max_tiers := OrderItemPicker.max_tier_per_category(sm.current_tier)
 			for _i in range(target_item_count):
-				var use_preferred: bool = not preferred_cats.is_empty() and (
-					transaction.transaction_type != TransactionContext.Type.PURCHASE or randf() <= 0.5
-				)
-				if use_preferred:
-					var pref_item := OrderItemPicker.any_for_categories(preferred_cats, sm.current_tier, prefer_hint, excluded_cats)
+				# 1. Story chapter preferred categories take precedence on story transactions
+				if not chapter_preferred_cats.is_empty() and transaction.transaction_type != TransactionContext.Type.PURCHASE:
+					var pref_item := OrderItemPicker.any_for_categories(chapter_preferred_cats, sm.current_tier, prefer_hint, excluded_cats)
 					if pref_item:
 						transaction.desired_items.append(pref_item)
 						if transaction.requested_category == "":
 							transaction.requested_category = pref_item.category
 							transaction.best_item_name = pref_item.item_name
+						continue
+
+				# 2. Everyday purchase orders: 70% favorite categories, 60% bias toward stocked items
+				var active_favs: Array[String] = favorite_cats if not favorite_cats.is_empty() else chapter_preferred_cats
+				if not active_favs.is_empty() and randf() < FAVORITE_CATEGORY_CHANCE:
+					var fav_item := OrderItemPicker.pick_from_categories_with_stock_bias(
+						active_favs,
+						sm.current_tier,
+						prefer_hint,
+						excluded_cats,
+						STOCKED_ITEM_BIAS
+					)
+					if fav_item:
+						transaction.desired_items.append(fav_item)
+						if transaction.requested_category == "":
+							transaction.requested_category = fav_item.category
+							transaction.best_item_name = fav_item.item_name
 						continue
 
 				if not pool.is_empty():

@@ -82,3 +82,4 @@ chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), S
 character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
 default_motion = ExtResource("motion_brahim_walk")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_brahim_cameo")])
+favorite_categories = Array[String](["can", "sachet"])

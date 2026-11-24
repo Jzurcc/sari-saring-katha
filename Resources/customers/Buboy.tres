@@ -104,3 +104,4 @@ character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), Sub
 default_motion = ExtResource("motion_buboy_skip")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_buboy_cameo")])
 metadata/_custom_type_script = "res://Scripts/Data/CustomerData.gd"
+favorite_categories = Array[String](["snack", "candy"])

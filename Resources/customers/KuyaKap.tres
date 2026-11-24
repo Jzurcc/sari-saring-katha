@@ -90,3 +90,4 @@ chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), S
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
 default_motion = ExtResource("motion_kuyakap_stroll")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_kuyakap_cameo")])
+favorite_categories = Array[String](["cigarette", "bottle"])

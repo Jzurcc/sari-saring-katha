@@ -92,3 +92,4 @@ chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), S
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
 default_motion = ExtResource("motion_tk_wrong_turn")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_tk_cameo")])
+favorite_categories = Array[String](["cigarette", "pack"])

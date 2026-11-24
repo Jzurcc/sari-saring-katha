@@ -42,6 +42,8 @@ const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd
 @export var is_nightly_collector: bool = false
 ## Relative spawn weight for regular visits and story selection (1.0 = normal, <1.0 = less common).
 @export_range(0.05, 5.0, 0.05) var spawn_weight: float = 1.0
+## Everyday favorite item categories for this neighbor (e.g. ["cigarette", "bottle"]).
+@export var favorite_categories: Array[String] = []
 
 @export_group("Story & Arcs")
 ## The single timeline file that handles all story chapters for this character.
@@ -92,6 +94,18 @@ func is_visit_only_until_final_chapter() -> bool:
 
 func is_collector() -> bool:
 	return is_nightly_collector
+
+## Returns this neighbor's everyday favorite categories, normalized via OrderItemPicker aliases.
+func get_favorite_categories() -> Array[String]:
+	var result: Array[String] = []
+	for raw_token in favorite_categories:
+		var token := raw_token.strip_edges()
+		if token.is_empty():
+			continue
+		for mapped in OrderItemPicker.mapped_categories(token):
+			if not result.has(mapped):
+				result.append(mapped)
+	return result
 
 # ---------------------------------------------------------------------------
 # Chapter Helpers
