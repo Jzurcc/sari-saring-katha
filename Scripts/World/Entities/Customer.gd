@@ -418,8 +418,13 @@ func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> voi
 	if not is_inside_tree():
 		return
 
-	# Pause briefly at the first spot, then stroll between 2–4 more background spots
-	await get_tree().create_timer(randf_range(4.0, 7.5)).timeout
+	# Wait for arrival at first off-center spot, then pop a Terraria-style thought bubble!
+	await get_tree().create_timer(randf_range(2.2, 3.4)).timeout
+	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
+		return
+	_pop_linger_thought(my_session)
+
+	await get_tree().create_timer(randf_range(3.0, 5.0)).timeout
 	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 		return
 
@@ -429,12 +434,53 @@ func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> voi
 		target_position = hangout_points[i]
 		if is_instance_valid(_motion):
 			_motion.set_lingering_target(hangout_points[i])
-		# Give them time to walk there + pause briefly before the next stroll
-		await get_tree().create_timer(randf_range(4.5, 8.5)).timeout
+		await get_tree().create_timer(randf_range(2.2, 3.2)).timeout
+		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
+			return
+		if randf() < 0.72:
+			_pop_linger_thought(my_session)
+		await get_tree().create_timer(randf_range(2.8, 4.8)).timeout
 		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 			return
 
+	if is_instance_valid(_attention_badge) and _attention_badge.is_showing_thought():
+		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)
 	lingering_ready_to_return.emit(self)
+
+func _pop_linger_thought(my_session: int) -> void:
+	if not is_instance_valid(_attention_badge) or not is_lingering_visitor or Dialogic.current_timeline != null:
+		return
+	var char_id := customer_data.get_clean_id() if customer_data else ""
+	var pool: Array = []
+	match char_id:
+		"kuyakap":
+			pool = [["☁", Color(0.32, 0.36, 0.44)], ["♪", Color(0.55, 0.30, 0.14)], ["★", Color(0.76, 0.50, 0.10)], ["~", Color(0.38, 0.32, 0.28)]]
+		"buboy":
+			pool = [["★", Color(0.84, 0.56, 0.08)], ["♥", Color(0.84, 0.24, 0.30)], ["♪", Color(0.18, 0.52, 0.72)], ["?!", Color(0.78, 0.36, 0.12)]]
+		"manangana":
+			pool = [["☽", Color(0.45, 0.32, 0.65)], ["♥", Color(0.82, 0.25, 0.34)], ["✦", Color(0.74, 0.52, 0.12)], ["♪", Color(0.24, 0.48, 0.46)]]
+		"danilo":
+			pool = [["☕", Color(0.46, 0.26, 0.12)], ["♪", Color(0.28, 0.46, 0.58)], ["~", Color(0.45, 0.38, 0.30)], ["zzZ", Color(0.36, 0.40, 0.60)]]
+		"rosalyn":
+			pool = [["☽", Color(0.34, 0.42, 0.68)], ["✦", Color(0.42, 0.48, 0.66)], ["...", Color(0.38, 0.38, 0.46)], ["♥", Color(0.72, 0.36, 0.48)]]
+		"rodel":
+			pool = [["≈", Color(0.14, 0.50, 0.68)], ["✦", Color(0.20, 0.56, 0.60)], ["♪", Color(0.18, 0.48, 0.64)], ["♥", Color(0.78, 0.30, 0.38)]]
+		"sarimanok":
+			pool = [["☀", Color(0.86, 0.48, 0.08)], ["★", Color(0.84, 0.58, 0.10)], ["♪", Color(0.76, 0.28, 0.26)], ["✦", Color(0.20, 0.54, 0.46)]]
+		"tk":
+			pool = [["?", Color(0.76, 0.38, 0.14)], ["?!", Color(0.80, 0.28, 0.22)], ["★", Color(0.74, 0.52, 0.12)], ["~", Color(0.38, 0.44, 0.52)]]
+		_:
+			pool = [["♪", Color(0.28, 0.46, 0.58)], ["♥", Color(0.82, 0.26, 0.32)], ["★", Color(0.80, 0.54, 0.10)], ["✦", Color(0.44, 0.36, 0.58)]]
+	var pick: Array = pool.pick_random()
+	_attention_badge.show_thought(str(pick[0]), pick[1] as Color)
+	_hide_thought_after(my_session, randf_range(2.4, 3.3))
+
+func _hide_thought_after(my_session: int, duration: float) -> void:
+	await get_tree().create_timer(duration).timeout
+	if not is_instance_valid(self) or not is_inside_tree():
+		return
+	if my_session == _linger_session_id and is_lingering_visitor and is_instance_valid(_attention_badge) and _attention_badge.is_showing_thought():
+		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)
 
 func return_to_counter_for_smalltalk(new_slot: int, slot_target: Vector3) -> void:
 	if _is_resolving:
@@ -550,6 +596,12 @@ func dismiss() -> void:
 
 func _update_attention_badge() -> void:
 	if not is_instance_valid(_attention_badge):
+		return
+	if is_lingering_visitor and not _is_resolving and Dialogic.current_timeline == null:
+		# Preserve active Terraria-style thought bubbles while lingering in the tambayan
+		if _attention_badge.is_showing_thought():
+			return
+		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)
 		return
 	if not is_waiting or _is_resolving or is_lingering_visitor or is_guest_customer or Dialogic.current_timeline != null:
 		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)

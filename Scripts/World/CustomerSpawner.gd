@@ -361,22 +361,27 @@ func _get_background_hangout_points() -> Array[Vector3]:
 
 	var points: Array[Vector3] = []
 	var waypoint_count := randi_range(3, 5)
-	var prev_side := randf_range(-2.6, 2.6)
-	var prev_back := randf_range(1.9, 3.2)
+	# First move is always behind AND clearly off-center (left or right) so incoming customers don't clip
+	var first_side_sign := 1.0 if randf() < 0.5 else -1.0
+	var prev_side := first_side_sign * randf_range(2.2, 3.5)
+	var prev_back := randf_range(2.6, 3.6)
 	points.append(target_global + dir_back * prev_back + side * prev_side)
 
 	for _i in range(waypoint_count - 1):
 		var is_long_stroll := randf() < 0.60
 		var next_side: float
 		if is_long_stroll:
-			# Cross-street / wider stroll (2.2m to 4.4m shift)
+			# Cross-street / wider stroll to the opposite side (avoid stopping dead center)
 			var dir_sign := -1.0 if prev_side >= 0.0 else 1.0
-			next_side = clampf(prev_side + dir_sign * randf_range(2.2, 4.4), -3.8, 3.8)
+			next_side = clampf(prev_side + dir_sign * randf_range(3.2, 5.2), -3.9, 3.9)
 		else:
-			# Short casual hop nearby (0.8m to 1.6m shift)
+			# Short casual hop nearby on the same side
 			var hop_sign := 1.0 if randf() < 0.5 else -1.0
-			next_side = clampf(prev_side + hop_sign * randf_range(0.8, 1.6), -3.8, 3.8)
-		var next_back := randf_range(1.8, 3.6)
+			next_side = clampf(prev_side + hop_sign * randf_range(0.7, 1.4), -3.9, 3.9)
+		# Keep lingering spots out of the center approach lane
+		if absf(next_side) < 1.5:
+			next_side = (1.0 if next_side >= 0.0 else -1.0) * randf_range(1.7, 2.4)
+		var next_back := randf_range(2.5, 4.0)
 		points.append(target_global + dir_back * next_back + side * next_side)
 		prev_side = next_side
 		prev_back = next_back

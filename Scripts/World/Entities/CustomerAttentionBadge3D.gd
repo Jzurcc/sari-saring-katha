@@ -8,10 +8,12 @@ enum Mode {
 	HIDDEN,
 	UNGREETED,
 	SMALLTALK,
+	THOUGHT,
 }
 
 static var _ungreeted_tex: ImageTexture = null
 static var _smalltalk_tex: ImageTexture = null
+static var _thought_tex: ImageTexture = null
 
 var _mode: Mode = Mode.HIDDEN
 var _bg_sprite: Sprite3D = null
@@ -21,6 +23,13 @@ var _pop_tween: Tween = null
 
 
 static func _get_bubble_texture(for_mode: Mode) -> ImageTexture:
+	if for_mode == Mode.THOUGHT:
+		if _thought_tex == null:
+			_thought_tex = _build_thought_bubble_texture(
+				Color(0.98, 0.94, 0.86, 0.95),
+				Color(0.42, 0.30, 0.16, 0.95)
+			)
+		return _thought_tex
 	if for_mode == Mode.SMALLTALK:
 		if _smalltalk_tex == null:
 			_smalltalk_tex = _build_bubble_texture(
@@ -35,6 +44,39 @@ static func _get_bubble_texture(for_mode: Mode) -> ImageTexture:
 			Color(0.96, 0.78, 0.42, 1.0)
 		)
 	return _ungreeted_tex
+
+
+static func _build_thought_bubble_texture(fill_col: Color, border_col: Color) -> ImageTexture:
+	const SIZE := 128
+	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
+	var box_center := Vector2(64.0, 48.0)
+	var box_half := Vector2(38.0, 28.0)
+	var corner_r := 22.0
+	var border_w := 4.8
+	var edge := 2.0
+	var dot1_c := Vector2(58.0, 88.0)
+	var dot1_r := 7.5
+	var dot2_c := Vector2(51.0, 104.0)
+	var dot2_r := 4.8
+
+	for y in SIZE:
+		for x in SIZE:
+			var p := Vector2(x + 0.5, y + 0.5)
+			var q := Vector2(absf(p.x - box_center.x), absf(p.y - box_center.y)) - (box_half - Vector2(corner_r, corner_r))
+			var sd_box := Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - corner_r
+			var sd_d1 := p.distance_to(dot1_c) - dot1_r
+			var sd_d2 := p.distance_to(dot2_c) - dot2_r
+			var sd := minf(sd_box, minf(sd_d1, sd_d2))
+			if sd > edge:
+				img.set_pixel(x, y, Color(0, 0, 0, 0))
+				continue
+			var outer_alpha := clampf((edge - sd) / edge, 0.0, 1.0)
+			var inner_blend := clampf((-sd - (border_w - 1.0)) / 1.5, 0.0, 1.0)
+			var col := border_col.lerp(fill_col, inner_blend)
+			col.a *= outer_alpha
+			img.set_pixel(x, y, col)
+
+	return ImageTexture.create_from_image(img)
 
 
 static func _build_bubble_texture(fill_col: Color, border_col: Color) -> ImageTexture:
@@ -146,10 +188,20 @@ func set_mode(new_mode: Mode) -> void:
 
 	if new_mode == Mode.SMALLTALK:
 		text = "..."
+		font_size = 54
 		modulate = Color(0.84, 1.0, 0.95, 1.0)
+		outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
+		outline_size = 11
+	elif new_mode == Mode.THOUGHT:
+		font_size = 48
+		outline_modulate = Color(0.20, 0.14, 0.08, 0.45)
+		outline_size = 4
 	else:
 		text = "!"
+		font_size = 54
 		modulate = Color(1.0, 0.93, 0.70, 1.0)
+		outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
+		outline_size = 11
 
 	if _bg_sprite:
 		_bg_sprite.texture = _get_bubble_texture(new_mode)
@@ -158,3 +210,14 @@ func set_mode(new_mode: Mode) -> void:
 	scale = Vector3.ZERO
 	_pop_tween = create_tween()
 	_pop_tween.tween_property(self, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func show_thought(glyph: String, glyph_color: Color = Color(0.24, 0.16, 0.09, 1.0)) -> void:
+	text = glyph
+	modulate = glyph_color
+	_mode = Mode.HIDDEN # Force re-pop animation even if showing a new thought
+	set_mode(Mode.THOUGHT)
+
+
+func is_showing_thought() -> bool:
+	return _mode == Mode.THOUGHT and visible
