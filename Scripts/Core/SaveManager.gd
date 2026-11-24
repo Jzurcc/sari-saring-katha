@@ -235,6 +235,14 @@ func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
 
 
+## Read-only peek at the saved dictionary on disk without mutating any live game state.
+## Used by the Main Menu diorama (TitleScreenStoreSync) to mirror unlocked store upgrades.
+func peek_save() -> Dictionary:
+	if not has_save():
+		return {}
+	return _read_from_disk()
+
+
 ## Alias for delete_save to maintain compatibility with legacy triggers.
 func clear_save() -> void:
 	delete_save()

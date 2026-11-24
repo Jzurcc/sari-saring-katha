@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://Scripts/World/Environment/FlickerLight.gd" id="17_r5sjn"]
 [ext_resource type="PackedScene" uid="uid://cgknnkswf8sa5" path="res://Scenes/nokia.tscn" id="17_re88u"]
 [ext_resource type="VoxelGIData" uid="uid://droyacmdet5hh" path="res://Resources/MainGame.VoxelGI_data.res" id="23_7p2u3"]
+[ext_resource type="Script" path="res://Scripts/World/Environment/TitleScreenStoreSync.gd" id="title_store_sync"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yc6xl"]
 shader = ExtResource("7_ktwve")
@@ -120,6 +121,7 @@ adjustment_saturation = 1.25
 [sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_jn25s"]
 
 [node name="TitleScreen3D" type="Node3D" unique_id=1311068723]
+script = ExtResource("title_store_sync")
 
 [node name="Sky3D" type="WorldEnvironment" parent="." unique_id=1036003173]
 environment = SubResource("Environment_ev6kq")
