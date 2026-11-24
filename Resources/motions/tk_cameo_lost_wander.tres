@@ -1,33 +1,43 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://bpxc4gye3pvka"]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
 
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
 [ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
 
 [sub_resource type="Resource" id="step_1"]
 script = ExtResource("2_step")
+anchor = 2
 local_offset = Vector3(-1.2, 0, -2.2)
-duration = 2.6
+duration = 3.6
+transition = 1
 ease_type = 1
 target_opacity = 1.0
+opacity_fade_fraction = 0.15
 pause_after = 0.7
 
 [sub_resource type="Resource" id="step_2"]
 script = ExtResource("2_step")
+anchor = 2
 local_offset = Vector3(1.1, 0, -2.5)
 duration = 1.15
-target_opacity = 1.0
+transition = 1
+ease_type = 2
 pause_after = 0.55
 
 [sub_resource type="Resource" id="step_3"]
 script = ExtResource("2_step")
 anchor = 6
-duration = 2.7
+local_offset = Vector3(0, 0, 0)
+duration = 3.8
+transition = 1
 ease_type = 0
 target_opacity = 0.0
+opacity_fade_fraction = 0.2
+opacity_fade_at_end = true
 
 [resource]
 script = ExtResource("1_profile")
 profile_name = "TK Cameo Lost Wander"
+locomotion_style = 0
 base_speed = 2.3
 bob_frequency = 10.5
 bob_amplitude = 0.085
@@ -35,5 +45,7 @@ sway_amount = 0.055
 play_landing_thud = false
 override_start_anchor = true
 start_anchor = 5
+start_offset = Vector3(0, 0, 0)
+start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2"), SubResource("step_3")])
 bypass_default_exit_stepback = true

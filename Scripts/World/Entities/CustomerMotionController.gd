@@ -139,9 +139,9 @@ func resolve_anchor(anchor: int, local_offset: Vector3 = Vector3.ZERO) -> Vector
 		MotionStepScript.Anchor.EXIT:
 			base = _exit_pos
 		MotionStepScript.Anchor.STREET_LEFT:
-			base = _counter_slot_pos - _approach_dir * 2.8 + _side_offset * 9.0
+			base = _counter_slot_pos - _approach_dir * 2.8 + _side_offset * 15.0
 		MotionStepScript.Anchor.STREET_RIGHT:
-			base = _counter_slot_pos - _approach_dir * 2.8 - _side_offset * 9.0
+			base = _counter_slot_pos - _approach_dir * 2.8 - _side_offset * 15.0
 		MotionStepScript.Anchor.CURRENT:
 			base = _owner_node.global_position if is_instance_valid(_owner_node) else _counter_slot_pos
 
@@ -329,7 +329,14 @@ func _process(delta: float) -> void:
 			_owner_node.global_position = pos
 
 			if step.target_opacity >= 0.0:
-				set_opacity(lerpf(_step_start_opacity, _step_end_opacity, raw_t))
+				var frac := clampf(step.opacity_fade_fraction, 0.05, 1.0)
+				var ot: float
+				if step.opacity_fade_at_end:
+					var start_at := 1.0 - frac
+					ot = clampf((raw_t - start_at) / frac, 0.0, 1.0)
+				else:
+					ot = clampf(raw_t / frac, 0.0, 1.0)
+				set_opacity(lerpf(_step_start_opacity, _step_end_opacity, ot))
 
 			_active_scale_mult = _step_start_scale_mult.lerp(_step_end_scale_mult, eased_t)
 			if _active_scale_mult != Vector3.ONE or _step_start_scale_mult != Vector3.ONE:

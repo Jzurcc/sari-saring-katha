@@ -1,53 +1,16 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://dycs1d854u62o"]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
 
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
-[ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
-
-[sub_resource type="Resource" id="enter_1"]
-script = ExtResource("2_step")
-anchor = 1
-local_offset = Vector3(0, 0.7, 0)
-duration = 1.1
-ease_type = 1
-height_arc = 0.45
-target_opacity = 1.0
-
-[sub_resource type="Resource" id="enter_2"]
-script = ExtResource("2_step")
-duration = 0.85
-height_arc = 0.2
-target_opacity = 1.0
-
-[sub_resource type="Resource" id="exit_1"]
-script = ExtResource("2_step")
-anchor = 7
-local_offset = Vector3(0, 1.5, -0.9)
-duration = 0.6
-transition = 10
-ease_type = 1
-target_opacity = 1.0
-
-[sub_resource type="Resource" id="exit_2"]
-script = ExtResource("2_step")
-anchor = 6
-local_offset = Vector3(-1.5, 4.4, -1.5)
-duration = 1.55
-transition = 7
-ease_type = 0
-height_arc = 0.85
-target_opacity = 0.0
 
 [resource]
 script = ExtResource("1_profile")
-profile_name = "Sarimanok Flap Swoop"
-locomotion_style = 2
-base_speed = 2.55
-bob_frequency = 13.5
-bob_amplitude = 0.12
-sway_amount = 0.07
-idle_height_offset = 0.04
-override_start_anchor = true
-start_offset = Vector3(0, 1.8, 0)
-enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
-exit_steps = Array[ExtResource("2_step")]([SubResource("exit_1"), SubResource("exit_2")])
-bypass_default_exit_stepback = true
+profile_name = "Sarimanok Brisk Strut"
+locomotion_style = 4
+base_speed = 2.6
+bob_frequency = 14.0
+bob_amplitude = 0.09
+sway_amount = 0.065
+idle_height_offset = 0.0
+idle_opacity = 1.0
+play_landing_thud = true
+start_opacity = 0.0

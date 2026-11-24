@@ -33,6 +33,10 @@ enum Anchor {
 
 ## Target sprite alpha (0.0..1.0) to smoothly interpolate to over this step. -1.0 keeps current alpha.
 @export_range(-1.0, 1.0, 0.01) var target_opacity: float = -1.0
+## Fraction of the step duration over which opacity completes its fade (e.g. 0.15 = fast fade).
+@export_range(0.05, 1.0, 0.05) var opacity_fade_fraction: float = 1.0
+## If true, holds start opacity until the final `opacity_fade_fraction` of the step (ideal for fade-outs at screen edge).
+@export var opacity_fade_at_end: bool = false
 
 ## Optional pauses before and after reaching this waypoint (seconds).
 @export var pause_before: float = 0.0
