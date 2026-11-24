@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="CustomerData" format=4 uid="uid://drt1rivqisq6m"]
 
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="1_3q4xm"]
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_5neox"]
 [ext_resource type="Resource" uid="uid://ud54y8wnnuay" path="res://Dialogue/Timelines/UncleMario.dch" id="1_mario"]
 [ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_4lb08"]
 [ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="2_4srvu"]

@@ -1,14 +1,13 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://jt6xop1ylgt7"]
 
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
 
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
 anchor = 1
 local_offset = Vector3(0.45, 0, -0.4)
 duration = 1.45
-transition = 1
 ease_type = 1
 target_opacity = 1.0
 pause_after = 1.3
@@ -16,22 +15,10 @@ pause_random_extra = 1.2
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")
-anchor = 2
-local_offset = Vector3(0, 0, 0)
 duration = 1.25
-transition = 1
-ease_type = 2
 target_opacity = 1.0
 
 [resource]
 script = ExtResource("1_profile")
 profile_name = "Danilo Hesitant Linger"
-locomotion_style = 0
-base_speed = 2.0
-bob_frequency = 10.0
-bob_amplitude = 0.08
-sway_amount = 0.05
-idle_opacity = 1.0
-play_landing_thud = true
-start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])

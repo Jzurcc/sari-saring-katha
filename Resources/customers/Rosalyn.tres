@@ -8,13 +8,13 @@
 [ext_resource type="Texture2D" uid="uid://bnah6st44t36f" path="res://Assets/characters/sprites/Rosalyn.png" id="5_8o33b"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Resource" path="res://Resources/motions/rosalyn_cameo_left_to_right.tres" id="motion_rosalyn_cameo_lr"]
+[ext_resource type="Resource" path="res://Resources/motions/rosalyn_cameo_pass_through.tres" id="motion_rosalyn_cameo_pass"]
+[ext_resource type="Resource" path="res://Resources/motions/rosalyn_ghost_phase_enter.tres" id="motion_rosalyn_phase"]
 [ext_resource type="Resource" uid="uid://bosnm7nb7n52i" path="res://Dialogue/Timelines/Rosalyn/Purchase.dtl" id="ros_purchase"]
 [ext_resource type="Resource" uid="uid://d2s4cte6itmct" path="res://Dialogue/Timelines/Rosalyn/Visit.dtl" id="ros_visit"]
 [ext_resource type="Resource" uid="uid://bnumeiduxs8n1" path="res://Dialogue/Timelines/Rosalyn/Story.dtl" id="story_timeline"]
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
-[ext_resource type="Resource" path="res://Resources/motions/rosalyn_ghost_phase_enter.tres" id="motion_rosalyn_phase"]
-[ext_resource type="Resource" path="res://Resources/motions/rosalyn_cameo_pass_through.tres" id="motion_rosalyn_cameo_pass"]
-[ext_resource type="Resource" path="res://Resources/motions/rosalyn_cameo_left_to_right.tres" id="motion_rosalyn_cameo_lr"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")

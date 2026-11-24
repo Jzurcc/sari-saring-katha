@@ -1,24 +1,18 @@
-[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3 uid="uid://ca2owlapu1ecn"]
 
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://bxt2psngqr7qx" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
 
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
-anchor = 2
 local_offset = Vector3(0, 0.12, 0.45)
 duration = 1.15
-transition = 1
 ease_type = 1
 target_opacity = 0.42
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")
-anchor = 2
-local_offset = Vector3(0, 0, 0)
 duration = 0.85
-transition = 1
-ease_type = 2
 target_opacity = 0.88
 
 [sub_resource type="Resource" id="exit_1"]
@@ -26,7 +20,6 @@ script = ExtResource("2_step")
 anchor = 3
 local_offset = Vector3(0, 0.25, 0.8)
 duration = 1.5
-transition = 1
 ease_type = 0
 target_opacity = 0.0
 
@@ -47,7 +40,6 @@ play_landing_thud = false
 override_start_anchor = true
 start_anchor = 3
 start_offset = Vector3(0, 0.2, 1.4)
-start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
 exit_steps = Array[ExtResource("2_step")]([SubResource("exit_1")])
 bypass_default_exit_stepback = true

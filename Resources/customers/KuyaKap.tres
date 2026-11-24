@@ -9,11 +9,11 @@
 [ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
 [ext_resource type="Resource" uid="uid://vd6vqcihb85s" path="res://Dialogue/Timelines/Kuyakap/Purchase.dtl" id="kuyakap_purchase"]
 [ext_resource type="Resource" uid="uid://d2xpnhja6r33a" path="res://Dialogue/Timelines/Kuyakap/Visit.dtl" id="kuyakap_visit"]
+[ext_resource type="Resource" path="res://Resources/motions/kuyakap_cameo_stroll.tres" id="motion_kuyakap_cameo"]
+[ext_resource type="Resource" path="res://Resources/motions/kuyakap_heavy_stroll.tres" id="motion_kuyakap_stroll"]
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Resource" uid="uid://b5ajudb37ubvf" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
-[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
-[ext_resource type="Resource" path="res://Resources/motions/kuyakap_heavy_stroll.tres" id="motion_kuyakap_stroll"]
-[ext_resource type="Resource" path="res://Resources/motions/kuyakap_cameo_stroll.tres" id="motion_kuyakap_cameo"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
