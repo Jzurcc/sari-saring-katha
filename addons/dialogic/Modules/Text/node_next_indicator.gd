@@ -49,21 +49,24 @@ func _ready() -> void:
 	add_to_group('dialogic_next_indicator')
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# Build ingrained keycap prompt (e.g. [SPACE]) anchored bottom-right inside textbox
+	# Build keycap prompt (e.g. [SPACE]) in light cream straddling the bottom-right outer edge
 	_keycap_panel = PanelContainer.new()
 	_keycap_panel.name = "AdvanceKeycap"
 	_keycap_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_keycap_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_keycap_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_keycap_panel.offset_right = -6.0
-	_keycap_panel.offset_bottom = -4.0
+	_keycap_panel.offset_right = 8.0
+	_keycap_panel.offset_bottom = 10.0
 
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.11, 0.10, 0.09, 0.90)
-	style.border_color = Color(1.0, 0.90, 0.54, 0.85)
+	style.bg_color = Color(0.961, 0.961, 0.863, 0.98)
+	style.border_color = Color(0.26, 0.19, 0.13, 0.92)
 	style.set_border_width_all(1)
 	style.border_width_bottom = 2
 	style.set_corner_radius_all(6)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.22)
+	style.shadow_size = 4
+	style.shadow_offset = Vector2(0, 2)
 	style.content_margin_left = 8
 	style.content_margin_right = 8
 	style.content_margin_top = 2
@@ -74,7 +77,7 @@ func _ready() -> void:
 	_keycap_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_keycap_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_keycap_lbl.add_theme_font_size_override("font_size", 12)
-	_keycap_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.56, 1.0))
+	_keycap_lbl.add_theme_color_override("font_color", Color(0.18, 0.12, 0.08, 1.0))
 	_keycap_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_keycap_panel.add_child(_keycap_lbl)
 	add_child(_keycap_panel)

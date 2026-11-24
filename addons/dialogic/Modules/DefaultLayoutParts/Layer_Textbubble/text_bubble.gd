@@ -178,7 +178,7 @@ func _resize_bubble(content_size:Vector2, popup:=false) -> void:
 	name_label_holder.alignment = name_label_alignment
 	name_label_holder.size.x = text.size.x
 	if is_instance_valid(next_indicator):
-		next_indicator.position = Vector2(half_size.x - bg_padding * 0.5, half_size.y - bg_padding * 0.5)
+		next_indicator.position = Vector2(half_size.x - 4.0, half_size.y - 2.0)
 
 
 func _on_question_shown(info:Dictionary) -> void:

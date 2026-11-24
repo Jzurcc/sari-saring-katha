@@ -766,16 +766,28 @@ func _clear_ambient_cameos() -> void:
 func _process(delta: float) -> void:
 	session.update_watchdog(delta)
 	var passive_xp := StoryManager.get_bench_passive_xp()
-	if passive_xp > 0 and not is_paused and not StoryManager.is_past_closing_time() and Dialogic.current_timeline == null:
-		var active_lingerers := 0
+	if passive_xp > 0 and not is_paused and not StoryManager.is_past_closing_time():
+		var active_visitors: Array[Node3D] = []
 		for v in lingering_visitors:
 			if is_instance_valid(v) and v.is_lingering_visitor and not v._is_resolving:
-				active_lingerers += 1
-		if active_lingerers > 0:
+				active_visitors.append(v)
+		if not active_visitors.is_empty():
 			_linger_xp_timer += delta
 			if _linger_xp_timer >= LINGERING_PASSIVE_XP_INTERVAL:
 				_linger_xp_timer -= LINGERING_PASSIVE_XP_INTERVAL
-				StoryManager.add_player_xp(passive_xp * active_lingerers, "Tambayan")
+				for i in range(active_visitors.size()):
+					var visitor: Node3D = active_visitors[i]
+					if i == 0:
+						var gained: int = StoryManager.add_player_xp(passive_xp, "Tambayan")
+						if gained > 0:
+							VisualEffectManager.spawn_floating_xp(visitor, gained)
+					else:
+						get_tree().create_timer(0.18 * float(i)).timeout.connect(func():
+							if is_instance_valid(visitor) and visitor.is_lingering_visitor and not visitor._is_resolving:
+								var gained: int = StoryManager.add_player_xp(passive_xp, "Tambayan")
+								if gained > 0:
+									VisualEffectManager.spawn_floating_xp(visitor, gained)
+						)
 		else:
 			_linger_xp_timer = 0.0
 	else:

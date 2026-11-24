@@ -323,3 +323,51 @@ func setup_ambient_dust(parent: Node3D) -> void:
 	p.scale_amount_curve = curves
 	
 	parent.add_child(p)
+
+
+func spawn_floating_xp(source_node_or_pos: Variant, amount: int) -> void:
+	if amount <= 0:
+		return
+	var spawn_pos := Vector3.ZERO
+	if source_node_or_pos is Node3D:
+		var n3d: Node3D = source_node_or_pos
+		if not is_instance_valid(n3d):
+			return
+		spawn_pos = n3d.global_position + Vector3(randf_range(-0.14, 0.14), 1.45, randf_range(-0.08, 0.08))
+	elif source_node_or_pos is Vector3:
+		spawn_pos = source_node_or_pos
+	else:
+		return
+
+	var lbl := Label3D.new()
+	lbl.name = "FloatingXP"
+	lbl.text = "+%d XP" % amount
+	if UIStyle.FONT_INDER:
+		lbl.font = UIStyle.FONT_INDER
+	lbl.font_size = 42
+	lbl.pixel_size = 0.0055
+	lbl.outline_size = 10
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.no_depth_test = true
+	lbl.shaded = false
+	lbl.render_priority = 12
+	lbl.modulate = Color(0.66, 0.96, 0.56, 0.0)
+	lbl.outline_modulate = Color(0.08, 0.06, 0.04, 0.0)
+	lbl.scale = Vector3.ONE * 0.55
+
+	_attach_effect(lbl, spawn_pos)
+	if not lbl.is_inside_tree():
+		lbl.queue_free()
+		return
+
+	var tw := lbl.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "global_position:y", spawn_pos.y + 0.62, 1.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(lbl, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "outline_modulate:a", 0.95, 0.14).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "scale", Vector3.ONE * 1.05, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().set_parallel(true)
+	tw.tween_property(lbl, "scale", Vector3.ONE * 0.92, 0.35).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.50).set_delay(0.32).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "outline_modulate:a", 0.0, 0.50).set_delay(0.32).set_trans(Tween.TRANS_SINE)
+	tw.chain().tween_callback(lbl.queue_free)

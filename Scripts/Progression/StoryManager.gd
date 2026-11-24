@@ -241,13 +241,13 @@ func get_xp_multiplier() -> float:
 		mult *= 0.65
 	return mult
 
-func add_player_xp(base_amount: int, reason: String = "") -> void:
+func add_player_xp(base_amount: int, reason: String = "") -> int:
 	if base_amount <= 0:
-		return
+		return 0
 	var gained := maxi(1, roundi(float(base_amount) * get_xp_multiplier()))
 	if player_level >= MAX_PLAYER_LEVEL:
 		EventBus.player_xp_changed.emit(player_level, 0, 0, gained, false)
-		return
+		return gained
 
 	player_xp += gained
 	var leveled_up := false
@@ -276,6 +276,7 @@ func add_player_xp(base_amount: int, reason: String = "") -> void:
 		record_daily_stat_int("level_ups", 1)
 	EventBus.player_xp_changed.emit(player_level, player_xp, get_xp_for_next_level(), gained, leveled_up)
 	_save_progression()
+	return gained
 
 func get_required_purchases_for_next_tier() -> int:
 	var base = 5 + floori(current_tier / 2.0)
@@ -745,10 +746,10 @@ func purchase_permit_upgrade(level: int) -> void:
 
 # --- Sari-Sari Tambayan Bench (Lingering Visitors, Passive XP & Return-to-Buy) ---
 const BENCH_UPGRADE_SPECS: Array[Dictionary] = [
-	{"level": 0, "req_level": 1, "name": "No Store Bench", "cost": 0.0, "linger_chance": 0.60, "max_lingering": 2, "passive_xp": 0, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Up to 2 visitors may linger outside (60% chance)."},
-	{"level": 1, "req_level": 2, "name": "Sari-Sari Tambayan Bench", "cost": 90.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 0, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Places a cozy wooden bench outside your tindahan! Boosts lingering chance (60% → 75%) and lets up to 3 neighbors hang out at once."},
-	{"level": 2, "req_level": 5, "name": "Tambayan Hospitality", "cost": 175.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 8, "return_to_buy": false, "desc": "Neighbors love chatting by your bench! Earn +1 passive Player XP every 2s per lingering visitor, plus +8 bonus XP when they return for smalltalk."},
-	{"level": 3, "req_level": 8, "name": "Craving Comebacks", "cost": 260.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 8, "return_to_buy": true, "desc": "Hanging out works up an appetite! Returning tambayan visitors now have a chance to step back up and place a real purchase order before heading home."},
+	{"level": 0, "req_level": 1, "name": "No Store Bench", "cost": 0.0, "linger_chance": 0.60, "max_lingering": 2, "passive_xp": 1, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Up to 2 visitors may linger outside (60% chance), granting +1 passive Player XP every 2s per lingering visitor."},
+	{"level": 1, "req_level": 2, "name": "Sari-Sari Tambayan Bench", "cost": 90.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Places a cozy wooden bench outside your tindahan! Boosts lingering chance (60% → 75%) and lets up to 3 neighbors hang out at once (+1 passive XP / 2s each)."},
+	{"level": 2, "req_level": 5, "name": "Tambayan Hospitality", "cost": 175.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 2, "smalltalk_xp": 8, "return_to_buy": false, "desc": "Neighbors love chatting by your bench! Doubles passive Player XP from lingering visitors (+1 → +2 XP every 2s each), plus +8 bonus XP when they return for smalltalk."},
+	{"level": 3, "req_level": 8, "name": "Craving Comebacks", "cost": 260.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 2, "smalltalk_xp": 8, "return_to_buy": true, "desc": "Hanging out works up an appetite! Returning tambayan visitors now have a chance to step back up and place a real purchase order before heading home."},
 ]
 var bench_upgrade_level: int = 0
 var _bench_upgrade_item_cache: Dictionary = {}

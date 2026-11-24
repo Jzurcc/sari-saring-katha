@@ -484,8 +484,8 @@ func _build_ui() -> void:
 
 	# ── 1. TOP WIDE TITLE BANNER ──
 	_header_banner = PanelContainer.new()
-	_header_banner.anchor_left = 0.14
-	_header_banner.anchor_right = 0.86
+	_header_banner.anchor_left = 0.10
+	_header_banner.anchor_right = 0.90
 	_header_banner.anchor_top = 0.030
 	_header_banner.anchor_bottom = 0.148
 	var header_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
@@ -538,8 +538,8 @@ func _build_ui() -> void:
 
 	# ── 2. SHARED HADES CENTER FRAME (Exact same 3 card slots across Beat 1 -> Beat 2!) ──
 	_center_frame = PanelContainer.new()
-	_center_frame.anchor_left = 0.255
-	_center_frame.anchor_right = 0.785
+	_center_frame.anchor_left = 0.215
+	_center_frame.anchor_right = 0.835
 	_center_frame.anchor_top = 0.175
 	_center_frame.anchor_bottom = 0.855
 	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
@@ -598,8 +598,8 @@ func _build_ui() -> void:
 
 	# ── 3. BOTTOM-RIGHT OVERLAPPING OFFER BUTTON (Straddling the frame's bottom border!) ──
 	_confirm_btn = Button.new()
-	_confirm_btn.anchor_left = 0.785
-	_confirm_btn.anchor_right = 0.785
+	_confirm_btn.anchor_left = 0.835
+	_confirm_btn.anchor_right = 0.835
 	_confirm_btn.anchor_top = 0.855
 	_confirm_btn.anchor_bottom = 0.855
 	_confirm_btn.offset_left = -246.0
@@ -623,8 +623,8 @@ func _build_ui() -> void:
 
 	# ── 3B. BEAT 2 REROLL & ACCEPT CARDS BUTTONS (Straddling frame's bottom border) ──
 	_reroll_btn = Button.new()
-	_reroll_btn.anchor_left = 0.255
-	_reroll_btn.anchor_right = 0.255
+	_reroll_btn.anchor_left = 0.215
+	_reroll_btn.anchor_right = 0.215
 	_reroll_btn.anchor_top = 0.855
 	_reroll_btn.anchor_bottom = 0.855
 	_reroll_btn.offset_left = 18.0
@@ -655,8 +655,8 @@ func _build_ui() -> void:
 	_root.add_child(_reroll_btn)
 
 	_accept_cards_btn = Button.new()
-	_accept_cards_btn.anchor_left = 0.785
-	_accept_cards_btn.anchor_right = 0.785
+	_accept_cards_btn.anchor_left = 0.835
+	_accept_cards_btn.anchor_right = 0.835
 	_accept_cards_btn.anchor_top = 0.855
 	_accept_cards_btn.anchor_bottom = 0.855
 	_accept_cards_btn.offset_left = -246.0
@@ -696,8 +696,8 @@ func _build_ui() -> void:
 		_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 	_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_mayari_portrait.anchor_left = -0.03
-	_mayari_portrait.anchor_right = 0.36
+	_mayari_portrait.anchor_left = -0.045
+	_mayari_portrait.anchor_right = 0.335
 	_mayari_portrait.anchor_top = 0.34
 	_mayari_portrait.anchor_bottom = 1.27
 	_mayari_portrait.z_index = 10
@@ -706,8 +706,8 @@ func _build_ui() -> void:
 
 	# ── 5. RIGHT-SIDE HADES KEYWORD CALLOUT STACK (Appears on Beat 2 card hover) ──
 	_callout_col = VBoxContainer.new()
-	_callout_col.anchor_left = 0.795
-	_callout_col.anchor_right = 0.985
+	_callout_col.anchor_left = 0.845
+	_callout_col.anchor_right = 0.992
 	_callout_col.anchor_top = 0.21
 	_callout_col.anchor_bottom = 0.85
 	_callout_col.add_theme_constant_override("separation", 10)
@@ -721,7 +721,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var style := UIStyle.create_flat_stylebox(Color(0.048, 0.045, 0.042, 0.92), 6, 16, 10)
-	style.content_margin_right = 28
+	style.content_margin_right = 20
 	style.border_color = Color(0.88, 0.79, 0.58, 0.48)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -733,7 +733,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 38)
+	hbox.add_theme_constant_override("separation", 24)
 	card.add_child(hbox)
 
 	# Same footprint as Beat 2's HadesEmblem so the flip lines up seamlessly!
@@ -1097,7 +1097,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 10)
-	style.content_margin_right = 28
+	style.content_margin_right = 20
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.62)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -1112,7 +1112,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.set_meta("accent_bright", accent_bright)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 38)
+	hbox.add_theme_constant_override("separation", 24)
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 

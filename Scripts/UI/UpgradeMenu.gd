@@ -1250,7 +1250,7 @@ func _create_bench_upgrade_bar(item: ItemData, target_level: int) -> PanelContai
 	if target_level == 1:
 		sub_txt = "75% linger chance  •  Up to 3 tambayan visitors"
 	elif target_level == 2:
-		sub_txt = "+1 XP / 2s while lingering  •  +8 XP on smalltalk"
+		sub_txt = "+1 → +2 XP / 2s while lingering  •  +8 XP on smalltalk"
 	else:
 		sub_txt = "Returning tambayan visitors may place a real order!"
 	var sub_lbl := Label.new()
@@ -1880,7 +1880,7 @@ func _update_detail_panel(item: ItemData) -> void:
 			]
 		elif bn_lvl == 2:
 			bn_lines = [
-				"• Passive XP: +1 Player XP every 2s per lingering visitor",
+				"• Passive XP: Doubles to +2 Player XP every 2s per lingering visitor",
 				"• Smalltalk Return Bonus: +8 Player XP per smalltalk",
 				"• Scales with all Player XP multipliers",
 			]

@@ -87,8 +87,8 @@ func _build_ui() -> void:
 
 	# Top wide Hades-style banner (matches MayariTallyOverlay exact size & style)
 	_banner = PanelContainer.new()
-	_banner.anchor_left = 0.14
-	_banner.anchor_right = 0.86
+	_banner.anchor_left = 0.045
+	_banner.anchor_right = 0.955
 	_banner.anchor_top = 0.030
 	_banner.anchor_bottom = 0.148
 	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
@@ -169,12 +169,12 @@ func _build_ui() -> void:
 	sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	bv.add_child(sub_lbl)
 
-	# Left Side: Classic Filipino Sari-Sari Wall Calendar
+	# Left Side: Classic Filipino Sari-Sari Wall Calendar (centered in column)
 	_cal_holder = Control.new()
-	_cal_holder.anchor_left = 0.032
-	_cal_holder.anchor_right = 0.342
-	_cal_holder.anchor_top = 0.175
-	_cal_holder.anchor_bottom = 0.855
+	_cal_holder.anchor_left = 0.025
+	_cal_holder.anchor_right = 0.325
+	_cal_holder.anchor_top = 0.168
+	_cal_holder.anchor_bottom = 0.872
 	_root.add_child(_cal_holder)
 
 	var cal_aspect := AspectRatioContainer.new()
@@ -202,11 +202,11 @@ func _build_ui() -> void:
 	cal_frame.add_child(cal_tex_rect)
 
 	# Year (left blue box), Month (center red box), Year (right blue box)
-	_cal_year_left = _make_calendar_banner_label(0.059, 0.271, 0.362, 0.411, 22)
+	_cal_year_left = _make_calendar_banner_label(0.056, 0.274, 0.354, 0.417, 27)
 	cal_tex_rect.add_child(_cal_year_left)
-	_cal_month_lbl = _make_calendar_banner_label(0.283, 0.714, 0.362, 0.411, 24)
+	_cal_month_lbl = _make_calendar_banner_label(0.280, 0.717, 0.354, 0.417, 32)
 	cal_tex_rect.add_child(_cal_month_lbl)
-	_cal_year_right = _make_calendar_banner_label(0.726, 0.939, 0.362, 0.411, 22)
+	_cal_year_right = _make_calendar_banner_label(0.723, 0.942, 0.354, 0.417, 27)
 	cal_tex_rect.add_child(_cal_year_right)
 
 	# Current Day Highlight Box
@@ -214,10 +214,10 @@ func _build_ui() -> void:
 	_cal_day_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cal_tex_rect.add_child(_cal_day_marker)
 
-	# Center-Right Hades Events Frame
+	# Center-Right Hades Events Frame (widened for descriptions)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.358
-	_frame.anchor_right = 0.808
+	_frame.anchor_left = 0.335
+	_frame.anchor_right = 0.850
 	_frame.anchor_top = 0.175
 	_frame.anchor_bottom = 0.855
 	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
@@ -240,8 +240,8 @@ func _build_ui() -> void:
 
 	# Right-side Hades keyword callout stack (appears on card hover)
 	_callout_col = VBoxContainer.new()
-	_callout_col.anchor_left = 0.820
-	_callout_col.anchor_right = 0.988
+	_callout_col.anchor_left = 0.858
+	_callout_col.anchor_right = 0.992
 	_callout_col.anchor_top = 0.21
 	_callout_col.anchor_bottom = 0.85
 	_callout_col.add_theme_constant_override("separation", 10)
@@ -280,7 +280,10 @@ func _refresh_calendar_display() -> void:
 	if is_instance_valid(_cal_year_right):
 		_cal_year_right.text = year_str
 	if is_instance_valid(_cal_month_lbl):
-		_cal_month_lbl.text = CALENDAR_MONTHS[month_idx]
+		var m_txt := CALENDAR_MONTHS[month_idx]
+		_cal_month_lbl.text = m_txt
+		var m_sz := 28 if m_txt.length() >= 8 else 32
+		_cal_month_lbl.add_theme_font_size_override("font_size", m_sz)
 
 	if is_instance_valid(_cal_day_marker):
 		# Day 1 is at Tuesday (col 2, row 0) -> cell_idx = day_in_month + 1 (2..32)
@@ -413,6 +416,19 @@ func _event_sigil(event_id: String) -> String:
 		"typhoon_warning": return "〰"
 		_: return "✦"
 
+func _format_natural_list(names: PackedStringArray) -> String:
+	var count := names.size()
+	if count == 0:
+		return "Featured Stock"
+	if count == 1:
+		return names[0]
+	if count == 2:
+		return "%s and %s" % [names[0], names[1]]
+	var leading := PackedStringArray()
+	for i in range(count - 1):
+		leading.append(names[i])
+	return "%s, and %s" % [", ".join(leading), names[count - 1]]
+
 func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 	var target_names: PackedStringArray = []
 	for cat in ev.affected_categories:
@@ -421,12 +437,12 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 		for it in ev.affected_items:
 			if it:
 				target_names.append(it.item_name)
-	var targets_str := ", ".join(target_names) if not target_names.is_empty() else "Featured Stock"
-	var desc_rich := "%s Neighbors are actively seeking %s today." % [ev.description, targets_str]
+	var targets_str := _format_natural_list(target_names)
+	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
 	var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
 	var stats: Array = [
-		{"label": "%s Demand:" % targets_str, "value": "+%d%%" % demand_pct, "tone": "pos"},
-		{"label": "%s Price Tolerance:" % targets_str, "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
+		{"label": "Highlighted Demand:", "value": "+%d%%" % demand_pct, "tone": "pos"},
+		{"label": "Highlighted Price Tolerance:", "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
 	]
 	var kws: Array = ["price_tolerance"] if ev.tolerance_offset != 0 else []
 	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws)
@@ -457,7 +473,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.custom_minimum_size = Vector2(0, 114)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 10)
-	style.content_margin_right = 28
+	style.content_margin_right = 20
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.78)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -469,7 +485,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 38)
+	hbox.add_theme_constant_override("separation", 24)
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
