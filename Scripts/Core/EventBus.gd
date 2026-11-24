@@ -86,6 +86,10 @@ signal tally_contribution_made(amount: float, tier: String, total_paid: float, g
 @warning_ignore("unused_signal")
 signal mayari_card_changed(card_id: String)
 @warning_ignore("unused_signal")
+signal sto_nino_blessing_changed()
+@warning_ignore("unused_signal")
+signal sto_nino_upgraded(new_level: int)
+@warning_ignore("unused_signal")
 signal keybinds_changed()
 
 # --- Nokia / Phone UI ---

@@ -76,6 +76,11 @@ func open_menu() -> void:
 		if next_maneki and StoryManager.player_level >= int(next_maneki.get_meta("req_level", 1)) and _card_map.has(next_maneki):
 			_focus_upgrade(next_maneki)
 			return
+	if StoryManager.sto_nino_upgrade_level < 3:
+		var next_sn := StoryManager.get_sto_nino_upgrade_item(StoryManager.sto_nino_upgrade_level + 1)
+		if next_sn and StoryManager.player_level >= int(next_sn.get_meta("req_level", 1)) and _card_map.has(next_sn):
+			_focus_upgrade(next_sn)
+			return
 	if StoryManager.radio_upgrade_level < 3:
 		var next_radio := StoryManager.get_radio_upgrade_item(StoryManager.radio_upgrade_level + 1)
 		if next_radio and StoryManager.player_level >= int(next_radio.get_meta("req_level", 1)) and _card_map.has(next_radio):
@@ -161,6 +166,24 @@ func _populate_upgrades() -> void:
 		upgrade_list_container.add_child(m_card)
 		_card_map[m_item] = m_card
 
+	# Sto. Niño Altar Blessings section
+	var sn_header := Label.new()
+	sn_header.text = "STO. NIÑO ALTAR BLESSINGS"
+	sn_header.add_theme_font_override("font", UIStyle.FONT_INDER)
+	sn_header.add_theme_font_size_override("font_size", 15)
+	sn_header.add_theme_color_override("font_color", Color("#F5C97B"))
+	var sn_hdr_margin := MarginContainer.new()
+	sn_hdr_margin.add_theme_constant_override("margin_top", 10)
+	sn_hdr_margin.add_theme_constant_override("margin_bottom", 2)
+	sn_hdr_margin.add_child(sn_header)
+	upgrade_list_container.add_child(sn_hdr_margin)
+
+	for lvl in range(1, 4):
+		var sn_item := StoryManager.get_sto_nino_upgrade_item(lvl)
+		var sn_card := _create_sto_nino_upgrade_bar(sn_item, lvl)
+		upgrade_list_container.add_child(sn_card)
+		_card_map[sn_item] = sn_card
+
 	# Store Intel & Wholesale Deals section
 	var intel_header := Label.new()
 	intel_header.text = "STORE INTEL & WHOLESALE DEALS"
@@ -217,6 +240,13 @@ func _get_effective_maneki_level() -> int:
 	for q in _queued_upgrades:
 		if q.get_meta("is_maneki_upgrade", false):
 			eff = maxi(eff, int(q.get_meta("maneki_level", eff)))
+	return eff
+
+func _get_effective_sto_nino_level() -> int:
+	var eff := StoryManager.sto_nino_upgrade_level
+	for q in _queued_upgrades:
+		if q.get_meta("is_sto_nino_upgrade", false):
+			eff = maxi(eff, int(q.get_meta("sto_nino_level", eff)))
 	return eff
 
 func _get_effective_radio_level() -> int:
@@ -831,6 +861,126 @@ func _create_maneki_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 
 	return card
 
+func _create_sto_nino_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 74)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.focus_mode = Control.FOCUS_NONE
+
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
+	var owned: bool = target_level <= StoryManager.sto_nino_upgrade_level
+	var is_queued: bool = item in _queued_upgrades
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_sto_nino_level() + 1)
+
+	var bg_col := UIStyle.COLOR_CARD_BG
+	if owned:
+		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif is_queued:
+		bg_col = Color(0.14, 0.28, 0.16, 0.95)
+	elif not is_next_available:
+		bg_col = UIStyle.COLOR_TAB_LOCKED
+
+	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 14
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 14)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(hbox)
+
+	var icon_frame := PanelContainer.new()
+	icon_frame.custom_minimum_size = Vector2(54, 54)
+	icon_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_frame.add_theme_stylebox_override("panel", UIStyle.create_flat_stylebox(Color(0.32, 0.12, 0.12, 0.65), 6, 4, 4))
+	hbox.add_child(icon_frame)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if item.texture:
+		icon.texture = item.texture
+	icon_frame.add_child(icon)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(info_vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = item.item_name
+	name_lbl.add_theme_font_size_override("font_size", 19)
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
+	info_vbox.add_child(name_lbl)
+
+	var fav_cnt: int = int(item.get_meta("favor_count", 1))
+	var dur_h: float = float(item.get_meta("duration_hours", 5.0))
+	var all_day: bool = bool(item.get_meta("all_day", false))
+	var dur_txt := "Lasts All Day" if all_day else ("Lasts %s" % _format_hours_short(dur_h))
+	var fav_txt := "%d Random Favor" % fav_cnt if fav_cnt == 1 else "%d Random Favors" % fav_cnt
+	var sub_lbl := Label.new()
+	sub_lbl.add_theme_font_size_override("font_size", 13)
+	sub_lbl.text = "%s  •  %s" % [fav_txt, dur_txt]
+	sub_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+	info_vbox.add_child(sub_lbl)
+
+	var right_vbox := VBoxContainer.new()
+	right_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(right_vbox)
+
+	var price_lbl := Label.new()
+	price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	price_lbl.add_theme_font_size_override("font_size", 17)
+	price_lbl.text = "₱%.2f" % item.price
+	price_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT if is_next_available else Color(0.85, 0.85, 0.85, 0.9))
+	right_vbox.add_child(price_lbl)
+
+	var status_lbl := Label.new()
+	status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	status_lbl.add_theme_font_size_override("font_size", 12)
+	if owned:
+		status_lbl.text = "OWNED"
+		status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+	elif is_queued:
+		status_lbl.text = "QUEUED ✓"
+		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
+	elif is_next_available:
+		status_lbl.text = "AVAILABLE"
+		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	elif not level_unlocked:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
+	else:
+		status_lbl.text = "BUY LV.%d FIRST" % (target_level - 1)
+		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
+	right_vbox.add_child(status_lbl)
+
+	if owned:
+		icon.modulate = Color(1, 1, 1, 0.5)
+		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	elif is_queued or is_next_available:
+		icon.modulate = Color(1, 1, 1, 1)
+		card.modulate = Color(1, 1, 1, 1)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.gui_input.connect(_on_card_clicked.bind(item))
+	else:
+		icon.modulate = Color(0.3, 0.25, 0.2, 0.8)
+		card.modulate = Color(0.7, 0.7, 0.7, 0.85)
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+
+	return card
+
 func _create_radio_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0, 74)
@@ -1092,6 +1242,11 @@ func _toggle_queue_upgrade(item: ItemData) -> void:
 			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
 				return not q.get_meta("is_radio_upgrade", false) or int(q.get_meta("radio_level", 1)) < removed_radio
 			)
+		elif item.get_meta("is_sto_nino_upgrade", false):
+			var removed_sn: int = int(item.get_meta("sto_nino_level", 1))
+			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
+				return not q.get_meta("is_sto_nino_upgrade", false) or int(q.get_meta("sto_nino_level", 1)) < removed_sn
+			)
 	else:
 		_queued_upgrades.append(item)
 
@@ -1141,6 +1296,37 @@ func _refresh_confirm_summary() -> void:
 			UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT, 18.0)
 
 func _update_detail_panel(item: ItemData) -> void:
+	if item.get_meta("is_sto_nino_upgrade", false):
+		var sn_lvl: int = int(item.get_meta("sto_nino_level", 1))
+		var prev_s: Dictionary = StoryManager.STO_NINO_UPGRADE_SPECS[sn_lvl - 1]
+		var next_s: Dictionary = StoryManager.STO_NINO_UPGRADE_SPECS[sn_lvl]
+		var prev_dur: String = "All Day" if bool(prev_s["all_day"]) else _format_hours_short(float(prev_s["duration_hours"]))
+		var next_dur: String = "All Day" if bool(next_s["all_day"]) else _format_hours_short(float(next_s["duration_hours"]))
+		var prev_cnt: int = int(prev_s["favor_count"])
+		var next_cnt: int = int(next_s["favor_count"])
+		if detail_icon:
+			detail_icon.texture = item.texture
+		if detail_name:
+			detail_name.text = item.item_name
+		if detail_subtitle:
+			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
+		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
+			child.queue_free()
+		var sn_lines: Array[String] = [
+			"• Blessing Duration: %s → %s" % [prev_dur, next_dur],
+			"• Random Favors Granted: %d → %d" % [prev_cnt, next_cnt],
+			"• Tap Sto. Niño on your shelf to receive new random Favors you don't have yet",
+		]
+		for line in sn_lines:
+			var stat_lbl := Label.new()
+			stat_lbl.text = line
+			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			stat_lbl.add_theme_font_size_override("font_size", 15)
+			stat_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+			unlocks_list.add_child(stat_lbl)
+		return
+
 	if item.get_meta("is_maneki_upgrade", false):
 		var m_lvl: int = int(item.get_meta("maneki_level", 1))
 		var prev_s: Dictionary = StoryManager.MANEKI_UPGRADE_SPECS[m_lvl - 1]
@@ -1421,7 +1607,7 @@ func _on_confirm_pressed() -> void:
 	var order := RestockOrder.new()
 	var remaining_budget := _get_money()
 	for q_item in _queued_upgrades:
-		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false) or q_item.get_meta("is_maneki_upgrade", false) or q_item.get_meta("is_radio_upgrade", false) or q_item.get_meta("is_mario_deals_upgrade", false):
+		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false) or q_item.get_meta("is_maneki_upgrade", false) or q_item.get_meta("is_radio_upgrade", false) or q_item.get_meta("is_mario_deals_upgrade", false) or q_item.get_meta("is_sto_nino_upgrade", false):
 			remaining_budget -= q_item.price
 			continue
 		var check := order.can_add(q_item, remaining_budget)

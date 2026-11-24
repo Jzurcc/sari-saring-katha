@@ -490,7 +490,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG):
 		var eligible_regular: Array[ItemData] = []
 		for it in items.keys():
-			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_maneki_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false):
+			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_maneki_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false) or it.get_meta("is_sto_nino_upgrade", false):
 				continue
 			if DispenserContainerItem.is_container_prop(it):
 				continue
@@ -511,7 +511,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_maneki_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false):
+		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_maneki_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false) or item.get_meta("is_sto_nino_upgrade", false):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -537,6 +537,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_radio_lvl := StoryManager.radio_upgrade_level
 	var highest_radio_name := ""
 	var unlock_mario_deals := false
+	var highest_sto_nino_lvl := StoryManager.sto_nino_upgrade_level
+	var highest_sto_nino_name := ""
 
 	for item in items.keys():
 		if item.get_meta("is_fridge_upgrade", false):
@@ -568,6 +570,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			continue
 		if item.get_meta("is_mario_deals_upgrade", false):
 			unlock_mario_deals = true
+			continue
+		if item.get_meta("is_sto_nino_upgrade", false):
+			var target_sn: int = int(item.get_meta("sto_nino_level", 1))
+			if target_sn > highest_sto_nino_lvl:
+				highest_sto_nino_lvl = target_sn
+				highest_sto_nino_name = item.item_name
 			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
@@ -621,6 +629,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 		if spawn_in_tree:
 			EventBus.show_notification.emit("Wholesale Pass Active!", "Uncle Mario's Daily Sulit Deals (-20%) are now unlocked!", "purchase")
 		LogManager.info("MarioManager", "Uncle Mario's Wholesale Pass unlocked on Mario arrival.")
+
+	if highest_sto_nino_lvl > StoryManager.sto_nino_upgrade_level:
+		StoryManager.purchase_sto_nino_upgrade(highest_sto_nino_lvl)
+		if spawn_in_tree:
+			EventBus.show_notification.emit("Sto. Niño Altar Upgraded!", "%s placed on your altar!" % highest_sto_nino_name, "purchase")
+		LogManager.info("MarioManager", "Sto. Niño upgraded to Level %d (%s)" % [highest_sto_nino_lvl, highest_sto_nino_name])
 
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:

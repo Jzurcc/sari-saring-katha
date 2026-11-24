@@ -83,7 +83,9 @@ func evaluate_tally_tier(offer: float) -> String:
 	return "shortfall"
 
 func has_mayari_card(card_id: String) -> bool:
-	return active_mayari_card != "" and active_mayari_card == card_id
+	if card_id == "":
+		return false
+	return active_mayari_card == card_id or (card_id in active_blessing_cards)
 
 func get_mayari_tolerance_offset() -> int:
 	if has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
@@ -461,6 +463,137 @@ func purchase_mario_deals_upgrade() -> void:
 	EventBus.restock_catalog_refresh.emit()
 	_save_progression()
 
+# --- Sto. Niño Altar Blessings (Random Favors on Tap) ---
+const STO_NINO_UPGRADE_SPECS: Array[Dictionary] = [
+	{"level": 0, "req_level": 1, "name": "Sto. Niño Altar", "cost": 0.0, "duration_hours": 5.0, "favor_count": 1, "all_day": false, "desc": "Tap Sto. Niño for 1 random Favor lasting 5 hours."},
+	{"level": 1, "req_level": 2, "name": "Sampaguita Garland", "cost": 85.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Fresh sampaguita garland for the altar. Extends Sto. Niño's Blessing from 5h to 8h (only 2 taps for the whole day)."},
+	{"level": 2, "req_level": 5, "name": "Red Altar Candle", "cost": 165.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "A warm votive candle beside Sto. Niño. Grants 2 distinct random Favors at once for 8 hours!"},
+	{"level": 3, "req_level": 9, "name": "Ornate Cape & Crown", "cost": 270.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Royal crimson vestments & golden halo. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
+]
+var sto_nino_upgrade_level: int = 0
+var active_blessing_cards: Array[String] = []
+var sto_nino_blessing_start_hour: float = -1.0
+var sto_nino_blessing_end_hour: float = -1.0
+var sto_nino_blessing_all_day: bool = false
+var _sto_nino_upgrade_item_cache: Dictionary = {}
+
+func get_sto_nino_spec(level: int = -1) -> Dictionary:
+	var lvl := sto_nino_upgrade_level if level < 0 else level
+	lvl = clampi(lvl, 0, STO_NINO_UPGRADE_SPECS.size() - 1)
+	return STO_NINO_UPGRADE_SPECS[lvl]
+
+func get_sto_nino_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, STO_NINO_UPGRADE_SPECS.size() - 1)
+	if _sto_nino_upgrade_item_cache.has(lvl):
+		return _sto_nino_upgrade_item_cache[lvl]
+	var spec: Dictionary = STO_NINO_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "sto_nino_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/sto_nino2.png"):
+		item.texture = load("res://Assets/ui/sto_nino2.png")
+	item.set_meta("is_sto_nino_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("sto_nino_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
+	item.set_meta("duration_hours", float(spec["duration_hours"]))
+	item.set_meta("favor_count", int(spec["favor_count"]))
+	item.set_meta("all_day", bool(spec["all_day"]))
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	_sto_nino_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_sto_nino_upgrade(level: int) -> void:
+	var target := clampi(level, 1, STO_NINO_UPGRADE_SPECS.size() - 1)
+	if target <= sto_nino_upgrade_level:
+		return
+	sto_nino_upgrade_level = target
+	var spec := get_sto_nino_spec()
+	if bool(spec["all_day"]) and not active_blessing_cards.is_empty():
+		sto_nino_blessing_all_day = true
+		sto_nino_blessing_end_hour = -1.0
+		EventBus.sto_nino_blessing_changed.emit()
+	LogManager.info("StoryManager", "Sto. Niño upgraded to Level %d (%s)" % [sto_nino_upgrade_level, str(spec["name"])])
+	EventBus.sto_nino_upgraded.emit(sto_nino_upgrade_level)
+	_save_progression()
+
+func has_active_sto_nino_blessing() -> bool:
+	check_sto_nino_blessing_expiry()
+	return not active_blessing_cards.is_empty()
+
+func get_sto_nino_blessing_progress() -> float:
+	if active_blessing_cards.is_empty() or sto_nino_blessing_all_day:
+		return 0.0
+	if sto_nino_blessing_start_hour < 0.0 or sto_nino_blessing_end_hour <= sto_nino_blessing_start_hour:
+		return 0.0
+	var span := sto_nino_blessing_end_hour - sto_nino_blessing_start_hour
+	return clampf((clock.current_display_time - sto_nino_blessing_start_hour) / span, 0.0, 1.0)
+
+func get_sto_nino_blessing_remaining_hours() -> float:
+	if active_blessing_cards.is_empty() or sto_nino_blessing_all_day or sto_nino_blessing_end_hour < 0.0:
+		return 0.0
+	return maxf(0.0, sto_nino_blessing_end_hour - clock.current_display_time)
+
+func activate_sto_nino_blessing() -> Array[String]:
+	check_sto_nino_blessing_expiry()
+	if not active_blessing_cards.is_empty():
+		return []
+	var spec := get_sto_nino_spec()
+	var want_count: int = int(spec["favor_count"])
+	var duration_h: float = float(spec["duration_hours"])
+	var is_all_day: bool = bool(spec["all_day"])
+
+	var pool: Array[String] = []
+	for card_id in MayariCardRegistry.CARDS.keys():
+		if not MayariCardRegistry.is_favor(card_id):
+			continue
+		if card_id == active_mayari_card:
+			continue
+		if not is_all_day and card_id == MayariCardRegistry.CARD_MOON_HOLDS_SKY:
+			continue
+		pool.append(card_id)
+	pool.shuffle()
+
+	var granted: Array[String] = []
+	for i in range(mini(want_count, pool.size())):
+		granted.append(pool[i])
+
+	if granted.is_empty():
+		return []
+
+	active_blessing_cards = granted
+	sto_nino_blessing_all_day = is_all_day
+	sto_nino_blessing_start_hour = clock.current_display_time
+	sto_nino_blessing_end_hour = -1.0 if is_all_day else (clock.current_display_time + duration_h)
+	LogManager.info("StoryManager", "Sto. Niño Blessing granted: %s (all_day=%s, start=%.2f, end=%.2f)" % [
+		str(granted), str(is_all_day), sto_nino_blessing_start_hour, sto_nino_blessing_end_hour
+	])
+	EventBus.sto_nino_blessing_changed.emit()
+	_save_progression()
+	return granted
+
+func check_sto_nino_blessing_expiry() -> void:
+	if active_blessing_cards.is_empty() or sto_nino_blessing_all_day or sto_nino_blessing_end_hour < 0.0:
+		return
+	if clock.current_display_time >= sto_nino_blessing_end_hour:
+		active_blessing_cards.clear()
+		sto_nino_blessing_start_hour = -1.0
+		sto_nino_blessing_end_hour = -1.0
+		LogManager.info("StoryManager", "Sto. Niño Blessing expired at %.2fh." % clock.current_display_time)
+		EventBus.sto_nino_blessing_changed.emit()
+		EventBus.show_notification.emit("Sto. Niño's Blessing Faded", "Tap Sto. Niño again for a new Favor.", "interact")
+		_save_progression()
+
+func _clear_sto_nino_blessing() -> void:
+	active_blessing_cards.clear()
+	sto_nino_blessing_start_hour = -1.0
+	sto_nino_blessing_end_hour = -1.0
+	sto_nino_blessing_all_day = false
+	EventBus.sto_nino_blessing_changed.emit()
+
 # --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
 var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
 var todays_sulit_deals: Array[String] = [] # Array of ItemData.resource_path (2-3 at -20% when unlocked)
@@ -632,11 +765,16 @@ func _cache_node_refs() -> void:
 	_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
 	LogManager.debug("StoryManager", "Cached GameManager: %s" % str(is_instance_valid(_game_manager)))
 
+func _process(_delta: float) -> void:
+	if not active_blessing_cards.is_empty() and not sto_nino_blessing_all_day:
+		check_sto_nino_blessing_expiry()
+
 func _on_day_started(new_day: int) -> void:
 	LogManager.info("StoryManager", "StoryManager._on_day_started(%d) CALLED" % new_day)
 	_cache_node_refs()
 	day = new_day
 	has_mayari_visited = false
+	_clear_sto_nino_blessing()
 	# Promote last night's drafted Moon Card to active for today (or clear if none)
 	active_mayari_card = pending_mayari_card
 	pending_mayari_card = ""
@@ -801,6 +939,11 @@ func get_save_data() -> Dictionary:
 		"maneki_upgrade_level": maneki_upgrade_level,
 		"radio_upgrade_level": radio_upgrade_level,
 		"has_mario_deals": has_mario_deals,
+		"sto_nino_upgrade_level": sto_nino_upgrade_level,
+		"active_blessing_cards": active_blessing_cards.duplicate(),
+		"sto_nino_blessing_start_hour": sto_nino_blessing_start_hour,
+		"sto_nino_blessing_end_hour": sto_nino_blessing_end_hour,
+		"sto_nino_blessing_all_day": sto_nino_blessing_all_day,
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
 		"todays_sulit_deals": todays_sulit_deals.duplicate(),
 		"todays_missed_items": todays_missed_items.duplicate(),
@@ -855,6 +998,15 @@ func load_save_data(data: Dictionary) -> void:
 	maneki_upgrade_level = clampi(int(data.get("maneki_upgrade_level", 0)), 0, MANEKI_UPGRADE_SPECS.size() - 1)
 	radio_upgrade_level = clampi(int(data.get("radio_upgrade_level", 0)), 0, RADIO_UPGRADE_SPECS.size() - 1)
 	has_mario_deals = bool(data.get("has_mario_deals", false))
+	sto_nino_upgrade_level = clampi(int(data.get("sto_nino_upgrade_level", 0)), 0, STO_NINO_UPGRADE_SPECS.size() - 1)
+	active_blessing_cards.clear()
+	for cid in data.get("active_blessing_cards", []):
+		if str(cid) != "":
+			active_blessing_cards.append(str(cid))
+	sto_nino_blessing_start_hour = float(data.get("sto_nino_blessing_start_hour", -1.0))
+	sto_nino_blessing_end_hour = float(data.get("sto_nino_blessing_end_hour", -1.0))
+	sto_nino_blessing_all_day = bool(data.get("sto_nino_blessing_all_day", false))
+	EventBus.sto_nino_blessing_changed.emit()
 	todays_expected_regulars.clear()
 	for p in data.get("todays_expected_regulars", []):
 		todays_expected_regulars.append(str(p))
@@ -944,6 +1096,8 @@ func reset_state() -> void:
 	maneki_upgrade_level = 0
 	radio_upgrade_level = 0
 	has_mario_deals = false
+	sto_nino_upgrade_level = 0
+	_clear_sto_nino_blessing()
 	todays_expected_regulars.clear()
 	todays_sulit_deals.clear()
 	todays_missed_items.clear()

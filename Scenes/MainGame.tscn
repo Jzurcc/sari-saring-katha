@@ -48,6 +48,7 @@
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
+[ext_resource type="Script" path="res://Scripts/World/Interactors/StoNinoInteractable.gd" id="sto_nino_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
@@ -573,13 +574,20 @@ texture = ExtResource("31_1r7st")
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.299846, 4.845353, 0.89582586)
 shape = SubResource("BoxShape3D_cqekc")
 
-[node name="Statue" type="Sprite3D" parent="." unique_id=2103369003]
+[node name="StoNino" type="Area3D" parent="." unique_id=2103369001]
+script = ExtResource("sto_nino_script")
+
+[node name="Statue" type="Sprite3D" parent="StoNino" unique_id=2103369003]
 transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.22742, -0.11046374)
 cast_shadow = 0
 billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("32_o6tew")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StoNino" unique_id=2103369004]
+transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.22742, -0.11046374)
+shape = SubResource("BoxShape3D_cqekc")
 
 [node name="Frame" type="Sprite3D" parent="." unique_id=1757741366]
 transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.9098506, 2.1249723)

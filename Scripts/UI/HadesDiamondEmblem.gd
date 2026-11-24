@@ -30,6 +30,13 @@ static func palette(kind: String) -> Dictionary:
 				"bg": Color(0.056, 0.076, 0.118, 0.96),
 				"tag": "OMEN",
 			}
+		"blessing":
+			return {
+				"accent": Color(0.95, 0.36, 0.34, 1.0),
+				"bright": Color(1.0, 0.80, 0.56, 1.0),
+				"bg": Color(0.115, 0.056, 0.058, 0.96),
+				"tag": "BLESSING",
+			}
 		_:
 			return {
 				"accent": Color(1.0, 0.78, 0.16, 1.0),

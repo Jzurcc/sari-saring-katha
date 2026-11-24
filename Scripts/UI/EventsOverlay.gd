@@ -233,7 +233,14 @@ func _populate_cards() -> void:
 	if StoryManager.active_mayari_card != "":
 		var card := MayariCardRegistry.get_card(StoryManager.active_mayari_card)
 		if not card.is_empty():
-			_cards_vbox.add_child(_build_mayari_event_card(card))
+			_cards_vbox.add_child(_build_mayari_event_card(card, false))
+			total_active += 1
+
+	# 3. Active Sto. Niño Blessings
+	for b_id in StoryManager.active_blessing_cards:
+		var b_card := MayariCardRegistry.get_card(b_id)
+		if not b_card.is_empty():
+			_cards_vbox.add_child(_build_mayari_event_card(b_card, true))
 			total_active += 1
 
 	if total_active == 0:
@@ -293,17 +300,18 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 	var kws: Array = ["price_tolerance"] if ev.tolerance_offset != 0 else []
 	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws)
 
-func _build_mayari_event_card(c_data: Dictionary) -> PanelContainer:
+func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
 	var desc_rich := str(c_data.get("description_rich", c_data.get("description", "")))
 	var stats: Array = c_data.get("stats", [])
 	var kws: Array = c_data.get("keywords", [])
+	var kind_str := "blessing" if is_blessing else ("favor" if is_fav else "omen")
 	return _build_hades_card(
 		str(c_data.get("title", "Moon Card")),
 		str(c_data.get("sigil", "☽")),
 		desc_rich,
 		stats,
-		"favor" if is_fav else "omen",
+		kind_str,
 		kws
 	)
 

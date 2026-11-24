@@ -17,6 +17,8 @@ class MiniDiamondIcon extends Control:
 	var accent: Color = Color(0.835, 0.624, 0.278, 1.0)
 	var accent_bright: Color = Color(1.0, 0.875, 0.56, 1.0)
 	var fill_color: Color = Color(0.12, 0.09, 0.06, 0.95)
+	## 0.0 = fresh (no overlay), 1.0 = fully elapsed (clockwise dark radial sweep)
+	var radial_progress: float = 0.0
 
 	func _draw() -> void:
 		var c := size * 0.5
@@ -26,7 +28,26 @@ class MiniDiamondIcon extends Control:
 		draw_polyline(_closed_pts(outer), accent_bright, 2.5, true)
 		var inner := _diamond_pts(c, r * 0.80)
 		draw_colored_polygon(inner, fill_color)
+		if radial_progress > 0.002:
+			_draw_clockwise_sweep(c, r * 1.35, inner, clampf(radial_progress, 0.0, 1.0))
 		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.65), 1.3, true)
+
+	func _draw_clockwise_sweep(center: Vector2, sweep_r: float, clip_poly: PackedVector2Array, frac: float) -> void:
+		if frac >= 0.998:
+			draw_colored_polygon(clip_poly, Color(0.02, 0.015, 0.015, 0.60))
+			return
+		var start_a := -PI * 0.5
+		var end_a := start_a + frac * TAU
+		var steps := maxi(4, int(ceilf(frac * 28.0)))
+		var wedge := PackedVector2Array()
+		wedge.append(center)
+		for i in range(steps + 1):
+			var a := lerpf(start_a, end_a, float(i) / float(steps))
+			wedge.append(center + Vector2(cos(a), sin(a)) * sweep_r)
+		var clipped := Geometry2D.intersect_polygons(clip_poly, wedge)
+		for poly in clipped:
+			if poly.size() >= 3:
+				draw_colored_polygon(poly, Color(0.02, 0.015, 0.015, 0.60))
 
 	func _diamond_pts(center: Vector2, radius: float) -> PackedVector2Array:
 		return PackedVector2Array([
@@ -42,15 +63,29 @@ class MiniDiamondIcon extends Control:
 		return closed
 
 var _row: HBoxContainer
+var _blessing_diamonds: Array[MiniDiamondIcon] = []
+var _last_blessing_progress: float = -1.0
 
 func _ready() -> void:
 	layer = 40
 	_build_ui()
 	EventBus.mayari_card_changed.connect(func(_id): _refresh_icons())
+	EventBus.sto_nino_blessing_changed.connect(_refresh_icons)
 	EventBus.day_started.connect(func(_d): _refresh_icons())
 	if is_instance_valid(StoreEventManager):
 		StoreEventManager.events_changed.connect(func(_ev): _refresh_icons())
 	_refresh_icons()
+
+func _process(_delta: float) -> void:
+	if _blessing_diamonds.is_empty():
+		return
+	var p := StoryManager.get_sto_nino_blessing_progress()
+	if absf(p - _last_blessing_progress) >= 0.004:
+		_last_blessing_progress = p
+		for d in _blessing_diamonds:
+			if is_instance_valid(d):
+				d.radial_progress = p
+				d.queue_redraw()
 
 func _build_ui() -> void:
 	var root := Control.new()
@@ -79,6 +114,8 @@ func _event_sigil(event_id: String) -> String:
 		_: return "✦"
 
 func _refresh_icons() -> void:
+	_blessing_diamonds.clear()
+	_last_blessing_progress = -1.0
 	for child in _row.get_children():
 		_row.remove_child(child)
 		child.queue_free()
@@ -102,6 +139,18 @@ func _refresh_icons() -> void:
 			var acc_b: Color = pc["bright"]
 			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b)
 			count += 1
+
+	# 3. Active Sto. Niño Blessings (with clockwise radial sweep when timed)
+	var b_progress := StoryManager.get_sto_nino_blessing_progress()
+	var pb: Dictionary = HadesEmblem.palette("blessing")
+	for b_id in StoryManager.active_blessing_cards:
+		var b_card := MayariCardRegistry.get_card(b_id)
+		if not b_card.is_empty():
+			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress)
+			_blessing_diamonds.append(d)
+			count += 1
+	if not _blessing_diamonds.is_empty():
+		_last_blessing_progress = b_progress
 
 	if count == 0:
 		_row.visible = false
@@ -129,7 +178,7 @@ func _refresh_icons() -> void:
 	var tw := create_tween()
 	tw.tween_property(_row, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE)
 
-func _add_diamond(sigil: String, accent: Color, accent_bright: Color) -> void:
+func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0) -> MiniDiamondIcon:
 	var d := MiniDiamondIcon.new()
 	d.custom_minimum_size = Vector2(62, 62)
 	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -137,6 +186,7 @@ func _add_diamond(sigil: String, accent: Color, accent_bright: Color) -> void:
 	d.accent = accent
 	d.accent_bright = accent_bright
 	d.fill_color = Color(accent.r * 0.28, accent.g * 0.21, accent.b * 0.14, 0.95)
+	d.radial_progress = progress
 	_row.add_child(d)
 
 	var lbl := Label.new()
@@ -148,3 +198,4 @@ func _add_diamond(sigil: String, accent: Color, accent_bright: Color) -> void:
 	lbl.add_theme_color_override("font_color", accent_bright)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	d.add_child(lbl)
+	return d
