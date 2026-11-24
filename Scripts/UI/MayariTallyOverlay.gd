@@ -672,8 +672,8 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 	# Left Hades-style rotated diamond emblem with upright centered sigil
 	var emblem := HadesEmblem.new()
-	emblem.custom_minimum_size = Vector2(138, 106)
-	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	emblem.custom_minimum_size = Vector2(122, 122)
+	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright

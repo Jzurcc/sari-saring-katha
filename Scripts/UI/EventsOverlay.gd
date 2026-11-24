@@ -309,8 +309,8 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
-	emblem.custom_minimum_size = Vector2(138, 106)
-	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	emblem.custom_minimum_size = Vector2(122, 122)
+	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
 	hbox.add_child(emblem)
