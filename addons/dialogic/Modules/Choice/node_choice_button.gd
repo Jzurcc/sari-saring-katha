@@ -39,10 +39,14 @@ signal choice_selected
 ## This can be used to have a custom text rendering child, like a RichTextLabel.
 @export var text_node: Node
 
+var _confirm_keycap: PanelContainer = null
+var _confirm_keycap_lbl: Label = null
+
 
 func _ready() -> void:
 	add_to_group('dialogic_choice_button')
 	shortcut_in_tooltip = false
+	clip_contents = false
 	hide()
 	
 	# For players who use a mouse to make choices, mouse hover should grab focus.
@@ -52,6 +56,83 @@ func _ready() -> void:
 		mouse_entered.connect(grab_focus)
 	if not focus_entered.is_connected(_on_choice_button_focus_entred):
 		focus_entered.connect(_on_choice_button_focus_entred.bind(self))
+	if not focus_entered.is_connected(_on_keycap_focus_entered):
+		focus_entered.connect(_on_keycap_focus_entered)
+	if not focus_exited.is_connected(_on_keycap_focus_exited):
+		focus_exited.connect(_on_keycap_focus_exited)
+	if not hidden.is_connected(_on_keycap_focus_exited):
+		hidden.connect(_on_keycap_focus_exited)
+
+	_build_confirm_keycap()
+	if Engine.has_singleton("EventBus") or get_node_or_null("/root/EventBus"):
+		var eb := get_node_or_null("/root/EventBus")
+		if eb and eb.has_signal("keybinds_changed") and not eb.keybinds_changed.is_connected(_refresh_keycap_text):
+			eb.keybinds_changed.connect(_refresh_keycap_text)
+
+
+func _build_confirm_keycap() -> void:
+	_confirm_keycap = PanelContainer.new()
+	_confirm_keycap.name = "ConfirmKeycap"
+	_confirm_keycap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confirm_keycap.anchor_left = 0.0
+	_confirm_keycap.anchor_right = 0.0
+	_confirm_keycap.anchor_top = 0.5
+	_confirm_keycap.anchor_bottom = 0.5
+	_confirm_keycap.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_confirm_keycap.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_confirm_keycap.offset_left = -10.0
+	_confirm_keycap.offset_right = -10.0
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.11, 0.10, 0.09, 0.94)
+	style.border_color = Color(1.0, 0.90, 0.54, 0.92)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.42)
+	style.shadow_size = 5
+	_confirm_keycap.add_theme_stylebox_override("panel", style)
+
+	_confirm_keycap_lbl = Label.new()
+	_confirm_keycap_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_keycap_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_confirm_keycap_lbl.add_theme_font_size_override("font_size", 14)
+	_confirm_keycap_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.56, 1.0))
+	_confirm_keycap_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_confirm_keycap.add_child(_confirm_keycap_lbl)
+
+	_refresh_keycap_text()
+	_confirm_keycap.visible = false
+	add_child(_confirm_keycap)
+
+
+func _refresh_keycap_text() -> void:
+	if not is_instance_valid(_confirm_keycap_lbl):
+		return
+	var nav := get_node_or_null("/root/DialogueChoiceNavigator")
+	if nav and nav.has_method("get_action_key_label"):
+		_confirm_keycap_lbl.text = nav.get_action_key_label("dialogue_confirm_choice", "F")
+	else:
+		_confirm_keycap_lbl.text = "F"
+
+
+func _on_keycap_focus_entered() -> void:
+	if not is_instance_valid(_confirm_keycap) or not visible or disabled:
+		return
+	_refresh_keycap_text()
+	_confirm_keycap.visible = true
+	_confirm_keycap.pivot_offset = _confirm_keycap.size * 0.5
+	_confirm_keycap.scale = Vector2(0.84, 0.84)
+	var tw := create_tween()
+	tw.tween_property(_confirm_keycap, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _on_keycap_focus_exited() -> void:
+	if is_instance_valid(_confirm_keycap):
+		_confirm_keycap.visible = false
 
 
 ## Custom choice buttons can override this for specialized behavior when the choice button is pressed.
