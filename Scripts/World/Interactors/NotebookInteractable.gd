@@ -2,6 +2,7 @@ extends WorldInteractor
 
 @export var notebook_ui_scene: PackedScene
 
+const AttentionBadge3D = preload("res://Scripts/World/Entities/CustomerAttentionBadge3D.gd")
 const BLINK_COLOR := Color(1.0, 0.85, 0.15, 1.0)
 const BLINK_DIM_COLOR := Color(1.0, 0.85, 0.15, 0.12)
 
@@ -9,6 +10,7 @@ var _meshes: Array[MeshInstance3D] = []
 var _is_ui_open: bool = false
 var _is_hovered: bool = false
 var _blink_tween: Tween = null
+var _attention_badge: AttentionBadge3D = null
 
 func _ready() -> void:
 	add_to_group("notebook_item")
@@ -17,6 +19,10 @@ func _ready() -> void:
 	outline_width = 64.0
 	outline_shader = preload("res://Shaders/outline.gdshader")
 	_collect_meshes()
+	_attention_badge = AttentionBadge3D.new()
+	add_child(_attention_badge)
+	_attention_badge.position = Vector3(0.0, 0.42, 0.0)
+	_attention_badge.set_base_y(0.42)
 	StoryManager.pending_debts_changed.connect(_refresh_blink_state)
 	EventBus.customer_satisfied.connect(_on_customer_left)
 	EventBus.customer_dismissed.connect(_on_customer_left)
@@ -26,12 +32,17 @@ func _on_customer_left(_customer: Customer) -> void:
 	_refresh_blink_state()
 
 func _refresh_blink_state() -> void:
+	var has_pending := StoryManager.has_pending_debts()
+	if is_instance_valid(_attention_badge):
+		var show_badge := has_pending and not _is_ui_open and Dialogic.current_timeline == null
+		_attention_badge.set_mode(AttentionBadge3D.Mode.UNGREETED if show_badge else AttentionBadge3D.Mode.HIDDEN)
+
 	if _is_hovered:
 		_stop_blink()
-		_apply_outline(BLINK_COLOR if StoryManager.has_pending_debts() else default_outline_color)
+		_apply_outline(BLINK_COLOR if has_pending else default_outline_color)
 		return
 
-	if StoryManager.has_pending_debts() and Dialogic.current_timeline == null:
+	if has_pending and Dialogic.current_timeline == null:
 		_start_blink()
 	else:
 		_stop_blink()

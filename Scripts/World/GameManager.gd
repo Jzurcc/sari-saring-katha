@@ -21,6 +21,7 @@ const MayariTallyOverlayScript = preload("res://Scripts/UI/MayariTallyOverlay.gd
 const MayariCardHUDScript = preload("res://Scripts/UI/MayariCardHUD.gd")
 const PlayerXPHUDScript = preload("res://Scripts/UI/PlayerXPHUD.gd")
 const EventsOverlayScript = preload("res://Scripts/UI/EventsOverlay.gd")
+const PendingDebtHUDScript = preload("res://Scripts/UI/PendingDebtHUD.gd")
 
 @export var starting_money: float = 250.0
 var money: float = 0.0
@@ -32,6 +33,7 @@ var _is_tally_overlay_open: bool = false
 var _mayari_card_hud: Node = null
 var _player_xp_hud: Node = null
 var _events_overlay: Node = null
+var _pending_debt_hud: Node = null
 
 # --- Tutorial Manager Instance ---
 var tutorial: TutorialManager
@@ -56,6 +58,8 @@ func _ready() -> void:
 	add_child(_player_xp_hud)
 	_events_overlay = EventsOverlayScript.new()
 	add_child(_events_overlay)
+	_pending_debt_hud = PendingDebtHUDScript.new()
+	add_child(_pending_debt_hud)
 	
 	# Connect early signals
 	EventBus.transaction_completed.connect(_on_transaction_completed)
