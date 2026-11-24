@@ -24,6 +24,7 @@ const CARD_EERIE_MIST_RUSH := "eerie_mist_rush"
 const CARD_RELUCTANT_CARE := "reluctant_care_package"
 const CARD_EARLY_DUSK := "early_dusk"
 const CARD_QUIET_ECLIPSE := "quiet_eclipse"
+const CARD_FADING_MEMORY := "fading_memory"
 
 const CARDS: Dictionary = {
 	# ── Biringan's Favor (Buffs) ─────────────────────────────────────────
@@ -201,6 +202,19 @@ const CARDS: Dictionary = {
 			{"label": "Market Events:", "value": "None Tomorrow", "tone": "neg"},
 		],
 		"hud_short": "No Market Events",
+	},
+	CARD_FADING_MEMORY: {
+		"id": CARD_FADING_MEMORY,
+		"kind": KIND_CHILL,
+		"title": "Fading Memory",
+		"sigil": "◌",
+		"tagline": "-35% Player XP",
+		"description": "Karimlan's mist dulls word of mouth. Earn 35% less Player XP from sales, visits, and stories tomorrow.",
+		"description_rich": "Karimlan's mist dulls word of mouth. Earn less [b]Player XP[/b] from every sale, visit, and story tomorrow.",
+		"stats": [
+			{"label": "Player XP Earned:", "value": "-35%", "tone": "neg"},
+		],
+		"hud_short": "-35% Player XP",
 	},
 }
 

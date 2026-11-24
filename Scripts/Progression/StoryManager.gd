@@ -7,8 +7,8 @@ signal pending_debts_changed
 
 const DAY_START_HOUR := 5.0
 const MENU_THEME_HOUR := 16.89 ## Golden hour aesthetic for Main Menu
-const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
-const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
+const CLOSING_HOUR := 20.0 ## 8 PM — no new customers after this
+const HARD_STOP_HOUR := 24.0 ## Midnight — absolute time limit
 ## 1 in-game hour = 50 real seconds.
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 
@@ -116,7 +116,7 @@ var pending_debts: Array[Dictionary] = [] # [{ "customer_path": String, "amount"
 var _save_requested: bool = false
 
 # --- Story Progression ---
-var _char_lookup: Dictionary = {}   # resource_path -> CustomerData
+var _char_lookup: Dictionary = {} # resource_path -> CustomerData
 var _game_manager: GameManager = null
 
 # --- Player Level, XP & Tier Progression ---
@@ -141,6 +141,8 @@ func get_xp_multiplier() -> float:
 	var mult := 1.0
 	if has_mayari_card(MayariCardRegistry.CARD_SILVER_RENOWN):
 		mult *= 1.50
+	if has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
+		mult *= 0.65
 	return mult
 
 func add_player_xp(base_amount: int, reason: String = "") -> void:
@@ -188,10 +190,10 @@ var _upgrade_item_cache: Dictionary = {}
 # --- Refrigerator Coldness & Upgrades ---
 ## Level 0 = stock fridge; Levels 1..3 = Magnetic Door Gasket, Heavy-Duty Insulation, Inverter Frost Compressor.
 const FRIDGE_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "req_level": 1, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 14.0, "desc": "Standard sari-sari fridge." },
-	{ "level": 1, "req_level": 2, "name": "Magnetic Door Gasket", "cost": 75.0, "drain_sec": 14.0, "regen_sec": 11.0, "desc": "Seals cold leaks when the door swings open." },
-	{ "level": 2, "req_level": 5, "name": "Heavy-Duty Insulation", "cost": 140.0, "drain_sec": 24.0, "regen_sec": 8.5, "desc": "Thick thermal lining keeps chilled stock frosty longer." },
-	{ "level": 3, "req_level": 9, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 36.0, "regen_sec": 6.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
+	{"level": 0, "req_level": 1, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 14.0, "desc": "Standard sari-sari fridge."},
+	{"level": 1, "req_level": 2, "name": "Magnetic Door Gasket", "cost": 75.0, "drain_sec": 14.0, "regen_sec": 11.0, "desc": "Seals cold leaks when the door swings open."},
+	{"level": 2, "req_level": 5, "name": "Heavy-Duty Insulation", "cost": 140.0, "drain_sec": 24.0, "regen_sec": 8.5, "desc": "Thick thermal lining keeps chilled stock frosty longer."},
+	{"level": 3, "req_level": 9, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 36.0, "regen_sec": 6.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast."},
 ]
 const FRIDGE_WARM_VALUE_MULTIPLIER := 0.75
 const FRIDGE_WARM_RECOVER_THRESHOLD := 50.0
@@ -248,9 +250,9 @@ func purchase_fridge_upgrade(level: int) -> void:
 
 # --- Store Cats (Counter Slots 1 -> 2 -> 3) ---
 const CAT_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "req_level": 1, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time." },
-	{ "level": 1, "req_level": 2, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once." },
-	{ "level": 2, "req_level": 6, "name": "Cat Food", "cost": 180.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots." },
+	{"level": 0, "req_level": 1, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time."},
+	{"level": 1, "req_level": 2, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once."},
+	{"level": 2, "req_level": 6, "name": "Cat Food", "cost": 180.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots."},
 ]
 var cat_upgrade_level: int = 0
 var _cat_upgrade_item_cache: Dictionary = {}
@@ -328,9 +330,9 @@ func purchase_trash_can_upgrade() -> void:
 
 # --- Lucky Waving Cat: Maneki-Neko (Shorter Time Windows -> More Customers/Day) ---
 const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows." },
-	{ "level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 95.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day." },
-	{ "level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 195.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day." },
+	{"level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows."},
+	{"level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 95.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day."},
+	{"level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 195.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day."},
 ]
 var maneki_upgrade_level: int = 0
 var _maneki_upgrade_item_cache: Dictionary = {}
@@ -381,10 +383,10 @@ func purchase_maneki_upgrade(level: int) -> void:
 
 # --- Barangay Transistor Radio (Reveals Expected Regulars: 0 -> 1 -> 2 -> All) ---
 const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden." },
-	{ "level": 1, "req_level": 1, "name": "Pocket Transistor Radio", "cost": 55.0, "reveals": 1, "desc": "Tuned to Karimlan AM. Reveals 1 of today's Expected Regulars in the Restock Menu." },
-	{ "level": 2, "req_level": 4, "name": "Copper Antenna Radio", "cost": 110.0, "reveals": 2, "desc": "Boosted reception catches more street tsismis. Reveals 2 Expected Regulars each day." },
-	{ "level": 3, "req_level": 7, "name": "Vintage Barangay Boombox", "cost": 185.0, "reveals": 4, "desc": "Crystal-clear barangay intel! Reveals all of today's Expected Regulars in the Restock Menu." },
+	{"level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden."},
+	{"level": 1, "req_level": 1, "name": "Pocket Transistor Radio", "cost": 55.0, "reveals": 1, "desc": "Tuned to Karimlan AM. Reveals 1 of today's Expected Regulars in the Restock Menu."},
+	{"level": 2, "req_level": 4, "name": "Copper Antenna Radio", "cost": 110.0, "reveals": 2, "desc": "Boosted reception catches more street tsismis. Reveals 2 Expected Regulars each day."},
+	{"level": 3, "req_level": 7, "name": "Vintage Barangay Boombox", "cost": 185.0, "reveals": 4, "desc": "Crystal-clear barangay intel! Reveals all of today's Expected Regulars in the Restock Menu."},
 ]
 var radio_upgrade_level: int = 0
 var _radio_upgrade_item_cache: Dictionary = {}
@@ -459,9 +461,9 @@ func purchase_mario_deals_upgrade() -> void:
 	_save_progression()
 
 # --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
-var todays_expected_regulars: Array[String] = []  # Array of CustomerData.resource_path (3-4 picked daily)
-var todays_sulit_deals: Array[String] = []        # Array of ItemData.resource_path (2-3 at -20% when unlocked)
-var todays_missed_items: Dictionary = {}          # ItemData.resource_path -> int missed count today
+var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
+var todays_sulit_deals: Array[String] = [] # Array of ItemData.resource_path (2-3 at -20% when unlocked)
+var todays_missed_items: Dictionary = {} # ItemData.resource_path -> int missed count today
 
 func ensure_daily_demand_rolled() -> void:
 	if todays_expected_regulars.is_empty():
