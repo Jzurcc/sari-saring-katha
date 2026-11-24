@@ -114,15 +114,15 @@ func _compute_grade_and_highlights() -> void:
 
 	if score >= 72:
 		_grade = "S"
-		_grade_title = "SUKI MASTER"
+		_grade_title = "PALDO"
 		_grade_col = Color(1.0, 0.88, 0.42, 1.0)
 	elif score >= 52:
 		_grade = "A"
-		_grade_title = "MASIPAG"
+		_grade_title = "MABENTA"
 		_grade_col = Color(0.58, 0.94, 0.56, 1.0)
 	elif score >= 32:
 		_grade = "B"
-		_grade_title = "STEADY"
+		_grade_title = "MAHINAHON"
 		_grade_col = Color(0.96, 0.88, 0.72, 1.0)
 	else:
 		_grade = "C"
