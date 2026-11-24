@@ -274,9 +274,9 @@ layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 30.0
+offset_left = 225.0
 offset_top = -60.0
-offset_right = 1030.0
+offset_right = 1125.0
 offset_bottom = -30.0
 grow_vertical = 0
 script = ExtResource("nowplaying_scr")
@@ -679,7 +679,7 @@ texture = ExtResource("48_d7jqg")
 [node name="TierAdvanceOverlay" parent="." unique_id=510000000 instance=ExtResource("51_tier_overlay")]
 
 [node name="PlasticMarker" type="Marker3D" parent="." unique_id=2123381481]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.9908627, 0.9105438, 2.585338)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62619925, 0.9105438, 1.5967443)
 
 [node name="notebook" parent="." unique_id=961263518 instance=ExtResource("59_m7vhu")]
 transform = Transform3D(-0.017711766, 0, -0.009289424, 0, 0.02, 0, 0.009289424, 0, -0.017711766, 2.4487228, 2.193247, -1.08845)
