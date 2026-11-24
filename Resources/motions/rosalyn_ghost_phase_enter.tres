@@ -25,12 +25,12 @@ target_opacity = 1.0
 [sub_resource type="Resource" id="exit_1"]
 script = ExtResource("2_step")
 anchor = 3
-local_offset = Vector3(0, 0.38, 5.2)
-duration = 3.6
+local_offset = Vector3(0, 0.45, 8.8)
+duration = 2.6
 transition = 1
 ease_type = 0
 target_opacity = 0.0
-opacity_fade_fraction = 0.45
+opacity_fade_fraction = 0.35
 opacity_fade_at_end = true
 
 [resource]
