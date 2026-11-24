@@ -724,7 +724,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 	var accent: Color = COL_TIER_FAIR
 	var accent_bright: Color = COL_TIER_FAIR_BRIGHT
 	var shadow_title := "UNREVEALED FATE"
-	var shadow_desc := "Each card rolls 55% Omen or 45% Favor — choose 1 of 3."
+	var shadow_desc := "The moon's gaze is unreadable tonight. Fortune or trial waits beneath the veil."
 	var shadow_tag := "55% OMEN"
 	var shadow_tag_sub := "45% FAVOR"
 	var shadow_tag_col := COL_TIER_MEAGER_BRIGHT
@@ -737,7 +737,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			accent = COL_TIER_SEALED
 			accent_bright = COL_TIER_SEALED_BRIGHT
 			shadow_title = "FINAL BLESSING"
-			shadow_desc = "The Silver Ledger is sealed — choose 1 of 3 guaranteed Favors."
+			shadow_desc = "The Silver Ledger closes in peace. A final lunar blessing awaits beneath the veil."
 			shadow_tag = "100% FAVOR"
 			shadow_tag_sub = ""
 			shadow_tag_col = accent_bright
@@ -748,7 +748,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			accent = COL_TIER_LAVISH
 			accent_bright = COL_TIER_LAVISH_BRIGHT
 			shadow_title = "UNREVEALED FAVOR"
-			shadow_desc = "A generous lunar blessing awaits — choose 1 of 3 Favors."
+			shadow_desc = "The Pale Queen smiles upon your offering. A warm blessing stirs beneath the veil."
 			shadow_tag = "100% FAVOR"
 			shadow_tag_sub = ""
 			shadow_tag_col = accent_bright
@@ -759,7 +759,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			accent = COL_TIER_FAIR
 			accent_bright = COL_TIER_FAIR_BRIGHT
 			shadow_title = "UNREVEALED FATE"
-			shadow_desc = "Each card rolls 55% Omen or 45% Favor — choose 1 of 3."
+			shadow_desc = "The moon's gaze is unreadable tonight. Fortune or trial waits beneath the veil."
 			shadow_tag = "55% OMEN"
 			shadow_tag_sub = "45% FAVOR"
 			shadow_tag_col = COL_TIER_MEAGER_BRIGHT
@@ -771,7 +771,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			accent = COL_TIER_MEAGER
 			accent_bright = COL_TIER_MEAGER_BRIGHT
 			shadow_title = "UNREVEALED OMEN"
-			shadow_desc = "An uneasy lunar trial awaits — choose 1 of 3 Omens."
+			shadow_desc = "Empty hands draw the moon's cold eye. A heavy omen gathers beneath the veil." if _current_offer <= 0.01 else "A meager tribute chills the evening air. A lunar trial gathers beneath the veil."
 			shadow_tag = "100% OMEN"
 			shadow_tag_sub = ""
 			shadow_tag_col = accent_bright
