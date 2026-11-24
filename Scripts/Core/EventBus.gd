@@ -90,6 +90,8 @@ signal sto_nino_blessing_changed()
 @warning_ignore("unused_signal")
 signal sto_nino_upgraded(new_level: int)
 @warning_ignore("unused_signal")
+signal permit_upgraded(new_level: int)
+@warning_ignore("unused_signal")
 signal keybinds_changed()
 
 # --- Nokia / Phone UI ---

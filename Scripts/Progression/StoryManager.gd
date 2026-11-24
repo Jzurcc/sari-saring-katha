@@ -140,7 +140,7 @@ func get_xp_for_next_level(lvl: int = player_level) -> int:
 	return PLAYER_XP_THRESHOLDS[idx]
 
 func get_xp_multiplier() -> float:
-	var mult := 1.0
+	var mult := get_permit_xp_multiplier()
 	if has_mayari_card(MayariCardRegistry.CARD_SILVER_RENOWN):
 		mult *= 1.50
 	if has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
@@ -465,10 +465,10 @@ func purchase_mario_deals_upgrade() -> void:
 
 # --- Sto. Niño Altar Blessings (Random Favors on Tap) ---
 const STO_NINO_UPGRADE_SPECS: Array[Dictionary] = [
-	{"level": 0, "req_level": 1, "name": "Sto. Niño Altar", "cost": 0.0, "duration_hours": 5.0, "favor_count": 1, "all_day": false, "desc": "Tap Sto. Niño for 1 random Favor lasting 5 hours."},
-	{"level": 1, "req_level": 2, "name": "Sampaguita Garland", "cost": 85.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Fresh sampaguita garland for the altar. Extends Sto. Niño's Blessing from 5h to 8h (only 2 taps for the whole day)."},
-	{"level": 2, "req_level": 5, "name": "Red Altar Candle", "cost": 165.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "A warm votive candle beside Sto. Niño. Grants 2 distinct random Favors at once for 8 hours!"},
-	{"level": 3, "req_level": 9, "name": "Ornate Cape & Crown", "cost": 270.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Royal crimson vestments & golden halo. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
+	{"level": 0, "req_level": 1, "name": "Sto. Niño Devotion", "cost": 0.0, "duration_hours": 5.0, "favor_count": 1, "all_day": false, "desc": "Tap Sto. Niño for 1 random Favor lasting 5 hours."},
+	{"level": 1, "req_level": 2, "name": "Morning Novena", "cost": 85.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Deepen your daily prayer routine. Extends Sto. Niño's Blessing from 5h to 8h (only 2 taps for the whole day)."},
+	{"level": 2, "req_level": 5, "name": "Double Devotion", "cost": 165.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "Earn Sto. Niño's abundant grace. Grants 2 distinct random Favors at once for 8 hours!"},
+	{"level": 3, "req_level": 9, "name": "Perpetual Benediction", "cost": 270.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Unbroken protection over your tindahan. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
 ]
 var sto_nino_upgrade_level: int = 0
 var active_blessing_cards: Array[String] = []
@@ -593,6 +593,55 @@ func _clear_sto_nino_blessing() -> void:
 	sto_nino_blessing_end_hour = -1.0
 	sto_nino_blessing_all_day = false
 	EventBus.sto_nino_blessing_changed.emit()
+
+# --- Framed Business Permit (Permanent Player XP Multiplier) ---
+const PERMIT_UPGRADE_SPECS: Array[Dictionary] = [
+	{"level": 0, "req_level": 1, "name": "No Business Permit", "cost": 0.0, "xp_mult": 1.0, "desc": "Standard Player XP gain."},
+	{"level": 1, "req_level": 2, "name": "Barangay Business Permit", "cost": 80.0, "xp_mult": 1.15, "desc": "Official framed permit displayed in your shop. Permanently grants +15% Player XP from all sales, visits, and stories."},
+	{"level": 2, "req_level": 5, "name": "Municipal Store Accreditation", "cost": 165.0, "xp_mult": 1.30, "desc": "Recognized across the town of Karimlan. Permanently boosts Player XP gain to +30%."},
+	{"level": 3, "req_level": 9, "name": "Karimlan Heritage Recognition", "cost": 275.0, "xp_mult": 1.50, "desc": "Honored as a beloved neighborhood landmark. Permanently boosts Player XP gain to +50%."},
+]
+var permit_upgrade_level: int = 0
+var _permit_upgrade_item_cache: Dictionary = {}
+
+func get_permit_xp_multiplier() -> float:
+	var lvl := clampi(permit_upgrade_level, 0, PERMIT_UPGRADE_SPECS.size() - 1)
+	return float(PERMIT_UPGRADE_SPECS[lvl]["xp_mult"])
+
+func get_permit_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, PERMIT_UPGRADE_SPECS.size() - 1)
+	if _permit_upgrade_item_cache.has(lvl):
+		return _permit_upgrade_item_cache[lvl]
+	var spec: Dictionary = PERMIT_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "permit_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/picture_frame_stand.png"):
+		item.texture = load("res://Assets/ui/picture_frame_stand.png")
+	item.set_meta("is_permit_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("permit_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
+	item.set_meta("xp_mult", float(spec["xp_mult"]))
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	_permit_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_permit_upgrade(level: int) -> void:
+	var target := clampi(level, 1, PERMIT_UPGRADE_SPECS.size() - 1)
+	if target <= permit_upgrade_level:
+		return
+	permit_upgrade_level = target
+	LogManager.info("StoryManager", "Business Permit upgraded to Level %d (%s, %.0f%% XP)" % [
+		permit_upgrade_level,
+		str(PERMIT_UPGRADE_SPECS[permit_upgrade_level]["name"]),
+		get_permit_xp_multiplier() * 100.0
+	])
+	EventBus.permit_upgraded.emit(permit_upgrade_level)
+	_save_progression()
 
 # --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
 var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
@@ -944,6 +993,7 @@ func get_save_data() -> Dictionary:
 		"sto_nino_blessing_start_hour": sto_nino_blessing_start_hour,
 		"sto_nino_blessing_end_hour": sto_nino_blessing_end_hour,
 		"sto_nino_blessing_all_day": sto_nino_blessing_all_day,
+		"permit_upgrade_level": permit_upgrade_level,
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
 		"todays_sulit_deals": todays_sulit_deals.duplicate(),
 		"todays_missed_items": todays_missed_items.duplicate(),
@@ -1007,6 +1057,7 @@ func load_save_data(data: Dictionary) -> void:
 	sto_nino_blessing_end_hour = float(data.get("sto_nino_blessing_end_hour", -1.0))
 	sto_nino_blessing_all_day = bool(data.get("sto_nino_blessing_all_day", false))
 	EventBus.sto_nino_blessing_changed.emit()
+	permit_upgrade_level = clampi(int(data.get("permit_upgrade_level", 0)), 0, PERMIT_UPGRADE_SPECS.size() - 1)
 	todays_expected_regulars.clear()
 	for p in data.get("todays_expected_regulars", []):
 		todays_expected_regulars.append(str(p))
@@ -1098,6 +1149,7 @@ func reset_state() -> void:
 	has_mario_deals = false
 	sto_nino_upgrade_level = 0
 	_clear_sto_nino_blessing()
+	permit_upgrade_level = 0
 	todays_expected_regulars.clear()
 	todays_sulit_deals.clear()
 	todays_missed_items.clear()
