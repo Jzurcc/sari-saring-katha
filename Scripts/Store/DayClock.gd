@@ -41,11 +41,21 @@ func set_clock_running(value: bool) -> void:
 		var in_menu = tree.current_scene and tree.current_scene.name == "MainMenu"
 		_time_of_day_node.game_time_enabled = is_clock_running and not in_menu
 
+func get_customer_time_window_hours() -> float:
+	if is_instance_valid(_tree_owner) and _tree_owner.has_method("get_customer_time_window_hours"):
+		return _tree_owner.get_customer_time_window_hours()
+	return CUSTOMER_TIME_WINDOW_HOURS
+
+func get_visit_time_window_hours() -> float:
+	if is_instance_valid(_tree_owner) and _tree_owner.has_method("get_visit_time_window_hours"):
+		return _tree_owner.get_visit_time_window_hours()
+	return VISIT_TIME_WINDOW_HOURS
+
 func on_day_started() -> void:
 	_cancel_fast_forward(false)
 	is_customer_present = false
 	wait_limit_time = -1.0
-	active_time_window_hours = CUSTOMER_TIME_WINDOW_HOURS
+	active_time_window_hours = get_customer_time_window_hours()
 	was_paused_by_limit = false
 	current_display_time = DAY_START_HOUR
 	_ensure_tod_node()
@@ -57,13 +67,13 @@ func on_customer_arrived(is_visit: bool = false) -> void:
 		_cancel_fast_forward(true)
 	is_customer_present = true
 	if wait_limit_time < 0 and not was_paused_by_limit:
-		active_time_window_hours = VISIT_TIME_WINDOW_HOURS if is_visit else CUSTOMER_TIME_WINDOW_HOURS
+		active_time_window_hours = get_visit_time_window_hours() if is_visit else get_customer_time_window_hours()
 		wait_limit_time = current_display_time + active_time_window_hours
-		LogManager.debug("DayClock", "Customer arrived (%s). Patience limit set to %.2f (+%.1fh)" % [
+		LogManager.debug("DayClock", "Customer arrived (%s). Patience limit set to %.2f (+%.2fh)" % [
 			"Visit" if is_visit else "Standard", wait_limit_time, active_time_window_hours
 		])
 	else:
-		LogManager.info("DayClock", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Window: %.1fh, Paused: %s)" % [
+		LogManager.info("DayClock", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Window: %.2fh, Paused: %s)" % [
 			wait_limit_time, active_time_window_hours, str(was_paused_by_limit)
 		])
 
@@ -83,7 +93,7 @@ func on_customer_dismissed() -> void:
 	var was_paused := was_paused_by_limit
 	was_paused_by_limit = false
 	wait_limit_time = -1.0
-	active_time_window_hours = CUSTOMER_TIME_WINDOW_HOURS
+	active_time_window_hours = get_customer_time_window_hours()
 
 	if current_display_time >= closing:
 		if is_clock_running:
@@ -196,10 +206,10 @@ func _on_tod_time_changed(t: float) -> void:
 		return
 	current_display_time = t
 	
-	# 1. Customer Wait Limit: Pause time if someone's been here for 4 hours
+	# 1. Customer Wait Limit: Pause time if someone's been here for the active time window
 	if wait_limit_time > 0 and current_display_time >= wait_limit_time:
 		if is_clock_running:
-			LogManager.info("DayClock", "Customer wait limit reached (+4h). Pausing clock.")
+			LogManager.info("DayClock", "Customer wait limit reached (+%.2fh). Pausing clock." % active_time_window_hours)
 			set_clock_running(false)
 			was_paused_by_limit = true
 		wait_limit_time = -1.0

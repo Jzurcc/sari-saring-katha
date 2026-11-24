@@ -284,6 +284,58 @@ func purchase_trash_can_upgrade() -> void:
 		get_tree().call_group("trash", "refresh_visibility", true)
 	_save_progression()
 
+# --- Lucky Waving Cat: Maneki-Neko (Shorter Time Windows -> More Customers/Day) ---
+const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
+	{ "level": 0, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows." },
+	{ "level": 1, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 95.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day." },
+	{ "level": 2, "name": "Golden Maneki-Neko", "cost": 195.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day." },
+]
+var maneki_upgrade_level: int = 0
+var _maneki_upgrade_item_cache: Dictionary = {}
+
+func get_customer_time_window_hours() -> float:
+	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)
+	return float(MANEKI_UPGRADE_SPECS[lvl]["customer_hours"])
+
+func get_visit_time_window_hours() -> float:
+	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)
+	return float(MANEKI_UPGRADE_SPECS[lvl]["visit_hours"])
+
+func get_maneki_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, MANEKI_UPGRADE_SPECS.size() - 1)
+	if _maneki_upgrade_item_cache.has(lvl):
+		return _maneki_upgrade_item_cache[lvl]
+	var spec: Dictionary = MANEKI_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "maneki_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/cat.png"):
+		item.texture = load("res://Assets/ui/cat.png")
+	item.set_meta("is_maneki_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("maneki_level", lvl)
+	item.set_meta("customer_hours", float(spec["customer_hours"]))
+	item.set_meta("visit_hours", float(spec["visit_hours"]))
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	_maneki_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_maneki_upgrade(level: int) -> void:
+	var target := clampi(level, 1, MANEKI_UPGRADE_SPECS.size() - 1)
+	if target <= maneki_upgrade_level:
+		return
+	maneki_upgrade_level = target
+	LogManager.info("StoryManager", "Maneki-Neko upgraded to Level %d (%s: %.1fh customer / %.1fh visit)" % [
+		maneki_upgrade_level,
+		MANEKI_UPGRADE_SPECS[maneki_upgrade_level]["name"],
+		get_customer_time_window_hours(),
+		get_visit_time_window_hours()
+	])
+	_save_progression()
+
 # --- Barangay Transistor Radio (Reveals Expected Regulars: 0 -> 1 -> 2 -> All) ---
 const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
 	{ "level": 0, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden." },
@@ -692,6 +744,7 @@ func get_save_data() -> Dictionary:
 		"is_fridge_warm": is_fridge_warm,
 		"cat_upgrade_level": cat_upgrade_level,
 		"has_trash_can": has_trash_can,
+		"maneki_upgrade_level": maneki_upgrade_level,
 		"radio_upgrade_level": radio_upgrade_level,
 		"has_mario_deals": has_mario_deals,
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
@@ -738,6 +791,7 @@ func load_save_data(data: Dictionary) -> void:
 		is_fridge_warm = false
 	cat_upgrade_level = clampi(int(data.get("cat_upgrade_level", 0)), 0, CAT_UPGRADE_SPECS.size() - 1)
 	has_trash_can = bool(data.get("has_trash_can", false))
+	maneki_upgrade_level = clampi(int(data.get("maneki_upgrade_level", 0)), 0, MANEKI_UPGRADE_SPECS.size() - 1)
 	radio_upgrade_level = clampi(int(data.get("radio_upgrade_level", 0)), 0, RADIO_UPGRADE_SPECS.size() - 1)
 	has_mario_deals = bool(data.get("has_mario_deals", false))
 	todays_expected_regulars.clear()
@@ -823,6 +877,7 @@ func reset_state() -> void:
 	is_fridge_warm = false
 	cat_upgrade_level = 0
 	has_trash_can = false
+	maneki_upgrade_level = 0
 	radio_upgrade_level = 0
 	has_mario_deals = false
 	todays_expected_regulars.clear()
@@ -972,9 +1027,9 @@ func _on_customer_arrived(customer: Customer) -> void:
 	# Start the wave clock window only when the counter transitions from empty -> occupied.
 	if not clock.is_customer_present:
 		clock.on_customer_arrived(is_visit)
-	elif not is_visit and clock.active_time_window_hours < DayClock.CUSTOMER_TIME_WINDOW_HOURS:
-		# A buyer joined a visit wave: widen the wave patience window to standard 4h
-		clock.active_time_window_hours = DayClock.CUSTOMER_TIME_WINDOW_HOURS
+	elif not is_visit and clock.active_time_window_hours < get_customer_time_window_hours():
+		# A buyer joined a visit wave: widen the wave patience window to standard customer window
+		clock.active_time_window_hours = get_customer_time_window_hours()
 
 func _on_customer_dismissed(customer: Customer) -> void:
 	if customer != null and customer.is_lingering_departure:

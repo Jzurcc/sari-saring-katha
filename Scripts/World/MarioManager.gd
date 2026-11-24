@@ -490,7 +490,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG):
 		var eligible_regular: Array[ItemData] = []
 		for it in items.keys():
-			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false):
+			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_maneki_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false):
 				continue
 			if DispenserContainerItem.is_container_prop(it):
 				continue
@@ -511,7 +511,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false):
+		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_maneki_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -532,6 +532,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_cat_lvl := StoryManager.cat_upgrade_level
 	var highest_cat_name := ""
 	var unlock_trash_can := false
+	var highest_maneki_lvl := StoryManager.maneki_upgrade_level
+	var highest_maneki_name := ""
 	var highest_radio_lvl := StoryManager.radio_upgrade_level
 	var highest_radio_name := ""
 	var unlock_mario_deals := false
@@ -551,6 +553,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			continue
 		if item.get_meta("is_trash_upgrade", false):
 			unlock_trash_can = true
+			continue
+		if item.get_meta("is_maneki_upgrade", false):
+			var target_maneki: int = int(item.get_meta("maneki_level", 1))
+			if target_maneki > highest_maneki_lvl:
+				highest_maneki_lvl = target_maneki
+				highest_maneki_name = item.item_name
 			continue
 		if item.get_meta("is_radio_upgrade", false):
 			var target_radio: int = int(item.get_meta("radio_level", 1))
@@ -595,6 +603,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 		if spawn_in_tree:
 			EventBus.show_notification.emit("Store Prop Delivered!", "Store Trash Can placed in your shop.", "purchase")
 		LogManager.info("MarioManager", "Store Trash Can delivered on Mario arrival.")
+
+	if highest_maneki_lvl > StoryManager.maneki_upgrade_level:
+		StoryManager.purchase_maneki_upgrade(highest_maneki_lvl)
+		if spawn_in_tree:
+			EventBus.show_notification.emit("Lucky Waving Cat!", "%s placed — faster customer flow all day!" % highest_maneki_name, "purchase")
+		LogManager.info("MarioManager", "Maneki-Neko upgraded to Level %d (%s)" % [highest_maneki_lvl, highest_maneki_name])
 
 	if highest_radio_lvl > StoryManager.radio_upgrade_level:
 		StoryManager.purchase_radio_upgrade(highest_radio_lvl)
