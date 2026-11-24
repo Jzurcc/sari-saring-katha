@@ -643,6 +643,76 @@ func purchase_permit_upgrade(level: int) -> void:
 	EventBus.permit_upgraded.emit(permit_upgrade_level)
 	_save_progression()
 
+# --- Sari-Sari Tambayan Bench (Lingering Visitors, Passive XP & Return-to-Buy) ---
+const BENCH_UPGRADE_SPECS: Array[Dictionary] = [
+	{"level": 0, "req_level": 1, "name": "No Store Bench", "cost": 0.0, "linger_chance": 0.60, "max_lingering": 2, "passive_xp": 0, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Up to 2 visitors may linger outside (60% chance)."},
+	{"level": 1, "req_level": 2, "name": "Sari-Sari Tambayan Bench", "cost": 90.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 0, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Places a cozy wooden bench outside your tindahan! Boosts lingering chance (60% → 75%) and lets up to 3 neighbors hang out at once."},
+	{"level": 2, "req_level": 5, "name": "Tambayan Hospitality", "cost": 175.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 8, "return_to_buy": false, "desc": "Neighbors love chatting by your bench! Earn +1 passive Player XP every 2s per lingering visitor, plus +8 bonus XP when they return for smalltalk."},
+	{"level": 3, "req_level": 8, "name": "Craving Comebacks", "cost": 260.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 8, "return_to_buy": true, "desc": "Hanging out works up an appetite! Returning tambayan visitors now have a chance to step back up and place a real purchase order before heading home."},
+]
+var bench_upgrade_level: int = 0
+var _bench_upgrade_item_cache: Dictionary = {}
+
+func get_bench_spec(level: int = -1) -> Dictionary:
+	var lvl := bench_upgrade_level if level < 0 else level
+	lvl = clampi(lvl, 0, BENCH_UPGRADE_SPECS.size() - 1)
+	return BENCH_UPGRADE_SPECS[lvl]
+
+func get_bench_linger_chance() -> float:
+	return float(get_bench_spec()["linger_chance"])
+
+func get_bench_max_lingering() -> int:
+	return int(get_bench_spec()["max_lingering"])
+
+func get_bench_passive_xp() -> int:
+	return int(get_bench_spec()["passive_xp"])
+
+func get_bench_smalltalk_xp() -> int:
+	return int(get_bench_spec()["smalltalk_xp"])
+
+func can_bench_return_to_buy() -> bool:
+	return bool(get_bench_spec()["return_to_buy"])
+
+func get_bench_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, BENCH_UPGRADE_SPECS.size() - 1)
+	if _bench_upgrade_item_cache.has(lvl):
+		return _bench_upgrade_item_cache[lvl]
+	var spec: Dictionary = BENCH_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "bench_upgrade"
+	if ResourceLoader.exists("res://Assets/ui/trophy.png"):
+		item.texture = load("res://Assets/ui/trophy.png")
+	item.set_meta("is_bench_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("bench_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
+	item.set_meta("linger_chance", float(spec["linger_chance"]))
+	item.set_meta("max_lingering", int(spec["max_lingering"]))
+	item.set_meta("passive_xp", int(spec["passive_xp"]))
+	item.set_meta("smalltalk_xp", int(spec["smalltalk_xp"]))
+	item.set_meta("return_to_buy", bool(spec["return_to_buy"]))
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	_bench_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_bench_upgrade(level: int) -> void:
+	var target := clampi(level, 1, BENCH_UPGRADE_SPECS.size() - 1)
+	if target <= bench_upgrade_level:
+		return
+	bench_upgrade_level = target
+	LogManager.info("StoryManager", "Store Bench upgraded to Level %d (%s)" % [
+		bench_upgrade_level,
+		str(BENCH_UPGRADE_SPECS[bench_upgrade_level]["name"])
+	])
+	EventBus.bench_upgraded.emit(bench_upgrade_level)
+	if get_tree():
+		get_tree().call_group("store_bench", "refresh_visibility", true)
+	_save_progression()
+
 # --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
 var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
 var todays_sulit_deals: Array[String] = [] # Array of ItemData.resource_path (2-3 at -20% when unlocked)
@@ -994,6 +1064,7 @@ func get_save_data() -> Dictionary:
 		"sto_nino_blessing_end_hour": sto_nino_blessing_end_hour,
 		"sto_nino_blessing_all_day": sto_nino_blessing_all_day,
 		"permit_upgrade_level": permit_upgrade_level,
+		"bench_upgrade_level": bench_upgrade_level,
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
 		"todays_sulit_deals": todays_sulit_deals.duplicate(),
 		"todays_missed_items": todays_missed_items.duplicate(),
@@ -1058,6 +1129,7 @@ func load_save_data(data: Dictionary) -> void:
 	sto_nino_blessing_all_day = bool(data.get("sto_nino_blessing_all_day", false))
 	EventBus.sto_nino_blessing_changed.emit()
 	permit_upgrade_level = clampi(int(data.get("permit_upgrade_level", 0)), 0, PERMIT_UPGRADE_SPECS.size() - 1)
+	bench_upgrade_level = clampi(int(data.get("bench_upgrade_level", 0)), 0, BENCH_UPGRADE_SPECS.size() - 1)
 	todays_expected_regulars.clear()
 	for p in data.get("todays_expected_regulars", []):
 		todays_expected_regulars.append(str(p))
@@ -1150,6 +1222,7 @@ func reset_state() -> void:
 	sto_nino_upgrade_level = 0
 	_clear_sto_nino_blessing()
 	permit_upgrade_level = 0
+	bench_upgrade_level = 0
 	todays_expected_regulars.clear()
 	todays_sulit_deals.clear()
 	todays_missed_items.clear()

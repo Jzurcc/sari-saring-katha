@@ -490,7 +490,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG):
 		var eligible_regular: Array[ItemData] = []
 		for it in items.keys():
-			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_maneki_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false) or it.get_meta("is_sto_nino_upgrade", false) or it.get_meta("is_permit_upgrade", false):
+			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_maneki_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false) or it.get_meta("is_sto_nino_upgrade", false) or it.get_meta("is_permit_upgrade", false) or it.get_meta("is_bench_upgrade", false):
 				continue
 			if DispenserContainerItem.is_container_prop(it):
 				continue
@@ -511,7 +511,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_maneki_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false) or item.get_meta("is_sto_nino_upgrade", false) or item.get_meta("is_permit_upgrade", false):
+		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_maneki_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false) or item.get_meta("is_sto_nino_upgrade", false) or item.get_meta("is_permit_upgrade", false) or item.get_meta("is_bench_upgrade", false):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -541,6 +541,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_sto_nino_name := ""
 	var highest_permit_lvl := StoryManager.permit_upgrade_level
 	var highest_permit_name := ""
+	var highest_bench_lvl := StoryManager.bench_upgrade_level
+	var highest_bench_name := ""
 
 	for item in items.keys():
 		if item.get_meta("is_fridge_upgrade", false):
@@ -584,6 +586,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			if target_pm > highest_permit_lvl:
 				highest_permit_lvl = target_pm
 				highest_permit_name = item.item_name
+			continue
+		if item.get_meta("is_bench_upgrade", false):
+			var target_bn: int = int(item.get_meta("bench_level", 1))
+			if target_bn > highest_bench_lvl:
+				highest_bench_lvl = target_bn
+				highest_bench_name = item.item_name
 			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
@@ -650,6 +658,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			var pct := int(roundf((StoryManager.get_permit_xp_multiplier() - 1.0) * 100.0))
 			EventBus.show_notification.emit("Business Permit Upgraded!", "%s displayed (+%d%% Player XP)!" % [highest_permit_name, pct], "purchase")
 		LogManager.info("MarioManager", "Business Permit upgraded to Level %d (%s)" % [highest_permit_lvl, highest_permit_name])
+
+	if highest_bench_lvl > StoryManager.bench_upgrade_level:
+		StoryManager.purchase_bench_upgrade(highest_bench_lvl)
+		if spawn_in_tree:
+			var notif_title := "Tambayan Bench Placed!" if highest_bench_lvl == 1 else "Tambayan Upgraded!"
+			EventBus.show_notification.emit(notif_title, "%s is now active outside your shop!" % highest_bench_name, "purchase")
+		LogManager.info("MarioManager", "Store Bench upgraded to Level %d (%s)" % [highest_bench_lvl, highest_bench_name])
 
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:

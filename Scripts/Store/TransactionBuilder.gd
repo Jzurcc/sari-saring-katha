@@ -512,3 +512,69 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 
 	return transaction
 
+## Builds a fresh PURCHASE transaction for a lingering tambayan visitor (Bench Lv.3)
+## who decides to step back up to the counter and buy something before heading home.
+static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -> TransactionContext:
+	if data == null or data.is_collector():
+		return null
+	var path: String = data.resource_path
+	var chapter: int = CharacterProgressionManager.get_chapter(path)
+	# Danilo doesn't place purchase orders before his final chapter
+	if data.get_clean_id() == "danilo" and chapter < data.max_story_chapters - 1:
+		return null
+
+	var tx := TransactionContext.new()
+	tx.customer_data = data
+	tx.transaction_type = TransactionContext.Type.PURCHASE
+	tx.timeline = data.purchase_timeline if data.purchase_timeline != null else "res://Dialogue/Timelines/Generic/Purchase.dtl"
+
+	var favorite_cats: Array[String] = data.get_favorite_categories()
+	var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
+	var prefer_hint: bool = data.has_riddle_preference()
+	var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier)
+	if sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS):
+		target_item_count = maxi(target_item_count, randi_range(2, 3))
+
+	var pool: Array[ItemData] = []
+	for item in InventoryManager.get_items_available_on_display():
+		if OrderItemPicker.is_unlocked(item, sm.current_tier) and item.can_be_sold and not (item.category in excluded_cats):
+			pool.append(item)
+	if pool.is_empty():
+		for item in InventoryManager.get_all_items():
+			if item.tier <= sm.current_tier and item.can_be_sold and not (item.category in excluded_cats):
+				pool.append(item)
+
+	var current_max_tiers := OrderItemPicker.max_tier_per_category(sm.current_tier)
+	for _i in range(target_item_count):
+		if not favorite_cats.is_empty() and randf() < FAVORITE_CATEGORY_CHANCE:
+			var fav_item := OrderItemPicker.pick_from_categories_with_stock_bias(
+				favorite_cats, sm.current_tier, prefer_hint, excluded_cats, STOCKED_ITEM_BIAS
+			)
+			if fav_item:
+				tx.desired_items.append(fav_item)
+				continue
+		if not pool.is_empty():
+			tx.desired_items.append(OrderItemPicker.pick_weighted(pool, sm.current_tier, current_max_tiers))
+		else:
+			var fallback := OrderItemPicker.random_orderable(sm.current_tier, excluded_cats)
+			if fallback:
+				tx.desired_items.append(fallback)
+
+	if tx.desired_items.is_empty():
+		return null
+
+	tx.original_count = tx.desired_items.size()
+	if data.can_request_utang():
+		tx.wants_debt = true
+	if prefer_hint:
+		var main_item: ItemData = tx.desired_items[0]
+		var final_riddle_chance: float = 1.0 if data.get_clean_id() == "buboy" else sm.riddle_chance
+		if main_item.item_hint != "" and randf() < final_riddle_chance:
+			tx.is_riddle = true
+			tx.riddle_item = main_item
+			if tx.desired_items.size() > 1:
+				tx.desired_items.assign([main_item])
+
+	sm.update_transaction_item_string(tx)
+	return tx
+

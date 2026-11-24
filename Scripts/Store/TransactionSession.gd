@@ -548,6 +548,9 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 
 		Phase.SMALLTALK:
 			if is_instance_valid(target):
+				var st_xp := StoryManager.get_bench_smalltalk_xp()
+				if st_xp > 0:
+					StoryManager.add_player_xp(st_xp, "Tambayan Smalltalk")
 				target.dialogue_phase = Phase.NONE
 				target.leave_from_lingering()
 

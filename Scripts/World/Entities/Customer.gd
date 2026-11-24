@@ -509,6 +509,26 @@ func return_to_counter_for_smalltalk(new_slot: int, slot_target: Vector3) -> voi
 	if is_instance_valid(_motion):
 		_motion.start_return_from_lingering(slot_target)
 
+func return_to_counter_for_purchase(new_slot: int, slot_target: Vector3, new_tx: TransactionContext) -> void:
+	if _is_resolving or new_tx == null:
+		return
+	_linger_session_id += 1
+	is_lingering_visitor = false
+	is_returning_for_smalltalk = false
+	is_lingering_departure = false
+	set_meta("returned_from_lingering", true)
+	set_meta("_xp_awarded", false)
+	transaction_context = new_tx
+	has_been_greeted = false
+	dialogue_phase = TransactionSession.Phase.NONE
+	slot_index = new_slot
+	is_waiting = false
+	_sync_collision_layer()
+	_update_attention_badge()
+	target_position = slot_target
+	if is_instance_valid(_motion):
+		_motion.start_return_from_lingering(slot_target)
+
 func leave_from_lingering() -> void:
 	if _is_resolving:
 		return

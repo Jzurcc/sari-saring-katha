@@ -86,6 +86,11 @@ func open_menu() -> void:
 		if next_pm and StoryManager.player_level >= int(next_pm.get_meta("req_level", 1)) and _card_map.has(next_pm):
 			_focus_upgrade(next_pm)
 			return
+	if StoryManager.bench_upgrade_level < 3:
+		var next_bn := StoryManager.get_bench_upgrade_item(StoryManager.bench_upgrade_level + 1)
+		if next_bn and StoryManager.player_level >= int(next_bn.get_meta("req_level", 1)) and _card_map.has(next_bn):
+			_focus_upgrade(next_bn)
+			return
 	if StoryManager.radio_upgrade_level < 3:
 		var next_radio := StoryManager.get_radio_upgrade_item(StoryManager.radio_upgrade_level + 1)
 		if next_radio and StoryManager.player_level >= int(next_radio.get_meta("req_level", 1)) and _card_map.has(next_radio):
@@ -207,6 +212,24 @@ func _populate_upgrades() -> void:
 		upgrade_list_container.add_child(pm_card)
 		_card_map[pm_item] = pm_card
 
+	# Sari-Sari Tambayan Bench section
+	var bn_header := Label.new()
+	bn_header.text = "TAMBAYAN BENCH & HANGOUT"
+	bn_header.add_theme_font_override("font", UIStyle.FONT_INDER)
+	bn_header.add_theme_font_size_override("font_size", 15)
+	bn_header.add_theme_color_override("font_color", Color("#F5C97B"))
+	var bn_hdr_margin := MarginContainer.new()
+	bn_hdr_margin.add_theme_constant_override("margin_top", 10)
+	bn_hdr_margin.add_theme_constant_override("margin_bottom", 2)
+	bn_hdr_margin.add_child(bn_header)
+	upgrade_list_container.add_child(bn_hdr_margin)
+
+	for lvl in range(1, 4):
+		var bn_item := StoryManager.get_bench_upgrade_item(lvl)
+		var bn_card := _create_bench_upgrade_bar(bn_item, lvl)
+		upgrade_list_container.add_child(bn_card)
+		_card_map[bn_item] = bn_card
+
 	# Store Intel & Wholesale Deals section
 	var intel_header := Label.new()
 	intel_header.text = "STORE INTEL & WHOLESALE DEALS"
@@ -277,6 +300,13 @@ func _get_effective_permit_level() -> int:
 	for q in _queued_upgrades:
 		if q.get_meta("is_permit_upgrade", false):
 			eff = maxi(eff, int(q.get_meta("permit_level", eff)))
+	return eff
+
+func _get_effective_bench_level() -> int:
+	var eff := StoryManager.bench_upgrade_level
+	for q in _queued_upgrades:
+		if q.get_meta("is_bench_upgrade", false):
+			eff = maxi(eff, int(q.get_meta("bench_level", eff)))
 	return eff
 
 func _get_effective_radio_level() -> int:
@@ -1127,6 +1157,128 @@ func _create_permit_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 
 	return card
 
+func _create_bench_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 74)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.focus_mode = Control.FOCUS_NONE
+
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
+	var owned: bool = target_level <= StoryManager.bench_upgrade_level
+	var is_queued: bool = item in _queued_upgrades
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_bench_level() + 1)
+
+	var bg_col := UIStyle.COLOR_CARD_BG
+	if owned:
+		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif is_queued:
+		bg_col = Color(0.14, 0.28, 0.16, 0.95)
+	elif not is_next_available:
+		bg_col = UIStyle.COLOR_TAB_LOCKED
+
+	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 14
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 14)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(hbox)
+
+	var icon_frame := PanelContainer.new()
+	icon_frame.custom_minimum_size = Vector2(54, 54)
+	icon_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_frame.add_theme_stylebox_override("panel", UIStyle.create_flat_stylebox(Color(0.24, 0.17, 0.10, 0.65), 6, 4, 4))
+	hbox.add_child(icon_frame)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if item.texture:
+		icon.texture = item.texture
+	icon_frame.add_child(icon)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(info_vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = item.item_name
+	name_lbl.add_theme_font_size_override("font_size", 19)
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
+	info_vbox.add_child(name_lbl)
+
+	var sub_txt := ""
+	if target_level == 1:
+		sub_txt = "75% linger chance  •  Up to 3 tambayan visitors"
+	elif target_level == 2:
+		sub_txt = "+1 XP / 2s while lingering  •  +8 XP on smalltalk"
+	else:
+		sub_txt = "Returning tambayan visitors may place a real order!"
+	var sub_lbl := Label.new()
+	sub_lbl.add_theme_font_size_override("font_size", 13)
+	sub_lbl.text = sub_txt
+	sub_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+	info_vbox.add_child(sub_lbl)
+
+	var right_vbox := VBoxContainer.new()
+	right_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(right_vbox)
+
+	var price_lbl := Label.new()
+	price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	price_lbl.add_theme_font_size_override("font_size", 17)
+	price_lbl.text = "₱%.2f" % item.price
+	price_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT if is_next_available else Color(0.85, 0.85, 0.85, 0.9))
+	right_vbox.add_child(price_lbl)
+
+	var status_lbl := Label.new()
+	status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	status_lbl.add_theme_font_size_override("font_size", 12)
+	if owned:
+		status_lbl.text = "OWNED"
+		status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+	elif is_queued:
+		status_lbl.text = "QUEUED ✓"
+		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
+	elif is_next_available:
+		status_lbl.text = "AVAILABLE"
+		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	elif not level_unlocked:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
+	else:
+		status_lbl.text = "BUY LV.%d FIRST" % (target_level - 1)
+		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
+	right_vbox.add_child(status_lbl)
+
+	if owned:
+		icon.modulate = Color(1, 1, 1, 0.5)
+		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	elif is_queued or is_next_available:
+		icon.modulate = Color(1, 1, 1, 1)
+		card.modulate = Color(1, 1, 1, 1)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.gui_input.connect(_on_card_clicked.bind(item))
+	else:
+		icon.modulate = Color(0.3, 0.25, 0.2, 0.8)
+		card.modulate = Color(0.7, 0.7, 0.7, 0.85)
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+
+	return card
+
 func _create_radio_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(0, 74)
@@ -1398,6 +1550,11 @@ func _toggle_queue_upgrade(item: ItemData) -> void:
 			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
 				return not q.get_meta("is_permit_upgrade", false) or int(q.get_meta("permit_level", 1)) < removed_pm
 			)
+		elif item.get_meta("is_bench_upgrade", false):
+			var removed_bn: int = int(item.get_meta("bench_level", 1))
+			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
+				return not q.get_meta("is_bench_upgrade", false) or int(q.get_meta("bench_level", 1)) < removed_bn
+			)
 	else:
 		_queued_upgrades.append(item)
 
@@ -1447,6 +1604,45 @@ func _refresh_confirm_summary() -> void:
 			UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT, 18.0)
 
 func _update_detail_panel(item: ItemData) -> void:
+	if item.get_meta("is_bench_upgrade", false):
+		var bn_lvl: int = int(item.get_meta("bench_level", 1))
+		if detail_icon:
+			detail_icon.texture = item.texture
+		if detail_name:
+			detail_name.text = item.item_name
+		if detail_subtitle:
+			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
+		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
+			child.queue_free()
+		var bn_lines: Array[String] = []
+		if bn_lvl == 1:
+			bn_lines = [
+				"• Places the Sari-Sari Bench outside your storefront",
+				"• Visitor Linger Chance: 60% → 75%",
+				"• Max Lingering Visitors: 2 → 3",
+			]
+		elif bn_lvl == 2:
+			bn_lines = [
+				"• Passive XP: +1 Player XP every 2s per lingering visitor",
+				"• Smalltalk Return Bonus: +8 Player XP per smalltalk",
+				"• Scales with all Player XP multipliers",
+			]
+		else:
+			bn_lines = [
+				"• Returning tambayan visitors have a 35% chance to buy something!",
+				"• Plays their normal purchase order & pays full price + XP",
+				"• They head home cleanly once served",
+			]
+		for line in bn_lines:
+			var stat_lbl := Label.new()
+			stat_lbl.text = line
+			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			stat_lbl.add_theme_font_size_override("font_size", 15)
+			stat_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+			unlocks_list.add_child(stat_lbl)
+		return
+
 	if item.get_meta("is_permit_upgrade", false):
 		var pm_lvl: int = int(item.get_meta("permit_level", 1))
 		var prev_pct := int(roundf((float(StoryManager.PERMIT_UPGRADE_SPECS[pm_lvl - 1]["xp_mult"]) - 1.0) * 100.0))
@@ -1785,7 +1981,7 @@ func _on_confirm_pressed() -> void:
 	var order := RestockOrder.new()
 	var remaining_budget := _get_money()
 	for q_item in _queued_upgrades:
-		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false) or q_item.get_meta("is_maneki_upgrade", false) or q_item.get_meta("is_radio_upgrade", false) or q_item.get_meta("is_mario_deals_upgrade", false) or q_item.get_meta("is_sto_nino_upgrade", false) or q_item.get_meta("is_permit_upgrade", false):
+		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false) or q_item.get_meta("is_maneki_upgrade", false) or q_item.get_meta("is_radio_upgrade", false) or q_item.get_meta("is_mario_deals_upgrade", false) or q_item.get_meta("is_sto_nino_upgrade", false) or q_item.get_meta("is_permit_upgrade", false) or q_item.get_meta("is_bench_upgrade", false):
 			remaining_budget -= q_item.price
 			continue
 		var check := order.can_add(q_item, remaining_budget)

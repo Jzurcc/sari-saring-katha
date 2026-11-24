@@ -7,9 +7,9 @@ class_name CustomerSpawner
 const DialoguePhase = TransactionSession.Phase
 
 const MAX_COUNTER_SLOTS := 3
-const LINGER_CHANCE := 0.70
-const MAX_LINGERING_VISITORS := 2
 const SMALLTALK_RETURN_CHANCE := 0.75
+const LINGERING_RETURN_BUY_CHANCE := 0.35
+const LINGERING_PASSIVE_XP_INTERVAL := 2.0
 const AMBIENT_CAMEO_MIN_INTERVAL := 26.0
 const AMBIENT_CAMEO_MAX_INTERVAL := 50.0
 const AMBIENT_CAMEO_TRIGGER_CHANCE := 0.72
@@ -65,6 +65,7 @@ var _is_transitioning_wave: bool = false
 var _next_arrival_order: int = 0
 var _leaving_customers_count: int = 0
 var _lingering_counter_departures: Dictionary = {}
+var _linger_xp_timer: float = 0.0
 
 var is_paused: bool = false:
 	set(value):
@@ -541,12 +542,13 @@ func handle_social_visit_finished(customer: Customer) -> void:
 	var ctx := customer.transaction_context
 	var can_linger: bool = not StoryManager.is_past_closing_time() \
 		and not _is_exclusive_wave \
-		and lingering_visitors.size() < MAX_LINGERING_VISITORS \
+		and not customer.get_meta("returned_from_lingering", false) \
+		and lingering_visitors.size() < StoryManager.get_bench_max_lingering() \
 		and ctx != null \
 		and not ctx.is_guided_tutorial \
 		and not ctx.is_visit_story \
 		and (customer.customer_data == null or not customer.customer_data.is_collector()) \
-		and randf() < LINGER_CHANCE
+		and randf() < StoryManager.get_bench_linger_chance()
 
 	if not can_linger:
 		customer.dismiss()
@@ -615,7 +617,7 @@ func _try_return_waiting_lingering_visitor() -> bool:
 	if StoryManager.is_past_closing_time() or _is_exclusive_wave or is_paused:
 		return false
 	var returned_any := false
-	for v in lingering_visitors:
+	for v in lingering_visitors.duplicate():
 		if not is_instance_valid(v) or not v.is_lingering_visitor or v._is_resolving:
 			continue
 		if not v.get_meta("ready_to_return_for_smalltalk", false):
@@ -637,6 +639,18 @@ func _bring_lingering_visitor_to_counter(customer: Customer, open_slot: int) -> 
 	counter_slots[open_slot] = customer
 	_next_arrival_order += 1
 	customer.arrival_order = _next_arrival_order
+
+	# Bench Lv. 3: chance for a lingering visitor to return with a real purchase order (then leave after!)
+	if StoryManager.can_bench_return_to_buy() and randf() < LINGERING_RETURN_BUY_CHANCE:
+		var buy_tx := TransactionBuilder.build_lingering_purchase_transaction(StoryManager, customer.customer_data)
+		if buy_tx != null:
+			lingering_visitors.erase(customer)
+			LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d to BUY (%d item(s))!" % [
+				customer.get_order_hud_key(), open_slot, buy_tx.desired_items.size()
+			])
+			customer.return_to_counter_for_purchase(open_slot, slot_target, buy_tx)
+			return
+
 	LogManager.info("CustomerSpawner", "Lingering visitor %s returning to Slot %d for smalltalk." % [customer.get_order_hud_key(), open_slot])
 	customer.return_to_counter_for_smalltalk(open_slot, slot_target)
 
@@ -748,6 +762,21 @@ func _clear_ambient_cameos() -> void:
 
 func _process(delta: float) -> void:
 	session.update_watchdog(delta)
+	var passive_xp := StoryManager.get_bench_passive_xp()
+	if passive_xp > 0 and not is_paused and not StoryManager.is_past_closing_time() and Dialogic.current_timeline == null:
+		var active_lingerers := 0
+		for v in lingering_visitors:
+			if is_instance_valid(v) and v.is_lingering_visitor and not v._is_resolving:
+				active_lingerers += 1
+		if active_lingerers > 0:
+			_linger_xp_timer += delta
+			if _linger_xp_timer >= LINGERING_PASSIVE_XP_INTERVAL:
+				_linger_xp_timer -= LINGERING_PASSIVE_XP_INTERVAL
+				StoryManager.add_player_xp(passive_xp * active_lingerers, "Tambayan")
+		else:
+			_linger_xp_timer = 0.0
+	else:
+		_linger_xp_timer = 0.0
 
 func _on_customer_arrived(customer: Customer) -> void:
 	EventBus.customer_arrived.emit(customer)

@@ -49,6 +49,7 @@
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
+[ext_resource type="Script" path="res://Scripts/World/Interactors/BenchProp.gd" id="bench_prop_script"]
 [ext_resource type="Script" path="res://Scripts/World/Interactors/PermitFrameProp.gd" id="permit_frame_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
@@ -798,8 +799,10 @@ shape = SubResource("BoxShape3D_ptfdn")
 
 [node name="Bench" type="MeshInstance3D" parent="." unique_id=1505288669]
 transform = Transform3D(0.01134886, -0.0001959394, -1.4154468e-09, -1.0147491e-09, 2.7609381e-09, -0.015440853, 0.00014403024, 0.015439039, 2.7432987e-09, -6.9875455, 0.72900146, -3.6162493)
+visible = false
 mesh = SubResource("ArrayMesh_0pcvt")
 skeleton = NodePath("")
+script = ExtResource("bench_prop_script")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Bench" unique_id=2124724155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00048828125, -0.010498047, -67.77262)
