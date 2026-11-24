@@ -418,15 +418,20 @@ func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> voi
 	if not is_inside_tree():
 		return
 
-	# Wait for arrival at first off-center spot, then pop a Terraria-style thought bubble!
-	await get_tree().create_timer(randf_range(2.2, 3.4)).timeout
+	# Pop Terraria-style thought bubbles frequently while hanging out in the tambayan
+	await get_tree().create_timer(randf_range(1.2, 2.0)).timeout
 	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 		return
 	_pop_linger_thought(my_session)
 
-	await get_tree().create_timer(randf_range(3.0, 5.0)).timeout
+	await get_tree().create_timer(randf_range(2.6, 3.6)).timeout
 	if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 		return
+	if randf() < 0.80:
+		_pop_linger_thought(my_session)
+		await get_tree().create_timer(randf_range(2.2, 3.2)).timeout
+		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
+			return
 
 	for i in range(1, hangout_points.size()):
 		if randf() > 0.85 and i >= 2:
@@ -434,14 +439,19 @@ func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> voi
 		target_position = hangout_points[i]
 		if is_instance_valid(_motion):
 			_motion.set_lingering_target(hangout_points[i])
-		await get_tree().create_timer(randf_range(2.2, 3.2)).timeout
+		await get_tree().create_timer(randf_range(1.2, 2.0)).timeout
 		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 			return
-		if randf() < 0.72:
+		if randf() < 0.95:
 			_pop_linger_thought(my_session)
-		await get_tree().create_timer(randf_range(2.8, 4.8)).timeout
+		await get_tree().create_timer(randf_range(2.4, 3.4)).timeout
 		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
 			return
+		if randf() < 0.65:
+			_pop_linger_thought(my_session)
+			await get_tree().create_timer(randf_range(2.0, 3.0)).timeout
+			if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
+				return
 
 	if is_instance_valid(_attention_badge) and _attention_badge.is_showing_thought():
 		_attention_badge.set_mode(AttentionBadge3D.Mode.HIDDEN)

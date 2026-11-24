@@ -187,6 +187,7 @@ func set_mode(new_mode: Mode) -> void:
 		)
 		return
 
+	var target_scale := Vector3.ONE
 	if new_mode == Mode.SMALLTALK:
 		text = "•••"
 		font_size = 42
@@ -195,8 +196,9 @@ func set_mode(new_mode: Mode) -> void:
 		outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
 		outline_size = 10
 	elif new_mode == Mode.THOUGHT:
-		font_size = 48
-		_mode_y_offset = 0.12
+		font_size = 54
+		_mode_y_offset = 0.24
+		target_scale = Vector3(1.55, 1.55, 1.55)
 		outline_modulate = Color(0.20, 0.14, 0.08, 0.45)
 		outline_size = 4
 	else:
@@ -215,7 +217,7 @@ func set_mode(new_mode: Mode) -> void:
 	visible = true
 	scale = Vector3.ZERO
 	_pop_tween = create_tween()
-	_pop_tween.tween_property(self, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_pop_tween.tween_property(self, "scale", target_scale, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func show_thought(glyph: String, glyph_color: Color = Color(0.24, 0.16, 0.09, 1.0)) -> void:
