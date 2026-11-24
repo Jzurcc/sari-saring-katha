@@ -168,7 +168,8 @@ func add_player_xp(base_amount: int, reason: String = "") -> void:
 			_last_tier_unlocked_notification = max_unlocked_tier
 		LogManager.info("StoryManager", "PLAYER LEVEL UP -> Lv. %d! (Unlocked Tier %d & new upgrades)" % [player_level, max_unlocked_tier])
 		EventBus.player_leveled_up.emit(player_level)
-		EventBus.show_notification.emit("Player Level %d!" % player_level, "New store upgrades & Tier %d unlocked!" % player_level, "purchase")
+		if _pending_tier_advance_source == "":
+			EventBus.show_notification.emit("Player Level %d!" % player_level, "New store upgrades unlocked!", "purchase")
 
 	if player_level >= MAX_PLAYER_LEVEL:
 		player_xp = 0
