@@ -639,8 +639,8 @@ func _build_ui() -> void:
 	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_mayari_portrait.anchor_left = -0.03
 	_mayari_portrait.anchor_right = 0.36
-	_mayari_portrait.anchor_top = 0.26
-	_mayari_portrait.anchor_bottom = 1.19
+	_mayari_portrait.anchor_top = 0.34
+	_mayari_portrait.anchor_bottom = 1.27
 	_mayari_portrait.z_index = 10
 	_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_mayari_portrait)
@@ -694,11 +694,25 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	title_lbl.add_theme_font_size_override("font_size", 22)
 	top_line.add_child(title_lbl)
 
+	var tag_col := VBoxContainer.new()
+	tag_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	tag_col.add_theme_constant_override("separation", 0)
+	top_line.add_child(tag_col)
+
 	var tag_lbl := Label.new()
+	tag_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag_lbl.add_theme_font_override("font", _bold_font)
-	tag_lbl.add_theme_font_size_override("font_size", 17)
-	top_line.add_child(tag_lbl)
+	tag_lbl.add_theme_font_size_override("font_size", 16)
+	tag_col.add_child(tag_lbl)
+
+	var tag_sub_lbl := Label.new()
+	tag_sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	tag_sub_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tag_sub_lbl.add_theme_font_override("font", _bold_font)
+	tag_sub_lbl.add_theme_font_size_override("font_size", 16)
+	tag_sub_lbl.visible = false
+	tag_col.add_child(tag_sub_lbl)
 
 	var desc_lbl := Label.new()
 	desc_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
@@ -720,6 +734,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 		"q_lbl": q_lbl,
 		"title_lbl": title_lbl,
 		"tag_lbl": tag_lbl,
+		"tag_sub_lbl": tag_sub_lbl,
 		"desc_lbl": desc_lbl,
 		"stat_lbl": stat_lbl,
 	}
@@ -776,8 +791,11 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 	var accent_bright: Color = COL_TIER_FAIR_BRIGHT
 	var badge_txt := "☽ FAIR"
 	var shadow_title := "UNREVEALED FATE"
-	var shadow_desc := "Each slot rolls 65% Omen or 35% Favor — choose 1 of 3."
-	var shadow_tag := "65% OMEN  ·  35% FAVOR"
+	var shadow_desc := "Each card rolls 55% Omen or 45% Favor — choose 1 of 3."
+	var shadow_tag := "55% OMEN"
+	var shadow_tag_sub := "45% FAVOR"
+	var shadow_tag_col := COL_TIER_MEAGER_BRIGHT
+	var shadow_tag_sub_col := COL_TIER_LAVISH_BRIGHT
 	var shadow_bg := Color(0.060, 0.058, 0.064, 0.94)
 	var shadow_q := "?"
 
@@ -789,9 +807,11 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			shadow_title = "FINAL BLESSING"
 			shadow_desc = "The Silver Ledger is sealed — choose 1 of 3 guaranteed Favors."
 			shadow_tag = "100% FAVOR"
+			shadow_tag_sub = ""
+			shadow_tag_col = accent_bright
 			shadow_bg = Color(0.095, 0.084, 0.056, 0.94)
 			shadow_q = "✦"
-			_confirm_btn.text = "SEAL LEDGER"
+			_confirm_btn.text = "Seal Ledger"
 		"generous":
 			accent = COL_TIER_LAVISH
 			accent_bright = COL_TIER_LAVISH_BRIGHT
@@ -799,19 +819,24 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			shadow_title = "UNREVEALED FAVOR"
 			shadow_desc = "A generous lunar blessing awaits — choose 1 of 3 Favors."
 			shadow_tag = "100% FAVOR"
+			shadow_tag_sub = ""
+			shadow_tag_col = accent_bright
 			shadow_bg = Color(0.092, 0.080, 0.050, 0.94)
 			shadow_q = "?"
-			_confirm_btn.text = "OFFER LAVISHLY"
+			_confirm_btn.text = "Offer Lavishly"
 		"balanced":
 			accent = COL_TIER_FAIR
 			accent_bright = COL_TIER_FAIR_BRIGHT
 			badge_txt = "☽ FAIR"
 			shadow_title = "UNREVEALED FATE"
-			shadow_desc = "Each card rolls 65% Omen or 35% Favor — choose 1 of 3."
-			shadow_tag = "65% OMEN  ·  35% FAVOR"
+			shadow_desc = "Each card rolls 55% Omen or 45% Favor — choose 1 of 3."
+			shadow_tag = "55% OMEN"
+			shadow_tag_sub = "45% FAVOR"
+			shadow_tag_col = COL_TIER_MEAGER_BRIGHT
+			shadow_tag_sub_col = COL_TIER_LAVISH_BRIGHT
 			shadow_bg = Color(0.062, 0.060, 0.066, 0.94)
 			shadow_q = "?"
-			_confirm_btn.text = "OFFER TRIBUTE"
+			_confirm_btn.text = "Offer Tribute"
 		_:
 			accent = COL_TIER_MEAGER
 			accent_bright = COL_TIER_MEAGER_BRIGHT
@@ -819,9 +844,11 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			shadow_title = "UNREVEALED OMEN"
 			shadow_desc = "An uneasy lunar trial awaits — choose 1 of 3 Omens."
 			shadow_tag = "100% OMEN"
+			shadow_tag_sub = ""
+			shadow_tag_col = accent_bright
 			shadow_bg = Color(0.048, 0.062, 0.090, 0.94)
 			shadow_q = "?"
-			_confirm_btn.text = "OFFER NOTHING" if _current_offer <= 0.01 else "OFFER MEAGER"
+			_confirm_btn.text = "Offer Nothing" if _current_offer <= 0.01 else "Offer Meager"
 
 	_tier_badge_lbl.text = badge_txt
 	_tier_badge_lbl.add_theme_color_override("font_color", accent_bright)
@@ -841,6 +868,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 		var ql: Label = sr["q_lbl"]
 		var tl: Label = sr["title_lbl"]
 		var tg: Label = sr["tag_lbl"]
+		var tgs: Label = sr["tag_sub_lbl"]
 		var dl: Label = sr["desc_lbl"]
 
 		st.bg_color = shadow_bg
@@ -853,7 +881,10 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 		tl.text = shadow_title
 		tl.add_theme_color_override("font_color", Color(accent_bright.r, accent_bright.g, accent_bright.b, 0.90))
 		tg.text = shadow_tag
-		tg.add_theme_color_override("font_color", Color(accent_bright.r, accent_bright.g, accent_bright.b, 0.88))
+		tg.add_theme_color_override("font_color", Color(shadow_tag_col.r, shadow_tag_col.g, shadow_tag_col.b, 0.92))
+		tgs.text = shadow_tag_sub
+		tgs.visible = not shadow_tag_sub.is_empty()
+		tgs.add_theme_color_override("font_color", Color(shadow_tag_sub_col.r, shadow_tag_sub_col.g, shadow_tag_sub_col.b, 0.92))
 		dl.text = shadow_desc
 
 		if tier_changed:
