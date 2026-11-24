@@ -50,13 +50,13 @@ func _build_ui() -> void:
 	_backdrop.color = Color(0.035, 0.028, 0.024, 0.76)
 	_root.add_child(_backdrop)
 
-	# Top wide Hades-style banner
+	# Top wide Hades-style banner (matches MayariTallyOverlay exact size & style)
 	_banner = PanelContainer.new()
 	_banner.anchor_left = 0.14
 	_banner.anchor_right = 0.86
-	_banner.anchor_top = 0.045
-	_banner.anchor_bottom = 0.165
-	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 30, 10)
+	_banner.anchor_top = 0.030
+	_banner.anchor_bottom = 0.148
+	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
 	b_style.border_color = COL_GOLD
 	b_style.set_border_width_all(2)
 	b_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
@@ -66,7 +66,7 @@ func _build_ui() -> void:
 
 	var bv := VBoxContainer.new()
 	bv.alignment = BoxContainer.ALIGNMENT_CENTER
-	bv.add_theme_constant_override("separation", 4)
+	bv.add_theme_constant_override("separation", 3)
 	_banner.add_child(bv)
 
 	var title_row := HBoxContainer.new()
@@ -76,16 +76,33 @@ func _build_ui() -> void:
 	left_pad.custom_minimum_size = Vector2(44, 0)
 	title_row.add_child(left_pad)
 
+	var center_title := HBoxContainer.new()
+	center_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center_title.alignment = BoxContainer.ALIGNMENT_CENTER
+	center_title.add_theme_constant_override("separation", 18)
+	title_row.add_child(center_title)
+
+	var left_orn := Label.new()
+	left_orn.text = "◈"
+	left_orn.add_theme_font_size_override("font_size", 22)
+	left_orn.add_theme_color_override("font_color", COL_GOLD)
+	center_title.add_child(left_orn)
+
 	var title_lbl := Label.new()
 	title_lbl.text = "N E I G H B O R H O O D   E V E N T S"
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 30)
+	title_lbl.add_theme_font_size_override("font_size", 32)
 	title_lbl.add_theme_color_override("font_color", COL_CREAM)
 	title_lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
 	title_lbl.add_theme_constant_override("outline_size", 4)
-	title_row.add_child(title_lbl)
+	center_title.add_child(title_lbl)
+
+	var right_orn := Label.new()
+	right_orn.text = "◈"
+	right_orn.add_theme_font_size_override("font_size", 22)
+	right_orn.add_theme_color_override("font_color", COL_GOLD)
+	center_title.add_child(right_orn)
 
 	var right_h := HBoxContainer.new()
 	right_h.custom_minimum_size = Vector2(44, 0)
@@ -113,21 +130,21 @@ func _build_ui() -> void:
 	sub_lbl.text = "Active conditions, rumors, and lunar omens across Karimlan today.  (Press K or Esc to close)"
 	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	sub_lbl.add_theme_font_size_override("font_size", 15)
+	sub_lbl.add_theme_font_size_override("font_size", 16)
 	sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	bv.add_child(sub_lbl)
 
-	# Centered Hades frame
+	# Centered Hades frame (exact same dimensions as MayariTallyOverlay: 0.53 wide x 0.68 tall)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.17
-	_frame.anchor_right = 0.83
-	_frame.anchor_top = 0.19
-	_frame.anchor_bottom = 0.90
-	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.95), 8, 26, 20)
+	_frame.anchor_left = 0.235
+	_frame.anchor_right = 0.765
+	_frame.anchor_top = 0.175
+	_frame.anchor_bottom = 0.855
+	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
 	f_style.border_color = Color(0.835, 0.624, 0.278, 0.78)
 	f_style.set_border_width_all(2)
-	f_style.shadow_color = Color(0.0, 0.0, 0.0, 0.6)
-	f_style.shadow_size = 20
+	f_style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
+	f_style.shadow_size = 22
 	_frame.add_theme_stylebox_override("panel", f_style)
 	_root.add_child(_frame)
 
@@ -138,7 +155,7 @@ func _build_ui() -> void:
 
 	_cards_vbox = VBoxContainer.new()
 	_cards_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_cards_vbox.add_theme_constant_override("separation", 14)
+	_cards_vbox.add_theme_constant_override("separation", 10)
 	scroll.add_child(_cards_vbox)
 
 func _on_toggled(opened: bool) -> void:
@@ -280,9 +297,9 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	var tag: String = str(pal["tag"])
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 146)
+	card.custom_minimum_size = Vector2(0, 114)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 12)
+	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 10)
 	style.content_margin_right = 28
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.78)
 	style.border_width_left = 4
@@ -295,11 +312,11 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 34)
+	hbox.add_theme_constant_override("separation", 38)
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
-	emblem.custom_minimum_size = Vector2(122, 122)
+	emblem.custom_minimum_size = Vector2(88, 88)
 	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
@@ -310,14 +327,14 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	sigil_lbl.text = sigil
 	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 42)
+	sigil_lbl.add_theme_font_size_override("font_size", 36)
 	sigil_lbl.add_theme_color_override("font_color", accent_bright)
 	emblem.add_child(sigil_lbl)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	text_col.add_theme_constant_override("separation", 4)
+	text_col.add_theme_constant_override("separation", 3)
 	hbox.add_child(text_col)
 
 	var top_line := HBoxContainer.new()
@@ -327,7 +344,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	title_lbl.text = title.to_upper()
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 24)
+	title_lbl.add_theme_font_size_override("font_size", 25)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	top_line.add_child(title_lbl)
 
@@ -346,8 +363,8 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	desc_rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
 	desc_rt.add_theme_font_override("bold_font", _bold_font)
-	desc_rt.add_theme_font_size_override("normal_font_size", 16)
-	desc_rt.add_theme_font_size_override("bold_font_size", 16)
+	desc_rt.add_theme_font_size_override("normal_font_size", 18)
+	desc_rt.add_theme_font_size_override("bold_font_size", 18)
 	desc_rt.add_theme_color_override("default_color", COL_CREAM_MUTED)
 	desc_rt.text = desc_rich.replace("[b]", "[b][color=%s]" % COL_BOLD_CREAM).replace("[/b]", "[/color][/b]")
 	text_col.add_child(desc_rt)
