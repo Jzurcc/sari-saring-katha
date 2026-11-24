@@ -373,8 +373,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 
 		var s_name := Label.new()
 		s_name.text = "▸ " + str(stat_dict.get("label", ""))
-		s_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		s_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		s_name.custom_minimum_size = Vector2(300, 0)
 		s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
 		s_name.add_theme_font_size_override("font_size", 17)
 		s_name.add_theme_color_override("font_color", COL_CREAM)
@@ -382,8 +381,6 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 
 		var s_val := Label.new()
 		s_val.text = str(stat_dict.get("value", ""))
-		s_val.custom_minimum_size = Vector2(96, 0)
-		s_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		s_val.add_theme_font_override("font", _bold_font)
 		s_val.add_theme_font_size_override("font_size", 18)
 		var tone := str(stat_dict.get("tone", "pos"))
