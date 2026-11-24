@@ -537,8 +537,10 @@ func get_regulars_who_like_item(item: ItemData, only_revealed_today: bool = fals
 	if not item:
 		return result
 	var cat := item.category.to_lower()
-	var source: Array[CustomerData] = get_revealed_expected_regulars() if only_revealed_today else []
-	if not only_revealed_today:
+	var source: Array[CustomerData] = []
+	if only_revealed_today:
+		source = get_revealed_expected_regulars()
+	else:
 		for c in available_characters:
 			if c and not c.is_collector() and c.unlock_tier <= current_tier:
 				source.append(c)
