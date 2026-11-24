@@ -283,6 +283,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.custom_minimum_size = Vector2(0, 146)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 12)
+	style.content_margin_right = 28
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.78)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -294,7 +295,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 20)
+	hbox.add_theme_constant_override("separation", 34)
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()

@@ -584,6 +584,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var style := UIStyle.create_flat_stylebox(Color(0.048, 0.045, 0.042, 0.92), 6, 16, 10)
+	style.content_margin_right = 28
 	style.border_color = Color(0.88, 0.79, 0.58, 0.48)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -595,7 +596,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 18)
+	hbox.add_theme_constant_override("separation", 38)
 	card.add_child(hbox)
 
 	# Same footprint as Beat 2's HadesEmblem so the flip lines up seamlessly!
@@ -947,6 +948,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 10)
+	style.content_margin_right = 28
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.62)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -961,7 +963,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.set_meta("accent_bright", accent_bright)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 18)
+	hbox.add_theme_constant_override("separation", 38)
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 
