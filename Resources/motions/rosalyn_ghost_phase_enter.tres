@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+
+[sub_resource type="Resource" id="enter_1"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0.12, 0.45)
+duration = 1.15
+transition = 1
+ease_type = 1
+target_opacity = 0.42
+
+[sub_resource type="Resource" id="enter_2"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0, 0)
+duration = 0.85
+transition = 1
+ease_type = 2
+target_opacity = 0.88
+
+[sub_resource type="Resource" id="exit_1"]
+script = ExtResource("2_step")
+anchor = 3
+local_offset = Vector3(0, 0.25, 0.8)
+duration = 1.5
+transition = 1
+ease_type = 0
+target_opacity = 0.0
+
+[resource]
+script = ExtResource("1_profile")
+profile_name = "Rosalyn Ghost Phase"
+locomotion_style = 1
+base_speed = 1.9
+bob_frequency = 4.2
+bob_amplitude = 0.06
+sway_amount = 0.03
+idle_height_offset = 0.14
+idle_bob_amplitude = 0.055
+idle_bob_speed = 2.0
+idle_sway_amount = 0.015
+idle_opacity = 0.88
+play_landing_thud = false
+override_start_anchor = true
+start_anchor = 3
+start_offset = Vector3(0, 0.2, 1.4)
+start_opacity = 0.0
+enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
+exit_steps = Array[ExtResource("2_step")]([SubResource("exit_1")])
+bypass_default_exit_stepback = true

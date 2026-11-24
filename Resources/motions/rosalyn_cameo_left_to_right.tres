@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+
+[sub_resource type="Resource" id="step_1"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0.28, -1.4)
+duration = 2.6
+transition = 1
+ease_type = 1
+target_opacity = 0.78
+
+[sub_resource type="Resource" id="step_2"]
+script = ExtResource("2_step")
+anchor = 6
+local_offset = Vector3(0, 0.35, -0.4)
+duration = 2.8
+transition = 1
+ease_type = 0
+target_opacity = 0.0
+
+[resource]
+script = ExtResource("1_profile")
+profile_name = "Rosalyn Cameo Left To Right"
+locomotion_style = 1
+base_speed = 2.0
+bob_frequency = 4.0
+bob_amplitude = 0.055
+sway_amount = 0.025
+idle_height_offset = 0.22
+play_landing_thud = false
+override_start_anchor = true
+start_anchor = 5
+start_offset = Vector3(0, 0.3, -0.4)
+start_opacity = 0.0
+enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2")])
+bypass_default_exit_stepback = true

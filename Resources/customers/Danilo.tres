@@ -11,6 +11,7 @@
 [ext_resource type="Resource" uid="uid://csh0cxkt44aci" path="res://Dialogue/Timelines/Danilo/Visit.dtl" id="danilo_visit"]
 [ext_resource type="Resource" uid="uid://cjllu4anoqql8" path="res://Dialogue/Timelines/Danilo/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
+[ext_resource type="Resource" path="res://Resources/motions/danilo_hesitant_linger.tres" id="motion_danilo_linger"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -95,3 +96,4 @@ spawn_weight = 0.55
 story_timeline = ExtResource("story_res")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+default_motion = ExtResource("motion_danilo_linger")

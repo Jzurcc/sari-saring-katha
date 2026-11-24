@@ -3,6 +3,7 @@ extends Resource
 
 const DEFAULT_PURCHASE_TIMELINE = preload("res://Dialogue/Timelines/Generic/Purchase.dtl")
 const DEFAULT_VISIT_TIMELINE = preload("res://Dialogue/Timelines/Generic/Visit.dtl")
+const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd")
 
 ## The display name of the character (can contain spaces).
 @export var character_name: String
@@ -55,6 +56,14 @@ const DEFAULT_VISIT_TIMELINE = preload("res://Dialogue/Timelines/Generic/Visit.d
 ## Per-arc generic assets. Index 0 = Arc 1 (chapters 0-2), 1 = Arc 2 (3-5), 2 = Arc 3 (6-8).
 ## Add or remove entries here to support any number of arcs — no code changes needed.
 @export var character_arcs: Array[ArcData] = []
+
+@export_group("Motion & Animations")
+## Default enter/idle/locomotion/exit motion profile for this customer.
+@export var default_motion: MotionProfileScript = null
+## Optional alternate motion variants randomly mixed in with default_motion on regular visits/purchases.
+@export var alternate_motions: Array[MotionProfileScript] = []
+## Non-interactive pass-by / fly-by cameo animations played occasionally in the street/sky in front of the store.
+@export var ambient_cameo_motions: Array[MotionProfileScript] = []
 
 ## Total number of story chapters for this character (derived from chapters.size()).
 var max_story_chapters: int:
@@ -220,3 +229,48 @@ func get_visit_timelines(chapter: int) -> Array[DialogicTimeline]:
 		result.append(DEFAULT_VISIT_TIMELINE)
 
 	return result
+
+# ---------------------------------------------------------------------------
+# Motion Selection Helpers
+# ---------------------------------------------------------------------------
+
+## Resolves the active CustomerMotionProfile for an encounter.
+## Priority: ChapterData.motion_override (for story encounters) -> weighted pick of default + alternates.
+func pick_motion_profile(chapter: int, is_story: bool) -> MotionProfileScript:
+	if is_story:
+		var ch := get_chapter(chapter)
+		if ch and ch.motion_override != null:
+			return ch.motion_override
+
+	var pool: Array[MotionProfileScript] = []
+	if default_motion != null:
+		pool.append(default_motion)
+	for alt in alternate_motions:
+		if alt != null:
+			pool.append(alt)
+
+	return _pick_weighted_motion(pool)
+
+## Picks a weighted random ambient cameo motion (pass-by / fly-by), or null if none are configured.
+func pick_ambient_cameo_motion() -> MotionProfileScript:
+	var pool: Array[MotionProfileScript] = []
+	for cameo in ambient_cameo_motions:
+		if cameo != null:
+			pool.append(cameo)
+	return _pick_weighted_motion(pool)
+
+static func _pick_weighted_motion(pool: Array[MotionProfileScript]) -> MotionProfileScript:
+	if pool.is_empty():
+		return null
+	if pool.size() == 1:
+		return pool[0]
+	var total_weight := 0.0
+	for p in pool:
+		total_weight += maxf(p.selection_weight, 0.05)
+	var roll := randf() * total_weight
+	var acc := 0.0
+	for p in pool:
+		acc += maxf(p.selection_weight, 0.05)
+		if roll <= acc:
+			return p
+	return pool[-1]

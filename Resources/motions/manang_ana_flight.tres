@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="CustomerMotionProfile" format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionStep.gd" id="2_step"]
+
+[sub_resource type="Resource" id="enter_1"]
+script = ExtResource("2_step")
+anchor = 1
+local_offset = Vector3(0, 0.85, 0)
+duration = 1.35
+transition = 1
+ease_type = 1
+height_arc = 0.35
+target_opacity = 1.0
+
+[sub_resource type="Resource" id="enter_2"]
+script = ExtResource("2_step")
+anchor = 2
+local_offset = Vector3(0, 0, 0)
+duration = 1.1
+transition = 1
+ease_type = 2
+target_opacity = 1.0
+
+[sub_resource type="Resource" id="exit_1"]
+script = ExtResource("2_step")
+anchor = 7
+local_offset = Vector3(0, 1.8, -0.8)
+duration = 0.75
+transition = 10
+ease_type = 1
+target_opacity = 1.0
+pause_after = 0.15
+
+[sub_resource type="Resource" id="exit_2"]
+script = ExtResource("2_step")
+anchor = 5
+local_offset = Vector3(2.0, 5.2, -2.0)
+duration = 1.85
+transition = 7
+ease_type = 0
+height_arc = 0.8
+target_opacity = 0.0
+
+[resource]
+script = ExtResource("1_profile")
+profile_name = "Manang Ana Flight"
+locomotion_style = 1
+base_speed = 2.15
+bob_frequency = 4.8
+bob_amplitude = 0.09
+sway_amount = 0.04
+idle_height_offset = 0.12
+idle_bob_amplitude = 0.06
+idle_bob_speed = 2.3
+idle_sway_amount = 0.02
+idle_opacity = 1.0
+play_landing_thud = false
+override_start_anchor = true
+start_anchor = 0
+start_offset = Vector3(0, 2.2, 0)
+start_opacity = 0.0
+enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])
+exit_steps = Array[ExtResource("2_step")]([SubResource("exit_1"), SubResource("exit_2")])
+bypass_default_exit_stepback = true

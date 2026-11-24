@@ -10,6 +10,9 @@ const MAX_COUNTER_SLOTS := 3
 const LINGER_CHANCE := 0.70
 const MAX_LINGERING_VISITORS := 2
 const SMALLTALK_RETURN_CHANCE := 0.60
+const AMBIENT_CAMEO_MIN_INTERVAL := 24.0
+const AMBIENT_CAMEO_MAX_INTERVAL := 48.0
+const MAX_ACTIVE_AMBIENT_CAMEOS := 1
 
 @export var customer_scene: PackedScene = preload("res://Scenes/Customer.tscn")
 @export var spawn_pos: NodePath
@@ -28,6 +31,9 @@ var session: TransactionSession = TransactionSession.new()
 var counter_slots: Array[Customer] = [null, null, null]
 ## Background visitors hanging out in the tambayan area (do NOT occupy counter slots)
 var lingering_visitors: Array[Customer] = []
+## Non-interactive pass-by / fly-by cameo instances currently crossing the street or storefront
+var _ambient_cameos: Array[Customer] = []
+var _ambient_cameo_session_id: int = 0
 
 ## Backward-compatible active customer accessor (returns active dialogue customer or first occupied slot)
 var current_customer: Customer:
@@ -87,6 +93,7 @@ func _ready() -> void:
 	EventBus.tray_item_placed.connect(_on_tray_item_placed)
 	EventBus.cat_upgraded.connect(_on_cat_upgraded)
 	set_max_unlocked_slots(StoryManager.get_max_counter_slots())
+	_schedule_next_ambient_cameo()
 	LogManager.debug("CustomerSpawner", "_ready() END")
 
 func _on_cat_upgraded(_new_level: int) -> void:
@@ -118,6 +125,9 @@ func get_present_character_paths() -> Array[String]:
 	for v in lingering_visitors:
 		if is_instance_valid(v) and v.customer_data and not (v.customer_data.resource_path in paths):
 			paths.append(v.customer_data.resource_path)
+	for cam in _ambient_cameos:
+		if is_instance_valid(cam) and cam.customer_data and not (cam.customer_data.resource_path in paths):
+			paths.append(cam.customer_data.resource_path)
 	if is_instance_valid(guest_customer) and guest_customer.customer_data:
 		if not (guest_customer.customer_data.resource_path in paths):
 			paths.append(guest_customer.customer_data.resource_path)
@@ -135,6 +145,8 @@ func _find_open_slot(prefer_side: bool = false) -> int:
 func _on_day_started(_day: int) -> void:
 	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
 	_dismiss_all_lingering_visitors()
+	_clear_ambient_cameos()
+	_schedule_next_ambient_cameo()
 	_spawn_next_customer()
 
 func _spawn_next_customer() -> void:
@@ -584,6 +596,65 @@ func _dismiss_all_lingering_visitors() -> void:
 			v.leave_from_lingering()
 	lingering_visitors.clear()
 
+# ── Ambient Pass-By / Fly-By Cameos ──────────────────────────────────────────
+
+func _schedule_next_ambient_cameo() -> void:
+	_ambient_cameo_session_id += 1
+	var my_session := _ambient_cameo_session_id
+	_run_ambient_cameo_loop(my_session)
+
+func _run_ambient_cameo_loop(my_session: int) -> void:
+	while is_inside_tree() and my_session == _ambient_cameo_session_id:
+		var wait_s := randf_range(AMBIENT_CAMEO_MIN_INTERVAL, AMBIENT_CAMEO_MAX_INTERVAL)
+		await get_tree().create_timer(wait_s).timeout
+		if not is_inside_tree() or my_session != _ambient_cameo_session_id:
+			return
+		_try_spawn_ambient_cameo()
+
+func _try_spawn_ambient_cameo() -> void:
+	# Prune freed cameos
+	_ambient_cameos = _ambient_cameos.filter(func(c): return is_instance_valid(c))
+	if _ambient_cameos.size() >= MAX_ACTIVE_AMBIENT_CAMEOS:
+		return
+	if is_paused or _is_exclusive_wave or StoryManager.is_past_closing_time():
+		return
+	var pos_data := _calculate_positions(false, 0)
+	if pos_data.is_empty():
+		return
+
+	var present_paths := get_present_character_paths()
+	var candidates: Array[CustomerData] = []
+	for char_data in StoryManager.available_characters:
+		if char_data == null or char_data.ambient_cameo_motions.is_empty():
+			continue
+		if char_data.unlock_tier > StoryManager.current_tier:
+			continue
+		if char_data.resource_path in present_paths:
+			continue
+		candidates.append(char_data)
+
+	if candidates.is_empty():
+		return
+
+	var chosen: CustomerData = candidates.pick_random()
+	var cameo_profile := chosen.pick_ambient_cameo_motion()
+	if cameo_profile == null:
+		return
+
+	var cameo: Customer = customer_scene.instantiate()
+	get_parent().add_child(cameo)
+	cameo.global_position = pos_data.spawn_pos
+	cameo.setup_ambient_cameo(chosen, cameo_profile, pos_data.spawn_pos, pos_data.target_pos, pos_data.exit_pos)
+	_ambient_cameos.append(cameo)
+	LogManager.info("CustomerSpawner", "Spawned ambient cameo: %s (%s)" % [chosen.character_name, cameo_profile.profile_name])
+
+func _clear_ambient_cameos() -> void:
+	_ambient_cameo_session_id += 1
+	for cam in _ambient_cameos:
+		if is_instance_valid(cam):
+			cam.queue_free()
+	_ambient_cameos.clear()
+
 # ── Interaction & Session Forwarding ─────────────────────────────────────────
 
 func _process(delta: float) -> void:
@@ -627,6 +698,7 @@ func _on_tray_item_placed(item: DraggableItem, tray_pos: Vector3) -> void:
 
 func _on_closing_time_reached() -> void:
 	_dismiss_all_lingering_visitors()
+	_clear_ambient_cameos()
 	# If time hit 8 PM and no one is at the counter, spawn Mayari immediately.
 	if not has_any_counter_customer() and not _is_spawning:
 		spawn_mayari_for_collection()
@@ -783,6 +855,7 @@ func reset_state() -> void:
 	for i in range(counter_slots.size()):
 		counter_slots[i] = null
 	lingering_visitors.clear()
+	_clear_ambient_cameos()
 	session.current_customer = null
 	guest_customer = null
 	_is_spawning = false

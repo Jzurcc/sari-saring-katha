@@ -1,6 +1,8 @@
 class_name TransactionContext
 extends RefCounted
 
+const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd")
+
 enum Type { STORY, PURCHASE, VISIT }
 
 var transaction_type: Type = Type.VISIT
@@ -42,6 +44,7 @@ var tip_active: bool = false
 var high_price_active: bool = false
 var awareness_active: bool = false
 var stock_status: String = "Normal"
+var motion_profile: MotionProfileScript = null
 
 func _is_match(item: ItemData, desired: ItemData) -> bool:
 	return (
@@ -116,7 +119,8 @@ func to_dict() -> Dictionary:
 		"tip_active": tip_active,
 		"high_price_active": high_price_active,
 		"awareness_active": awareness_active,
-		"stock_status": stock_status
+		"stock_status": stock_status,
+		"motion_profile_path": motion_profile.resource_path if motion_profile else ""
 	}
 
 static func from_dict(data: Dictionary) -> TransactionContext:
@@ -171,6 +175,9 @@ static func from_dict(data: Dictionary) -> TransactionContext:
 	ctx.high_price_active = data.get("high_price_active", false)
 	ctx.awareness_active = data.get("awareness_active", false)
 	ctx.stock_status = str(data.get("stock_status", "Normal"))
+	var motion_path: String = str(data.get("motion_profile_path", ""))
+	if motion_path != "" and ResourceLoader.exists(motion_path):
+		ctx.motion_profile = load(motion_path) as MotionProfileScript
 
 	# Self-heal restored Uncle Mario tutorial saves that lack desired_items or is_guided_tutorial
 	if ctx.customer_data and ctx.customer_data.get_clean_id() == "unclemario":

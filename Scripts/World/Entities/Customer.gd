@@ -2,6 +2,8 @@ class_name Customer
 extends WorldInteractor
 
 const AttentionBadge3D = preload("res://Scripts/World/Entities/CustomerAttentionBadge3D.gd")
+const MotionControllerScript = preload("res://Scripts/World/Entities/CustomerMotionController.gd")
+const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd")
 
 @warning_ignore("unused_signal")
 signal satisfied(customer: Customer)
@@ -32,21 +34,18 @@ var dialogue_phase: TransactionSession.Phase = TransactionSession.Phase.NONE
 var greeting_interrupted: bool = false
 var _is_repositioning: bool = false
 
-# Lingering Visitor (Tambayan) state
+# Lingering Visitor (Tambayan) & Ambient Cameo state
 var is_lingering_visitor: bool = false
 var is_returning_for_smalltalk: bool = false
 var is_lingering_departure: bool = false
+var is_ambient_cameo: bool = false
 var _linger_session_id: int = 0
 
 var _is_resolving: bool = false
 var _spawn_position: Vector3 = Vector3.ZERO
 var _exit_position: Vector3 = Vector3.ZERO
-var _exit_stepback_pos: Vector3 = Vector3.ZERO
-var _using_exit_stepback: bool = false
-var _approach_back_dir: Vector3 = Vector3(-1, 0, 0)
 var _delayed_target: Vector3 = Vector3.ZERO
-var _walk_timer: float = 0.0
-var _last_pos: Vector3 = Vector3.ZERO
+var _motion: MotionControllerScript = null
 
 @onready var body_sprite: Sprite3D = $Body
 var _outline_material: ShaderMaterial = null
@@ -59,84 +58,78 @@ var _was_dialogue_open: bool = false
 func _ready() -> void:
 	super._ready()
 	_was_dialogue_open = Dialogic.current_timeline != null
+	_ensure_motion_controller()
 	_sync_collision_layer()
+
+
+func _ensure_motion_controller() -> void:
+	if is_instance_valid(_motion):
+		return
+	_motion = MotionControllerScript.new()
+	_motion.name = "MotionController"
+	add_child(_motion)
+	_motion.enter_finished.connect(_on_motion_enter_finished)
+	_motion.reposition_finished.connect(_on_motion_reposition_finished)
+	_motion.cameo_finished.connect(_on_motion_cameo_finished)
 
 
 func _sync_collision_layer() -> void:
 	# Layer 5 (value 16) allows PlayerInteraction to raycast customers through counters.
-	# Disable while walking in, resolving/leaving, or lingering so non-active customers never block neighbor clicks or drops.
-	var interactable := is_waiting and not _is_resolving and not is_lingering_visitor
+	# Disable while walking in, resolving/leaving, lingering, or playing an ambient cameo.
+	var interactable := is_waiting and not _is_resolving and not is_lingering_visitor and not is_ambient_cameo
 	collision_layer = 0
 	set_collision_layer_value(5, interactable)
 	if not interactable and is_hovered:
 		on_hover(false)
 
 
+func _apply_character_visuals() -> void:
+	if not customer_data or not body_sprite:
+		return
+	if customer_data.sprite_texture:
+		body_sprite.texture = customer_data.sprite_texture
+		# Dynamically set the offset to half the texture height (in pixels).
+		# Since 'centered' is true, this pins the texture bottom to the node origin.
+		body_sprite.offset.y = customer_data.sprite_texture.get_height() / 2.0
+
+	body_sprite.position.y = 0
+	body_sprite.scale = Vector3.ONE * customer_data.sprite_scale
+
+	# Position the SpeechMarker relative to the character's height and data ratio.
+	var speech_marker = get_node_or_null("SpeechMarker")
+	if speech_marker and customer_data.sprite_texture:
+		var full_height_y = customer_data.sprite_texture.get_height() * body_sprite.pixel_size
+		var ratio = customer_data.speech_marker_height_ratio
+		speech_marker.position.y = (full_height_y * ratio) * customer_data.sprite_scale
+
+	# Adjust the collision shape so it tightly fits the customer's sprite boundaries.
+	var collision_shape = get_node_or_null("CollisionShape3D")
+	if collision_shape and collision_shape.shape is BoxShape3D and customer_data.sprite_texture:
+		var shape_copy: BoxShape3D = collision_shape.shape.duplicate()
+		var sprite_w = customer_data.sprite_texture.get_width() * body_sprite.pixel_size * customer_data.sprite_scale
+		var sprite_h = customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale
+		shape_copy.size = Vector3(sprite_w, sprite_h, shape_copy.size.z)
+		collision_shape.shape = shape_copy
+		collision_shape.position.y = shape_copy.size.y / 2.0
+
+	self.scale = Vector3.ONE
+
 
 func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3.ZERO, delayed_arrival: bool = false) -> void:
-	# Capture spawn position now — global_position is already set by CustomerSpawner.
+	_ensure_motion_controller()
 	_spawn_position = global_position
-	# If no specific exit is provided, return to spawn by default
 	_exit_position = exit if exit != Vector3.ZERO else _spawn_position
-	var flat_back := Vector3(_spawn_position.x - target.x, 0.0, _spawn_position.z - target.z)
-	if flat_back.length_squared() > 0.001:
-		_approach_back_dir = flat_back.normalized()
-	
+	target_position = target
+
 	transaction_context = context
 	if transaction_context:
 		customer_data = transaction_context.customer_data
-		
-	if delayed_arrival:
-		_delayed_target = target
-		target_position = _spawn_position
-		if body_sprite:
-			body_sprite.modulate.a = 0.0 # Invisible until triggered
-	else:
-		target_position = target
-		# Entrance Fade In
-		if body_sprite:
-			body_sprite.modulate.a = 0.0
-			create_tween().tween_property(body_sprite, "modulate:a", 1.0, 0.5)
 
-	_last_pos = global_position
+	_apply_character_visuals()
 
-	# Apply the character's sprite texture and scale from their CustomerData resource.
-	if customer_data and body_sprite:
-		if customer_data.sprite_texture:
-			body_sprite.texture = customer_data.sprite_texture
-			# Dynamically set the offset to half the texture height (in pixels).
-			# Since 'centered' is true, this pins the texture bottom to the node origin.
-			body_sprite.offset.y = customer_data.sprite_texture.get_height() / 2.0
-		
-		# Reset sprite position to 0 so it sits at the root's origin.
-		body_sprite.position.y = 0
-
-		# Scale only the visuals and the speech marker.
-		body_sprite.scale = Vector3.ONE * customer_data.sprite_scale
-		
-		# Position the SpeechMarker relative to the character's height and data ratio.
+	# Floating attention indicator ("!" when ungreeted, "..." when returning for smalltalk)
+	if customer_data and body_sprite and not is_ambient_cameo:
 		var speech_marker = get_node_or_null("SpeechMarker")
-		if speech_marker and customer_data.sprite_texture:
-			var full_height_y = customer_data.sprite_texture.get_height() * body_sprite.pixel_size
-			var ratio = customer_data.speech_marker_height_ratio
-			speech_marker.position.y = (full_height_y * ratio) * customer_data.sprite_scale
-
-		# Adjust the collision shape so it tightly fits the customer's sprite boundaries.
-		var collision_shape = get_node_or_null("CollisionShape3D")
-		if collision_shape and collision_shape.shape is BoxShape3D and customer_data.sprite_texture:
-			# Duplicate shape so changes don't affect other instances
-			var shape_copy: BoxShape3D = collision_shape.shape.duplicate()
-			var sprite_w = customer_data.sprite_texture.get_width() * body_sprite.pixel_size * customer_data.sprite_scale
-			var sprite_h = customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale
-			shape_copy.size = Vector3(sprite_w, sprite_h, shape_copy.size.z)
-			collision_shape.shape = shape_copy
-			# Set position so the bottom of the shape is at 0
-			collision_shape.position.y = shape_copy.size.y / 2.0
-
-		# Ensure the root node stays at unit scale.
-		self.scale = Vector3.ONE
-
-		# Floating attention indicator ("!" when ungreeted, "..." when returning for smalltalk)
 		_attention_badge = AttentionBadge3D.new()
 		add_child(_attention_badge)
 		var badge_y := 1.8
@@ -147,9 +140,67 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 		_attention_badge.position = Vector3(0.0, badge_y, 0.0)
 		_attention_badge.set_base_y(badge_y)
 		_update_attention_badge()
-		
-		if transaction_context and transaction_context.blocks_phone_call:
-			MarioManager.is_mario_physically_present = true
+
+	if transaction_context and transaction_context.blocks_phone_call:
+		MarioManager.is_mario_physically_present = true
+
+	var motion_profile: MotionProfileScript = null
+	if transaction_context and transaction_context.motion_profile != null:
+		motion_profile = transaction_context.motion_profile
+	elif customer_data != null:
+		var ch := CharacterProgressionManager.get_chapter(customer_data.resource_path)
+		var is_story := transaction_context != null and transaction_context.transaction_type == TransactionContext.Type.STORY
+		motion_profile = customer_data.pick_motion_profile(ch, is_story)
+
+	_motion.configure(
+		self,
+		body_sprite,
+		_get_base_sprite_scale(),
+		motion_profile,
+		_spawn_position,
+		target,
+		_exit_position,
+		movement_speed
+	)
+
+	if delayed_arrival:
+		_delayed_target = target
+		_motion.start_delayed()
+	else:
+		_motion.start_enter()
+
+
+## Configures this Customer instance as a non-interactive background/pass-by ambient cameo
+## (e.g. Manang Ana flying across the sky, Rosalyn gliding past the counter and vanishing).
+func setup_ambient_cameo(
+	char_data: CustomerData,
+	cameo_profile: MotionProfileScript,
+	spawn_pos: Vector3,
+	counter_pos: Vector3,
+	exit_pos: Vector3
+) -> void:
+	_ensure_motion_controller()
+	is_ambient_cameo = true
+	is_waiting = false
+	customer_data = char_data
+	_spawn_position = spawn_pos
+	_exit_position = exit_pos
+	target_position = counter_pos
+	_sync_collision_layer()
+	_apply_character_visuals()
+	if body_sprite:
+		body_sprite.sorting_offset = -1.0
+	_motion.configure(
+		self,
+		body_sprite,
+		_get_base_sprite_scale(),
+		cameo_profile,
+		spawn_pos,
+		counter_pos,
+		exit_pos,
+		movement_speed
+	)
+	_motion.start_ambient_cameo()
 
 
 ## Forces a delayed customer to start their arrival sequence.
@@ -157,14 +208,27 @@ func trigger_arrival() -> void:
 	if _delayed_target != Vector3.ZERO:
 		target_position = _delayed_target
 		_delayed_target = Vector3.ZERO
-		if body_sprite:
-			create_tween().tween_property(body_sprite, "modulate:a", 1.0, 0.5)
+		if is_instance_valid(_motion):
+			_motion.start_enter()
+
+
+func _on_motion_enter_finished() -> void:
+	if not is_waiting and not _is_resolving and not is_lingering_visitor and not is_ambient_cameo:
+		arrived_at_counter()
+
+
+func _on_motion_reposition_finished() -> void:
+	_is_repositioning = false
+
+
+func _on_motion_cameo_finished() -> void:
+	queue_free()
 
 
 ## Called by PlayerInteraction when the player aims at this customer and clicks.
 ## Only responds when waiting at the counter and not mid-animation.
 func on_interact() -> void:
-	if is_waiting and not _is_resolving:
+	if is_waiting and not _is_resolving and not is_ambient_cameo:
 		# Don't trigger if already in dialogue, unless it's paused (e.g. tutorial tasks)
 		if Dialogic.current_timeline != null and not Dialogic.paused:
 			return
@@ -172,58 +236,13 @@ func on_interact() -> void:
 		clicked.emit(self)
 		EventBus.customer_clicked.emit(self)
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
+	if is_ambient_cameo:
+		return
 	var dialogue_open := Dialogic.current_timeline != null
 	if dialogue_open != _was_dialogue_open:
 		_was_dialogue_open = dialogue_open
 		_update_attention_badge()
-
-	# Skip movement and arrival while waiting at the counter OR while a
-	# resolve/dismiss animation is playing. Without the _is_resolving check,
-	# dismiss() sets is_waiting=false on the same frame, _process resumes,
-	# and arrived_at_counter() fires a second time → double dialogue.
-	# Movement logic
-	if not is_waiting or _is_repositioning:
-		var distance = global_position.distance_to(target_position)
-		var is_leaving = _is_resolving and (target_position == _exit_position or _using_exit_stepback)
-		
-		# Allow movement if not resolving OR if we are explicitly leaving
-		if not _is_resolving or is_leaving:
-			var speed = movement_speed
-			if is_leaving:
-				speed = movement_speed * 1.55
-			elif is_lingering_visitor:
-				speed = movement_speed * 0.65
-			elif _is_repositioning:
-				speed = movement_speed * 1.15
-			global_position = global_position.move_toward(target_position, speed * delta)
-			
-			if _using_exit_stepback and distance < 0.25:
-				_using_exit_stepback = false
-				target_position = _exit_position
-			elif _is_repositioning:
-				if distance < 0.05:
-					global_position = target_position
-					_is_repositioning = false
-			elif not is_leaving and not is_lingering_visitor and distance < 0.1:
-				arrived_at_counter()
-		
-		# Procedure Bouncy Walk Logic
-		# We use the velocity (actual movement) to determine if we are "walking"
-		var is_actually_moving = global_position.distance_to(_last_pos) > 0.001
-		_last_pos = global_position
-		
-		if is_actually_moving:
-			_walk_timer += delta
-			var speed_factor = 10.0
-			var amplitude = 0.08
-			var sway_amount = 0.05
-			body_sprite.position.y = abs(sin(_walk_timer * speed_factor)) * amplitude
-			body_sprite.rotation.z = sin(_walk_timer * speed_factor * 0.5) * sway_amount
-		else:
-			# Reset visuals when still
-			body_sprite.position.y = move_toward(body_sprite.position.y, 0, delta)
-			body_sprite.rotation.z = move_toward(body_sprite.rotation.z, 0, delta)
 
 func arrived_at_counter() -> void:
 	is_waiting = true
@@ -231,11 +250,14 @@ func arrived_at_counter() -> void:
 	_update_outline()
 	_update_attention_badge()
 	
-	# Landing Thud (Squash and Stretch)
-	if body_sprite:
+	# Landing Thud (Squash and Stretch) — skipped for floating/ghostly motion profiles
+	var should_thud := true
+	if is_instance_valid(_motion):
+		should_thud = _motion.should_play_landing_thud()
+	if body_sprite and should_thud:
 		if _visual_tween: _visual_tween.kill()
 		_visual_tween = create_tween()
-		var base_scale = Vector3.ONE * (customer_data.sprite_scale if customer_data else 1.0)
+		var base_scale = _get_base_sprite_scale()
 		# Squash down
 		_visual_tween.tween_property(body_sprite, "scale", Vector3(base_scale.x * 1.15, base_scale.y * 0.85, base_scale.z), 0.1) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -245,7 +267,6 @@ func arrived_at_counter() -> void:
 		# Settle
 		_visual_tween.tween_property(body_sprite, "scale", base_scale, 0.1) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-			
 			
 	if customer_data:
 		AudioManager.play_dialogue_blip(customer_data)
@@ -344,25 +365,29 @@ func _on_item_accepted(item: ItemData) -> void:
 
 func pulse_color(color: Color, duration: float = 0.5) -> void:
 	if body_sprite == null: return
-	var tween = create_tween()
-	# Boost overall brightness for the pulse
-	var target_color = color
-	target_color.r = clamp(target_color.r * 1.2, 0, 1)
-	target_color.g = clamp(target_color.g * 1.2, 0, 1)
-	target_color.b = clamp(target_color.b * 1.2, 0, 1)
-	
-	tween.tween_property(body_sprite, "modulate", target_color, duration * 0.3) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(body_sprite, "modulate", Color.WHITE, duration * 0.7) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	var tween = create_tween().set_parallel(true)
+	var tr: float = clampf(color.r * 1.2, 0.0, 1.0)
+	var tg: float = clampf(color.g * 1.2, 0.0, 1.0)
+	var tb: float = clampf(color.b * 1.2, 0.0, 1.0)
+
+	# Tween RGB channels only so custom motion opacity (modulate.a) is always preserved
+	tween.tween_property(body_sprite, "modulate:r", tr, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(body_sprite, "modulate:g", tg, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(body_sprite, "modulate:b", tb, duration * 0.3).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var back = tween.chain().set_parallel(true)
+	back.tween_property(body_sprite, "modulate:r", 1.0, duration * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	back.tween_property(body_sprite, "modulate:g", 1.0, duration * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	back.tween_property(body_sprite, "modulate:b", 1.0, duration * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func move_to_slot(new_slot: int, new_target: Vector3) -> void:
-	if _is_resolving or is_lingering_visitor:
+	if _is_resolving or is_lingering_visitor or is_ambient_cameo:
 		return
 	slot_index = new_slot
 	target_position = new_target
 	if is_waiting:
 		_is_repositioning = true
+	if is_instance_valid(_motion):
+		_motion.start_reposition(new_target)
 
 func get_order_hud_key() -> String:
 	if customer_data:
@@ -384,6 +409,8 @@ func enter_lingering_mode(hangout_points: Array[Vector3]) -> void:
 
 	if not hangout_points.is_empty():
 		target_position = hangout_points[0]
+		if is_instance_valid(_motion):
+			_motion.start_lingering(hangout_points[0])
 
 	_run_linger_routine(hangout_points, my_session)
 
@@ -400,6 +427,8 @@ func _run_linger_routine(hangout_points: Array[Vector3], my_session: int) -> voi
 		if randf() > 0.85 and i >= 2:
 			break
 		target_position = hangout_points[i]
+		if is_instance_valid(_motion):
+			_motion.set_lingering_target(hangout_points[i])
 		# Give them time to walk there + pause briefly before the next stroll
 		await get_tree().create_timer(randf_range(4.5, 8.5)).timeout
 		if not is_instance_valid(self) or not is_inside_tree() or my_session != _linger_session_id or not is_lingering_visitor:
@@ -418,6 +447,8 @@ func return_to_counter_for_smalltalk(new_slot: int, slot_target: Vector3) -> voi
 	_sync_collision_layer()
 	_update_attention_badge()
 	target_position = slot_target
+	if is_instance_valid(_motion):
+		_motion.start_return_from_lingering(slot_target)
 
 func leave_from_lingering() -> void:
 	if _is_resolving:
@@ -448,24 +479,16 @@ func _leave_store(completion_signal: Signal) -> void:
 	started_leaving.emit(self)
 	if not is_lingering_departure:
 		InventoryManager.decrement_cooldown()
-	
-	# Step back behind the counter line first so leaving customers walk behind waiting neighbors
-	var to_exit := Vector3(_exit_position.x - global_position.x, 0.0, _exit_position.z - global_position.z)
-	var exit_dir := to_exit.normalized() if to_exit.length_squared() > 0.001 else Vector3.ZERO
-	_exit_stepback_pos = global_position + (_approach_back_dir * 1.35) + (exit_dir * 0.75)
-	_using_exit_stepback = true
-	target_position = _exit_stepback_pos
-	
-	var exit_tween = create_tween()
-	exit_tween.tween_interval(2.0)
-	exit_tween.tween_property(body_sprite, "modulate:a", 0.0, 0.5) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	
-	await exit_tween.finished
-	
+
+	if is_instance_valid(_motion):
+		_motion.start_exit()
+		await _motion.exit_finished
+	else:
+		await get_tree().create_timer(2.0).timeout
+
 	if transaction_context and transaction_context.blocks_phone_call:
 		MarioManager.is_mario_physically_present = false
-		
+
 	# Emit completion signal only once FULLY resolved (gone from the scene)
 	completion_signal.emit(self)
 	queue_free()

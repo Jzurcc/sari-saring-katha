@@ -1,6 +1,8 @@
 class_name ChapterData
 extends Resource
 
+const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd")
+
 ## Unified data container for a single story chapter on a CustomerData resource.
 ## Replaces the legacy parallel arrays (chapter_names, chapter_categories,
 ## visit_story_chapters, story_prerequisites, chapter_request_items).
@@ -26,3 +28,8 @@ extends Resource
 ## Specific items the customer will request during this chapter.
 ## Leave empty to use category preferences / random selection.
 @export var pinned_items: Array[ChapterItemEntry] = []
+
+@export_group("Motion Override")
+## Optional motion profile override for this story chapter (e.g. ghost counter phase-through).
+## Leave null to use the character's default/alternate motion profiles.
+@export var motion_override: MotionProfileScript = null

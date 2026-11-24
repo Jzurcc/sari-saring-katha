@@ -62,6 +62,8 @@ static func build_next_transaction(sm: Node, exclude_paths: Array[String] = [], 
 	var chapter: int = CharacterProgressionManager.get_chapter(char_data.resource_path)
 	var branch_value: float = CharacterProgressionManager.get_branch(char_data.resource_path)
 	var current_arc: float = float(char_data.get_arc_index(chapter) + 1)
+	var is_story: bool = (transaction.transaction_type == TransactionContext.Type.STORY)
+	transaction.motion_profile = char_data.pick_motion_profile(chapter, is_story)
 
 	# 5. Sync to Dialogic only for the primary customer (joiners sync on click)
 	if not is_wave_joiner:

@@ -11,6 +11,9 @@
 [ext_resource type="Resource" uid="uid://bpb60ibkybakm" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
 [ext_resource type="Resource" uid="uid://dc1yt6iiwlltd" path="res://Dialogue/Timelines/ManangAna/Story.dtl" id="mana_story"]
 [ext_resource type="Resource" uid="uid://dw2evopysv3yc" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Resource" path="res://Resources/motions/manang_ana_flight.tres" id="motion_ana_flight"]
+[ext_resource type="Resource" path="res://Resources/motions/manang_ana_cameo_sky_flyby.tres" id="motion_ana_cameo_sky"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -87,3 +90,5 @@ requests_utang = true
 story_timeline = ExtResource("mana_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+default_motion = ExtResource("motion_ana_flight")
+ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_ana_cameo_sky")])
