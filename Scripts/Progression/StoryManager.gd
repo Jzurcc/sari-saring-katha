@@ -43,7 +43,7 @@ var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 
 # --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
-const TALLY_GOAL := 750.0
+const TALLY_GOAL := 1500.0
 const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 50.0, 60.0, 75.0, 90.0, 105.0, 120.0]
 const TALLY_GEN_SCHEDULE: Array[float] = [65.0, 80.0, 95.0, 115.0, 135.0, 155.0, 175.0]
 

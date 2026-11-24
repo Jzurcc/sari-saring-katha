@@ -28,6 +28,158 @@ const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)       # Luminous Hades-style 
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)       # Warm coral-red for penalties
 const COL_BOLD_CREAM := "#FFF6E5"
 
+## Custom Hades Heat-Gauge-inspired interactive tribute bar with thin vertical threshold lines,
+## diamond pips, and indicators directly below the bar. Click or drag anywhere to set tribute.
+class TributeGauge extends Control:
+	signal value_changed(new_value: float)
+
+	const BAR_H := 26.0
+	const BAR_Y := 14.0
+
+	var max_val: float = 100.0
+	var current_val: float = 0.0
+	var min_thresh: float = 40.0
+	var gen_thresh: float = 65.0
+	var fill_color: Color = Color(0.95, 0.76, 0.28, 1.0)
+	var border_color: Color = Color(0.86, 0.66, 0.30, 0.92)
+	var interactive: bool = true
+
+	var _dragging: bool = false
+	var _stripe_scroll: float = 0.0
+	var _fill_rect: ColorRect
+	var _stripe_mat: ShaderMaterial
+
+	static var _gauge_shader: Shader = null
+
+	func _ready() -> void:
+		mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		_fill_rect = ColorRect.new()
+		_fill_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_fill_rect.color = Color.WHITE
+		if _gauge_shader == null:
+			_gauge_shader = Shader.new()
+			_gauge_shader.code = """
+shader_type canvas_item;
+uniform vec4 base_color : source_color = vec4(0.95, 0.76, 0.28, 1.0);
+uniform float scroll_offset = 0.0;
+void fragment() {
+	float diag = (FRAGCOORD.x + FRAGCOORD.y) / 22.0 - scroll_offset;
+	float band = smoothstep(0.40, 0.48, fract(diag)) * (1.0 - smoothstep(0.86, 0.94, fract(diag)));
+	float sheen = smoothstep(0.35, 0.0, UV.y) * 0.16;
+	vec3 col = base_color.rgb + vec3(band * 0.22 + sheen);
+	COLOR = vec4(col, base_color.a);
+}
+"""
+		_stripe_mat = ShaderMaterial.new()
+		_stripe_mat.shader = _gauge_shader
+		_fill_rect.material = _stripe_mat
+		add_child(_fill_rect)
+		resized.connect(_sync_fill_rect)
+
+	func _process(delta: float) -> void:
+		_stripe_scroll += delta * 0.55
+		if _stripe_mat:
+			_stripe_mat.set_shader_parameter("scroll_offset", _stripe_scroll)
+			_stripe_mat.set_shader_parameter("base_color", fill_color)
+
+	func _sync_fill_rect() -> void:
+		if not is_instance_valid(_fill_rect):
+			return
+		var pad := 2.0
+		var ratio := clampf(current_val / maxf(0.01, max_val), 0.0, 1.0) if max_val > 0.01 else 0.0
+		var w := maxf(0.0, (size.x - pad * 2.0) * ratio)
+		_fill_rect.position = Vector2(pad, BAR_Y + pad)
+		_fill_rect.size = Vector2(w, BAR_H - pad * 2.0)
+		_fill_rect.visible = w > 1.0
+
+	func set_state(cur: float, mx: float, min_t: float, gen_t: float, col: Color, b_col: Color) -> void:
+		current_val = cur
+		max_val = mx
+		min_thresh = min_t
+		gen_thresh = gen_t
+		fill_color = col
+		border_color = b_col
+		_sync_fill_rect()
+		queue_redraw()
+
+	func _gui_input(event: InputEvent) -> void:
+		if not interactive or max_val <= 0.01:
+			return
+		if event is InputEventMouseButton:
+			var mb := event as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_LEFT:
+				_dragging = mb.pressed
+				if mb.pressed:
+					_emit_from_x(mb.position.x)
+		elif event is InputEventMouseMotion and _dragging:
+			var mm := event as InputEventMouseMotion
+			_emit_from_x(mm.position.x)
+
+	func _emit_from_x(local_x: float) -> void:
+		var ratio := clampf(local_x / maxf(1.0, size.x), 0.0, 1.0)
+		value_changed.emit(ratio * max_val)
+
+	func _draw() -> void:
+		var bar_rect := Rect2(0.0, BAR_Y, size.x, BAR_H)
+		# Deep obsidian recessed track
+		draw_rect(bar_rect, Color(0.04, 0.036, 0.032, 0.96), true)
+
+		# Subtle ruler notches along the track
+		var steps := 12
+		for i in range(1, steps):
+			var nx := size.x * (float(i) / float(steps))
+			draw_line(Vector2(nx, BAR_Y + 6.0), Vector2(nx, BAR_Y + BAR_H - 6.0), Color(1.0, 0.92, 0.78, 0.08), 1.0, true)
+
+		# Crisp outer & inner gold frame
+		draw_rect(bar_rect, border_color, false, 2.0)
+		draw_rect(bar_rect.grow(-2.0), Color(0.0, 0.0, 0.0, 0.5), false, 1.0)
+
+		# End-cap diamond ornaments
+		_draw_diamond(Vector2(0.0, BAR_Y + BAR_H * 0.5), 5.0, border_color)
+		_draw_diamond(Vector2(size.x, BAR_Y + BAR_H * 0.5), 5.0, border_color)
+
+		var font := UIStyle.FONT_INDER
+		# Edge labels (₱0 and MAX)
+		draw_string(font, Vector2(0.0, BAR_Y + BAR_H + 26.0), "₱0", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.75, 0.68, 0.58, 0.70))
+		var max_str := "₱%d" % int(roundf(max_val))
+		draw_string(font, Vector2(size.x - 64.0, BAR_Y + BAR_H + 26.0), max_str, HORIZONTAL_ALIGNMENT_RIGHT, 64.0, 13, Color(0.75, 0.68, 0.58, 0.70))
+
+		# Threshold lines & indicators below (Hades Heat Gauge style!)
+		if max_val > 0.01:
+			if min_thresh > 0.0 and min_thresh < max_val - 0.01:
+				var min_x := clampf(min_thresh / max_val, 0.06, 0.94) * size.x
+				var reached_min := current_val >= min_thresh - 0.01
+				_draw_threshold(min_x, "MIN · ₱%d" % int(roundf(min_thresh)), reached_min, Color(1.0, 0.92, 0.78, 1.0))
+			if gen_thresh > min_thresh + 0.01 and gen_thresh < max_val - 0.01:
+				var gen_x := clampf(gen_thresh / max_val, 0.08, 0.94) * size.x
+				var reached_gen := current_val >= gen_thresh - 0.01
+				_draw_threshold(gen_x, "GENEROUS · ₱%d" % int(roundf(gen_thresh)), reached_gen, Color(1.0, 0.86, 0.40, 1.0))
+
+			# Active glowing diamond pointer riding on the fill edge
+			var cur_x := clampf(current_val / max_val, 0.0, 1.0) * size.x
+			var ptr_c := Vector2(cur_x, BAR_Y + BAR_H * 0.5)
+			_draw_diamond(ptr_c, 11.0, Color(0.05, 0.04, 0.035, 0.98))
+			_draw_diamond(ptr_c, 8.5, fill_color.lightened(0.28))
+			_draw_diamond(ptr_c, 4.0, Color(1.0, 0.97, 0.90, 0.95))
+
+	func _draw_threshold(x: float, label_txt: String, reached: bool, lit_col: Color) -> void:
+		var line_col := lit_col if reached else Color(0.78, 0.72, 0.62, 0.45)
+		# Thin vertical threshold line slicing cleanly across the gauge & down into indicator
+		draw_line(Vector2(x, BAR_Y - 5.0), Vector2(x, BAR_Y + BAR_H + 14.0), line_col, 1.5, true)
+		_draw_diamond(Vector2(x, BAR_Y + BAR_H + 14.0), 4.0, line_col)
+		var lbl_col := lit_col if reached else Color(0.76, 0.70, 0.60, 0.65)
+		var w := 130.0
+		var lx := clampf(x - w * 0.5, 22.0, size.x - w - 22.0)
+		draw_string(UIStyle.FONT_INDER, Vector2(lx, BAR_Y + BAR_H + 34.0), label_txt, HORIZONTAL_ALIGNMENT_CENTER, w, 13, lbl_col)
+
+	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
+		draw_colored_polygon(PackedVector2Array([
+			center + Vector2(0.0, -r),
+			center + Vector2(r, 0.0),
+			center + Vector2(0.0, r),
+			center + Vector2(-r, 0.0),
+		]), col)
+
 var _bold_font: FontVariation
 
 var _player_money: float = 0.0
@@ -49,20 +201,16 @@ var _frame_prompt_lbl: Label
 var _mayari_portrait: TextureRect
 var _header_title_lbl: Label
 var _header_sub_lbl: Label
-var _ledger_val_lbl: Label
-var _track_bg: ColorRect
-var _track_preview: ColorRect
-var _track_base: ColorRect
 
-# Beat 1: Offering Panel
-var _offer_container: PanelContainer
+# Beat 1: Hades Heat-Gauge Offering Panel
+var _offer_container: VBoxContainer
+var _tier_emblem: Control
+var _tier_sigil_lbl: Label
 var _aura_lbl: Label
+var _outcome_lbl: Label
 var _amount_lbl: Label
-var _slider: HSlider
-var _pip_min: ColorRect
-var _pip_gen: ColorRect
-var _snap_row: HBoxContainer
-var _snap_buttons: Array[Button] = []
+var _wallet_after_lbl: Label
+var _gauge: TributeGauge
 var _confirm_btn: Button
 var _confirm_style: StyleBoxFlat
 var _minus_btn: Button
@@ -153,15 +301,18 @@ func _build_ui() -> void:
 	_header_banner.add_child(header_v)
 
 	var title_row := HBoxContainer.new()
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 18)
 	header_v.add_child(title_row)
 
-	var left_pad := Control.new()
-	left_pad.custom_minimum_size = Vector2(170, 0)
-	title_row.add_child(left_pad)
+	var left_orn := Label.new()
+	left_orn.text = "◈"
+	left_orn.add_theme_font_size_override("font_size", 22)
+	left_orn.add_theme_color_override("font_color", COL_GOLD)
+	title_row.add_child(left_orn)
 
 	_header_title_lbl = Label.new()
 	_header_title_lbl.text = "T H E   S I L V E R   L E D G E R"
-	_header_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_header_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	_header_title_lbl.add_theme_font_size_override("font_size", 34)
@@ -170,14 +321,11 @@ func _build_ui() -> void:
 	_header_title_lbl.add_theme_constant_override("outline_size", 4)
 	title_row.add_child(_header_title_lbl)
 
-	_ledger_val_lbl = Label.new()
-	_ledger_val_lbl.custom_minimum_size = Vector2(170, 0)
-	_ledger_val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_ledger_val_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_ledger_val_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_ledger_val_lbl.add_theme_font_size_override("font_size", 22)
-	_ledger_val_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	title_row.add_child(_ledger_val_lbl)
+	var right_orn := Label.new()
+	right_orn.text = "◈"
+	right_orn.add_theme_font_size_override("font_size", 22)
+	right_orn.add_theme_color_override("font_color", COL_GOLD)
+	title_row.add_child(right_orn)
 
 	_header_sub_lbl = Label.new()
 	_header_sub_lbl.text = "Set tonight's tribute to Reyna Mayari."
@@ -187,42 +335,17 @@ func _build_ui() -> void:
 	_header_sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	header_v.add_child(_header_sub_lbl)
 
-	# Sleek integrated ledger progress hairline across the wide banner
-	_track_bg = ColorRect.new()
-	_track_bg.custom_minimum_size = Vector2(0, 5)
-	_track_bg.color = Color(0.28, 0.22, 0.16, 0.65)
-	header_v.add_child(_track_bg)
-
-	_track_preview = ColorRect.new()
-	_track_preview.anchor_top = 0.0
-	_track_preview.anchor_bottom = 1.0
-	_track_preview.anchor_left = 0.0
-	_track_preview.anchor_right = 0.0
-	_track_preview.color = Color(1.0, 0.86, 0.50, 0.55)
-	_track_bg.add_child(_track_preview)
-
-	_track_base = ColorRect.new()
-	_track_base.anchor_top = 0.0
-	_track_base.anchor_bottom = 1.0
-	_track_base.anchor_left = 0.0
-	_track_base.anchor_right = 0.0
-	_track_base.color = COL_GOLD
-	_track_bg.add_child(_track_base)
-
 	# ── 2. DEAD-CENTER HADES FRAME (Narrower than top banner!) ───────────
 	_center_frame = PanelContainer.new()
-	_center_frame.anchor_left = 0.22
-	_center_frame.anchor_right = 0.78
+	_center_frame.anchor_left = 0.24
+	_center_frame.anchor_right = 0.80
 	_center_frame.anchor_top = 0.175
 	_center_frame.anchor_bottom = 0.895
-	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 28, 20)
-	frame_style.border_color = Color(0.835, 0.624, 0.278, 0.75)
-	frame_style.border_width_left = 2
-	frame_style.border_width_top = 2
-	frame_style.border_width_right = 2
-	frame_style.border_width_bottom = 2
-	frame_style.shadow_color = Color(0.0, 0.0, 0.0, 0.6)
-	frame_style.shadow_size = 20
+	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 32, 22)
+	frame_style.border_color = Color(0.835, 0.624, 0.278, 0.78)
+	frame_style.set_border_width_all(2)
+	frame_style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
+	frame_style.shadow_size = 22
 	_center_frame.add_theme_stylebox_override("panel", frame_style)
 	_root.add_child(_center_frame)
 
@@ -230,14 +353,16 @@ func _build_ui() -> void:
 	main_col.add_theme_constant_override("separation", 12)
 	_center_frame.add_child(main_col)
 
+	# Hidden in Beat 1; shown as "CHOOSE ONE:" in Beat 2
 	_frame_prompt_lbl = Label.new()
-	_frame_prompt_lbl.text = "NIGHTLY OFFERING:"
+	_frame_prompt_lbl.text = "CHOOSE ONE:"
+	_frame_prompt_lbl.visible = false
 	_frame_prompt_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	_frame_prompt_lbl.add_theme_font_size_override("font_size", 22)
 	_frame_prompt_lbl.add_theme_color_override("font_color", COL_CREAM)
 	main_col.add_child(_frame_prompt_lbl)
 
-	# Beat 1: Offering Panel inside the centered frame
+	# Beat 1: Reworked Hades Heat-Gauge Offering Ritual
 	_build_offering_panel(main_col)
 
 	# Beat 2: Hades-style 3 Horizontal Boon Rows inside the centered frame
@@ -249,182 +374,152 @@ func _build_ui() -> void:
 	_cards_container.modulate.a = 0.0
 	main_col.add_child(_cards_container)
 
-	# ── 3. BOTTOM-LEFT REYNA MAYARI PORTRAIT (Cropped, overlapping left edge of center frame!) ──
+	# ── 3. BOTTOM-LEFT REYNA MAYARI PORTRAIT (Full width uncropped, shifted right to overlap frame!) ──
 	_mayari_portrait = TextureRect.new()
 	if ResourceLoader.exists(MAYARI_SPRITE_PATH):
 		_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 	_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_mayari_portrait.anchor_left = -0.02
-	_mayari_portrait.anchor_right = 0.29
-	_mayari_portrait.anchor_top = 0.24
-	_mayari_portrait.anchor_bottom = 1.24
+	_mayari_portrait.anchor_right = 0.42
+	_mayari_portrait.anchor_top = 0.16
+	_mayari_portrait.anchor_bottom = 1.22
 	_mayari_portrait.z_index = 10
 	_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_mayari_portrait)
 
 func _build_offering_panel(parent: VBoxContainer) -> void:
-	_offer_container = PanelContainer.new()
-	var style := UIStyle.create_flat_stylebox(COL_ESPRESSO, 12, 28, 26)
-	style.border_color = Color(0.835, 0.624, 0.278, 0.55)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	_offer_container.add_theme_stylebox_override("panel", style)
+	_offer_container = VBoxContainer.new()
+	_offer_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_offer_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	_offer_container.add_theme_constant_override("separation", 20)
 	parent.add_child(_offer_container)
 
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 14)
-	_offer_container.add_child(v)
+	# 1. Ornate Tier Crest Row (Diamond emblem + spaced tier name + outcome)
+	var crest_panel := PanelContainer.new()
+	crest_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	crest_panel.custom_minimum_size = Vector2(460, 80)
+	var cs := UIStyle.create_flat_stylebox(Color(0.088, 0.078, 0.068, 0.94), 8, 18, 10)
+	cs.border_color = Color(0.835, 0.624, 0.278, 0.55)
+	cs.set_border_width_all(1)
+	crest_panel.add_theme_stylebox_override("panel", cs)
+	_offer_container.add_child(crest_panel)
 
-	# Aura status word
+	var crest_h := HBoxContainer.new()
+	crest_h.alignment = BoxContainer.ALIGNMENT_CENTER
+	crest_h.add_theme_constant_override("separation", 18)
+	crest_panel.add_child(crest_h)
+
+	_tier_emblem = HadesEmblem.new()
+	_tier_emblem.custom_minimum_size = Vector2(64, 64)
+	_tier_emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	crest_h.add_child(_tier_emblem)
+
+	_tier_sigil_lbl = Label.new()
+	_tier_sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_tier_sigil_lbl.text = "☽"
+	_tier_sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_tier_sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_tier_sigil_lbl.add_theme_font_size_override("font_size", 28)
+	_tier_emblem.add_child(_tier_sigil_lbl)
+
+	var crest_txt := VBoxContainer.new()
+	crest_txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	crest_txt.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	crest_txt.add_theme_constant_override("separation", 2)
+	crest_h.add_child(crest_txt)
+
 	_aura_lbl = Label.new()
-	_aura_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_aura_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_aura_lbl.add_theme_font_size_override("font_size", 19)
-	v.add_child(_aura_lbl)
+	_aura_lbl.add_theme_font_override("font", _bold_font)
+	_aura_lbl.add_theme_font_size_override("font_size", 22)
+	crest_txt.add_child(_aura_lbl)
 
-	# Sculptural Peso Readout + Chevrons
+	_outcome_lbl = Label.new()
+	_outcome_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_outcome_lbl.add_theme_font_size_override("font_size", 15)
+	_outcome_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	crest_txt.add_child(_outcome_lbl)
+
+	# 2. Sculptural Peso Readout + Framed Steppers
+	var num_col := VBoxContainer.new()
+	num_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	num_col.add_theme_constant_override("separation", 2)
+	_offer_container.add_child(num_col)
+
 	var num_row := HBoxContainer.new()
 	num_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	num_row.add_theme_constant_override("separation", 28)
-	v.add_child(num_row)
+	num_row.add_theme_constant_override("separation", 26)
+	num_col.add_child(num_row)
 
 	_minus_btn = _make_chevron("‹")
 	_minus_btn.pressed.connect(func(): _nudge_offer(-5.0))
 	num_row.add_child(_minus_btn)
 
 	_amount_lbl = Label.new()
-	_amount_lbl.custom_minimum_size = Vector2(210, 0)
+	_amount_lbl.custom_minimum_size = Vector2(220, 0)
 	_amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_amount_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_amount_lbl.add_theme_font_size_override("font_size", 68)
+	_amount_lbl.add_theme_font_override("font", _bold_font)
+	_amount_lbl.add_theme_font_size_override("font_size", 74)
 	_amount_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_amount_lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
-	_amount_lbl.add_theme_constant_override("outline_size", 4)
+	_amount_lbl.add_theme_constant_override("outline_size", 5)
 	num_row.add_child(_amount_lbl)
 
 	_plus_btn = _make_chevron("›")
 	_plus_btn.pressed.connect(func(): _nudge_offer(5.0))
 	num_row.add_child(_plus_btn)
 
-	# Warm gold slider track (matches OptionsOverlay slider colors!)
-	var slider_wrap := Control.new()
-	slider_wrap.custom_minimum_size = Vector2(480, 28)
-	slider_wrap.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	v.add_child(slider_wrap)
+	_wallet_after_lbl = Label.new()
+	_wallet_after_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wallet_after_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_wallet_after_lbl.add_theme_font_size_override("font_size", 14)
+	_wallet_after_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	num_col.add_child(_wallet_after_lbl)
 
-	_slider = HSlider.new()
-	_slider.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_slider.min_value = 0.0
-	_slider.max_value = maxf(0.0, _max_offer)
-	_slider.step = 1.0
-	_slider.value = _current_offer
-	_slider.value_changed.connect(_on_slider_changed)
-	var track_s := StyleBoxFlat.new()
-	track_s.bg_color = Color(0.518, 0.396, 0.196, 0.55)
-	track_s.set_corner_radius_all(3)
-	track_s.content_margin_top = 3
-	track_s.content_margin_bottom = 3
-	var fill_s := StyleBoxFlat.new()
-	fill_s.bg_color = COL_CREAM
-	fill_s.set_corner_radius_all(3)
-	_slider.add_theme_stylebox_override("slider", track_s)
-	_slider.add_theme_stylebox_override("grabber_area", fill_s)
-	_slider.add_theme_stylebox_override("grabber_area_highlight", fill_s)
-	slider_wrap.add_child(_slider)
+	# 3. Interactive Hades Heat-Gauge with threshold lines & indicators below
+	_gauge = TributeGauge.new()
+	_gauge.custom_minimum_size = Vector2(540, 82)
+	_gauge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_gauge.value_changed.connect(_on_slider_changed)
+	_offer_container.add_child(_gauge)
 
-	_pip_min = ColorRect.new()
-	_pip_min.size = Vector2(3, 14)
-	_pip_min.color = COL_CREAM
-	_pip_min.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	slider_wrap.add_child(_pip_min)
-
-	_pip_gen = ColorRect.new()
-	_pip_gen.size = Vector2(3, 14)
-	_pip_gen.color = COL_GOLD_BRIGHT
-	_pip_gen.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	slider_wrap.add_child(_pip_gen)
-
-	# Quiet quick-snap buttons
-	_snap_row = HBoxContainer.new()
-	_snap_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_snap_row.add_theme_constant_override("separation", 20)
-	v.add_child(_snap_row)
-
-	var remaining := maxf(0.0, _goal - _total_paid)
-	_add_snap("Hold (₱0)", 0.0, COL_CREAM_MUTED)
-	if _min_amount > 0.0 and _min_amount < remaining - 0.01:
-		_add_snap("Min ₱%d" % int(roundf(_min_amount)), _min_amount, COL_CREAM)
-	if _generous_amount > _min_amount + 0.01 and _generous_amount < remaining - 0.01:
-		_add_snap("Generous ₱%d" % int(roundf(_generous_amount)), _generous_amount, COL_GOLD_BRIGHT)
-	var max_lbl := "Seal ₱%d" % int(roundf(remaining)) if _player_money >= remaining else "All ₱%d" % int(roundf(_max_offer))
-	_add_snap(max_lbl, _max_offer, COL_SEALED)
-
-	var sp := Control.new()
-	sp.custom_minimum_size = Vector2(0, 6)
-	v.add_child(sp)
-
-	# Confirm CTA (matches OptionsOverlay warm bronze-gold button)
+	# 4. Ornate Confirm CTA Button
 	_confirm_btn = Button.new()
-	_confirm_btn.custom_minimum_size = Vector2(280, 52)
+	_confirm_btn.custom_minimum_size = Vector2(300, 56)
 	_confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_confirm_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_confirm_btn.focus_mode = Control.FOCUS_NONE
-	_confirm_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_confirm_btn.add_theme_font_override("font", _bold_font)
 	_confirm_btn.add_theme_font_size_override("font_size", 22)
-	_confirm_style = UIStyle.create_flat_stylebox(Color(0.518, 0.396, 0.196, 1.0), 8, 24, 10)
+	_confirm_style = UIStyle.create_flat_stylebox(Color(0.518, 0.396, 0.196, 1.0), 8, 28, 12)
 	_confirm_style.border_color = COL_CREAM
-	_confirm_style.set_border_width_all(1)
+	_confirm_style.set_border_width_all(2)
 	_apply_confirm_style(COL_GOLD)
 	_confirm_btn.pressed.connect(_on_confirm_pressed)
-	v.add_child(_confirm_btn)
+	_offer_container.add_child(_confirm_btn)
 
 func _make_chevron(glyph: String) -> Button:
 	var btn := Button.new()
 	btn.text = glyph
-	btn.custom_minimum_size = Vector2(44, 48)
+	btn.custom_minimum_size = Vector2(48, 48)
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var empty := StyleBoxEmpty.new()
-	btn.add_theme_stylebox_override("normal", empty)
-	btn.add_theme_stylebox_override("hover", empty)
-	btn.add_theme_stylebox_override("pressed", empty)
-	btn.add_theme_stylebox_override("disabled", empty)
+	var s := UIStyle.create_flat_stylebox(Color(0.11, 0.095, 0.082, 0.92), 8, 0, 0)
+	s.border_color = Color(0.835, 0.624, 0.278, 0.55)
+	s.set_border_width_all(1)
+	var h: StyleBoxFlat = s.duplicate()
+	h.bg_color = Color(0.20, 0.16, 0.12, 0.96)
+	h.border_color = COL_GOLD_BRIGHT
+	btn.add_theme_stylebox_override("normal", s)
+	btn.add_theme_stylebox_override("hover", h)
+	btn.add_theme_stylebox_override("pressed", s)
+	btn.add_theme_stylebox_override("disabled", s)
 	btn.add_theme_font_override("font", UIStyle.FONT_INDER)
-	btn.add_theme_font_size_override("font_size", 38)
+	btn.add_theme_font_size_override("font_size", 32)
 	btn.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	btn.add_theme_color_override("font_hover_color", COL_CREAM)
 	btn.add_theme_color_override("font_pressed_color", COL_GOLD)
 	return btn
-
-func _add_snap(label_text: String, amount: float, col: Color) -> void:
-	var btn := Button.new()
-	btn.text = label_text
-	btn.focus_mode = Control.FOCUS_NONE
-	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.disabled = amount > _max_offer + 0.01
-	var empty := StyleBoxEmpty.new()
-	btn.add_theme_stylebox_override("normal", empty)
-	btn.add_theme_stylebox_override("hover", empty)
-	btn.add_theme_stylebox_override("pressed", empty)
-	btn.add_theme_stylebox_override("disabled", empty)
-	btn.add_theme_font_override("font", UIStyle.FONT_INDER)
-	btn.add_theme_font_size_override("font_size", 17)
-	btn.add_theme_color_override("font_color", col * Color(1, 1, 1, 0.85))
-	btn.add_theme_color_override("font_hover_color", Color.WHITE)
-	btn.add_theme_color_override("font_disabled_color", Color(0.5, 0.45, 0.4, 0.35))
-	btn.pressed.connect(func():
-		if _is_locked:
-			return
-		EventBus.request_sfx.emit("interact")
-		_current_offer = clampf(amount, 0.0, _max_offer)
-		_slider.set_value_no_signal(_current_offer)
-		_refresh_offering_ui(true)
-	)
-	_snap_row.add_child(btn)
-	_snap_buttons.append(btn)
 
 func _apply_confirm_style(accent: Color) -> void:
 	var base_bg := Color(accent.r * 0.55, accent.g * 0.45, accent.b * 0.25, 0.95)
@@ -452,7 +547,6 @@ func _nudge_offer(delta: float) -> void:
 	if not is_equal_approx(next_val, _current_offer):
 		EventBus.request_sfx.emit("interact")
 		_current_offer = next_val
-		_slider.set_value_no_signal(_current_offer)
 		_refresh_offering_ui(true)
 
 func _on_slider_changed(val: float) -> void:
@@ -474,48 +568,57 @@ func _evaluate_tier(offer: float) -> String:
 
 func _refresh_offering_ui(animate_pop: bool) -> void:
 	var tier := _evaluate_tier(_current_offer)
-	var projected := minf(_goal, _total_paid + _current_offer)
-
-	_ledger_val_lbl.text = "₱%d / ₱%d" % [int(roundf(projected)), int(roundf(_goal))]
-	_track_base.anchor_right = clampf(_total_paid / _goal, 0.0, 1.0)
-	_track_preview.anchor_right = clampf(projected / _goal, 0.0, 1.0)
 	_amount_lbl.text = "₱%d" % int(roundf(_current_offer))
+	var wallet_left := maxf(0.0, _player_money - _current_offer)
+	_wallet_after_lbl.text = "Wallet after tribute: ₱%d" % int(roundf(wallet_left))
 
-	if _max_offer > 0.01:
-		_pip_min.visible = _min_amount > 0.0 and _min_amount < _max_offer
-		_pip_min.position = Vector2(clampf(_min_amount / _max_offer, 0.0, 1.0) * 480.0 - 1.5, 7.0)
-		_pip_gen.visible = _generous_amount > _min_amount and _generous_amount < _max_offer
-		_pip_gen.position = Vector2(clampf(_generous_amount / _max_offer, 0.0, 1.0) * 480.0 - 1.5, 7.0)
-	else:
-		_pip_min.visible = false
-		_pip_gen.visible = false
+	var fav_pal: Dictionary = HadesEmblem.palette("favor")
+	var chill_pal: Dictionary = HadesEmblem.palette("chill")
+	var accent: Color = fav_pal["accent"]
+	var accent_bright: Color = fav_pal["bright"]
+	var sigil := "☽"
 
-	var accent := COL_GOLD
 	match tier:
 		"cleared":
 			accent = COL_SEALED
-			_aura_lbl.text = "SEAL THE PACT — GUARANTEED FAVOR"
+			accent_bright = Color.WHITE
+			sigil = "✦"
+			_aura_lbl.text = "S E A L   T H E   P A C T"
+			_outcome_lbl.text = "3 Guaranteed Favor Blessings"
 			_confirm_btn.text = "SEAL LEDGER"
-			_track_preview.color = Color(1.0, 0.94, 0.78, 0.80)
 		"generous":
-			accent = COL_GOLD_BRIGHT
-			_aura_lbl.text = "GENEROUS — GUARANTEED FAVOR"
+			accent = fav_pal["accent"]
+			accent_bright = fav_pal["bright"]
+			sigil = "★"
+			_aura_lbl.text = "G E N E R O U S"
+			_outcome_lbl.text = "3 Guaranteed Favor Blessings"
 			_confirm_btn.text = "OFFER GENEROUSLY"
-			_track_preview.color = Color(1.0, 0.85, 0.45, 0.68)
 		"balanced":
-			accent = COL_CREAM
-			_aura_lbl.text = "BALANCED — MIXED FATE"
+			accent = COL_GOLD
+			accent_bright = COL_CREAM
+			sigil = "☽"
+			_aura_lbl.text = "B A L A N C E D"
+			_outcome_lbl.text = "Mixed Lunar Hand (Favor & Chill)"
 			_confirm_btn.text = "OFFER TRIBUTE"
-			_track_preview.color = Color(0.88, 0.78, 0.62, 0.55)
 		_:
-			accent = COL_CHILL_SOFT
-			_aura_lbl.text = "SHORTFALL — BIRINGAN'S CHILL"
+			accent = chill_pal["accent"]
+			accent_bright = chill_pal["bright"]
+			sigil = "◌"
+			_aura_lbl.text = "S H O R T F A L L"
+			_outcome_lbl.text = "3 Chill Omens Tomorrow"
 			_confirm_btn.text = "OFFER NOTHING" if _current_offer <= 0.01 else "OFFER SHORTFALL"
-			_track_preview.color = Color(0.84, 0.37, 0.36, 0.60)
 
-	_aura_lbl.add_theme_color_override("font_color", accent)
-	_amount_lbl.add_theme_color_override("font_color", accent)
-	_apply_confirm_style(COL_CHILL if tier == "shortfall" else COL_GOLD)
+	_tier_emblem.accent = accent
+	_tier_emblem.accent_bright = accent_bright
+	_tier_emblem.queue_redraw()
+	if _tier_emblem.has_method("_sync_triangle_rect"):
+		_tier_emblem.call("_sync_triangle_rect")
+	_tier_sigil_lbl.text = sigil
+	_tier_sigil_lbl.add_theme_color_override("font_color", accent_bright)
+	_aura_lbl.add_theme_color_override("font_color", accent_bright)
+	_amount_lbl.add_theme_color_override("font_color", accent_bright)
+	_apply_confirm_style(accent)
+	_gauge.set_state(_current_offer, _max_offer, _min_amount, _generous_amount, accent, accent_bright)
 
 	if animate_pop:
 		_amount_lbl.pivot_offset = _amount_lbl.size * 0.5
@@ -554,28 +657,23 @@ func _on_confirm_pressed() -> void:
 		return
 	_is_locked = true
 	_phase = 1
-	_slider.editable = false
+	_gauge.interactive = false
 	_confirm_btn.disabled = true
 	_minus_btn.disabled = true
 	_plus_btn.disabled = true
-	for b in _snap_buttons:
-		b.disabled = true
 
 	_confirmed_offer = _current_offer
 	_confirmed_tier = _evaluate_tier(_confirmed_offer)
 	EventBus.request_sfx.emit("money_decrease" if _confirmed_offer > 0.0 else "interact")
 
-	var new_total := minf(_goal, _total_paid + _confirmed_offer)
-	var target_ratio := clampf(new_total / _goal, 0.0, 1.0)
-	var fill_tw := create_tween()
-	fill_tw.tween_property(_track_base, "anchor_right", target_ratio, 0.50).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	fill_tw.parallel().tween_property(_offer_container, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
-	await fill_tw.finished
+	var fade_tw := create_tween()
+	fade_tw.tween_property(_offer_container, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
+	await fade_tw.finished
 	if not is_inside_tree():
 		return
 
 	_offer_container.visible = false
-	await get_tree().create_timer(0.18).timeout
+	await get_tree().create_timer(0.14).timeout
 	if not is_inside_tree():
 		return
 
@@ -592,6 +690,7 @@ func _launch_hades_card_stack() -> void:
 	_cards_ready = false
 
 	_frame_prompt_lbl.text = "CHOOSE ONE:"
+	_frame_prompt_lbl.visible = true
 	match _confirmed_tier:
 		"cleared":
 			_header_title_lbl.text = "T H E   P A C T   I S   S E A L E D"
