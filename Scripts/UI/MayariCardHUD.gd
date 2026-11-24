@@ -23,10 +23,10 @@ class MiniDiamondIcon extends Control:
 		var r := minf(size.x, size.y) * 0.45
 		var outer := _diamond_pts(c, r)
 		draw_colored_polygon(outer, Color(0.05, 0.04, 0.035, 0.94))
-		draw_polyline(_closed_pts(outer), accent_bright, 2.0, true)
+		draw_polyline(_closed_pts(outer), accent_bright, 2.5, true)
 		var inner := _diamond_pts(c, r * 0.80)
 		draw_colored_polygon(inner, fill_color)
-		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.65), 1.0, true)
+		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.65), 1.3, true)
 
 	func _diamond_pts(center: Vector2, radius: float) -> PackedVector2Array:
 		return PackedVector2Array([
@@ -63,9 +63,9 @@ func _build_ui() -> void:
 	_row.anchor_top = 1.0
 	_row.anchor_bottom = 1.0
 	_row.offset_left = 24.0
-	_row.offset_top = -66.0
+	_row.offset_top = -86.0
 	_row.offset_bottom = -22.0
-	_row.add_theme_constant_override("separation", 6)
+	_row.add_theme_constant_override("separation", 10)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_row)
 
@@ -111,14 +111,14 @@ func _refresh_icons() -> void:
 	var key_panel := PanelContainer.new()
 	key_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var ks := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.86), 6, 8, 3)
+	var ks := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.86), 6, 10, 4)
 	ks.border_color = Color(0.86, 0.66, 0.30, 0.78)
 	ks.set_border_width_all(1)
 	key_panel.add_theme_stylebox_override("panel", ks)
 	var key_lbl := Label.new()
 	key_lbl.text = "K"
 	key_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	key_lbl.add_theme_font_size_override("font_size", 13)
+	key_lbl.add_theme_font_size_override("font_size", 16)
 	key_lbl.add_theme_color_override("font_color", Color(1.0, 0.93, 0.78, 1.0))
 	key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	key_panel.add_child(key_lbl)
@@ -131,7 +131,7 @@ func _refresh_icons() -> void:
 
 func _add_diamond(sigil: String, accent: Color, accent_bright: Color) -> void:
 	var d := MiniDiamondIcon.new()
-	d.custom_minimum_size = Vector2(42, 42)
+	d.custom_minimum_size = Vector2(62, 62)
 	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	d.accent = accent
@@ -144,7 +144,7 @@ func _add_diamond(sigil: String, accent: Color, accent_bright: Color) -> void:
 	lbl.text = sigil
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_font_size_override("font_size", 26)
 	lbl.add_theme_color_override("font_color", accent_bright)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	d.add_child(lbl)
