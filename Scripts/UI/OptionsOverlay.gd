@@ -32,7 +32,8 @@ const REMAPPABLE_ACTIONS = {
 	"toggle_ledger": "Price Ledger",
 	"price_up": "Increase Price",
 	"price_down": "Decrease Price",
-	"dialogic_default_action": "Advance Dialogue"
+	"dialogic_default_action": "Advance Dialogue",
+	"dialogue_confirm_choice": "Confirm Dialogue Choice"
 }
 
 var _is_remapping: bool = false
@@ -146,6 +147,10 @@ func _set_default_for_action(action: String) -> void:
 			var e3 = InputEventMouseButton.new()
 			e3.button_index = MOUSE_BUTTON_LEFT
 			events.append(e3)
+		"dialogue_confirm_choice":
+			var e1 = InputEventKey.new()
+			e1.physical_keycode = KEY_F
+			events.append(e1)
 	
 	for e in events:
 		InputMap.action_add_event(action, e)
