@@ -668,7 +668,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			bag.use_arc_launch = true
 			bag.launch_from_pos = launch_origin
 			bag.launch_target_pos = bag_pos
-			bag.launch_delay = bag_idx * 0.35
+			bag.launch_delay = bag_idx * 0.22
 			get_tree().current_scene.add_child(bag)
 			bag_idx += 1
 		else:

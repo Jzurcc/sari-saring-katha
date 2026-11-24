@@ -70,8 +70,8 @@ func _play_arc_launch() -> void:
 
 	var start_pos := launch_from_pos
 	var end_pos := launch_target_pos
-	var duration := randf_range(1.75, 2.05)
-	var arc_height := randf_range(2.8, 3.5)
+	var duration := randf_range(0.95, 1.15)
+	var arc_height := randf_range(1.4, 1.85)
 
 	var arc_tween := create_tween()
 	arc_tween.tween_method(func(t: float):
