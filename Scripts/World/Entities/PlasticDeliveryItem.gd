@@ -70,8 +70,8 @@ func _play_arc_launch() -> void:
 
 	var start_pos := launch_from_pos
 	var end_pos := launch_target_pos
-	var duration := randf_range(0.55, 0.68)
-	var arc_height := randf_range(2.1, 2.8)
+	var duration := randf_range(1.05, 1.25)
+	var arc_height := randf_range(2.5, 3.2)
 
 	var arc_tween := create_tween()
 	arc_tween.tween_method(func(t: float):
@@ -81,9 +81,9 @@ func _play_arc_launch() -> void:
 		var y_base := lerpf(start_pos.y, end_pos.y, t)
 		var y_arc := sin(t * PI) * arc_height
 		global_position = Vector3(xz_pos.x, y_base + y_arc, xz_pos.z)
-		sprite.modulate.a = clampf(t / 0.16, 0.0, 1.0)
-		sprite.scale = base_scale * lerpf(0.55, 1.0, minf(1.0, t * 1.25))
-	, 0.0, 1.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		sprite.modulate.a = clampf(t / 0.14, 0.0, 1.0)
+		sprite.scale = base_scale * lerpf(0.55, 1.0, minf(1.0, t * 1.15))
+	, 0.0, 1.0, duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	await arc_tween.finished
 	if not is_inside_tree() or not is_instance_valid(sprite):
