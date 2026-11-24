@@ -257,6 +257,7 @@ func _update_binding(action: String, event: InputEvent) -> void:
 	_update_input_map(action, event)
 	_save_settings()
 	_update_all_binding_buttons()
+	EventBus.keybinds_changed.emit()
 
 func _update_input_map(action: String, event: InputEvent) -> void:
 	if not InputMap.has_action(action):

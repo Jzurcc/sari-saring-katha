@@ -79,6 +79,8 @@ signal debt_quota_met(is_successful: bool)
 signal tally_contribution_made(amount: float, tier: String, total_paid: float, goal: float)
 @warning_ignore("unused_signal")
 signal mayari_card_changed(card_id: String)
+@warning_ignore("unused_signal")
+signal keybinds_changed()
 
 # --- Nokia / Phone UI ---
 @warning_ignore("unused_signal")
