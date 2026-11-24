@@ -340,6 +340,7 @@ func _spawn_reject_cross(source_control: Control) -> void:
 	cross.add_theme_color_override("font_outline_color", Color(0.18, 0.03, 0.03, 0.95))
 	cross.add_theme_constant_override("outline_size", 6)
 	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cross.z_index = 20
 	cross.position = center - Vector2(12, 20)
 	cross.pivot_offset = Vector2(12, 18)
 	cross.scale = Vector2(0.3, 0.3)
