@@ -7,10 +7,10 @@ extends CanvasLayer
 ## anticipation lift before dropping cleanly off the bottom edge.
 
 const BAR_WIDTH := 440.0
-const BAR_HEIGHT := 34.0
-const FRAME_PAD := 5.0
+const BAR_HEIGHT := 26.0
+const FRAME_PAD := 4.0
 const REST_BOTTOM_MARGIN := 26.0
-const IDLE_HIDE_DELAY := 3.0
+const IDLE_HIDE_DELAY := 1.5
 
 const IDLE_STRIPE_SPEED := 0.58
 const IDLE_STRIPE_ALPHA := 0.24
@@ -148,8 +148,8 @@ void fragment() {
 
 	# Top gloss sheen inside the pill
 	var gloss := Panel.new()
-	gloss.position = Vector2(FRAME_PAD + 10.0, FRAME_PAD + 3.0)
-	gloss.size = Vector2(BAR_WIDTH - 20.0, 6.0)
+	gloss.position = Vector2(FRAME_PAD + 10.0, FRAME_PAD + 2.5)
+	gloss.size = Vector2(BAR_WIDTH - 20.0, 5.0)
 	gloss.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gloss_s := StyleBoxFlat.new()
 	gloss_s.bg_color = Color(1.0, 0.98, 0.92, 0.16)
@@ -157,12 +157,12 @@ void fragment() {
 	gloss.add_theme_stylebox_override("panel", gloss_s)
 	_holder.add_child(gloss)
 
-	# Overlay text INSIDE the fat bar: Left = "Lv. X", Right = "cur / next"
+	# Overlay text INSIDE the bar: Left = "Lv. X", Right = "cur / next"
 	var text_margin := MarginContainer.new()
 	text_margin.position = Vector2(FRAME_PAD, FRAME_PAD)
 	text_margin.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
-	text_margin.add_theme_constant_override("margin_left", 16)
-	text_margin.add_theme_constant_override("margin_right", 16)
+	text_margin.add_theme_constant_override("margin_left", 14)
+	text_margin.add_theme_constant_override("margin_right", 14)
 	text_margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_holder.add_child(text_margin)
 
@@ -175,7 +175,7 @@ void fragment() {
 	_lvl_lbl.text = "Lv. 1"
 	_lvl_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_lvl_lbl.add_theme_font_override("font", _bold_font)
-	_lvl_lbl.add_theme_font_size_override("font_size", 18)
+	_lvl_lbl.add_theme_font_size_override("font_size", 16)
 	_lvl_lbl.add_theme_color_override("font_color", COL_TEXT)
 	_lvl_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
 	_lvl_lbl.add_theme_constant_override("outline_size", 4)
@@ -188,7 +188,7 @@ void fragment() {
 	_xp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_xp_lbl.text = "0 / 100"
 	_xp_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_xp_lbl.add_theme_font_size_override("font_size", 16)
+	_xp_lbl.add_theme_font_size_override("font_size", 14)
 	_xp_lbl.add_theme_color_override("font_color", COL_TEXT_SUB)
 	_xp_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
 	_xp_lbl.add_theme_constant_override("outline_size", 4)
@@ -260,13 +260,13 @@ func _schedule_hide(my_session: int) -> void:
 	if _vis_tween and _vis_tween.is_valid():
 		_vis_tween.kill()
 
-	# Subtle anticipation lift (+10px up), then smooth drop off the bottom edge
+	# Subtle anticipation lift (+10px up), then slower, silky-smooth drop off the bottom edge
 	_vis_tween = create_tween()
-	_vis_tween.tween_property(_holder, "offset_top", _rest_offset_top - 10.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_vis_tween.parallel().tween_property(_holder, "offset_bottom", _rest_offset_bottom - 10.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_vis_tween.tween_property(_holder, "offset_top", _hidden_offset_top, 0.30).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	_vis_tween.parallel().tween_property(_holder, "offset_bottom", _hidden_offset_bottom, 0.30).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	_vis_tween.parallel().tween_property(_holder, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
+	_vis_tween.tween_property(_holder, "offset_top", _rest_offset_top - 10.0, 0.20).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_vis_tween.parallel().tween_property(_holder, "offset_bottom", _rest_offset_bottom - 10.0, 0.20).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_vis_tween.tween_property(_holder, "offset_top", _hidden_offset_top, 0.56).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_vis_tween.parallel().tween_property(_holder, "offset_bottom", _hidden_offset_bottom, 0.56).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_vis_tween.parallel().tween_property(_holder, "modulate:a", 0.0, 0.46).set_delay(0.08).set_trans(Tween.TRANS_SINE)
 	_vis_tween.tween_callback(func():
 		if my_session == _hide_session_id:
 			_is_shown = false
