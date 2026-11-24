@@ -495,6 +495,8 @@ func on_dialogue_ended() -> void:
 
 	if phase == Phase.REPAYMENT:
 		phase = Phase.NONE
+		_pending_dismiss = false
+		_is_partial_success = false
 		if is_instance_valid(current_customer) and current_customer.is_waiting:
 			on_customer_clicked(current_customer, false)
 		return
