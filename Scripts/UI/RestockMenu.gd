@@ -591,18 +591,10 @@ func _build_tabs() -> void:
 		var unlocked_items := _get_unlocked_items_for_category(cat_key)
 		var is_locked := unlocked_items.is_empty() and cat_key != "recommended" and cat_key != "all"
 
-		var out_count := 0
-		if cat_key != "recommended" and cat_key != "all":
-			for it in unlocked_items:
-				if InventoryManager.get_total_item_stock(it) <= 0:
-					out_count += 1
-
 		var tab_btn := Button.new()
 		var base_label: String = str(category_labels.get(cat_key, cat_key.capitalize()))
 		if cat_key == "recommended":
 			tab_btn.text = "★ Recommended (%d)" % unlocked_items.size()
-		elif out_count > 0:
-			tab_btn.text = "%s • %d" % [base_label, out_count]
 		else:
 			tab_btn.text = base_label
 		tab_btn.name = "Tab_" + cat_key
@@ -727,17 +719,12 @@ func _populate_grid(cat_key: String) -> void:
 		_product_grid.add_child(card)
 
 func _get_item_badge(item: ItemData) -> Dictionary:
-	var stock := InventoryManager.get_total_item_stock(item)
 	if is_instance_valid(StoreEventManager) and StoreEventManager.get_item_demand_multiplier(item) > 1.05:
 		return {"text": "HOT", "color": COL_HOT}
 	if StoryManager.get_missed_count(item) > 0:
 		return {"text": "MISSED", "color": COL_CORAL}
 	if StoryManager.is_item_on_sulit_deal(item):
 		return {"text": "-20%", "color": COL_POSITIVE}
-	if stock <= 0:
-		return {"text": "OUT", "color": COL_CORAL}
-	if stock <= 1:
-		return {"text": "LOW", "color": COL_GOLD}
 	return {"text": "", "color": Color.TRANSPARENT}
 
 func _create_product_card(item: ItemData) -> PanelContainer:
