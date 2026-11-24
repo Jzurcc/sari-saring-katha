@@ -195,13 +195,13 @@ const CARDS: Dictionary = {
 		"kind": KIND_CHILL,
 		"title": "Quiet Eclipse",
 		"sigil": "●",
-		"tagline": "No Market Events Today",
-		"description": "An uncanny hush blankets Karimlan. No daily Market Events or demand surges will occur tomorrow.",
-		"description_rich": "An uncanny hush blankets Karimlan. All daily [b]Market Events[/b] and demand surges are silenced.",
+		"tagline": "No Neighborhood Events Today",
+		"description": "An uncanny hush blankets Karimlan. No daily Neighborhood Events or demand surges will occur tomorrow.",
+		"description_rich": "An uncanny hush blankets Karimlan. All daily [b]Neighborhood Events[/b] and demand surges are silenced.",
 		"stats": [
-			{"label": "Market Events:", "value": "None Tomorrow", "tone": "neg"},
+			{"label": "Neighborhood Events:", "value": "None Tomorrow", "tone": "neg"},
 		],
-		"hud_short": "No Market Events",
+		"hud_short": "No Events Today",
 	},
 	CARD_FADING_MEMORY: {
 		"id": CARD_FADING_MEMORY,

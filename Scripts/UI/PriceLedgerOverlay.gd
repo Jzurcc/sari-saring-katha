@@ -38,6 +38,11 @@ func _ready() -> void:
 	_setup_tabs()
 	_apply_styles()
 
+	# Neighborhood Events now live in their own dedicated [K] Events Overlay
+	var left_panel := get_node_or_null("BackgroundPanel/MainVBox/ContentHBox/LeftPanel") as Control
+	if left_panel:
+		left_panel.visible = false
+
 func _setup_tabs() -> void:
 	for child in tab_container.get_children():
 		child.queue_free()

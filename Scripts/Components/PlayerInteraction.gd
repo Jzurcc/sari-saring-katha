@@ -197,6 +197,13 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
+	# Neighborhood Events Menu Toggle (K)
+	if event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_K or event.keycode == KEY_K):
+		if allow_interaction:
+			EventBus.events_overlay_toggled.emit(true)
+			get_viewport().set_input_as_handled()
+			return
+
 	# Pricing Adjustments (Direct Price Mode)
 	if pricing_mode_active and is_instance_valid(_last_hovered):
 		var delta := 0.0

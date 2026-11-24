@@ -149,7 +149,7 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(1, 0.922, 0.792, 1)
-text = "MARKET NEWS"
+text = "NEIGHBORHOOD EVENTS"
 
 [node name="EventsSubLabel" type="Label" parent="BackgroundPanel/MainVBox/ContentHBox/LeftPanel/EventsVBox"]
 layout_mode = 2

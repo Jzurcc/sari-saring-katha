@@ -20,6 +20,7 @@ const END_OF_DAY_QUOTES = [
 const MayariTallyOverlayScript = preload("res://Scripts/UI/MayariTallyOverlay.gd")
 const MayariCardHUDScript = preload("res://Scripts/UI/MayariCardHUD.gd")
 const PlayerXPHUDScript = preload("res://Scripts/UI/PlayerXPHUD.gd")
+const EventsOverlayScript = preload("res://Scripts/UI/EventsOverlay.gd")
 
 @export var starting_money: float = 250.0
 var money: float = 0.0
@@ -30,6 +31,7 @@ var _is_ending_day: bool = false
 var _is_tally_overlay_open: bool = false
 var _mayari_card_hud: Node = null
 var _player_xp_hud: Node = null
+var _events_overlay: Node = null
 
 # --- Tutorial Manager Instance ---
 var tutorial: TutorialManager
@@ -52,6 +54,8 @@ func _ready() -> void:
 	add_child(_mayari_card_hud)
 	_player_xp_hud = PlayerXPHUDScript.new()
 	add_child(_player_xp_hud)
+	_events_overlay = EventsOverlayScript.new()
+	add_child(_events_overlay)
 	
 	# Connect early signals
 	EventBus.transaction_completed.connect(_on_transaction_completed)
