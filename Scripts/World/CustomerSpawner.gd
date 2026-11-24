@@ -153,7 +153,9 @@ func _find_open_slot(prefer_side: bool = false) -> int:
 ## - 2 customer slots (cat unlocked): prioritizes hidden Slot 2, falls back to Slots 1, 0.
 ## - 3 customer slots (fully unlocked): integrated with Slot 2, falls back to Slots 1, 0.
 func _find_open_slot_for_lingering() -> int:
-	var order: Array[int] = [1, 0] if max_unlocked_slots <= 1 else [2, 1, 0]
+	var order: Array[int] = [1, 0]
+	if max_unlocked_slots > 1:
+		order = [2, 1, 0]
 	for idx in order:
 		if idx == 0 and _is_spawning:
 			continue

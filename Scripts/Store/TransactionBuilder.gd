@@ -115,10 +115,10 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 	var force_story: bool = false
 
 	var unlocked: Array[CustomerData] = CharacterProgressionManager.get_unlocked_characters(sm.current_tier, sm.day)
-	if not exclude_paths.is_empty():
-		unlocked = unlocked.filter(func(c: CustomerData) -> bool:
-			return c != null and not (c.resource_path in exclude_paths)
-		)
+	# Collectors (Reyna Mayari) only ever appear via build_collection_transaction() at closing time — never during daytime waves.
+	unlocked = unlocked.filter(func(c: CustomerData) -> bool:
+		return c != null and not c.is_collector() and not (c.resource_path in exclude_paths)
+	)
 	if unlocked.is_empty():
 		return {"customer": null, "force_story": false}
 
