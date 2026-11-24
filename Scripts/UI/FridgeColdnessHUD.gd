@@ -4,8 +4,8 @@ class_name FridgeColdnessHUD
 ## Center-right animated refrigerator coldness meter with moving diagonal stripes.
 ## Visible while the refrigerator is open OR while coldness is regenerating (< 100%).
 
-const BAR_WIDTH := 22.0
-const BAR_HEIGHT := 196.0
+const BAR_WIDTH := 28.0
+const BAR_HEIGHT := 340.0
 const FRAME_PAD := 6.0
 
 const COLOR_ICE := Color("#6CE5FF")
@@ -123,10 +123,10 @@ void fragment() {
 	_pct_label = Label.new()
 	_pct_label.text = "100%"
 	_pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_pct_label.position = Vector2(-14.0, -24.0)
-	_pct_label.size = Vector2(frame_w + 28.0, 20.0)
+	_pct_label.position = Vector2(-14.0, -26.0)
+	_pct_label.size = Vector2(frame_w + 28.0, 22.0)
 	_pct_label.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_pct_label.add_theme_font_size_override("font_size", 14)
+	_pct_label.add_theme_font_size_override("font_size", 16)
 	_pct_label.add_theme_color_override("font_color", COLOR_ICE)
 	_pct_label.add_theme_color_override("font_outline_color", Color(0.05, 0.06, 0.08, 0.92))
 	_pct_label.add_theme_constant_override("outline_size", 4)
