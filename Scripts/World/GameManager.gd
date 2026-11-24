@@ -161,6 +161,8 @@ func _on_day_ended(ended_day_number: int) -> void:
 	
 	# 3. Open eyes for the new day
 	await SceneTransition.open_eyes()
+	if is_inside_tree() and not _is_tally_overlay_open:
+		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	_is_ending_day = false
 
 func _play_sleep_sequence(ended_day_number: int) -> bool:
@@ -240,6 +242,9 @@ func _handle_open_tally_offer() -> void:
 	_is_tally_overlay_open = false
 	if not is_inside_tree():
 		return
+
+	# Restore FPS captured mouse mode as soon as the tally & card draft overlay closes
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 	var offer_amount: float = float(result[0])
 	var tier: String = str(result[1])
