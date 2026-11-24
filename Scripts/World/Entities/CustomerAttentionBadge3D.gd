@@ -18,6 +18,7 @@ static var _thought_tex: ImageTexture = null
 var _mode: Mode = Mode.HIDDEN
 var _bg_sprite: Sprite3D = null
 var _base_y: float = 0.0
+var _mode_y_offset: float = 0.0
 var _bob_time: float = 0.0
 var _pop_tween: Tween = null
 
@@ -156,14 +157,14 @@ func _ready() -> void:
 
 func set_base_y(y_pos: float) -> void:
 	_base_y = y_pos
-	position.y = y_pos
+	position.y = _base_y + _mode_y_offset
 
 
 func _process(delta: float) -> void:
 	if not visible:
 		return
 	_bob_time += delta
-	position.y = _base_y + sin(_bob_time * 3.4) * 0.045
+	position.y = _base_y + _mode_y_offset + sin(_bob_time * 3.4) * 0.045
 
 
 func set_mode(new_mode: Mode) -> void:
@@ -187,21 +188,26 @@ func set_mode(new_mode: Mode) -> void:
 		return
 
 	if new_mode == Mode.SMALLTALK:
-		text = "..."
-		font_size = 54
+		text = "•••"
+		font_size = 42
+		_mode_y_offset = 0.30
 		modulate = Color(0.84, 1.0, 0.95, 1.0)
 		outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
-		outline_size = 11
+		outline_size = 10
 	elif new_mode == Mode.THOUGHT:
 		font_size = 48
+		_mode_y_offset = 0.12
 		outline_modulate = Color(0.20, 0.14, 0.08, 0.45)
 		outline_size = 4
 	else:
 		text = "!"
 		font_size = 54
+		_mode_y_offset = 0.0
 		modulate = Color(1.0, 0.93, 0.70, 1.0)
 		outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
 		outline_size = 11
+
+	position.y = _base_y + _mode_y_offset
 
 	if _bg_sprite:
 		_bg_sprite.texture = _get_bubble_texture(new_mode)
