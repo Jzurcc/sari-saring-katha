@@ -6,6 +6,13 @@ extends Label
 
 enum DisplayMode { DAY, TIME }
 
+const SHORT_MONTHS: Array[String] = [
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
+const START_MONTH_IDX := 7 # August (0-based)
+const DAYS_PER_MONTH := 31
+
 @export var display_mode: DisplayMode = DisplayMode.DAY
 
 var _time_of_day: Node = null
@@ -31,10 +38,14 @@ func _refresh() -> void:
 		DisplayMode.DAY:
 			var gm_nodes = get_tree().get_nodes_in_group("game_manager")
 			if gm_nodes.size() > 0:
-				var _gm = gm_nodes[0]
-				text = "Day %d" % int(StoryManager.day)
+				var total_idx := maxi(0, int(StoryManager.day) - 1)
+				@warning_ignore("integer_division")
+				var months_elapsed := total_idx / DAYS_PER_MONTH
+				var day_in_month := (total_idx % DAYS_PER_MONTH) + 1
+				var month_idx := (START_MONTH_IDX + months_elapsed) % 12
+				text = "%s %d" % [SHORT_MONTHS[month_idx], day_in_month]
 			else:
-				text = "Day ?"
+				text = "Aug ?"
 		DisplayMode.TIME:
 			if _time_of_day == null:
 				_time_of_day = get_tree().root.find_child("TimeOfDay", true, false)
