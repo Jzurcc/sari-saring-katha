@@ -131,11 +131,11 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 		char_data = CharacterProgressionManager.pick_character_weighted(joiner_pool)
 		return {"customer": char_data, "force_story": false}
 
-	# Priority 0: Forced First-Time Encounters (Ignores Cooldown)
+	# Priority 0: Forced First-Time Encounters (Ignores Cooldown, avoids consecutive repeat)
 	var new_characters := unlocked.filter(func(c: CustomerData) -> bool:
 		var c_ch: int = CharacterProgressionManager.get_chapter(c.resource_path)
 		var is_new: bool = not CharacterProgressionManager.has_encountered(c.resource_path) or c_ch == 0
-		return is_new and not c.is_collector() and _has_available_story_chapter(c)
+		return is_new and not c.is_collector() and c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
 	)
 
 	if not new_characters.is_empty():
@@ -144,13 +144,13 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 		LogManager.info("StoryManager", "FIRST ENCOUNTER: Forcing story for new character: %s" % char_data.get_clean_id())
 		return {"customer": char_data, "force_story": force_story}
 
-	# Priority 0.5: Pending Market Event Announcement (Danilo delivers the rumor!)
+	# Priority 0.5: Pending Market Event Announcement (Danilo delivers the rumor — unless he was just here)
 	if is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
-		var danilo_candidates = unlocked.filter(func(c: CustomerData) -> bool: return c.get_clean_id() == "danilo")
+		var danilo_candidates = unlocked.filter(func(c: CustomerData) -> bool: return c.get_clean_id() == "danilo" and c.resource_path != sm.last_character_path)
 		if not danilo_candidates.is_empty():
 			char_data = danilo_candidates[0]
 			force_story = false
-			LogManager.info("StoryManager", "EVENT PENDING: Forcing Danilo to deliver market event rumor.")
+			LogManager.info("StoryManager", "EVENT PENDING: Forcing Danilo to deliver neighborhood event rumor.")
 			return {"customer": char_data, "force_story": force_story}
 
 	# Priority 1: Cooldown is 0, check for available story chapters

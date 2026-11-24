@@ -35,6 +35,7 @@ var lingering_visitors: Array[Customer] = []
 ## Non-interactive pass-by / fly-by cameo instances currently crossing the street or storefront
 var _ambient_cameos: Array[Customer] = []
 var _ambient_cameo_session_id: int = 0
+var _pending_incoming_path: String = ""
 
 ## Backward-compatible active customer accessor (returns active dialogue customer or first occupied slot)
 var current_customer: Customer:
@@ -132,6 +133,8 @@ func get_present_character_paths() -> Array[String]:
 	if is_instance_valid(guest_customer) and guest_customer.customer_data:
 		if not (guest_customer.customer_data.resource_path in paths):
 			paths.append(guest_customer.customer_data.resource_path)
+	if _pending_incoming_path != "" and not (_pending_incoming_path in paths):
+		paths.append(_pending_incoming_path)
 	return paths
 
 func _find_open_slot(prefer_side: bool = false) -> int:
@@ -214,8 +217,10 @@ func _spawn_next_customer() -> void:
 		return
 
 	_log_incoming_transaction(transaction, 0)
+	_pending_incoming_path = transaction.customer_data.resource_path if transaction.customer_data else ""
 
 	await get_tree().create_timer(2.0).timeout
+	_pending_incoming_path = ""
 	if not is_inside_tree() or my_wave_id != _wave_id:
 		_is_spawning = false
 		return

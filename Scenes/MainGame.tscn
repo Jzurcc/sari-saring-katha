@@ -176,8 +176,8 @@ transform = Transform3D(-0.999715, 0, 0.023873888, 0, 1, 0, -0.023873888, 0, -0.
 [node name="LeftHUD" type="Control" parent="CanvasLayer" unique_id=495697440]
 layout_mode = 3
 anchors_preset = 0
-offset_left = 24.0
-offset_top = 60.0
+offset_left = 28.0
+offset_top = 20.0
 offset_right = 334.0
 offset_bottom = 250.0
 
