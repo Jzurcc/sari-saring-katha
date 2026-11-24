@@ -147,7 +147,7 @@ func _build_ui() -> void:
 	header_v.add_child(title_row)
 
 	var left_pad := Control.new()
-	left_pad.custom_minimum_size = Vector2(140, 0)
+	left_pad.custom_minimum_size = Vector2(170, 0)
 	title_row.add_child(left_pad)
 
 	_header_title_lbl = Label.new()
@@ -155,18 +155,18 @@ func _build_ui() -> void:
 	_header_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_header_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_header_title_lbl.add_theme_font_size_override("font_size", 28)
+	_header_title_lbl.add_theme_font_size_override("font_size", 34)
 	_header_title_lbl.add_theme_color_override("font_color", COL_CREAM)
 	_header_title_lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
-	_header_title_lbl.add_theme_constant_override("outline_size", 3)
+	_header_title_lbl.add_theme_constant_override("outline_size", 4)
 	title_row.add_child(_header_title_lbl)
 
 	_ledger_val_lbl = Label.new()
-	_ledger_val_lbl.custom_minimum_size = Vector2(140, 0)
+	_ledger_val_lbl.custom_minimum_size = Vector2(170, 0)
 	_ledger_val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ledger_val_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_ledger_val_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_ledger_val_lbl.add_theme_font_size_override("font_size", 16)
+	_ledger_val_lbl.add_theme_font_size_override("font_size", 22)
 	_ledger_val_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	title_row.add_child(_ledger_val_lbl)
 
@@ -174,7 +174,7 @@ func _build_ui() -> void:
 	_header_sub_lbl.text = "Set tonight's tribute to Reyna Mayari."
 	_header_sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_header_sub_lbl.add_theme_font_size_override("font_size", 13)
+	_header_sub_lbl.add_theme_font_size_override("font_size", 17)
 	_header_sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	header_v.add_child(_header_sub_lbl)
 
@@ -224,7 +224,7 @@ func _build_ui() -> void:
 	_frame_prompt_lbl = Label.new()
 	_frame_prompt_lbl.text = "NIGHTLY OFFERING:"
 	_frame_prompt_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_frame_prompt_lbl.add_theme_font_size_override("font_size", 18)
+	_frame_prompt_lbl.add_theme_font_size_override("font_size", 22)
 	_frame_prompt_lbl.add_theme_color_override("font_color", COL_CREAM)
 	main_col.add_child(_frame_prompt_lbl)
 
@@ -273,7 +273,7 @@ func _build_offering_panel(parent: VBoxContainer) -> void:
 	_aura_lbl = Label.new()
 	_aura_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_aura_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_aura_lbl.add_theme_font_size_override("font_size", 15)
+	_aura_lbl.add_theme_font_size_override("font_size", 19)
 	v.add_child(_aura_lbl)
 
 	# Sculptural Peso Readout + Chevrons
@@ -287,10 +287,10 @@ func _build_offering_panel(parent: VBoxContainer) -> void:
 	num_row.add_child(_minus_btn)
 
 	_amount_lbl = Label.new()
-	_amount_lbl.custom_minimum_size = Vector2(180, 0)
+	_amount_lbl.custom_minimum_size = Vector2(210, 0)
 	_amount_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_amount_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_amount_lbl.add_theme_font_size_override("font_size", 56)
+	_amount_lbl.add_theme_font_size_override("font_size", 68)
 	_amount_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_amount_lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
 	_amount_lbl.add_theme_constant_override("outline_size", 4)
@@ -359,12 +359,12 @@ func _build_offering_panel(parent: VBoxContainer) -> void:
 
 	# Confirm CTA (matches OptionsOverlay warm bronze-gold button)
 	_confirm_btn = Button.new()
-	_confirm_btn.custom_minimum_size = Vector2(240, 46)
+	_confirm_btn.custom_minimum_size = Vector2(280, 52)
 	_confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_confirm_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_confirm_btn.focus_mode = Control.FOCUS_NONE
 	_confirm_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_confirm_btn.add_theme_font_size_override("font_size", 18)
+	_confirm_btn.add_theme_font_size_override("font_size", 22)
 	_confirm_style = UIStyle.create_flat_stylebox(Color(0.518, 0.396, 0.196, 1.0), 8, 24, 10)
 	_confirm_style.border_color = COL_CREAM
 	_confirm_style.set_border_width_all(1)
@@ -402,7 +402,7 @@ func _add_snap(label_text: String, amount: float, col: Color) -> void:
 	btn.add_theme_stylebox_override("pressed", empty)
 	btn.add_theme_stylebox_override("disabled", empty)
 	btn.add_theme_font_override("font", UIStyle.FONT_INDER)
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 17)
 	btn.add_theme_color_override("font_color", col * Color(1, 1, 1, 0.85))
 	btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	btn.add_theme_color_override("font_disabled_color", Color(0.5, 0.45, 0.4, 0.35))
@@ -636,12 +636,12 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var row_bg := Color(0.088, 0.078, 0.068, 0.95) if is_fav else Color(0.115, 0.068, 0.068, 0.95)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 114)
+	card.custom_minimum_size = Vector2(0, 132)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
-	var style := UIStyle.create_flat_stylebox(row_bg, 8, 16, 12)
+	var style := UIStyle.create_flat_stylebox(row_bg, 8, 18, 14)
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.62)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -662,7 +662,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 	# Left framed emblem square (Hades boon icon slot)
 	var emblem_frame := PanelContainer.new()
-	emblem_frame.custom_minimum_size = Vector2(74, 74)
+	emblem_frame.custom_minimum_size = Vector2(84, 84)
 	emblem_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	emblem_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var emb_bg := Color(accent.r * 0.28, accent.g * 0.22, accent.b * 0.14, 0.95)
@@ -676,7 +676,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	sigil_lbl.text = str(c_data.get("sigil", "☽"))
 	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 34)
+	sigil_lbl.add_theme_font_size_override("font_size", 42)
 	sigil_lbl.add_theme_color_override("font_color", accent_bright)
 	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	emblem_frame.add_child(sigil_lbl)
@@ -685,7 +685,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	text_col.add_theme_constant_override("separation", 4)
+	text_col.add_theme_constant_override("separation", 5)
 	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(text_col)
 
@@ -697,7 +697,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	title_lbl.text = str(c_data.get("title", "Moon Card"))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 21)
+	title_lbl.add_theme_font_size_override("font_size", 26)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
@@ -706,7 +706,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	rarity_lbl.text = "FAVOR" if is_fav else "CHILL"
 	rarity_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rarity_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	rarity_lbl.add_theme_font_size_override("font_size", 13)
+	rarity_lbl.add_theme_font_size_override("font_size", 16)
 	rarity_lbl.add_theme_color_override("font_color", accent)
 	rarity_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(rarity_lbl)
@@ -715,7 +715,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	desc_lbl.text = str(c_data.get("description", ""))
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	desc_lbl.add_theme_font_size_override("font_size", 13)
+	desc_lbl.add_theme_font_size_override("font_size", 16)
 	desc_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	desc_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(desc_lbl)
@@ -723,7 +723,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var hook_lbl := Label.new()
 	hook_lbl.text = "▸  " + str(c_data.get("tagline", ""))
 	hook_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	hook_lbl.add_theme_font_size_override("font_size", 14)
+	hook_lbl.add_theme_font_size_override("font_size", 18)
 	hook_lbl.add_theme_color_override("font_color", COL_CREAM)
 	hook_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(hook_lbl)
