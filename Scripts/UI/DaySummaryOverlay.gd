@@ -1,10 +1,13 @@
 class_name DaySummaryOverlay
 extends CanvasLayer
 
-## End-of-day Papa's Pizzeria / Hades-styled Nightly Ledger Summary.
-## Displays animated rolling stats across Top Card (Cashflow), Middle Card (Performance),
-## Bottom Row (Today's Active Conditions + Top 3 Highlights), and a slam-down Daily Rank Stamp.
-## Clicking or pressing Space skips the roll-up animation immediately.
+## End-of-day Nightly Ledger Summary.
+## Leads the player's eyes sequentially through:
+##   1. Cashflow & Ledger (all channels shown even when ₱0.00, big numbers, one-by-one reveal)
+##   2. Store Performance (one-by-one reveal + rounded animated Player XP bar)
+##   3. Bottom Row (Larger Diamond Condition Medallions with hover Event Cards at cursor + Specific Highlights)
+##   4. Slam-down Daily Rank Stamp positioned cleanly to the left of the Cashflow numbers.
+## Clicking or pressing Space skips straight to the completed state.
 
 signal completed(grade: String, quip: String)
 
@@ -12,14 +15,18 @@ const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayari.png"
 const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 
 const COL_ESPRESSO_DEEP := Color(0.055, 0.048, 0.042, 0.96)
-const COL_CARD_BG := Color(0.088, 0.078, 0.068, 0.94)
+const COL_CARD_BG := Color(0.085, 0.074, 0.064, 0.95)
+const COL_WHITE_HDR := Color(0.98, 0.97, 0.94, 1.0)
 const COL_GOLD := Color(0.835, 0.624, 0.278, 1.0)
 const COL_GOLD_BRIGHT := Color(1.0, 0.875, 0.56, 1.0)
-const COL_CREAM := Color(1.0, 0.922, 0.792, 1.0)
-const COL_CREAM_MUTED := Color(0.82, 0.75, 0.64, 0.84)
+const COL_GOLD_LABEL := Color(0.98, 0.84, 0.48, 1.0)
+const COL_GOLD_ZERO := Color(0.86, 0.72, 0.44, 0.68)
+const COL_CREAM := Color(1.0, 0.935, 0.82, 1.0)
+const COL_CREAM_MUTED := Color(0.92, 0.84, 0.68, 0.88)
+const COL_BOLD_CREAM := "#FFF6E5"
 const COL_BROWN_BORDER := Color(0.482, 0.306, 0.102, 0.9)
-const COL_POS := Color(0.56, 0.92, 0.52, 1.0)
-const COL_NEG := Color(0.96, 0.48, 0.45, 1.0)
+const COL_POS := Color(0.56, 0.94, 0.52, 1.0)
+const COL_NEG := Color(0.98, 0.50, 0.46, 1.0)
 
 const SHORT_MONTHS: Array[String] = [
 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -34,14 +41,22 @@ var _frame: PanelContainer
 var _mayari_portrait: TextureRect
 var _close_btn: Button
 var _stamp_panel: PanelContainer
-var _xp_bar_fill: ColorRect
-var _xp_bar_track: Control
+var _xp_bar_fill: Panel
+var _xp_bar_track: Panel
+
+var _cashflow_card: PanelContainer
+var _cashflow_sep: ColorRect
+var _perf_card: PanelContainer
+var _perf_foot: Label
+var _bottom_row: HBoxContainer
+var _hover_card_holder: Control
+var _active_hover_card: PanelContainer
 
 var _stats: Dictionary = {}
 var _day_number: int = 1
 var _show_mayari: bool = true
 var _grade: String = "B"
-var _grade_title: String = "STEADY"
+var _grade_title: String = "Mahinahon"
 var _grade_col: Color = COL_GOLD_BRIGHT
 var _quip: String = ""
 var _highlights: Array[String] = []
@@ -50,14 +65,20 @@ var _skip_requested: bool = false
 var _tally_finished: bool = false
 var _closing: bool = false
 
-# Animated numeric labels: Array[{ "label": Label, "target": float, "prefix": String, "suffix": String, "is_int": bool, "row": Control }]
-var _anim_entries: Array[Dictionary] = []
+# Sequential animation queues
+var _cashflow_entries: Array[Dictionary] = []
+var _net_entry: Dictionary = {}
+var _perf_entries: Array[Dictionary] = []
+var _condition_nodes: Array[Control] = []
+var _highlight_nodes: Array[Control] = []
+
 
 func setup(day_num: int, daily_stats: Dictionary, show_mayari: bool = true) -> void:
 	_day_number = day_num
 	_stats = daily_stats.duplicate(true)
 	_show_mayari = show_mayari
 	_compute_grade_and_highlights()
+
 
 func _ready() -> void:
 	layer = 62
@@ -68,6 +89,12 @@ func _ready() -> void:
 	_build_ui()
 	_run_sequence()
 
+
+func _process(_delta: float) -> void:
+	if is_instance_valid(_hover_card_holder) and _hover_card_holder.visible and is_instance_valid(_active_hover_card):
+		_position_hover_card()
+
+
 func _format_short_date(day_num: int) -> String:
 	var total_idx := maxi(0, day_num - 1)
 	@warning_ignore("integer_division")
@@ -75,6 +102,7 @@ func _format_short_date(day_num: int) -> String:
 	var day_in_month := (total_idx % 31) + 1
 	var month_idx := (7 + months_elapsed) % 12
 	return "%s %d" % [SHORT_MONTHS[month_idx], day_in_month]
+
 
 func _compute_grade_and_highlights() -> void:
 	var cash_sales := float(_stats.get("cash_sales", 0.0))
@@ -114,25 +142,29 @@ func _compute_grade_and_highlights() -> void:
 
 	if score >= 72:
 		_grade = "S"
-		_grade_title = "PALDO"
+		_grade_title = "Paldo"
 		_grade_col = Color(1.0, 0.88, 0.42, 1.0)
 	elif score >= 52:
 		_grade = "A"
-		_grade_title = "MABENTA"
+		_grade_title = "Mabenta"
 		_grade_col = Color(0.58, 0.94, 0.56, 1.0)
 	elif score >= 32:
 		_grade = "B"
-		_grade_title = "MAHINAHON"
+		_grade_title = "Mahinahon"
 		_grade_col = Color(0.96, 0.88, 0.72, 1.0)
 	else:
 		_grade = "C"
-		_grade_title = "MATUMAL"
+		_grade_title = "Matumal"
 		_grade_col = Color(0.62, 0.80, 0.98, 1.0)
 
-	# Build prioritized Top 3 Highlights (no em-dashes!)
+	# Build prioritized Top 3 Highlights (specific arc names, no em-dashes)
 	var candidates: Array[String] = []
-	for arc_name in arcs:
-		candidates.append("Completed %s's Story Arc!" % str(arc_name))
+	for arc_entry in arcs:
+		var arc_str := str(arc_entry)
+		if arc_str.contains("'s "):
+			candidates.append("Completed %s!" % arc_str)
+		else:
+			candidates.append("Completed %s's Story Arc!" % arc_str)
 	for m_title in milestones:
 		candidates.append("Unlocked Ledger Milestone: %s!" % str(m_title))
 	if level_ups > 0:
@@ -146,7 +178,6 @@ func _compute_grade_and_highlights() -> void:
 	elif returning_buyers == 1:
 		candidates.append("Tambayan Visitor Came Back to Buy!")
 
-	# Best Seller item
 	var best_item := ""
 	var best_qty := 0
 	var item_counts: Dictionary = _stats.get("items_sold_counts", {})
@@ -187,7 +218,9 @@ func _compute_grade_and_highlights() -> void:
 
 	# Contextual 1-line post-summary quip for Reyna Mayari at the counter
 	if not arcs.is_empty():
-		_quip = "You saw %s's tale to a turning point today. Karimlan remembers such kindness." % str(arcs[0])
+		var first_arc := str(arcs[0])
+		var first_char := first_arc.split("'s ")[0] if first_arc.contains("'s ") else first_arc
+		_quip = "You saw %s's tale to a turning point today. Karimlan remembers such kindness." % first_char
 	elif not milestones.is_empty():
 		_quip = "A new seal opens upon the Silver Ledger. You grow bolder, shopkeeper."
 	elif _grade == "S":
@@ -203,6 +236,7 @@ func _compute_grade_and_highlights() -> void:
 	else:
 		_quip = "A quiet ledger tonight. Let the night air clear the dust, and try again at dawn."
 
+
 func _build_ui() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -210,16 +244,16 @@ func _build_ui() -> void:
 
 	_backdrop = ColorRect.new()
 	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_backdrop.color = Color(0.032, 0.026, 0.022, 0.80)
+	_backdrop.color = Color(0.030, 0.024, 0.020, 0.82)
 	_root.add_child(_backdrop)
 
-	# Top Hades Banner
+	# Top Header Banner
 	_banner = PanelContainer.new()
-	_banner.anchor_left = 0.14
-	_banner.anchor_right = 0.86
-	_banner.anchor_top = 0.028
-	_banner.anchor_bottom = 0.140
-	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
+	_banner.anchor_left = 0.10
+	_banner.anchor_right = 0.90
+	_banner.anchor_top = 0.022
+	_banner.anchor_bottom = 0.130
+	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 8, 32, 10)
 	b_style.border_color = COL_GOLD
 	b_style.set_border_width_all(2)
 	b_style.shadow_color = Color(0.0, 0.0, 0.0, 0.58)
@@ -237,35 +271,35 @@ func _build_ui() -> void:
 	title_row.add_theme_constant_override("separation", 16)
 	bv.add_child(title_row)
 
-	for s_orn in ["◈", "N I G H T L Y   L E D G E R   ·   %s" % _format_short_date(_day_number).to_upper(), "◈"]:
+	for s_orn in ["◈", "Nightly Ledger  ·  %s" % _format_short_date(_day_number), "◈"]:
 		var lbl := Label.new()
 		lbl.text = s_orn
 		if s_orn == "◈":
-			lbl.add_theme_font_size_override("font_size", 20)
+			lbl.add_theme_font_size_override("font_size", 22)
 			lbl.add_theme_color_override("font_color", COL_GOLD)
 		else:
-			lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-			lbl.add_theme_font_size_override("font_size", 30)
-			lbl.add_theme_color_override("font_color", COL_CREAM)
+			lbl.add_theme_font_override("font", _bold_font)
+			lbl.add_theme_font_size_override("font_size", 32)
+			lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 			lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
 			lbl.add_theme_constant_override("outline_size", 4)
 		title_row.add_child(lbl)
 
 	var sub_lbl := Label.new()
-	sub_lbl.text = "End of Day Performance Summary  (Click or press Space to skip)"
+	sub_lbl.text = "End of Day Performance Summary  ·  Click or press Space to skip"
 	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	sub_lbl.add_theme_font_size_override("font_size", 15)
-	sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	sub_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
 	bv.add_child(sub_lbl)
 
-	# Main Center Frame (same footprint as MayariTallyOverlay)
+	# Main Center Frame (widened for breathing room and large legible numbers)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.255
-	_frame.anchor_right = 0.795
-	_frame.anchor_top = 0.165
-	_frame.anchor_bottom = 0.865
-	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.95), 8, 22, 16)
+	_frame.anchor_left = 0.215
+	_frame.anchor_right = 0.855
+	_frame.anchor_top = 0.148
+	_frame.anchor_bottom = 0.880
+	var f_style := UIStyle.create_flat_stylebox(Color(0.055, 0.048, 0.042, 0.96), 10, 24, 16)
 	f_style.border_color = Color(0.835, 0.624, 0.278, 0.82)
 	f_style.set_border_width_all(2)
 	f_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
@@ -274,37 +308,43 @@ func _build_ui() -> void:
 	_root.add_child(_frame)
 
 	var main_vbox := VBoxContainer.new()
-	main_vbox.add_theme_constant_override("separation", 10)
+	main_vbox.add_theme_constant_override("separation", 12)
 	_frame.add_child(main_vbox)
 
-	# ── 1. TOP CARD: CASHFLOW & LEDGER ──
-	main_vbox.add_child(_build_cashflow_card())
+	# 1. Top Card: Cashflow & Ledger
+	_cashflow_card = _build_cashflow_card()
+	_cashflow_card.modulate.a = 0.0
+	main_vbox.add_child(_cashflow_card)
 
-	# ── 2. MIDDLE CARD: STORE PERFORMANCE ──
-	main_vbox.add_child(_build_performance_card())
+	# 2. Middle Card: Store Performance
+	_perf_card = _build_performance_card()
+	_perf_card.modulate.a = 0.0
+	main_vbox.add_child(_perf_card)
 
-	# ── 3. BOTTOM ROW: TODAY'S CONDITIONS + TOP 3 HIGHLIGHTS ──
-	main_vbox.add_child(_build_bottom_row())
+	# 3. Bottom Row: Today's Conditions + Highlights of the Day
+	_bottom_row = _build_bottom_row()
+	_bottom_row.modulate.a = 0.0
+	main_vbox.add_child(_bottom_row)
 
-	# ── SLAM-DOWN DAILY RANK STAMP (Top-Right inside Center Frame) ──
+	# Slam-Down Daily Rank Stamp — placed cleanly TO THE LEFT of the Cashflow numbers!
 	_stamp_panel = PanelContainer.new()
-	_stamp_panel.anchor_left = 0.795
-	_stamp_panel.anchor_right = 0.795
-	_stamp_panel.anchor_top = 0.165
-	_stamp_panel.anchor_bottom = 0.165
-	_stamp_panel.offset_left = -168.0
-	_stamp_panel.offset_right = -18.0
-	_stamp_panel.offset_top = 18.0
-	_stamp_panel.offset_bottom = 128.0
-	_stamp_panel.rotation_degrees = -6.0
+	_stamp_panel.anchor_left = 0.855
+	_stamp_panel.anchor_right = 0.855
+	_stamp_panel.anchor_top = 0.148
+	_stamp_panel.anchor_bottom = 0.148
+	_stamp_panel.offset_left = -385.0
+	_stamp_panel.offset_right = -215.0
+	_stamp_panel.offset_top = 34.0
+	_stamp_panel.offset_bottom = 152.0
+	_stamp_panel.rotation_degrees = -5.5
 	_stamp_panel.z_index = 14
 	_stamp_panel.visible = false
 	_stamp_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var st_style := UIStyle.create_flat_stylebox(Color(0.09, 0.075, 0.06, 0.96), 8, 12, 8)
+	var st_style := UIStyle.create_flat_stylebox(Color(0.09, 0.075, 0.06, 0.96), 10, 14, 8)
 	st_style.border_color = _grade_col
 	st_style.set_border_width_all(3)
-	st_style.shadow_color = Color(0.0, 0.0, 0.0, 0.6)
-	st_style.shadow_size = 14
+	st_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
+	st_style.shadow_size = 16
 	_stamp_panel.add_theme_stylebox_override("panel", st_style)
 	_root.add_child(_stamp_panel)
 
@@ -317,7 +357,7 @@ func _build_ui() -> void:
 	g_lbl.text = _grade
 	g_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	g_lbl.add_theme_font_override("font", _bold_font)
-	g_lbl.add_theme_font_size_override("font_size", 46)
+	g_lbl.add_theme_font_size_override("font_size", 50)
 	g_lbl.add_theme_color_override("font_color", _grade_col)
 	sv.add_child(g_lbl)
 
@@ -325,35 +365,35 @@ func _build_ui() -> void:
 	gt_lbl.text = _grade_title
 	gt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	gt_lbl.add_theme_font_override("font", _bold_font)
-	gt_lbl.add_theme_font_size_override("font_size", 13)
-	gt_lbl.add_theme_color_override("font_color", COL_CREAM)
+	gt_lbl.add_theme_font_size_override("font_size", 17)
+	gt_lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 	sv.add_child(gt_lbl)
 
-	# ── OVERLAPPING BOTTOM-RIGHT CONTINUE BUTTON ──
+	# Overlapping Bottom-Right Continue Button
 	_close_btn = Button.new()
 	_close_btn.text = "Close Ledger" if _show_mayari else "Close Shop & Sleep"
-	_close_btn.anchor_left = 0.795
-	_close_btn.anchor_right = 0.795
-	_close_btn.anchor_top = 0.865
-	_close_btn.anchor_bottom = 0.865
-	_close_btn.offset_left = -246.0
+	_close_btn.anchor_left = 0.855
+	_close_btn.anchor_right = 0.855
+	_close_btn.anchor_top = 0.880
+	_close_btn.anchor_bottom = 0.880
+	_close_btn.offset_left = -256.0
 	_close_btn.offset_right = -18.0
 	_close_btn.offset_top = -24.0
-	_close_btn.offset_bottom = 24.0
+	_close_btn.offset_bottom = 26.0
 	_close_btn.z_index = 14
 	_close_btn.disabled = true
 	_close_btn.focus_mode = Control.FOCUS_NONE
 	_close_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_close_btn.add_theme_font_override("font", _bold_font)
-	_close_btn.add_theme_font_size_override("font_size", 18)
-	var cb_style := UIStyle.create_flat_stylebox(Color(0.38, 0.29, 0.14, 0.98), 8, 20, 8)
+	_close_btn.add_theme_font_size_override("font_size", 19)
+	var cb_style := UIStyle.create_flat_stylebox(Color(0.38, 0.29, 0.14, 0.98), 8, 22, 8)
 	cb_style.border_color = COL_GOLD_BRIGHT
 	cb_style.set_border_width_all(2)
 	cb_style.shadow_color = Color(0.0, 0.0, 0.0, 0.72)
 	cb_style.shadow_size = 14
 	var cb_hov: StyleBoxFlat = cb_style.duplicate()
 	cb_hov.bg_color = Color(0.48, 0.37, 0.18, 0.98)
-	cb_hov.border_color = COL_CREAM
+	cb_hov.border_color = COL_WHITE_HDR
 	var cb_dis: StyleBoxFlat = cb_style.duplicate()
 	cb_dis.bg_color = Color(0.14, 0.12, 0.10, 0.82)
 	cb_dis.border_color = Color(0.45, 0.38, 0.28, 0.45)
@@ -361,32 +401,40 @@ func _build_ui() -> void:
 	_close_btn.add_theme_stylebox_override("hover", cb_hov)
 	_close_btn.add_theme_stylebox_override("pressed", cb_style)
 	_close_btn.add_theme_stylebox_override("disabled", cb_dis)
-	_close_btn.add_theme_color_override("font_color", COL_CREAM)
+	_close_btn.add_theme_color_override("font_color", COL_WHITE_HDR)
 	_close_btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	_close_btn.add_theme_color_override("font_disabled_color", Color(0.65, 0.60, 0.52, 0.55))
 	_close_btn.pressed.connect(_on_close_pressed)
 	_root.add_child(_close_btn)
 
-	# ── REYNA MAYARI PORTRAIT ON LEFT (when present) ──
+	# Reyna Mayari Portrait on Left (when present)
 	if _show_mayari:
 		_mayari_portrait = TextureRect.new()
 		if ResourceLoader.exists(MAYARI_SPRITE_PATH):
 			_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 		_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_mayari_portrait.anchor_left = -0.03
-		_mayari_portrait.anchor_right = 0.36
+		_mayari_portrait.anchor_left = -0.045
+		_mayari_portrait.anchor_right = 0.335
 		_mayari_portrait.anchor_top = 0.34
 		_mayari_portrait.anchor_bottom = 1.27
 		_mayari_portrait.z_index = 10
 		_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_root.add_child(_mayari_portrait)
 
+	# Mouse-following Hover Event Card Container (for Today's Conditions diamonds)
+	_hover_card_holder = Control.new()
+	_hover_card_holder.z_index = 40
+	_hover_card_holder.visible = false
+	_hover_card_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_hover_card_holder)
+
+
 func _make_section_card(title: String) -> Array:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var st := UIStyle.create_flat_stylebox(COL_CARD_BG, 6, 16, 10)
-	st.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.52)
+	var st := UIStyle.create_flat_stylebox(COL_CARD_BG, 8, 20, 12)
+	st.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.54)
 	st.border_width_left = 4
 	st.border_width_top = 1
 	st.border_width_right = 1
@@ -394,18 +442,19 @@ func _make_section_card(title: String) -> Array:
 	panel.add_theme_stylebox_override("panel", st)
 
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 4)
+	vb.add_theme_constant_override("separation", 6)
 	panel.add_child(vb)
 
 	var hdr := Label.new()
 	hdr.text = title
 	hdr.add_theme_font_override("font", _bold_font)
-	hdr.add_theme_font_size_override("font_size", 14)
-	hdr.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	hdr.add_theme_font_size_override("font_size", 19)
+	hdr.add_theme_color_override("font_color", COL_WHITE_HDR)
 	vb.add_child(hdr)
 	return [panel, vb]
 
-func _add_stat_row(parent: VBoxContainer, label_txt: String, target: float, prefix: String, suffix: String, val_col: Color, is_int: bool = false, is_bold: bool = false) -> void:
+
+func _create_stat_row(parent: VBoxContainer, label_txt: String, target: float, prefix: String, suffix: String, val_col: Color, is_int: bool = false, is_bold: bool = false) -> Dictionary:
 	var row := HBoxContainer.new()
 	row.modulate.a = 0.0
 	parent.add_child(row)
@@ -413,30 +462,35 @@ func _add_stat_row(parent: VBoxContainer, label_txt: String, target: float, pref
 	var l := Label.new()
 	l.text = label_txt
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.add_theme_font_override("font", _bold_font if is_bold else UIStyle.FONT_INDER)
-	l.add_theme_font_size_override("font_size", 18 if is_bold else 16)
-	l.add_theme_color_override("font_color", COL_CREAM if is_bold else COL_CREAM_MUTED)
+	l.add_theme_font_size_override("font_size", 21 if is_bold else 18)
+	l.add_theme_color_override("font_color", COL_WHITE_HDR if is_bold else COL_GOLD_LABEL)
 	row.add_child(l)
 
 	var v := Label.new()
-	v.text = "%s0%s" % [prefix, suffix]
+	v.text = _format_val(0.0, prefix, suffix, is_int)
 	v.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	v.add_theme_font_override("font", _bold_font)
-	v.add_theme_font_size_override("font_size", 20 if is_bold else 16)
+	v.add_theme_font_size_override("font_size", 27 if is_bold else 22)
 	v.add_theme_color_override("font_color", val_col)
 	row.add_child(v)
 
-	_anim_entries.append({
+	return {
 		"label": v,
+		"name_label": l,
 		"target": target,
 		"prefix": prefix,
 		"suffix": suffix,
 		"is_int": is_int,
+		"is_bold": is_bold,
 		"row": row,
-	})
+	}
+
 
 func _build_cashflow_card() -> PanelContainer:
-	var built := _make_section_card("CASHFLOW & LEDGER")
+	var built := _make_section_card("Cashflow & Ledger")
 	var panel: PanelContainer = built[0]
 	var vb: VBoxContainer = built[1]
 
@@ -447,27 +501,28 @@ func _build_cashflow_card() -> PanelContainer:
 	var tribute := float(_stats.get("mayari_tribute", 0.0))
 	var net := (cash_sales + utang_repaid + tips) - (spent_restock + tribute)
 
-	_add_stat_row(vb, "Cash Sales", cash_sales, "+₱", "", COL_POS)
-	if utang_repaid > 0.01:
-		_add_stat_row(vb, "Utang Repaid", utang_repaid, "+₱", "", COL_POS)
-	if tips > 0.01:
-		_add_stat_row(vb, "Tips & Bonuses", tips, "+₱", "", COL_GOLD_BRIGHT)
-	if spent_restock > 0.01:
-		_add_stat_row(vb, "Restock & Upgrades", spent_restock, "-₱", "", COL_NEG)
-	if tribute > 0.01:
-		_add_stat_row(vb, "Mayari's Tribute", tribute, "-₱", "", COL_NEG)
+	# Always show all Cashflow & Ledger rows (even when ₱0.00) so players see every channel
+	_cashflow_entries.clear()
+	_cashflow_entries.append(_create_stat_row(vb, "Cash Sales", cash_sales, "+₱" if cash_sales > 0.01 else "₱", "", COL_POS if cash_sales > 0.01 else COL_GOLD_ZERO))
+	_cashflow_entries.append(_create_stat_row(vb, "Utang Repaid", utang_repaid, "+₱" if utang_repaid > 0.01 else "₱", "", COL_POS if utang_repaid > 0.01 else COL_GOLD_ZERO))
+	_cashflow_entries.append(_create_stat_row(vb, "Tips & Bonuses", tips, "+₱" if tips > 0.01 else "₱", "", COL_GOLD_BRIGHT if tips > 0.01 else COL_GOLD_ZERO))
+	_cashflow_entries.append(_create_stat_row(vb, "Restock & Upgrades", spent_restock, "-₱" if spent_restock > 0.01 else "₱", "", COL_NEG if spent_restock > 0.01 else COL_GOLD_ZERO))
+	_cashflow_entries.append(_create_stat_row(vb, "Mayari's Tribute", tribute, "-₱" if tribute > 0.01 else "₱", "", COL_NEG if tribute > 0.01 else COL_GOLD_ZERO))
 
-	var sep := ColorRect.new()
-	sep.custom_minimum_size = Vector2(0, 1)
-	sep.color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.35)
-	vb.add_child(sep)
+	_cashflow_sep = ColorRect.new()
+	_cashflow_sep.custom_minimum_size = Vector2(0, 1)
+	_cashflow_sep.color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.42)
+	_cashflow_sep.modulate.a = 0.0
+	vb.add_child(_cashflow_sep)
 
-	var net_prefix := "+₱" if net >= 0.0 else "-₱"
-	_add_stat_row(vb, "Net Profit Today", absf(net), net_prefix, "", COL_POS if net >= 0.0 else COL_NEG, false, true)
+	var net_prefix := "+₱" if net > 0.01 else ("-₱" if net < -0.01 else "₱")
+	var net_col := COL_POS if net > 0.01 else (COL_NEG if net < -0.01 else COL_GOLD_BRIGHT)
+	_net_entry = _create_stat_row(vb, "Net Profit Today", absf(net), net_prefix, "", net_col, false, true)
 	return panel
 
+
 func _build_performance_card() -> PanelContainer:
-	var built := _make_section_card("STORE PERFORMANCE")
+	var built := _make_section_card("Store Performance")
 	var panel: PanelContainer = built[0]
 	var vb: VBoxContainer = built[1]
 
@@ -481,105 +536,133 @@ func _build_performance_card() -> PanelContainer:
 	for k in StoryManager.todays_missed_items.keys():
 		missed_cnt += int(StoryManager.todays_missed_items[k])
 
-	_add_stat_row(vb, "Neighbors Served (%d buyers, %d visits)" % [buyers, visits], float(buyers + visits), "", "", COL_CREAM, true)
-	_add_stat_row(vb, "Items Handed Over", float(items_sold), "", "", COL_CREAM, true)
-	var ch_suffix := ""
+	_perf_entries.clear()
+	_perf_entries.append(_create_stat_row(vb, "Neighbors Served (%d buyers, %d visits)" % [buyers, visits], float(buyers + visits), "", "", COL_WHITE_HDR, true))
+	_perf_entries.append(_create_stat_row(vb, "Items Handed Over", float(items_sold), "", "", COL_WHITE_HDR, true))
 	if not chapters.is_empty():
 		var unique_ch: Array[String] = []
 		for cn in chapters:
 			if not (str(cn) in unique_ch):
 				unique_ch.append(str(cn))
-		ch_suffix = " (%s)" % ", ".join(unique_ch)
-	_add_stat_row(vb, "Story Chapters Progressed", float(chapters.size()), "", ch_suffix, COL_GOLD_BRIGHT, true)
-	_add_stat_row(vb, "Player XP Earned (Lv. %d)" % StoryManager.player_level, float(xp_earned), "+", " XP", COL_POS, true)
+		var ch_suffix := " (%s)" % ", ".join(unique_ch)
+		_perf_entries.append(_create_stat_row(vb, "Story Chapters Progressed", float(chapters.size()), "", ch_suffix, COL_GOLD_BRIGHT, true))
+	_perf_entries.append(_create_stat_row(vb, "Player XP Earned (Lv. %d)" % StoryManager.player_level, float(xp_earned), "+", " XP", COL_POS, true))
 
-	# Mini XP Progress Bar
+	# Rounded Mini XP Progress Bar (matching rounded track & rounded fill)
 	_xp_bar_track = Panel.new()
-	_xp_bar_track.custom_minimum_size = Vector2(0, 8)
-	var ts := UIStyle.create_flat_stylebox(Color(0.04, 0.035, 0.03, 0.95), 4, 0, 0)
-	ts.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.45)
+	_xp_bar_track.custom_minimum_size = Vector2(0, 12)
+	_xp_bar_track.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	_xp_bar_track.modulate.a = 0.0
+	var ts := UIStyle.create_flat_stylebox(Color(0.04, 0.035, 0.03, 0.96), 6, 0, 0)
+	ts.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.55)
 	ts.set_border_width_all(1)
 	_xp_bar_track.add_theme_stylebox_override("panel", ts)
 	vb.add_child(_xp_bar_track)
 
-	_xp_bar_fill = ColorRect.new()
-	_xp_bar_fill.color = COL_GOLD_BRIGHT
+	_xp_bar_fill = Panel.new()
+	var fs := UIStyle.create_flat_stylebox(COL_GOLD_BRIGHT, 6, 0, 0)
+	fs.border_color = Color(1.0, 0.95, 0.78, 0.65)
+	fs.border_width_top = 1
+	_xp_bar_fill.add_theme_stylebox_override("panel", fs)
 	_xp_bar_fill.anchor_left = 0.0
 	_xp_bar_fill.anchor_top = 0.0
 	_xp_bar_fill.anchor_bottom = 1.0
 	_xp_bar_fill.anchor_right = 0.0
+	_xp_bar_fill.offset_left = 1.0
+	_xp_bar_fill.offset_top = 1.0
+	_xp_bar_fill.offset_bottom = -1.0
+	_xp_bar_fill.offset_right = -1.0
+	_xp_bar_fill.visible = false
 	_xp_bar_track.add_child(_xp_bar_fill)
 
-	var foot := Label.new()
-	foot.text = "Utang Extended: %d   ·   Missed Requests: %d" % [utang_cnt, missed_cnt]
-	foot.add_theme_font_override("font", UIStyle.FONT_INDER)
-	foot.add_theme_font_size_override("font_size", 13)
-	foot.add_theme_color_override("font_color", COL_POS if missed_cnt == 0 else COL_CREAM_MUTED)
-	vb.add_child(foot)
+	_perf_foot = Label.new()
+	_perf_foot.text = "Utang Extended: %d   ·   Missed Requests: %d" % [utang_cnt, missed_cnt]
+	_perf_foot.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_perf_foot.add_theme_font_size_override("font_size", 15)
+	_perf_foot.add_theme_color_override("font_color", COL_POS if missed_cnt == 0 else COL_GOLD_LABEL)
+	_perf_foot.modulate.a = 0.0
+	vb.add_child(_perf_foot)
 
 	return panel
+
 
 func _build_bottom_row() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 12)
 
-	# Left: Today's Active Conditions (Events, Today's Moon Cards, Sto. Niño Blessings — NO tomorrow preview)
-	var cond_built := _make_section_card("TODAY'S CONDITIONS")
+	# Left: Today's Conditions (Larger Diamond Icons + Hover Event Card at cursor)
+	var cond_built := _make_section_card("Today's Conditions")
 	var cond_panel: PanelContainer = cond_built[0]
 	var cond_vb: VBoxContainer = cond_built[1]
 	cond_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cond_panel.size_flags_stretch_ratio = 0.44
+	cond_panel.size_flags_stretch_ratio = 0.42
 	row.add_child(cond_panel)
 
 	var icons_flow := HFlowContainer.new()
-	icons_flow.add_theme_constant_override("h_separation", 8)
-	icons_flow.add_theme_constant_override("v_separation", 6)
+	icons_flow.add_theme_constant_override("h_separation", 14)
+	icons_flow.add_theme_constant_override("v_separation", 10)
 	cond_vb.add_child(icons_flow)
 
-	var cond_count := 0
+	_condition_nodes.clear()
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
-			icons_flow.add_child(_make_condition_pill(ev.event_name, HadesEmblem.palette("event")))
-			cond_count += 1
+			var c_info := _make_event_hover_info(ev)
+			var d_btn := _make_condition_diamond(c_info)
+			icons_flow.add_child(d_btn)
+			_condition_nodes.append(d_btn)
+
 	var mayari_ids: Array[String] = StoryManager.active_mayari_cards
 	if mayari_ids.is_empty() and StoryManager.active_mayari_card != "":
 		mayari_ids = [StoryManager.active_mayari_card]
 	for mid in mayari_ids:
 		var c := MayariCardRegistry.get_card(mid)
 		if not c.is_empty():
-			var pal := HadesEmblem.palette("favor" if MayariCardRegistry.is_favor(mid) else "omen")
-			icons_flow.add_child(_make_condition_pill(str(c.get("title", "")), pal))
-			cond_count += 1
+			var kind_str := "favor" if MayariCardRegistry.is_favor(mid) else "omen"
+			var c_info := _make_card_hover_info(c, kind_str)
+			var d_btn := _make_condition_diamond(c_info)
+			icons_flow.add_child(d_btn)
+			_condition_nodes.append(d_btn)
+
 	for bid in _stats.get("blessings_used", []):
 		var bc := MayariCardRegistry.get_card(str(bid))
 		if not bc.is_empty():
-			icons_flow.add_child(_make_condition_pill(str(bc.get("title", "")), HadesEmblem.palette("blessing")))
-			cond_count += 1
+			var c_info := _make_card_hover_info(bc, "blessing")
+			var d_btn := _make_condition_diamond(c_info)
+			icons_flow.add_child(d_btn)
+			_condition_nodes.append(d_btn)
 
-	if cond_count == 0:
+	if _condition_nodes.is_empty():
 		var quiet := Label.new()
 		quiet.text = "Quiet day in Karimlan."
 		quiet.add_theme_font_override("font", UIStyle.FONT_INDER)
-		quiet.add_theme_font_size_override("font_size", 14)
-		quiet.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		quiet.add_theme_font_size_override("font_size", 16)
+		quiet.add_theme_color_override("font_color", COL_GOLD_LABEL)
 		cond_vb.add_child(quiet)
+	else:
+		var hint_lbl := Label.new()
+		hint_lbl.text = "Hover a diamond to inspect"
+		hint_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		hint_lbl.add_theme_font_size_override("font_size", 13)
+		hint_lbl.add_theme_color_override("font_color", COL_GOLD_ZERO)
+		cond_vb.add_child(hint_lbl)
 
 	# Right: Top 3 Highlights of the Day
-	var hl_built := _make_section_card("HIGHLIGHTS OF THE DAY")
+	var hl_built := _make_section_card("Highlights of the Day")
 	var hl_panel: PanelContainer = hl_built[0]
 	var hl_vb: VBoxContainer = hl_built[1]
 	hl_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hl_panel.size_flags_stretch_ratio = 0.56
+	hl_panel.size_flags_stretch_ratio = 0.58
 	row.add_child(hl_panel)
 
+	_highlight_nodes.clear()
 	if _highlights.is_empty():
 		var none_lbl := Label.new()
 		none_lbl.text = "Another honest day behind the counter."
 		none_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		none_lbl.add_theme_font_size_override("font_size", 14)
-		none_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		none_lbl.add_theme_font_size_override("font_size", 17)
+		none_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
 		hl_vb.add_child(none_lbl)
 	else:
 		for h_txt in _highlights:
@@ -587,62 +670,324 @@ func _build_bottom_row() -> HBoxContainer:
 			hl.text = "★  %s" % h_txt
 			hl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			hl.add_theme_font_override("font", UIStyle.FONT_INDER)
-			hl.add_theme_font_size_override("font_size", 14)
-			hl.add_theme_color_override("font_color", COL_CREAM)
+			hl.add_theme_font_size_override("font_size", 17)
+			hl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+			hl.modulate.a = 0.0
 			hl_vb.add_child(hl)
+			_highlight_nodes.append(hl)
 
 	return row
 
-func _make_condition_pill(title: String, pal: Dictionary) -> PanelContainer:
-	var p := PanelContainer.new()
-	var acc: Color = pal["accent"]
-	var brt: Color = pal["bright"]
-	var st := UIStyle.create_flat_stylebox(Color(acc.r * 0.22, acc.g * 0.20, acc.b * 0.18, 0.92), 5, 8, 3)
-	st.border_color = Color(acc.r, acc.g, acc.b, 0.78)
-	st.set_border_width_all(1)
-	p.add_theme_stylebox_override("panel", st)
-	var l := Label.new()
-	l.text = title
-	l.add_theme_font_override("font", _bold_font)
-	l.add_theme_font_size_override("font_size", 12)
-	l.add_theme_color_override("font_color", brt)
-	p.add_child(l)
-	return p
+
+func _category_display(cat: String) -> String:
+	match cat.to_lower():
+		"bottle": return "Beverages"
+		"snack": return "Snacks"
+		"can": return "Canned Goods"
+		"cigarette": return "Cigarettes"
+		"candy": return "Candies"
+		"pack": return "Noodles"
+		"sachet": return "Sachets"
+		"frozen": return "Frozen"
+		_: return cat.capitalize()
+
+
+func _event_sigil(event_id: String) -> String:
+	match event_id:
+		"barangay_liga": return "◈"
+		"brownout_notice": return "⚡"
+		"payday_friday": return "₱"
+		"summer_heat": return "☀"
+		"typhoon_warning": return "〰"
+		_: return "✦"
+
+
+func _format_natural_list(names: PackedStringArray) -> String:
+	var count := names.size()
+	if count == 0:
+		return "Featured Stock"
+	if count == 1:
+		return names[0]
+	if count == 2:
+		return "%s and %s" % [names[0], names[1]]
+	var leading := PackedStringArray()
+	for i in range(count - 1):
+		leading.append(names[i])
+	return "%s, and %s" % [", ".join(leading), names[count - 1]]
+
+
+func _make_event_hover_info(ev: StoreEventData) -> Dictionary:
+	var target_names := PackedStringArray()
+	for cat in ev.affected_categories:
+		target_names.append(_category_display(cat))
+	if target_names.is_empty():
+		for it in ev.affected_items:
+			if it:
+				target_names.append(it.item_name)
+	var targets_str := _format_natural_list(target_names)
+	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
+	var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
+	var stats: Array = [
+		{"label": "Highlighted Demand:", "value": "+%d%%" % demand_pct, "tone": "pos"},
+		{"label": "Highlighted Price Tolerance:", "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
+	]
+	return {
+		"title": ev.event_name,
+		"sigil": _event_sigil(ev.event_id),
+		"desc_rich": desc_rich,
+		"stats": stats,
+		"kind": "event",
+	}
+
+
+func _make_card_hover_info(c_data: Dictionary, kind: String) -> Dictionary:
+	return {
+		"title": str(c_data.get("title", "Moon Card")),
+		"sigil": str(c_data.get("sigil", "☽")),
+		"desc_rich": str(c_data.get("description_rich", c_data.get("description", ""))),
+		"stats": c_data.get("stats", []),
+		"kind": kind,
+	}
+
+
+func _make_condition_diamond(info: Dictionary) -> Control:
+	var pal: Dictionary = HadesEmblem.palette(str(info.get("kind", "event")))
+	var accent: Color = pal["accent"]
+	var accent_bright: Color = pal["bright"]
+
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(68, 68)
+	holder.mouse_filter = Control.MOUSE_FILTER_STOP
+	holder.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	holder.pivot_offset = Vector2(34, 34)
+	holder.modulate.a = 0.0
+
+	var emblem := HadesEmblem.new()
+	emblem.set_anchors_preset(Control.PRESET_FULL_RECT)
+	emblem.accent = accent
+	emblem.accent_bright = accent_bright
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.add_child(emblem)
+
+	var sigil_lbl := Label.new()
+	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sigil_lbl.text = str(info.get("sigil", "✦"))
+	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sigil_lbl.add_theme_font_size_override("font_size", 28)
+	sigil_lbl.add_theme_color_override("font_color", accent_bright)
+	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	emblem.add_child(sigil_lbl)
+
+	holder.mouse_entered.connect(func():
+		var tw := holder.create_tween()
+		tw.tween_property(holder, "scale", Vector2(1.12, 1.12), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_show_hover_card(info)
+	)
+	holder.mouse_exited.connect(func():
+		var tw := holder.create_tween()
+		tw.tween_property(holder, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_SINE)
+		_hide_hover_card()
+	)
+	return holder
+
+
+func _show_hover_card(info: Dictionary) -> void:
+	if not is_instance_valid(_hover_card_holder):
+		return
+	for ch in _hover_card_holder.get_children():
+		ch.queue_free()
+
+	_active_hover_card = _build_hover_event_card(info)
+	_hover_card_holder.add_child(_active_hover_card)
+	_hover_card_holder.visible = true
+	_position_hover_card()
+
+
+func _hide_hover_card() -> void:
+	if is_instance_valid(_hover_card_holder):
+		_hover_card_holder.visible = false
+	_active_hover_card = null
+
+
+func _position_hover_card() -> void:
+	if not is_instance_valid(_active_hover_card):
+		return
+	var vp_size := get_viewport().get_visible_rect().size
+	var mpos := get_viewport().get_mouse_position()
+	var card_sz := _active_hover_card.get_combined_minimum_size()
+	var card_w := maxf(card_sz.x, 480.0)
+	var card_h := maxf(card_sz.y, 130.0)
+	_active_hover_card.size = Vector2(card_w, card_h)
+
+	var x := mpos.x + 20.0
+	var y := mpos.y - card_h - 14.0
+	if x + card_w > vp_size.x - 16.0:
+		x = mpos.x - card_w - 20.0
+	if x < 16.0:
+		x = 16.0
+	if y < 16.0:
+		y = mpos.y + 22.0
+	if y + card_h > vp_size.y - 16.0:
+		y = vp_size.y - card_h - 16.0
+	_hover_card_holder.position = Vector2(x, y)
+
+
+func _build_hover_event_card(info: Dictionary) -> PanelContainer:
+	var kind := str(info.get("kind", "event"))
+	var pal: Dictionary = HadesEmblem.palette(kind)
+	var accent: Color = pal["accent"]
+	var accent_bright: Color = pal["bright"]
+	var row_bg: Color = pal["bg"]
+	var tag: String = str(pal["tag"])
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(480, 0)
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := UIStyle.create_flat_stylebox(row_bg, 8, 16, 12)
+	style.content_margin_right = 20
+	style.border_color = Color(accent.r, accent.g, accent.b, 0.88)
+	style.border_width_left = 4
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.72)
+	style.shadow_size = 18
+	style.shadow_offset = Vector2(0, 6)
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 20)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(hbox)
+
+	var emblem := HadesEmblem.new()
+	emblem.custom_minimum_size = Vector2(74, 74)
+	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	emblem.accent = accent
+	emblem.accent_bright = accent_bright
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(emblem)
+
+	var sigil_lbl := Label.new()
+	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sigil_lbl.text = str(info.get("sigil", "✦"))
+	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sigil_lbl.add_theme_font_size_override("font_size", 32)
+	sigil_lbl.add_theme_color_override("font_color", accent_bright)
+	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	emblem.add_child(sigil_lbl)
+
+	var text_col := VBoxContainer.new()
+	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_col.add_theme_constant_override("separation", 4)
+	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(text_col)
+
+	var top_line := HBoxContainer.new()
+	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	text_col.add_child(top_line)
+
+	var title_lbl := Label.new()
+	title_lbl.text = str(info.get("title", "Condition"))
+	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_lbl.add_theme_font_override("font", _bold_font)
+	title_lbl.add_theme_font_size_override("font_size", 21)
+	title_lbl.add_theme_color_override("font_color", accent_bright)
+	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(title_lbl)
+
+	var tag_lbl := Label.new()
+	tag_lbl.text = tag
+	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tag_lbl.add_theme_font_override("font", _bold_font)
+	tag_lbl.add_theme_font_size_override("font_size", 15)
+	tag_lbl.add_theme_color_override("font_color", accent_bright)
+	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(tag_lbl)
+
+	var desc_rt := RichTextLabel.new()
+	desc_rt.bbcode_enabled = true
+	desc_rt.fit_content = true
+	desc_rt.scroll_active = false
+	desc_rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
+	desc_rt.add_theme_font_override("bold_font", _bold_font)
+	desc_rt.add_theme_font_size_override("normal_font_size", 16)
+	desc_rt.add_theme_font_size_override("bold_font_size", 16)
+	desc_rt.add_theme_color_override("default_color", COL_CREAM_MUTED)
+	var raw_desc := str(info.get("desc_rich", ""))
+	desc_rt.text = raw_desc.replace("[b]", "[b][color=%s]" % COL_BOLD_CREAM).replace("[/b]", "[/color][/b]")
+	text_col.add_child(desc_rt)
+
+	var stats: Array = info.get("stats", [])
+	if not stats.is_empty():
+		var stats_box := VBoxContainer.new()
+		stats_box.add_theme_constant_override("separation", 2)
+		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(stats_box)
+		for st in stats:
+			var stat_dict: Dictionary = st
+			var s_row := HBoxContainer.new()
+			s_row.add_theme_constant_override("separation", 10)
+			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			stats_box.add_child(s_row)
+
+			var s_name := Label.new()
+			s_name.text = "▸ " + str(stat_dict.get("label", ""))
+			s_name.custom_minimum_size = Vector2(230, 0)
+			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+			s_name.add_theme_font_size_override("font_size", 15)
+			s_name.add_theme_color_override("font_color", COL_CREAM)
+			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_name)
+
+			var s_val := Label.new()
+			s_val.text = str(stat_dict.get("value", ""))
+			s_val.add_theme_font_override("font", _bold_font)
+			s_val.add_theme_font_size_override("font_size", 16)
+			var tone := str(stat_dict.get("tone", "pos"))
+			var val_col := COL_POS if tone == "pos" else (COL_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+			s_val.add_theme_color_override("font_color", val_col)
+			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_val)
+
+	return card
+
 
 func _format_val(val: float, prefix: String, suffix: String, is_int: bool) -> String:
 	if is_int:
 		return "%s%d%s" % [prefix, roundi(val), suffix]
 	return "%s%.2f%s" % [prefix, val, suffix]
 
-func _run_sequence() -> void:
-	_backdrop.modulate.a = 0.0
-	_banner.modulate.a = 0.0
-	_frame.modulate.a = 0.0
-	var intro := create_tween()
-	intro.tween_property(_backdrop, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
-	intro.parallel().tween_property(_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
-	intro.parallel().tween_property(_frame, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE)
-	await intro.finished
+
+func _animate_stat_entry(entry: Dictionary) -> void:
+	var row: Control = entry["row"]
+	var lbl: Label = entry["label"]
+	var target: float = float(entry["target"])
+	var prefix: String = str(entry["prefix"])
+	var suffix: String = str(entry["suffix"])
+	var is_int: bool = bool(entry["is_int"])
+	var is_bold: bool = bool(entry.get("is_bold", false))
+
+	if _skip_requested:
+		row.modulate.a = 1.0
+		lbl.text = _format_val(target, prefix, suffix, is_int)
+		lbl.scale = Vector2.ONE
+		return
+
+	# Reveal the row name first with a soft fade-in
+	var rtw := create_tween()
+	rtw.tween_property(row, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+	await rtw.finished
 	if not is_inside_tree():
 		return
 
-	# Roll up each numeric stat sequentially (Papa's Pizzeria style!)
-	for entry in _anim_entries:
-		var row: Control = entry["row"]
-		var lbl: Label = entry["label"]
-		var target: float = float(entry["target"])
-		var prefix: String = str(entry["prefix"])
-		var suffix: String = str(entry["suffix"])
-		var is_int: bool = bool(entry["is_int"])
-
-		if _skip_requested:
-			row.modulate.a = 1.0
-			lbl.text = _format_val(target, prefix, suffix, is_int)
-			continue
-
-		row.modulate.a = 1.0
-		EventBus.request_sfx.emit("interact")
-		var dur := 0.24 if absf(target) > 0.01 else 0.08
+	EventBus.request_sfx.emit("interact")
+	if absf(target) > 0.01:
+		var dur := 0.34 if is_bold else 0.24
 		var tw := create_tween()
 		tw.tween_method(func(v: float):
 			if is_instance_valid(lbl):
@@ -651,21 +996,136 @@ func _run_sequence() -> void:
 		await tw.finished
 		if not is_inside_tree():
 			return
+		# Subtle scale pop on final landed number
+		lbl.pivot_offset = Vector2(lbl.size.x, lbl.size.y * 0.5)
+		var pop := create_tween()
+		var peak := 1.16 if is_bold else 1.10
+		pop.tween_property(lbl, "scale", Vector2(peak, peak), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		pop.tween_property(lbl, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_SINE)
+		await pop.finished
+	else:
+		lbl.text = _format_val(0.0, prefix, suffix, is_int)
+		await get_tree().create_timer(0.08).timeout
 
-	# Animate mini XP bar fill
+
+func _run_sequence() -> void:
+	_backdrop.modulate.a = 0.0
+	_banner.modulate.a = 0.0
+	_frame.modulate.a = 0.0
+	if is_instance_valid(_mayari_portrait):
+		_mayari_portrait.modulate.a = 0.0
+
+	var intro := create_tween()
+	intro.tween_property(_backdrop, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
+	intro.parallel().tween_property(_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
+	intro.parallel().tween_property(_frame, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE)
+	if is_instance_valid(_mayari_portrait):
+		intro.parallel().tween_property(_mayari_portrait, "modulate:a", 1.0, 0.30).set_trans(Tween.TRANS_SINE)
+	await intro.finished
+	if not is_inside_tree():
+		return
+
+	# 1. Cashflow & Ledger section + one-by-one row reveals
+	if _skip_requested:
+		_cashflow_card.modulate.a = 1.0
+	else:
+		var ctw := create_tween()
+		ctw.tween_property(_cashflow_card, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
+		await ctw.finished
+		if not is_inside_tree():
+			return
+
+	for entry in _cashflow_entries:
+		await _animate_stat_entry(entry)
+		if not is_inside_tree():
+			return
+
+	if is_instance_valid(_cashflow_sep):
+		_cashflow_sep.modulate.a = 1.0
+	if not _net_entry.is_empty():
+		await _animate_stat_entry(_net_entry)
+		if not is_inside_tree():
+			return
+
+	# 2. Store Performance section + one-by-one row reveals + rounded XP bar
+	if _skip_requested:
+		_perf_card.modulate.a = 1.0
+	else:
+		var ptw := create_tween()
+		ptw.tween_property(_perf_card, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
+		await ptw.finished
+		if not is_inside_tree():
+			return
+
+	for entry in _perf_entries:
+		await _animate_stat_entry(entry)
+		if not is_inside_tree():
+			return
+
 	var needed := maxi(1, StoryManager.get_xp_for_next_level())
 	var xp_ratio := 1.0 if StoryManager.player_level >= StoryManager.MAX_PLAYER_LEVEL else clampf(float(StoryManager.player_xp) / float(needed), 0.0, 1.0)
+	if is_instance_valid(_xp_bar_track):
+		_xp_bar_track.modulate.a = 1.0
 	if is_instance_valid(_xp_bar_fill):
+		_xp_bar_fill.visible = xp_ratio > 0.005
 		if _skip_requested:
 			_xp_bar_fill.anchor_right = xp_ratio
-		else:
+		elif xp_ratio > 0.005:
 			var xtw := create_tween()
-			xtw.tween_property(_xp_bar_fill, "anchor_right", xp_ratio, 0.35).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			xtw.tween_property(_xp_bar_fill, "anchor_right", xp_ratio, 0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 			await xtw.finished
 			if not is_inside_tree():
 				return
+	if is_instance_valid(_perf_foot):
+		if _skip_requested:
+			_perf_foot.modulate.a = 1.0
+		else:
+			var ftw := create_tween()
+			ftw.tween_property(_perf_foot, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+			await ftw.finished
+			if not is_inside_tree():
+				return
 
-	# Slam down the Daily Rank Stamp!
+	# 3. Bottom Row: Today's Conditions diamonds + Highlights of the Day one by one
+	if _skip_requested:
+		_bottom_row.modulate.a = 1.0
+	else:
+		var btw := create_tween()
+		btw.tween_property(_bottom_row, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
+		await btw.finished
+		if not is_inside_tree():
+			return
+
+	for d_node in _condition_nodes:
+		if not is_instance_valid(d_node):
+			continue
+		if _skip_requested:
+			d_node.modulate.a = 1.0
+			d_node.scale = Vector2.ONE
+		else:
+			d_node.scale = Vector2(0.55, 0.55)
+			EventBus.request_sfx.emit("interact")
+			var dtw := create_tween().set_parallel(true)
+			dtw.tween_property(d_node, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+			dtw.tween_property(d_node, "scale", Vector2.ONE, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			await dtw.finished
+			if not is_inside_tree():
+				return
+
+	for h_node in _highlight_nodes:
+		if not is_instance_valid(h_node):
+			continue
+		if _skip_requested:
+			h_node.modulate.a = 1.0
+		else:
+			EventBus.request_sfx.emit("interact")
+			var htw := create_tween()
+			htw.tween_property(h_node, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+			await htw.finished
+			if not is_inside_tree():
+				return
+
+	# 4. Slam down the Daily Rank Stamp cleanly to the left of the Cashflow numbers!
 	if is_instance_valid(_stamp_panel):
 		_stamp_panel.visible = true
 		_stamp_panel.pivot_offset = _stamp_panel.size * 0.5
@@ -673,7 +1133,7 @@ func _run_sequence() -> void:
 			_stamp_panel.scale = Vector2.ONE
 			_stamp_panel.modulate.a = 1.0
 		else:
-			_stamp_panel.scale = Vector2(2.3, 2.3)
+			_stamp_panel.scale = Vector2(2.35, 2.35)
 			_stamp_panel.modulate.a = 0.0
 			EventBus.request_sfx.emit("purchase")
 			var stw := create_tween()
@@ -687,6 +1147,7 @@ func _run_sequence() -> void:
 	if is_instance_valid(_close_btn):
 		_close_btn.disabled = false
 
+
 func _input(event: InputEvent) -> void:
 	if _closing:
 		return
@@ -699,11 +1160,13 @@ func _input(event: InputEvent) -> void:
 		_skip_requested = true
 		get_viewport().set_input_as_handled()
 
+
 func _on_close_pressed() -> void:
 	if _closing or not _tally_finished:
 		return
 	_closing = true
 	_close_btn.disabled = true
+	_hide_hover_card()
 	EventBus.request_sfx.emit("drop")
 	var fade := create_tween()
 	fade.tween_property(_root, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)

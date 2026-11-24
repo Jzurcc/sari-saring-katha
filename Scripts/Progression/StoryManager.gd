@@ -1760,7 +1760,15 @@ func _on_story_advanced(character_path: String, new_chapter: int) -> void:
 	var char_name := char_data.character_name if char_data and char_data.character_name != "" else character_path.get_file().get_basename()
 	record_daily_list_entry("story_chapters", char_name, true)
 	if new_chapter > 0 and new_chapter % 3 == 0:
-		record_daily_list_entry("arcs_completed", char_name, false)
+		@warning_ignore("integer_division")
+		var arc_idx := (new_chapter / 3) - 1
+		var arc_label := ""
+		if char_data and arc_idx >= 0 and arc_idx < char_data.character_arcs.size():
+			var arc_res = char_data.character_arcs[arc_idx]
+			if arc_res and str(arc_res.arc_name).strip_edges() != "":
+				arc_label = str(arc_res.arc_name).strip_edges()
+		var arc_entry := "%s's %s" % [char_name, arc_label] if arc_label != "" else "%s's Arc %d" % [char_name, arc_idx + 1]
+		record_daily_list_entry("arcs_completed", arc_entry, false)
 	add_player_xp(20, "Story Chapter")
 
 func get_best_item_for_category(cat: String, current_item: ItemData = null) -> ItemData:
