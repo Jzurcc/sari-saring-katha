@@ -301,9 +301,8 @@ func _pulse_medallion_happy(entry: Dictionary) -> void:
 		glow_tw.tween_property(ring, "modulate", Color(0.82, 1.35, 0.88, 1.0), 0.10).set_trans(Tween.TRANS_SINE)
 		glow_tw.tween_property(ring, "modulate", Color.WHITE, 0.28).set_trans(Tween.TRANS_SINE)
 
-func _pulse_row_rejected(entry: Dictionary, spawn_cross: bool = false) -> void:
+func _pulse_row_rejected(entry: Dictionary, _spawn_cross: bool = false) -> void:
 	var row := entry.get("row") as Control
-	var badge := entry.get("badge_holder") as Control
 	var ring := entry.get("ring_panel") as Panel
 	var items_box := entry.get("items_box") as HBoxContainer
 
@@ -323,35 +322,6 @@ func _pulse_row_rejected(entry: Dictionary, spawn_cross: bool = false) -> void:
 		shake.tween_property(row, "position:x", 16.0, 0.055).as_relative().set_trans(Tween.TRANS_SINE)
 		shake.tween_property(row, "position:x", -12.0, 0.055).as_relative().set_trans(Tween.TRANS_SINE)
 		shake.tween_property(row, "position:x", 5.0, 0.05).as_relative().set_trans(Tween.TRANS_SINE)
-
-	if spawn_cross and is_instance_valid(badge):
-		_spawn_reject_cross(badge)
-
-func _spawn_reject_cross(source_control: Control) -> void:
-	var host := get_node_or_null("Control") as Control
-	if not is_instance_valid(host) or not is_instance_valid(source_control):
-		return
-	var center := source_control.get_global_rect().get_center()
-	var cross := Label.new()
-	cross.text = "✕"
-	cross.add_theme_font_override("font", UIStyle.FONT_INDER)
-	cross.add_theme_font_size_override("font_size", 32)
-	cross.add_theme_color_override("font_color", Color("#FF6B6B"))
-	cross.add_theme_color_override("font_outline_color", Color(0.18, 0.03, 0.03, 0.95))
-	cross.add_theme_constant_override("outline_size", 6)
-	cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cross.z_index = 20
-	cross.position = center - Vector2(12, 20)
-	cross.pivot_offset = Vector2(12, 18)
-	cross.scale = Vector2(0.3, 0.3)
-	host.add_child(cross)
-
-	var tw := cross.create_tween()
-	tw.tween_property(cross, "scale", Vector2(1.18, 1.18), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(cross, "position:y", center.y - 34.0, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_interval(0.18)
-	tw.tween_property(cross, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
-	tw.tween_callback(cross.queue_free)
 
 func _remove_row(customer_name: String, fulfilled_celebration: bool = false, rejected_anim: bool = false) -> void:
 	if not _rows.has(customer_name):
