@@ -836,6 +836,9 @@ func load_save_data(data: Dictionary) -> void:
 	last_tally_tier = str(data.get("last_tally_tier", "balanced"))
 	EventBus.mayari_card_changed.emit(active_mayari_card)
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
+	if has_mayari_visited and _current_display_time < clock.get_closing_hour():
+		LogManager.warn("StoryManager", "Self-healed stale has_mayari_visited=true on daytime save (time=%.2f < closing=%.2f)." % [_current_display_time, clock.get_closing_hour()])
+		has_mayari_visited = false
 	is_clock_running = data.get("is_clock_running", false)
 	wait_limit_time = data.get("wait_limit_time", -1.0)
 	clock.active_time_window_hours = float(data.get("active_time_window_hours", DayClock.CUSTOMER_TIME_WINDOW_HOURS))

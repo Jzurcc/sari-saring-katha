@@ -40,14 +40,16 @@ var is_quitting: bool = false
 
 func _ready() -> void:
 	# --- Save Triggers ---
+	# Use CONNECT_DEFERRED so StoryManager, CharacterProgressionManager, StoreEventManager,
+	# and CustomerSpawner always finish updating their state for the event BEFORE we save.
 	# A) End of day & start of new day
-	EventBus.day_ended.connect(_on_day_ended)
-	EventBus.day_started.connect(_on_day_started)
+	EventBus.day_ended.connect(_on_day_ended, CONNECT_DEFERRED)
+	EventBus.day_started.connect(_on_day_started, CONNECT_DEFERRED)
 	# C) Tier advance
-	EventBus.tier_advanced.connect(_on_tier_advanced)
+	EventBus.tier_advanced.connect(_on_tier_advanced, CONNECT_DEFERRED)
 	# B) Customer departures (any outcome)
-	EventBus.customer_satisfied.connect(_on_customer_left)
-	EventBus.customer_dismissed.connect(_on_customer_left)
+	EventBus.customer_satisfied.connect(_on_customer_left, CONNECT_DEFERRED)
+	EventBus.customer_dismissed.connect(_on_customer_left, CONNECT_DEFERRED)
 
 
 
