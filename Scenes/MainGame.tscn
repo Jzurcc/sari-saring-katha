@@ -45,12 +45,11 @@
 [ext_resource type="PackedScene" uid="uid://c6xk4y8u7j1k2" path="res://Scenes/UI/HelperPrompt.tscn" id="65_helper_ui"]
 [ext_resource type="PackedScene" uid="uid://vxg5jhle4otv" path="res://Scenes/Calendar.tscn" id="67_y6hl6"]
 [ext_resource type="Material" uid="uid://bh2y2miv517vc" path="res://Assets/3D/final store/textures/materials/doorway_1.tres" id="74_01nwf"]
+[ext_resource type="Script" uid="uid://bs2mrmnrytfg6" path="res://Scripts/World/Interactors/BenchProp.gd" id="bench_prop_script"]
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
-[ext_resource type="Script" path="res://Scripts/World/Interactors/BenchProp.gd" id="bench_prop_script"]
-[ext_resource type="Script" path="res://Scripts/World/Interactors/PermitFrameProp.gd" id="permit_frame_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
@@ -70,11 +69,13 @@
 [ext_resource type="Script" uid="uid://dys2m56tkbar6" path="res://Scripts/World/Interactors/NotebookInteractable.gd" id="notebook_script_123"]
 [ext_resource type="PackedScene" uid="uid://cihcdepk6ngy3" path="res://Scenes/UI/NotebookUI.tscn" id="notebook_ui_456"]
 [ext_resource type="Script" uid="uid://oq2ueyehis8b" path="res://Scripts/UI/NowPlayingIndicator.gd" id="nowplaying_scr"]
+[ext_resource type="Script" uid="uid://cwy7ci0b8mor1" path="res://Scripts/World/Interactors/PermitFrameProp.gd" id="permit_frame_script"]
 [ext_resource type="Script" uid="uid://scq6bvdyi7mi" path="res://Scripts/Components/PlayerInteraction.gd" id="pi_scr"]
 [ext_resource type="Script" uid="uid://f458ogc2hvl" path="res://Scripts/UI/SaveIndicator.gd" id="save_scr"]
 [ext_resource type="Resource" uid="uid://wm1gpkw3glu2" path="res://Resources/items/sachetcontainers/Aryel.tres" id="sc_aryel"]
 [ext_resource type="Resource" uid="uid://cv3kc6f1s6724" path="res://Resources/items/sachetcontainers/KneesToes.tres" id="sc_kneestoes"]
 [ext_resource type="Resource" uid="uid://b1a3e2b3icb32" path="res://Resources/items/sachetcontainers/Kopimo.tres" id="sc_kopimo"]
+[ext_resource type="Script" uid="uid://b8gv7xukjjq7n" path="res://Scripts/World/Interactors/StoNinoInteractable.gd" id="sto_nino_script"]
 [ext_resource type="Script" uid="uid://c4nyxybw28ti4" path="res://Scripts/Components/TrashInteractable.gd" id="trash_scr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -315,9 +316,9 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 225.0
-offset_top = -60.0
+offset_top = -44.0
 offset_right = 1125.0
-offset_bottom = -30.0
+offset_bottom = -14.0
 grow_vertical = 0
 script = ExtResource("nowplaying_scr")
 
@@ -613,13 +614,20 @@ texture = ExtResource("31_1r7st")
 transform = Transform3D(-1.0927847e-08, 0, 0.25, 0, 0.25, 0, -0.25, 0, -1.0927847e-08, 4.299846, 4.845353, 0.89582586)
 shape = SubResource("BoxShape3D_cqekc")
 
-[node name="Statue" type="Sprite3D" parent="." unique_id=2103369003]
+[node name="StoNino" type="Area3D" parent="." unique_id=2103369001]
+script = ExtResource("sto_nino_script")
+
+[node name="Statue" type="Sprite3D" parent="StoNino" unique_id=2103369003]
 transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.22742, -0.11046374)
 cast_shadow = 0
 billboard = 2
 shaded = true
 alpha_cut = 1
 texture = ExtResource("32_o6tew")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StoNino" unique_id=2103369004]
+transform = Transform3D(-1.2988269e-08, 0.041347455, 0.297137, 1.8073546e-09, 0.297137, -0.041347455, -0.29999998, 0, -1.3113415e-08, 4.3776584, 5.22742, -0.11046374)
+shape = SubResource("BoxShape3D_cqekc")
 
 [node name="Frame" type="Sprite3D" parent="." unique_id=1757741366]
 transform = Transform3D(-7.616596e-09, -0.032190587, 0.17709818, -1.3833861e-09, 0.17709818, 0.032190587, -0.18, 1.0418866e-12, -7.741208e-09, 4.3776584, 4.9098506, 2.1249723)
@@ -798,8 +806,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9007449, 3.6493435, -4.878
 shape = SubResource("BoxShape3D_ptfdn")
 
 [node name="Bench" type="MeshInstance3D" parent="." unique_id=1505288669]
-transform = Transform3D(0.01134886, -0.0001959394, -1.4154468e-09, -1.0147491e-09, 2.7609381e-09, -0.015440853, 0.00014403024, 0.015439039, 2.7432987e-09, -6.9875455, 0.72900146, -3.6162493)
-visible = false
+transform = Transform3D(0.01134886, -0.0001959394, -1.4154468e-09, -1.0147491e-09, 2.7609381e-09, -0.015440853, 0.00014403024, 0.015439039, 2.7432987e-09, -6.7510996, 0.7693781, -3.6162493)
 mesh = SubResource("ArrayMesh_0pcvt")
 skeleton = NodePath("")
 script = ExtResource("bench_prop_script")
