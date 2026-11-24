@@ -11,6 +11,12 @@ var is_fading_in: bool = true
 var base_scale: Vector3 = Vector3.ONE
 var in_flight_count: int = 0
 
+# Optional curved projectile launch from Mario's tricycle into the store
+var use_arc_launch: bool = false
+var launch_from_pos: Vector3 = Vector3.ZERO
+var launch_target_pos: Vector3 = Vector3.ZERO
+var launch_delay: float = 0.0
+
 @onready var sprite: Sprite3D = $Sprite3D
 
 func _ready() -> void:
@@ -42,11 +48,57 @@ func _ready() -> void:
 		sprite.scale = base_scale * random_scale_factor
 		base_scale = sprite.scale
 
-		sprite.modulate.a = 0.0
-		var tween = create_tween()
-		tween.tween_property(sprite, "modulate:a", 1.0, 1.0)
-		await tween.finished
-		is_fading_in = false
+		if use_arc_launch:
+			_play_arc_launch()
+		else:
+			sprite.modulate.a = 0.0
+			var tween = create_tween()
+			tween.tween_property(sprite, "modulate:a", 1.0, 1.0)
+			await tween.finished
+			is_fading_in = false
+
+func _play_arc_launch() -> void:
+	is_fading_in = true
+	global_position = launch_from_pos
+	sprite.modulate.a = 0.0
+	sprite.scale = base_scale * 0.55
+
+	if launch_delay > 0.0:
+		await get_tree().create_timer(launch_delay).timeout
+		if not is_inside_tree():
+			return
+
+	var start_pos := launch_from_pos
+	var end_pos := launch_target_pos
+	var duration := randf_range(0.55, 0.68)
+	var arc_height := randf_range(2.1, 2.8)
+
+	var arc_tween := create_tween()
+	arc_tween.tween_method(func(t: float):
+		if not is_instance_valid(self) or not is_instance_valid(sprite):
+			return
+		var xz_pos := start_pos.lerp(end_pos, t)
+		var y_base := lerpf(start_pos.y, end_pos.y, t)
+		var y_arc := sin(t * PI) * arc_height
+		global_position = Vector3(xz_pos.x, y_base + y_arc, xz_pos.z)
+		sprite.modulate.a = clampf(t / 0.16, 0.0, 1.0)
+		sprite.scale = base_scale * lerpf(0.55, 1.0, minf(1.0, t * 1.25))
+	, 0.0, 1.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+	await arc_tween.finished
+	if not is_inside_tree() or not is_instance_valid(sprite):
+		return
+
+	global_position = end_pos
+	sprite.modulate.a = 1.0
+	if EventBus.has_signal("request_sfx"):
+		EventBus.request_sfx.emit("plastic")
+
+	# Juicy squash-and-stretch landing bounce
+	sprite.scale = base_scale * Vector3(1.26, 0.72, 1.26)
+	var land_tw := create_tween()
+	land_tw.tween_property(sprite, "scale", base_scale, 0.30).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	is_fading_in = false
 
 func _apply_outline(color: Color) -> void:
 	super._apply_outline(color)

@@ -614,6 +614,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	
 	# Group items into batches of 5
 	var batch_size = 5
+	var launch_origin: Vector3 = (_delivery_sprite.global_position + Vector3(0, 0.4, 0)) if is_instance_valid(_delivery_sprite) else TARGET_POS
+	var bag_idx := 0
 	for i in range(0, final_bag_items.size(), batch_size):
 		var batch = final_bag_items.slice(i, i + batch_size)
 		var offset := Vector3(
@@ -624,9 +626,13 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 		var bag_pos: Vector3 = base_marker_pos + offset
 		if spawn_in_tree and _is_in_main_game():
 			var bag = plastic_scene.instantiate()
-			get_tree().current_scene.add_child(bag)
 			bag.items = batch
-			bag.global_position = bag_pos
+			bag.use_arc_launch = true
+			bag.launch_from_pos = launch_origin
+			bag.launch_target_pos = bag_pos
+			bag.launch_delay = bag_idx * 0.14
+			get_tree().current_scene.add_child(bag)
+			bag_idx += 1
 		else:
 			var item_paths: Array = []
 			for batch_item in batch:
