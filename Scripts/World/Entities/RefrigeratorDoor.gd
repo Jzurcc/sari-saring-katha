@@ -26,6 +26,8 @@ var _tween: Tween
 var _outline_mat: ShaderMaterial
 var _pivot: Node3D
 var _active_mists: Array[CPUParticles3D] = []
+var _wind_gusts_remaining: int = 0
+var _wind_timer: float = 0.0
 
 # ================================================================================
 func _ready() -> void:
@@ -33,10 +35,38 @@ func _ready() -> void:
 	_resolve_pivot()
 	_build_outline_material()
 	set_process(true)
+	EventBus.day_started.connect(_on_day_started)
+	EventBus.mayari_card_changed.connect(_on_mayari_card_changed)
+	_schedule_disembodied_wind()
 	# Sync initial coldness state to HUD
 	EventBus.fridge_coldness_changed.emit(StoryManager.fridge_coldness, is_open, StoryManager.is_fridge_warm)
 
+func _on_day_started(_day: int) -> void:
+	_schedule_disembodied_wind()
+
+func _on_mayari_card_changed(_card_id: String) -> void:
+	_schedule_disembodied_wind()
+
+func _schedule_disembodied_wind() -> void:
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
+		_wind_gusts_remaining = randi_range(1, 2)
+		_wind_timer = randf_range(35.0, 75.0)
+	else:
+		_wind_gusts_remaining = 0
+		_wind_timer = 0.0
+
 func _process(delta: float) -> void:
+	# Disembodied Wind Moon Card: 1-2 eerie gusts pop the fridge open during the day
+	if _wind_gusts_remaining > 0 and StoryManager.is_clock_running and Dialogic.current_timeline == null:
+		_wind_timer -= delta
+		if _wind_timer <= 0.0:
+			if not is_open:
+				_wind_gusts_remaining -= 1
+				_wind_timer = randf_range(55.0, 95.0)
+				_trigger_disembodied_wind_gust()
+			else:
+				_wind_timer = 12.0
+
 	var prev_cold := StoryManager.fridge_coldness
 	var prev_warm := StoryManager.is_fridge_warm
 
@@ -88,6 +118,16 @@ func on_hover(is_hovered: bool) -> void:
 
 
 func on_interact() -> void:
+	toggle_open()
+
+func _trigger_disembodied_wind_gust() -> void:
+	if is_open:
+		return
+	LogManager.info("RefrigeratorDoor", "Disembodied Wind gust popped the refrigerator door open!")
+	EventBus.request_camera_shake.emit(0.06, 0.25)
+	if get_tree():
+		get_tree().call_group("store_cats", "play_startled_meow")
+	EventBus.show_notification.emit("Disembodied Wind!", "An eerie gust swung your fridge door open!", "refrigerator_open")
 	toggle_open()
 
 # Close open

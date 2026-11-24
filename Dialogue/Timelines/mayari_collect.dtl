@@ -1,29 +1,42 @@
 label Greeting
 label CollectionIntro
-ReynaMayari: I am here to collect today's installment.
-ReynaMayari: The quota for today is {Global_TodayQuota} pesos.
+ReynaMayari: I am here for tonight's tally.
+ReynaMayari: The remaining balance on Lola's ledger is [color=#b0c4de]{Global_TallyRemaining}[/color] of [color=#b0c4de]{Global_TallyGoal}[/color] pesos.
+ReynaMayari: Tonight, I expect at least [color=#b0c4de]{Global_TallyMin}[/color] pesos. Decide what you will offer. [pause=0.4]
+[signal arg="open_tally_offer"]
+[wait time="0.5"]
+[end_timeline]
 
-
-ReynaMayari: Let's see what we have in the drawer... [pause=1.0]
-[signal arg="deduct_quota"]
-if {Global_HasEnoughMoney} == 1.0:
-	jump Success
-else:
-	jump Angry
+label Generous
+ReynaMayari: ...You offered [color=#f5d76e]{Global_TallyOffer}[/color] pesos. More than I asked. [pause=0.5]
+ReynaMayari: Unusual for a mortal. [pause=0.3] The silver spires remember generosity.
+if {Global_QuotaDay} == 2.0:
+	ReynaMayari: Actually, I've been meaning to see what your store offers by daylight.
+	ReynaMayari: Expect a visit from me soon. [pause=0.4]
+ReynaMayari: Until tomorrow. [pause=0.3]
+[end_timeline]
 
 label Success
 ReynaMayari: I see you've been working hard. [pause=0.4]
-ReynaMayari: The installment has been collected.
-ReynaMayari: Keep this up, and your grandmother's debt will be a memory in no time. [pause=0.5]
+ReynaMayari: Your offering has been recorded in the Silver Ledger.
+ReynaMayari: Keep this up, and your grandmother's pact will be settled in no time. [pause=0.5]
 if {Global_QuotaDay} == 2.0:
 	ReynaMayari: Actually, I've been meaning to check what your store offers.
 	ReynaMayari: I think I will see what you have here tomorrow. [pause=0.5]
 ReynaMayari: Until tomorrow. [pause=0.3]
 [end_timeline]
 
+label Shortfall
 label Angry
 ReynaMayari: [wave blue]I am disappointed.[/wave] [pause=0.5]
-ReynaMayari: Your earnings for today are insufficient to cover your obligations.
+ReynaMayari: Tonight's offering falls short of what the ledger expects.
 ReynaMayari: Do not think my patience is infinite. [pause=0.4]
-ReynaMayari: Expect... [pause=0.3] complications if this happens again.
+ReynaMayari: Expect... [pause=0.3] a mild chill over Karimlan tomorrow.
+[end_timeline]
+
+label LedgerCleared
+ReynaMayari: It is done. [pause=0.5]
+ReynaMayari: Every last peso of your bloodline's tally has been settled.
+ReynaMayari: As Queen of Biringan, I declare the pact sealed and renewed. Karimlan rests under my protection. [pause=0.4]
+ReynaMayari: Keep your coins from now on, child. [pause=0.3] I will... see myself out.
 [end_timeline]

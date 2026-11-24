@@ -30,6 +30,20 @@ func get_actual_items() -> Dictionary:
 func get_item_count(item: ItemData) -> int:
 	return selected_items.get(item, 0)
 
+func get_effective_unit_price(item: ItemData) -> float:
+	if not item:
+		return 0.0
+	var is_upg: bool = item.get_meta("is_upgrade", false) \
+		or item.get_meta("is_fridge_upgrade", false) \
+		or item.get_meta("is_cat_upgrade", false) \
+		or item.get_meta("is_trash_upgrade", false)
+	if is_upg:
+		return item.price
+	var mult := StoryManager.get_restock_discount_multiplier()
+	if mult < 0.999:
+		return maxf(1.0, snapped(item.price * mult, 0.5))
+	return item.price
+
 func get_total_cost() -> float:
 	return total_price
 
@@ -108,7 +122,7 @@ func can_add(item: ItemData, player_money: float) -> Dictionary:
 			"sfx": "error"
 		}
 
-	if total_price + item.price > player_money:
+	if total_price + get_effective_unit_price(item) > player_money:
 		return {
 			"ok": false,
 			"error": "insufficient_funds",
@@ -169,7 +183,7 @@ func add_item(item: ItemData) -> void:
 	if not item:
 		return
 	selected_items[item] = selected_items.get(item, 0) + 1
-	total_price += item.price
+	total_price += get_effective_unit_price(item)
 	order_changed.emit()
 
 ## Decrements or removes [param item] from the basket.
@@ -198,16 +212,16 @@ func remove_item(item: ItemData) -> Dictionary:
 						cascaded.append(basket_item)
 			
 			for rip in cascaded:
-				total_price -= rip.price
+				total_price = maxf(0.0, total_price - get_effective_unit_price(rip))
 				selected_items.erase(rip)
 		
-		total_price -= item.price
+		total_price = maxf(0.0, total_price - get_effective_unit_price(item))
 		selected_items.erase(item)
 		order_changed.emit()
 		return {"is_upgrade": is_upgrade, "new_count": 0, "removed": true, "cascaded": cascaded}
 
 	selected_items[item] = new_count
-	total_price -= item.price
+	total_price = maxf(0.0, total_price - get_effective_unit_price(item))
 	order_changed.emit()
 	return {"is_upgrade": false, "new_count": new_count, "removed": false, "cascaded": []}
 

@@ -486,6 +486,28 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items := _pending_delivery_items.duplicate()
 	_pending_delivery_items.clear()
 
+	# Silver-Touched Bag Moon Card: slip 1-2 free bonus units of ordered regular items into delivery!
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG):
+		var eligible_regular: Array[ItemData] = []
+		for it in items.keys():
+			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false):
+				continue
+			if DispenserContainerItem.is_container_prop(it):
+				continue
+			eligible_regular.append(it)
+		if not eligible_regular.is_empty():
+			var bonus_count := randi_range(1, 2)
+			var granted := 0
+			for _b in range(bonus_count):
+				var chosen: ItemData = eligible_regular.pick_random()
+				var current_total := InventoryManager.get_stock(chosen) + int(items[chosen])
+				if current_total < InventoryManager.get_max_stock(chosen):
+					items[chosen] = int(items[chosen]) + 1
+					granted += 1
+			if granted > 0 and spawn_in_tree:
+				LogManager.info("MarioManager", "Silver-Touched Bag granted +%d bonus item(s)!" % granted)
+				EventBus.show_notification.emit("Silver-Touched Bag!", "+%d free bonus item(s) slipped into your bag!" % granted, "purchase")
+
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():

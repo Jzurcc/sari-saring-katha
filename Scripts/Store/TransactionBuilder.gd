@@ -242,6 +242,8 @@ static func build_transaction_context(
 			var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
 			var prefer_hint: bool = data.has_riddle_preference()
 			var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
+			if transaction.transaction_type == TransactionContext.Type.PURCHASE and sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS):
+				target_item_count = maxi(target_item_count, randi_range(2, 3))
 
 			# Build general store pool (always filtering out excluded categories)
 			var pool: Array[ItemData] = []
@@ -368,6 +370,7 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		var tolerance: int = 0
 		if is_instance_valid(StoreEventManager):
 			tolerance = StoreEventManager.get_item_tolerance_offset(item)
+		tolerance += sm.get_mayari_tolerance_offset()
 		var effective_step: int = item_step - tolerance
 		if effective_step > max_effective_step:
 			max_effective_step = effective_step
@@ -441,12 +444,25 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	var path: String = data.resource_path
 	var chapter: int = CharacterProgressionManager.get_chapter(path)
 
+	# Once the ₱750 ledger is permanently sealed, stop nightly collections
+	# (except one final visit for Chapter 9 epilogue if not yet seen).
+	if sm.is_tally_cleared():
+		if chapter == 8 and chapter < data.max_story_chapters:
+			transaction.transaction_type = TransactionContext.Type.STORY
+			transaction.timeline = data.story_timeline
+			DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
+			sm.has_mayari_visited = true
+			CharacterProgressionManager.record_encounter(path)
+			LogManager.info("StoryManager", "Mayari EPILOGUE visit (Chapter 9: Patron of the Moon).")
+			return transaction
+		return null
+
 	var should_play_story: bool = false
 	if not sm.is_mayari_met:
 		should_play_story = true
 		sm.is_mayari_met = true
 		LogManager.info("StoryManager", "Mayari DEBUT nightly visit.")
-	elif sm.last_mayari_collection_successful and chapter < data.max_story_chapters:
+	elif sm.last_mayari_collection_successful and chapter < 7 and chapter < data.max_story_chapters:
 		should_play_story = true
 		LogManager.info("StoryManager", "Mayari STORY nightly visit (Chapter %d)." % chapter)
 

@@ -58,6 +58,11 @@ func roll_daily_events() -> void:
 		events_changed.emit(_active_events)
 		return
 
+	if is_instance_valid(StoryManager) and StoryManager.has_mayari_card(MayariCardRegistry.CARD_QUIET_ECLIPSE):
+		LogManager.info("StoreEventManager", "Quiet Eclipse Moon Card active — no market events today.")
+		events_changed.emit(_active_events)
+		return
+
 	if randf() > DAILY_EVENT_CHANCE:
 		LogManager.info("StoreEventManager", "Quiet day — no market event rolled today.")
 		events_changed.emit(_active_events)

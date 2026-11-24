@@ -41,6 +41,70 @@ var has_mayari_visited: bool = false
 var is_mayari_debt_active: bool = true
 var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
+
+# --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
+const TALLY_GOAL := 750.0
+const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 50.0, 60.0, 75.0, 90.0, 105.0, 120.0]
+const TALLY_GEN_SCHEDULE: Array[float] = [65.0, 80.0, 95.0, 115.0, 135.0, 155.0, 175.0]
+
+var tally_total_paid: float = 0.0
+var tally_sufficient_nights: int = 0
+var active_mayari_card: String = ""
+var pending_mayari_card: String = ""
+var last_tally_tier: String = "balanced"
+
+func get_tally_remaining() -> float:
+	return maxf(0.0, TALLY_GOAL - tally_total_paid)
+
+func is_tally_cleared() -> bool:
+	return (not is_mayari_debt_active) or tally_total_paid >= TALLY_GOAL - 0.01
+
+func get_nightly_min_tally() -> float:
+	var rem := get_tally_remaining()
+	if rem <= 0.01:
+		return 0.0
+	var idx := clampi(tally_sufficient_nights, 0, TALLY_MIN_SCHEDULE.size() - 1)
+	return minf(TALLY_MIN_SCHEDULE[idx], rem)
+
+func get_nightly_generous_tally() -> float:
+	var rem := get_tally_remaining()
+	if rem <= 0.01:
+		return 0.0
+	var idx := clampi(tally_sufficient_nights, 0, TALLY_GEN_SCHEDULE.size() - 1)
+	return minf(TALLY_GEN_SCHEDULE[idx], rem)
+
+func evaluate_tally_tier(offer: float) -> String:
+	if tally_total_paid + offer >= TALLY_GOAL - 0.01:
+		return "cleared"
+	if offer >= get_nightly_generous_tally() - 0.01:
+		return "generous"
+	if offer >= get_nightly_min_tally() - 0.01:
+		return "balanced"
+	return "shortfall"
+
+func has_mayari_card(card_id: String) -> bool:
+	return active_mayari_card != "" and active_mayari_card == card_id
+
+func get_mayari_tolerance_offset() -> int:
+	if has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
+		return 1
+	if has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH) or has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
+		return -1
+	return 0
+
+func get_restock_discount_multiplier() -> float:
+	if has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
+		return 0.85
+	if has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
+		return 0.90
+	return 1.0
+
+func get_effective_closing_hour() -> float:
+	if has_mayari_card(MayariCardRegistry.CARD_MOON_HOLDS_SKY):
+		return 22.0
+	if has_mayari_card(MayariCardRegistry.CARD_EARLY_DUSK):
+		return 18.5
+	return CLOSING_HOUR
 var customer_debts: Dictionary = {}
 var pending_debts: Array[Dictionary] = [] # [{ "customer_path": String, "amount": float }]
 var _save_requested: bool = false
@@ -94,11 +158,17 @@ var _fridge_upgrade_item_cache: Dictionary = {}
 
 func get_fridge_drain_rate() -> float:
 	var lvl := clampi(fridge_upgrade_level, 0, FRIDGE_UPGRADE_SPECS.size() - 1)
-	return 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["drain_sec"])
+	var rate := 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["drain_sec"])
+	if has_mayari_card(MayariCardRegistry.CARD_FROST_OF_BIRINGAN):
+		rate *= 0.60
+	return rate
 
 func get_fridge_regen_rate() -> float:
 	var lvl := clampi(fridge_upgrade_level, 0, FRIDGE_UPGRADE_SPECS.size() - 1)
-	return 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["regen_sec"])
+	var rate := 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["regen_sec"])
+	if has_mayari_card(MayariCardRegistry.CARD_FROST_OF_BIRINGAN):
+		rate *= 1.40
+	return rate
 
 func get_fridge_upgrade_item(level: int) -> ItemData:
 	var lvl := clampi(level, 1, FRIDGE_UPGRADE_SPECS.size() - 1)
@@ -293,8 +363,23 @@ func _on_day_started(new_day: int) -> void:
 	_cache_node_refs()
 	day = new_day
 	has_mayari_visited = false
+	# Promote last night's drafted Moon Card to active for today (or clear if none)
+	active_mayari_card = pending_mayari_card
+	pending_mayari_card = ""
+	EventBus.mayari_card_changed.emit(active_mayari_card)
+	if active_mayari_card != "":
+		var card := MayariCardRegistry.get_card(active_mayari_card)
+		if not card.is_empty():
+			var prefix := "Biringan's Favor" if MayariCardRegistry.is_favor(active_mayari_card) else "Biringan's Chill"
+			LogManager.info("StoryManager", "Active Moon Card for Day %d: %s (%s)" % [day, str(card["title"]), prefix])
+			call_deferred("_announce_active_mayari_card", prefix, str(card["title"]), str(card["tagline"]))
 	LogManager.info("StoryManager", "Day %d starts." % day)
 	clock.on_day_started()
+
+func _announce_active_mayari_card(prefix: String, title: String, tagline: String) -> void:
+	await get_tree().create_timer(1.2).timeout
+	if active_mayari_card != "":
+		EventBus.show_notification.emit("%s: %s" % [prefix, title], tagline, "interact")
 
 
 func advance_tier(source: String = "Manual") -> void:
@@ -416,6 +501,11 @@ func get_save_data() -> Dictionary:
 		"is_mayari_debt_active": is_mayari_debt_active,
 		"is_mayari_met": is_mayari_met,
 		"last_mayari_collection_successful": last_mayari_collection_successful,
+		"tally_total_paid": tally_total_paid,
+		"tally_sufficient_nights": tally_sufficient_nights,
+		"active_mayari_card": active_mayari_card,
+		"pending_mayari_card": pending_mayari_card,
+		"last_tally_tier": last_tally_tier,
 		"current_display_time": clock.get_effective_display_time(),
 		"is_clock_running": is_clock_running or clock._is_fast_forwarding,
 		"wait_limit_time": wait_limit_time,
@@ -450,6 +540,12 @@ func load_save_data(data: Dictionary) -> void:
 	is_mayari_debt_active = data.get("is_mayari_debt_active", true)
 	is_mayari_met = data.get("is_mayari_met", false)
 	last_mayari_collection_successful = data.get("last_mayari_collection_successful", true)
+	tally_total_paid = clampf(float(data.get("tally_total_paid", 0.0)), 0.0, TALLY_GOAL)
+	tally_sufficient_nights = maxi(0, int(data.get("tally_sufficient_nights", 0)))
+	active_mayari_card = str(data.get("active_mayari_card", ""))
+	pending_mayari_card = str(data.get("pending_mayari_card", ""))
+	last_tally_tier = str(data.get("last_tally_tier", "balanced"))
+	EventBus.mayari_card_changed.emit(active_mayari_card)
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
 	is_clock_running = data.get("is_clock_running", false)
 	wait_limit_time = data.get("wait_limit_time", -1.0)
@@ -524,6 +620,12 @@ func reset_state() -> void:
 	is_mayari_debt_active = true
 	is_mayari_met = false
 	last_mayari_collection_successful = true
+	tally_total_paid = 0.0
+	tally_sufficient_nights = 0
+	active_mayari_card = ""
+	pending_mayari_card = ""
+	last_tally_tier = "balanced"
+	EventBus.mayari_card_changed.emit("")
 	_last_tier_unlocked_notification = 0
 	_pending_tier_advance_source = ""
 	_last_notified_tier = 0

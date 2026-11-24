@@ -374,7 +374,13 @@ func _update_detail_panel(item: ItemData) -> void:
 	detail_icon.custom_minimum_size = detail_icon_size
 	detail_name.text = item.item_name
 	detail_name.add_theme_font_size_override("font_size", detail_name_font_size)
-	detail_price.text = "₱%.2f" % item.price
+	var eff_price := order.get_effective_unit_price(item)
+	var disc_mult := StoryManager.get_restock_discount_multiplier()
+	if disc_mult < 0.999 and not item.get_meta("is_upgrade", false):
+		var pct := int(roundf((1.0 - disc_mult) * 100.0))
+		detail_price.text = "₱%.2f (%d%% OFF!)" % [eff_price, pct]
+	else:
+		detail_price.text = "₱%.2f" % eff_price
 	detail_price.add_theme_font_size_override("font_size", detail_price_font_size)
 	add_btn.visible = true
 

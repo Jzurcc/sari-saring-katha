@@ -488,6 +488,8 @@ func _on_wave_cleared() -> void:
 			return
 
 	var delay := randf_range(0.4, 1.4)
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
+		delay *= 0.80
 	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 

@@ -26,10 +26,11 @@ if {Transaction_Chapter} == 0.0:
 		ReynaMayari: It is not a debt in the way you understand it. [pause=0.5] It is more like... a subscription.
 		ReynaMayari: Paid nightly. In full. [pause=0.4] For as long as the store stands and someone of her line keeps it.
 		ReynaMayari: The remaining balance is considerable. But it is not unmanageable. [pause=0.3] Your grandmother made sure of that.
-	ReynaMayari: The outstanding tally for this cycle is [color=#b0c4de]{Global_TodayQuota}[/color] pesos.
-	ReynaMayari:  I will collect it from the drawer now. I will know if the amount is short.
-	ReynaMayari:  Do not be frightened. She was not. [pause=0.3] And you have her eyes.
-	[signal arg="deduct_quota"]
+	ReynaMayari: The remaining tally on Lola's ledger stands at [color=#b0c4de]{Global_TallyGoal}[/color] pesos.
+	ReynaMayari: Each night, you will decide what to offer. Tonight, I expect at least [color=#b0c4de]{Global_TallyMin}[/color] pesos.
+	ReynaMayari: Do not be frightened. She was not. [pause=0.3] And you have her eyes.
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
@@ -40,7 +41,8 @@ elif {Transaction_Chapter} == 1.0:
 	ReynaMayari: .[pause=0.6].[pause=0.6].[pause=1]I see you have restocked the cold shelf.
 	ReynaMayari: [wave]Irrelevant.[/wave] [pause=1] The drink of mortals is of no interest to the Queen of the Silver Spires.
 	ReynaMayari: Produce the tally. [pause=0.4] Tonight's collection does not wait.
-	[signal arg="deduct_quota"]
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
@@ -52,7 +54,8 @@ elif {Transaction_Chapter} == 2.0:
 	ReynaMayari: .[pause=0.7] .[pause=0.7] .[pause=1] [wave]It has no flavor whatsoever.[/wave]
 	ReynaMayari:  [speed=2] Not that flavor is of any consequence to a Queen.
 	ReynaMayari: This is purely an observation. Pay the tally. Move on.
-	[signal arg="deduct_quota"]
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
@@ -64,7 +67,8 @@ elif {Transaction_Chapter} == 3.0:
 	ReynaMayari: Every coin you pay keeps the boundary intact. [pause=0.5] You are not just running a store, child. You are keeping a wall standing.
 	ReynaMayari:  ...Those [color=#0f6e2f]{Transaction_ItemWants}[/color] on the third shelf. They are very... [pause=0.4] geometrically interesting for mortal confections.
 	ReynaMayari:  I am studying them for strategic purposes. Produce the tally.
-	[signal arg="deduct_quota"]
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
@@ -76,7 +80,8 @@ elif {Transaction_Chapter} == 4.0:
 	ReynaMayari:  ...You may be wondering why I collect the tally personally instead of dispatching a herald.
 	ReynaMayari: The answer has nothing to do with curiosity. [pause=0.4] A queen must verify the collection herself. It is protocol.
 	ReynaMayari:  That is the only reason I am here. Provide the tally. Immediately.
-	[signal arg="deduct_quota"]
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
@@ -90,7 +95,8 @@ elif {Transaction_Chapter} == 5.0:
 	ReynaMayari: But then he held up one of your [color=#0f6e2f]{Transaction_ItemWants}[/color] and said it was "for the pretty moon lady."
 	ReynaMayari:  I accepted the tribute. [pause=0.3] Because it was politically appropriate to do so. Not for any other reason.
 	ReynaMayari: Produce tonight's tally before I reconsider sparing you from the disembodied wind.
-	[signal arg="deduct_quota"]
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 6.0:
@@ -103,7 +109,8 @@ elif {Transaction_Chapter} == 6.0:
 	ReynaMayari: The silence of Biringan is dignified. The eternal moonlight is restful. The Black Rice is... it is food.
 	ReynaMayari:  ...Are those [color=#0f6e2f]{Transaction_ItemWants}[/color] a new stock?
 	ReynaMayari:  Also irrelevant. Tally. Now. Let us finish this.
-	[signal arg="deduct_quota"]
+	[signal arg="open_tally_offer"]
+	[wait time="0.5"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7.0:
@@ -136,8 +143,14 @@ elif {Transaction_Chapter} == 8.0:
 
 label SuccessFirst
 ReynaMayari:  ...Acceptable.
-ReynaMayari: The first installment has been collected and formally recorded in the ledger of Biringan.
+ReynaMayari: The first offering has been recorded in the ledger of Biringan.
 ReynaMayari:  Do not be late next time.
+[signal arg="story_success"]
+[end_timeline]
+
+label Generous
+ReynaMayari:  You gave more than required. [pause=0.5] ...That is unusual for a mortal.
+ReynaMayari:  It is noted in silver ink. May the moon favor your store tomorrow.
 [signal arg="story_success"]
 [end_timeline]
 
@@ -147,17 +160,28 @@ if {Transaction_SatisfyVar} <= 33:
 elif {Transaction_SatisfyVar} <= 66:
 	ReynaMayari:  A passable offering. [pause=0.3] The numbers are satisfied, if not by much.
 else:
-	ReynaMayari:  You gave more than required. [pause=0.5] ...That is unusual for a mortal. [pause=0.3] It is noted.
+	ReynaMayari:  You honor the pact well, child. [pause=0.4] The ledger records your effort.
 [signal arg="story_success"]
 [end_timeline]
 
+label Shortfall
 label Angry
 if {Transaction_WrongItemVar} <= 50:
 	ReynaMayari: [wave blue]The ledger does not tolerate shortfalls.[/wave] [pause=0.5]
-	ReynaMayari: This is insufficient. Return with what remains. I am not yet done here.
+	ReynaMayari: This is insufficient. Expect a chill over Karimlan tomorrow.
 else:
 	ReynaMayari: [wave blue]This is an affront to the silver spires.[/wave] [pause=0.5]
-	ReynaMayari: The debt grows heavier when you fail to meet your obligations, child. Do not test me.
+	ReynaMayari: Mind the ledger tomorrow, child. Do not test my patience.
+[end_timeline]
+
+label LedgerCleared
+ReynaMayari:  It is done.
+ReynaMayari: The debt of your bloodline is cleared. [pause=0.4] As Queen of Biringan, I declare the pact sealed and renewed.
+ReynaMayari: Whatever walks the forests at night — the hollow, the hungry, the formless — they will not cross your threshold.
+ReynaMayari: You have earned your grandmother's peace. And I... [pause=0.5] I have fulfilled my duty.
+ReynaMayari:  ...The protection requires periodic verification, of course.
+ReynaMayari: I will need to conduct on-site inspections. At irregular intervals. [pause=0.3] It is a very thorough pact.
+ReynaMayari:  Keep your coins from now on. [pause=0.3] I will... see myself out.
 [signal arg="story_success"]
 [end_timeline]
 

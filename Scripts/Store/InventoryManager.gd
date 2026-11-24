@@ -326,6 +326,8 @@ func start_delivery_cooldown() -> void:
 		customers_needed_for_delivery = player.debug_delivery_cooldown
 	else:
 		customers_needed_for_delivery = 2
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
+		customers_needed_for_delivery = maxi(0, customers_needed_for_delivery - 1)
 
 # ─── Persistence ──────────────────────────────────────────────────────────────
 

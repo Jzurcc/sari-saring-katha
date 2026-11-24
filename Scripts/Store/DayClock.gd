@@ -70,8 +70,14 @@ func on_customer_arrived(is_visit: bool = false) -> void:
 func is_fast_forwarding() -> bool:
 	return _is_fast_forwarding
 
+func get_closing_hour() -> float:
+	if is_instance_valid(_tree_owner) and _tree_owner.has_method("get_effective_closing_hour"):
+		return _tree_owner.get_effective_closing_hour()
+	return CLOSING_HOUR
+
 func on_customer_dismissed() -> void:
 	is_customer_present = false
+	var closing := get_closing_hour()
 	var limit_time := wait_limit_time
 	var window_hours := active_time_window_hours
 	var was_paused := was_paused_by_limit
@@ -79,10 +85,10 @@ func on_customer_dismissed() -> void:
 	wait_limit_time = -1.0
 	active_time_window_hours = CUSTOMER_TIME_WINDOW_HOURS
 
-	if current_display_time >= CLOSING_HOUR:
+	if current_display_time >= closing:
 		if is_clock_running:
 			set_clock_running(false)
-			LogManager.info("DayClock", "Grace period ended. Pausing clock for Closing Time.")
+			LogManager.info("DayClock", "Grace period ended. Pausing clock for Closing Time (%.1fh)." % closing)
 		if current_display_time > HARD_STOP_HOUR:
 			current_display_time = HARD_STOP_HOUR
 			apply_display_time(HARD_STOP_HOUR)
@@ -97,7 +103,7 @@ func on_customer_dismissed() -> void:
 	if limit_time > 0.0:
 		var fast_forward_hours := window_hours / 2.0
 		var half_window_target := limit_time - (window_hours - fast_forward_hours)
-		var clamped_target := minf(half_window_target, CLOSING_HOUR)
+		var clamped_target := minf(half_window_target, closing)
 		if clamped_target > current_display_time + 0.02:
 			_start_fast_forward(clamped_target)
 		else:
@@ -139,10 +145,11 @@ func _on_fast_forward_finished(target_time: float) -> void:
 	current_display_time = target_time
 	apply_display_time(target_time)
 
-	if current_display_time >= CLOSING_HOUR:
+	var closing := get_closing_hour()
+	if current_display_time >= closing:
 		set_clock_running(false)
 		if not is_customer_present:
-			LogManager.info("DayClock", "Fast-forward reached Closing Time (8 PM). Pausing clock.")
+			LogManager.info("DayClock", "Fast-forward reached Closing Time (%.1fh). Pausing clock." % closing)
 			EventBus.closing_time_reached.emit()
 	else:
 		set_clock_running(true)
@@ -156,7 +163,7 @@ func _cancel_fast_forward(snap_to_target: bool) -> void:
 	if _is_fast_forwarding and snap_to_target and _fast_forward_target > current_display_time:
 		current_display_time = _fast_forward_target
 		apply_display_time(current_display_time)
-		set_clock_running(current_display_time < CLOSING_HOUR)
+		set_clock_running(current_display_time < get_closing_hour())
 	_is_fast_forwarding = false
 	_fast_forward_target = -1.0
 	if was_running:
@@ -168,7 +175,7 @@ func get_effective_display_time() -> float:
 	return current_display_time
 
 func is_past_closing_time() -> bool:
-	return get_effective_display_time() >= CLOSING_HOUR
+	return get_effective_display_time() >= get_closing_hour()
 
 func reset_to_morning() -> void:
 	_cancel_fast_forward(false)
@@ -208,17 +215,18 @@ func _on_tod_time_changed(t: float) -> void:
 			EventBus.closing_time_reached.emit()
 		return
 
-	# 3. End of day check: strictly cap at CLOSING_HOUR ONLY if no customer is present
-	if current_display_time >= CLOSING_HOUR and not is_customer_present:
+	# 3. End of day check: strictly cap at effective closing hour ONLY if no customer is present
+	var closing := get_closing_hour()
+	if current_display_time >= closing and not is_customer_present:
 		if is_clock_running:
-			LogManager.info("DayClock", "Closing Time Reached (8 PM). Pausing clock.")
+			LogManager.info("DayClock", "Closing Time Reached (%.1fh). Pausing clock." % closing)
 			set_clock_running(false)
-			current_display_time = CLOSING_HOUR
-			apply_display_time(CLOSING_HOUR)
+			current_display_time = closing
+			apply_display_time(closing)
 			EventBus.closing_time_reached.emit()
-		elif current_display_time > CLOSING_HOUR:
-			current_display_time = CLOSING_HOUR
-			apply_display_time(CLOSING_HOUR)
+		elif current_display_time > closing:
+			current_display_time = closing
+			apply_display_time(closing)
 
 func apply_display_time(t: float) -> void:
 	_ensure_tod_node()

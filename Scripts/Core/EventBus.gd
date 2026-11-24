@@ -75,6 +75,10 @@ signal utang_accepted(customer: Customer)
 signal utang_rejected(customer: Customer)
 @warning_ignore("unused_signal")
 signal debt_quota_met(is_successful: bool)
+@warning_ignore("unused_signal")
+signal tally_contribution_made(amount: float, tier: String, total_paid: float, goal: float)
+@warning_ignore("unused_signal")
+signal mayari_card_changed(card_id: String)
 
 # --- Nokia / Phone UI ---
 @warning_ignore("unused_signal")

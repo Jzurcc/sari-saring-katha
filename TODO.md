@@ -56,7 +56,7 @@
 - [ ] **Handwritten Dialogue Rework:** Polish and rewrite character dialogues for stronger voice, warmth, and cultural authenticity.
 
 ## 8. Economy & Reyna Mayari Tally Rework
-- [ ] **Player-Chosen Tally Contributions & Goal System:** Rework Reyna Mayari's nightly tally so the player decides how much money they want to contribute each night toward an overall goal they need to reach, instead of a fixed mandatory nightly deduction.
+- [x] **Player-Chosen Tally Contributions, Goal System & Moon-Card Draft:** Reworked Reyna Mayari's nightly tally into a **₱750** goal-based *Silver Ledger of Biringan* (with Option A sufficient-night scaling) followed by a Slay-the-Spire style **3-Card Moon Draft** (7 *Biringan's Favor* buffs + 5 *Biringan's Chill* quirks/debuffs) and an active-card HUD badge.
 
 ## 9. Restocking UX & Inventory Clarity
 - [ ] **Prerequisite — Visible Current Stock in Restock Menu:** Display each product's current owned/shelf stock (e.g. `Stock: 1 / 5` or `OUT OF STOCK` badge) directly on every Restock Menu card and detail view so players immediately know what they already have while shopping.

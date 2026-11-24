@@ -17,6 +17,8 @@ const END_OF_DAY_QUOTES = [
 ]
 
 @onready var sleep_overlay_scene = preload("res://Scenes/UI/SleepOverlay.tscn")
+const MayariTallyOverlayScript = preload("res://Scripts/UI/MayariTallyOverlay.gd")
+const MayariCardHUDScript = preload("res://Scripts/UI/MayariCardHUD.gd")
 
 @export var starting_money: float = 250.0
 var money: float = 0.0
@@ -24,6 +26,8 @@ var quota_day: int = 1
 var _last_earning: float = 0.0
 var _pending_quota: float = 0.0  # Quota for the day that just ended (cached before day increments)
 var _is_ending_day: bool = false
+var _is_tally_overlay_open: bool = false
+var _mayari_card_hud: Node = null
 
 # --- Tutorial Manager Instance ---
 var tutorial: TutorialManager
@@ -42,6 +46,8 @@ func _ready() -> void:
 	money = starting_money
 	
 	tutorial = TutorialManager.new(self)
+	_mayari_card_hud = MayariCardHUDScript.new()
+	add_child(_mayari_card_hud)
 	
 	# Connect early signals
 	EventBus.transaction_completed.connect(_on_transaction_completed)
@@ -97,12 +103,16 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
-		# Tip Windfall on Loss Leaders (step <= -1)
+		# Tip Windfall on Loss Leaders (step <= -1) + Moonlight Tips Moon Card (+₱3)
 		var tip: float = 0.0
 		if item.current_step < 0 and not wants_debt:
 			tip = snapped(float(abs(item.current_step)) * 1.5 + 1.0, 1.0)
 			_last_earning += tip
 			LogManager.info("GameManager", "Loss leader discount rewarded with a tip of +₱%.2f!" % tip)
+		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
+			tip += 3.0
+			_last_earning += 3.0
+			LogManager.info("GameManager", "Moonlight Tips card granted +₱3.00 bonus tip!")
 
 		money += _last_earning
 		EventBus.money_changed.emit(money)
@@ -179,8 +189,8 @@ func _play_sleep_sequence(ended_day_number: int) -> bool:
 	return is_inside_tree()
 
 func _on_dialogic_signal(argument: String) -> void:
-	if argument == "deduct_quota":
-		_handle_deduct_quota()
+	if argument == "open_tally_offer" or argument == "deduct_quota":
+		_handle_open_tally_offer()
 	
 	# Let TutorialManager handle tutorial-specific signals
 	elif tutorial.handle_dialogic_signal(argument):
@@ -206,45 +216,106 @@ func _on_dialogic_signal(argument: String) -> void:
 		
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 
-func _handle_deduct_quota() -> void:
-	if _pending_quota <= 0.0:
-		prepare_nightly_quota()
-	var quota := _pending_quota
-	var was_successful := deduct_money(quota)
-	
-	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
-	
-	var timeline_path = Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
-	
-	if was_successful:
-		quota_day += 1 
-		LogManager.info("GameManager", "Quota met! Subtracted %.2f. New balance: %.2f. Next Quota Day: %d" % [quota, money, quota_day])
-		if quota_day == 2 and StoryManager.is_label_in_timeline(timeline_path, "SuccessFirst"):
-			Dialogic.Jump.jump_to_label("SuccessFirst")
-		elif StoryManager.is_label_in_timeline(timeline_path, "Success"):
-			Dialogic.Jump.jump_to_label("Success")
-		else:
-			LogManager.warn("GameManager", "Success labels missing in current timeline. Ending dialogue safely.")
-			Dialogic.end_timeline()
-	else:
-		LogManager.info("GameManager", "Quota FAILED! Only had %.2f / %.2f needed. Quota Day remains at: %d" % [money, quota, quota_day])
-		if StoryManager.is_label_in_timeline(timeline_path, "Angry"):
-			Dialogic.Jump.jump_to_label("Angry")
-		else:
-			LogManager.warn("GameManager", "Angry labels missing in current timeline. Ending dialogue safely.")
-			Dialogic.end_timeline()
-	
-	EventBus.debt_quota_met.emit(was_successful)
+func _handle_open_tally_offer() -> void:
+	if _is_tally_overlay_open:
+		return
+	_is_tally_overlay_open = true
+	prepare_nightly_quota()
 
-## Calculates and syncs today's nightly quota to Dialogic before Mayari arrives.
-func prepare_nightly_quota() -> float:
-	_pending_quota = get_quota_for_day(quota_day)
-	var was_successful := money >= _pending_quota
-	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
-	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if was_successful else 0.0)
+	var timeline_path := Dialogic.current_timeline.resource_path if Dialogic.current_timeline else ""
+	Dialogic.paused = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	var overlay := MayariTallyOverlayScript.new()
+	overlay.setup(
+		money,
+		StoryManager.tally_total_paid,
+		StoryManager.TALLY_GOAL,
+		StoryManager.get_nightly_min_tally(),
+		StoryManager.get_nightly_generous_tally()
+	)
+	add_child(overlay)
+
+	var result: Array = await overlay.completed
+	_is_tally_overlay_open = false
+	if not is_inside_tree():
+		return
+
+	var offer_amount: float = float(result[0])
+	var tier: String = str(result[1])
+	var selected_card_id: String = str(result[2])
+
+	if offer_amount > 0.0:
+		deduct_money(offer_amount)
+
+	StoryManager.tally_total_paid = minf(StoryManager.TALLY_GOAL, StoryManager.tally_total_paid + offer_amount)
+	StoryManager.last_tally_tier = tier
+	StoryManager.pending_mayari_card = selected_card_id
+
+	var is_sufficient := (tier == "balanced" or tier == "generous" or tier == "cleared")
+	if is_sufficient:
+		StoryManager.tally_sufficient_nights += 1
+		quota_day = StoryManager.tally_sufficient_nights + 1
+
+	if tier == "cleared" or StoryManager.tally_total_paid >= StoryManager.TALLY_GOAL - 0.01:
+		StoryManager.tally_total_paid = StoryManager.TALLY_GOAL
+		StoryManager.is_mayari_debt_active = false
+		StoryManager.pending_mayari_card = ""
+		var mayari_path := "res://Resources/customers/ReynaMayari.tres"
+		while CharacterProgressionManager.get_chapter(mayari_path) < 8:
+			CharacterProgressionManager.advance_story_direct(mayari_path)
+
+	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if is_sufficient else 0.0)
+	Dialogic.VAR.set_variable("Global_TallyOffer", offer_amount)
+	Dialogic.VAR.set_variable("Global_TallyTotalPaid", StoryManager.tally_total_paid)
+	Dialogic.VAR.set_variable("Global_TallyRemaining", StoryManager.get_tally_remaining())
+	Dialogic.VAR.set_variable("Global_TallyGoal", StoryManager.TALLY_GOAL)
+	Dialogic.VAR.set_variable("Global_TallyTier", tier)
 	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
-	LogManager.info("GameManager", "Prepared Nightly Quota (Quota Day %d): %.2f, Can Pay: %s" % [
-		quota_day, _pending_quota, was_successful
+
+	EventBus.tally_contribution_made.emit(offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL)
+	EventBus.debt_quota_met.emit(is_sufficient)
+
+	LogManager.info("GameManager", "Tally committed: Offer=₱%.2f, Tier=%s, Total=₱%.2f/₱%.2f, Card=%s" % [
+		offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL, selected_card_id
+	])
+
+	Dialogic.paused = false
+	var target_label := ""
+	if tier == "cleared" and StoryManager.is_label_in_timeline(timeline_path, "LedgerCleared"):
+		target_label = "LedgerCleared"
+	elif tier == "generous" and StoryManager.is_label_in_timeline(timeline_path, "Generous"):
+		target_label = "Generous"
+	elif is_sufficient and quota_day == 2 and StoryManager.is_label_in_timeline(timeline_path, "SuccessFirst"):
+		target_label = "SuccessFirst"
+	elif is_sufficient and StoryManager.is_label_in_timeline(timeline_path, "Success"):
+		target_label = "Success"
+	elif not is_sufficient and StoryManager.is_label_in_timeline(timeline_path, "Shortfall"):
+		target_label = "Shortfall"
+	elif not is_sufficient and StoryManager.is_label_in_timeline(timeline_path, "Angry"):
+		target_label = "Angry"
+
+	if target_label != "":
+		Dialogic.Jump.jump_to_label(target_label)
+	else:
+		LogManager.warn("GameManager", "No matching tally reaction label in %s for tier '%s'. Ending timeline." % [timeline_path, tier])
+		Dialogic.end_timeline()
+
+## Calculates and syncs today's nightly tally thresholds to Dialogic before Mayari arrives.
+func prepare_nightly_quota() -> float:
+	_pending_quota = StoryManager.get_nightly_min_tally()
+	var generous_amt := StoryManager.get_nightly_generous_tally()
+	var can_meet_min := money >= _pending_quota
+	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
+	Dialogic.VAR.set_variable("Global_TallyMin", _pending_quota)
+	Dialogic.VAR.set_variable("Global_TallyGenerous", generous_amt)
+	Dialogic.VAR.set_variable("Global_TallyGoal", StoryManager.TALLY_GOAL)
+	Dialogic.VAR.set_variable("Global_TallyTotalPaid", StoryManager.tally_total_paid)
+	Dialogic.VAR.set_variable("Global_TallyRemaining", StoryManager.get_tally_remaining())
+	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if can_meet_min else 0.0)
+	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
+	LogManager.info("GameManager", "Prepared Nightly Tally: Min=₱%.0f, Generous=₱%.0f, Paid=₱%.0f/₱%.0f" % [
+		_pending_quota, generous_amt, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL
 	])
 	return _pending_quota
 
@@ -272,13 +343,20 @@ func load_save_data(data: Dictionary) -> void:
 	money = data.get("money", starting_money)
 	quota_day = data.get("quota_day", 1)
 	_pending_quota = data.get("pending_quota", 0.0)
+
+	# Backward-compatible migration for older saves before goal-based tally:
+	if quota_day > 1 and StoryManager.tally_total_paid <= 0.0 and StoryManager.tally_sufficient_nights == 0:
+		var migrated_paid := 0.0
+		for q in range(1, quota_day):
+			migrated_paid += get_quota_for_day(q)
+		StoryManager.tally_sufficient_nights = quota_day - 1
+		if StoryManager.is_mayari_debt_active:
+			StoryManager.tally_total_paid = minf(migrated_paid, StoryManager.TALLY_GOAL - 50.0)
+		else:
+			StoryManager.tally_total_paid = StoryManager.TALLY_GOAL
+		LogManager.info("GameManager", "Migrated legacy quota_day=%d -> tally_total_paid=₱%.0f" % [quota_day, StoryManager.tally_total_paid])
 	
-	Dialogic.VAR.set_variable("Global_TodayQuota", _pending_quota)
-	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
-	
-	var has_enough = money >= _pending_quota
-	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if has_enough else 0.0)
-	
+	prepare_nightly_quota()
 	EventBus.money_changed.emit(money)
 	LogManager.info("GameManager", "State loaded. Day %d, Money %.2f, Quota Day %d" % [StoryManager.day, money, quota_day])
 

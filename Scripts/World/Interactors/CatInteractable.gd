@@ -72,6 +72,13 @@ func _play_meow(volume_db: float) -> void:
 	temp_player.play()
 	temp_player.finished.connect(temp_player.queue_free)
 
+## Called by RefrigeratorDoor when Disembodied Wind pops the fridge open.
+func play_startled_meow() -> void:
+	if not visible:
+		return
+	_play_meow(-9.0)
+	_play_pet_animation()
+
 func _play_pet_animation() -> void:
 	var visuals = get_visual_nodes()
 	if visuals.is_empty(): return
