@@ -115,20 +115,21 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 	var force_story: bool = false
 
 	var unlocked: Array[CustomerData] = CharacterProgressionManager.get_unlocked_characters(sm.current_tier, sm.day)
-	# Collectors (Reyna Mayari) only ever appear via build_collection_transaction() at closing time — never during daytime waves.
+	# Collectors (Reyna Mayari) only join daytime waves once the 30% (₱450) Daylight Audience ledger milestone is unlocked.
+	var allow_daytime_collector: bool = sm.is_daytime_mayari_unlocked()
 	unlocked = unlocked.filter(func(c: CustomerData) -> bool:
-		return c != null and not c.is_collector() and not (c.resource_path in exclude_paths)
+		return c != null and (not c.is_collector() or allow_daytime_collector) and not (c.resource_path in exclude_paths)
 	)
 	if unlocked.is_empty():
 		return {"customer": null, "force_story": false}
 
-	# Wave joiners pick directly from non-collector unlocked neighbors for organic side bustle
+	# Wave joiners pick directly from unlocked neighbors for organic side bustle
 	if is_wave_joiner:
 		var joiner_pool := unlocked.filter(func(c: CustomerData) -> bool:
-			return not c.is_collector() and c.resource_path != sm.last_character_path
+			return c.resource_path != sm.last_character_path
 		)
 		if joiner_pool.is_empty():
-			joiner_pool = unlocked.filter(func(c: CustomerData) -> bool: return not c.is_collector())
+			joiner_pool = unlocked
 		char_data = CharacterProgressionManager.pick_character_weighted(joiner_pool)
 		return {"customer": char_data, "force_story": false}
 
@@ -167,9 +168,9 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 			force_story = true
 			LogManager.info("StoryManager", "Cooldown 0: Forcing chapter %d for: %s" % [CharacterProgressionManager.get_chapter(char_data.resource_path), char_data.get_clean_id()])
 		else:
-			# Soft-lock override
+			# Soft-lock override (never pull collectors into daytime story chapters)
 			var fallback := unlocked.filter(func(c: CustomerData) -> bool:
-				return c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
+				return not c.is_collector() and c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
 			)
 			if not fallback.is_empty():
 				char_data = fallback.pick_random()
@@ -474,6 +475,7 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 
 	var transaction := TransactionContext.new()
 	transaction.customer_data = data
+	transaction.is_nightly_collection = true
 
 	var path: String = data.resource_path
 	var chapter: int = CharacterProgressionManager.get_chapter(path)

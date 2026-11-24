@@ -249,10 +249,10 @@ func _spawn_next_customer() -> void:
 	var primary := _spawn_customer_into_slot(transaction, 0)
 	session.current_customer = primary
 
-	# Exclusive scenes (tutorial, two-character story, collector) stay solo
+	# Exclusive scenes (tutorial, two-character story, nightly collector) stay solo
 	_is_exclusive_wave = transaction.is_guided_tutorial \
 		or transaction.secondary_customer_data != null \
-		or (transaction.customer_data != null and transaction.customer_data.is_collector())
+		or transaction.is_nightly_collection
 
 	_is_spawning = false
 
@@ -896,7 +896,7 @@ func get_save_data() -> Dictionary:
 			continue
 		if c.is_lingering_visitor or c.is_returning_for_smalltalk or c.is_lingering_departure:
 			continue
-		if c.customer_data and c.customer_data.is_collector():
+		if c.transaction_context.is_nightly_collection:
 			continue
 		var is_already_done: bool = c._is_resolving \
 			or c.dialogue_phase == TransactionSession.Phase.SATISFIED \

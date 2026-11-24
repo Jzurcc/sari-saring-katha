@@ -229,9 +229,12 @@ func _populate_cards() -> void:
 			_cards_vbox.add_child(_build_neighborhood_event_card(ev))
 			total_active += 1
 
-	# 2. Active Reyna Mayari Moon Card (treated as an active event too!)
-	if StoryManager.active_mayari_card != "":
-		var card := MayariCardRegistry.get_card(StoryManager.active_mayari_card)
+	# 2. Active Reyna Mayari Moon Card(s) (treated as active events too!)
+	var mayari_ids: Array[String] = StoryManager.active_mayari_cards
+	if mayari_ids.is_empty() and StoryManager.active_mayari_card != "":
+		mayari_ids = [StoryManager.active_mayari_card]
+	for mid in mayari_ids:
+		var card := MayariCardRegistry.get_card(mid)
 		if not card.is_empty():
 			_cards_vbox.add_child(_build_mayari_event_card(card, false))
 			total_active += 1

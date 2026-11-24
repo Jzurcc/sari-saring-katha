@@ -37,6 +37,7 @@ var event_rumor_active: bool = false
 var event_rumor_text: String = ""
 var pending_event_id: String = ""
 var is_visit_story: bool = false
+var is_nightly_collection: bool = false
 var story_advanced: bool = false
 var is_guided_tutorial: bool = false
 var blocks_phone_call: bool = false

@@ -47,10 +47,20 @@ const TALLY_GOAL := 1500.0
 const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 50.0, 60.0, 75.0, 90.0, 105.0, 120.0]
 const TALLY_GEN_SCHEDULE: Array[float] = [65.0, 80.0, 95.0, 115.0, 135.0, 155.0, 175.0]
 
+const LEDGER_MILESTONES: Array[Dictionary] = [
+	{"id": "reroll_1", "ratio": 0.15, "amount": 225.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
+	{"id": "daytime_mayari", "ratio": 0.30, "amount": 450.0, "title": "Daylight Audience", "desc": "Reyna Mayari can now visit and shop during the day like a regular neighbor."},
+	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 750.0, "title": "Silver Favor", "desc": "Fair odds shift to 65% Favor / 35% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
+	{"id": "twin_moons", "ratio": 0.75, "amount": 1125.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards per night (choose 1 or 2)."},
+	{"id": "sealed_ledger", "ratio": 1.00, "amount": 1500.0, "title": "Patron of the Moon", "desc": "Permanently seals the Silver Ledger."},
+]
+
 var tally_total_paid: float = 0.0
 var tally_sufficient_nights: int = 0
 var active_mayari_card: String = ""
 var pending_mayari_card: String = ""
+var active_mayari_cards: Array[String] = []
+var pending_mayari_cards: Array[String] = []
 var last_tally_tier: String = "balanced"
 
 func get_tally_remaining() -> float:
@@ -58,6 +68,30 @@ func get_tally_remaining() -> float:
 
 func is_tally_cleared() -> bool:
 	return (not is_mayari_debt_active) or tally_total_paid >= TALLY_GOAL - 0.01
+
+func is_ledger_milestone_unlocked(milestone_id: String, paid_override: float = -1.0) -> bool:
+	var paid := tally_total_paid if paid_override < 0.0 else paid_override
+	for m in LEDGER_MILESTONES:
+		if str(m["id"]) == milestone_id:
+			return paid >= float(m["amount"]) - 0.01
+	return false
+
+func get_nightly_reroll_count(paid_override: float = -1.0) -> int:
+	var rerolls := 0
+	if is_ledger_milestone_unlocked("reroll_1", paid_override):
+		rerolls += 1
+	if is_ledger_milestone_unlocked("shifted_odds_reroll_2", paid_override):
+		rerolls += 1
+	return rerolls
+
+func has_shifted_mayari_odds(paid_override: float = -1.0) -> bool:
+	return is_ledger_milestone_unlocked("shifted_odds_reroll_2", paid_override)
+
+func get_max_mayari_card_picks(paid_override: float = -1.0) -> int:
+	return 2 if is_ledger_milestone_unlocked("twin_moons", paid_override) else 1
+
+func is_daytime_mayari_unlocked() -> bool:
+	return is_ledger_milestone_unlocked("daytime_mayari")
 
 func get_nightly_min_tally() -> float:
 	var rem := get_tally_remaining()
@@ -85,7 +119,7 @@ func evaluate_tally_tier(offer: float) -> String:
 func has_mayari_card(card_id: String) -> bool:
 	if card_id == "":
 		return false
-	return active_mayari_card == card_id or (card_id in active_blessing_cards)
+	return active_mayari_card == card_id or (card_id in active_mayari_cards) or (card_id in active_blessing_cards)
 
 func get_mayari_tolerance_offset() -> int:
 	if has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
@@ -550,7 +584,7 @@ func activate_sto_nino_blessing() -> Array[String]:
 	for card_id in MayariCardRegistry.CARDS.keys():
 		if not MayariCardRegistry.is_favor(card_id):
 			continue
-		if card_id == active_mayari_card:
+		if card_id == active_mayari_card or (card_id in active_mayari_cards):
 			continue
 		if not is_all_day and card_id == MayariCardRegistry.CARD_MOON_HOLDS_SKY:
 			continue
@@ -894,26 +928,39 @@ func _on_day_started(new_day: int) -> void:
 	day = new_day
 	has_mayari_visited = false
 	_clear_sto_nino_blessing()
-	# Promote last night's drafted Moon Card to active for today (or clear if none)
-	active_mayari_card = pending_mayari_card
+	# Promote last night's drafted Moon Card(s) to active for today (or clear if none)
+	active_mayari_cards.clear()
+	for cid in pending_mayari_cards:
+		if str(cid) != "" and not (str(cid) in active_mayari_cards):
+			active_mayari_cards.append(str(cid))
+	if active_mayari_cards.is_empty() and pending_mayari_card != "":
+		active_mayari_cards.append(pending_mayari_card)
+	pending_mayari_cards.clear()
 	pending_mayari_card = ""
+	active_mayari_card = active_mayari_cards[0] if not active_mayari_cards.is_empty() else ""
 	EventBus.mayari_card_changed.emit(active_mayari_card)
-	if active_mayari_card != "":
-		var card := MayariCardRegistry.get_card(active_mayari_card)
-		if not card.is_empty():
-			var prefix := "Favor" if MayariCardRegistry.is_favor(active_mayari_card) else "Omen"
-			LogManager.info("StoryManager", "Active Moon Card for Day %d: %s (%s)" % [day, str(card["title"]), prefix])
-			call_deferred("_announce_active_mayari_card", prefix, str(card["title"]), str(card["tagline"]))
+	if not active_mayari_cards.is_empty():
+		var titles: Array[String] = []
+		var taglines: Array[String] = []
+		for cid in active_mayari_cards:
+			var card := MayariCardRegistry.get_card(cid)
+			if not card.is_empty():
+				var prefix := "Favor" if MayariCardRegistry.is_favor(cid) else "Omen"
+				titles.append("%s: %s" % [prefix, str(card["title"])])
+				taglines.append(str(card["tagline"]))
+				LogManager.info("StoryManager", "Active Moon Card for Day %d: %s (%s)" % [day, str(card["title"]), prefix])
+		if not titles.is_empty():
+			call_deferred("_announce_active_mayari_cards", " · ".join(titles), " | ".join(taglines))
 	LogManager.info("StoryManager", "Day %d starts." % day)
 	todays_missed_items.clear()
 	_roll_daily_expected_regulars()
 	_roll_daily_sulit_deals()
 	clock.on_day_started()
 
-func _announce_active_mayari_card(prefix: String, title: String, tagline: String) -> void:
+func _announce_active_mayari_cards(title_text: String, tagline_text: String) -> void:
 	await get_tree().create_timer(1.2).timeout
-	if active_mayari_card != "":
-		EventBus.show_notification.emit("%s: %s" % [prefix, title], tagline, "interact")
+	if not active_mayari_cards.is_empty():
+		EventBus.show_notification.emit(title_text, tagline_text, "interact")
 
 
 func advance_tier(source: String = "Manual") -> void:
@@ -1041,6 +1088,8 @@ func get_save_data() -> Dictionary:
 		"tally_sufficient_nights": tally_sufficient_nights,
 		"active_mayari_card": active_mayari_card,
 		"pending_mayari_card": pending_mayari_card,
+		"active_mayari_cards": active_mayari_cards.duplicate(),
+		"pending_mayari_cards": pending_mayari_cards.duplicate(),
 		"last_tally_tier": last_tally_tier,
 		"current_display_time": clock.get_effective_display_time(),
 		"is_clock_running": is_clock_running or clock._is_fast_forwarding,
@@ -1097,6 +1146,20 @@ func load_save_data(data: Dictionary) -> void:
 	tally_sufficient_nights = maxi(0, int(data.get("tally_sufficient_nights", 0)))
 	active_mayari_card = str(data.get("active_mayari_card", ""))
 	pending_mayari_card = str(data.get("pending_mayari_card", ""))
+	active_mayari_cards.clear()
+	for cid in data.get("active_mayari_cards", []):
+		if str(cid) != "" and not (str(cid) in active_mayari_cards):
+			active_mayari_cards.append(str(cid))
+	if active_mayari_cards.is_empty() and active_mayari_card != "":
+		active_mayari_cards.append(active_mayari_card)
+	active_mayari_card = active_mayari_cards[0] if not active_mayari_cards.is_empty() else ""
+	pending_mayari_cards.clear()
+	for cid in data.get("pending_mayari_cards", []):
+		if str(cid) != "" and not (str(cid) in pending_mayari_cards):
+			pending_mayari_cards.append(str(cid))
+	if pending_mayari_cards.is_empty() and pending_mayari_card != "":
+		pending_mayari_cards.append(pending_mayari_card)
+	pending_mayari_card = pending_mayari_cards[0] if not pending_mayari_cards.is_empty() else ""
 	last_tally_tier = str(data.get("last_tally_tier", "balanced"))
 	EventBus.mayari_card_changed.emit(active_mayari_card)
 	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
@@ -1205,6 +1268,8 @@ func reset_state() -> void:
 	tally_sufficient_nights = 0
 	active_mayari_card = ""
 	pending_mayari_card = ""
+	active_mayari_cards.clear()
+	pending_mayari_cards.clear()
 	last_tally_tier = "balanced"
 	EventBus.mayari_card_changed.emit("")
 	_last_tier_unlocked_notification = 0
@@ -1366,10 +1431,10 @@ func _on_customer_satisfied(customer) -> void:
 	
 	_process_story_cooldown(customer)
 	
-	# Mark collector visited & fallback-award Player XP if not already awarded at last-item handover
+	# Mark nightly collector visited & fallback-award Player XP if not already awarded at last-item handover
 	if customer.transaction_context and not customer.transaction_context.is_guided_tutorial:
-		var is_collector_cust: bool = customer.customer_data != null and customer.customer_data.is_collector()
-		if is_collector_cust:
+		var is_nightly_coll: bool = customer.transaction_context.is_nightly_collection
+		if is_nightly_coll:
 			has_mayari_visited = true
 			is_mayari_met = true
 		else:
@@ -1402,7 +1467,7 @@ func _on_customer_arrived(customer: Customer) -> void:
 func _on_customer_dismissed(customer: Customer) -> void:
 	if customer != null and customer.is_lingering_departure:
 		return
-	if customer != null and customer.customer_data != null and customer.customer_data.is_collector():
+	if customer != null and customer.transaction_context and customer.transaction_context.is_nightly_collection:
 		has_mayari_visited = true
 		is_mayari_met = true
 	if customer != null and customer.transaction_context:

@@ -265,14 +265,29 @@ func _handle_open_tally_offer() -> void:
 
 	var offer_amount: float = float(result[0])
 	var tier: String = str(result[1])
-	var selected_card_id: String = str(result[2])
+	var selected_cards_raw = result[2]
+	var selected_cards: Array[String] = []
+	if selected_cards_raw is Array:
+		for cid in selected_cards_raw:
+			if str(cid) != "" and not (str(cid) in selected_cards):
+				selected_cards.append(str(cid))
+	elif str(selected_cards_raw) != "":
+		selected_cards.append(str(selected_cards_raw))
 
 	if offer_amount > 0.0:
 		deduct_money(offer_amount)
 
+	var prev_paid := StoryManager.tally_total_paid
 	StoryManager.tally_total_paid = minf(StoryManager.TALLY_GOAL, StoryManager.tally_total_paid + offer_amount)
+	for m in StoryManager.LEDGER_MILESTONES:
+		var m_amt := float(m["amount"])
+		if prev_paid < m_amt - 0.01 and StoryManager.tally_total_paid >= m_amt - 0.01:
+			EventBus.show_notification.emit("Ledger Milestone: %s!" % str(m["title"]), str(m["desc"]), "purchase")
+			LogManager.info("GameManager", "Unlocked Silver Ledger Milestone: %s (₱%.0f)" % [str(m["title"]), m_amt])
+
 	StoryManager.last_tally_tier = tier
-	StoryManager.pending_mayari_card = selected_card_id
+	StoryManager.pending_mayari_cards = selected_cards
+	StoryManager.pending_mayari_card = selected_cards[0] if not selected_cards.is_empty() else ""
 	StoryManager.has_mayari_visited = true
 	StoryManager.is_mayari_met = true
 
@@ -301,8 +316,8 @@ func _handle_open_tally_offer() -> void:
 	EventBus.tally_contribution_made.emit(offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL)
 	EventBus.debt_quota_met.emit(is_sufficient)
 
-	LogManager.info("GameManager", "Tally committed: Offer=₱%.2f, Tier=%s, Total=₱%.2f/₱%.2f, Card=%s" % [
-		offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL, selected_card_id
+	LogManager.info("GameManager", "Tally committed: Offer=₱%.2f, Tier=%s, Total=₱%.2f/₱%.2f, Cards=%s" % [
+		offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL, str(selected_cards)
 	])
 
 	Dialogic.paused = false

@@ -9,7 +9,7 @@ extends CanvasLayer
 ##   diamond end-caps & handlebar thumb, threshold indicators below, and a floating
 ##   [< [coin] amount >] control riding directly on top of the adjustable thumb line.
 
-signal completed(offer_amount: float, tier: String, selected_card_id: String)
+signal completed(offer_amount: float, tier: String, selected_card_ids: Array)
 
 const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayari.png"
 const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
@@ -74,6 +74,7 @@ class MysteryDiamond extends Control:
 class UnifiedLedgerGauge extends Control:
 	signal value_changed(new_offer: float)
 	signal nudge_requested(delta: float)
+	signal milestone_hovered(milestone: Dictionary)
 
 	const BAR_Y := 34.0
 	const BAR_H := 22.0
@@ -89,8 +90,28 @@ class UnifiedLedgerGauge extends Control:
 	var peso_tex: Texture2D = null
 	var bold_font: Font = null
 	var interactive: bool = true
+	var milestones: Array[Dictionary] = []
+	var _hovered_milestone_idx: int = -1
 
 	var _dragging: bool = false
+
+	func _update_milestone_hover(local_pos: Vector2) -> void:
+		var g := maxf(1.0, goal)
+		var best_idx := -1
+		var best_dist := 18.0
+		for i in range(milestones.size()):
+			var m_amt := float(milestones[i].get("amount", 0.0))
+			if m_amt <= 0.0 or m_amt >= g - 0.01:
+				continue
+			var mx := _ratio_to_x(m_amt / g)
+			var d := local_pos.distance_to(Vector2(mx, BAR_Y + BAR_H * 0.5))
+			if d < best_dist:
+				best_dist = d
+				best_idx = i
+		if best_idx != _hovered_milestone_idx:
+			_hovered_milestone_idx = best_idx
+			milestone_hovered.emit(milestones[best_idx] if best_idx >= 0 else {})
+			queue_redraw()
 	var _stripe_scroll: float = 0.0
 	var _preview_rect: ColorRect
 	var _stripe_mat: ShaderMaterial
@@ -163,6 +184,12 @@ void fragment() {
 		_thumb_box.add_child(_plus_btn)
 
 		resized.connect(_sync_visuals)
+		mouse_exited.connect(func():
+			if _hovered_milestone_idx != -1:
+				_hovered_milestone_idx = -1
+				milestone_hovered.emit({})
+				queue_redraw()
+		)
 
 	func _make_tiny_arrow(glyph: String) -> Button:
 		var b := Button.new()
@@ -244,6 +271,12 @@ void fragment() {
 		tw.tween_property(_amount_lbl, "scale", Vector2.ONE, 0.11).set_trans(Tween.TRANS_SINE)
 
 	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseMotion:
+			var mm := event as InputEventMouseMotion
+			_update_milestone_hover(mm.position)
+			if interactive and max_offer > 0.01 and _dragging:
+				_emit_from_x(mm.position.x)
+			return
 		if not interactive or max_offer <= 0.01:
 			return
 		if event is InputEventMouseButton:
@@ -254,9 +287,6 @@ void fragment() {
 					_emit_from_x(mb.position.x)
 				elif not mb.pressed:
 					_dragging = false
-		elif event is InputEventMouseMotion and _dragging:
-			var mm := event as InputEventMouseMotion
-			_emit_from_x(mm.position.x)
 
 	func _emit_from_x(local_x: float) -> void:
 		var g := maxf(1.0, goal)
@@ -321,6 +351,21 @@ void fragment() {
 			var reached_gen := current_offer >= gen_thresh - 0.01
 			_draw_threshold_pip(gen_x, reached_gen, Color(1.0, 0.93, 0.68, 1.0))
 
+		# Milestone diamond pips along the bar (15% / 30% / 50% / 75%)
+		for i in range(milestones.size()):
+			var m: Dictionary = milestones[i]
+			var m_amt := float(m.get("amount", 0.0))
+			if m_amt <= 0.0 or m_amt >= g - 0.01:
+				continue
+			var mx := _ratio_to_x(m_amt / g)
+			var already_unlocked := total_paid >= m_amt - 0.01
+			var unlocked_tonight := (not already_unlocked) and (total_paid + current_offer >= m_amt - 0.01)
+			var pip_col := Color(0.56, 0.96, 0.62, 1.0) if unlocked_tonight else (Color(1.0, 0.88, 0.52, 0.96) if already_unlocked else Color(0.70, 0.60, 0.44, 0.58))
+			var pip_r := 6.2 if _hovered_milestone_idx == i else (5.2 if (already_unlocked or unlocked_tonight) else 4.2)
+			draw_line(Vector2(mx, BAR_Y + 1.0), Vector2(mx, BAR_Y + BAR_H - 1.0), Color(pip_col.r, pip_col.g, pip_col.b, 0.45), 1.2, true)
+			_draw_diamond(Vector2(mx, BAR_Y + BAR_H * 0.5), pip_r + 1.6, Color(0.05, 0.04, 0.035, 0.92))
+			_draw_diamond(Vector2(mx, BAR_Y + BAR_H * 0.5), pip_r, pip_col)
+
 		# Connector stem from floating readout down into glowing diamond handlebar thumb
 		draw_line(Vector2(cur_x, BAR_Y - 8.0), Vector2(cur_x, BAR_Y), Color(border_color.r, border_color.g, border_color.b, 0.72), 1.5, true)
 		var ptr_c := Vector2(cur_x, BAR_Y + BAR_H * 0.5)
@@ -380,6 +425,13 @@ var _callout_tween: Tween = null
 var _hovered_idx: int = -1
 var _card_picked: bool = false
 var _cards_ready: bool = false
+var _rerolls_left: int = 0
+var _max_card_picks: int = 1
+var _selected_indices: Array[int] = []
+var _confirmed_shifted_odds: bool = false
+var _reroll_btn: Button
+var _accept_cards_btn: Button
+var _accept_style: StyleBoxFlat
 
 var _confirmed_offer: float = 0.0
 var _confirmed_tier: String = "balanced"
@@ -538,8 +590,10 @@ func _build_ui() -> void:
 	_unified_gauge.bold_font = _bold_font
 	_unified_gauge.custom_minimum_size = Vector2(0, 74)
 	_unified_gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_unified_gauge.milestones = StoryManager.LEDGER_MILESTONES
 	_unified_gauge.value_changed.connect(_on_slider_changed)
 	_unified_gauge.nudge_requested.connect(_nudge_offer)
+	_unified_gauge.milestone_hovered.connect(_on_milestone_hovered)
 	_gauge_dock.add_child(_unified_gauge)
 
 	# ── 3. BOTTOM-RIGHT OVERLAPPING OFFER BUTTON (Straddling the frame's bottom border!) ──
@@ -566,6 +620,75 @@ func _build_ui() -> void:
 	_apply_confirm_style(COL_TIER_FAIR)
 	_confirm_btn.pressed.connect(_on_confirm_pressed)
 	_root.add_child(_confirm_btn)
+
+	# ── 3B. BEAT 2 REROLL & ACCEPT CARDS BUTTONS (Straddling frame's bottom border) ──
+	_reroll_btn = Button.new()
+	_reroll_btn.anchor_left = 0.255
+	_reroll_btn.anchor_right = 0.255
+	_reroll_btn.anchor_top = 0.855
+	_reroll_btn.anchor_bottom = 0.855
+	_reroll_btn.offset_left = 18.0
+	_reroll_btn.offset_right = 216.0
+	_reroll_btn.offset_top = -24.0
+	_reroll_btn.offset_bottom = 24.0
+	_reroll_btn.z_index = 12
+	_reroll_btn.visible = false
+	_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_reroll_btn.focus_mode = Control.FOCUS_NONE
+	_reroll_btn.add_theme_font_override("font", _bold_font)
+	_reroll_btn.add_theme_font_size_override("font_size", 17)
+	var rr_style := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.10, 0.97), 8, 16, 8)
+	rr_style.border_color = COL_GOLD
+	rr_style.set_border_width_all(2)
+	rr_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
+	rr_style.shadow_size = 12
+	var rr_hov: StyleBoxFlat = rr_style.duplicate()
+	rr_hov.bg_color = Color(0.24, 0.19, 0.13, 0.98)
+	rr_hov.border_color = COL_GOLD_BRIGHT
+	_reroll_btn.add_theme_stylebox_override("normal", rr_style)
+	_reroll_btn.add_theme_stylebox_override("hover", rr_hov)
+	_reroll_btn.add_theme_stylebox_override("pressed", rr_style)
+	_reroll_btn.add_theme_stylebox_override("disabled", rr_style)
+	_reroll_btn.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	_reroll_btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	_reroll_btn.pressed.connect(_on_reroll_pressed)
+	_root.add_child(_reroll_btn)
+
+	_accept_cards_btn = Button.new()
+	_accept_cards_btn.anchor_left = 0.785
+	_accept_cards_btn.anchor_right = 0.785
+	_accept_cards_btn.anchor_top = 0.855
+	_accept_cards_btn.anchor_bottom = 0.855
+	_accept_cards_btn.offset_left = -246.0
+	_accept_cards_btn.offset_right = -18.0
+	_accept_cards_btn.offset_top = -24.0
+	_accept_cards_btn.offset_bottom = 24.0
+	_accept_cards_btn.z_index = 12
+	_accept_cards_btn.visible = false
+	_accept_cards_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_accept_cards_btn.focus_mode = Control.FOCUS_NONE
+	_accept_cards_btn.add_theme_font_override("font", _bold_font)
+	_accept_cards_btn.add_theme_font_size_override("font_size", 18)
+	_accept_style = UIStyle.create_flat_stylebox(Color(0.36, 0.28, 0.14, 0.98), 8, 20, 8)
+	_accept_style.border_color = COL_GOLD_BRIGHT
+	_accept_style.set_border_width_all(2)
+	_accept_style.shadow_color = Color(0.0, 0.0, 0.0, 0.72)
+	_accept_style.shadow_size = 14
+	var acc_hov: StyleBoxFlat = _accept_style.duplicate()
+	acc_hov.bg_color = Color(0.46, 0.36, 0.18, 0.98)
+	acc_hov.border_color = COL_CREAM
+	var acc_dis: StyleBoxFlat = _accept_style.duplicate()
+	acc_dis.bg_color = Color(0.14, 0.12, 0.10, 0.85)
+	acc_dis.border_color = Color(0.45, 0.38, 0.28, 0.45)
+	_accept_cards_btn.add_theme_stylebox_override("normal", _accept_style)
+	_accept_cards_btn.add_theme_stylebox_override("hover", acc_hov)
+	_accept_cards_btn.add_theme_stylebox_override("pressed", _accept_style)
+	_accept_cards_btn.add_theme_stylebox_override("disabled", acc_dis)
+	_accept_cards_btn.add_theme_color_override("font_color", COL_CREAM)
+	_accept_cards_btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	_accept_cards_btn.add_theme_color_override("font_disabled_color", Color(0.65, 0.60, 0.52, 0.65))
+	_accept_cards_btn.pressed.connect(_on_accept_cards_pressed)
+	_root.add_child(_accept_cards_btn)
 
 	# ── 4. BOTTOM-LEFT REYNA MAYARI PORTRAIT (Uncropped, slightly smaller & tucked left/down) ──
 	_mayari_portrait = TextureRect.new()
@@ -775,10 +898,11 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			accent_bright = COL_TIER_FAIR_BRIGHT
 			shadow_title = "UNREVEALED FATE"
 			shadow_desc = "The moon's gaze is unreadable tonight. Fortune or trial waits beneath the veil."
-			shadow_tag = "55% OMEN"
-			shadow_tag_sub = "45% FAVOR"
-			shadow_tag_col = COL_TIER_MEAGER_BRIGHT
-			shadow_tag_sub_col = COL_TIER_LAVISH_BRIGHT
+			var shifted_fair := StoryManager.has_shifted_mayari_odds(_total_paid + _current_offer)
+			shadow_tag = "65% FAVOR" if shifted_fair else "55% OMEN"
+			shadow_tag_sub = "35% OMEN" if shifted_fair else "45% FAVOR"
+			shadow_tag_col = COL_TIER_LAVISH_BRIGHT if shifted_fair else COL_TIER_MEAGER_BRIGHT
+			shadow_tag_sub_col = COL_TIER_MEAGER_BRIGHT if shifted_fair else COL_TIER_LAVISH_BRIGHT
 			shadow_bg = Color(0.062, 0.060, 0.066, 0.94)
 			shadow_q = "?"
 			_confirm_btn.text = "Offer Fairly"
@@ -787,9 +911,11 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			accent_bright = COL_TIER_MEAGER_BRIGHT
 			shadow_title = "UNREVEALED OMEN"
 			shadow_desc = "Empty hands draw the moon's cold eye. A heavy omen gathers beneath the veil." if _current_offer <= 0.01 else "A meager tribute chills the evening air. A lunar trial gathers beneath the veil."
-			shadow_tag = "100% OMEN"
-			shadow_tag_sub = ""
+			var shifted_meager := StoryManager.has_shifted_mayari_odds(_total_paid + _current_offer)
+			shadow_tag = "75% OMEN" if shifted_meager else "100% OMEN"
+			shadow_tag_sub = "25% FAVOR" if shifted_meager else ""
 			shadow_tag_col = accent_bright
+			shadow_tag_sub_col = COL_TIER_LAVISH_BRIGHT
 			shadow_bg = Color(0.048, 0.062, 0.090, 0.94)
 			shadow_q = "?"
 			_confirm_btn.text = "Offer Nothing" if _current_offer <= 0.01 else "Offer Meagerly"
@@ -892,25 +1018,33 @@ func _on_confirm_pressed() -> void:
 
 func _launch_hades_card_flip() -> void:
 	_phase = 2
-	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier)
+	var projected_paid := minf(_goal, _total_paid + _confirmed_offer)
+	_confirmed_shifted_odds = StoryManager.has_shifted_mayari_odds(projected_paid)
+	_rerolls_left = StoryManager.get_nightly_reroll_count(projected_paid)
+	_max_card_picks = StoryManager.get_max_mayari_card_picks(projected_paid)
+	_selected_indices.clear()
+	_show_keyword_callouts([])
+
+	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
 	_card_rows.clear()
 	_card_picked = false
 	_hovered_idx = -1
 	_cards_ready = false
 
+	var pick_phrase := "Choose 1 or 2" if _max_card_picks >= 2 else "Choose one"
 	match _confirmed_tier:
 		"cleared":
 			_header_title_lbl.text = "T H E   P A C T   I S   S E A L E D"
-			_header_sub_lbl.text = "Choose one final Favor for tomorrow."
+			_header_sub_lbl.text = "%s final Favor%s for tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
 		"generous":
 			_header_title_lbl.text = "F A V O R   O F   B I R I N G A N"
-			_header_sub_lbl.text = "Choose one Favor for tomorrow."
+			_header_sub_lbl.text = "%s Favor%s for tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
 		"shortfall":
 			_header_title_lbl.text = "O M E N   O F   B I R I N G A N"
-			_header_sub_lbl.text = "Choose one Omen to endure tomorrow."
+			_header_sub_lbl.text = "%s card%s to endure tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
 		_:
 			_header_title_lbl.text = "M O O N   O F   B I R I N G A N"
-			_header_sub_lbl.text = "The moon deals a mixed hand for tomorrow."
+			_header_sub_lbl.text = "The moon deals a mixed hand — %s for tomorrow." % ("choose 1 or 2" if _max_card_picks >= 2 else "choose one")
 
 	# Pre-create the 3 revealed cards inside the EXACT same slots (hidden until flip midpoint)
 	for i in range(mini(_card_data_list.size(), _card_slots.size())):
@@ -947,6 +1081,7 @@ func _launch_hades_card_flip() -> void:
 	if last_tw:
 		await last_tw.finished
 	_cards_ready = true
+	_refresh_draft_controls()
 
 func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
@@ -1142,15 +1277,17 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 		var style: StyleBoxFlat = row.get_meta("card_style")
 		var accent: Color = row.get_meta("accent")
 		var accent_bright: Color = row.get_meta("accent_bright")
+		var is_sel := i in _selected_indices
 		row.pivot_offset = row.size * 0.5
 		var tw := create_tween()
-		if _hovered_idx == i:
-			style.border_color = accent_bright
-			style.border_width_top = 2
-			style.border_width_right = 2
-			style.border_width_bottom = 2
+		if _hovered_idx == i or is_sel:
+			style.border_color = COL_CREAM if is_sel else accent_bright
+			style.border_width_top = 3 if is_sel else 2
+			style.border_width_right = 3 if is_sel else 2
+			style.border_width_bottom = 3 if is_sel else 2
 			style.border_width_left = 6
-			tw.tween_property(row, "scale", Vector2(1.022, 1.022), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			var sc := Vector2(1.026, 1.026) if _hovered_idx == i else Vector2(1.014, 1.014)
+			tw.tween_property(row, "scale", sc, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			tw.parallel().tween_property(row, "modulate", Color.WHITE, 0.12)
 		else:
 			style.border_color = Color(accent.r, accent.g, accent.b, 0.55)
@@ -1158,7 +1295,7 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			style.border_width_right = 1
 			style.border_width_bottom = 1
 			style.border_width_left = 4
-			var dim := Color(0.76, 0.72, 0.68, 0.88) if _hovered_idx != -1 else Color.WHITE
+			var dim := Color(0.76, 0.72, 0.68, 0.88) if (_hovered_idx != -1 or not _selected_indices.is_empty()) else Color.WHITE
 			tw.tween_property(row, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
 			tw.parallel().tween_property(row, "modulate", dim, 0.14)
 
@@ -1230,25 +1367,193 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 	_callout_tween = create_tween()
 	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
 
+func _on_milestone_hovered(m: Dictionary) -> void:
+	if _phase != 0 or not is_instance_valid(_callout_col):
+		return
+	if _callout_tween and _callout_tween.is_valid():
+		_callout_tween.kill()
+	for child in _callout_col.get_children():
+		_callout_col.remove_child(child)
+		child.queue_free()
+	if m.is_empty():
+		_callout_col.visible = false
+		_callout_col.modulate.a = 0.0
+		return
+
+	var m_amt := float(m.get("amount", 0.0))
+	var pct := int(roundf(float(m.get("ratio", 0.0)) * 100.0))
+	var already := _total_paid >= m_amt - 0.01
+	var tonight := (not already) and (_total_paid + _current_offer >= m_amt - 0.01)
+	var status_str := "UNLOCKED ✓" if already else ("UNLOCKS TONIGHT!" if tonight else "₱%d MORE NEEDED" % int(ceilf(m_amt - _total_paid)))
+	var status_col := COL_STAT_POS if (already or tonight) else COL_GOLD_BRIGHT
+
+	var box := PanelContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.96), 6, 14, 10)
+	bs.border_color = status_col
+	bs.border_width_left = 3
+	bs.border_width_top = 1
+	bs.border_width_right = 1
+	bs.border_width_bottom = 1
+	bs.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	bs.shadow_size = 12
+	box.add_theme_stylebox_override("panel", bs)
+
+	var bv := VBoxContainer.new()
+	bv.add_theme_constant_override("separation", 4)
+	bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(bv)
+
+	var kt := Label.new()
+	kt.text = "%d%% (₱%d) · %s" % [pct, int(m_amt), str(m.get("title", "")).to_upper()]
+	kt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kt.add_theme_font_override("font", _bold_font)
+	kt.add_theme_font_size_override("font_size", 15)
+	kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	bv.add_child(kt)
+
+	var ks := Label.new()
+	ks.text = status_str
+	ks.add_theme_font_override("font", _bold_font)
+	ks.add_theme_font_size_override("font_size", 12)
+	ks.add_theme_color_override("font_color", status_col)
+	bv.add_child(ks)
+
+	var kd := Label.new()
+	kd.text = str(m.get("desc", ""))
+	kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	kd.add_theme_font_override("font", UIStyle.FONT_INDER)
+	kd.add_theme_font_size_override("font_size", 13)
+	kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	bv.add_child(kd)
+
+	_callout_col.add_child(box)
+	_callout_col.visible = true
+	_callout_col.modulate.a = 0.0
+	_callout_tween = create_tween()
+	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+
+func _refresh_draft_controls() -> void:
+	if is_instance_valid(_reroll_btn):
+		_reroll_btn.visible = _cards_ready and not _card_picked and _rerolls_left > 0
+		_reroll_btn.disabled = not _cards_ready or _card_picked or _rerolls_left <= 0
+		_reroll_btn.text = "↻ Reroll (%d)" % _rerolls_left
+	if is_instance_valid(_accept_cards_btn):
+		_accept_cards_btn.visible = _cards_ready and not _card_picked and _max_card_picks >= 2
+		var cnt := _selected_indices.size()
+		_accept_cards_btn.disabled = cnt == 0
+		if cnt == 0:
+			_accept_cards_btn.text = "Pick 1 or 2 Cards"
+		elif cnt == 1:
+			_accept_cards_btn.text = "Accept 1 Card"
+		else:
+			_accept_cards_btn.text = "Accept 2 Cards"
+
+func _on_reroll_pressed() -> void:
+	if not _cards_ready or _card_picked or _rerolls_left <= 0:
+		return
+	_rerolls_left -= 1
+	_cards_ready = false
+	_selected_indices.clear()
+	_hovered_idx = -1
+	_show_keyword_callouts([])
+	_refresh_draft_controls()
+	EventBus.request_sfx.emit("interact")
+
+	var old_rows := _card_rows.duplicate()
+	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+	_card_rows.clear()
+	for i in range(mini(_card_data_list.size(), _card_slots.size())):
+		var row := _create_hades_boon_row(_card_data_list[i], i)
+		row.visible = false
+		_card_slots[i].add_child(row)
+		_card_rows.append(row)
+
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return
+
+	var last_tw: Tween = null
+	for i in range(_card_rows.size()):
+		var old_r: PanelContainer = old_rows[i] if i < old_rows.size() else null
+		var new_r: PanelContainer = _card_rows[i]
+		var tw := create_tween()
+		tw.tween_interval(i * 0.08)
+		if is_instance_valid(old_r):
+			old_r.pivot_offset = old_r.size * 0.5
+			tw.tween_property(old_r, "scale:y", 0.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_callback(func():
+			if is_instance_valid(old_r):
+				old_r.queue_free()
+			new_r.visible = true
+			new_r.pivot_offset = new_r.size * 0.5
+			new_r.scale = Vector2(1.0, 0.0)
+			EventBus.request_sfx.emit("interact")
+		)
+		tw.tween_property(new_r, "scale:y", 1.0, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		last_tw = tw
+
+	if last_tw:
+		await last_tw.finished
+	_cards_ready = true
+	_refresh_draft_controls()
+
 func _select_row(index: int) -> void:
 	if _card_picked or index < 0 or index >= _card_data_list.size():
 		return
+	if _max_card_picks >= 2:
+		if index in _selected_indices:
+			_selected_indices.erase(index)
+		elif _selected_indices.size() < _max_card_picks:
+			_selected_indices.append(index)
+		else:
+			# Replace oldest selection so clicking a 3rd card feels responsive
+			_selected_indices.pop_front()
+			_selected_indices.append(index)
+		EventBus.request_sfx.emit("interact")
+		_refresh_draft_controls()
+		_on_row_hovered(index, true)
+		return
+	_finalize_selected_rows([index])
+
+func _on_accept_cards_pressed() -> void:
+	if _card_picked or not _cards_ready or _selected_indices.is_empty():
+		return
+	_finalize_selected_rows(_selected_indices.duplicate())
+
+func _finalize_selected_rows(indices: Array[int]) -> void:
+	if _card_picked or indices.is_empty():
+		return
 	_card_picked = true
 	_show_keyword_callouts([])
-	var chosen_data: Dictionary = _card_data_list[index]
-	var chosen_id := str(chosen_data.get("id", ""))
-	var is_fav := str(chosen_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
+	_refresh_draft_controls()
 
-	EventBus.request_sfx.emit("purchase" if is_fav else "interact")
-	_header_title_lbl.text = str(chosen_data.get("title", "")).to_upper()
-	_header_sub_lbl.text = "Active tomorrow · " + str(chosen_data.get("tagline", ""))
+	var chosen_ids: Array[String] = []
+	var chosen_titles: Array[String] = []
+	var chosen_tags: Array[String] = []
+	var any_favor := false
+	for idx in indices:
+		if idx < 0 or idx >= _card_data_list.size():
+			continue
+		var c_data: Dictionary = _card_data_list[idx]
+		var cid := str(c_data.get("id", ""))
+		if cid != "":
+			chosen_ids.append(cid)
+			chosen_titles.append(str(c_data.get("title", "")).to_upper())
+			chosen_tags.append(str(c_data.get("tagline", "")))
+			if str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR:
+				any_favor = true
+
+	EventBus.request_sfx.emit("purchase" if any_favor else "interact")
+	_header_title_lbl.text = "  ·  ".join(chosen_titles)
+	_header_sub_lbl.text = "Active tomorrow · " + " | ".join(chosen_tags)
 
 	for i in range(_card_rows.size()):
 		var row := _card_rows[i]
 		if not is_instance_valid(row):
 			continue
 		var tw := create_tween()
-		if i == index:
+		if i in indices:
 			var style: StyleBoxFlat = row.get_meta("card_style")
 			style.border_color = COL_CREAM
 			style.set_border_width_all(3)
@@ -1261,14 +1566,18 @@ func _select_row(index: int) -> void:
 	await get_tree().create_timer(0.68).timeout
 	if not is_inside_tree():
 		return
-	await _fade_out_and_finish(chosen_id)
+	await _fade_out_and_finish(chosen_ids)
 
-func _fade_out_and_finish(selected_card_id: String) -> void:
+func _fade_out_and_finish(selected_card_ids: Array[String]) -> void:
 	var fade := create_tween()
 	fade.tween_property(_backdrop, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
 	fade.parallel().tween_property(_mayari_portrait, "modulate:a", 0.0, 0.22)
 	fade.parallel().tween_property(_header_banner, "modulate:a", 0.0, 0.22)
 	fade.parallel().tween_property(_center_frame, "modulate:a", 0.0, 0.22)
+	if is_instance_valid(_reroll_btn):
+		fade.parallel().tween_property(_reroll_btn, "modulate:a", 0.0, 0.18)
+	if is_instance_valid(_accept_cards_btn):
+		fade.parallel().tween_property(_accept_cards_btn, "modulate:a", 0.0, 0.18)
 	await fade.finished
-	completed.emit(_confirmed_offer, _confirmed_tier, selected_card_id)
+	completed.emit(_confirmed_offer, _confirmed_tier, selected_card_ids)
 	queue_free()

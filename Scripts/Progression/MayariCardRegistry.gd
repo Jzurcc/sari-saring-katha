@@ -295,10 +295,10 @@ static func get_cards_by_kind(kind: String) -> Array[Dictionary]:
 	return result
 
 ## Draws 3 unique cards for the post-tally roguelike draft:
-## - "generous": 3 guaranteed Favor cards
-## - "shortfall": 3 guaranteed Omen cards
-## - "balanced": 3 unique cards, each slot rolling 55% Omen / 45% Favor
-static func draw_three_cards(tally_tier: String) -> Array[Dictionary]:
+## - "generous" / "cleared": 3 guaranteed Favor cards
+## - "shortfall": 100% Omen normally; 75% Omen / 25% Favor with 50% Silver Favor milestone
+## - "balanced": 55% Omen / 45% Favor normally; 35% Omen / 65% Favor with 50% Silver Favor milestone
+static func draw_three_cards(tally_tier: String, shifted_odds: bool = false) -> Array[Dictionary]:
 	var favor_pool := get_cards_by_kind(KIND_FAVOR)
 	var chill_pool := get_cards_by_kind(KIND_CHILL)
 	favor_pool.shuffle()
@@ -310,14 +310,31 @@ static func draw_three_cards(tally_tier: String) -> Array[Dictionary]:
 			for i in range(mini(3, favor_pool.size())):
 				picked.append(favor_pool[i])
 		"shortfall":
-			for i in range(mini(3, chill_pool.size())):
-				picked.append(chill_pool[i])
+			if not shifted_odds:
+				for i in range(mini(3, chill_pool.size())):
+					picked.append(chill_pool[i])
+			else:
+				var f_idx := 0
+				var c_idx := 0
+				for _slot in range(3):
+					var want_chill := randf() < 0.75
+					if want_chill and c_idx < chill_pool.size():
+						picked.append(chill_pool[c_idx])
+						c_idx += 1
+					elif f_idx < favor_pool.size():
+						picked.append(favor_pool[f_idx])
+						f_idx += 1
+					elif c_idx < chill_pool.size():
+						picked.append(chill_pool[c_idx])
+						c_idx += 1
+				picked.shuffle()
 		_:
-			# Fair: 55% Omen / 45% Favor per slot
+			# Fair: 55% Omen / 45% Favor normally; 35% Omen / 65% Favor with Silver Favor milestone
+			var chill_prob := 0.35 if shifted_odds else 0.55
 			var f_idx := 0
 			var c_idx := 0
 			for _slot in range(3):
-				var want_chill := randf() < 0.55
+				var want_chill := randf() < chill_prob
 				if want_chill and c_idx < chill_pool.size():
 					picked.append(chill_pool[c_idx])
 					c_idx += 1

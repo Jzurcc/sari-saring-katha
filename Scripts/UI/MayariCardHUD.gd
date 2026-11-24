@@ -129,11 +129,14 @@ func _refresh_icons() -> void:
 			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"])
 			count += 1
 
-	# 2. Active Reyna Mayari Moon Card
-	if StoryManager.active_mayari_card != "":
-		var card := MayariCardRegistry.get_card(StoryManager.active_mayari_card)
+	# 2. Active Reyna Mayari Moon Card(s)
+	var mayari_ids: Array[String] = StoryManager.active_mayari_cards
+	if mayari_ids.is_empty() and StoryManager.active_mayari_card != "":
+		mayari_ids = [StoryManager.active_mayari_card]
+	for mid in mayari_ids:
+		var card := MayariCardRegistry.get_card(mid)
 		if not card.is_empty():
-			var is_fav := MayariCardRegistry.is_favor(StoryManager.active_mayari_card)
+			var is_fav := MayariCardRegistry.is_favor(mid)
 			var pc: Dictionary = HadesEmblem.palette("favor" if is_fav else "chill")
 			var acc: Color = pc["accent"]
 			var acc_b: Color = pc["bright"]
