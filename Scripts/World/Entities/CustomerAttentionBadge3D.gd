@@ -51,13 +51,13 @@ static func _build_thought_bubble_texture(fill_col: Color, border_col: Color) ->
 	const SIZE := 128
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	var box_center := Vector2(64.0, 48.0)
-	var box_half := Vector2(38.0, 28.0)
-	var corner_r := 22.0
+	var box_half := Vector2(42.0, 31.0)
+	var corner_r := 24.0
 	var border_w := 4.8
 	var edge := 2.0
-	var dot1_c := Vector2(58.0, 88.0)
+	var dot1_c := Vector2(58.0, 91.0)
 	var dot1_r := 7.5
-	var dot2_c := Vector2(51.0, 104.0)
+	var dot2_c := Vector2(51.0, 107.0)
 	var dot2_r := 4.8
 
 	for y in SIZE:
@@ -188,6 +188,7 @@ func set_mode(new_mode: Mode) -> void:
 		return
 
 	var target_scale := Vector3.ONE
+	var bg_y := -0.024
 	if new_mode == Mode.SMALLTALK:
 		text = "•••"
 		font_size = 42
@@ -196,9 +197,10 @@ func set_mode(new_mode: Mode) -> void:
 		outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
 		outline_size = 10
 	elif new_mode == Mode.THOUGHT:
-		font_size = 54
-		_mode_y_offset = 0.24
-		target_scale = Vector3(1.55, 1.55, 1.55)
+		font_size = 40
+		_mode_y_offset = 0.34
+		bg_y = -0.042
+		target_scale = Vector3(2.1, 2.1, 2.1)
 		outline_modulate = Color(0.20, 0.14, 0.08, 0.45)
 		outline_size = 4
 	else:
@@ -213,6 +215,7 @@ func set_mode(new_mode: Mode) -> void:
 
 	if _bg_sprite:
 		_bg_sprite.texture = _get_bubble_texture(new_mode)
+		_bg_sprite.position.y = bg_y
 
 	visible = true
 	scale = Vector3.ZERO
