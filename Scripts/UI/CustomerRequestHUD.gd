@@ -225,10 +225,12 @@ func _create_row(customer_name: String) -> Dictionary:
 		portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait_rect.size = Vector2(PORTRAIT_IMG_SIZE, PORTRAIT_IMG_SIZE)
+		portrait_rect.pivot_offset = Vector2(PORTRAIT_IMG_SIZE * 0.5, PORTRAIT_IMG_SIZE * 0.65)
 		var img_offset := (PORTRAIT_RING_SIZE - PORTRAIT_IMG_SIZE) * 0.5
 		portrait_rect.position = Vector2(img_offset, img_offset - 3.0)
 		portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		badge_holder.add_child(portrait_rect)
+		_apply_portrait_bob(portrait_rect)
 	else:
 		var name_lbl := Label.new()
 		name_lbl.text = customer_name.left(2).to_upper()
@@ -550,7 +552,12 @@ func _pop_and_remove_item(child: Control) -> void:
 
 	if anim_target and anim_target.get_meta("sway_tween", null):
 		var sw_tw = anim_target.get_meta("sway_tween")
-		sw_tw.kill()
+		if sw_tw and sw_tw.is_valid():
+			sw_tw.kill()
+	if anim_target and anim_target.get_meta("bob_tween", null):
+		var bb_tw = anim_target.get_meta("bob_tween")
+		if bb_tw and bb_tw.is_valid():
+			bb_tw.kill()
 
 	_spawn_fulfill_burst(child)
 
@@ -607,15 +614,45 @@ func _hide_hud() -> void:
 					c.queue_free()
 	)
 
+func _apply_portrait_bob(portrait: Control) -> void:
+	# Distinct cozy head-bob + independent gentle head-tilt for customer portraits
+	var base_y := portrait.position.y
+	var bob_amp := randf_range(2.2, 4.0)
+	var bob_half := randf_range(0.75, 1.25)
+	var bob_dir := 1.0 if randf() < 0.5 else -1.0
+
+	var bob_tw := portrait.create_tween().set_loops()
+	bob_tw.tween_property(portrait, "position:y", base_y - bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob_tw.tween_property(portrait, "position:y", base_y + bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	var tilt_deg := randf_range(2.2, 4.8)
+	var tilt_half := randf_range(1.15, 1.85)
+	var tilt_dir := 1.0 if randf() < 0.5 else -1.0
+	portrait.rotation_degrees = randf_range(-tilt_deg * 0.5, tilt_deg * 0.5)
+	var tilt_tw := portrait.create_tween().set_loops()
+	tilt_tw.tween_property(portrait, "rotation_degrees", tilt_deg * tilt_dir, tilt_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tilt_tw.tween_property(portrait, "rotation_degrees", -tilt_deg * tilt_dir, tilt_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
 func _apply_sway(icon: Control) -> void:
+	# Varied per-item rock + independent vertical float so neighboring items never bob in lockstep
+	var sway_dir := 1.0 if randf() < 0.5 else -1.0
+	var sway_dur := randf_range(1.8, 4.6)
+	var angle := randf_range(2.5, 8.0)
+	icon.rotation_degrees = randf_range(-angle, angle)
+
 	var tw := icon.create_tween().set_loops()
 	icon.set_meta("sway_tween", tw)
-	var duration := randf_range(2.5, 4.5)
-	var angle := randf_range(3.0, 6.0)
+	tw.tween_property(icon, "rotation_degrees", angle * sway_dir, sway_dur * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(icon, "rotation_degrees", -angle * sway_dir, sway_dur * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
-	icon.rotation_degrees = randf_range(-angle, angle)
-	tw.tween_property(icon, "rotation_degrees", angle, duration / 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tw.tween_property(icon, "rotation_degrees", -angle, duration / 2.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var base_y := icon.position.y
+	var bob_amp := randf_range(2.0, 5.2)
+	var bob_half := randf_range(0.85, 1.75)
+	var bob_dir := 1.0 if randf() < 0.5 else -1.0
+	var bob_tw := icon.create_tween().set_loops()
+	icon.set_meta("bob_tween", bob_tw)
+	bob_tw.tween_property(icon, "position:y", base_y - bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob_tw.tween_property(icon, "position:y", base_y + bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _on_customer_hover_changed(customer: Customer, is_dragging: bool) -> void:
 	var next_key := customer.get_order_hud_key().strip_edges() if is_instance_valid(customer) else ""
