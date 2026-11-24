@@ -462,7 +462,7 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	var path: String = data.resource_path
 	var chapter: int = CharacterProgressionManager.get_chapter(path)
 
-	# Once the ₱750 ledger is permanently sealed, stop nightly collections
+	# Once the ledger is permanently sealed, stop nightly collections
 	# (except one final visit for Chapter 9 epilogue if not yet seen).
 	if sm.is_tally_cleared():
 		if chapter == 8 and chapter < data.max_story_chapters:
@@ -470,8 +470,6 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 			transaction.is_visit_story = true
 			transaction.timeline = data.story_timeline
 			DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
-			sm.has_mayari_visited = true
-			CharacterProgressionManager.record_encounter(path)
 			LogManager.info("StoryManager", "Mayari EPILOGUE visit (Chapter 9: Patron of the Moon).")
 			return transaction
 		return null
@@ -479,7 +477,6 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	var should_play_story: bool = false
 	if not sm.is_mayari_met:
 		should_play_story = true
-		sm.is_mayari_met = true
 		LogManager.info("StoryManager", "Mayari DEBUT nightly visit.")
 	elif sm.last_mayari_collection_successful and chapter < 7 and chapter < data.max_story_chapters:
 		should_play_story = true
@@ -497,7 +494,5 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 
 	DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
 
-	sm.has_mayari_visited = true
-	CharacterProgressionManager.record_encounter(path)
 	return transaction
 

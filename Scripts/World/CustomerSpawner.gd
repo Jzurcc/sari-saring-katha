@@ -807,6 +807,8 @@ func get_save_data() -> Dictionary:
 			continue
 		if c.is_lingering_visitor or c.is_returning_for_smalltalk or c.is_lingering_departure:
 			continue
+		if c.customer_data and c.customer_data.is_collector():
+			continue
 		var is_already_done: bool = c._is_resolving \
 			or c.dialogue_phase == TransactionSession.Phase.SATISFIED \
 			or _is_completed_order(c.transaction_context)

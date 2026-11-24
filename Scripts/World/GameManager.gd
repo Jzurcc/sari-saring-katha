@@ -269,6 +269,8 @@ func _handle_open_tally_offer() -> void:
 	StoryManager.tally_total_paid = minf(StoryManager.TALLY_GOAL, StoryManager.tally_total_paid + offer_amount)
 	StoryManager.last_tally_tier = tier
 	StoryManager.pending_mayari_card = selected_card_id
+	StoryManager.has_mayari_visited = true
+	StoryManager.is_mayari_met = true
 
 	var is_sufficient := (tier == "balanced" or tier == "generous" or tier == "cleared")
 	if is_sufficient:

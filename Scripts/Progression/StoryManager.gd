@@ -1066,7 +1066,10 @@ func _on_customer_satisfied(customer) -> void:
 	# Award Player XP for completed visits & purchases (never for guided tutorial or Mayari tally)
 	if customer.transaction_context and not customer.transaction_context.is_guided_tutorial:
 		var is_collector_cust: bool = customer.customer_data != null and customer.customer_data.is_collector()
-		if not is_collector_cust:
+		if is_collector_cust:
+			has_mayari_visited = true
+			is_mayari_met = true
+		else:
 			var ctx: TransactionContext = customer.transaction_context
 			if ctx.transaction_type == TransactionContext.Type.VISIT or ctx.is_visit_story:
 				add_player_xp(10, "Visit")
@@ -1104,6 +1107,9 @@ func _on_customer_arrived(customer: Customer) -> void:
 func _on_customer_dismissed(customer: Customer) -> void:
 	if customer != null and customer.is_lingering_departure:
 		return
+	if customer != null and customer.customer_data != null and customer.customer_data.is_collector():
+		has_mayari_visited = true
+		is_mayari_met = true
 	if customer != null and customer.transaction_context:
 		for desired in customer.transaction_context.desired_items:
 			if desired and InventoryManager.get_total_item_stock(desired) <= 0:
