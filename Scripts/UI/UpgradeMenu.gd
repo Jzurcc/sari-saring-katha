@@ -1261,15 +1261,19 @@ func _update_detail_panel(item: ItemData) -> void:
 			unlocks_list.remove_child(child)
 			child.queue_free()
 
-		var lines: Array[String] = [
-			"• Simultaneous Counter Slots: %d → %d neighbors" % [prev_slots, next_slots],
-			"• Pettable store cat lounges on the counter top shelf",
-			"• Click your store cat anytime for lucky meows"
-		] if c_lvl == 1 else [
-			"• Simultaneous Counter Slots: %d → %d neighbors" % [prev_slots, next_slots],
-			"• Keeps Mingming well-fed and extra welcoming",
-			"• Attracts lively 3-neighbor rushes to your counter"
-		]
+		var lines: Array[String] = []
+		if c_lvl == 1:
+			lines = [
+				"• Simultaneous Counter Slots: %d → %d neighbors" % [prev_slots, next_slots],
+				"• Pettable store cat lounges on the counter top shelf",
+				"• Click your store cat anytime for lucky meows"
+			]
+		else:
+			lines = [
+				"• Simultaneous Counter Slots: %d → %d neighbors" % [prev_slots, next_slots],
+				"• Keeps Mingming well-fed and extra welcoming",
+				"• Attracts lively 3-neighbor rushes to your counter"
+			]
 		for line in lines:
 			var stat_lbl := Label.new()
 			stat_lbl.text = line
