@@ -23,6 +23,58 @@ const COL_BROWN_BORDER := Color(0.482, 0.306, 0.102, 0.9)
 const COL_CHILL := Color(0.84, 0.37, 0.36, 1.0)          # Warm crimson-terracotta (fits brand!)
 const COL_CHILL_SOFT := Color(0.95, 0.58, 0.54, 1.0)
 const COL_SEALED := Color(1.0, 0.95, 0.82, 1.0)
+const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)       # Luminous Hades-style green for buffs
+const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)       # Warm coral-red for penalties
+const COL_BOLD_CREAM := "#FFF6E5"
+
+## Custom Hades-style rotated diamond emblem with ornate double border & diagonal backing.
+class DiamondEmblem extends Control:
+	var accent: Color = Color(0.835, 0.624, 0.278, 1.0)
+	var accent_bright: Color = Color(1.0, 0.875, 0.56, 1.0)
+	var fill_color: Color = Color(0.14, 0.11, 0.08, 0.96)
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r := minf(size.x, size.y) * 0.46
+
+		# Subtle Hades-style diagonal accent wedge behind the diamond
+		var wedge := PackedVector2Array([
+			Vector2(0.0, 0.0),
+			Vector2(size.x * 0.62, 0.0),
+			Vector2(size.x * 0.98, size.y),
+			Vector2(0.0, size.y),
+		])
+		draw_colored_polygon(wedge, Color(accent.r, accent.g, accent.b, 0.20))
+
+		# Outer dark bevel diamond
+		var outer := _diamond_pts(c, r)
+		draw_colored_polygon(outer, Color(0.04, 0.035, 0.03, 0.96))
+		draw_polyline(_closed_pts(outer), accent_bright, 2.5, true)
+
+		# Inner filled diamond
+		var inner := _diamond_pts(c, r * 0.84)
+		draw_colored_polygon(inner, fill_color)
+		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.78), 1.5, true)
+
+		# Subtle decorative pips at the 4 diamond vertices
+		var pip_r := 3.5
+		for pt in outer:
+			draw_colored_polygon(_diamond_pts(pt, pip_r), accent_bright)
+
+	func _diamond_pts(center: Vector2, radius: float) -> PackedVector2Array:
+		return PackedVector2Array([
+			center + Vector2(0.0, -radius),
+			center + Vector2(radius, 0.0),
+			center + Vector2(0.0, radius),
+			center + Vector2(-radius, 0.0),
+		])
+
+	func _closed_pts(pts: PackedVector2Array) -> PackedVector2Array:
+		var closed := PackedVector2Array(pts)
+		closed.append(pts[0])
+		return closed
+
+var _bold_font: FontVariation
 
 var _player_money: float = 0.0
 var _total_paid: float = 0.0
@@ -91,6 +143,9 @@ func setup(player_money: float, total_paid: float, goal: float, min_amount: floa
 func _ready() -> void:
 	layer = 110
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_bold_font = FontVariation.new()
+	_bold_font.base_font = UIStyle.FONT_INDER
+	_bold_font.variation_embolden = 0.65
 	_build_ui()
 	_refresh_offering_ui(false)
 	_play_entrance()
@@ -636,12 +691,12 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	var row_bg := Color(0.088, 0.078, 0.068, 0.95) if is_fav else Color(0.115, 0.068, 0.068, 0.95)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 132)
+	card.custom_minimum_size = Vector2(0, 146)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
-	var style := UIStyle.create_flat_stylebox(row_bg, 8, 18, 14)
+	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 12)
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.62)
 	style.border_width_left = 4
 	style.border_width_top = 1
@@ -656,36 +711,35 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.set_meta("accent_bright", accent_bright)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 18)
+	hbox.add_theme_constant_override("separation", 20)
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 
-	# Left framed emblem square (Hades boon icon slot)
-	var emblem_frame := PanelContainer.new()
-	emblem_frame.custom_minimum_size = Vector2(84, 84)
-	emblem_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	emblem_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var emb_bg := Color(accent.r * 0.28, accent.g * 0.22, accent.b * 0.14, 0.95)
-	var emb_style := UIStyle.create_flat_stylebox(emb_bg, 8, 0, 0)
-	emb_style.border_color = accent_bright
-	emb_style.set_border_width_all(2)
-	emblem_frame.add_theme_stylebox_override("panel", emb_style)
-	hbox.add_child(emblem_frame)
+	# Left Hades-style rotated diamond emblem with upright centered sigil
+	var emblem := DiamondEmblem.new()
+	emblem.custom_minimum_size = Vector2(106, 106)
+	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	emblem.accent = accent
+	emblem.accent_bright = accent_bright
+	emblem.fill_color = Color(accent.r * 0.28, accent.g * 0.21, accent.b * 0.14, 0.96)
+	hbox.add_child(emblem)
 
 	var sigil_lbl := Label.new()
+	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	sigil_lbl.text = str(c_data.get("sigil", "☽"))
 	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	sigil_lbl.add_theme_font_size_override("font_size", 42)
 	sigil_lbl.add_theme_color_override("font_color", accent_bright)
 	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem_frame.add_child(sigil_lbl)
+	emblem.add_child(sigil_lbl)
 
-	# Middle text stack: Title + Tag row, concise description, stat highlight
+	# Middle text stack: Uppercase Title + Rarity tag, rich bold description, aligned Hades stat rows
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	text_col.add_theme_constant_override("separation", 5)
+	text_col.add_theme_constant_override("separation", 4)
 	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(text_col)
 
@@ -694,10 +748,10 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	text_col.add_child(top_line)
 
 	var title_lbl := Label.new()
-	title_lbl.text = str(c_data.get("title", "Moon Card"))
+	title_lbl.text = str(c_data.get("title", "Moon Card")).to_upper()
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 26)
+	title_lbl.add_theme_font_size_override("font_size", 25)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
@@ -706,27 +760,66 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	rarity_lbl.text = "FAVOR" if is_fav else "CHILL"
 	rarity_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rarity_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	rarity_lbl.add_theme_font_size_override("font_size", 16)
+	rarity_lbl.add_theme_font_size_override("font_size", 17)
 	rarity_lbl.add_theme_color_override("font_color", accent)
 	rarity_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(rarity_lbl)
 
-	var desc_lbl := Label.new()
-	desc_lbl.text = str(c_data.get("description", ""))
-	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	desc_lbl.add_theme_font_size_override("font_size", 16)
-	desc_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
-	desc_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text_col.add_child(desc_lbl)
+	var desc_rt := RichTextLabel.new()
+	desc_rt.bbcode_enabled = true
+	desc_rt.fit_content = true
+	desc_rt.scroll_active = false
+	desc_rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
+	desc_rt.add_theme_font_override("bold_font", _bold_font)
+	desc_rt.add_theme_font_size_override("normal_font_size", 16)
+	desc_rt.add_theme_font_size_override("bold_font_size", 16)
+	desc_rt.add_theme_color_override("default_color", COL_CREAM_MUTED)
+	var raw_desc := str(c_data.get("description_rich", c_data.get("description", "")))
+	desc_rt.text = raw_desc.replace("[b]", "[b][color=%s]" % COL_BOLD_CREAM).replace("[/b]", "[/color][/b]")
+	text_col.add_child(desc_rt)
 
-	var hook_lbl := Label.new()
-	hook_lbl.text = "▸  " + str(c_data.get("tagline", ""))
-	hook_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	hook_lbl.add_theme_font_size_override("font_size", 18)
-	hook_lbl.add_theme_color_override("font_color", COL_CREAM)
-	hook_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text_col.add_child(hook_lbl)
+	# Hades-style stat breakdown rows:  ▸ Stat Name:         +Value
+	var stats: Array = c_data.get("stats", [])
+	if stats.is_empty():
+		var hook_lbl := Label.new()
+		hook_lbl.text = "▸  " + str(c_data.get("tagline", ""))
+		hook_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		hook_lbl.add_theme_font_size_override("font_size", 17)
+		hook_lbl.add_theme_color_override("font_color", COL_CREAM)
+		hook_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(hook_lbl)
+	else:
+		var stats_box := VBoxContainer.new()
+		stats_box.add_theme_constant_override("separation", 2)
+		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(stats_box)
+		for st in stats:
+			var stat_dict: Dictionary = st
+			var s_row := HBoxContainer.new()
+			s_row.add_theme_constant_override("separation", 12)
+			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			stats_box.add_child(s_row)
+
+			var s_name := Label.new()
+			s_name.text = "▸ " + str(stat_dict.get("label", ""))
+			s_name.custom_minimum_size = Vector2(240, 0)
+			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+			s_name.add_theme_font_size_override("font_size", 17)
+			s_name.add_theme_color_override("font_color", COL_CREAM)
+			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_name)
+
+			var s_val := Label.new()
+			s_val.text = str(stat_dict.get("value", ""))
+			s_val.add_theme_font_override("font", _bold_font)
+			s_val.add_theme_font_size_override("font_size", 18)
+			var tone := str(stat_dict.get("tone", "pos"))
+			var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+			s_val.add_theme_color_override("font_color", val_col)
+			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_val)
 
 	card.mouse_entered.connect(_on_row_hovered.bind(index, true))
 	card.mouse_exited.connect(_on_row_hovered.bind(index, false))
