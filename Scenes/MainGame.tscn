@@ -45,12 +45,13 @@
 [ext_resource type="PackedScene" uid="uid://c6xk4y8u7j1k2" path="res://Scenes/UI/HelperPrompt.tscn" id="65_helper_ui"]
 [ext_resource type="PackedScene" uid="uid://vxg5jhle4otv" path="res://Scenes/Calendar.tscn" id="67_y6hl6"]
 [ext_resource type="Material" uid="uid://bh2y2miv517vc" path="res://Assets/3D/final store/textures/materials/doorway_1.tres" id="74_01nwf"]
+[ext_resource type="Script" uid="uid://blrfufejsu1cj" path="res://Scripts/Components/WorldInteractor.gd" id="79_g18bh"]
 [ext_resource type="Script" uid="uid://bs2mrmnrytfg6" path="res://Scripts/World/Interactors/BenchProp.gd" id="bench_prop_script"]
+[ext_resource type="Script" uid="uid://dfwqdddxblsw1" path="res://Scripts/World/Interactors/CalendarInteractable.gd" id="calendar_interactable_script"]
 [ext_resource type="Resource" uid="uid://qtpuix4fthvt" path="res://Resources/items/candy/Chubs.tres" id="candy_chubs"]
 [ext_resource type="Resource" uid="uid://dgrcuvw34ae8q" path="res://Resources/items/candy/Mentor.tres" id="candy_mentor"]
 [ext_resource type="Resource" uid="uid://dsniq07uwbh7w" path="res://Resources/items/candy/Pocha.tres" id="candy_pocha"]
 [ext_resource type="Script" uid="uid://bnjgmgonmrwni" path="res://Scripts/World/Interactors/CatInteractable.gd" id="cat_script"]
-[ext_resource type="Script" path="res://Scripts/World/Interactors/CalendarInteractable.gd" id="calendar_interactable_script"]
 [ext_resource type="Script" uid="uid://30ubw6dxdp0r" path="res://Scripts/World/Entities/CandyContainerItem.gd" id="cci_scr"]
 [ext_resource type="Script" uid="uid://dc3nhe61qyojn" path="res://Scripts/World/CandyContainerManager.gd" id="ccm_scr"]
 [ext_resource type="Resource" uid="uid://debw72eyxjeo5" path="res://Resources/items/candycontainer/Chubs.tres" id="cc_chubs"]
@@ -77,6 +78,8 @@
 [ext_resource type="Resource" uid="uid://cv3kc6f1s6724" path="res://Resources/items/sachetcontainers/KneesToes.tres" id="sc_kneestoes"]
 [ext_resource type="Resource" uid="uid://b1a3e2b3icb32" path="res://Resources/items/sachetcontainers/Kopimo.tres" id="sc_kopimo"]
 [ext_resource type="Script" uid="uid://b8gv7xukjjq7n" path="res://Scripts/World/Interactors/StoNinoInteractable.gd" id="sto_nino_script"]
+[ext_resource type="Script" path="res://Scripts/World/Environment/StorefrontCustomDisplay.gd" id="storefront_display_script"]
+[ext_resource type="Script" path="res://Scripts/World/Interactors/DoorInteractable.gd" id="door_interactable_script"]
 [ext_resource type="Script" uid="uid://c4nyxybw28ti4" path="res://Scripts/Components/TrashInteractable.gd" id="trash_scr"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
@@ -183,6 +186,9 @@ shadow_mesh = SubResource("ArrayMesh_iv81v")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_0b41i"]
 size = Vector3(340.59668, 89.341324, 135.54524)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_keblb"]
+size = Vector3(1.7548828, 3.8894043, 0.24957275)
 
 [node name="MainGame" type="Node3D" unique_id=572606432]
 script = ExtResource("1_script")
@@ -818,3 +824,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00048828125, -0.010498047, 
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Bench/StaticBody3D" unique_id=1106519866]
 shape = SubResource("BoxShape3D_0b41i")
+
+[node name="DoorInteractable" type="Area3D" parent="." unique_id=1057099669]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1096907, 1.428158, 4.698128)
+script = ExtResource("door_interactable_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorInteractable" unique_id=948536338]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.70092773, 1.4447021, 0.19107056)
+shape = SubResource("BoxShape3D_keblb")
+
+[node name="StorefrontCustomDisplay" type="Node3D" parent="."]
+script = ExtResource("storefront_display_script")

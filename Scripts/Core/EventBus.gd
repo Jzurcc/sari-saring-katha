@@ -94,6 +94,10 @@ signal permit_upgraded(new_level: int)
 @warning_ignore("unused_signal")
 signal bench_upgraded(new_level: int)
 @warning_ignore("unused_signal")
+signal storefront_upgraded(new_level: int)
+@warning_ignore("unused_signal")
+signal storefront_artwork_updated(slot_name: String)
+@warning_ignore("unused_signal")
 signal keybinds_changed()
 
 # --- Nokia / Phone UI ---

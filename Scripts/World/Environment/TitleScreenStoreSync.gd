@@ -8,6 +8,7 @@ extends Node3D
 ## while keeping the title screen storefront visually in sync with your save.
 
 const CALENDAR_SCENE: PackedScene = preload("res://Scenes/Calendar.tscn")
+const StorefrontCustomDisplayScript = preload("res://Scripts/World/Environment/StorefrontCustomDisplay.gd")
 
 const TEX_TROPHY: Texture2D = preload("res://Assets/ui/trophy.png")
 const TEX_STO_NINO: Texture2D = preload("res://Assets/ui/sto_nino2.png")
@@ -39,6 +40,7 @@ const CALENDAR_TRANSFORM := Transform3D(
 )
 
 var _props_root: Node3D = null
+var _storefront_display: StorefrontCustomDisplayScript = null
 var _sto_nino_sprite: Sprite3D = null
 var _sto_nino_upgraded: bool = false
 var _pulse_time: float = 0.0
@@ -48,6 +50,12 @@ func _ready() -> void:
 	_props_root = Node3D.new()
 	_props_root.name = "SyncedStoreProps"
 	add_child(_props_root)
+
+	_storefront_display = StorefrontCustomDisplayScript.new()
+	_storefront_display.name = "StorefrontCustomDisplay"
+	_storefront_display.read_from_save_peek = true
+	add_child(_storefront_display)
+
 	refresh_from_save()
 
 
@@ -85,6 +93,10 @@ func refresh_from_save() -> void:
 	if raw_placed is Array:
 		for p in raw_placed:
 			placed_set[str(p)] = true
+
+	# --- Custom Roof Signage (Lv.1) & Portrait Poster (Lv.2) ---
+	if is_instance_valid(_storefront_display):
+		_storefront_display.refresh_display(story)
 
 	# --- Permanent store props (match MainGame 1:1) ---
 	_spawn_calendar()

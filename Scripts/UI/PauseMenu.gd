@@ -17,6 +17,8 @@ const NORMAL_CUTOFF: float = 20500.0 # Full range frequency
 const FADE_DURATION: float = 0.4
 
 var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
+var _paint_signage_btn: Button = null
+var _paint_poster_btn: Button = null
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -31,6 +33,8 @@ func _ready() -> void:
 	options_overlay.closed.connect(_on_options_closed)
 	collection_overlay.closed.connect(_on_collection_closed)
 	story_overlay.closed.connect(_on_characters_closed)
+
+	_setup_storefront_buttons()
 	
 	for btn in buttons.get_children():
 		if btn is Button:
@@ -40,7 +44,55 @@ func _ready() -> void:
 	# Initial state
 	hide()
 
+func _setup_storefront_buttons() -> void:
+	var template := buttons.get_node_or_null("SaveGame") as Button
+	if not template:
+		return
+	var insert_idx := template.get_index()
+
+	_paint_signage_btn = template.duplicate(0) as Button
+	_paint_signage_btn.name = "PaintSignage"
+	_paint_signage_btn.text = "PAINT SIGNAGE"
+	_paint_signage_btn.add_theme_font_size_override("font_size", 42)
+	_paint_signage_btn.pressed.connect(_on_paint_storefront_pressed.bind("signage"))
+	buttons.add_child(_paint_signage_btn)
+	buttons.move_child(_paint_signage_btn, insert_idx)
+
+	_paint_poster_btn = template.duplicate(0) as Button
+	_paint_poster_btn.name = "PaintPoster"
+	_paint_poster_btn.text = "PAINT POSTER"
+	_paint_poster_btn.add_theme_font_size_override("font_size", 42)
+	_paint_poster_btn.pressed.connect(_on_paint_storefront_pressed.bind("poster"))
+	buttons.add_child(_paint_poster_btn)
+	buttons.move_child(_paint_poster_btn, insert_idx + 1)
+
+	_refresh_storefront_buttons()
+
+func _refresh_storefront_buttons() -> void:
+	if is_instance_valid(_paint_signage_btn):
+		_paint_signage_btn.visible = StoryManager.storefront_upgrade_level >= 1
+	if is_instance_valid(_paint_poster_btn):
+		_paint_poster_btn.visible = StoryManager.storefront_upgrade_level >= 2
+
+func _on_paint_storefront_pressed(slot_name: String) -> void:
+	_play_click()
+	hide()
+	var overlay_cls = preload("res://Scripts/UI/StorefrontCanvasOverlay.gd")
+	var overlay = overlay_cls.new()
+	overlay.layer = 105
+	get_tree().root.add_child(overlay)
+	overlay.closed.connect(func(_saved: bool):
+		if is_instance_valid(self):
+			show()
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			_refresh_storefront_buttons()
+			_update_menu_interaction(true)
+			buttons.get_node("Resume").grab_focus()
+	)
+	overlay.open_editor(slot_name)
+
 func pause() -> void:
+	_refresh_storefront_buttons()
 	show()
 	get_tree().paused = true
 	_previous_mouse_mode = Input.mouse_mode

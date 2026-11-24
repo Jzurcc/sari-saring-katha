@@ -132,6 +132,20 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			_last_earning += 3.0
 			LogManager.info("GameManager", "Moonlight Tips card granted +₱3.00 bonus tip!")
 
+		var featured_cat := StoryManager.get_poster_featured_category()
+		if not wants_debt and featured_cat != "" and item.category == featured_cat:
+			tip += 3.0
+			_last_earning += 3.0
+			LogManager.info("GameManager", "Poster Featured Category (%s) granted +₱3.00 promo bonus!" % featured_cat)
+
+		var sf_tip_chance := StoryManager.get_storefront_tip_chance()
+		if not wants_debt and sf_tip_chance > 0.0 and randf() < sf_tip_chance:
+			var app_tip := float(randi_range(3, 6))
+			tip += app_tip
+			_last_earning += app_tip
+			Dialogic.VAR.set_variable("Global_TipActive", true)
+			LogManager.info("GameManager", "Storefront Curb Appeal Appreciation Tip: +₱%.2f!" % app_tip)
+
 		StoryManager.record_daily_stat_add("cash_sales", base_sale)
 		if tip > 0.0:
 			StoryManager.record_daily_stat_add("tips_earned", tip)

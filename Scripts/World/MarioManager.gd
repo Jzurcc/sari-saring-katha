@@ -490,7 +490,8 @@ func _is_non_stock_upgrade(item: ItemData) -> bool:
 		or item.get_meta("is_mario_deals_upgrade", false) \
 		or item.get_meta("is_sto_nino_upgrade", false) \
 		or item.get_meta("is_permit_upgrade", false) \
-		or item.get_meta("is_bench_upgrade", false)
+		or item.get_meta("is_bench_upgrade", false) \
+		or item.get_meta("is_storefront_upgrade", false)
 
 
 func _commit_pending_delivery(spawn_in_tree: bool) -> void:
@@ -556,6 +557,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_permit_name := ""
 	var highest_bench_lvl := StoryManager.bench_upgrade_level
 	var highest_bench_name := ""
+	var highest_storefront_lvl := StoryManager.storefront_upgrade_level
+	var highest_storefront_name := ""
 
 	for item in items.keys():
 		if _is_non_stock_upgrade(item):
@@ -607,6 +610,12 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			if target_bn > highest_bench_lvl:
 				highest_bench_lvl = target_bn
 				highest_bench_name = item.item_name
+			continue
+		if item.get_meta("is_storefront_upgrade", false):
+			var target_sf: int = int(item.get_meta("storefront_level", 1))
+			if target_sf > highest_storefront_lvl:
+				highest_storefront_lvl = target_sf
+				highest_storefront_name = item.item_name
 			continue
 		if item.get_meta("is_upgrade", false):
 			upgrade_delivered = true
@@ -681,6 +690,17 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			var notif_title := "Tambayan Bench Placed!" if highest_bench_lvl == 1 else "Tambayan Upgraded!"
 			EventBus.show_notification.emit(notif_title, "%s is now active outside your shop!" % highest_bench_name, "purchase")
 		LogManager.info("MarioManager", "Store Bench upgraded to Level %d (%s)" % [highest_bench_lvl, highest_bench_name])
+
+	if highest_storefront_lvl > StoryManager.storefront_upgrade_level:
+		StoryManager.purchase_storefront_upgrade(highest_storefront_lvl)
+		if spawn_in_tree:
+			if highest_storefront_lvl == 1:
+				EventBus.show_notification.emit("Roof Signage Unlocked!", "Paint your signboard anytime via Upgrade Menu or Pause Menu!", "purchase")
+			elif highest_storefront_lvl == 2:
+				EventBus.show_notification.emit("Promo Poster Mounted!", "Paint your poster & add 3+ matching stickers to boost category demand!", "purchase")
+			else:
+				EventBus.show_notification.emit("The Door is Unlocked!", "A tarnished key fits the lock — click the door anytime to step outside!", "purchase")
+		LogManager.info("MarioManager", "Storefront upgraded to Level %d (%s)" % [highest_storefront_lvl, highest_storefront_name])
 
 	# Handle Tier Advancement and Samples
 	if upgrade_delivered:

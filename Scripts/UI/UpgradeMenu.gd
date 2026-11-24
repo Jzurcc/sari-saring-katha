@@ -91,6 +91,11 @@ func open_menu() -> void:
 		if next_bn and StoryManager.player_level >= int(next_bn.get_meta("req_level", 1)) and _card_map.has(next_bn):
 			_focus_upgrade(next_bn)
 			return
+	if StoryManager.storefront_upgrade_level < 3:
+		var next_sf := StoryManager.get_storefront_upgrade_item(StoryManager.storefront_upgrade_level + 1)
+		if next_sf and StoryManager.player_level >= int(next_sf.get_meta("req_level", 1)) and _card_map.has(next_sf):
+			_focus_upgrade(next_sf)
+			return
 	if StoryManager.radio_upgrade_level < 3:
 		var next_radio := StoryManager.get_radio_upgrade_item(StoryManager.radio_upgrade_level + 1)
 		if next_radio and StoryManager.player_level >= int(next_radio.get_meta("req_level", 1)) and _card_map.has(next_radio):
@@ -230,6 +235,24 @@ func _populate_upgrades() -> void:
 		upgrade_list_container.add_child(bn_card)
 		_card_map[bn_item] = bn_card
 
+	# Storefront Customization section
+	var sf_header := Label.new()
+	sf_header.text = "STOREFRONT CUSTOMIZATION"
+	sf_header.add_theme_font_override("font", UIStyle.FONT_INDER)
+	sf_header.add_theme_font_size_override("font_size", 15)
+	sf_header.add_theme_color_override("font_color", Color("#F5C97B"))
+	var sf_hdr_margin := MarginContainer.new()
+	sf_hdr_margin.add_theme_constant_override("margin_top", 10)
+	sf_hdr_margin.add_theme_constant_override("margin_bottom", 2)
+	sf_hdr_margin.add_child(sf_header)
+	upgrade_list_container.add_child(sf_hdr_margin)
+
+	for lvl in range(1, 4):
+		var sf_item := StoryManager.get_storefront_upgrade_item(lvl)
+		var sf_card := _create_storefront_upgrade_bar(sf_item, lvl)
+		upgrade_list_container.add_child(sf_card)
+		_card_map[sf_item] = sf_card
+
 	# Store Intel & Wholesale Deals section
 	var intel_header := Label.new()
 	intel_header.text = "STORE INTEL & WHOLESALE DEALS"
@@ -307,6 +330,13 @@ func _get_effective_bench_level() -> int:
 	for q in _queued_upgrades:
 		if q.get_meta("is_bench_upgrade", false):
 			eff = maxi(eff, int(q.get_meta("bench_level", eff)))
+	return eff
+
+func _get_effective_storefront_level() -> int:
+	var eff := StoryManager.storefront_upgrade_level
+	for q in _queued_upgrades:
+		if q.get_meta("is_storefront_upgrade", false):
+			eff = maxi(eff, int(q.get_meta("storefront_level", eff)))
 	return eff
 
 func _get_effective_radio_level() -> int:
@@ -1506,6 +1536,186 @@ func _create_mario_deals_upgrade_bar(item: ItemData) -> PanelContainer:
 
 	return card
 
+func _create_storefront_upgrade_bar(item: ItemData, target_level: int) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 76)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.focus_mode = Control.FOCUS_NONE
+
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
+	var owned: bool = target_level <= StoryManager.storefront_upgrade_level
+	var is_queued: bool = item in _queued_upgrades
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_storefront_level() + 1)
+	var is_paintable: bool = owned and (target_level == 1 or target_level == 2)
+
+	var bg_col := UIStyle.COLOR_CARD_BG
+	if owned:
+		bg_col = UIStyle.COLOR_CARD_OWNED_BG
+	elif is_queued:
+		bg_col = Color(0.14, 0.28, 0.16, 0.95)
+	elif not is_next_available:
+		bg_col = UIStyle.COLOR_TAB_LOCKED
+
+	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 12
+	style.content_margin_right = 14
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 14)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_child(hbox)
+
+	var icon_frame := PanelContainer.new()
+	icon_frame.custom_minimum_size = Vector2(54, 54)
+	icon_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_frame.add_theme_stylebox_override("panel", UIStyle.create_flat_stylebox(Color(0.24, 0.17, 0.10, 0.65), 6, 4, 4))
+	hbox.add_child(icon_frame)
+
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(44, 44)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if item.texture:
+		icon.texture = item.texture
+	icon_frame.add_child(icon)
+
+	var info_vbox := VBoxContainer.new()
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(info_vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = item.item_name
+	name_lbl.add_theme_font_size_override("font_size", 19)
+	name_lbl.add_theme_color_override("font_color", Color.WHITE)
+	info_vbox.add_child(name_lbl)
+
+	var sub_txt := ""
+	if target_level == 1:
+		sub_txt = "Custom roof art on Main Menu  •  +15% Tips & softer markup reaction"
+	elif target_level == 2:
+		if owned:
+			var fcat := StoryManager.get_poster_featured_category()
+			if fcat != "":
+				sub_txt = "Featured Promo: %s (+Demand & +₱3 bonus)" % StoryManager.get_category_display_name(fcat)
+			else:
+				sub_txt = "Click PAINT to draw & add 3+ matching stickers for a Promo!"
+		else:
+			sub_txt = "Custom front poster  •  3+ matching stickers feature a category (+₱3)"
+	else:
+		sub_txt = "Unlocks the store door  •  Step outside & explore Karimlan!"
+	var sub_lbl := Label.new()
+	sub_lbl.add_theme_font_size_override("font_size", 13)
+	sub_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	sub_lbl.text = sub_txt
+	sub_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+	info_vbox.add_child(sub_lbl)
+
+	var right_vbox := VBoxContainer.new()
+	right_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	right_vbox.add_theme_constant_override("separation", 2)
+	hbox.add_child(right_vbox)
+
+	if is_paintable:
+		var slot := "signage" if target_level == 1 else "poster"
+		var paint_btn := Button.new()
+		paint_btn.text = "PAINT"
+		paint_btn.custom_minimum_size = Vector2(78, 30)
+		paint_btn.focus_mode = Control.FOCUS_NONE
+		UIStyle.style_button(paint_btn, Color("#D59F47"), Color(0.10, 0.08, 0.06, 1.0), 13.0, 6)
+		paint_btn.pressed.connect(func():
+			AudioManager.play_sfx("interact")
+			_focus_upgrade(item)
+			_open_storefront_editor(slot)
+		)
+		right_vbox.add_child(paint_btn)
+
+		var owned_sub := Label.new()
+		owned_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		owned_sub.text = "OWNED"
+		owned_sub.add_theme_font_size_override("font_size", 10)
+		owned_sub.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 0.9))
+		right_vbox.add_child(owned_sub)
+	else:
+		var price_lbl := Label.new()
+		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		price_lbl.add_theme_font_size_override("font_size", 17)
+		price_lbl.text = "₱%.2f" % item.price
+		price_lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT if is_next_available else Color(0.85, 0.85, 0.85, 0.9))
+		right_vbox.add_child(price_lbl)
+
+		var status_lbl := Label.new()
+		status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		status_lbl.add_theme_font_size_override("font_size", 12)
+		if owned:
+			status_lbl.text = "OWNED"
+			status_lbl.add_theme_color_override("font_color", Color(0.75, 1.0, 0.75, 1.0))
+		elif is_queued:
+			status_lbl.text = "QUEUED ✓"
+			status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
+		elif is_next_available:
+			status_lbl.text = "AVAILABLE"
+			status_lbl.add_theme_color_override("font_color", Color.WHITE)
+		elif not level_unlocked:
+			status_lbl.text = "REQUIRES LV. %d" % req_lvl
+			status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
+		else:
+			status_lbl.text = "BUY LV.%d FIRST" % (target_level - 1)
+			status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
+		right_vbox.add_child(status_lbl)
+
+	if is_paintable:
+		icon.modulate = Color(1, 1, 1, 0.95)
+		card.modulate = Color(0.92, 1.0, 0.92, 0.96)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		var slot := "signage" if target_level == 1 else "poster"
+		card.gui_input.connect(func(ev: InputEvent):
+			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+				AudioManager.play_sfx("interact")
+				_focus_upgrade(item)
+				_open_storefront_editor(slot)
+		)
+	elif owned:
+		icon.modulate = Color(1, 1, 1, 0.5)
+		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
+		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	elif is_queued or is_next_available:
+		icon.modulate = Color(1, 1, 1, 1)
+		card.modulate = Color(1, 1, 1, 1)
+		card.mouse_filter = Control.MOUSE_FILTER_STOP
+		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		card.gui_input.connect(_on_card_clicked.bind(item))
+	else:
+		icon.modulate = Color(0.3, 0.25, 0.2, 0.8)
+		card.modulate = Color(0.7, 0.7, 0.7, 0.85)
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
+
+	return card
+
+func _open_storefront_editor(slot_name: String) -> void:
+	if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
+		return
+	var overlay_cls = preload("res://Scripts/UI/StorefrontCanvasOverlay.gd")
+	var overlay = overlay_cls.new()
+	overlay.layer = 110
+	get_tree().root.add_child(overlay)
+	overlay.closed.connect(func(_saved: bool):
+		if is_instance_valid(self) and is_visible_in_tree():
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			_populate_upgrades()
+			if _focused_upgrade:
+				_focus_upgrade(_focused_upgrade)
+	)
+	overlay.open_editor(slot_name)
+
 func _on_card_clicked(event: InputEvent, item: ItemData) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		AudioManager.play_sfx("interact")
@@ -1554,6 +1764,11 @@ func _toggle_queue_upgrade(item: ItemData) -> void:
 			var removed_bn: int = int(item.get_meta("bench_level", 1))
 			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
 				return not q.get_meta("is_bench_upgrade", false) or int(q.get_meta("bench_level", 1)) < removed_bn
+			)
+		elif item.get_meta("is_storefront_upgrade", false):
+			var removed_sf: int = int(item.get_meta("storefront_level", 1))
+			_queued_upgrades = _queued_upgrades.filter(func(q: ItemData) -> bool:
+				return not q.get_meta("is_storefront_upgrade", false) or int(q.get_meta("storefront_level", 1)) < removed_sf
 			)
 	else:
 		_queued_upgrades.append(item)
@@ -1604,6 +1819,47 @@ func _refresh_confirm_summary() -> void:
 			UIStyle.style_button(confirm_btn, UIStyle.COLOR_TAB_LOCKED, UIStyle.COLOR_TAB_LOCKED_FONT, 18.0)
 
 func _update_detail_panel(item: ItemData) -> void:
+	if item.get_meta("is_storefront_upgrade", false):
+		var sf_lvl: int = int(item.get_meta("storefront_level", 1))
+		if detail_icon:
+			detail_icon.texture = item.texture
+		if detail_name:
+			detail_name.text = item.item_name
+		if detail_subtitle:
+			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
+		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
+			child.queue_free()
+		var sf_lines: Array[String] = []
+		if sf_lvl == 1:
+			sf_lines = [
+				"• Unlocks custom Roof Signage drawing studio (Brush, Eraser, Bucket, Picker, Color Wheel + Stickers)",
+				"• Syncs directly onto your storefront on the Main Menu",
+				"• +15% Appreciation Tip chance (₱3–₱6) on cash sales & softens markup pushback",
+			]
+		elif sf_lvl == 2:
+			var fcat := StoryManager.get_poster_featured_category()
+			var promo_line := "• Currently Featured: %s" % StoryManager.get_category_display_name(fcat) if fcat != "" else "• Add 3+ unlocked stickers of the same category to activate a Promo Bonus"
+			sf_lines = [
+				"• Mounts a custom portrait Poster in front of your store (synced to Main Menu)",
+				promo_line,
+				"• Featured Category items sell for +₱3 bonus & attract higher demand; Tip chance rises to 25%",
+			]
+		else:
+			sf_lines = [
+				"• Gives you the tarnished key to unlock the side DoorInteractable",
+				"• Click the door anytime to step outside & wander around Karimlan!",
+				"• Also lets you click your Roof Sign & Poster outside to repaint them on the spot",
+			]
+		for line in sf_lines:
+			var stat_lbl := Label.new()
+			stat_lbl.text = line
+			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			stat_lbl.add_theme_font_size_override("font_size", 15)
+			stat_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
+			unlocks_list.add_child(stat_lbl)
+		return
+
 	if item.get_meta("is_bench_upgrade", false):
 		var bn_lvl: int = int(item.get_meta("bench_level", 1))
 		if detail_icon:
@@ -1981,7 +2237,7 @@ func _on_confirm_pressed() -> void:
 	var order := RestockOrder.new()
 	var remaining_budget := _get_money()
 	for q_item in _queued_upgrades:
-		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false) or q_item.get_meta("is_maneki_upgrade", false) or q_item.get_meta("is_radio_upgrade", false) or q_item.get_meta("is_mario_deals_upgrade", false) or q_item.get_meta("is_sto_nino_upgrade", false) or q_item.get_meta("is_permit_upgrade", false) or q_item.get_meta("is_bench_upgrade", false):
+		if q_item.get_meta("is_fridge_upgrade", false) or q_item.get_meta("is_cat_upgrade", false) or q_item.get_meta("is_trash_upgrade", false) or q_item.get_meta("is_maneki_upgrade", false) or q_item.get_meta("is_radio_upgrade", false) or q_item.get_meta("is_mario_deals_upgrade", false) or q_item.get_meta("is_sto_nino_upgrade", false) or q_item.get_meta("is_permit_upgrade", false) or q_item.get_meta("is_bench_upgrade", false) or q_item.get_meta("is_storefront_upgrade", false):
 			remaining_budget -= q_item.price
 			continue
 		var check := order.can_add(q_item, remaining_budget)

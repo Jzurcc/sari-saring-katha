@@ -298,6 +298,24 @@ static func build_transaction_context(
 							transaction.best_item_name = fav_item.item_name
 						continue
 
+				# 2.5. Storefront Poster Featured Category promo pull (+25% direct category roll)
+				if transaction.transaction_type == TransactionContext.Type.PURCHASE:
+					var featured_cat: String = sm.get_poster_featured_category()
+					if featured_cat != "" and not (featured_cat in excluded_cats) and randf() < 0.25:
+						var feat_item := OrderItemPicker.pick_from_categories_with_stock_bias(
+							[featured_cat],
+							sm.current_tier,
+							prefer_hint,
+							excluded_cats,
+							0.65
+						)
+						if feat_item:
+							transaction.desired_items.append(feat_item)
+							if transaction.requested_category == "":
+								transaction.requested_category = feat_item.category
+								transaction.best_item_name = feat_item.item_name
+							continue
+
 				if not pool.is_empty():
 					var item := OrderItemPicker.pick_weighted(pool, sm.current_tier, current_max_tiers)
 					if transaction.upgrade_to_best_tier:
@@ -412,6 +430,9 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		high_price_chance = HIGH_PRICE_DESIRED_EXTREME_CHANCE
 	if has_store_extreme:
 		high_price_chance = maxf(high_price_chance, HIGH_PRICE_STORE_CHANCE)
+	var relief: float = sm.get_storefront_price_relief()
+	if high_price_chance > 0.0 and relief > 0.0:
+		high_price_chance = maxf(0.0, high_price_chance - relief)
 
 	var high_price_active: bool = high_price_chance > 0.0 and (randf() < high_price_chance)
 

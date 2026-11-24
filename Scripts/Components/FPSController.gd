@@ -55,6 +55,12 @@ func _ready() -> void:
 		_default_col_height = collision_shape.shape.height
 		_default_col_y = collision_shape.position.y
 
+	EventBus.day_started.connect(_on_day_started)
+
+func _on_day_started(_day_number: int) -> void:
+	if global_position.z > 4.9:
+		teleport_to(Vector3(-1.596, 2.9326215, -0.05), Vector3(-5.0, 2.9326215, -0.05))
+
 func _on_camera_shake(intensity: float, duration: float) -> void:
 	if intensity > _shake_intensity * (_shake_timer / max(_shake_duration, 0.01)):
 		_shake_intensity = intensity
@@ -126,7 +132,7 @@ func _physics_process(delta: float) -> void:
 		camera.fov = base_fov
 		
 		# Automatic Step Up for Stairs / Small Ledges
-		if StoryManager.current_tier >= 10 and is_on_floor() and get_slide_collision_count() > 0 and input_dir.length_squared() > 0.01:
+		if (StoryManager.current_tier >= 10 or StoryManager.storefront_upgrade_level >= 3) and is_on_floor() and get_slide_collision_count() > 0 and input_dir.length_squared() > 0.01:
 			var is_wall = false
 			for i in range(get_slide_collision_count()):
 				var collision = get_slide_collision(i)
@@ -148,6 +154,21 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0, movement_friction * delta)
 		
 	move_and_slide()
+
+	if global_position.y < -8.0:
+		teleport_to(Vector3(1.40, 2.92, 6.20), Vector3(1.40, 2.92, 10.50))
+
+
+## Instantaneously moves the player to world_pos and aims head/camera at look_at_world_pos.
+func teleport_to(world_pos: Vector3, look_at_world_pos: Vector3) -> void:
+	global_position = world_pos
+	velocity = Vector3.ZERO
+	var target_local_pos := to_local(look_at_world_pos)
+	_yaw = atan2(-target_local_pos.x, -target_local_pos.z)
+	var horizontal_dist := Vector2(target_local_pos.x, target_local_pos.z).length()
+	_pitch = clampf(atan2(target_local_pos.y - head.position.y, horizontal_dist), -PI * 0.5, PI * 0.5)
+	head.rotation.y = _yaw
+	camera.rotation.x = _pitch
 
 
 ## Makes the player camera smoothly rotate to look at a specific world position.

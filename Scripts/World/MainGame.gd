@@ -72,8 +72,10 @@ func _ready() -> void:
 	LogManager.debug("MainGame", "_ready() END")
 
 func _input(event: InputEvent) -> void:
-	# Escape toggles pause menu
+	# Escape toggles pause menu (ignored while full-screen Storefront Drawing Studio is open)
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
+		if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
+			return
 		if pause_menu and not pause_menu.visible:
 			get_viewport().set_input_as_handled()
 			pause_menu.pause()

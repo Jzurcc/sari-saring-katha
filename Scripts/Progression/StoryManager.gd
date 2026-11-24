@@ -813,6 +813,126 @@ func purchase_bench_upgrade(level: int) -> void:
 		get_tree().call_group("store_bench", "refresh_visibility", true)
 	_save_progression()
 
+# --- Storefront Customization (Lv.1 Signage -> Lv.2 Promo Poster -> Lv.3 Open Door) ---
+const SIGNAGE_IMAGE_PATH := "user://custom_signage.png"
+const SIGNAGE_PAINT_PATH := "user://custom_signage_paint.png"
+const POSTER_IMAGE_PATH := "user://custom_poster.png"
+const POSTER_PAINT_PATH := "user://custom_poster_paint.png"
+
+const STOREFRONT_UPGRADE_SPECS: Array[Dictionary] = [
+	{"level": 0, "req_level": 1, "name": "Standard Storefront", "cost": 0.0, "tip_chance": 0.0, "price_relief": 0.0, "desc": "Classic neighborhood sari-sari storefront."},
+	{"level": 1, "req_level": 2, "name": "Hand-Drawn Roof Signage", "cost": 80.0, "tip_chance": 0.15, "price_relief": 0.15, "desc": "Paint your own giant roof signboard! Grants +15% Appreciation Tip chance (₱3–₱6) on cash sales, softens markup pushback, and displays on the Main Menu."},
+	{"level": 2, "req_level": 5, "name": "Storefront Promo Poster", "cost": 155.0, "tip_chance": 0.25, "price_relief": 0.25, "desc": "Mount a custom portrait poster in front of the store! Add 3+ product stickers of one category to activate a Featured Category (+demand & +₱3 promo bonus)."},
+	{"level": 3, "req_level": 10, "name": "Open Door", "cost": 350.0, "tip_chance": 0.30, "price_relief": 0.30, "desc": "A tarnished brass key hangs quietly behind the counter... Unlocks the store door so you can finally step outside and wander Karimlan."},
+]
+
+var storefront_upgrade_level: int = 0
+var has_custom_signage: bool = false
+var has_custom_poster: bool = false
+var poster_featured_category: String = ""
+var custom_signage_stickers: Array[Dictionary] = []
+var custom_poster_stickers: Array[Dictionary] = []
+var custom_recent_colors: Array[String] = []
+var _storefront_upgrade_item_cache: Dictionary = {}
+
+func get_storefront_tip_chance() -> float:
+	var lvl := clampi(storefront_upgrade_level, 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
+	return float(STOREFRONT_UPGRADE_SPECS[lvl]["tip_chance"])
+
+func get_storefront_price_relief() -> float:
+	var lvl := clampi(storefront_upgrade_level, 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
+	return float(STOREFRONT_UPGRADE_SPECS[lvl]["price_relief"])
+
+func get_poster_featured_category() -> String:
+	if storefront_upgrade_level >= 2 and has_custom_poster:
+		return poster_featured_category
+	return ""
+
+func get_category_display_name(cat: String) -> String:
+	match cat.to_lower():
+		"snack": return "Snacks"
+		"can": return "Canned Goods"
+		"bottle": return "Cold Drinks"
+		"frozen": return "Frozen Treats"
+		"candy": return "Candies"
+		"sachet": return "Sachets"
+		"pack": return "Instant Noodles & Packs"
+		"cigarette": return "Cigarettes"
+		_: return cat.capitalize()
+
+func get_storefront_upgrade_item(level: int) -> ItemData:
+	var lvl := clampi(level, 1, STOREFRONT_UPGRADE_SPECS.size() - 1)
+	if _storefront_upgrade_item_cache.has(lvl):
+		return _storefront_upgrade_item_cache[lvl]
+	var spec: Dictionary = STOREFRONT_UPGRADE_SPECS[lvl]
+	var item := ItemData.new()
+	item.item_name = str(spec["name"])
+	item.price = float(spec["cost"])
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "storefront_upgrade"
+	var icon_path := "res://Assets/3D/final store/textures/signage.png"
+	if lvl == 2:
+		icon_path = "res://Assets/3D/final store/textures/load_poster.png"
+	elif lvl == 3:
+		icon_path = "res://Assets/ui/picture_frame_stand.png"
+	if ResourceLoader.exists(icon_path):
+		item.texture = load(icon_path)
+	item.set_meta("is_storefront_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("storefront_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
+	item.set_meta("tip_chance", float(spec["tip_chance"]))
+	item.set_meta("price_relief", float(spec["price_relief"]))
+	item.set_meta("upgrade_desc", str(spec["desc"]))
+	_storefront_upgrade_item_cache[lvl] = item
+	return item
+
+func purchase_storefront_upgrade(level: int) -> void:
+	var target := clampi(level, 1, STOREFRONT_UPGRADE_SPECS.size() - 1)
+	if target <= storefront_upgrade_level:
+		return
+	storefront_upgrade_level = target
+	LogManager.info("StoryManager", "Storefront Customization upgraded to Level %d (%s)" % [
+		storefront_upgrade_level,
+		str(STOREFRONT_UPGRADE_SPECS[storefront_upgrade_level]["name"])
+	])
+	EventBus.storefront_upgraded.emit(storefront_upgrade_level)
+	if get_tree():
+		get_tree().call_group("storefront_custom_display", "refresh_display")
+		get_tree().call_group("store_door", "refresh_lock_state")
+	_save_progression()
+
+func save_storefront_artwork(slot_name: String, stickers: Array[Dictionary], featured_cat: String, recent_colors: Array[String]) -> void:
+	var cloned_stickers: Array[Dictionary] = []
+	for s in stickers:
+		if s is Dictionary:
+			cloned_stickers.append(s.duplicate(true))
+	if slot_name == "signage":
+		custom_signage_stickers = cloned_stickers
+		has_custom_signage = true
+	elif slot_name == "poster":
+		custom_poster_stickers = cloned_stickers
+		has_custom_poster = true
+		poster_featured_category = featured_cat
+	var sanitized_colors: Array[String] = []
+	for col_hex in recent_colors:
+		var s_col := str(col_hex)
+		if s_col != "" and not sanitized_colors.has(s_col):
+			sanitized_colors.append(s_col)
+			if sanitized_colors.size() >= 12:
+				break
+	custom_recent_colors = sanitized_colors
+	EventBus.storefront_artwork_updated.emit(slot_name)
+	if get_tree():
+		get_tree().call_group("storefront_custom_display", "refresh_display")
+	_save_progression()
+
+func delete_custom_artwork_files() -> void:
+	for p in [SIGNAGE_IMAGE_PATH, SIGNAGE_PAINT_PATH, POSTER_IMAGE_PATH, POSTER_PAINT_PATH]:
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(p)
+
 # --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
 var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
 var todays_sulit_deals: Array[String] = [] # Array of ItemData.resource_path (2-3 at -20% when unlocked)
@@ -1181,6 +1301,13 @@ func get_save_data() -> Dictionary:
 		"sto_nino_blessing_all_day": sto_nino_blessing_all_day,
 		"permit_upgrade_level": permit_upgrade_level,
 		"bench_upgrade_level": bench_upgrade_level,
+		"storefront_upgrade_level": storefront_upgrade_level,
+		"has_custom_signage": has_custom_signage,
+		"has_custom_poster": has_custom_poster,
+		"poster_featured_category": poster_featured_category,
+		"custom_signage_stickers": custom_signage_stickers.duplicate(true),
+		"custom_poster_stickers": custom_poster_stickers.duplicate(true),
+		"custom_recent_colors": custom_recent_colors.duplicate(),
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
 		"todays_sulit_deals": todays_sulit_deals.duplicate(),
 		"todays_missed_items": todays_missed_items.duplicate(),
@@ -1261,6 +1388,29 @@ func load_save_data(data: Dictionary) -> void:
 	EventBus.sto_nino_blessing_changed.emit()
 	permit_upgrade_level = clampi(int(data.get("permit_upgrade_level", 0)), 0, PERMIT_UPGRADE_SPECS.size() - 1)
 	bench_upgrade_level = clampi(int(data.get("bench_upgrade_level", 0)), 0, BENCH_UPGRADE_SPECS.size() - 1)
+	storefront_upgrade_level = clampi(int(data.get("storefront_upgrade_level", 0)), 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
+	has_custom_signage = bool(data.get("has_custom_signage", false))
+	has_custom_poster = bool(data.get("has_custom_poster", false))
+	poster_featured_category = str(data.get("poster_featured_category", ""))
+	custom_signage_stickers.clear()
+	var raw_sig = data.get("custom_signage_stickers", [])
+	if raw_sig is Array:
+		for entry in raw_sig:
+			if entry is Dictionary:
+				custom_signage_stickers.append(entry.duplicate(true))
+	custom_poster_stickers.clear()
+	var raw_pos = data.get("custom_poster_stickers", [])
+	if raw_pos is Array:
+		for entry in raw_pos:
+			if entry is Dictionary:
+				custom_poster_stickers.append(entry.duplicate(true))
+	custom_recent_colors.clear()
+	var raw_cols = data.get("custom_recent_colors", [])
+	if raw_cols is Array:
+		for c_hex in raw_cols:
+			var s_hex := str(c_hex)
+			if s_hex != "" and custom_recent_colors.size() < 12:
+				custom_recent_colors.append(s_hex)
 	todays_expected_regulars.clear()
 	for p in data.get("todays_expected_regulars", []):
 		todays_expected_regulars.append(str(p))
@@ -1359,6 +1509,19 @@ func reset_state() -> void:
 	_clear_sto_nino_blessing()
 	permit_upgrade_level = 0
 	bench_upgrade_level = 0
+	storefront_upgrade_level = 0
+	has_custom_signage = false
+	has_custom_poster = false
+	poster_featured_category = ""
+	custom_signage_stickers.clear()
+	custom_poster_stickers.clear()
+	custom_recent_colors.clear()
+	delete_custom_artwork_files()
+	EventBus.storefront_upgraded.emit(0)
+	EventBus.storefront_artwork_updated.emit("")
+	if get_tree():
+		get_tree().call_group("storefront_custom_display", "refresh_display")
+		get_tree().call_group("store_door", "refresh_lock_state")
 	todays_expected_regulars.clear()
 	todays_sulit_deals.clear()
 	todays_missed_items.clear()

@@ -169,7 +169,15 @@ func force_save() -> void:
 
 ## Deletes all save-related files from disk. Primarily used for New Game / Resets.
 func delete_save() -> void:
-	var files_to_nuke = [SAVE_PATH, BACKUP_PATH, TMP_PATH]
+	var files_to_nuke = [
+		SAVE_PATH,
+		BACKUP_PATH,
+		TMP_PATH,
+		"user://custom_signage.png",
+		"user://custom_signage_paint.png",
+		"user://custom_poster.png",
+		"user://custom_poster_paint.png",
+	]
 	
 	for path in files_to_nuke:
 		if FileAccess.file_exists(path):
