@@ -57,7 +57,7 @@ const CARDS: Dictionary = {
 		"id": CARD_CLEAR_ROAD,
 		"kind": KIND_FAVOR,
 		"title": "Clear Road",
-		"sigil": "☄",
+		"sigil": "»",
 		"tagline": "Faster Mario & 10% Off",
 		"description": "The moonlight clears the road for Uncle Mario: 10% off restock orders and deliveries arrive 1 customer sooner.",
 		"hud_short": "10% Off Restock & Fast Mario",

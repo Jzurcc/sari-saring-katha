@@ -37,8 +37,10 @@ var _phase: int = 0 # 0 = offering, 1 = resolving, 2 = card_draft
 
 var _root: Control
 var _backdrop: ColorRect
+var _header_banner: PanelContainer
+var _center_frame: PanelContainer
+var _frame_prompt_lbl: Label
 var _mayari_portrait: TextureRect
-var _right_stage: Control
 var _header_title_lbl: Label
 var _header_sub_lbl: Label
 var _ledger_val_lbl: Label
@@ -115,81 +117,70 @@ func _build_ui() -> void:
 	# Warm dark backdrop (lets the night store subtly breathe behind)
 	_backdrop = ColorRect.new()
 	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_backdrop.color = Color(0.035, 0.028, 0.024, 0.72)
+	_backdrop.color = Color(0.035, 0.028, 0.024, 0.74)
 	_backdrop.modulate.a = 0.0
 	_root.add_child(_backdrop)
 
-	# ── LEFT STAGE: REYNA MAYARI PORTRAIT (Hades composition) ────────────
-	_mayari_portrait = TextureRect.new()
-	if ResourceLoader.exists(MAYARI_SPRITE_PATH):
-		_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
-	_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_mayari_portrait.anchor_left = 0.0
-	_mayari_portrait.anchor_right = 0.38
-	_mayari_portrait.anchor_top = 0.06
-	_mayari_portrait.anchor_bottom = 1.06
-	_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(_mayari_portrait)
-
-	# ── RIGHT STAGE: HEADER + OFFERING / HADES BOON STACK ────────────────
-	_right_stage = Control.new()
-	_right_stage.anchor_left = 0.36
-	_right_stage.anchor_right = 0.94
-	_right_stage.anchor_top = 0.10
-	_right_stage.anchor_bottom = 0.90
-	_root.add_child(_right_stage)
-
-	var main_col := VBoxContainer.new()
-	main_col.set_anchors_preset(Control.PRESET_FULL_RECT)
-	main_col.add_theme_constant_override("separation", 14)
-	_right_stage.add_child(main_col)
-
-	# 1. Warm Espresso & Gold Banner Header
-	var header_panel := PanelContainer.new()
-	var header_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 10, 22, 14)
+	# ── 1. TOP WIDE TITLE BANNER (Wider than the centered box below — Hades style!) ──
+	_header_banner = PanelContainer.new()
+	_header_banner.anchor_left = 0.14
+	_header_banner.anchor_right = 0.86
+	_header_banner.anchor_top = 0.035
+	_header_banner.anchor_bottom = 0.155
+	var header_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
 	header_style.border_color = COL_GOLD
 	header_style.border_width_top = 2
 	header_style.border_width_bottom = 2
-	header_style.border_width_left = 1
-	header_style.border_width_right = 1
-	header_panel.add_theme_stylebox_override("panel", header_style)
-	main_col.add_child(header_panel)
+	header_style.border_width_left = 2
+	header_style.border_width_right = 2
+	header_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	header_style.shadow_size = 16
+	_header_banner.add_theme_stylebox_override("panel", header_style)
+	_root.add_child(_header_banner)
 
 	var header_v := VBoxContainer.new()
-	header_v.add_theme_constant_override("separation", 6)
-	header_panel.add_child(header_v)
+	header_v.alignment = BoxContainer.ALIGNMENT_CENTER
+	header_v.add_theme_constant_override("separation", 4)
+	_header_banner.add_child(header_v)
 
 	var title_row := HBoxContainer.new()
 	header_v.add_child(title_row)
 
+	var left_pad := Control.new()
+	left_pad.custom_minimum_size = Vector2(140, 0)
+	title_row.add_child(left_pad)
+
 	_header_title_lbl = Label.new()
-	_header_title_lbl.text = "THE SILVER LEDGER"
+	_header_title_lbl.text = "T H E   S I L V E R   L E D G E R"
 	_header_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_header_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_header_title_lbl.add_theme_font_size_override("font_size", 26)
+	_header_title_lbl.add_theme_font_size_override("font_size", 28)
 	_header_title_lbl.add_theme_color_override("font_color", COL_CREAM)
 	_header_title_lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
 	_header_title_lbl.add_theme_constant_override("outline_size", 3)
 	title_row.add_child(_header_title_lbl)
 
 	_ledger_val_lbl = Label.new()
+	_ledger_val_lbl.custom_minimum_size = Vector2(140, 0)
+	_ledger_val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ledger_val_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_ledger_val_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_ledger_val_lbl.add_theme_font_size_override("font_size", 18)
+	_ledger_val_lbl.add_theme_font_size_override("font_size", 16)
 	_ledger_val_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	title_row.add_child(_ledger_val_lbl)
 
 	_header_sub_lbl = Label.new()
 	_header_sub_lbl.text = "Set tonight's tribute to Reyna Mayari."
+	_header_sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header_sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_header_sub_lbl.add_theme_font_size_override("font_size", 14)
+	_header_sub_lbl.add_theme_font_size_override("font_size", 13)
 	_header_sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	header_v.add_child(_header_sub_lbl)
 
-	# Sleek integrated ledger progress hairline
+	# Sleek integrated ledger progress hairline across the wide banner
 	_track_bg = ColorRect.new()
-	_track_bg.custom_minimum_size = Vector2(0, 6)
+	_track_bg.custom_minimum_size = Vector2(0, 5)
 	_track_bg.color = Color(0.28, 0.22, 0.16, 0.65)
 	header_v.add_child(_track_bg)
 
@@ -209,15 +200,59 @@ func _build_ui() -> void:
 	_track_base.color = COL_GOLD
 	_track_bg.add_child(_track_base)
 
-	# 2. Beat 1: Offering Panel (warm espresso matching OptionsOverlay)
+	# ── 2. DEAD-CENTER HADES FRAME (Narrower than top banner!) ───────────
+	_center_frame = PanelContainer.new()
+	_center_frame.anchor_left = 0.22
+	_center_frame.anchor_right = 0.78
+	_center_frame.anchor_top = 0.175
+	_center_frame.anchor_bottom = 0.895
+	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 28, 20)
+	frame_style.border_color = Color(0.835, 0.624, 0.278, 0.75)
+	frame_style.border_width_left = 2
+	frame_style.border_width_top = 2
+	frame_style.border_width_right = 2
+	frame_style.border_width_bottom = 2
+	frame_style.shadow_color = Color(0.0, 0.0, 0.0, 0.6)
+	frame_style.shadow_size = 20
+	_center_frame.add_theme_stylebox_override("panel", frame_style)
+	_root.add_child(_center_frame)
+
+	var main_col := VBoxContainer.new()
+	main_col.add_theme_constant_override("separation", 12)
+	_center_frame.add_child(main_col)
+
+	_frame_prompt_lbl = Label.new()
+	_frame_prompt_lbl.text = "NIGHTLY OFFERING:"
+	_frame_prompt_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_frame_prompt_lbl.add_theme_font_size_override("font_size", 18)
+	_frame_prompt_lbl.add_theme_color_override("font_color", COL_CREAM)
+	main_col.add_child(_frame_prompt_lbl)
+
+	# Beat 1: Offering Panel inside the centered frame
 	_build_offering_panel(main_col)
 
-	# 3. Beat 2: Hades-style 3 Horizontal Boon Rows
+	# Beat 2: Hades-style 3 Horizontal Boon Rows inside the centered frame
 	_cards_container = VBoxContainer.new()
+	_cards_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_cards_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	_cards_container.add_theme_constant_override("separation", 12)
 	_cards_container.visible = false
 	_cards_container.modulate.a = 0.0
 	main_col.add_child(_cards_container)
+
+	# ── 3. BOTTOM-LEFT REYNA MAYARI PORTRAIT (Cropped, overlapping left edge of center frame!) ──
+	_mayari_portrait = TextureRect.new()
+	if ResourceLoader.exists(MAYARI_SPRITE_PATH):
+		_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
+	_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_mayari_portrait.anchor_left = -0.02
+	_mayari_portrait.anchor_right = 0.29
+	_mayari_portrait.anchor_top = 0.24
+	_mayari_portrait.anchor_bottom = 1.24
+	_mayari_portrait.z_index = 10
+	_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_mayari_portrait)
 
 func _build_offering_panel(parent: VBoxContainer) -> void:
 	_offer_container = PanelContainer.new()
@@ -486,20 +521,22 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 
 func _play_entrance() -> void:
 	_mayari_portrait.modulate.a = 0.0
-	_mayari_portrait.offset_left = -70.0
-	_mayari_portrait.offset_right = -70.0
-	_right_stage.modulate.a = 0.0
-	_right_stage.offset_left = 40.0
-	_right_stage.offset_right = 40.0
+	_mayari_portrait.offset_left = -80.0
+	_mayari_portrait.offset_right = -80.0
+	_header_banner.modulate.a = 0.0
+	_header_banner.offset_top = -24.0
+	_header_banner.offset_bottom = -24.0
+	_center_frame.modulate.a = 0.0
 
 	var tw := create_tween()
-	tw.tween_property(_backdrop, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
-	tw.parallel().tween_property(_mayari_portrait, "modulate:a", 1.0, 0.34).set_trans(Tween.TRANS_SINE)
-	tw.parallel().tween_property(_mayari_portrait, "offset_left", 0.0, 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(_mayari_portrait, "offset_right", 0.0, 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(_right_stage, "modulate:a", 1.0, 0.32).set_delay(0.06).set_trans(Tween.TRANS_SINE)
-	tw.parallel().tween_property(_right_stage, "offset_left", 0.0, 0.38).set_delay(0.06).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(_right_stage, "offset_right", 0.0, 0.38).set_delay(0.06).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_backdrop, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_header_banner, "modulate:a", 1.0, 0.30).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_header_banner, "offset_top", 0.0, 0.34).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(_header_banner, "offset_bottom", 0.0, 0.34).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(_center_frame, "modulate:a", 1.0, 0.32).set_delay(0.06).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_mayari_portrait, "modulate:a", 1.0, 0.34).set_delay(0.08).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_mayari_portrait, "offset_left", 0.0, 0.42).set_delay(0.08).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(_mayari_portrait, "offset_right", 0.0, 0.42).set_delay(0.08).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 # ── Resolution & Transition to Hades Boon Stack ──────────────────────────────
 
@@ -545,18 +582,19 @@ func _launch_hades_card_stack() -> void:
 	_hovered_idx = -1
 	_cards_ready = false
 
+	_frame_prompt_lbl.text = "CHOOSE ONE:"
 	match _confirmed_tier:
 		"cleared":
-			_header_title_lbl.text = "THE PACT IS SEALED"
+			_header_title_lbl.text = "T H E   P A C T   I S   S E A L E D"
 			_header_sub_lbl.text = "Choose one final blessing of Biringan for tomorrow."
 		"generous":
-			_header_title_lbl.text = "FAVOR OF BIRINGAN"
+			_header_title_lbl.text = "F A V O R   O F   B I R I N G A N"
 			_header_sub_lbl.text = "Choose one lunar blessing for tomorrow."
 		"shortfall":
-			_header_title_lbl.text = "CHILL OF BIRINGAN"
+			_header_title_lbl.text = "C H I L L   O F   B I R I N G A N"
 			_header_sub_lbl.text = "Choose one omen to endure tomorrow."
 		_:
-			_header_title_lbl.text = "CHOOSE ONE:"
+			_header_title_lbl.text = "M O O N   O F   B I R I N G A N"
 			_header_sub_lbl.text = "The moon deals a mixed hand for tomorrow."
 
 	for child in _cards_container.get_children():
@@ -773,7 +811,8 @@ func _fade_out_and_finish(selected_card_id: String) -> void:
 	var fade := create_tween()
 	fade.tween_property(_backdrop, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
 	fade.parallel().tween_property(_mayari_portrait, "modulate:a", 0.0, 0.22)
-	fade.parallel().tween_property(_right_stage, "modulate:a", 0.0, 0.22)
+	fade.parallel().tween_property(_header_banner, "modulate:a", 0.0, 0.22)
+	fade.parallel().tween_property(_center_frame, "modulate:a", 0.0, 0.22)
 	await fade.finished
 	completed.emit(_confirmed_offer, _confirmed_tier, selected_card_id)
 	queue_free()
