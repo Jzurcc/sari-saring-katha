@@ -6,8 +6,8 @@
 [sub_resource type="Resource" id="step_1"]
 script = ExtResource("2_step")
 anchor = 2
-local_offset = Vector3(0, 0.28, -1.4)
-duration = 3.8
+local_offset = Vector3(0, 0.28, -4.2)
+duration = 4.2
 transition = 0
 ease_type = 2
 target_opacity = 0.82
@@ -16,8 +16,8 @@ opacity_fade_fraction = 0.18
 [sub_resource type="Resource" id="step_2"]
 script = ExtResource("2_step")
 anchor = 6
-local_offset = Vector3(0, 0.35, -0.4)
-duration = 4.0
+local_offset = Vector3(0, 0.35, -1.8)
+duration = 4.4
 transition = 0
 ease_type = 2
 target_opacity = 0.0
@@ -36,7 +36,7 @@ idle_height_offset = 0.22
 play_landing_thud = false
 override_start_anchor = true
 start_anchor = 5
-start_offset = Vector3(0, 0.3, -0.4)
+start_offset = Vector3(0, 0.3, -1.8)
 start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2")])
 bypass_default_exit_stepback = true
