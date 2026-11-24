@@ -6,8 +6,8 @@
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
 anchor = 1
-local_offset = Vector3(1.9, 0, -0.5)
-duration = 1.05
+local_offset = Vector3(1.1, 0, -0.35)
+duration = 1.1
 transition = 1
 ease_type = 2
 target_opacity = 1.0
@@ -17,29 +17,9 @@ pause_random_extra = 0.15
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")
-anchor = 1
-local_offset = Vector3(-1.7, 0, -0.2)
-duration = 1.0
-transition = 1
-ease_type = 2
-pause_after = 0.25
-pause_random_extra = 0.15
-
-[sub_resource type="Resource" id="enter_3"]
-script = ExtResource("2_step")
-anchor = 1
-local_offset = Vector3(1.1, 0, 0.35)
-duration = 0.85
-transition = 1
-ease_type = 2
-pause_after = 0.2
-pause_random_extra = 0.15
-
-[sub_resource type="Resource" id="enter_4"]
-script = ExtResource("2_step")
 anchor = 2
 local_offset = Vector3(0, 0, 0)
-duration = 0.9
+duration = 1.15
 transition = 1
 ease_type = 2
 
@@ -47,11 +27,11 @@ ease_type = 2
 script = ExtResource("1_profile")
 profile_name = "TK Wrong Turn Enter"
 locomotion_style = 0
-base_speed = 2.45
-bob_frequency = 11.2
-bob_amplitude = 0.085
-sway_amount = 0.055
+base_speed = 2.35
+bob_frequency = 10.5
+bob_amplitude = 0.075
+sway_amount = 0.05
 idle_opacity = 1.0
 play_landing_thud = true
 start_opacity = 0.0
-enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2"), SubResource("enter_3"), SubResource("enter_4")])
+enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])

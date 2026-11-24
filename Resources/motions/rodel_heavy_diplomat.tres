@@ -6,41 +6,32 @@
 [sub_resource type="Resource" id="enter_1"]
 script = ExtResource("2_step")
 anchor = 1
-local_offset = Vector3(0.65, 0, -1.1)
-duration = 1.05
+local_offset = Vector3(0.35, 0, -0.45)
+duration = 1.15
 transition = 1
 ease_type = 2
-side_arc = 0.85
+side_arc = 0.45
 target_opacity = 1.0
 opacity_fade_fraction = 0.18
 
 [sub_resource type="Resource" id="enter_2"]
 script = ExtResource("2_step")
-anchor = 1
-local_offset = Vector3(-0.65, 0, 0.45)
-duration = 1.05
-transition = 1
-ease_type = 2
-side_arc = -0.95
-
-[sub_resource type="Resource" id="enter_3"]
-script = ExtResource("2_step")
 anchor = 2
 local_offset = Vector3(0, 0, 0)
-duration = 0.95
+duration = 1.15
 transition = 1
 ease_type = 2
-side_arc = 0.65
+side_arc = -0.45
 
 [resource]
 script = ExtResource("1_profile")
 profile_name = "Rodel Curved Mermaid Walk"
 locomotion_style = 0
 base_speed = 1.75
-bob_frequency = 7.2
-bob_amplitude = 0.045
-sway_amount = 0.095
+bob_frequency = 7.0
+bob_amplitude = 0.035
+sway_amount = 0.07
 idle_opacity = 1.0
 play_landing_thud = true
 start_opacity = 0.0
-enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2"), SubResource("enter_3")])
+enter_steps = Array[ExtResource("2_step")]([SubResource("enter_1"), SubResource("enter_2")])

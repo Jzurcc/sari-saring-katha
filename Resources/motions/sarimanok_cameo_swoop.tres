@@ -6,30 +6,30 @@
 [sub_resource type="Resource" id="step_1"]
 script = ExtResource("2_step")
 anchor = 2
-local_offset = Vector3(-1.4, 0, -2.2)
-duration = 2.2
+local_offset = Vector3(-1.6, 0, -5.0)
+duration = 3.6
 transition = 1
 ease_type = 1
 target_opacity = 1.0
-opacity_fade_fraction = 0.15
-pause_after = 0.65
-pause_random_extra = 0.45
+opacity_fade_fraction = 0.18
+pause_after = 1.0
+pause_random_extra = 0.5
 
 [sub_resource type="Resource" id="step_2"]
 script = ExtResource("2_step")
 anchor = 2
-local_offset = Vector3(1.8, 0, -2.4)
-duration = 2.3
+local_offset = Vector3(1.8, 0, -5.2)
+duration = 3.8
 transition = 0
 ease_type = 2
-pause_after = 0.45
-pause_random_extra = 0.35
+pause_after = 0.7
+pause_random_extra = 0.4
 
 [sub_resource type="Resource" id="step_3"]
 script = ExtResource("2_step")
 anchor = 5
-local_offset = Vector3(0, 0, 0)
-duration = 2.1
+local_offset = Vector3(0, 0, -2.0)
+duration = 3.5
 transition = 1
 ease_type = 0
 target_opacity = 0.0
@@ -38,16 +38,16 @@ opacity_fade_at_end = true
 
 [resource]
 script = ExtResource("1_profile")
-profile_name = "Sarimanok Cameo Run Stop Strut"
-locomotion_style = 4
-base_speed = 3.2
-bob_frequency = 14.5
-bob_amplitude = 0.095
-sway_amount = 0.07
+profile_name = "Sarimanok Background Stroll"
+locomotion_style = 0
+base_speed = 2.0
+bob_frequency = 9.5
+bob_amplitude = 0.06
+sway_amount = 0.04
 play_landing_thud = false
 override_start_anchor = true
 start_anchor = 6
-start_offset = Vector3(0, 0, 0)
+start_offset = Vector3(0, 0, -2.0)
 start_opacity = 0.0
 enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2"), SubResource("step_3")])
 bypass_default_exit_stepback = true
