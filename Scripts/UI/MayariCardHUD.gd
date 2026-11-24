@@ -27,7 +27,7 @@ func _build_ui() -> void:
 	_panel.anchor_left = 0.0
 	_panel.anchor_top = 0.0
 	_panel.offset_left = 20.0
-	_panel.offset_top = 132.0
+	_panel.offset_top = 152.0
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_style = UIStyle.create_flat_stylebox(Color(0.068, 0.082, 0.145, 0.88), 10, 12, 7)

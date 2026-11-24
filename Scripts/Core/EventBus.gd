@@ -55,6 +55,10 @@ signal tier_advanced(new_tier: int, source: String)
 signal upgrade_available(new_tier: int, cost: float, items: Array[ItemData])
 @warning_ignore("unused_signal")
 signal purchase_made()
+@warning_ignore("unused_signal")
+signal player_xp_changed(level: int, current_xp: int, xp_to_next: int, gained_xp: int, leveled_up: bool)
+@warning_ignore("unused_signal")
+signal player_leveled_up(new_level: int)
 
 # --- Economy ---
 @warning_ignore("unused_signal")

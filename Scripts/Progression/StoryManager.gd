@@ -119,24 +119,63 @@ var _save_requested: bool = false
 var _char_lookup: Dictionary = {}   # resource_path -> CustomerData
 var _game_manager: GameManager = null
 
-# --- Tier Progression ---
+# --- Player Level, XP & Tier Progression ---
+const MAX_PLAYER_LEVEL := 10
+const PLAYER_XP_THRESHOLDS: Array[int] = [0, 100, 150, 210, 280, 360, 450, 550, 670, 800]
+
+var player_level: int = 1
+var player_xp: int = 0
 var current_tier: int = 1
 var max_unlocked_tier: int = 1
 var _last_tier_unlocked_notification: int = 0
 var _last_notified_tier: int = 0
-var purchase_counter: int = 0:
-	set(value):
-		purchase_counter = value
-		var required = get_required_purchases_for_next_tier()
-		if purchase_counter >= required:
-			if max_unlocked_tier < 10:
-				max_unlocked_tier += 1
-				_pending_tier_advance_source = "Activity"
-				_last_tier_unlocked_notification = max_unlocked_tier
-			purchase_counter = 0
+var purchase_counter: int = 0 # Legacy save field kept for backward compatibility
+
+func get_xp_for_next_level(lvl: int = player_level) -> int:
+	if lvl >= MAX_PLAYER_LEVEL:
+		return 0
+	var idx := clampi(lvl, 1, PLAYER_XP_THRESHOLDS.size() - 1)
+	return PLAYER_XP_THRESHOLDS[idx]
+
+func get_xp_multiplier() -> float:
+	var mult := 1.0
+	if has_mayari_card(MayariCardRegistry.CARD_SILVER_RENOWN):
+		mult *= 1.50
+	return mult
+
+func add_player_xp(base_amount: int, reason: String = "") -> void:
+	if base_amount <= 0:
+		return
+	var gained := maxi(1, roundi(float(base_amount) * get_xp_multiplier()))
+	if player_level >= MAX_PLAYER_LEVEL:
+		EventBus.player_xp_changed.emit(player_level, 0, 0, gained, false)
+		return
+
+	player_xp += gained
+	var leveled_up := false
+	while player_level < MAX_PLAYER_LEVEL:
+		var needed := get_xp_for_next_level(player_level)
+		if needed <= 0 or player_xp < needed:
+			break
+		player_xp -= needed
+		player_level += 1
+		leveled_up = true
+		if player_level > max_unlocked_tier:
+			max_unlocked_tier = player_level
+			_pending_tier_advance_source = "LevelUp"
+			_last_tier_unlocked_notification = max_unlocked_tier
+		LogManager.info("StoryManager", "PLAYER LEVEL UP -> Lv. %d! (Unlocked Tier %d & new upgrades)" % [player_level, max_unlocked_tier])
+		EventBus.player_leveled_up.emit(player_level)
+		EventBus.show_notification.emit("Player Level %d!" % player_level, "New store upgrades & Tier %d unlocked!" % player_level, "purchase")
+
+	if player_level >= MAX_PLAYER_LEVEL:
+		player_xp = 0
+
+	LogManager.info("StoryManager", "Player XP +%d (%s) -> Lv. %d (%d/%d)" % [gained, reason, player_level, player_xp, get_xp_for_next_level()])
+	EventBus.player_xp_changed.emit(player_level, player_xp, get_xp_for_next_level(), gained, leveled_up)
+	_save_progression()
 
 func get_required_purchases_for_next_tier() -> int:
-	# Formula: 5 + floor(current_tier / 2) with a steeper curve for the end game
 	var base = 5 + floori(current_tier / 2.0)
 	if current_tier >= 7:
 		base += (current_tier - 6) * 2
@@ -149,10 +188,10 @@ var _upgrade_item_cache: Dictionary = {}
 # --- Refrigerator Coldness & Upgrades ---
 ## Level 0 = stock fridge; Levels 1..3 = Magnetic Door Gasket, Heavy-Duty Insulation, Inverter Frost Compressor.
 const FRIDGE_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 14.0, "desc": "Standard sari-sari fridge." },
-	{ "level": 1, "name": "Magnetic Door Gasket", "cost": 75.0, "drain_sec": 14.0, "regen_sec": 11.0, "desc": "Seals cold leaks when the door swings open." },
-	{ "level": 2, "name": "Heavy-Duty Insulation", "cost": 140.0, "drain_sec": 24.0, "regen_sec": 8.5, "desc": "Thick thermal lining keeps chilled stock frosty longer." },
-	{ "level": 3, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 36.0, "regen_sec": 6.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
+	{ "level": 0, "req_level": 1, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 7.0, "regen_sec": 14.0, "desc": "Standard sari-sari fridge." },
+	{ "level": 1, "req_level": 2, "name": "Magnetic Door Gasket", "cost": 75.0, "drain_sec": 14.0, "regen_sec": 11.0, "desc": "Seals cold leaks when the door swings open." },
+	{ "level": 2, "req_level": 5, "name": "Heavy-Duty Insulation", "cost": 140.0, "drain_sec": 24.0, "regen_sec": 8.5, "desc": "Thick thermal lining keeps chilled stock frosty longer." },
+	{ "level": 3, "req_level": 9, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 36.0, "regen_sec": 6.5, "desc": "Commercial inverter cooling snaps back to ice-cold fast." },
 ]
 const FRIDGE_WARM_VALUE_MULTIPLIER := 0.75
 const FRIDGE_WARM_RECOVER_THRESHOLD := 50.0
@@ -191,6 +230,7 @@ func get_fridge_upgrade_item(level: int) -> ItemData:
 		item.texture = load("res://Assets/items/icons/2_bottle_water.png")
 	item.set_meta("is_fridge_upgrade", true)
 	item.set_meta("fridge_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
 	item.set_meta("drain_sec", float(spec["drain_sec"]))
 	item.set_meta("regen_sec", float(spec["regen_sec"]))
@@ -208,9 +248,9 @@ func purchase_fridge_upgrade(level: int) -> void:
 
 # --- Store Cats (Counter Slots 1 -> 2 -> 3) ---
 const CAT_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time." },
-	{ "level": 1, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once." },
-	{ "level": 2, "name": "Cat Food", "cost": 180.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots." },
+	{ "level": 0, "req_level": 1, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time." },
+	{ "level": 1, "req_level": 2, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once." },
+	{ "level": 2, "req_level": 6, "name": "Cat Food", "cost": 180.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots." },
 ]
 var cat_upgrade_level: int = 0
 var _cat_upgrade_item_cache: Dictionary = {}
@@ -234,6 +274,7 @@ func get_cat_upgrade_item(level: int) -> ItemData:
 	item.set_meta("is_cat_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("cat_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
 	item.set_meta("slots", int(spec["slots"]))
 	item.set_meta("delivery_dialogue_label", "CatUpgradeDelivery%d" % lvl)
@@ -269,6 +310,7 @@ func get_trash_can_upgrade_item() -> ItemData:
 		item.texture = load("res://Assets/ui/trash.png")
 	item.set_meta("is_trash_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("req_level", 1)
 	item.set_meta("upgrade_desc", "A sturdy bin in the corner for tossing unwanted or extra stock.")
 	item.set_meta("delivery_dialogue_label", "TrashCanUpgradeDelivery")
 	_trash_can_upgrade_item = item
@@ -286,9 +328,9 @@ func purchase_trash_can_upgrade() -> void:
 
 # --- Lucky Waving Cat: Maneki-Neko (Shorter Time Windows -> More Customers/Day) ---
 const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows." },
-	{ "level": 1, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 95.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day." },
-	{ "level": 2, "name": "Golden Maneki-Neko", "cost": 195.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day." },
+	{ "level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows." },
+	{ "level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 95.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day." },
+	{ "level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 195.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day." },
 ]
 var maneki_upgrade_level: int = 0
 var _maneki_upgrade_item_cache: Dictionary = {}
@@ -317,6 +359,7 @@ func get_maneki_upgrade_item(level: int) -> ItemData:
 	item.set_meta("is_maneki_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("maneki_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
 	item.set_meta("customer_hours", float(spec["customer_hours"]))
 	item.set_meta("visit_hours", float(spec["visit_hours"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
@@ -338,10 +381,10 @@ func purchase_maneki_upgrade(level: int) -> void:
 
 # --- Barangay Transistor Radio (Reveals Expected Regulars: 0 -> 1 -> 2 -> All) ---
 const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
-	{ "level": 0, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden." },
-	{ "level": 1, "name": "Pocket Transistor Radio", "cost": 55.0, "reveals": 1, "desc": "Tuned to Karimlan AM. Reveals 1 of today's Expected Regulars in the Restock Menu." },
-	{ "level": 2, "name": "Copper Antenna Radio", "cost": 110.0, "reveals": 2, "desc": "Boosted reception catches more street tsismis. Reveals 2 Expected Regulars each day." },
-	{ "level": 3, "name": "Vintage Barangay Boombox", "cost": 185.0, "reveals": 4, "desc": "Crystal-clear barangay intel! Reveals all of today's Expected Regulars in the Restock Menu." },
+	{ "level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden." },
+	{ "level": 1, "req_level": 1, "name": "Pocket Transistor Radio", "cost": 55.0, "reveals": 1, "desc": "Tuned to Karimlan AM. Reveals 1 of today's Expected Regulars in the Restock Menu." },
+	{ "level": 2, "req_level": 4, "name": "Copper Antenna Radio", "cost": 110.0, "reveals": 2, "desc": "Boosted reception catches more street tsismis. Reveals 2 Expected Regulars each day." },
+	{ "level": 3, "req_level": 7, "name": "Vintage Barangay Boombox", "cost": 185.0, "reveals": 4, "desc": "Crystal-clear barangay intel! Reveals all of today's Expected Regulars in the Restock Menu." },
 ]
 var radio_upgrade_level: int = 0
 var _radio_upgrade_item_cache: Dictionary = {}
@@ -366,6 +409,7 @@ func get_radio_upgrade_item(level: int) -> ItemData:
 	item.set_meta("is_radio_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("radio_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
 	item.set_meta("reveals", int(spec["reveals"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
 	_radio_upgrade_item_cache[lvl] = item
@@ -399,6 +443,7 @@ func get_mario_deals_upgrade_item() -> ItemData:
 		item.texture = load("res://Assets/ui/mario_tricycle.png")
 	item.set_meta("is_mario_deals_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("req_level", 3)
 	item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals: 2–3 random unlocked items are 20% off wholesale every morning.")
 	_mario_deals_upgrade_item = item
 	return item
@@ -566,6 +611,8 @@ func _ready() -> void:
 	Dialogic.VAR.variable_changed.connect(_on_dialogic_variable_changed)
 	Dialogic.signal_event.connect(_on_dialogic_signal)
 	EventBus.debt_quota_met.connect(_on_debt_quota_met)
+	if not CharacterProgressionManager.story_advanced.is_connected(_on_story_advanced):
+		CharacterProgressionManager.story_advanced.connect(_on_story_advanced)
 	
 	# Initial child character data into a lookup map for faster retrieval
 	for c in available_characters:
@@ -715,6 +762,8 @@ func get_save_data() -> Dictionary:
 		if tod_time != null: _current_display_time = tod_time
 	return {
 		"day": day,
+		"player_level": player_level,
+		"player_xp": player_xp,
 		"current_tier": current_tier,
 		"max_unlocked_tier": max_unlocked_tier,
 		"purchase_counter": purchase_counter,
@@ -755,6 +804,10 @@ func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
 	current_tier = data.get("current_tier", current_tier)
 	max_unlocked_tier = data.get("max_unlocked_tier", max_unlocked_tier)
+	player_level = clampi(int(data.get("player_level", maxi(1, max_unlocked_tier))), 1, MAX_PLAYER_LEVEL)
+	player_xp = maxi(0, int(data.get("player_xp", 0)))
+	max_unlocked_tier = maxi(max_unlocked_tier, player_level)
+	EventBus.player_xp_changed.emit(player_level, player_xp, get_xp_for_next_level(), 0, false)
 	purchase_counter = data.get("purchase_counter", purchase_counter)
 	customer_debts = data.get("customer_debts", {})
 	pending_debts.clear()
@@ -850,9 +903,12 @@ func load_save_data(data: Dictionary) -> void:
 
 func reset_state() -> void:
 	day = 1
+	player_level = 1
+	player_xp = 0
 	current_tier = 1
 	max_unlocked_tier = 1
 	purchase_counter = 0
+	EventBus.player_xp_changed.emit(player_level, player_xp, get_xp_for_next_level(), 0, false)
 	pending_upgrade_tier = 0
 	pending_upgrade_cost = 0.0
 	customer_debts = {}
@@ -1003,9 +1059,19 @@ func _on_customer_satisfied(customer) -> void:
 	
 	_process_story_cooldown(customer)
 	
-	# Increment purchase counter for activity-based progression
-	if customer.transaction_context and customer.transaction_context.transaction_type != TransactionContext.Type.VISIT:
-		purchase_counter += 1
+	# Award Player XP for completed visits & purchases (never for guided tutorial or Mayari tally)
+	if customer.transaction_context and not customer.transaction_context.is_guided_tutorial:
+		var is_collector_cust: bool = customer.customer_data != null and customer.customer_data.is_collector()
+		if not is_collector_cust:
+			var ctx: TransactionContext = customer.transaction_context
+			if ctx.transaction_type == TransactionContext.Type.VISIT or ctx.is_visit_story:
+				add_player_xp(10, "Visit")
+			else:
+				var xp := 15 + maxi(0, ctx.original_count - 1) * 5
+				if ctx.is_riddle:
+					xp += 10
+				add_player_xp(xp, "Purchase")
+				purchase_counter += 1
 		
 	# Tutorial Persistence: If this encounter was the guided tutorial, mark it complete now.
 	if customer.transaction_context and customer.transaction_context.is_guided_tutorial:
@@ -1076,6 +1142,11 @@ func _set_last_customer_info(customer: Customer) -> void:
 
 func _process_story_cooldown(customer) -> void:
 	CharacterProgressionManager.process_story_cooldown(customer, last_mayari_collection_successful)
+
+func _on_story_advanced(character_path: String, _new_chapter: int) -> void:
+	if character_path.contains("ReynaMayari") or character_path.contains("UncleMario"):
+		return
+	add_player_xp(20, "Story Chapter")
 
 func get_best_item_for_category(cat: String, current_item: ItemData = null) -> ItemData:
 	return OrderItemPicker.best_for_category(cat, current_tier, current_item)

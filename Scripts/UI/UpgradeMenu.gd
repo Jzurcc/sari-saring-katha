@@ -58,32 +58,32 @@ func open_menu() -> void:
 			return
 	if StoryManager.fridge_upgrade_level < 3:
 		var next_fridge := StoryManager.get_fridge_upgrade_item(StoryManager.fridge_upgrade_level + 1)
-		if next_fridge and _card_map.has(next_fridge):
+		if next_fridge and StoryManager.player_level >= int(next_fridge.get_meta("req_level", 1)) and _card_map.has(next_fridge):
 			_focus_upgrade(next_fridge)
 			return
 	if StoryManager.cat_upgrade_level < 2:
 		var next_cat := StoryManager.get_cat_upgrade_item(StoryManager.cat_upgrade_level + 1)
-		if next_cat and _card_map.has(next_cat):
+		if next_cat and StoryManager.player_level >= int(next_cat.get_meta("req_level", 1)) and _card_map.has(next_cat):
 			_focus_upgrade(next_cat)
 			return
 	if not StoryManager.has_trash_can:
 		var trash_item := StoryManager.get_trash_can_upgrade_item()
-		if trash_item and _card_map.has(trash_item):
+		if trash_item and StoryManager.player_level >= int(trash_item.get_meta("req_level", 1)) and _card_map.has(trash_item):
 			_focus_upgrade(trash_item)
 			return
 	if StoryManager.maneki_upgrade_level < 2:
 		var next_maneki := StoryManager.get_maneki_upgrade_item(StoryManager.maneki_upgrade_level + 1)
-		if next_maneki and _card_map.has(next_maneki):
+		if next_maneki and StoryManager.player_level >= int(next_maneki.get_meta("req_level", 1)) and _card_map.has(next_maneki):
 			_focus_upgrade(next_maneki)
 			return
 	if StoryManager.radio_upgrade_level < 3:
 		var next_radio := StoryManager.get_radio_upgrade_item(StoryManager.radio_upgrade_level + 1)
-		if next_radio and _card_map.has(next_radio):
+		if next_radio and StoryManager.player_level >= int(next_radio.get_meta("req_level", 1)) and _card_map.has(next_radio):
 			_focus_upgrade(next_radio)
 			return
 	if not StoryManager.has_mario_deals:
 		var deals_item := StoryManager.get_mario_deals_upgrade_item()
-		if deals_item and _card_map.has(deals_item):
+		if deals_item and StoryManager.player_level >= int(deals_item.get_meta("req_level", 1)) and _card_map.has(deals_item):
 			_focus_upgrade(deals_item)
 			return
 	_clear_detail_panel()
@@ -102,7 +102,11 @@ func _populate_upgrades() -> void:
 	_card_map.clear()
 
 	if current_tier_label:
-		current_tier_label.text = "Current: Tier %d" % StoryManager.current_tier
+		var xp_need := StoryManager.get_xp_for_next_level()
+		if xp_need > 0:
+			current_tier_label.text = "Player Lv. %d (%d/%d XP)  •  Tier %d" % [StoryManager.player_level, StoryManager.player_xp, xp_need, StoryManager.current_tier]
+		else:
+			current_tier_label.text = "Player Lv. %d (MAX)  •  Tier %d" % [StoryManager.player_level, StoryManager.current_tier]
 
 	for t in range(2, 11):
 		var item := StoryManager.get_tier_upgrade_item(t)
@@ -336,7 +340,7 @@ func _create_upgrade_bar(item: ItemData, target_tier: int) -> PanelContainer:
 		status_lbl.text = "BUY TIER %d FIRST" % (target_tier - 1)
 		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
 	else:
-		status_lbl.text = "LOCKED"
+		status_lbl.text = "REQUIRES LV. %d" % target_tier
 		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	right_vbox.add_child(status_lbl)
 
@@ -365,9 +369,11 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.focus_mode = Control.FOCUS_NONE
 
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
 	var owned: bool = target_level <= StoryManager.fridge_upgrade_level
 	var is_queued: bool = item in _queued_upgrades
-	var is_next_available: bool = (not owned) and (target_level == _get_effective_fridge_level() + 1)
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_fridge_level() + 1)
 
 	var bg_col := UIStyle.COLOR_CARD_BG
 	if owned:
@@ -448,6 +454,9 @@ func _create_fridge_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 	elif is_next_available:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	elif not level_unlocked:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	else:
 		status_lbl.text = "BUY LVL %d FIRST" % (target_level - 1)
 		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
@@ -477,6 +486,8 @@ func _create_trash_upgrade_bar(item: ItemData) -> PanelContainer:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.focus_mode = Control.FOCUS_NONE
 
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
 	var owned: bool = StoryManager.has_trash_can
 	var is_queued: bool = item in _queued_upgrades
 
@@ -485,6 +496,8 @@ func _create_trash_upgrade_bar(item: ItemData) -> PanelContainer:
 		bg_col = UIStyle.COLOR_CARD_OWNED_BG
 	elif is_queued:
 		bg_col = Color(0.14, 0.28, 0.16, 0.95)
+	elif not level_unlocked:
+		bg_col = UIStyle.COLOR_TAB_LOCKED
 
 	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
 	style.set_corner_radius_all(6)
@@ -552,21 +565,29 @@ func _create_trash_upgrade_bar(item: ItemData) -> PanelContainer:
 	elif is_queued:
 		status_lbl.text = "QUEUED ✓"
 		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
-	else:
+	elif level_unlocked:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	else:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	right_vbox.add_child(status_lbl)
 
 	if owned:
 		icon.modulate = Color(1, 1, 1, 0.5)
 		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	else:
+	elif is_queued or level_unlocked:
 		icon.modulate = Color(1, 1, 1, 1)
 		card.modulate = Color(1, 1, 1, 1)
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.gui_input.connect(_on_card_clicked.bind(item))
+	else:
+		icon.modulate = Color(0.3, 0.25, 0.2, 0.8)
+		card.modulate = Color(0.7, 0.7, 0.7, 0.85)
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
 
 	return card
 
@@ -576,9 +597,11 @@ func _create_cat_upgrade_bar(item: ItemData, target_level: int) -> PanelContaine
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.focus_mode = Control.FOCUS_NONE
 
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
 	var owned: bool = target_level <= StoryManager.cat_upgrade_level
 	var is_queued: bool = item in _queued_upgrades
-	var is_next_available: bool = (not owned) and (target_level == _get_effective_cat_level() + 1)
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_cat_level() + 1)
 
 	var bg_col := UIStyle.COLOR_CARD_BG
 	if owned:
@@ -658,6 +681,9 @@ func _create_cat_upgrade_bar(item: ItemData, target_level: int) -> PanelContaine
 	elif is_next_available:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	elif not level_unlocked:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	else:
 		status_lbl.text = "ADOPT CAT FIRST"
 		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
@@ -694,9 +720,11 @@ func _create_maneki_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.focus_mode = Control.FOCUS_NONE
 
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
 	var owned: bool = target_level <= StoryManager.maneki_upgrade_level
 	var is_queued: bool = item in _queued_upgrades
-	var is_next_available: bool = (not owned) and (target_level == _get_effective_maneki_level() + 1)
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_maneki_level() + 1)
 
 	var bg_col := UIStyle.COLOR_CARD_BG
 	if owned:
@@ -777,6 +805,9 @@ func _create_maneki_upgrade_bar(item: ItemData, target_level: int) -> PanelConta
 	elif is_next_available:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	elif not level_unlocked:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	else:
 		status_lbl.text = "BUY LV.1 FIRST"
 		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
@@ -806,9 +837,11 @@ func _create_radio_upgrade_bar(item: ItemData, target_level: int) -> PanelContai
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.focus_mode = Control.FOCUS_NONE
 
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
 	var owned: bool = target_level <= StoryManager.radio_upgrade_level
 	var is_queued: bool = item in _queued_upgrades
-	var is_next_available: bool = (not owned) and (target_level == _get_effective_radio_level() + 1)
+	var is_next_available: bool = (not owned) and level_unlocked and (target_level == _get_effective_radio_level() + 1)
 
 	var bg_col := UIStyle.COLOR_CARD_BG
 	if owned:
@@ -888,6 +921,9 @@ func _create_radio_upgrade_bar(item: ItemData, target_level: int) -> PanelContai
 	elif is_next_available:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	elif not level_unlocked:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	else:
 		status_lbl.text = "UPGRADE PREV FIRST"
 		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.55, 0.95))
@@ -917,6 +953,8 @@ func _create_mario_deals_upgrade_bar(item: ItemData) -> PanelContainer:
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.focus_mode = Control.FOCUS_NONE
 
+	var req_lvl: int = int(item.get_meta("req_level", 1))
+	var level_unlocked: bool = StoryManager.player_level >= req_lvl
 	var owned: bool = StoryManager.has_mario_deals
 	var is_queued: bool = item in _queued_upgrades
 
@@ -925,6 +963,8 @@ func _create_mario_deals_upgrade_bar(item: ItemData) -> PanelContainer:
 		bg_col = UIStyle.COLOR_CARD_OWNED_BG
 	elif is_queued:
 		bg_col = Color(0.14, 0.28, 0.16, 0.95)
+	elif not level_unlocked:
+		bg_col = UIStyle.COLOR_TAB_LOCKED
 
 	var style := UIStyle.create_card_style(bg_col, UIStyle.COLOR_CARD_BORDER, 2)
 	style.set_corner_radius_all(6)
@@ -992,21 +1032,29 @@ func _create_mario_deals_upgrade_bar(item: ItemData) -> PanelContainer:
 	elif is_queued:
 		status_lbl.text = "QUEUED ✓"
 		status_lbl.add_theme_color_override("font_color", Color("#8BF08E"))
-	else:
+	elif level_unlocked:
 		status_lbl.text = "AVAILABLE"
 		status_lbl.add_theme_color_override("font_color", Color.WHITE)
+	else:
+		status_lbl.text = "REQUIRES LV. %d" % req_lvl
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.9))
 	right_vbox.add_child(status_lbl)
 
 	if owned:
 		icon.modulate = Color(1, 1, 1, 0.5)
 		card.modulate = Color(0.85, 1.0, 0.85, 0.7)
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	else:
+	elif is_queued or level_unlocked:
 		icon.modulate = Color(1, 1, 1, 1)
 		card.modulate = Color(1, 1, 1, 1)
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		card.gui_input.connect(_on_card_clicked.bind(item))
+	else:
+		icon.modulate = Color(0.3, 0.25, 0.2, 0.8)
+		card.modulate = Color(0.7, 0.7, 0.7, 0.85)
+		card.mouse_filter = Control.MOUSE_FILTER_PASS
+		card.mouse_default_cursor_shape = Control.CURSOR_ARROW
 
 	return card
 

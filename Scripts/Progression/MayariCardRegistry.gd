@@ -16,6 +16,7 @@ const CARD_CLEAR_ROAD := "clear_road"
 const CARD_SILVER_TOUCHED_BAG := "silver_touched_bag"
 const CARD_MOON_HOLDS_SKY := "moon_holds_sky"
 const CARD_GENEROUS_BASKETS := "generous_baskets"
+const CARD_SILVER_RENOWN := "silver_renown"
 
 ## Card IDs — Chill (Debuffs / Quirks)
 const CARD_DISEMBODIED_WIND := "disembodied_wind"
@@ -118,6 +119,19 @@ const CARDS: Dictionary = {
 			{"label": "Customer Basket Size:", "value": "2–3 Items", "tone": "pos"},
 		],
 		"hud_short": "Bigger Customer Orders",
+	},
+	CARD_SILVER_RENOWN: {
+		"id": CARD_SILVER_RENOWN,
+		"kind": KIND_FAVOR,
+		"title": "Silver Renown",
+		"sigil": "★",
+		"tagline": "+50% Player XP",
+		"description": "Biringan's whispers carry your tindahan's name across Karimlan. Earn +50% Player XP from every sale, visit, and story tomorrow.",
+		"description_rich": "Biringan's whispers carry your tindahan's name across Karimlan. Earn extra [b]Player XP[/b] from every sale, visit, and story.",
+		"stats": [
+			{"label": "Player XP Earned:", "value": "+50%", "tone": "pos"},
+		],
+		"hud_short": "+50% Player XP",
 	},
 
 	# ── Biringan's Chill (Debuffs / Quirks) ──────────────────────────────
