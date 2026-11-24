@@ -24,7 +24,14 @@ var _inspected_item_ids: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("persist")
+	EventBus.day_ended.connect(_on_day_boundary)
+	EventBus.day_started.connect(_on_day_boundary)
 	initialize()
+
+func _on_day_boundary(_day_number: int) -> void:
+	if customers_needed_for_delivery > 0:
+		customers_needed_for_delivery = 0
+		LogManager.info("InventoryManager", "Uncle Mario delivery cooldown reset for the new day.")
 
 ## Load all ItemData resources from subfolders and set initial stock.
 func initialize() -> void:
