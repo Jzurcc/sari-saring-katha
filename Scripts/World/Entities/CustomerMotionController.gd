@@ -65,6 +65,7 @@ var _default_fade_in_from: float = 0.0
 # Procedural locomotion & idle bob timers
 var _walk_timer: float = 0.0
 var _idle_timer: float = 0.0
+var _idle_opacity_timer: float = 0.0
 var _last_pos: Vector3 = Vector3.ZERO
 var _fallback_speed: float = 2.0
 
@@ -409,6 +410,10 @@ func _process(delta: float) -> void:
 
 			State.IDLE:
 				is_moving = false
+				if profile and profile.idle_opacity_pulse_speed > 0.0 and profile.idle_opacity_pulse_max > profile.idle_opacity_pulse_min:
+					_idle_opacity_timer += delta
+					var pulse_t := 0.5 + 0.5 * cos(_idle_opacity_timer * profile.idle_opacity_pulse_speed)
+					set_opacity(lerpf(profile.idle_opacity_pulse_min, profile.idle_opacity_pulse_max, pulse_t))
 
 	_last_pos = _owner_node.global_position
 	_apply_locomotion_visuals(delta, is_moving, use_bob)

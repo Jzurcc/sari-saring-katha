@@ -6,37 +6,57 @@
 [sub_resource type="Resource" id="step_1"]
 script = ExtResource("2_step")
 anchor = 2
-local_offset = Vector3(0, 0.22, 0.2)
-duration = 1.65
+local_offset = Vector3(1.5, 0.22, -0.2)
+duration = 3.0
 transition = 1
 ease_type = 1
-target_opacity = 0.86
-opacity_fade_fraction = 0.2
+target_opacity = 0.92
+opacity_fade_fraction = 0.65
 
 [sub_resource type="Resource" id="step_2"]
 script = ExtResource("2_step")
 anchor = 3
-local_offset = Vector3(0, 0.35, 3.2)
-duration = 1.9
-transition = 7
+local_offset = Vector3(1.5, 0.28, 1.6)
+duration = 2.5
+transition = 1
+ease_type = 2
+target_opacity = 0.0
+opacity_fade_fraction = 0.75
+
+[sub_resource type="Resource" id="step_3"]
+script = ExtResource("2_step")
+anchor = 3
+local_offset = Vector3(1.5, 0.34, 3.6)
+duration = 2.4
+transition = 1
+ease_type = 2
+target_opacity = 0.85
+opacity_fade_fraction = 0.65
+
+[sub_resource type="Resource" id="step_4"]
+script = ExtResource("2_step")
+anchor = 3
+local_offset = Vector3(1.5, 0.42, 6.2)
+duration = 2.6
+transition = 1
 ease_type = 0
 target_opacity = 0.0
-opacity_fade_fraction = 0.5
+opacity_fade_fraction = 0.65
 opacity_fade_at_end = true
 
 [resource]
 script = ExtResource("1_profile")
 profile_name = "Rosalyn Cameo Pass Through"
 locomotion_style = 1
-base_speed = 2.2
-bob_frequency = 4.5
-bob_amplitude = 0.06
-sway_amount = 0.03
+base_speed = 1.4
+bob_frequency = 3.2
+bob_amplitude = 0.055
+sway_amount = 0.025
 idle_height_offset = 0.18
 play_landing_thud = false
 override_start_anchor = true
 start_anchor = 0
-start_offset = Vector3(0, 0.25, -1.5)
+start_offset = Vector3(1.5, 0.25, -2.0)
 start_opacity = 0.0
-enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2")])
+enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2"), SubResource("step_3"), SubResource("step_4")])
 bypass_default_exit_stepback = true

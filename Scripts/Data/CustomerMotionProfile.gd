@@ -33,6 +33,10 @@ enum LocomotionStyle {
 @export var idle_bob_speed: float = 2.4
 @export var idle_sway_amount: float = 0.0
 @export_range(0.0, 1.0, 0.01) var idle_opacity: float = 1.0
+## Optional slow opacity pulsing while idle at the counter (active when pulse_speed > 0 and max > min).
+@export_range(0.0, 1.0, 0.01) var idle_opacity_pulse_min: float = 1.0
+@export_range(0.0, 1.0, 0.01) var idle_opacity_pulse_max: float = 1.0
+@export var idle_opacity_pulse_speed: float = 0.0
 ## If false, skips the squash-and-stretch landing thud on arrival (ideal for ghosts/flyers).
 @export var play_landing_thud: bool = true
 
