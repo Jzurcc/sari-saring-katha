@@ -14,6 +14,7 @@ extends CharacterBody3D
 @export_group("Dynamic FOV")
 @export var base_fov: float = 75.0
 @export var fov_change: float = 1.5
+var fov_offset: float = 0.0
 
 @export_group("Camera Juiciness")
 @export var idle_sway_amplitude: float = 0.015
@@ -122,8 +123,8 @@ func _physics_process(delta: float) -> void:
 		camera.position.y = sin(_t_bob * bob_frequency) * bob_amplitude
 		camera.position.x = cos(_t_bob * bob_frequency / 2.0) * bob_amplitude
 		
-		# FOV is now fixed to base_fov (75)
-		camera.fov = base_fov
+		# FOV respects base_fov plus any cinematic UI zoom offset
+		camera.fov = base_fov + fov_offset
 		
 		# Automatic Step Up for Stairs / Small Ledges
 		if StoryManager.current_tier >= 10 and is_on_floor() and get_slide_collision_count() > 0 and input_dir.length_squared() > 0.01:

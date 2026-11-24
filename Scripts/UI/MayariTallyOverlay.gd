@@ -368,6 +368,11 @@ var _cards_ready: bool = false
 
 var _confirmed_offer: float = 0.0
 var _confirmed_tier: String = "balanced"
+var _zoom_target: Node = null
+var _zoom_base_fov: float = 75.0
+var _zoom_uses_offset: bool = false
+var _zoom_tween: Tween = null
+const VIGNETTE_ZOOM_FOV_DELTA := -9.0
 
 func setup(player_money: float, total_paid: float, goal: float, min_amount: float, generous_amount: float) -> void:
 	_player_money = maxf(0.0, player_money)
@@ -875,6 +880,47 @@ func _play_entrance() -> void:
 	tw.parallel().tween_property(_header_banner, "offset_bottom", 0.0, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(_offer_frame, "modulate:a", 1.0, 0.28).set_delay(0.05).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_offer_frame, "scale", Vector2.ONE, 0.32).set_delay(0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_animate_vignette_zoom(true)
+
+func _resolve_camera_zoom_target() -> void:
+	if is_instance_valid(_zoom_target):
+		return
+	var cam := get_viewport().get_camera_3d()
+	if not is_instance_valid(cam):
+		return
+	# Prefer FPSController.fov_offset so it doesn't fight _physics_process FOV enforcement
+	var cur: Node = cam.get_parent()
+	while cur != null:
+		if "fov_offset" in cur:
+			_zoom_target = cur
+			_zoom_uses_offset = true
+			return
+		cur = cur.get_parent()
+	_zoom_target = cam
+	_zoom_base_fov = cam.fov
+	_zoom_uses_offset = false
+
+func _animate_vignette_zoom(zoom_in: bool) -> void:
+	_resolve_camera_zoom_target()
+	if not is_instance_valid(_zoom_target):
+		return
+	if _zoom_tween and _zoom_tween.is_valid():
+		_zoom_tween.kill()
+	_zoom_tween = create_tween()
+	var dur := 0.42 if zoom_in else 0.26
+	if _zoom_uses_offset:
+		var target_off := VIGNETTE_ZOOM_FOV_DELTA if zoom_in else 0.0
+		_zoom_tween.tween_property(_zoom_target, "fov_offset", target_off, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT if zoom_in else Tween.EASE_IN_OUT)
+	else:
+		var target_fov := (_zoom_base_fov + VIGNETTE_ZOOM_FOV_DELTA) if zoom_in else _zoom_base_fov
+		_zoom_tween.tween_property(_zoom_target, "fov", target_fov, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT if zoom_in else Tween.EASE_IN_OUT)
+
+func _exit_tree() -> void:
+	if is_instance_valid(_zoom_target):
+		if _zoom_uses_offset:
+			_zoom_target.set("fov_offset", 0.0)
+		elif _zoom_target is Camera3D:
+			(_zoom_target as Camera3D).fov = _zoom_base_fov
 
 # ── Resolution & Transition to Hades Boon Stack ──────────────────────────────
 
@@ -1193,6 +1239,7 @@ func _select_row(index: int) -> void:
 	await _fade_out_and_finish(chosen_id)
 
 func _fade_out_and_finish(selected_card_id: String) -> void:
+	_animate_vignette_zoom(false)
 	var fade := create_tween()
 	fade.tween_property(_backdrop, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
 	fade.parallel().tween_property(_mayari_portrait, "modulate:a", 0.0, 0.22)
