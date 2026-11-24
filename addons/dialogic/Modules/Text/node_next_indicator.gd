@@ -91,11 +91,16 @@ func _ready() -> void:
 func _refresh_keycap_text() -> void:
 	if not is_instance_valid(_keycap_lbl):
 		return
+	var raw_label := "SPACE"
 	var nav := get_node_or_null("/root/DialogueChoiceNavigator")
 	if nav and nav.has_method("get_action_key_label"):
-		_keycap_lbl.text = nav.get_action_key_label("dialogic_default_action", "SPACE")
+		raw_label = nav.get_action_key_label("dialogic_default_action", "SPACE")
+	if raw_label == "SPACE":
+		_keycap_lbl.text = "⎵"
+		_keycap_lbl.add_theme_font_size_override("font_size", 15)
 	else:
-		_keycap_lbl.text = "SPACE"
+		_keycap_lbl.text = raw_label
+		_keycap_lbl.add_theme_font_size_override("font_size", 12)
 
 
 func _on_visibility_changed() -> void:

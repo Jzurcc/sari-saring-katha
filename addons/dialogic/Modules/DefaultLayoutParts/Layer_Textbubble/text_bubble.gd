@@ -8,6 +8,7 @@ extends Control
 @onready var name_label: Label = (%NameLabel as Label)
 @onready var name_label_box: PanelContainer = (%NameLabelPanel as PanelContainer)
 @onready var name_label_holder: HBoxContainer = $DialogText/NameLabelPositioner
+var next_indicator: DialogicNode_NextIndicator = null
 
 var node_to_point_at: Node = null:
 	set(val):
@@ -36,6 +37,12 @@ var bg_padding := 30
 
 
 func _ready() -> void:
+	next_indicator = DialogicNode_NextIndicator.new()
+	next_indicator.name = "NextIndicator"
+	next_indicator.enabled = false
+	next_indicator.show_on_questions = false
+	next_indicator.z_index = 2
+	add_child(next_indicator)
 	reset()
 	DialogicUtil.autoload().Choices.question_shown.connect(_on_question_shown)
 
@@ -44,6 +51,9 @@ func reset() -> void:
 	set_process(false)
 	scale = Vector2.ZERO
 	modulate.a = 0.0
+	if is_instance_valid(next_indicator):
+		next_indicator.enabled = false
+		next_indicator.hide()
 
 	tail.points = []
 	bubble_rect = Rect2(0,0,2,2)
@@ -119,6 +129,9 @@ func open() -> void:
 	set_process(true)
 	show()
 	text.enabled = true
+	if is_instance_valid(next_indicator):
+		next_indicator.enabled = true
+		next_indicator.hide()
 	var open_tween := create_tween().set_parallel(true)
 	open_tween.tween_property(self, "scale", Vector2.ONE, 0.1).from(Vector2.ZERO)
 	open_tween.tween_property(self, "modulate:a", 1.0, 0.1).from(0.0)
@@ -127,6 +140,9 @@ func open() -> void:
 func close() -> void:
 	_is_closing = true
 	text.enabled = false
+	if is_instance_valid(next_indicator):
+		next_indicator.enabled = false
+		next_indicator.hide()
 	var close_tween := create_tween().set_parallel(true)
 	close_tween.tween_property(self, "scale", Vector2.ONE * 0.8, 0.2)
 	close_tween.tween_property(self, "modulate:a", 0.0, 0.2)
@@ -161,6 +177,8 @@ func _resize_bubble(content_size:Vector2, popup:=false) -> void:
 	name_label_holder.position += name_label_offset
 	name_label_holder.alignment = name_label_alignment
 	name_label_holder.size.x = text.size.x
+	if is_instance_valid(next_indicator):
+		next_indicator.position = Vector2(half_size.x - bg_padding * 0.5, half_size.y - bg_padding * 0.5)
 
 
 func _on_question_shown(info:Dictionary) -> void:
