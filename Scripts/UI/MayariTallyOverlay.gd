@@ -999,7 +999,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	title_lbl.text = str(c_data.get("title", "Moon Card")).to_upper()
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_font_size_override("font_size", 25)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
@@ -1008,7 +1008,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	rarity_lbl.text = "FAVOR" if is_fav else "OMEN"
 	rarity_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rarity_lbl.add_theme_font_override("font", _bold_font)
-	rarity_lbl.add_theme_font_size_override("font_size", 19)
+	rarity_lbl.add_theme_font_size_override("font_size", 22)
 	rarity_lbl.add_theme_color_override("font_color", accent_bright)
 	rarity_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(rarity_lbl)
@@ -1021,8 +1021,8 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	desc_rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
 	desc_rt.add_theme_font_override("bold_font", _bold_font)
-	desc_rt.add_theme_font_size_override("normal_font_size", 15)
-	desc_rt.add_theme_font_size_override("bold_font_size", 15)
+	desc_rt.add_theme_font_size_override("normal_font_size", 18)
+	desc_rt.add_theme_font_size_override("bold_font_size", 18)
 	desc_rt.add_theme_color_override("default_color", COL_CREAM_MUTED)
 	var raw_desc := str(c_data.get("description_rich", c_data.get("description", "")))
 	desc_rt.text = raw_desc.replace("[b]", "[b][color=%s]" % COL_BOLD_CREAM).replace("[/b]", "[/color][/b]")
@@ -1033,13 +1033,13 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 		var hook_lbl := Label.new()
 		hook_lbl.text = "▸  " + str(c_data.get("tagline", ""))
 		hook_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		hook_lbl.add_theme_font_size_override("font_size", 15)
+		hook_lbl.add_theme_font_size_override("font_size", 18)
 		hook_lbl.add_theme_color_override("font_color", COL_CREAM)
 		hook_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text_col.add_child(hook_lbl)
 	else:
 		var stats_box := VBoxContainer.new()
-		stats_box.add_theme_constant_override("separation", 1)
+		stats_box.add_theme_constant_override("separation", 2)
 		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		text_col.add_child(stats_box)
 		for st in stats:
@@ -1051,9 +1051,9 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 			var s_name := Label.new()
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
-			s_name.custom_minimum_size = Vector2(280, 0)
+			s_name.custom_minimum_size = Vector2(290, 0)
 			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
-			s_name.add_theme_font_size_override("font_size", 15)
+			s_name.add_theme_font_size_override("font_size", 18)
 			s_name.add_theme_color_override("font_color", COL_CREAM)
 			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			s_row.add_child(s_name)
@@ -1061,7 +1061,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 			var s_val := Label.new()
 			s_val.text = str(stat_dict.get("value", ""))
 			s_val.add_theme_font_override("font", _bold_font)
-			s_val.add_theme_font_size_override("font_size", 16)
+			s_val.add_theme_font_size_override("font_size", 19)
 			var tone := str(stat_dict.get("tone", "pos"))
 			var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
 			s_val.add_theme_color_override("font_color", val_col)
