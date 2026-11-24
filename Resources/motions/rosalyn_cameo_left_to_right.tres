@@ -16,12 +16,12 @@ opacity_fade_fraction = 0.45
 [sub_resource type="Resource" id="step_2"]
 script = ExtResource("2_step")
 anchor = 6
-local_offset = Vector3(0, 0.35, -1.8)
-duration = 5.6
+local_offset = Vector3(-3.5, 0.35, -1.8)
+duration = 6.8
 transition = 0
 ease_type = 2
 target_opacity = 0.0
-opacity_fade_fraction = 0.45
+opacity_fade_fraction = 0.25
 opacity_fade_at_end = true
 
 [resource]
