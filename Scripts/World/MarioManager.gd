@@ -480,6 +480,19 @@ func flush_pending_delivery() -> void:
 	_commit_pending_delivery(_is_in_main_game())
 
 
+func _is_non_stock_upgrade(item: ItemData) -> bool:
+	return item.get_meta("is_upgrade", false) \
+		or item.get_meta("is_fridge_upgrade", false) \
+		or item.get_meta("is_cat_upgrade", false) \
+		or item.get_meta("is_trash_upgrade", false) \
+		or item.get_meta("is_maneki_upgrade", false) \
+		or item.get_meta("is_radio_upgrade", false) \
+		or item.get_meta("is_mario_deals_upgrade", false) \
+		or item.get_meta("is_sto_nino_upgrade", false) \
+		or item.get_meta("is_permit_upgrade", false) \
+		or item.get_meta("is_bench_upgrade", false)
+
+
 func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if _pending_delivery_items.is_empty():
 		return
@@ -490,7 +503,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG):
 		var eligible_regular: Array[ItemData] = []
 		for it in items.keys():
-			if it.get_meta("is_upgrade", false) or it.get_meta("is_fridge_upgrade", false) or it.get_meta("is_cat_upgrade", false) or it.get_meta("is_trash_upgrade", false) or it.get_meta("is_maneki_upgrade", false) or it.get_meta("is_radio_upgrade", false) or it.get_meta("is_mario_deals_upgrade", false) or it.get_meta("is_sto_nino_upgrade", false) or it.get_meta("is_permit_upgrade", false) or it.get_meta("is_bench_upgrade", false):
+			if _is_non_stock_upgrade(it):
 				continue
 			if DispenserContainerItem.is_container_prop(it):
 				continue
@@ -511,7 +524,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.
 	for item in items.keys():
-		if item.get_meta("is_upgrade", false) or item.get_meta("is_fridge_upgrade", false) or item.get_meta("is_cat_upgrade", false) or item.get_meta("is_trash_upgrade", false) or item.get_meta("is_maneki_upgrade", false) or item.get_meta("is_radio_upgrade", false) or item.get_meta("is_mario_deals_upgrade", false) or item.get_meta("is_sto_nino_upgrade", false) or item.get_meta("is_permit_upgrade", false) or item.get_meta("is_bench_upgrade", false):
+		if _is_non_stock_upgrade(item):
 			continue
 		if DispenserContainerItem.is_dispenser_refill(item) or DispenserContainerItem.is_container_prop(item):
 			continue
@@ -649,6 +662,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if highest_sto_nino_lvl > StoryManager.sto_nino_upgrade_level:
 		StoryManager.purchase_sto_nino_upgrade(highest_sto_nino_lvl)
 		if spawn_in_tree:
+			EventBus.show_notification.emit("Sto. Niño Altar Upgraded!", "%s placed on your altar!" % highest_sto_nino_name, "purchase")
 			EventBus.show_notification.emit("Sto. Niño Devotion Upgraded!", "%s is now active!" % highest_sto_nino_name, "purchase")
 		LogManager.info("MarioManager", "Sto. Niño upgraded to Level %d (%s)" % [highest_sto_nino_lvl, highest_sto_nino_name])
 
@@ -874,7 +888,6 @@ func reset_state() -> void:
 		_sfx_player.stop()
 	_restore_audio_bus()
 	LogManager.info("MarioManager", "State reset for New Game.")
-
 
 
 ## Starts a Dialogic timeline with the FollowBubble style.
