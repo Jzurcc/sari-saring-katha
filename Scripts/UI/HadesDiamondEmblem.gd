@@ -3,7 +3,7 @@ extends Control
 ## Shared Hades-style boon emblem: a silk-smooth anti-aliased, wider-at-the-bottom
 ## colored triangle hugging the card's left/bottom inner border behind a rotated,
 ## double-bordered diamond.
-## Colors by kind: EVENT = light green, FAVOR = soft saturated yellow, CHILL = light blue.
+## Colors by kind: EVENT = light green, FAVOR = soft saturated yellow, OMEN = light blue.
 
 var accent: Color = Color(1.0, 0.78, 0.16, 1.0)
 var accent_bright: Color = Color(1.0, 0.90, 0.48, 1.0)
@@ -23,12 +23,12 @@ static func palette(kind: String) -> Dictionary:
 				"bg": Color(0.060, 0.092, 0.064, 0.96),
 				"tag": "EVENT",
 			}
-		"chill":
+		"chill", "omen":
 			return {
 				"accent": Color(0.26, 0.60, 1.0, 1.0),
 				"bright": Color(0.64, 0.85, 1.0, 1.0),
 				"bg": Color(0.056, 0.076, 0.118, 0.96),
-				"tag": "CHILL",
+				"tag": "OMEN",
 			}
 		_:
 			return {

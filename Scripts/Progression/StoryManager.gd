@@ -643,7 +643,7 @@ func _on_day_started(new_day: int) -> void:
 	if active_mayari_card != "":
 		var card := MayariCardRegistry.get_card(active_mayari_card)
 		if not card.is_empty():
-			var prefix := "Biringan's Favor" if MayariCardRegistry.is_favor(active_mayari_card) else "Biringan's Chill"
+			var prefix := "Favor" if MayariCardRegistry.is_favor(active_mayari_card) else "Omen"
 			LogManager.info("StoryManager", "Active Moon Card for Day %d: %s (%s)" % [day, str(card["title"]), prefix])
 			call_deferred("_announce_active_mayari_card", prefix, str(card["title"]), str(card["tagline"]))
 	LogManager.info("StoryManager", "Day %d starts." % day)
