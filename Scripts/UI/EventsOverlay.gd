@@ -87,8 +87,8 @@ func _build_ui() -> void:
 
 	# Top wide Hades-style banner (matches MayariTallyOverlay exact size & style)
 	_banner = PanelContainer.new()
-	_banner.anchor_left = 0.045
-	_banner.anchor_right = 0.955
+	_banner.anchor_left = 0.08
+	_banner.anchor_right = 0.92
 	_banner.anchor_top = 0.030
 	_banner.anchor_bottom = 0.148
 	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
@@ -171,10 +171,10 @@ func _build_ui() -> void:
 
 	# Left Side: Classic Filipino Sari-Sari Wall Calendar (centered in column)
 	_cal_holder = Control.new()
-	_cal_holder.anchor_left = 0.025
-	_cal_holder.anchor_right = 0.325
-	_cal_holder.anchor_top = 0.168
-	_cal_holder.anchor_bottom = 0.872
+	_cal_holder.anchor_left = 0.016
+	_cal_holder.anchor_right = 0.296
+	_cal_holder.anchor_top = 0.175
+	_cal_holder.anchor_bottom = 0.855
 	_root.add_child(_cal_holder)
 
 	var cal_aspect := AspectRatioContainer.new()
@@ -214,10 +214,10 @@ func _build_ui() -> void:
 	_cal_day_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cal_tex_rect.add_child(_cal_day_marker)
 
-	# Center-Right Hades Events Frame (widened for descriptions)
+	# Center-Right Hades Events Frame (EXACT same 0.580 x 0.680 rectangle as Silver Ledger)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.335
-	_frame.anchor_right = 0.850
+	_frame.anchor_left = 0.305
+	_frame.anchor_right = 0.885
 	_frame.anchor_top = 0.175
 	_frame.anchor_bottom = 0.855
 	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
@@ -226,6 +226,7 @@ func _build_ui() -> void:
 	f_style.shadow_color = Color(0.0, 0.0, 0.0, 0.62)
 	f_style.shadow_size = 22
 	_frame.add_theme_stylebox_override("panel", f_style)
+	_frame.resized.connect(_sync_card_heights)
 	_root.add_child(_frame)
 
 	var scroll := ScrollContainer.new()
@@ -238,12 +239,11 @@ func _build_ui() -> void:
 	_cards_vbox.add_theme_constant_override("separation", 10)
 	scroll.add_child(_cards_vbox)
 
-	# Right-side Hades keyword callout stack (appears on card hover)
+	# Floating Hades keyword callout stack (aligns to center-right of the hovered card)
 	_callout_col = VBoxContainer.new()
-	_callout_col.anchor_left = 0.858
-	_callout_col.anchor_right = 0.992
-	_callout_col.anchor_top = 0.21
-	_callout_col.anchor_bottom = 0.85
+	_callout_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	_callout_col.custom_minimum_size = Vector2(220, 0)
+	_callout_col.z_index = 30
 	_callout_col.add_theme_constant_override("separation", 10)
 	_callout_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_callout_col.visible = false
@@ -462,6 +462,19 @@ func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false) -> 
 		kws
 	)
 
+func _get_unified_card_height() -> float:
+	# Exact same card height as the 3 slots inside MayariTallyOverlay's matching 0.680-tall frame
+	var fh := _frame.size.y if is_instance_valid(_frame) and _frame.size.y > 100.0 else get_viewport().get_visible_rect().size.y * 0.680
+	return maxf(130.0, (fh - 135.0) / 3.0)
+
+func _sync_card_heights() -> void:
+	if not is_instance_valid(_cards_vbox):
+		return
+	var target_h := _get_unified_card_height()
+	for ch in _cards_vbox.get_children():
+		if ch is PanelContainer and ch.has_meta("is_hades_card"):
+			ch.custom_minimum_size = Vector2(0, target_h)
+
 func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, keywords: Array = []) -> PanelContainer:
 	var pal: Dictionary = HadesEmblem.palette(kind)
 	var accent: Color = pal["accent"]
@@ -470,8 +483,9 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	var tag: String = str(pal["tag"])
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 114)
+	card.custom_minimum_size = Vector2(0, _get_unified_card_height())
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.set_meta("is_hades_card", true)
 	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 10)
 	style.content_margin_right = 20
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.78)
@@ -485,7 +499,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 24)
+	hbox.add_theme_constant_override("separation", 52)
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
@@ -609,12 +623,26 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 
 	if not keywords.is_empty():
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
-		card.mouse_entered.connect(_show_keyword_callouts.bind(keywords))
-		card.mouse_exited.connect(_show_keyword_callouts.bind([]))
+		card.mouse_entered.connect(_show_keyword_callouts.bind(keywords, card))
+		card.mouse_exited.connect(_show_keyword_callouts.bind([], null))
 
 	return card
 
-func _show_keyword_callouts(keyword_ids: Array) -> void:
+func _position_callout_beside(anchor_ctrl: Control) -> void:
+	if not is_instance_valid(_callout_col) or not is_instance_valid(anchor_ctrl):
+		return
+	var vp_sz := get_viewport().get_visible_rect().size
+	var rect := anchor_ctrl.get_global_rect()
+	var c_sz := _callout_col.get_combined_minimum_size()
+	var cw := clampf(c_sz.x, 220.0, 260.0)
+	var ch := maxf(c_sz.y, 72.0)
+	_callout_col.size = Vector2(cw, ch)
+	var tx := minf(rect.end.x + 14.0, vp_sz.x - cw - 10.0)
+	var mid_y := rect.position.y + rect.size.y * 0.5
+	var ty := clampf(mid_y - ch * 0.5, 16.0, vp_sz.y - ch - 16.0)
+	_callout_col.position = Vector2(tx, ty)
+
+func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> void:
 	if not is_instance_valid(_callout_col):
 		return
 	if _callout_tween and _callout_tween.is_valid():
@@ -630,6 +658,7 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 		if info.is_empty():
 			continue
 		var box := PanelContainer.new()
+		box.custom_minimum_size = Vector2(236, 0)
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.95), 6, 14, 10)
 		bs.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
@@ -656,6 +685,7 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 
 		var kd := Label.new()
 		kd.text = str(info.get("desc", ""))
+		kd.custom_minimum_size = Vector2(204, 0)
 		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
 		kd.add_theme_font_size_override("font_size", 13)
@@ -672,6 +702,12 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 		return
 
 	_callout_col.visible = true
+	_callout_col.reset_size()
+	if is_instance_valid(anchor_ctrl):
+		_position_callout_beside(anchor_ctrl)
 	_callout_col.modulate.a = 0.0
-	_callout_tween = create_tween()
+	var final_x := _callout_col.position.x
+	_callout_col.position.x = final_x - 8.0
+	_callout_tween = create_tween().set_parallel(true)
 	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+	_callout_tween.tween_property(_callout_col, "position:x", final_x, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

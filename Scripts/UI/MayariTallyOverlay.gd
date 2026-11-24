@@ -484,8 +484,8 @@ func _build_ui() -> void:
 
 	# ── 1. TOP WIDE TITLE BANNER ──
 	_header_banner = PanelContainer.new()
-	_header_banner.anchor_left = 0.10
-	_header_banner.anchor_right = 0.90
+	_header_banner.anchor_left = 0.08
+	_header_banner.anchor_right = 0.92
 	_header_banner.anchor_top = 0.030
 	_header_banner.anchor_bottom = 0.148
 	var header_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
@@ -538,8 +538,8 @@ func _build_ui() -> void:
 
 	# ── 2. SHARED HADES CENTER FRAME (Exact same 3 card slots across Beat 1 -> Beat 2!) ──
 	_center_frame = PanelContainer.new()
-	_center_frame.anchor_left = 0.215
-	_center_frame.anchor_right = 0.835
+	_center_frame.anchor_left = 0.220
+	_center_frame.anchor_right = 0.800
 	_center_frame.anchor_top = 0.175
 	_center_frame.anchor_bottom = 0.855
 	var frame_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
@@ -598,8 +598,8 @@ func _build_ui() -> void:
 
 	# ── 3. BOTTOM-RIGHT OVERLAPPING OFFER BUTTON (Straddling the frame's bottom border!) ──
 	_confirm_btn = Button.new()
-	_confirm_btn.anchor_left = 0.835
-	_confirm_btn.anchor_right = 0.835
+	_confirm_btn.anchor_left = 0.800
+	_confirm_btn.anchor_right = 0.800
 	_confirm_btn.anchor_top = 0.855
 	_confirm_btn.anchor_bottom = 0.855
 	_confirm_btn.offset_left = -246.0
@@ -623,8 +623,8 @@ func _build_ui() -> void:
 
 	# ── 3B. BEAT 2 REROLL & ACCEPT CARDS BUTTONS (Straddling frame's bottom border) ──
 	_reroll_btn = Button.new()
-	_reroll_btn.anchor_left = 0.215
-	_reroll_btn.anchor_right = 0.215
+	_reroll_btn.anchor_left = 0.220
+	_reroll_btn.anchor_right = 0.220
 	_reroll_btn.anchor_top = 0.855
 	_reroll_btn.anchor_bottom = 0.855
 	_reroll_btn.offset_left = 18.0
@@ -655,8 +655,8 @@ func _build_ui() -> void:
 	_root.add_child(_reroll_btn)
 
 	_accept_cards_btn = Button.new()
-	_accept_cards_btn.anchor_left = 0.835
-	_accept_cards_btn.anchor_right = 0.835
+	_accept_cards_btn.anchor_left = 0.800
+	_accept_cards_btn.anchor_right = 0.800
 	_accept_cards_btn.anchor_top = 0.855
 	_accept_cards_btn.anchor_bottom = 0.855
 	_accept_cards_btn.offset_left = -246.0
@@ -696,8 +696,8 @@ func _build_ui() -> void:
 		_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 	_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_mayari_portrait.anchor_left = -0.045
-	_mayari_portrait.anchor_right = 0.335
+	_mayari_portrait.anchor_left = -0.055
+	_mayari_portrait.anchor_right = 0.315
 	_mayari_portrait.anchor_top = 0.34
 	_mayari_portrait.anchor_bottom = 1.27
 	_mayari_portrait.z_index = 10
@@ -706,10 +706,9 @@ func _build_ui() -> void:
 
 	# ── 5. RIGHT-SIDE HADES KEYWORD CALLOUT STACK (Appears on Beat 2 card hover) ──
 	_callout_col = VBoxContainer.new()
-	_callout_col.anchor_left = 0.845
-	_callout_col.anchor_right = 0.992
-	_callout_col.anchor_top = 0.21
-	_callout_col.anchor_bottom = 0.85
+	_callout_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	_callout_col.custom_minimum_size = Vector2(220, 0)
+	_callout_col.z_index = 30
 	_callout_col.add_theme_constant_override("separation", 10)
 	_callout_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_callout_col.visible = false
@@ -733,7 +732,7 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 24)
+	hbox.add_theme_constant_override("separation", 52)
 	card.add_child(hbox)
 
 	# Same footprint as Beat 2's HadesEmblem so the flip lines up seamlessly!
@@ -1046,10 +1045,12 @@ func _launch_hades_card_flip() -> void:
 			_header_title_lbl.text = "M O O N   O F   B I R I N G A N"
 			_header_sub_lbl.text = "The moon deals a mixed hand — %s for tomorrow." % ("choose 1 or 2" if _max_card_picks >= 2 else "choose one")
 
-	# Pre-create the 3 revealed cards inside the EXACT same slots (hidden until flip midpoint)
+	# Pre-create the 3 revealed cards inside the EXACT same slots with visible=true & alpha=0
+	# so MarginContainer lays them out at the EXACT same rect as the shadow cards before flipping!
 	for i in range(mini(_card_data_list.size(), _card_slots.size())):
 		var row := _create_hades_boon_row(_card_data_list[i], i)
-		row.visible = false
+		row.visible = true
+		row.modulate.a = 0.0
 		_card_slots[i].add_child(row)
 		_card_rows.append(row)
 
@@ -1057,13 +1058,19 @@ func _launch_hades_card_flip() -> void:
 	if not is_inside_tree():
 		return
 
-	# Staggered vertical card flip: shadow collapses scale.y 1 -> 0, swaps to revealed card, pops 0 -> 1!
+	# Staggered vertical card flip IN PLACE: shadow collapses scale.y 1 -> 0 around slot center,
+	# swaps directly to pre-laid-out revealed card at the exact same center, and unfolds 0 -> 1!
 	var last_tw: Tween = null
 	for i in range(_card_rows.size()):
+		var slot: Control = _card_slots[i]
+		var slot_sz: Vector2 = slot.size
 		var shadow_panel: PanelContainer = _shadow_rows[i]["panel"]
 		var revealed_row: PanelContainer = _card_rows[i]
-		shadow_panel.pivot_offset = shadow_panel.size * 0.5
-		revealed_row.pivot_offset = shadow_panel.size * 0.5
+		shadow_panel.pivot_offset = slot_sz * 0.5
+		revealed_row.visible = false
+		revealed_row.modulate.a = 1.0
+		revealed_row.pivot_offset = slot_sz * 0.5
+		revealed_row.scale = Vector2(1.0, 0.0)
 
 		var tw := create_tween()
 		tw.tween_interval(i * 0.11)
@@ -1071,7 +1078,7 @@ func _launch_hades_card_flip() -> void:
 		tw.tween_callback(func():
 			shadow_panel.visible = false
 			revealed_row.visible = true
-			revealed_row.pivot_offset = revealed_row.size * 0.5
+			revealed_row.pivot_offset = slot.size * 0.5
 			revealed_row.scale = Vector2(1.0, 0.0)
 			EventBus.request_sfx.emit("interact")
 		)
@@ -1112,7 +1119,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.set_meta("accent_bright", accent_bright)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 24)
+	hbox.add_theme_constant_override("separation", 52)
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 
@@ -1265,7 +1272,7 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 	if is_hovered:
 		_hovered_idx = index
 		EventBus.request_sfx.emit("interact")
-		_show_keyword_callouts(_card_data_list[index].get("keywords", []))
+		_show_keyword_callouts(_card_data_list[index].get("keywords", []), _card_rows[index])
 	elif _hovered_idx == index:
 		_hovered_idx = -1
 		_show_keyword_callouts([])
@@ -1305,7 +1312,21 @@ func _on_row_gui_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_select_row(index)
 
-func _show_keyword_callouts(keyword_ids: Array) -> void:
+func _position_callout_beside(anchor_ctrl: Control) -> void:
+	if not is_instance_valid(_callout_col) or not is_instance_valid(anchor_ctrl):
+		return
+	var vp_sz := get_viewport().get_visible_rect().size
+	var rect := anchor_ctrl.get_global_rect()
+	var c_sz := _callout_col.get_combined_minimum_size()
+	var cw := clampf(c_sz.x, 220.0, 260.0)
+	var ch := maxf(c_sz.y, 72.0)
+	_callout_col.size = Vector2(cw, ch)
+	var tx := minf(rect.end.x + 14.0, vp_sz.x - cw - 10.0)
+	var mid_y := rect.position.y + rect.size.y * 0.5
+	var ty := clampf(mid_y - ch * 0.5, 16.0, vp_sz.y - ch - 16.0)
+	_callout_col.position = Vector2(tx, ty)
+
+func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> void:
 	if not is_instance_valid(_callout_col):
 		return
 	if _callout_tween and _callout_tween.is_valid():
@@ -1321,6 +1342,7 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 		if info.is_empty():
 			continue
 		var box := PanelContainer.new()
+		box.custom_minimum_size = Vector2(236, 0)
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.95), 6, 14, 10)
 		bs.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
@@ -1347,6 +1369,7 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 
 		var kd := Label.new()
 		kd.text = str(info.get("desc", ""))
+		kd.custom_minimum_size = Vector2(204, 0)
 		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
 		kd.add_theme_font_size_override("font_size", 13)
@@ -1363,9 +1386,15 @@ func _show_keyword_callouts(keyword_ids: Array) -> void:
 		return
 
 	_callout_col.visible = true
+	_callout_col.reset_size()
+	if is_instance_valid(anchor_ctrl):
+		_position_callout_beside(anchor_ctrl)
 	_callout_col.modulate.a = 0.0
-	_callout_tween = create_tween()
+	var final_x := _callout_col.position.x
+	_callout_col.position.x = final_x - 8.0
+	_callout_tween = create_tween().set_parallel(true)
 	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+	_callout_tween.tween_property(_callout_col, "position:x", final_x, 0.16).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 func _on_milestone_hovered(m: Dictionary) -> void:
 	if _phase != 0 or not is_instance_valid(_callout_col):
@@ -1429,6 +1458,9 @@ func _on_milestone_hovered(m: Dictionary) -> void:
 
 	_callout_col.add_child(box)
 	_callout_col.visible = true
+	_callout_col.reset_size()
+	if is_instance_valid(_gauge_dock):
+		_position_callout_beside(_gauge_dock)
 	_callout_col.modulate.a = 0.0
 	_callout_tween = create_tween()
 	_callout_tween.tween_property(_callout_col, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
@@ -1465,7 +1497,8 @@ func _on_reroll_pressed() -> void:
 	_card_rows.clear()
 	for i in range(mini(_card_data_list.size(), _card_slots.size())):
 		var row := _create_hades_boon_row(_card_data_list[i], i)
-		row.visible = false
+		row.visible = true
+		row.modulate.a = 0.0
 		_card_slots[i].add_child(row)
 		_card_rows.append(row)
 
@@ -1475,18 +1508,24 @@ func _on_reroll_pressed() -> void:
 
 	var last_tw: Tween = null
 	for i in range(_card_rows.size()):
+		var slot: Control = _card_slots[i]
+		var slot_sz: Vector2 = slot.size
 		var old_r: PanelContainer = old_rows[i] if i < old_rows.size() else null
 		var new_r: PanelContainer = _card_rows[i]
+		new_r.visible = false
+		new_r.modulate.a = 1.0
+		new_r.pivot_offset = slot_sz * 0.5
+		new_r.scale = Vector2(1.0, 0.0)
 		var tw := create_tween()
 		tw.tween_interval(i * 0.08)
 		if is_instance_valid(old_r):
-			old_r.pivot_offset = old_r.size * 0.5
+			old_r.pivot_offset = slot_sz * 0.5
 			tw.tween_property(old_r, "scale:y", 0.0, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.tween_callback(func():
 			if is_instance_valid(old_r):
 				old_r.queue_free()
 			new_r.visible = true
-			new_r.pivot_offset = new_r.size * 0.5
+			new_r.pivot_offset = slot.size * 0.5
 			new_r.scale = Vector2(1.0, 0.0)
 			EventBus.request_sfx.emit("interact")
 		)

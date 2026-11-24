@@ -84,7 +84,7 @@ func _sync_triangle_rect() -> void:
 	# Sit slightly inset from the card's left/top/bottom inner border with a wider-than-tall triangle clear of card text
 	var h := maxf(size.y, 84.0)
 	_tri_rect.position = Vector2(-7.0, -4.0)
-	_tri_rect.size = Vector2(h * 1.12, h + 8.0)
+	_tri_rect.size = Vector2(minf(h * 1.12, 130.0), h + 8.0)
 	if _tri_mat:
 		_tri_mat.set_shader_parameter("tri_color", Color(accent.r, accent.g, accent.b, 0.94))
 
