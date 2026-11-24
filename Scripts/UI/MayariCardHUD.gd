@@ -61,7 +61,7 @@ func _build_ui() -> void:
 	_row = HBoxContainer.new()
 	_row.anchor_left = 0.0
 	_row.anchor_top = 0.0
-	_row.offset_left = 22.0
+	_row.offset_left = 24.0
 	_row.offset_top = 124.0
 	_row.add_theme_constant_override("separation", 6)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -5,7 +5,7 @@ extends CanvasLayer
 ## bezel & moving diagonal stripe shader. Displays "Lv. X" on the left and "cur / next"
 ## on the right directly inside the bar, with juicy stripe-speed & opacity surges on XP gain.
 
-const BAR_WIDTH := 232.0
+const BAR_WIDTH := 310.0
 const BAR_HEIGHT := 26.0
 const FRAME_PAD := 4.0
 
@@ -61,8 +61,8 @@ func _build_ui() -> void:
 	_holder = Control.new()
 	_holder.anchor_left = 0.0
 	_holder.anchor_top = 0.0
-	_holder.offset_left = 22.0
-	_holder.offset_top = 82.0
+	_holder.offset_left = 24.0
+	_holder.offset_top = 18.0
 	_holder.size = Vector2(frame_w, frame_h)
 	_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_holder)
