@@ -27,7 +27,7 @@ var _scroll_event_count: int = 0
 const SCROLL_THRESHOLD: int = 1
 var _was_lmb_pressed: bool = false
 var _was_dragging: bool = false
-var _last_fridge_toggle_frame: int = -1
+var _last_fridge_toggle_ms: int = -1000
 
 func _ready() -> void:
 	if interaction_range <= 0.0:
@@ -140,15 +140,19 @@ func _physics_process(_delta: float) -> void:
 
 	_was_dragging = DragManager.is_dragging
 
-	# Allow opening/closing the refrigerator door during active dialogue even if Dialogic's layout consumes MOUSE_BUTTON_LEFT
+	# Allow opening/closing the refrigerator door during active (unpaused) dialogue even if Dialogic's layout consumes MOUSE_BUTTON_LEFT
 	var lmb_now := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-	if lmb_now and not _was_lmb_pressed and Dialogic.current_timeline != null:
+	if lmb_now and not _was_lmb_pressed and Dialogic.current_timeline != null and not Dialogic.paused:
 		if is_instance_valid(_last_hovered) and _last_hovered.is_in_group("fridge_door"):
-			var frame := Engine.get_physics_frames()
-			if frame != _last_fridge_toggle_frame:
-				_last_fridge_toggle_frame = frame
-				_last_hovered.on_interact()
+			_try_interact_fridge_door(_last_hovered)
 	_was_lmb_pressed = lmb_now
+
+func _try_interact_fridge_door(target: WorldInteractor) -> void:
+	var now_ms := Time.get_ticks_msec()
+	if now_ms - _last_fridge_toggle_ms < 150:
+		return
+	_last_fridge_toggle_ms = now_ms
+	target.on_interact()
 
 func _input(event: InputEvent) -> void:
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
@@ -167,11 +171,8 @@ func _input(event: InputEvent) -> void:
 			and event.pressed \
 			and is_instance_valid(_last_hovered) \
 			and _last_hovered.is_in_group("fridge_door"):
-			var frame := Engine.get_physics_frames()
-			if frame != _last_fridge_toggle_frame:
-				_last_fridge_toggle_frame = frame
-				get_viewport().set_input_as_handled()
-				_last_hovered.on_interact()
+			get_viewport().set_input_as_handled()
+			_try_interact_fridge_door(_last_hovered)
 		return
 
 	# Pricing Mode Toggle (Alt) - Always allowed regardless of dialogue
@@ -237,7 +238,10 @@ func _input(event: InputEvent) -> void:
 				_pickup_item(_last_hovered as DraggableItem)
 			else:
 				get_viewport().set_input_as_handled()
-				_last_hovered.on_interact()
+				if _last_hovered.is_in_group("fridge_door"):
+					_try_interact_fridge_door(_last_hovered)
+				else:
+					_last_hovered.on_interact()
 		else:
 			LogManager.debug("PlayerInteraction", "Left click, but _last_hovered is null/invalid")
 
