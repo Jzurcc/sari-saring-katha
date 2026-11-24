@@ -31,6 +31,10 @@ func _ready() -> void:
 	if close_btn_node:
 		close_btn_node.pressed.connect(_on_cancel_pressed)
 
+	# Prevent Godot 4 ScrollContainer + wrapped-Label scrollbar width oscillation hangs
+	if unlocks_list and unlocks_list.get_parent() is ScrollContainer:
+		(unlocks_list.get_parent() as ScrollContainer).vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+
 	EventBus.restock_catalog_refresh.connect(_on_catalog_refresh_requested)
 	hide()
 
@@ -88,6 +92,7 @@ func _animate_entrance() -> void:
 
 func _populate_upgrades() -> void:
 	for child in upgrade_list_container.get_children():
+		upgrade_list_container.remove_child(child)
 		child.queue_free()
 	_card_map.clear()
 
@@ -871,7 +876,7 @@ func _create_mario_deals_upgrade_bar(item: ItemData) -> PanelContainer:
 func _on_card_clicked(event: InputEvent, item: ItemData) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		AudioManager.play_sfx("interact")
-		_toggle_queue_upgrade(item)
+		_toggle_queue_upgrade.call_deferred(item)
 
 func _toggle_queue_upgrade(item: ItemData) -> void:
 	if item in _queued_upgrades:
@@ -957,6 +962,7 @@ func _update_detail_panel(item: ItemData) -> void:
 		if detail_subtitle:
 			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
 		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
 			child.queue_free()
 		var next_txt := "All (3–4)" if r_lvl >= 3 else str(next_rev)
 		for line in [
@@ -980,6 +986,7 @@ func _update_detail_panel(item: ItemData) -> void:
 		if detail_subtitle:
 			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
 		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
 			child.queue_free()
 		for line in [
 			"• Unlocks Uncle Mario's Daily Sulit Deals",
@@ -1003,6 +1010,7 @@ func _update_detail_panel(item: ItemData) -> void:
 			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
 
 		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
 			child.queue_free()
 
 		for line in [
@@ -1030,6 +1038,7 @@ func _update_detail_panel(item: ItemData) -> void:
 			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
 
 		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
 			child.queue_free()
 
 		var lines: Array[String] = [
@@ -1062,6 +1071,7 @@ func _update_detail_panel(item: ItemData) -> void:
 			detail_subtitle.text = str(item.get_meta("upgrade_desc", ""))
 
 		for child in unlocks_list.get_children():
+			unlocks_list.remove_child(child)
 			child.queue_free()
 
 		for line in [

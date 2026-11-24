@@ -309,9 +309,10 @@ func get_radio_upgrade_item(level: int) -> ItemData:
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "radio_upgrade"
-	if ResourceLoader.exists("res://Assets/ui/nokia.png"):
-		item.texture = load("res://Assets/ui/nokia.png")
+	if ResourceLoader.exists("res://Assets/ui/nokia2d.png"):
+		item.texture = load("res://Assets/ui/nokia2d.png")
 	item.set_meta("is_radio_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("radio_level", lvl)
 	item.set_meta("reveals", int(spec["reveals"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
@@ -345,6 +346,7 @@ func get_mario_deals_upgrade_item() -> ItemData:
 	if ResourceLoader.exists("res://Assets/ui/mario_tricycle.png"):
 		item.texture = load("res://Assets/ui/mario_tricycle.png")
 	item.set_meta("is_mario_deals_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals: 2–3 random unlocked items are 20% off wholesale every morning.")
 	_mario_deals_upgrade_item = item
 	return item
