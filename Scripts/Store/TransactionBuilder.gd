@@ -13,9 +13,8 @@ const GENERIC_PURCHASE_TIMELINE := "res://Dialogue/Timelines/Generic/Purchase.dt
 const GENERIC_VISIT_TIMELINE := "res://Dialogue/Timelines/Generic/Visit.dtl"
 
 const AWARENESS_CHANCE := 0.4
-const HIGH_PRICE_DESIRED_EXTREME_CHANCE := 0.85 # Desired item at effective step >= +3
-const HIGH_PRICE_DESIRED_HIGH_CHANCE := 0.55    # Desired item at effective step == +2
-const HIGH_PRICE_STORE_CHANCE := 0.65           # Store-wide prices are high before/regardless of order
+const HIGH_PRICE_DESIRED_EXTREME_CHANCE := 0.70 # Desired item at effective step >= +3
+const HIGH_PRICE_STORE_CHANCE := 0.65           # Any stocked store item at effective step >= +3
 const REPAYMENT_CHANCE := 0.30
 const DISPLAY_POOL_CHANCE := 0.60
 const FAVORITE_CATEGORY_CHANCE := 0.70
@@ -394,33 +393,23 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		if effective_step > max_desired_effective_step:
 			max_desired_effective_step = effective_step
 
-	# 2) Check general store-wide stocked prices (pre-order / browsing awareness)
-	var stocked_total: int = 0
-	var stocked_high: int = 0
+	# 2) Check general store-wide stocked prices for extreme markups (>= +3)
 	var has_store_extreme: bool = false
 	for item in InventoryManager.get_all_items():
 		if not item or not item.can_be_sold or InventoryManager.get_total_item_stock(item) <= 0:
 			continue
-		stocked_total += 1
 		var tol: int = 0
 		if is_instance_valid(StoreEventManager):
 			tol = StoreEventManager.get_item_tolerance_offset(item)
 		tol += sm.get_mayari_tolerance_offset()
-		var eff: int = item.current_step - tol
-		if eff >= 3:
+		if (item.current_step - tol) >= 3:
 			has_store_extreme = true
-			stocked_high += 1
-		elif eff >= 2:
-			stocked_high += 1
-
-	var store_feels_expensive: bool = has_store_extreme or (stocked_total > 0 and (stocked_high >= 3 or float(stocked_high) / float(stocked_total) >= 0.30))
+			break
 
 	var high_price_chance := 0.0
 	if max_desired_effective_step >= 3:
 		high_price_chance = HIGH_PRICE_DESIRED_EXTREME_CHANCE
-	elif max_desired_effective_step >= 2:
-		high_price_chance = HIGH_PRICE_DESIRED_HIGH_CHANCE
-	if store_feels_expensive:
+	if has_store_extreme:
 		high_price_chance = maxf(high_price_chance, HIGH_PRICE_STORE_CHANCE)
 
 	var high_price_active: bool = high_price_chance > 0.0 and (randf() < high_price_chance)
