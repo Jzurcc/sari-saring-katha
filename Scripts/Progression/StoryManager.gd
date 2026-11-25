@@ -268,10 +268,10 @@ func get_xp_for_next_level(lvl: int = player_level) -> int:
 		return PLAYER_XP_THRESHOLDS[lvl]
 	return PLAYER_XP_THRESHOLDS[PLAYER_XP_THRESHOLDS.size() - 1] + (lvl - (PLAYER_XP_THRESHOLDS.size() - 1)) * 140
 
-## Scaling anti-softlock cash bonus awarded on every player level-up (Lv. 2 = ₱30, scales progressively & indefinitely).
+## Scaling anti-softlock cash bonus awarded on every player level-up (Lv. 2 = ₱60, scales progressively & indefinitely).
 func get_level_up_money_reward(new_level: int) -> float:
 	var step := float(maxi(0, new_level - 2))
-	var raw := (30.0 + step * 10.0) * (1.0 + 0.04 * step)
+	var raw := (60.0 + step * 15.0) * (1.0 + 0.04 * step)
 	return snapped(raw, 5.0)
 
 func get_xp_multiplier() -> float:
