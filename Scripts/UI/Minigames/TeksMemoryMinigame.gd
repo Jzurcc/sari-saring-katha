@@ -13,6 +13,7 @@ const PORTRAIT_PATHS: Array[String] = [
 	"res://Assets/characters/portraits/Buboy Face.png",
 	"res://Assets/characters/portraits/Danilo Face.png",
 	"res://Assets/characters/portraits/Kuya_Kap Face.png",
+	"res://Assets/characters/portraits/LoloPilo Face.png",
 	"res://Assets/characters/portraits/ManangAna Face.png",
 	"res://Assets/characters/portraits/ReynaMayari Face.png",
 	"res://Assets/characters/portraits/Rodel Face.png",

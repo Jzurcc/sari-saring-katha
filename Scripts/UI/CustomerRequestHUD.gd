@@ -12,6 +12,7 @@ const PORTRAIT_MAP := {
 	"buboy": preload("res://Assets/characters/portraits/Buboy Face.png"),
 	"danilo": preload("res://Assets/characters/portraits/Danilo Face.png"),
 	"kuyakap": preload("res://Assets/characters/portraits/Kuya_Kap Face.png"),
+	"lolopilo": preload("res://Assets/characters/portraits/LoloPilo Face.png"),
 	"manangana": preload("res://Assets/characters/portraits/ManangAna Face.png"),
 	"reynamayari": preload("res://Assets/characters/portraits/ReynaMayari Face.png"),
 	"rodel": preload("res://Assets/characters/portraits/Rodel Face.png"),
