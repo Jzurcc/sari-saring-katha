@@ -720,23 +720,23 @@ func _build_ui() -> void:
 	_footer_right_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_book_rect.add_child(_footer_right_lbl)
 
-	# Top-right curled corner -> Next Neighbor
-	_next_btn = _make_corner_flip_button("↪", "Next Neighbor (Right Arrow)")
-	_next_btn.anchor_left = 0.922
-	_next_btn.anchor_right = 0.976
-	_next_btn.anchor_top = 0.016
-	_next_btn.anchor_bottom = 0.094
-	_next_btn.pressed.connect(func(): _step_neighbor(1))
-	_book_rect.add_child(_next_btn)
-
-	# Bottom-right curled corner -> Previous Neighbor
+	# Top-right curled corner -> Previous Neighbor
 	_prev_btn = _make_corner_flip_button("↩", "Previous Neighbor (Left Arrow)")
-	_prev_btn.anchor_left = 0.908
-	_prev_btn.anchor_right = 0.974
-	_prev_btn.anchor_top = 0.876
-	_prev_btn.anchor_bottom = 0.960
+	_prev_btn.anchor_left = 0.922
+	_prev_btn.anchor_right = 0.976
+	_prev_btn.anchor_top = 0.016
+	_prev_btn.anchor_bottom = 0.094
 	_prev_btn.pressed.connect(func(): _step_neighbor(-1))
 	_book_rect.add_child(_prev_btn)
+
+	# Bottom-right curled corner -> Next Neighbor
+	_next_btn = _make_corner_flip_button("↪", "Next Neighbor (Right Arrow)")
+	_next_btn.anchor_left = 0.908
+	_next_btn.anchor_right = 0.974
+	_next_btn.anchor_top = 0.876
+	_next_btn.anchor_bottom = 0.960
+	_next_btn.pressed.connect(func(): _step_neighbor(1))
+	_book_rect.add_child(_next_btn)
 
 	# External rounded "✕" Close button outside top-right of the notebook (matches NotebookUI.gd)
 	_close_btn = Button.new()

@@ -173,23 +173,23 @@ func _build_ui() -> void:
 	_page_footer_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_page_rect.add_child(_page_footer_lbl)
 
-	# Top-right curled corner inside notebook -> Next Page icon
-	_next_page_btn = _make_corner_flip_button("↪", "Next Page (Right Arrow)")
-	_next_page_btn.anchor_left = 0.880
-	_next_page_btn.anchor_right = 0.966
-	_next_page_btn.anchor_top = 0.016
-	_next_page_btn.anchor_bottom = 0.096
-	_next_page_btn.pressed.connect(_on_next_page_pressed)
-	_page_rect.add_child(_next_page_btn)
-
-	# Bottom-right curled corner inside notebook -> Previous Page icon
+	# Top-right curled corner inside notebook -> Previous Page icon
 	_prev_page_btn = _make_corner_flip_button("↩", "Previous Page (Left Arrow)")
 	_prev_page_btn.anchor_left = 0.880
 	_prev_page_btn.anchor_right = 0.966
-	_prev_page_btn.anchor_top = 0.884
-	_prev_page_btn.anchor_bottom = 0.964
+	_prev_page_btn.anchor_top = 0.016
+	_prev_page_btn.anchor_bottom = 0.096
 	_prev_page_btn.pressed.connect(_on_prev_page_pressed)
 	_page_rect.add_child(_prev_page_btn)
+
+	# Bottom-right curled corner inside notebook -> Next Page icon
+	_next_page_btn = _make_corner_flip_button("↪", "Next Page (Right Arrow)")
+	_next_page_btn.anchor_left = 0.880
+	_next_page_btn.anchor_right = 0.966
+	_next_page_btn.anchor_top = 0.884
+	_next_page_btn.anchor_bottom = 0.964
+	_next_page_btn.pressed.connect(_on_next_page_pressed)
+	_page_rect.add_child(_next_page_btn)
 
 	# Rounded-corner "✕" Close button positioned OUTSIDE the notebook at its top-right
 	_close_btn = Button.new()
