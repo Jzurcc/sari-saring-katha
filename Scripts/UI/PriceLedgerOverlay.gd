@@ -452,7 +452,7 @@ func _update_row_display(item: ItemData) -> void:
 	var base_price: float = item.price
 	var diff: float = final_price - base_price
 
-	# Circle track string (-3 to +5): • for selected and ◦ for not selected
+	# Circle track string (-5 to +5): • for selected and ◦ for not selected
 	var pips_text := ""
 	for i in range(ItemData.MIN_STEP, ItemData.MAX_STEP + 1):
 		if i == step:

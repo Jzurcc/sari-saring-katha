@@ -14,8 +14,8 @@ enum ItemType {
 @export var price: float = 10.0
 ## The current selling price to customers. Initialized to 105% of price if set to 0.
 @export var selling_price: float = 0.0
-## Current discrete pricing step: -3 (loss leader) to +5 (extreme markup). 0 = wholesale cost.
-const MIN_STEP := -3
+## Current discrete pricing step: -5 (loss leader) to +5 (extreme markup). 0 = wholesale cost.
+const MIN_STEP := -5
 const MAX_STEP := 5
 @export var current_step: int = 0
 ## Whether the player has manually adjusted this price.
@@ -72,14 +72,14 @@ func get_step_increment() -> float:
 		return 1.5
 	return minf(16.0, snapped(3.5 + price * 0.18, 0.5))
 
-## Calculates the selling price for a given discrete step (-3 to +5).
+## Calculates the selling price for a given discrete step (-5 to +5).
 ## Step 0 = wholesale cost (price). Negative steps sell at a loss.
 func get_price_for_step(step_idx: int) -> float:
 	var clamped_step := clampi(step_idx, MIN_STEP, MAX_STEP)
 	var inc := get_step_increment()
 	return max(1.0, snapped(price + float(clamped_step) * inc, 0.5))
 
-## Calculates the nearest discrete step (-3 to +5) corresponding to a given price.
+## Calculates the nearest discrete step (-5 to +5) corresponding to a given price.
 func get_step_from_price(target_price: float) -> int:
 	var inc := get_step_increment()
 	if inc <= 0.001:
@@ -105,6 +105,6 @@ func get_final_price() -> float:
 func get_max_selling_price() -> float:
 	return get_price_for_step(MAX_STEP)
 
-## Returns the minimum selling price (at step -3).
+## Returns the minimum selling price (at step -5).
 func get_min_selling_price() -> float:
 	return get_price_for_step(MIN_STEP)

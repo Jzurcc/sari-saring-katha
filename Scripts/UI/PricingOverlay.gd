@@ -203,7 +203,7 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	else:
 		chill_status_label.hide()
 
-	# 9-Step Circle Track (-3 to +5): • for selected and ◦ for not selected
+	# 11-Step Circle Track (-5 to +5): • for selected and ◦ for not selected
 	var pips := ""
 	for i in range(ItemData.MIN_STEP, ItemData.MAX_STEP + 1):
 		if i == step:
