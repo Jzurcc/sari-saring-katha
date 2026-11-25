@@ -8,10 +8,14 @@ extends Node
 const MosquitoSwatScript := preload("res://Scripts/UI/Minigames/MosquitoSwatMinigame.gd")
 const SipaScript := preload("res://Scripts/UI/Minigames/SipaMinigame.gd")
 const TeksMemoryScript := preload("res://Scripts/UI/Minigames/TeksMemoryMinigame.gd")
+const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 
 var mosquito_minigame: CanvasLayer
 var sipa_minigame: CanvasLayer
 var teks_minigame: CanvasLayer
+var _fade_layer: CanvasLayer
+var _fade_rect: ColorRect
+var _is_transitioning: bool = false
 var _active_id: String = ""
 
 
@@ -31,13 +35,28 @@ func _ready() -> void:
 	teks_minigame.minigame_finished.connect(_on_minigame_finished.bind("teks"))
 	add_child(teks_minigame)
 
+	# Fullscreen black fade curtain for entering/exiting minigames
+	_fade_layer = CanvasLayer.new()
+	_fade_layer.name = "MinigameFadeLayer"
+	_fade_layer.layer = 96
+	_fade_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	_fade_layer.visible = false
+	add_child(_fade_layer)
+
+	_fade_rect = ColorRect.new()
+	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade_rect.color = Color(0.015, 0.012, 0.010, 0.0)
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	_fade_layer.add_child(_fade_rect)
+
 	EventBus.start_minigame.connect(launch_minigame)
 	if is_instance_valid(Dialogic) and not Dialogic.signal_event.is_connected(_on_dialogic_signal):
 		Dialogic.signal_event.connect(_on_dialogic_signal)
 
 
 func is_any_open() -> bool:
-	return (is_instance_valid(mosquito_minigame) and mosquito_minigame.is_open) \
+	return _is_transitioning \
+		or (is_instance_valid(mosquito_minigame) and mosquito_minigame.is_open) \
 		or (is_instance_valid(sipa_minigame) and sipa_minigame.is_open) \
 		or (is_instance_valid(teks_minigame) and teks_minigame.is_open)
 
@@ -86,21 +105,69 @@ func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:
 	var id := minigame_id.strip_edges().to_lower()
 	if id == "lolo_pilo_random" or id == "random":
 		id = LOLO_PILO_MINIGAMES[randi() % LOLO_PILO_MINIGAMES.size()]
+	var target: CanvasLayer = null
+	var resolved_id := ""
 	match id:
 		"mosquito", "mosquito_swat", "lamok":
-			_active_id = "mosquito"
-			_hide_dialogic_for_minigame()
-			mosquito_minigame.open_minigame(config)
+			resolved_id = "mosquito"
+			target = mosquito_minigame
 		"sipa":
-			_active_id = "sipa"
-			_hide_dialogic_for_minigame()
-			sipa_minigame.open_minigame(config)
+			resolved_id = "sipa"
+			target = sipa_minigame
 		"teks", "teks_memory":
-			_active_id = "teks"
-			_hide_dialogic_for_minigame()
-			teks_minigame.open_minigame(config)
+			resolved_id = "teks"
+			target = teks_minigame
 		_:
 			LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
+			return
+
+	_transition_into_minigame(resolved_id, target, config)
+
+
+func _transition_into_minigame(resolved_id: String, target: CanvasLayer, config: Dictionary) -> void:
+	_is_transitioning = true
+	_active_id = resolved_id
+	_hide_dialogic_for_minigame()
+	Juice.play_sfx("tab_switch", 0.78, -3.0)
+
+	# Fade to black curtain
+	_fade_layer.visible = true
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	_fade_rect.color.a = 0.0
+	var tw_in := create_tween()
+	tw_in.tween_property(_fade_rect, "color:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw_in.finished
+	if not is_inside_tree():
+		_is_transitioning = false
+		return
+
+	# Open minigame under cover of black, brief beat, then fade back in
+	target.open_minigame(config)
+	await get_tree().create_timer(0.06).timeout
+	if not is_inside_tree():
+		_is_transitioning = false
+		return
+
+	var tw_out := create_tween()
+	tw_out.tween_property(_fade_rect, "color:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw_out.finished
+	if is_instance_valid(_fade_layer):
+		_fade_layer.visible = false
+	_is_transitioning = false
+
+
+func _play_exit_fade() -> void:
+	if not is_instance_valid(_fade_layer) or not is_instance_valid(_fade_rect):
+		return
+	_fade_layer.visible = true
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade_rect.color.a = 0.65
+	var tw := create_tween()
+	tw.tween_property(_fade_rect, "color:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(func():
+		if is_instance_valid(_fade_layer) and not _is_transitioning:
+			_fade_layer.visible = false
+	)
 
 
 func _on_dialogic_signal(arg: String) -> void:
@@ -140,6 +207,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
+	_play_exit_fade()
 	_restore_dialogic_after_minigame()
 	# Award Reputation to the active counter customer (e.g. Lolo Pilo or Mosquito complainant)
 	var spawner := get_tree().get_first_node_in_group("customer_spawner")
@@ -155,5 +223,5 @@ func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -
 		if gm and "money" in gm:
 			gm.money += 15.0
 			EventBus.money_changed.emit(gm.money)
-		EventBus.show_notification.emit("Minigame Victory!", "+₱15.00 & +15 Player XP earned!", "purchase")
+		EventBus.show_notification.emit("Minigame Victory!", "+₱15  •  +15 XP", "purchase")
 	EventBus.minigame_completed.emit(minigame_id, won, result)
