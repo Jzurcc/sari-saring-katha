@@ -1,7 +1,7 @@
 class_name TeksMemoryMinigame
 extends CanvasLayer
 
-## Classic Filipino Teks Memory Match Minigame.
+## Classic Filipino Teks Memory Match Minigame (Fullscreen Vignette UI).
 ## 4x3 grid (6 pairs) of rectangular vintage Teks cards featuring customer portraits,
 ## random pastel light backgrounds, rectangular double borders, and text-free visual
 ## power-level pips along the bottom.
@@ -34,6 +34,17 @@ const PASTEL_BACKGROUNDS: Array[Color] = [
 	Color(0.96, 0.92, 0.84, 1.0), # Warm apricot
 ]
 
+const VIGNETTE_SHADER_CODE := """
+shader_type canvas_item;
+uniform vec4 tint : source_color = vec4(0.03, 0.024, 0.02, 0.84);
+void fragment() {
+	vec2 d = UV - vec2(0.5);
+	float dist = length(d * vec2(1.12, 1.0));
+	float vig = smoothstep(0.16, 0.78, dist);
+	COLOR = vec4(tint.rgb, mix(0.32, tint.a, vig));
+}
+"""
+
 const TOTAL_PAIRS := 6
 const MAX_TRIES := 14
 
@@ -46,8 +57,7 @@ var _flipped: Array[Dictionary] = []
 
 var _root: Control
 var _grid: GridContainer
-var _pairs_lbl: Label
-var _tries_lbl: Label
+var _stats_lbl: Label
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
@@ -117,7 +127,6 @@ func _start_round() -> void:
 	for ch in _grid.get_children():
 		ch.queue_free()
 
-	# Pick 6 random portraits & pastel backgrounds
 	var pool := PORTRAIT_PATHS.duplicate()
 	pool.shuffle()
 	var pastels := PASTEL_BACKGROUNDS.duplicate()
@@ -148,20 +157,23 @@ func _start_round() -> void:
 
 
 func _create_teks_card(entry: Dictionary) -> Dictionary:
-	var card_size := Vector2(124, 162)
+	var card_size := Vector2(126, 166)
 	var holder := Control.new()
 	holder.custom_minimum_size = card_size
 	holder.pivot_offset = card_size * 0.5
 	holder.mouse_filter = Control.MOUSE_FILTER_STOP
 	holder.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
-	# Back face (vintage dark crimson/gold geometric Teks card back — zero text)
+	# Back face (vintage crimson/gold geometric Teks card back — zero text)
 	var back := PanelContainer.new()
 	back.set_anchors_preset(Control.PRESET_FULL_RECT)
 	back.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var bs := UIStyle.create_flat_stylebox(Color(0.36, 0.12, 0.14, 1.0), 6, 8, 8)
 	bs.border_color = Color(0.95, 0.86, 0.68, 0.95)
 	bs.set_border_width_all(4)
+	bs.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	bs.shadow_size = 10
+	bs.shadow_offset = Vector2(0, 4)
 	back.add_theme_stylebox_override("panel", bs)
 	holder.add_child(back)
 
@@ -190,6 +202,9 @@ func _create_teks_card(entry: Dictionary) -> Dictionary:
 	var f_outer := UIStyle.create_flat_stylebox(Color(0.98, 0.95, 0.88, 1.0), 5, 7, 7)
 	f_outer.border_color = Color(0.22, 0.16, 0.12, 0.95)
 	f_outer.set_border_width_all(3)
+	f_outer.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	f_outer.shadow_size = 10
+	f_outer.shadow_offset = Vector2(0, 4)
 	front.add_theme_stylebox_override("panel", f_outer)
 	holder.add_child(front)
 
@@ -217,7 +232,6 @@ func _create_teks_card(entry: Dictionary) -> Dictionary:
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner_v.add_child(portrait)
 
-	# Visual-only Teks power level bar (5 rectangular pips, zero text!)
 	var power_bar := Control.new()
 	power_bar.custom_minimum_size = Vector2(0, 14)
 	power_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -271,7 +285,6 @@ func _on_card_clicked(card: Dictionary) -> void:
 			_pairs_found += 1
 			_flipped.clear()
 			_refresh_hud()
-			# Celebratory pop on matched pair
 			for m in [a, b]:
 				var r: Control = m["root"]
 				var tw := r.create_tween()
@@ -311,10 +324,9 @@ func _flip_card(card: Dictionary, show_front: bool) -> void:
 
 
 func _refresh_hud() -> void:
-	_pairs_lbl.text = "PAIRS: %d / %d" % [_pairs_found, TOTAL_PAIRS]
-	_tries_lbl.text = "TRIES LEFT: %d" % _tries_left
-	var col := Color(0.98, 0.45, 0.40) if _tries_left <= 3 else Color(1.0, 0.92, 0.72)
-	_tries_lbl.add_theme_color_override("font_color", col)
+	_stats_lbl.text = "Pairs: %d / %d   •   Tries Left: %d" % [_pairs_found, TOTAL_PAIRS, _tries_left]
+	var col := Color(0.98, 0.48, 0.44) if _tries_left <= 3 else Color(0.96, 0.91, 0.78)
+	_stats_lbl.add_theme_color_override("font_color", col)
 
 
 func _finish_round(won: bool, title: String, sub: String) -> void:
@@ -331,87 +343,87 @@ func _build_ui() -> void:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
 
-	var dimmer := ColorRect.new()
-	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dimmer.color = Color(0.03, 0.025, 0.02, 0.72)
-	_root.add_child(dimmer)
+	# Fullscreen Vignette Backdrop
+	var vig := ColorRect.new()
+	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh := Shader.new()
+	sh.code = VIGNETTE_SHADER_CODE
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	vig.material = mat
+	_root.add_child(vig)
 
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_root.add_child(center)
-
-	var frame := PanelContainer.new()
-	frame.custom_minimum_size = Vector2(640, 645)
-	var fs := UIStyle.create_flat_stylebox(Color(0.09, 0.08, 0.068, 0.97), 12, 24, 18)
-	fs.border_color = Color(0.86, 0.66, 0.30, 0.92)
-	fs.set_border_width_all(2)
-	frame.add_theme_stylebox_override("panel", fs)
-	center.add_child(frame)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
-	frame.add_child(vbox)
-
-	# Header
-	var hdr := HBoxContainer.new()
-	hdr.add_theme_constant_override("separation", 16)
-	vbox.add_child(hdr)
+	# Floating Top-Center Title & Stats (no outer box, Title Case)
+	var header := VBoxContainer.new()
+	header.anchor_left = 0.5
+	header.anchor_right = 0.5
+	header.anchor_top = 0.0
+	header.offset_left = -260
+	header.offset_right = 260
+	header.offset_top = 20
+	header.add_theme_constant_override("separation", 4)
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(header)
 
 	var title := Label.new()
-	title.text = "TEKS MEMORY"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "Teks Memory"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62))
-	hdr.add_child(title)
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color(1.0, 0.93, 0.72))
+	title.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.92))
+	title.add_theme_constant_override("outline_size", 6)
+	header.add_child(title)
 
-	_pairs_lbl = Label.new()
-	_pairs_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_pairs_lbl.add_theme_font_size_override("font_size", 18)
-	_pairs_lbl.add_theme_color_override("font_color", Color(0.70, 0.96, 0.62))
-	hdr.add_child(_pairs_lbl)
+	_stats_lbl = Label.new()
+	_stats_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_stats_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_stats_lbl.add_theme_font_size_override("font_size", 19)
+	_stats_lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.9))
+	_stats_lbl.add_theme_constant_override("outline_size", 5)
+	header.add_child(_stats_lbl)
 
-	_tries_lbl = Label.new()
-	_tries_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_tries_lbl.add_theme_font_size_override("font_size", 18)
-	hdr.add_child(_tries_lbl)
-
+	# Minimal floating close button top-right
 	var close_btn := Button.new()
 	close_btn.text = "✕"
-	close_btn.custom_minimum_size = Vector2(36, 36)
+	close_btn.anchor_left = 1.0
+	close_btn.anchor_right = 1.0
+	close_btn.offset_left = -58
+	close_btn.offset_right = -18
+	close_btn.offset_top = 18
+	close_btn.offset_bottom = 58
 	close_btn.pressed.connect(func(): close_minigame(false, true))
-	hdr.add_child(close_btn)
+	_root.add_child(close_btn)
 
-	# Board container
-	var board_wrap := Control.new()
-	board_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	board_wrap.custom_minimum_size = Vector2(560, 520)
-	vbox.add_child(board_wrap)
-
+	# Centered 4x3 Teks Grid floating over vignette
 	var board_center := CenterContainer.new()
 	board_center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	board_wrap.add_child(board_center)
+	board_center.offset_top = 86
+	board_center.offset_bottom = -16
+	board_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(board_center)
 
 	_grid = GridContainer.new()
 	_grid.columns = 4
-	_grid.add_theme_constant_override("h_separation", 16)
-	_grid.add_theme_constant_override("v_separation", 14)
+	_grid.add_theme_constant_override("h_separation", 20)
+	_grid.add_theme_constant_override("v_separation", 16)
 	board_center.add_child(_grid)
 
 	# Result panel
 	_result_panel = PanelContainer.new()
 	_result_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_result_panel.custom_minimum_size = Vector2(380, 185)
-	_result_panel.offset_left = -190
-	_result_panel.offset_right = 190
+	_result_panel.custom_minimum_size = Vector2(390, 185)
+	_result_panel.offset_left = -195
+	_result_panel.offset_right = 195
 	_result_panel.offset_top = -92
 	_result_panel.offset_bottom = 92
-	var rs := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.96), 12, 22, 18)
-	rs.border_color = Color(0.92, 0.72, 0.32, 0.95)
+	var rs := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 14, 24, 20)
+	rs.border_color = Color(0.92, 0.72, 0.32, 0.92)
 	rs.set_border_width_all(2)
 	_result_panel.add_theme_stylebox_override("panel", rs)
 	_result_panel.visible = false
-	board_wrap.add_child(_result_panel)
+	_root.add_child(_result_panel)
 
 	var rv := VBoxContainer.new()
 	rv.alignment = BoxContainer.ALIGNMENT_CENTER
