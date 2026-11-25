@@ -50,7 +50,10 @@ static func _get_pill_texture() -> ImageTexture:
 	return _pill_tex
 
 func _ready() -> void:
-	text = "Alt"
+	_refresh_key_text()
+	var eb := get_node_or_null("/root/EventBus")
+	if eb and eb.has_signal("keybinds_changed") and not eb.keybinds_changed.is_connected(_refresh_key_text):
+		eb.keybinds_changed.connect(_refresh_key_text)
 	font = UIStyle.FONT_INDER
 	font_size = 28
 	pixel_size = 0.0020
@@ -74,6 +77,13 @@ func _ready() -> void:
 	add_child(_bg_sprite)
 
 	_start_pulse()
+
+func _refresh_key_text() -> void:
+	var nav := get_node_or_null("/root/DialogueChoiceNavigator")
+	if nav and nav.has_method("get_action_key_label"):
+		text = nav.get_action_key_label("pricing_lens", "V")
+	else:
+		text = "V"
 
 func _start_pulse() -> void:
 	if _pulse_tween and _pulse_tween.is_valid():

@@ -179,7 +179,6 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("pricing_lens") and not event.echo:
 		pricing_mode_active = !pricing_mode_active
 		EventBus.pricing_mode_changed.emit(pricing_mode_active)
-		LogManager.info("PlayerInteraction", "Pricing Mode: %s" % ("ON" if pricing_mode_active else "OFF"))
 
 		if is_instance_valid(_last_hovered):
 			_last_hovered.set_pricing_ui_active(pricing_mode_active)
@@ -231,8 +230,6 @@ func _input(event: InputEvent) -> void:
 
 	# Block interaction triggers if we are actively dragging/holding an item
 	if DragManager.is_dragging:
-		if event is InputEventMouseButton and event.pressed:
-			LogManager.debug("PlayerInteraction", "Click ignored: Already dragging.")
 		return
 
 	# Left-Click Interaction
@@ -249,8 +246,6 @@ func _input(event: InputEvent) -> void:
 					_try_interact_fridge_door(_last_hovered)
 				else:
 					_last_hovered.on_interact()
-		else:
-			LogManager.debug("PlayerInteraction", "Left click, but _last_hovered is null/invalid")
 
 func _pickup_item(item: DraggableItem) -> void:
 	if item and item.sprite and item.sprite.texture:

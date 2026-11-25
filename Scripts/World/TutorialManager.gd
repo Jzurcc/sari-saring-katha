@@ -109,7 +109,7 @@ func handle_dialogic_signal(argument: String) -> bool:
 		return true
 	elif argument == "wait_for_pricing":
 		is_blocking_pickup = false
-		_start_tutorial_task("wait_for_pricing", "Press ALT or L to check prices.", EventBus.pricing_mode_changed)
+		_start_tutorial_task("wait_for_pricing", "Press V or L to check prices.", EventBus.pricing_mode_changed)
 		if not EventBus.price_ledger_toggled.is_connected(_on_tutorial_task_completed):
 			EventBus.price_ledger_toggled.connect(_on_tutorial_task_completed, CONNECT_ONE_SHOT)
 		return true
@@ -118,7 +118,7 @@ func handle_dialogic_signal(argument: String) -> bool:
 		return true
 	elif argument == "wait_for_price_change" or argument == "wait_for_price_increase" or argument == "wait_for_profit_increase":
 		is_blocking_pickup = false
-		_start_tutorial_task("wait_for_price_change", "Press ALT, hover an item on the shelf, and scroll to adjust its price.", EventBus.price_increased)
+		_start_tutorial_task("wait_for_price_change", "Press V, hover an item on the shelf, and scroll to adjust its price.", EventBus.price_increased)
 		if not EventBus.price_decreased.is_connected(_on_tutorial_task_completed):
 			EventBus.price_decreased.connect(_on_tutorial_task_completed, CONNECT_ONE_SHOT)
 		return true

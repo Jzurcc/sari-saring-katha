@@ -96,10 +96,12 @@ func close_ledger() -> void:
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("drop")
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_open:
 		return
-	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_L or event.keycode == KEY_L)):
+	var is_esc: bool = event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_ESCAPE or event.keycode == KEY_ESCAPE))
+	var is_l: bool = event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_L or event.keycode == KEY_L)
+	if is_esc or is_l:
 		close_ledger()
 		get_viewport().set_input_as_handled()
 

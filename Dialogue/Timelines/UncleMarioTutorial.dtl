@@ -6,7 +6,7 @@ UncleMario: Need a quick rundown of the store, or are you ready to run this plac
 - Nah, I'm good!
 	UncleMario: [i]Naku, anak[/i]. [shake]You're not![/shake]
 	UncleMario: Let's start from the beginning.
-UncleMario: First... pricing! Press [i]ALT[/i] to toggle your pricing lens, look at any product on the shelf, and scroll to adjust its price steps.
+UncleMario: First... pricing! Press [i]V[/i] to toggle your pricing lens, look at any product on the shelf, and scroll to adjust its price steps.
 UncleMario: Go ahead and try adjusting the price of an [color=#0f6e2f]Anoba[/color] on the shelf to your left!
 [signal arg="wait_for_price_change"]
 UncleMario: Nice! 

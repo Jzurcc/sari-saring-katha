@@ -71,11 +71,18 @@ func _ready() -> void:
 
 	LogManager.debug("MainGame", "_ready() END")
 
-func _input(event: InputEvent) -> void:
-	# Escape toggles pause menu (ignored while full-screen Storefront Drawing Studio is open)
+func _unhandled_input(event: InputEvent) -> void:
+	# Escape toggles pause menu (only if no sub-menu/overlay consumed it first)
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
 		if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
 			return
+		# Double-check open overlays so Escape closes them instead of opening Pause
+		for ev_ov in get_tree().get_nodes_in_group("events_overlay"):
+			if ev_ov.get("is_open"):
+				return
+		for pl_ov in get_tree().get_nodes_in_group("price_ledger_overlay"):
+			if pl_ov.get("is_open"):
+				return
 		if pause_menu and not pause_menu.visible:
 			get_viewport().set_input_as_handled()
 			pause_menu.pause()
