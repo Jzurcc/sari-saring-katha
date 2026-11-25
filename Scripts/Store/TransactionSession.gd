@@ -28,6 +28,15 @@ var _current_timeline_path: String = ""
 var _last_dialogue_frame: int = -1
 var _watchdog_elapsed: float = 0.0
 const WATCHDOG_TIMEOUT_SEC: float = 0.5
+const PRICE_REFUSED_TIMELINE_PATH := "res://Dialogue/Timelines/price_refused.dtl"
+
+const PRICE_REFUSAL_LINES: Array[String] = [
+	"₱%d for %s?! Ang mahal naman! Sa kabila na lang ako.",
+	"Wait, ₱%d for %s? That's way past my budget. Never mind!",
+	"Grabe naman ang patong sa %s... I'll just pass today.",
+	"₱%d?! My wallet can't take that right now. Maybe next time.",
+	"Whoa, %s is ₱%d now? Too steep for me — I'll head out.",
+]
 
 var generic_char_res: Resource = preload("res://Dialogue/Timelines/Customer.dch")
 var _tree_owner: Node = null
@@ -62,6 +71,116 @@ func on_customer_arrived(customer: Customer) -> void:
 	update_item_names(customer)
 	if generic_char_res:
 		generic_char_res.display_name = InventoryManager.current_character_name
+
+
+static func compute_overpriced_refusal_chance(item_data: ItemData) -> float:
+	if item_data == null:
+		return 0.0
+	var tolerance: int = 0
+	if is_instance_valid(StoreEventManager):
+		tolerance = StoreEventManager.get_item_tolerance_offset(item_data)
+	tolerance += StoryManager.get_mayari_tolerance_offset()
+	var effective_step: int = item_data.current_step - tolerance
+	if effective_step < 2:
+		return 0.0
+	var base_chance: float = 0.0
+	match effective_step:
+		2: base_chance = 0.20
+		3: base_chance = 0.45
+		4: base_chance = 0.70
+		_: base_chance = 0.88
+	var relief: float = StoryManager.get_storefront_price_relief()
+	var final_chance: float = base_chance - relief
+	return maxf(0.05, final_chance) if effective_step >= 3 else maxf(0.0, final_chance)
+
+
+func _matches_desired_preview(context: TransactionContext, offered: ItemData) -> bool:
+	if context == null or offered == null:
+		return false
+	for d in context.desired_items:
+		if d == null:
+			continue
+		if d == offered or d.get_clean_id() == offered.get_clean_id() or d.item_name == offered.item_name:
+			return true
+	return false
+
+
+func _should_refuse_for_high_price(customer: Customer, context: TransactionContext, offered: ItemData) -> bool:
+	if not is_instance_valid(customer) or context == null or offered == null:
+		return false
+	if context.transaction_type != TransactionContext.Type.PURCHASE:
+		return false
+	if context.wants_debt or context.is_guided_tutorial:
+		return false
+	if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
+		var gm := _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
+		if gm and gm.tutorial and gm.tutorial.is_guided_timeline_active():
+			return false
+	if not _matches_desired_preview(context, offered):
+		return false
+	var chance: float = compute_overpriced_refusal_chance(offered)
+	return chance > 0.0 and randf() < chance
+
+
+func _trigger_price_refusal(
+	customer: Customer,
+	item: DraggableItem,
+	needs_switch: bool,
+	prev_customer: Customer,
+	prev_phase: Phase,
+	prev_pending_dismiss: bool,
+	prev_partial_success: bool
+) -> void:
+	var item_data: ItemData = item.item_data
+	var price: float = item_data.get_final_price()
+	var price_int: int = int(roundf(price))
+	var char_name: String = customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"
+
+	# Return rejected item cleanly to shelf (no stock lost, no money earned)
+	item.show_visuals()
+	item.return_to_start()
+
+	# World & UI Juice
+	EventBus.request_camera_shake.emit(0.18, 0.22)
+	AudioManager.play_sfx("error")
+	customer.pulse_color(Color(1.0, 0.26, 0.22, 1.0))
+	VisualEffectManager.spawn_price_refusal_fx(customer, price)
+	EventBus.show_notification.emit(
+		"Price Refused!",
+		"%s walked out — %s (₱%.2f) was too steep!" % [char_name, item_data.item_name, price],
+		"error"
+	)
+	StoryManager.record_missed_item(item_data)
+
+	# Pick a natural refusal line and play walkout dialogue on the customer
+	var tmpl: String = PRICE_REFUSAL_LINES[randi() % PRICE_REFUSAL_LINES.size()]
+	var line: String = ""
+	if tmpl.find("₱%d") != -1 and tmpl.find("%s") != -1:
+		if tmpl.find("₱%d") < tmpl.find("%s"):
+			line = tmpl % [price_int, item_data.item_name]
+		else:
+			line = tmpl % [item_data.item_name, price_int]
+	elif tmpl.find("%s") != -1:
+		line = tmpl % item_data.item_name
+	else:
+		line = tmpl % price_int
+
+	if generic_char_res:
+		generic_char_res.display_name = char_name
+	Dialogic.VAR.set_variable("Global_PriceRefusalLine", line)
+
+	if needs_switch and is_instance_valid(prev_customer):
+		_finish_dialogue_for_customer(prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+		_switching_customer_dialogue = false
+
+	current_customer = customer
+	_pending_dismiss = true
+	_is_partial_success = false
+	customer.dialogue_phase = Phase.WRONG_ITEM
+	if ResourceLoader.exists(PRICE_REFUSED_TIMELINE_PATH):
+		start_dialogue(PRICE_REFUSED_TIMELINE_PATH, customer, Phase.WRONG_ITEM, "")
+	else:
+		_finish_dialogue_for_customer(customer, Phase.WRONG_ITEM, true, false)
 
 func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 	if _switching_customer_dialogue or Dialogic.current_timeline != null or customer == null or customer.transaction_context == null:
@@ -199,8 +318,14 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		_sync_customer_dialogic_vars(customer)
 
 	var context: TransactionContext = customer.transaction_context
-	var is_correct: bool = customer.check_item(item.item_data)
 	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
+
+	# Check overpriced refusal BEFORE fulfilling the item (regular cash purchases only; never blocks Story/Tutorial/Utang)
+	if _should_refuse_for_high_price(customer, context, item.item_data):
+		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+		return false
+
+	var is_correct: bool = customer.check_item(item.item_data)
 
 	if is_correct:
 		EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
@@ -659,4 +784,3 @@ func _dismiss_guest_if_present() -> void:
 		var g = guest_customer
 		guest_customer = null
 		g.create_tween().tween_callback(g.dismiss).set_delay(0.5)
-

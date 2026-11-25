@@ -333,7 +333,11 @@ func spawn_floating_xp(source_node_or_pos: Variant, amount: int) -> void:
 		var n3d: Node3D = source_node_or_pos
 		if not is_instance_valid(n3d):
 			return
-		spawn_pos = n3d.global_position + Vector3(randf_range(-0.14, 0.14), 1.45, randf_range(-0.08, 0.08))
+		var cam := get_viewport().get_camera_3d()
+		var right_dir := cam.global_transform.basis.x if is_instance_valid(cam) else Vector3.RIGHT
+		right_dir.y = 0.0
+		right_dir = right_dir.normalized() if right_dir.length_squared() > 0.0001 else Vector3.RIGHT
+		spawn_pos = n3d.global_position + right_dir * randf_range(0.36, 0.46) + Vector3(0.0, randf_range(1.62, 1.72), 0.0)
 	elif source_node_or_pos is Vector3:
 		spawn_pos = source_node_or_pos
 	else:
@@ -370,4 +374,51 @@ func spawn_floating_xp(source_node_or_pos: Variant, amount: int) -> void:
 	tw.tween_property(lbl, "scale", Vector3.ONE * 0.92, 0.35).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(lbl, "modulate:a", 0.0, 0.50).set_delay(0.32).set_trans(Tween.TRANS_SINE)
 	tw.tween_property(lbl, "outline_modulate:a", 0.0, 0.50).set_delay(0.32).set_trans(Tween.TRANS_SINE)
+	tw.chain().tween_callback(lbl.queue_free)
+
+
+func spawn_price_refusal_fx(source_node: Node3D, price: float) -> void:
+	if not is_instance_valid(source_node):
+		return
+	var cam := get_viewport().get_camera_3d()
+	var right_dir := cam.global_transform.basis.x if is_instance_valid(cam) else Vector3.RIGHT
+	right_dir.y = 0.0
+	right_dir = right_dir.normalized() if right_dir.length_squared() > 0.0001 else Vector3.RIGHT
+	var spawn_pos := source_node.global_position + right_dir * 0.42 + Vector3(0.0, 1.72, 0.0)
+
+	var lbl := Label3D.new()
+	lbl.name = "FloatingPriceRefusal"
+	lbl.text = "₱%.0f?! Too pricey!" % roundf(price)
+	if UIStyle.FONT_INDER:
+		lbl.font = UIStyle.FONT_INDER
+	lbl.font_size = 46
+	lbl.pixel_size = 0.0056
+	lbl.outline_size = 12
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.no_depth_test = true
+	lbl.shaded = false
+	lbl.render_priority = 14
+	lbl.modulate = Color(1.0, 0.36, 0.32, 0.0)
+	lbl.outline_modulate = Color(0.14, 0.03, 0.03, 0.0)
+	lbl.scale = Vector3.ONE * 0.5
+
+	_attach_effect(lbl, spawn_pos)
+	if not lbl.is_inside_tree():
+		lbl.queue_free()
+		return
+
+	# Sharp pop-in with lateral irritation jolt, then rise & fade out
+	var tw := lbl.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "modulate:a", 1.0, 0.10).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "outline_modulate:a", 0.96, 0.10).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "scale", Vector3.ONE * 1.18, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(lbl, "global_position:y", spawn_pos.y + 0.55, 1.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(lbl, "global_position:x", spawn_pos.x + right_dir.x * 0.07, 0.06)
+	tw.tween_property(lbl, "global_position:x", spawn_pos.x - right_dir.x * 0.07, 0.06)
+	tw.tween_property(lbl, "global_position:x", spawn_pos.x, 0.06)
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "scale", Vector3.ONE * 0.96, 0.30).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.45).set_delay(0.55).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(lbl, "outline_modulate:a", 0.0, 0.45).set_delay(0.55).set_trans(Tween.TRANS_SINE)
 	tw.chain().tween_callback(lbl.queue_free)

@@ -138,11 +138,9 @@ func force_save() -> void:
 
 	# 4. Gather data from all persist-group nodes in current scene
 	var persist_nodes = get_tree().get_nodes_in_group("persist")
-	LogManager.info("SaveManager", "Saving... Merging data from %d active 'persist' nodes." % persist_nodes.size())
 	
 	for node in persist_nodes:
 		if not node.has_method("get_save_data"):
-			LogManager.debug("SaveManager", "Skipped (no get_save_data): %s" % node.name)
 			continue
 
 		var sid: String = _get_node_save_id(node)
@@ -161,8 +159,7 @@ func force_save() -> void:
 	save_finished.emit()
 
 	if success:
-		LogManager.info("SaveManager", "Game saved. Updated keys: %s" % str(new_keys))
-		LogManager.debug("SaveManager", "Total file keys: %s" % str(master_save.keys()))
+		LogManager.info("SaveManager", "Saved (%d systems)." % new_keys.size())
 	else:
 		LogManager.error("SaveManager", "Save failed — disk write error!")
 

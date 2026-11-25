@@ -76,7 +76,6 @@ func has_encountered(character_path: String) -> bool:
 ## Saves the Dialogic branch value for a character.
 func save_branch(character_path: String, branch_value: float) -> void:
 	customer_story_branches[character_path] = branch_value
-	LogManager.debug("CharacterProgressionManager", "Branch saved: %s -> %.1f" % [character_path.get_file(), branch_value])
 
 # ---------------------------------------------------------------------------
 # Story Advancement

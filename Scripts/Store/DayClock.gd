@@ -9,7 +9,7 @@ signal fast_forward_finished
 const DAY_START_HOUR := 5.0
 const MENU_THEME_HOUR := 16.89 ## Golden hour aesthetic for Main Menu
 const CLOSING_HOUR   := 20.0  ## 8 PM — no new customers after this
-const HARD_STOP_HOUR := 24.0  ## Midnight — absolute time limit
+const HARD_STOP_HOUR := 23.95 ## 11:57 PM — stops safely before Sky3D's 24.0 -> 0.0 wraparound
 const CLOCK_SPEED_HOURS_PER_SEC := 1.0 / 50.0
 const CUSTOMER_TIME_WINDOW_HOURS := 4.0
 const VISIT_TIME_WINDOW_HOURS := 2.0
@@ -68,10 +68,7 @@ func on_customer_arrived(is_visit: bool = false) -> void:
 	is_customer_present = true
 	if wait_limit_time < 0 and not was_paused_by_limit:
 		active_time_window_hours = get_visit_time_window_hours() if is_visit else get_customer_time_window_hours()
-		wait_limit_time = current_display_time + active_time_window_hours
-		LogManager.debug("DayClock", "Customer arrived (%s). Patience limit set to %.2f (+%.2fh)" % [
-			"Visit" if is_visit else "Standard", wait_limit_time, active_time_window_hours
-		])
+		wait_limit_time = minf(current_display_time + active_time_window_hours, HARD_STOP_HOUR)
 	else:
 		LogManager.info("DayClock", "Customer arrived (Restore). Preserving patience state (Limit: %.2f, Window: %.2fh, Paused: %s)" % [
 			wait_limit_time, active_time_window_hours, str(was_paused_by_limit)
@@ -95,11 +92,11 @@ func on_customer_dismissed() -> void:
 	wait_limit_time = -1.0
 	active_time_window_hours = get_customer_time_window_hours()
 
-	if current_display_time >= closing:
+	if is_past_closing_time():
 		if is_clock_running:
 			set_clock_running(false)
 			LogManager.info("DayClock", "Grace period ended. Pausing clock for Closing Time (%.1fh)." % closing)
-		if current_display_time > HARD_STOP_HOUR:
+		if current_display_time > HARD_STOP_HOUR or current_display_time < DAY_START_HOUR:
 			current_display_time = HARD_STOP_HOUR
 			apply_display_time(HARD_STOP_HOUR)
 		EventBus.closing_time_reached.emit()
@@ -107,7 +104,6 @@ func on_customer_dismissed() -> void:
 
 	if was_paused:
 		set_clock_running(true)
-		LogManager.info("DayClock", "Customer left after +%.1fh pause. Resuming clock." % window_hours)
 		return
 
 	if limit_time > 0.0:
@@ -116,10 +112,6 @@ func on_customer_dismissed() -> void:
 		var clamped_target := minf(half_window_target, closing)
 		if clamped_target > current_display_time + 0.02:
 			_start_fast_forward(clamped_target)
-		else:
-			LogManager.debug("DayClock", "Customer served past +%.1fh halfway mark (%.2f >= %.2f). No time skip." % [
-				fast_forward_hours, current_display_time, half_window_target
-			])
 
 func _start_fast_forward(target_time: float) -> void:
 	_cancel_fast_forward(false)
@@ -185,7 +177,8 @@ func get_effective_display_time() -> float:
 	return current_display_time
 
 func is_past_closing_time() -> bool:
-	return get_effective_display_time() >= get_closing_hour()
+	var t := get_effective_display_time()
+	return t >= get_closing_hour() or t < DAY_START_HOUR
 
 func reset_to_morning() -> void:
 	_cancel_fast_forward(false)
@@ -214,8 +207,8 @@ func _on_tod_time_changed(t: float) -> void:
 			was_paused_by_limit = true
 		wait_limit_time = -1.0
 		
-	# 2. Hard Stop Limit: Never go past Midnight
-	if current_display_time >= HARD_STOP_HOUR:
+	# 2. Hard Stop Limit: Never wrap past Midnight (Sky3D wraps 24.0 -> 0.0, so t < DAY_START_HOUR is post-midnight)
+	if current_display_time >= HARD_STOP_HOUR or current_display_time < DAY_START_HOUR:
 		if is_clock_running:
 			LogManager.info("DayClock", "Midnight reached. Hard pausing clock.")
 			set_clock_running(false)

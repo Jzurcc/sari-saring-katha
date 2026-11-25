@@ -291,6 +291,7 @@ func _on_dialogic_signal(argument: String) -> void:
 					customer.transaction_context.is_repaying = false
 					customer.transaction_context.repayment_amount = 0.0
 				StoryManager.reduce_debt(customer.customer_data.resource_path, amount)
+				StoryManager.queue_pending_repayment(customer.customer_data.resource_path, amount)
 		
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 

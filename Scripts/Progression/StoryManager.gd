@@ -209,6 +209,8 @@ func get_effective_closing_hour() -> float:
 	return CLOSING_HOUR
 var customer_debts: Dictionary = {}
 var pending_debts: Array[Dictionary] = [] # [{ "customer_path": String, "amount": float }]
+var pending_repayments: Array[Dictionary] = [] # [{ "customer_path": String, "amount": float, "day": int }]
+var settled_debts_log: Array[Dictionary] = [] # [{ "customer_path": String, "customer_name": String, "amount": float, "day": int }]
 var _save_requested: bool = false
 
 # --- Story Progression ---
@@ -482,12 +484,12 @@ func purchase_maneki_upgrade(level: int) -> void:
 	])
 	_save_progression()
 
-# --- Barangay Transistor Radio (Reveals Expected Regulars: 0 -> 1 -> 2 -> All) ---
+# --- Barangay Transistor Radio (Papa Ulap Broadcasts, +1 Daily Events, Expected Regulars) ---
 const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
-	{"level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "desc": "Expected Regulars are hidden."},
-	{"level": 1, "req_level": 1, "name": "Pocket Transistor Radio", "cost": 55.0, "reveals": 1, "desc": "Tuned to Karimlan AM. Reveals 1 of today's Expected Regulars in the Restock Menu."},
-	{"level": 2, "req_level": 4, "name": "Copper Antenna Radio", "cost": 110.0, "reveals": 2, "desc": "Boosted reception catches more street tsismis. Reveals 2 Expected Regulars each day."},
-	{"level": 3, "req_level": 7, "name": "Vintage Barangay Boombox", "cost": 185.0, "reveals": 4, "desc": "Crystal-clear barangay intel! Reveals all of today's Expected Regulars in the Restock Menu."},
+	{"level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "max_events": 1, "desc": "Daily Market Events and Expected Regulars stay hidden."},
+	{"level": 1, "req_level": 1, "name": "Counter Transistor Radio", "cost": 55.0, "reveals": 1, "max_events": 1, "desc": "Places a Counter Radio tuned to Papa Ulap! Click to reveal today's hidden Market Event (and unlocks 1 Expected Regular in the Restock Menu)."},
+	{"level": 2, "req_level": 4, "name": "Copper Tuning Coil", "cost": 110.0, "reveals": 2, "max_events": 2, "desc": "Upgrades the radio's internal coil for stronger reception — unlocks +1 possible Market Event every day (tune in again after 4h to reveal it) and reveals 2 Expected Regulars."},
+	{"level": 3, "req_level": 7, "name": "High-Gain Signal Amplifier", "cost": 185.0, "reveals": 4, "max_events": 3, "desc": "Boosts the radio's receiver circuitry for crystal-clear airwaves! Unlocks another +1 possible Market Event daily (up to 3/day) and reveals all Expected Regulars."},
 ]
 var radio_upgrade_level: int = 0
 var _radio_upgrade_item_cache: Dictionary = {}
@@ -495,6 +497,10 @@ var _radio_upgrade_item_cache: Dictionary = {}
 func get_revealed_regular_count() -> int:
 	var lvl := clampi(radio_upgrade_level, 0, RADIO_UPGRADE_SPECS.size() - 1)
 	return int(RADIO_UPGRADE_SPECS[lvl]["reveals"])
+
+func get_max_daily_events() -> int:
+	var lvl := clampi(radio_upgrade_level, 0, RADIO_UPGRADE_SPECS.size() - 1)
+	return int(RADIO_UPGRADE_SPECS[lvl].get("max_events", 1))
 
 func get_radio_upgrade_item(level: int) -> ItemData:
 	var lvl := clampi(level, 1, RADIO_UPGRADE_SPECS.size() - 1)
@@ -507,13 +513,16 @@ func get_radio_upgrade_item(level: int) -> ItemData:
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "radio_upgrade"
-	if ResourceLoader.exists("res://Assets/ui/nokia2d.png"):
+	if ResourceLoader.exists("res://Assets/ui/Radio.png"):
+		item.texture = load("res://Assets/ui/Radio.png")
+	elif ResourceLoader.exists("res://Assets/ui/nokia2d.png"):
 		item.texture = load("res://Assets/ui/nokia2d.png")
 	item.set_meta("is_radio_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("radio_level", lvl)
 	item.set_meta("req_level", int(spec["req_level"]))
 	item.set_meta("reveals", int(spec["reveals"]))
+	item.set_meta("max_events", int(spec.get("max_events", 1)))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
 	_radio_upgrade_item_cache[lvl] = item
 	return item
@@ -524,7 +533,15 @@ func purchase_radio_upgrade(level: int) -> void:
 		return
 	radio_upgrade_level = target
 	ensure_daily_demand_rolled()
-	LogManager.info("StoryManager", "Barangay Radio upgraded to Level %d (%s, reveals %d regulars)" % [radio_upgrade_level, RADIO_UPGRADE_SPECS[radio_upgrade_level]["name"], get_revealed_regular_count()])
+	if is_instance_valid(StoreEventManager) and StoreEventManager.has_method("roll_bonus_slots_for_radio_upgrade"):
+		StoreEventManager.roll_bonus_slots_for_radio_upgrade()
+	LogManager.info("StoryManager", "Barangay Radio upgraded to Level %d (%s, max_events=%d, reveals=%d regulars)" % [
+		radio_upgrade_level,
+		RADIO_UPGRADE_SPECS[radio_upgrade_level]["name"],
+		get_max_daily_events(),
+		get_revealed_regular_count()
+	])
+	EventBus.radio_upgraded.emit(radio_upgrade_level)
 	EventBus.restock_catalog_refresh.emit()
 	_save_progression()
 
@@ -563,8 +580,8 @@ func purchase_mario_deals_upgrade() -> void:
 
 # --- Sto. Niño Altar Blessings (Random Favors on Tap) ---
 const STO_NINO_UPGRADE_SPECS: Array[Dictionary] = [
-	{"level": 0, "req_level": 1, "name": "Sto. Niño Devotion", "cost": 0.0, "duration_hours": 5.0, "favor_count": 1, "all_day": false, "desc": "Tap Sto. Niño for 1 random Favor lasting 5 hours."},
-	{"level": 1, "req_level": 2, "name": "Morning Novena", "cost": 85.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Deepen your daily prayer routine. Extends Sto. Niño's Blessing from 5h to 8h (only 2 taps for the whole day)."},
+	{"level": 0, "req_level": 1, "name": "No Sto. Niño Altar", "cost": 0.0, "duration_hours": 0.0, "favor_count": 0, "all_day": false, "desc": "Purchase the Sto. Niño Altar upgrade to pray for daily Favors."},
+	{"level": 1, "req_level": 2, "name": "Sto. Niño Altar", "cost": 85.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Places a blessed Sto. Niño statue on your altar! Tap Sto. Niño for 1 random Favor lasting 8 hours (only 2 taps for the whole day)."},
 	{"level": 2, "req_level": 5, "name": "Double Devotion", "cost": 165.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "Earn Sto. Niño's abundant grace. Grants 2 distinct random Favors at once for 8 hours!"},
 	{"level": 3, "req_level": 9, "name": "Perpetual Benediction", "cost": 270.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Unbroken protection over your tindahan. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
 ]
@@ -636,6 +653,8 @@ func get_sto_nino_blessing_remaining_hours() -> float:
 	return maxf(0.0, sto_nino_blessing_end_hour - clock.current_display_time)
 
 func activate_sto_nino_blessing() -> Array[String]:
+	if sto_nino_upgrade_level < 1:
+		return []
 	check_sto_nino_blessing_expiry()
 	if not active_blessing_cards.is_empty():
 		return []
@@ -934,6 +953,25 @@ func delete_custom_artwork_files() -> void:
 		if FileAccess.file_exists(p):
 			DirAccess.remove_absolute(p)
 
+func reset_storefront_artwork(slot_name: String) -> void:
+	if slot_name == "signage":
+		has_custom_signage = false
+		custom_signage_stickers.clear()
+		for p in [SIGNAGE_IMAGE_PATH, SIGNAGE_PAINT_PATH]:
+			if FileAccess.file_exists(p):
+				DirAccess.remove_absolute(p)
+	elif slot_name == "poster":
+		has_custom_poster = false
+		custom_poster_stickers.clear()
+		poster_featured_category = ""
+		for p in [POSTER_IMAGE_PATH, POSTER_PAINT_PATH]:
+			if FileAccess.file_exists(p):
+				DirAccess.remove_absolute(p)
+	EventBus.storefront_artwork_updated.emit(slot_name)
+	if get_tree():
+		get_tree().call_group("storefront_custom_display", "refresh_display")
+	_save_progression()
+
 # --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
 var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
 var todays_sulit_deals: Array[String] = [] # Array of ItemData.resource_path (2-3 at -20% when unlocked)
@@ -1137,7 +1175,7 @@ func _on_day_started(new_day: int) -> void:
 				taglines.append(str(card["tagline"]))
 				LogManager.info("StoryManager", "Active Moon Card for Day %d: %s (%s)" % [day, str(card["title"]), prefix])
 		if not titles.is_empty():
-			call_deferred("_announce_active_mayari_cards", " · ".join(titles), " | ".join(taglines))
+			call_deferred("_announce_active_mayari_cards", active_mayari_cards.duplicate())
 	LogManager.info("StoryManager", "Day %d starts." % day)
 	reset_daily_stats()
 	todays_missed_items.clear()
@@ -1145,10 +1183,10 @@ func _on_day_started(new_day: int) -> void:
 	_roll_daily_sulit_deals()
 	clock.on_day_started()
 
-func _announce_active_mayari_cards(title_text: String, tagline_text: String) -> void:
+func _announce_active_mayari_cards(card_ids: Array[String]) -> void:
 	await get_tree().create_timer(1.2).timeout
-	if not active_mayari_cards.is_empty():
-		EventBus.show_notification.emit(title_text, tagline_text, "interact")
+	if not active_mayari_cards.is_empty() and not card_ids.is_empty():
+		EventBus.morning_mayari_cards_announced.emit(card_ids)
 
 
 func advance_tier(source: String = "Manual") -> void:
@@ -1218,7 +1256,7 @@ func process_pending_unlock() -> void:
 	pending_upgrade_cost = get_upgrade_cost(pending_upgrade_tier)
 
 	# Refresh Uncle Mario's delivery cooldown so he is immediately ready
-	InventoryManager.customers_needed_for_delivery = 0
+	InventoryManager.clear_delivery_cooldown()
 	
 	# But the notification highlights the specific tier that was JUST unlocked
 	var notify_tier = _last_tier_unlocked_notification if _last_tier_unlocked_notification > 0 else pending_upgrade_tier
@@ -1266,6 +1304,8 @@ func get_save_data() -> Dictionary:
 		"purchase_counter": purchase_counter,
 		"customer_debts": customer_debts.duplicate(),
 		"pending_debts": pending_debts.duplicate(true),
+		"pending_repayments": pending_repayments.duplicate(true),
+		"settled_debts_log": settled_debts_log.duplicate(true),
 		"pending_upgrade_tier": pending_upgrade_tier,
 		"pending_upgrade_cost": pending_upgrade_cost,
 		"has_mayari_visited": has_mayari_visited,
@@ -1331,6 +1371,23 @@ func load_save_data(data: Dictionary) -> void:
 				"customer_path": str(entry["customer_path"]),
 				"amount": float(entry["amount"])
 			})
+	pending_repayments.clear()
+	for entry in data.get("pending_repayments", []):
+		if entry is Dictionary and entry.has("customer_path") and float(entry.get("amount", 0.0)) > 0.0:
+			pending_repayments.append({
+				"customer_path": str(entry["customer_path"]),
+				"amount": float(entry["amount"]),
+				"day": int(entry.get("day", day))
+			})
+	settled_debts_log.clear()
+	for entry in data.get("settled_debts_log", []):
+		if entry is Dictionary and float(entry.get("amount", 0.0)) > 0.0:
+			settled_debts_log.append({
+				"customer_path": str(entry.get("customer_path", "")),
+				"customer_name": str(entry.get("customer_name", "Neighbor")),
+				"amount": float(entry.get("amount", 0.0)),
+				"day": int(entry.get("day", 1))
+			})
 	pending_debts_changed.emit()
 	pending_upgrade_tier = data.get("pending_upgrade_tier", 0)
 	pending_upgrade_cost = data.get("pending_upgrade_cost", 0.0)
@@ -1358,7 +1415,10 @@ func load_save_data(data: Dictionary) -> void:
 	pending_mayari_card = pending_mayari_cards[0] if not pending_mayari_cards.is_empty() else ""
 	last_tally_tier = str(data.get("last_tally_tier", "balanced"))
 	EventBus.mayari_card_changed.emit(active_mayari_card)
-	_current_display_time = data.get("current_display_time", DAY_START_HOUR)
+	_current_display_time = float(data.get("current_display_time", DAY_START_HOUR))
+	if _current_display_time < DAY_START_HOUR:
+		LogManager.warn("StoryManager", "Self-healed post-midnight wrapped save time (%.2f -> %.2f)." % [_current_display_time, DayClock.HARD_STOP_HOUR])
+		_current_display_time = DayClock.HARD_STOP_HOUR
 	if has_mayari_visited and _current_display_time < clock.get_closing_hour():
 		LogManager.warn("StoryManager", "Self-healed stale has_mayari_visited=true on daytime save (time=%.2f < closing=%.2f)." % [_current_display_time, clock.get_closing_hour()])
 		has_mayari_visited = false
@@ -1481,6 +1541,8 @@ func reset_state() -> void:
 	pending_upgrade_cost = 0.0
 	customer_debts = {}
 	pending_debts.clear()
+	pending_repayments.clear()
+	settled_debts_log.clear()
 	pending_debts_changed.emit()
 	has_mayari_visited = false
 	is_mayari_debt_active = true
@@ -1561,6 +1623,55 @@ func queue_pending_debt(customer_path: String, amount: float) -> void:
 
 func has_pending_debts() -> bool:
 	return not pending_debts.is_empty()
+
+func has_pending_repayments() -> bool:
+	return not pending_repayments.is_empty()
+
+func has_pending_ledger_actions() -> bool:
+	return not pending_debts.is_empty() or not pending_repayments.is_empty()
+
+func get_pending_ledger_count() -> int:
+	return pending_debts.size() + pending_repayments.size()
+
+func queue_pending_repayment(customer_path: String, amount: float) -> void:
+	if customer_path == "" or amount <= 0.0:
+		return
+	for entry in pending_repayments:
+		if str(entry.get("customer_path", "")) == customer_path:
+			entry["amount"] = float(entry.get("amount", 0.0)) + amount
+			entry["day"] = day
+			LogManager.info("StoryManager", "Updated pending utang repayment for %s: +%.2f" % [customer_path.get_file(), amount])
+			pending_debts_changed.emit()
+			_save_progression()
+			return
+	pending_repayments.append({
+		"customer_path": customer_path,
+		"amount": amount,
+		"day": day
+	})
+	LogManager.info("StoryManager", "Queued pending utang repayment for %s: %.2f (awaiting cross-off in Notebook)" % [customer_path.get_file(), amount])
+	pending_debts_changed.emit()
+	_save_progression()
+
+func commit_pending_repayment(index: int) -> void:
+	if index < 0 or index >= pending_repayments.size():
+		return
+	var entry: Dictionary = pending_repayments[index]
+	pending_repayments.remove_at(index)
+	var c_path: String = str(entry.get("customer_path", ""))
+	var amt: float = float(entry.get("amount", 0.0))
+	var c_data := _get_character_data(c_path)
+	var c_name: String = c_data.character_name if (c_data and c_data.character_name != "") else c_path.get_file().get_basename()
+	settled_debts_log.push_front({
+		"customer_path": c_path,
+		"customer_name": c_name,
+		"amount": amt,
+		"day": int(entry.get("day", day))
+	})
+	if settled_debts_log.size() > 60:
+		settled_debts_log.resize(60)
+	pending_debts_changed.emit()
+	_save_progression()
 
 func commit_pending_debt(index: int) -> void:
 	if index < 0 or index >= pending_debts.size():
@@ -1676,7 +1787,9 @@ func _on_customer_satisfied(customer) -> void:
 		else:
 			award_customer_completion_xp(customer)
 			if customer.transaction_context.transaction_type == TransactionContext.Type.VISIT or customer.transaction_context.is_visit_story:
-				record_daily_stat_int("visits_served", 1)
+				if not customer.get_meta("visit_stat_recorded", false):
+					customer.set_meta("visit_stat_recorded", true)
+					record_daily_stat_int("visits_served", 1)
 			else:
 				record_daily_stat_int("buyers_served", 1)
 		
@@ -1793,7 +1906,6 @@ func _on_dialogic_variable_changed(info: Dictionary) -> void:
 		if is_instance_valid(customer) and customer.customer_data:
 			var new_val = float(info.get("new_value", 0.0))
 			CharacterProgressionManager.save_branch(customer.customer_data.resource_path, new_val)
-			LogManager.info("StoryManager", "Captured Transaction_Branch change for %s -> %s" % [customer.customer_data.character_name, str(new_val)])
 			_save_progression()
 			
 	elif var_path == "Transaction_ItemWants":

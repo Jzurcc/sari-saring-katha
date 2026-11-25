@@ -179,9 +179,7 @@ func _spawn_next_customer() -> void:
 		LogManager.debug("CustomerSpawner", "_spawn_next_customer() ABORTED: counter already occupied.")
 		return
 
-	LogManager.debug("CustomerSpawner", "_spawn_next_customer() CALLED. is_paused=%s, _is_spawning=%s" % [is_paused, _is_spawning])
 	if is_paused:
-		LogManager.debug("CustomerSpawner", "Aborting spawn: store is paused.")
 		return
 
 	max_unlocked_slots = StoryManager.get_max_counter_slots()
@@ -542,6 +540,12 @@ func handle_social_visit_finished(customer: Customer) -> void:
 		return
 
 	var ctx := customer.transaction_context
+	if not customer.get_meta("visit_stat_recorded", false) \
+		and (ctx == null or not ctx.is_guided_tutorial) \
+		and (customer.customer_data == null or not customer.customer_data.is_collector()):
+		customer.set_meta("visit_stat_recorded", true)
+		StoryManager.award_customer_completion_xp(customer)
+		StoryManager.record_daily_stat_int("visits_served", 1)
 	var can_linger: bool = not StoryManager.is_past_closing_time() \
 		and not _is_exclusive_wave \
 		and not customer.get_meta("returned_from_lingering", false) \
@@ -752,7 +756,6 @@ func _try_spawn_ambient_cameo() -> void:
 	cameo.global_position = pos_data.spawn_pos
 	cameo.setup_ambient_cameo(chosen, cameo_profile, pos_data.spawn_pos, pos_data.target_pos, pos_data.exit_pos)
 	_ambient_cameos.append(cameo)
-	LogManager.info("CustomerSpawner", "Spawned ambient cameo: %s (%s)" % [chosen.character_name, cameo_profile.profile_name])
 
 func _clear_ambient_cameos() -> void:
 	_ambient_cameo_session_id += 1

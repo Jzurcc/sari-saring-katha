@@ -1,0 +1,3 @@
+Customer: {Global_PriceRefusalLine}
+[signal arg="refuse_service"]
+[end_timeline]
