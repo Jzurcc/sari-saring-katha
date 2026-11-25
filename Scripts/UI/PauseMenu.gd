@@ -71,10 +71,20 @@ func _setup_storefront_buttons() -> void:
 func _refresh_storefront_buttons() -> void:
 	if is_instance_valid(_paint_signage_btn):
 		_paint_signage_btn.visible = StoryManager.storefront_upgrade_level >= 1
+		var can_edit_sig := StoryManager.can_edit_storefront_slot("signage")
+		_paint_signage_btn.text = "PAINT SIGNAGE" if can_edit_sig else "PAINT SIGNAGE (EDITED TODAY)"
 	if is_instance_valid(_paint_poster_btn):
 		_paint_poster_btn.visible = StoryManager.storefront_upgrade_level >= 2
 
 func _on_paint_storefront_pressed(slot_name: String) -> void:
+	if not StoryManager.can_edit_storefront_slot(slot_name):
+		AudioManager.play_sfx("error")
+		EventBus.show_notification.emit(
+			"Signage Already Edited Today",
+			"You can only edit your Roof Signage once per day. Come back tomorrow!",
+			"error"
+		)
+		return
 	_play_click()
 	hide()
 	var overlay_cls = preload("res://Scripts/UI/StorefrontCanvasOverlay.gd")

@@ -554,20 +554,19 @@ func _build_ui() -> void:
 	# ── DOCK SECTION D: STORE PRODUCT STICKERS ──
 	dock_v.add_child(_make_dock_hdr("Store Product Stickers"))
 
-	if _slot_name == "poster":
-		_promo_banner = PanelContainer.new()
-		var pb_st := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.08, 0.96), 6, 8, 6)
-		pb_st.border_color = GOLD_ACCENT
-		pb_st.set_border_width_all(1)
-		_promo_banner.add_theme_stylebox_override("panel", pb_st)
-		dock_v.add_child(_promo_banner)
+	_promo_banner = PanelContainer.new()
+	var pb_st := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.08, 0.96), 6, 8, 6)
+	pb_st.border_color = GOLD_ACCENT
+	pb_st.set_border_width_all(1)
+	_promo_banner.add_theme_stylebox_override("panel", pb_st)
+	dock_v.add_child(_promo_banner)
 
-		_promo_lbl = Label.new()
-		_promo_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_promo_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		_promo_lbl.add_theme_font_size_override("font_size", 12)
-		_promo_lbl.add_theme_color_override("font_color", GOLD_BRIGHT)
-		_promo_banner.add_child(_promo_lbl)
+	_promo_lbl = Label.new()
+	_promo_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_promo_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_promo_lbl.add_theme_font_size_override("font_size", 12)
+	_promo_lbl.add_theme_color_override("font_color", GOLD_BRIGHT)
+	_promo_banner.add_child(_promo_lbl)
 
 	_cat_tabs_row = HFlowContainer.new()
 	_cat_tabs_row.add_theme_constant_override("h_separation", 4)
@@ -1015,8 +1014,8 @@ func _refresh_promo_status() -> void:
 		if int(counts[cat]) >= 3:
 			qualifying.append(str(cat))
 
-	# 1. Right-dock poster promo banner
-	if _slot_name == "poster" and is_instance_valid(_promo_lbl):
+	# 1. Right-dock Featured Category promo banner (both Signage & Poster)
+	if is_instance_valid(_promo_lbl):
 		if qualifying.size() == 1:
 			var cname := StoryManager.get_category_display_name(qualifying[0])
 			_promo_lbl.text = "✦ Featured Promo Ready: %s (+demand & +₱3 bonus!)" % cname
@@ -1031,9 +1030,8 @@ func _refresh_promo_status() -> void:
 	for ch in _cat_hud_vbox.get_children():
 		ch.queue_free()
 
-	var is_poster := (_slot_name == "poster")
 	var hdr := Label.new()
-	hdr.text = "Promo Category Progress" if is_poster else "Signage Stickers"
+	hdr.text = "Promo Category Progress"
 	hdr.add_theme_font_override("font", _bold_font)
 	hdr.add_theme_font_size_override("font_size", 12)
 	hdr.add_theme_color_override("font_color", GOLD_BRIGHT)
@@ -1042,7 +1040,7 @@ func _refresh_promo_status() -> void:
 
 	if counts.is_empty():
 		var empty_lbl := Label.new()
-		empty_lbl.text = "0/3 — Add 3 stickers of a category for Featured Promo" if is_poster else "Tip Bonus active on Save (+Appreciation Tips & relief)"
+		empty_lbl.text = "0/3 — Add 3 stickers of a category for Featured Promo"
 		empty_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 		empty_lbl.add_theme_font_size_override("font_size", 11)
 		empty_lbl.add_theme_color_override("font_color", MUTED_TEXT)
@@ -1057,14 +1055,10 @@ func _refresh_promo_status() -> void:
 			var cnt: int = int(counts[cat])
 			var cname := StoryManager.get_category_display_name(cat)
 			var row_lbl := Label.new()
-			if is_poster:
-				var ready := cnt >= 3
-				row_lbl.text = "%d/3 %s%s" % [cnt, cname, "  ✓ Featured Ready!" if ready else ""]
-				row_lbl.add_theme_color_override("font_color", Color(0.56, 0.94, 0.58, 1.0) if ready else WHITE_HDR)
-			else:
-				row_lbl.text = "%d× %s" % [cnt, cname]
-				row_lbl.add_theme_color_override("font_color", WHITE_HDR)
-			row_lbl.add_theme_font_override("font", _bold_font if (is_poster and cnt >= 3) else UIStyle.FONT_INDER)
+			var ready := cnt >= 3
+			row_lbl.text = "%d/3 %s%s" % [cnt, cname, "  ✓ Featured Ready!" if ready else ""]
+			row_lbl.add_theme_color_override("font_color", Color(0.56, 0.94, 0.58, 1.0) if ready else WHITE_HDR)
+			row_lbl.add_theme_font_override("font", _bold_font if ready else UIStyle.FONT_INDER)
 			row_lbl.add_theme_font_size_override("font_size", 13)
 			row_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			_cat_hud_vbox.add_child(row_lbl)
@@ -1081,19 +1075,16 @@ func _on_reset_to_default_pressed() -> void:
 
 
 func _on_save_pressed() -> void:
-	if _slot_name == "poster":
-		var counts := _surface.get_sticker_category_counts()
-		var qualifying: Array[String] = []
-		for cat in counts.keys():
-			if int(counts[cat]) >= 3:
-				qualifying.append(str(cat))
-		if qualifying.size() >= 2:
-			_show_featured_category_modal(qualifying, counts)
-			return
-		var chosen := qualifying[0] if qualifying.size() == 1 else ""
-		_show_save_confirm_modal(chosen, int(counts.get(chosen, 0)))
-	else:
-		_show_save_confirm_modal("", 0)
+	var counts := _surface.get_sticker_category_counts()
+	var qualifying: Array[String] = []
+	for cat in counts.keys():
+		if int(counts[cat]) >= 3:
+			qualifying.append(str(cat))
+	if qualifying.size() >= 2:
+		_show_featured_category_modal(qualifying, counts)
+		return
+	var chosen := qualifying[0] if qualifying.size() == 1 else ""
+	_show_save_confirm_modal(chosen, int(counts.get(chosen, 0)))
 
 
 func _show_save_confirm_modal(chosen_cat: String, cat_count: int) -> void:
@@ -1152,8 +1143,13 @@ func _show_save_confirm_modal(chosen_cat: String, cat_count: int) -> void:
 			body.text = "No category has 3/3 stickers yet, so no Featured Category bonus will be active.\n\nMount this poster anyway?"
 	else:
 		var tip_pct := int(roundf(StoryManager.get_storefront_tip_chance() * 100.0))
-		title.text = "Mount Roof Signage?"
-		body.text = "Your custom signboard will mount above the store (and Main Menu), granting +%d%% Appreciation Tip chance (₱3–₱6) and softer markup pushback.\n\nDo you confirm?" % maxi(15, tip_pct)
+		if chosen_cat != "":
+			var cname := StoryManager.get_category_display_name(chosen_cat)
+			title.text = "Mount Roof Signage?"
+			body.text = "%s (%d/3) will be featured on your Roof Signage — boosting demand & granting +₱3 bonus per cash sale (plus +%d%% Appreciation Tips)!\n\nNote: Roof Signage can only be edited once per day. Do you confirm?" % [cname, cat_count, maxi(15, tip_pct)]
+		else:
+			title.text = "Mount Roof Signage?"
+			body.text = "No category has 3/3 stickers yet, so no Featured Category bonus will be active (still grants +%d%% Appreciation Tips & relief).\n\nNote: Roof Signage can only be edited once per day. Do you confirm?" % maxi(15, tip_pct)
 
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -1215,7 +1211,7 @@ func _show_featured_category_modal(qualifying: Array[String], counts: Dictionary
 	vbox.add_child(title)
 
 	var sub := Label.new()
-	sub.text = "Multiple categories have 3+ stickers. Pick one to feature on your poster:"
+	sub.text = "Multiple categories have 3/3 stickers. Pick one to feature%s:" % (" (Roof Signage can only be edited once per day)" if _slot_name == "signage" else "")
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_override("font", UIStyle.FONT_INDER)
@@ -1267,7 +1263,14 @@ func _finalize_save(chosen_featured_cat: String) -> void:
 
 	AudioManager.play_sfx("purchase")
 	if _slot_name == "signage":
-		EventBus.show_notification.emit("Roof Signage Mounted!", "Your custom signboard is now live on your store and Main Menu!", "purchase")
+		if chosen_featured_cat != "":
+			EventBus.show_notification.emit(
+				"Roof Signage Mounted!",
+				"Featuring %s (+demand & +₱3 promo bonus)! Signage can be edited again tomorrow." % StoryManager.get_category_display_name(chosen_featured_cat),
+				"purchase"
+			)
+		else:
+			EventBus.show_notification.emit("Roof Signage Mounted!", "Your custom signboard is live! Signage can be edited again tomorrow.", "purchase")
 	elif chosen_featured_cat != "":
 		EventBus.show_notification.emit(
 			"Poster Mounted!",
