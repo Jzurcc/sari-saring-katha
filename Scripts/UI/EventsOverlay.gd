@@ -19,7 +19,7 @@ const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_BOLD_CREAM := "#FFF6E5"
 const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
-const CALENDAR_TEX_PATH := "res://Assets/ui/calendar_ui.jpg"
+const CALENDAR_TEX_PATH := "res://Assets/ui/calendar_ui.png"
 const CALENDAR_FONT_PATH := "res://Assets/Fonts/Balete Trial/BaleteTrial-Bold.ttf"
 const CALENDAR_MONTHS: Array[String] = [
 	"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
@@ -57,6 +57,7 @@ var _frame: PanelContainer
 var _cards_vbox: VBoxContainer
 var _callout_col: VBoxContainer
 var _callout_tween: Tween = null
+var _callout_anchor: Control = null
 
 func _ready() -> void:
 	layer = 55
@@ -169,10 +170,10 @@ func _build_ui() -> void:
 	sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	bv.add_child(sub_lbl)
 
-	# Left Side: Classic Filipino Sari-Sari Wall Calendar (centered in column)
+	# Left Side: Classic Filipino Sari-Sari Wall Calendar (centered symmetrically with Events Frame)
 	_cal_holder = Control.new()
-	_cal_holder.anchor_left = 0.016
-	_cal_holder.anchor_right = 0.296
+	_cal_holder.anchor_left = 0.065
+	_cal_holder.anchor_right = 0.345
 	_cal_holder.anchor_top = 0.175
 	_cal_holder.anchor_bottom = 0.855
 	_root.add_child(_cal_holder)
@@ -214,10 +215,10 @@ func _build_ui() -> void:
 	_cal_day_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cal_tex_rect.add_child(_cal_day_marker)
 
-	# Center-Right Hades Events Frame (EXACT same 0.580 x 0.680 rectangle as Silver Ledger)
+	# Center-Right Hades Events Frame (EXACT same 0.580 x 0.680 rectangle, centered symmetrically with Calendar)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.305
-	_frame.anchor_right = 0.885
+	_frame.anchor_left = 0.355
+	_frame.anchor_right = 0.935
 	_frame.anchor_top = 0.175
 	_frame.anchor_bottom = 0.855
 	var f_style := UIStyle.create_flat_stylebox(Color(0.058, 0.052, 0.046, 0.94), 8, 24, 14)
@@ -340,10 +341,12 @@ func close_overlay() -> void:
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("drop")
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_open:
 		return
-	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_C or event.keycode == KEY_C)):
+	var is_esc: bool = event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_ESCAPE or event.keycode == KEY_ESCAPE))
+	var is_c: bool = event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_C or event.keycode == KEY_C)
+	if is_esc or is_c:
 		close_overlay()
 		get_viewport().set_input_as_handled()
 
@@ -500,6 +503,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 52)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
@@ -507,6 +511,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
+	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
 	var sigil_lbl := Label.new()
@@ -516,15 +521,18 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	sigil_lbl.add_theme_font_size_override("font_size", 36)
 	sigil_lbl.add_theme_color_override("font_color", accent_bright)
+	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	emblem.add_child(sigil_lbl)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	text_col.add_theme_constant_override("separation", 3)
+	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(text_col)
 
 	var top_line := HBoxContainer.new()
+	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(top_line)
 
 	var title_lbl := Label.new()
@@ -533,6 +541,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	title_lbl.add_theme_font_size_override("font_size", 25)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
+	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
 
 	var tag_lbl := Label.new()
@@ -541,6 +550,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	tag_lbl.add_theme_font_override("font", _bold_font)
 	tag_lbl.add_theme_font_size_override("font_size", 22)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
+	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_lbl)
 
 	var desc_rt := RichTextLabel.new()
@@ -548,6 +558,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	desc_rt.fit_content = true
 	desc_rt.scroll_active = false
 	desc_rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
 	desc_rt.add_theme_font_override("bold_font", _bold_font)
 	desc_rt.add_theme_font_size_override("normal_font_size", 18)
@@ -604,7 +615,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 
 			var s_name := Label.new()
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
-			s_name.custom_minimum_size = Vector2(290, 0)
+			s_name.custom_minimum_size = Vector2(345, 0)
 			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
 			s_name.add_theme_font_size_override("font_size", lbl_sz)
 			s_name.add_theme_color_override("font_color", COL_CREAM)
@@ -624,7 +635,12 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	if not keywords.is_empty():
 		card.mouse_filter = Control.MOUSE_FILTER_STOP
 		card.mouse_entered.connect(_show_keyword_callouts.bind(keywords, card))
-		card.mouse_exited.connect(_show_keyword_callouts.bind([], null))
+		card.mouse_exited.connect(func():
+			if is_instance_valid(card) and card.get_global_rect().has_point(get_viewport().get_mouse_position()):
+				return
+			if _callout_anchor == card:
+				_show_keyword_callouts([], null)
+		)
 
 	return card
 
@@ -634,7 +650,7 @@ func _position_callout_beside(anchor_ctrl: Control) -> void:
 	var vp_sz := get_viewport().get_visible_rect().size
 	var rect := anchor_ctrl.get_global_rect()
 	var c_sz := _callout_col.get_combined_minimum_size()
-	var cw := clampf(c_sz.x, 220.0, 260.0)
+	var cw := clampf(c_sz.x, 260.0, 310.0)
 	var ch := maxf(c_sz.y, 72.0)
 	_callout_col.size = Vector2(cw, ch)
 	var tx := minf(rect.end.x + 14.0, vp_sz.x - cw - 10.0)
@@ -645,6 +661,9 @@ func _position_callout_beside(anchor_ctrl: Control) -> void:
 func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> void:
 	if not is_instance_valid(_callout_col):
 		return
+	if not keyword_ids.is_empty() and anchor_ctrl != null and anchor_ctrl == _callout_anchor and _callout_col.visible:
+		return
+	_callout_anchor = anchor_ctrl if not keyword_ids.is_empty() else null
 	if _callout_tween and _callout_tween.is_valid():
 		_callout_tween.kill()
 
@@ -658,7 +677,7 @@ func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> 
 		if info.is_empty():
 			continue
 		var box := PanelContainer.new()
-		box.custom_minimum_size = Vector2(236, 0)
+		box.custom_minimum_size = Vector2(280, 0)
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.95), 6, 14, 10)
 		bs.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
@@ -671,24 +690,24 @@ func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> 
 		box.add_theme_stylebox_override("panel", bs)
 
 		var bv := VBoxContainer.new()
-		bv.add_theme_constant_override("separation", 3)
+		bv.add_theme_constant_override("separation", 4)
 		bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(bv)
 
 		var kt := Label.new()
 		kt.text = str(info.get("title", ""))
 		kt.add_theme_font_override("font", _bold_font)
-		kt.add_theme_font_size_override("font_size", 15)
+		kt.add_theme_font_size_override("font_size", 21)
 		kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 		kt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bv.add_child(kt)
 
 		var kd := Label.new()
 		kd.text = str(info.get("desc", ""))
-		kd.custom_minimum_size = Vector2(204, 0)
+		kd.custom_minimum_size = Vector2(248, 0)
 		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
-		kd.add_theme_font_size_override("font_size", 13)
+		kd.add_theme_font_size_override("font_size", 18)
 		kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		kd.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bv.add_child(kd)

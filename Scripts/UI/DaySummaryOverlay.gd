@@ -11,7 +11,7 @@ extends CanvasLayer
 
 signal completed(grade: String, quip: String)
 
-const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayari.png"
+const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayariUI.png"
 const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 
 const COL_ESPRESSO_DEEP := Color(0.055, 0.048, 0.042, 0.96)
@@ -249,8 +249,8 @@ func _build_ui() -> void:
 
 	# Top Header Banner
 	_banner = PanelContainer.new()
-	_banner.anchor_left = 0.10
-	_banner.anchor_right = 0.90
+	_banner.anchor_left = 0.22
+	_banner.anchor_right = 0.86
 	_banner.anchor_top = 0.022
 	_banner.anchor_bottom = 0.130
 	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 8, 32, 10)
@@ -293,12 +293,15 @@ func _build_ui() -> void:
 	sub_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
 	bv.add_child(sub_lbl)
 
-	# Main Center Frame (widened for breathing room and large legible numbers)
+	# Main Center Frame (grows taller per animated line like an unrolling ledger!)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.215
-	_frame.anchor_right = 0.855
+	_frame.anchor_left = 0.22
+	_frame.anchor_right = 0.86
 	_frame.anchor_top = 0.148
-	_frame.anchor_bottom = 0.880
+	_frame.anchor_bottom = 0.148
+	_frame.offset_top = 0.0
+	_frame.offset_bottom = 64.0
+	_frame.clip_contents = true
 	var f_style := UIStyle.create_flat_stylebox(Color(0.055, 0.048, 0.042, 0.96), 10, 24, 16)
 	f_style.border_color = Color(0.835, 0.624, 0.278, 0.82)
 	f_style.set_border_width_all(2)
@@ -313,23 +316,26 @@ func _build_ui() -> void:
 
 	# 1. Top Card: Cashflow & Ledger
 	_cashflow_card = _build_cashflow_card()
+	_cashflow_card.visible = false
 	_cashflow_card.modulate.a = 0.0
 	main_vbox.add_child(_cashflow_card)
 
 	# 2. Middle Card: Store Performance
 	_perf_card = _build_performance_card()
+	_perf_card.visible = false
 	_perf_card.modulate.a = 0.0
 	main_vbox.add_child(_perf_card)
 
 	# 3. Bottom Row: Today's Conditions + Highlights of the Day
 	_bottom_row = _build_bottom_row()
+	_bottom_row.visible = false
 	_bottom_row.modulate.a = 0.0
 	main_vbox.add_child(_bottom_row)
 
 	# Slam-Down Daily Rank Stamp — placed cleanly TO THE LEFT of the Cashflow numbers!
 	_stamp_panel = PanelContainer.new()
-	_stamp_panel.anchor_left = 0.855
-	_stamp_panel.anchor_right = 0.855
+	_stamp_panel.anchor_left = 0.86
+	_stamp_panel.anchor_right = 0.86
 	_stamp_panel.anchor_top = 0.148
 	_stamp_panel.anchor_bottom = 0.148
 	_stamp_panel.offset_left = -385.0
@@ -369,16 +375,16 @@ func _build_ui() -> void:
 	gt_lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 	sv.add_child(gt_lbl)
 
-	# Overlapping Bottom-Right Continue Button
+	# Bottom-Right Edge Continue Button (positioned cleanly at the bottom-right screen edge)
 	_close_btn = Button.new()
 	_close_btn.text = "Close Ledger" if _show_mayari else "Close Shop & Sleep"
-	_close_btn.anchor_left = 0.855
-	_close_btn.anchor_right = 0.855
-	_close_btn.anchor_top = 0.880
-	_close_btn.anchor_bottom = 0.880
-	_close_btn.offset_left = -256.0
-	_close_btn.offset_right = -18.0
-	_close_btn.offset_top = -24.0
+	_close_btn.anchor_left = 0.965
+	_close_btn.anchor_right = 0.965
+	_close_btn.anchor_top = 0.945
+	_close_btn.anchor_bottom = 0.945
+	_close_btn.offset_left = -246.0
+	_close_btn.offset_right = 0.0
+	_close_btn.offset_top = -26.0
 	_close_btn.offset_bottom = 26.0
 	_close_btn.z_index = 14
 	_close_btn.disabled = true
@@ -407,17 +413,17 @@ func _build_ui() -> void:
 	_close_btn.pressed.connect(_on_close_pressed)
 	_root.add_child(_close_btn)
 
-	# Reyna Mayari Portrait on Left (when present)
+	# Reyna Mayari Portrait eased further left so she frames the summary without blocking the ledger
 	if _show_mayari:
 		_mayari_portrait = TextureRect.new()
 		if ResourceLoader.exists(MAYARI_SPRITE_PATH):
 			_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 		_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_mayari_portrait.anchor_left = -0.045
-		_mayari_portrait.anchor_right = 0.335
-		_mayari_portrait.anchor_top = 0.34
-		_mayari_portrait.anchor_bottom = 1.27
+		_mayari_portrait.anchor_left = -0.145
+		_mayari_portrait.anchor_right = 0.255
+		_mayari_portrait.anchor_top = 0.18
+		_mayari_portrait.anchor_bottom = 1.24
 		_mayari_portrait.z_index = 10
 		_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_root.add_child(_mayari_portrait)
@@ -456,6 +462,7 @@ func _make_section_card(title: String) -> Array:
 
 func _create_stat_row(parent: VBoxContainer, label_txt: String, target: float, prefix: String, suffix: String, val_col: Color, is_int: bool = false, is_bold: bool = false) -> Dictionary:
 	var row := HBoxContainer.new()
+	row.visible = false
 	row.modulate.a = 0.0
 	parent.add_child(row)
 
@@ -512,6 +519,7 @@ func _build_cashflow_card() -> PanelContainer:
 	_cashflow_sep = ColorRect.new()
 	_cashflow_sep.custom_minimum_size = Vector2(0, 1)
 	_cashflow_sep.color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.42)
+	_cashflow_sep.visible = false
 	_cashflow_sep.modulate.a = 0.0
 	vb.add_child(_cashflow_sep)
 
@@ -552,6 +560,7 @@ func _build_performance_card() -> PanelContainer:
 	_xp_bar_track = Panel.new()
 	_xp_bar_track.custom_minimum_size = Vector2(0, 12)
 	_xp_bar_track.clip_children = CanvasItem.CLIP_CHILDREN_AND_DRAW
+	_xp_bar_track.visible = false
 	_xp_bar_track.modulate.a = 0.0
 	var ts := UIStyle.create_flat_stylebox(Color(0.04, 0.035, 0.03, 0.96), 6, 0, 0)
 	ts.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.55)
@@ -578,8 +587,9 @@ func _build_performance_card() -> PanelContainer:
 	_perf_foot = Label.new()
 	_perf_foot.text = "Utang Extended: %d   ·   Missed Requests: %d" % [utang_cnt, missed_cnt]
 	_perf_foot.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_perf_foot.add_theme_font_size_override("font_size", 15)
+	_perf_foot.add_theme_font_size_override("font_size", 18)
 	_perf_foot.add_theme_color_override("font_color", COL_POS if missed_cnt == 0 else COL_GOLD_LABEL)
+	_perf_foot.visible = false
 	_perf_foot.modulate.a = 0.0
 	vb.add_child(_perf_foot)
 
@@ -763,6 +773,7 @@ func _make_condition_diamond(info: Dictionary) -> Control:
 	holder.modulate.a = 0.0
 
 	var emblem := HadesEmblem.new()
+	emblem.show_triangle = false
 	emblem.set_anchors_preset(Control.PRESET_FULL_RECT)
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
@@ -810,14 +821,23 @@ func _hide_hover_card() -> void:
 	_active_hover_card = null
 
 
+func _get_unified_hover_card_size() -> Vector2:
+	# Exact 1:1 width & height ratio as EventsOverlay / MayariTallyOverlay cards!
+	var vp_size := get_viewport().get_visible_rect().size
+	var w := maxf(680.0, vp_size.x * 0.53 - 48.0)
+	var h := maxf(130.0, (vp_size.y * 0.680 - 135.0) / 3.0)
+	return Vector2(w, h)
+
+
 func _position_hover_card() -> void:
 	if not is_instance_valid(_active_hover_card):
 		return
 	var vp_size := get_viewport().get_visible_rect().size
 	var mpos := get_viewport().get_mouse_position()
+	var unified := _get_unified_hover_card_size()
 	var card_sz := _active_hover_card.get_combined_minimum_size()
-	var card_w := maxf(card_sz.x, 480.0)
-	var card_h := maxf(card_sz.y, 130.0)
+	var card_w := unified.x
+	var card_h := maxf(unified.y, card_sz.y)
 	_active_hover_card.size = Vector2(card_w, card_h)
 
 	var x := mpos.x + 20.0
@@ -825,7 +845,7 @@ func _position_hover_card() -> void:
 	if x + card_w > vp_size.x - 16.0:
 		x = mpos.x - card_w - 20.0
 	if x < 16.0:
-		x = 16.0
+		x = clampf(mpos.x - card_w * 0.5, 16.0, maxf(16.0, vp_size.x - card_w - 16.0))
 	if y < 16.0:
 		y = mpos.y + 22.0
 	if y + card_h > vp_size.y - 16.0:
@@ -840,11 +860,12 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	var accent_bright: Color = pal["bright"]
 	var row_bg: Color = pal["bg"]
 	var tag: String = str(pal["tag"])
+	var unified := _get_unified_hover_card_size()
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(480, 0)
+	card.custom_minimum_size = unified
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := UIStyle.create_flat_stylebox(row_bg, 8, 16, 12)
+	var style := UIStyle.create_flat_stylebox(row_bg, 6, 16, 10)
 	style.content_margin_right = 20
 	style.border_color = Color(accent.r, accent.g, accent.b, 0.88)
 	style.border_width_left = 4
@@ -857,13 +878,13 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	card.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 20)
+	hbox.add_theme_constant_override("separation", 52)
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
-	emblem.custom_minimum_size = Vector2(74, 74)
-	emblem.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	emblem.custom_minimum_size = Vector2(88, 88)
+	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -874,14 +895,15 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	sigil_lbl.text = str(info.get("sigil", "✦"))
 	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 32)
+	sigil_lbl.add_theme_font_size_override("font_size", 36)
 	sigil_lbl.add_theme_color_override("font_color", accent_bright)
 	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	emblem.add_child(sigil_lbl)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text_col.add_theme_constant_override("separation", 4)
+	text_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	text_col.add_theme_constant_override("separation", 3)
 	text_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(text_col)
 
@@ -890,10 +912,10 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	text_col.add_child(top_line)
 
 	var title_lbl := Label.new()
-	title_lbl.text = str(info.get("title", "Condition"))
+	title_lbl.text = str(info.get("title", "Condition")).to_upper()
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_lbl.add_theme_font_override("font", _bold_font)
-	title_lbl.add_theme_font_size_override("font_size", 21)
+	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	title_lbl.add_theme_font_size_override("font_size", 25)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
@@ -902,7 +924,7 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	tag_lbl.text = tag
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag_lbl.add_theme_font_override("font", _bold_font)
-	tag_lbl.add_theme_font_size_override("font_size", 15)
+	tag_lbl.add_theme_font_size_override("font_size", 22)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_lbl)
@@ -915,29 +937,31 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	desc_rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
 	desc_rt.add_theme_font_override("bold_font", _bold_font)
-	desc_rt.add_theme_font_size_override("normal_font_size", 16)
-	desc_rt.add_theme_font_size_override("bold_font_size", 16)
+	desc_rt.add_theme_font_size_override("normal_font_size", 18)
+	desc_rt.add_theme_font_size_override("bold_font_size", 18)
 	desc_rt.add_theme_color_override("default_color", COL_CREAM_MUTED)
 	var raw_desc := str(info.get("desc_rich", ""))
 	desc_rt.text = raw_desc.replace("[b]", "[b][color=%s]" % COL_BOLD_CREAM).replace("[/b]", "[/color][/b]")
 	text_col.add_child(desc_rt)
 
 	var stats: Array = info.get("stats", [])
-	if not stats.is_empty():
-		var stats_box := VBoxContainer.new()
-		stats_box.add_theme_constant_override("separation", 2)
-		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		text_col.add_child(stats_box)
+	if stats.size() >= 3:
+		var grid := GridContainer.new()
+		grid.columns = 2
+		grid.add_theme_constant_override("h_separation", 20)
+		grid.add_theme_constant_override("v_separation", 2)
+		grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(grid)
 		for st in stats:
 			var stat_dict: Dictionary = st
 			var s_row := HBoxContainer.new()
-			s_row.add_theme_constant_override("separation", 10)
+			s_row.add_theme_constant_override("separation", 8)
+			s_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			stats_box.add_child(s_row)
+			grid.add_child(s_row)
 
 			var s_name := Label.new()
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
-			s_name.custom_minimum_size = Vector2(230, 0)
 			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
 			s_name.add_theme_font_size_override("font_size", 15)
 			s_name.add_theme_color_override("font_color", COL_CREAM)
@@ -953,6 +977,38 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 			s_val.add_theme_color_override("font_color", val_col)
 			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			s_row.add_child(s_val)
+	elif not stats.is_empty():
+		var stats_box := VBoxContainer.new()
+		stats_box.add_theme_constant_override("separation", 1 if stats.size() == 2 else 2)
+		stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		text_col.add_child(stats_box)
+		var lbl_sz := 16 if stats.size() == 2 else 18
+		var val_sz := 17 if stats.size() == 2 else 19
+		for st in stats:
+			var stat_dict: Dictionary = st
+			var s_row := HBoxContainer.new()
+			s_row.add_theme_constant_override("separation", 12)
+			s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			stats_box.add_child(s_row)
+
+			var s_name := Label.new()
+			s_name.text = "▸ " + str(stat_dict.get("label", ""))
+			s_name.custom_minimum_size = Vector2(345, 0)
+			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+			s_name.add_theme_font_size_override("font_size", lbl_sz)
+			s_name.add_theme_color_override("font_color", COL_CREAM)
+			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_name)
+
+			var s_val := Label.new()
+			s_val.text = str(stat_dict.get("value", ""))
+			s_val.add_theme_font_override("font", _bold_font)
+			s_val.add_theme_font_size_override("font_size", val_sz)
+			var tone := str(stat_dict.get("tone", "pos"))
+			var val_col := COL_POS if tone == "pos" else (COL_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+			s_val.add_theme_color_override("font_color", val_col)
+			s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			s_row.add_child(s_val)
 
 	return card
 
@@ -961,6 +1017,19 @@ func _format_val(val: float, prefix: String, suffix: String, is_int: bool) -> St
 	if is_int:
 		return "%s%d%s" % [prefix, roundi(val), suffix]
 	return "%s%.2f%s" % [prefix, val, suffix]
+
+
+func _grow_frame_to_fit(dur: float = 0.16) -> void:
+	if not is_instance_valid(_frame):
+		return
+	var vp_h := get_viewport().get_visible_rect().size.y
+	var max_h := maxf(240.0, vp_h * 0.74)
+	var target_h := clampf(_frame.get_combined_minimum_size().y, 64.0, max_h)
+	if _skip_requested or dur <= 0.01:
+		_frame.offset_bottom = target_h
+		return
+	var gtw := create_tween()
+	gtw.tween_property(_frame, "offset_bottom", target_h, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 func _animate_stat_entry(entry: Dictionary) -> void:
@@ -972,12 +1041,15 @@ func _animate_stat_entry(entry: Dictionary) -> void:
 	var is_int: bool = bool(entry["is_int"])
 	var is_bold: bool = bool(entry.get("is_bold", false))
 
+	row.visible = true
 	if _skip_requested:
 		row.modulate.a = 1.0
 		lbl.text = _format_val(target, prefix, suffix, is_int)
 		lbl.scale = Vector2.ONE
+		_grow_frame_to_fit(0.0)
 		return
 
+	_grow_frame_to_fit(0.16)
 	# Reveal the row name first with a soft fade-in
 	var rtw := create_tween()
 	rtw.tween_property(row, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
@@ -1014,18 +1086,24 @@ func _run_sequence() -> void:
 	_frame.modulate.a = 0.0
 	if is_instance_valid(_mayari_portrait):
 		_mayari_portrait.modulate.a = 0.0
+		_mayari_portrait.offset_left = 78.0
+		_mayari_portrait.offset_right = 78.0
 
 	var intro := create_tween()
 	intro.tween_property(_backdrop, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
 	intro.parallel().tween_property(_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
 	intro.parallel().tween_property(_frame, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE)
 	if is_instance_valid(_mayari_portrait):
-		intro.parallel().tween_property(_mayari_portrait, "modulate:a", 1.0, 0.30).set_trans(Tween.TRANS_SINE)
+		intro.parallel().tween_property(_mayari_portrait, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
+		intro.parallel().tween_property(_mayari_portrait, "offset_left", 30.0, 0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		intro.parallel().tween_property(_mayari_portrait, "offset_right", 30.0, 0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	await intro.finished
 	if not is_inside_tree():
 		return
 
-	# 1. Cashflow & Ledger section + one-by-one row reveals
+	# 1. Cashflow & Ledger section + one-by-one row reveals (frame grows taller with each line!)
+	_cashflow_card.visible = true
+	_grow_frame_to_fit(0.18)
 	if _skip_requested:
 		_cashflow_card.modulate.a = 1.0
 	else:
@@ -1041,6 +1119,7 @@ func _run_sequence() -> void:
 			return
 
 	if is_instance_valid(_cashflow_sep):
+		_cashflow_sep.visible = true
 		_cashflow_sep.modulate.a = 1.0
 	if not _net_entry.is_empty():
 		await _animate_stat_entry(_net_entry)
@@ -1048,6 +1127,8 @@ func _run_sequence() -> void:
 			return
 
 	# 2. Store Performance section + one-by-one row reveals + rounded XP bar
+	_perf_card.visible = true
+	_grow_frame_to_fit(0.18)
 	if _skip_requested:
 		_perf_card.modulate.a = 1.0
 	else:
@@ -1065,7 +1146,9 @@ func _run_sequence() -> void:
 	var needed := maxi(1, StoryManager.get_xp_for_next_level())
 	var xp_ratio := 1.0 if StoryManager.player_level >= StoryManager.MAX_PLAYER_LEVEL else clampf(float(StoryManager.player_xp) / float(needed), 0.0, 1.0)
 	if is_instance_valid(_xp_bar_track):
+		_xp_bar_track.visible = true
 		_xp_bar_track.modulate.a = 1.0
+		_grow_frame_to_fit(0.14)
 	if is_instance_valid(_xp_bar_fill):
 		_xp_bar_fill.visible = xp_ratio > 0.005
 		if _skip_requested:
@@ -1077,6 +1160,8 @@ func _run_sequence() -> void:
 			if not is_inside_tree():
 				return
 	if is_instance_valid(_perf_foot):
+		_perf_foot.visible = true
+		_grow_frame_to_fit(0.14)
 		if _skip_requested:
 			_perf_foot.modulate.a = 1.0
 		else:
@@ -1087,6 +1172,8 @@ func _run_sequence() -> void:
 				return
 
 	# 3. Bottom Row: Today's Conditions diamonds + Highlights of the Day one by one
+	_bottom_row.visible = true
+	_grow_frame_to_fit(0.22)
 	if _skip_requested:
 		_bottom_row.modulate.a = 1.0
 	else:

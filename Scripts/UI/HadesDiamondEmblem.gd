@@ -9,6 +9,8 @@ var accent: Color = Color(1.0, 0.78, 0.16, 1.0)
 var accent_bright: Color = Color(1.0, 0.90, 0.48, 1.0)
 ## Leave fully transparent to auto-derive a dark accent-tinted inner fill.
 var fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
+## Set false to render a clean standalone diamond without the left corner ribbon triangle.
+var show_triangle: bool = true
 
 static var _tri_shader: Shader = null
 var _tri_rect: ColorRect = null
@@ -66,17 +68,19 @@ void fragment() {
 	return _tri_shader
 
 func _ready() -> void:
-	_tri_rect = ColorRect.new()
-	_tri_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tri_rect.show_behind_parent = true
-	_tri_mat = ShaderMaterial.new()
-	_tri_mat.shader = _get_tri_shader()
-	_tri_mat.set_shader_parameter("tri_color", Color(accent.r, accent.g, accent.b, 0.94))
-	_tri_rect.material = _tri_mat
-	add_child(_tri_rect)
-	move_child(_tri_rect, 0)
-	_sync_triangle_rect()
-	resized.connect(_sync_triangle_rect)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if show_triangle:
+		_tri_rect = ColorRect.new()
+		_tri_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_tri_rect.show_behind_parent = true
+		_tri_mat = ShaderMaterial.new()
+		_tri_mat.shader = _get_tri_shader()
+		_tri_mat.set_shader_parameter("tri_color", Color(accent.r, accent.g, accent.b, 0.94))
+		_tri_rect.material = _tri_mat
+		add_child(_tri_rect)
+		move_child(_tri_rect, 0)
+		_sync_triangle_rect()
+		resized.connect(_sync_triangle_rect)
 
 func _sync_triangle_rect() -> void:
 	if not is_instance_valid(_tri_rect):

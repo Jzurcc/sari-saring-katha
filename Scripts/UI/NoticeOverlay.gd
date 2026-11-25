@@ -121,7 +121,7 @@ func _on_show_notification(title: String, message: String, sfx_name: String = ""
 	_sigil_lbl.text = sigil
 	_sigil_lbl.add_theme_color_override("font_color", accent_bright)
 
-	_title_lbl.text = title.to_upper()
+	_title_lbl.text = title
 	_title_lbl.add_theme_color_override("font_color", accent_bright)
 	_msg_lbl.text = message
 	_msg_lbl.visible = not message.strip_edges().is_empty()

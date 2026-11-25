@@ -11,7 +11,7 @@ extends CanvasLayer
 
 signal completed(offer_amount: float, tier: String, selected_card_ids: Array)
 
-const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayari.png"
+const MAYARI_SPRITE_PATH := "res://Assets/characters/sprites/ReynaMayariUI.png"
 const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
 const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 
@@ -114,10 +114,11 @@ class UnifiedLedgerGauge extends Control:
 		if best_idx != _hovered_milestone_idx:
 			_hovered_milestone_idx = best_idx
 			milestone_hovered.emit(milestones[best_idx] if best_idx >= 0 else {})
-			queue_redraw()
+			_queue_all_redraw()
 	var _stripe_scroll: float = 0.0
 	var _preview_rect: ColorRect
 	var _stripe_mat: ShaderMaterial
+	var _overlay_canvas: Control
 
 	# Floating thumb readout: [<] [coin] [amount] [>] riding above cur_x
 	var _thumb_box: HBoxContainer
@@ -150,6 +151,13 @@ void fragment() {
 		_stripe_mat.shader = _gauge_shader
 		_preview_rect.material = _stripe_mat
 		add_child(_preview_rect)
+
+		# Foreground canvas drawn ON TOP of _preview_rect so milestone pips & thumb stay above the moving tally bar
+		_overlay_canvas = Control.new()
+		_overlay_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_overlay_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_overlay_canvas.draw.connect(_draw_foreground)
+		add_child(_overlay_canvas)
 
 		# Floating [< [coin] 75 >] riding right on top of the thumb line
 		_thumb_box = HBoxContainer.new()
@@ -191,7 +199,7 @@ void fragment() {
 			if _hovered_milestone_idx != -1:
 				_hovered_milestone_idx = -1
 				milestone_hovered.emit({})
-				queue_redraw()
+				_queue_all_redraw()
 		)
 
 	func _make_tiny_arrow(glyph: String) -> Button:
@@ -223,6 +231,11 @@ void fragment() {
 		if is_instance_valid(_plus_btn):
 			_plus_btn.disabled = not enabled
 
+	func _queue_all_redraw() -> void:
+		queue_redraw()
+		if is_instance_valid(_overlay_canvas):
+			_overlay_canvas.queue_redraw()
+
 	func _process(delta: float) -> void:
 		_stripe_scroll += delta * 0.55
 		if _stripe_mat:
@@ -240,7 +253,7 @@ void fragment() {
 		for k in expired:
 			_pip_burst_timers.erase(k)
 		if needs_redraw:
-			queue_redraw()
+			_queue_all_redraw()
 
 	func _ratio_to_x(r: float) -> float:
 		var pad := 2.0
@@ -293,7 +306,7 @@ void fragment() {
 		_prev_tonight_ids = cur_tonight
 
 		_sync_visuals()
-		queue_redraw()
+		_queue_all_redraw()
 
 	func pop_amount() -> void:
 		if not is_instance_valid(_amount_lbl):
@@ -358,18 +371,27 @@ void fragment() {
 		if max_x < size.x - 4.0 and max_x > paid_x + 2.0:
 			draw_line(Vector2(max_x, BAR_Y + 1.0), Vector2(max_x, BAR_Y + BAR_H - 1.0), Color(0.86, 0.78, 0.64, 0.38), 1.5, true)
 
+	func _draw_foreground() -> void:
+		if not is_instance_valid(_overlay_canvas):
+			return
+		var bar_rect := Rect2(0.0, BAR_Y, size.x, BAR_H)
+		var g := maxf(1.0, goal)
+		var pad := 2.0
+		var paid_x := _ratio_to_x(total_paid / g)
+		var cur_x := _ratio_to_x((total_paid + current_offer) / g)
+
 		# Crisp outer & inner gold frame
 		var frame_col := Color(0.835, 0.624, 0.278, 0.85)
-		draw_rect(bar_rect, frame_col, false, 2.0)
-		draw_rect(bar_rect.grow(-2.0), Color(0.0, 0.0, 0.0, 0.45), false, 1.0)
+		_overlay_canvas.draw_rect(bar_rect, frame_col, false, 2.0)
+		_overlay_canvas.draw_rect(bar_rect.grow(-2.0), Color(0.0, 0.0, 0.0, 0.45), false, 1.0)
 
 		# End-cap diamond ornaments (left & right)
-		_draw_diamond(Vector2(0.0, BAR_Y + BAR_H * 0.5), 4.5, frame_col)
-		_draw_diamond(Vector2(size.x, BAR_Y + BAR_H * 0.5), 4.5, frame_col)
+		_draw_diamond_on(_overlay_canvas, Vector2(0.0, BAR_Y + BAR_H * 0.5), 4.5, frame_col)
+		_draw_diamond_on(_overlay_canvas, Vector2(size.x, BAR_Y + BAR_H * 0.5), 4.5, frame_col)
 
 		# Seam line where already-paid meets tonight's tribute
 		if paid_x > pad + 2.0:
-			draw_line(Vector2(paid_x, BAR_Y - 2.0), Vector2(paid_x, BAR_Y + BAR_H + 2.0), Color(1.0, 0.94, 0.80, 0.65), 1.5, true)
+			_overlay_canvas.draw_line(Vector2(paid_x, BAR_Y - 2.0), Vector2(paid_x, BAR_Y + BAR_H + 2.0), Color(1.0, 0.94, 0.80, 0.65), 1.5, true)
 
 		# Thin vertical threshold lines & diamond pips below the bar (no text labels)
 		var show_min := min_thresh > 0.0 and total_paid + min_thresh < g - 0.01
@@ -379,12 +401,12 @@ void fragment() {
 
 		if show_min:
 			var reached_min := current_offer >= min_thresh - 0.01
-			_draw_threshold_pip(min_x, reached_min, Color(0.98, 0.92, 0.76, 1.0))
+			_draw_threshold_pip(_overlay_canvas, min_x, reached_min, Color(0.98, 0.92, 0.76, 1.0))
 		if show_gen:
 			var reached_gen := current_offer >= gen_thresh - 0.01
-			_draw_threshold_pip(gen_x, reached_gen, Color(1.0, 0.93, 0.68, 1.0))
+			_draw_threshold_pip(_overlay_canvas, gen_x, reached_gen, Color(1.0, 0.93, 0.68, 1.0))
 
-		# Milestone diamond pips along the bar (15% / 30% / 50% / 75%)
+		# Milestone diamond pips ON TOP of the moving tally bar (15% / 30% / 50% / 75%)
 		for i in range(milestones.size()):
 			var m: Dictionary = milestones[i]
 			var m_amt := float(m.get("amount", 0.0))
@@ -397,45 +419,44 @@ void fragment() {
 			var pip_col := Color(0.56, 0.96, 0.62, 1.0) if unlocked_tonight else (Color(1.0, 0.88, 0.52, 0.96) if already_unlocked else Color(0.70, 0.60, 0.44, 0.58))
 			var pulse := 0.5 + 0.5 * sin(_pulse_time * 5.2 + float(i) * 0.9)
 			var pip_r := 6.6 if _hovered_milestone_idx == i else ((5.8 + pulse * 1.1) if unlocked_tonight else (5.2 if already_unlocked else 4.2))
-			draw_line(Vector2(mx, BAR_Y + 1.0), Vector2(mx, BAR_Y + BAR_H - 1.0), Color(pip_col.r, pip_col.g, pip_col.b, 0.82 if unlocked_tonight else 0.45), 1.6 if unlocked_tonight else 1.2, true)
+			_overlay_canvas.draw_line(Vector2(mx, BAR_Y + 1.0), Vector2(mx, BAR_Y + BAR_H - 1.0), Color(pip_col.r, pip_col.g, pip_col.b, 0.82 if unlocked_tonight else 0.45), 1.6 if unlocked_tonight else 1.2, true)
 			if unlocked_tonight:
-				# Luminous pulsing halo + subtle beacon ticks showing this milestone unlocks tonight!
 				var halo_r := pip_r + 4.2 + pulse * 2.4
-				_draw_diamond(pip_c, halo_r, Color(0.56, 0.98, 0.64, 0.24 + pulse * 0.16))
-				_draw_diamond_outline(pip_c, halo_r, Color(0.78, 1.0, 0.82, 0.58 + pulse * 0.30), 1.4)
-				draw_line(Vector2(mx, BAR_Y - 5.0), Vector2(mx, BAR_Y - 1.0), Color(0.72, 1.0, 0.78, 0.75 + pulse * 0.25), 1.6, true)
-				draw_line(Vector2(mx, BAR_Y + BAR_H + 1.0), Vector2(mx, BAR_Y + BAR_H + 5.0), Color(0.72, 1.0, 0.78, 0.75 + pulse * 0.25), 1.6, true)
+				_draw_diamond_on(_overlay_canvas, pip_c, halo_r, Color(0.56, 0.98, 0.64, 0.24 + pulse * 0.16))
+				_draw_diamond_outline_on(_overlay_canvas, pip_c, halo_r, Color(0.78, 1.0, 0.82, 0.58 + pulse * 0.30), 1.4)
+				_overlay_canvas.draw_line(Vector2(mx, BAR_Y - 5.0), Vector2(mx, BAR_Y - 1.0), Color(0.72, 1.0, 0.78, 0.75 + pulse * 0.25), 1.6, true)
+				_overlay_canvas.draw_line(Vector2(mx, BAR_Y + BAR_H + 1.0), Vector2(mx, BAR_Y + BAR_H + 5.0), Color(0.72, 1.0, 0.78, 0.75 + pulse * 0.25), 1.6, true)
 			if _pip_burst_timers.has(i):
 				var bt := clampf(float(_pip_burst_timers[i]), 0.0, 1.0)
 				var burst_r := pip_r + (1.0 - bt) * 18.0
-				_draw_diamond_outline(pip_c, burst_r, Color(0.86, 1.0, 0.82, bt * 0.95), 2.2)
-			_draw_diamond(pip_c, pip_r + 1.6, Color(0.05, 0.04, 0.035, 0.92))
-			_draw_diamond(pip_c, pip_r, pip_col)
+				_draw_diamond_outline_on(_overlay_canvas, pip_c, burst_r, Color(0.86, 1.0, 0.82, bt * 0.95), 2.2)
+			_draw_diamond_on(_overlay_canvas, pip_c, pip_r + 1.6, Color(0.05, 0.04, 0.035, 0.92))
+			_draw_diamond_on(_overlay_canvas, pip_c, pip_r, pip_col)
 			if unlocked_tonight:
-				_draw_diamond(pip_c, pip_r * 0.42, Color(0.96, 1.0, 0.94, 0.95))
+				_draw_diamond_on(_overlay_canvas, pip_c, pip_r * 0.42, Color(0.96, 1.0, 0.94, 0.95))
 
 		# Connector stem from floating readout down into glowing diamond handlebar thumb
-		draw_line(Vector2(cur_x, BAR_Y - 8.0), Vector2(cur_x, BAR_Y), Color(border_color.r, border_color.g, border_color.b, 0.72), 1.5, true)
+		_overlay_canvas.draw_line(Vector2(cur_x, BAR_Y - 8.0), Vector2(cur_x, BAR_Y), Color(border_color.r, border_color.g, border_color.b, 0.72), 1.5, true)
 		var ptr_c := Vector2(cur_x, BAR_Y + BAR_H * 0.5)
-		_draw_diamond(ptr_c, 10.5, Color(0.05, 0.04, 0.035, 0.98))
-		_draw_diamond(ptr_c, 7.8, fill_color.lightened(0.20))
-		_draw_diamond(ptr_c, 3.4, Color(1.0, 0.97, 0.90, 0.96))
+		_draw_diamond_on(_overlay_canvas, ptr_c, 10.5, Color(0.05, 0.04, 0.035, 0.98))
+		_draw_diamond_on(_overlay_canvas, ptr_c, 7.8, fill_color.lightened(0.20))
+		_draw_diamond_on(_overlay_canvas, ptr_c, 3.4, Color(1.0, 0.97, 0.90, 0.96))
 
-	func _draw_threshold_pip(x: float, reached: bool, lit_col: Color) -> void:
+	func _draw_threshold_pip(target: CanvasItem, x: float, reached: bool, lit_col: Color) -> void:
 		var line_col := lit_col if reached else Color(0.78, 0.72, 0.62, 0.44)
-		draw_line(Vector2(x, BAR_Y - 4.0), Vector2(x, BAR_Y + BAR_H + 11.0), line_col, 1.5, true)
-		_draw_diamond(Vector2(x, BAR_Y + BAR_H + 11.0), 3.6, line_col)
+		target.draw_line(Vector2(x, BAR_Y - 4.0), Vector2(x, BAR_Y + BAR_H + 11.0), line_col, 1.5, true)
+		_draw_diamond_on(target, Vector2(x, BAR_Y + BAR_H + 11.0), 3.6, line_col)
 
-	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
-		draw_colored_polygon(PackedVector2Array([
+	func _draw_diamond_on(target: CanvasItem, center: Vector2, r: float, col: Color) -> void:
+		target.draw_colored_polygon(PackedVector2Array([
 			center + Vector2(0.0, -r),
 			center + Vector2(r, 0.0),
 			center + Vector2(0.0, r),
 			center + Vector2(-r, 0.0),
 		]), col)
 
-	func _draw_diamond_outline(center: Vector2, r: float, col: Color, width: float = 1.5) -> void:
-		draw_polyline(PackedVector2Array([
+	func _draw_diamond_outline_on(target: CanvasItem, center: Vector2, r: float, col: Color, width: float = 1.5) -> void:
+		target.draw_polyline(PackedVector2Array([
 			center + Vector2(0.0, -r),
 			center + Vector2(r, 0.0),
 			center + Vector2(0.0, r),
@@ -471,6 +492,7 @@ var _shadow_rows: Array[Dictionary] = []
 # Unified Bottom Ledger Gauge Dock + Overlapping Bottom-Right Offer Button
 var _gauge_dock: VBoxContainer
 var _unified_gauge: UnifiedLedgerGauge
+var _scroll_hint_box: HBoxContainer
 var _confirm_btn: Button
 var _confirm_style: StyleBoxFlat
 
@@ -479,10 +501,12 @@ var _card_rows: Array[PanelContainer] = []
 var _card_data_list: Array[Dictionary] = []
 var _callout_col: VBoxContainer
 var _callout_tween: Tween = null
+var _callout_anchor: Control = null
 var _hovered_idx: int = -1
 var _card_picked: bool = false
 var _cards_ready: bool = false
 var _rerolls_left: int = 0
+var _max_rerolls: int = 0
 var _max_card_picks: int = 1
 var _selected_indices: Array[int] = []
 var _confirmed_shifted_odds: bool = false
@@ -543,8 +567,8 @@ func _build_ui() -> void:
 
 	# ── 1. TOP WIDE TITLE BANNER ──
 	_header_banner = PanelContainer.new()
-	_header_banner.anchor_left = 0.08
-	_header_banner.anchor_right = 0.92
+	_header_banner.anchor_left = 0.220
+	_header_banner.anchor_right = 0.800
 	_header_banner.anchor_top = 0.030
 	_header_banner.anchor_bottom = 0.148
 	var header_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
@@ -655,6 +679,53 @@ func _build_ui() -> void:
 	_unified_gauge.milestone_hovered.connect(_on_milestone_hovered)
 	_gauge_dock.add_child(_unified_gauge)
 
+	# Scroll keybind indicator (rounded square with ↕) tucked cleanly below the gauge bar
+	_scroll_hint_box = HBoxContainer.new()
+	_scroll_hint_box.anchor_left = 0.220
+	_scroll_hint_box.anchor_right = 0.220
+	_scroll_hint_box.anchor_top = 0.855
+	_scroll_hint_box.anchor_bottom = 0.855
+	_scroll_hint_box.offset_left = 18.0
+	_scroll_hint_box.offset_right = 190.0
+	_scroll_hint_box.offset_top = 8.0
+	_scroll_hint_box.offset_bottom = 38.0
+	_scroll_hint_box.z_index = 12
+	_scroll_hint_box.add_theme_constant_override("separation", 8)
+	_scroll_hint_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_scroll_hint_box)
+
+	var sq_badge := PanelContainer.new()
+	sq_badge.custom_minimum_size = Vector2(28, 28)
+	sq_badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	sq_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sq_style := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 6, 0, 0)
+	sq_style.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.82)
+	sq_style.set_border_width_all(1)
+	sq_style.border_width_bottom = 2
+	sq_style.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	sq_style.shadow_size = 6
+	sq_badge.add_theme_stylebox_override("panel", sq_style)
+	_scroll_hint_box.add_child(sq_badge)
+
+	var sym_lbl := Label.new()
+	sym_lbl.text = "↕"
+	sym_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sym_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sym_lbl.add_theme_font_override("font", _bold_font)
+	sym_lbl.add_theme_font_size_override("font_size", 16)
+	sym_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	sym_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sq_badge.add_child(sym_lbl)
+
+	var scroll_lbl := Label.new()
+	scroll_lbl.text = "Scroll to adjust"
+	scroll_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	scroll_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	scroll_lbl.add_theme_font_size_override("font_size", 13)
+	scroll_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	scroll_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scroll_hint_box.add_child(scroll_lbl)
+
 	# ── 3. BOTTOM-RIGHT OVERLAPPING OFFER BUTTON (Straddling the frame's bottom border!) ──
 	_confirm_btn = Button.new()
 	_confirm_btn.anchor_left = 0.800
@@ -687,15 +758,15 @@ func _build_ui() -> void:
 	_reroll_btn.anchor_top = 0.855
 	_reroll_btn.anchor_bottom = 0.855
 	_reroll_btn.offset_left = 18.0
-	_reroll_btn.offset_right = 216.0
-	_reroll_btn.offset_top = -24.0
-	_reroll_btn.offset_bottom = 24.0
+	_reroll_btn.offset_right = 180.0
+	_reroll_btn.offset_top = -28.0
+	_reroll_btn.offset_bottom = 28.0
 	_reroll_btn.z_index = 12
 	_reroll_btn.visible = false
 	_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_reroll_btn.focus_mode = Control.FOCUS_NONE
 	_reroll_btn.add_theme_font_override("font", _bold_font)
-	_reroll_btn.add_theme_font_size_override("font_size", 17)
+	_reroll_btn.add_theme_font_size_override("font_size", 18)
 	var rr_style := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.10, 0.97), 8, 16, 8)
 	rr_style.border_color = COL_GOLD
 	rr_style.set_border_width_all(2)
@@ -755,10 +826,10 @@ func _build_ui() -> void:
 		_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 	_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_mayari_portrait.anchor_left = -0.055
-	_mayari_portrait.anchor_right = 0.315
-	_mayari_portrait.anchor_top = 0.34
-	_mayari_portrait.anchor_bottom = 1.27
+	_mayari_portrait.anchor_left = -0.085
+	_mayari_portrait.anchor_right = 0.355
+	_mayari_portrait.anchor_top = 0.16
+	_mayari_portrait.anchor_bottom = 1.24
 	_mayari_portrait.z_index = 10
 	_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_mayari_portrait)
@@ -774,10 +845,11 @@ func _build_ui() -> void:
 	_callout_col.modulate.a = 0.0
 	_root.add_child(_callout_col)
 
-func _create_preview_shadow_row(_index: int) -> Dictionary:
+func _create_preview_shadow_row(index: int) -> Dictionary:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var style := UIStyle.create_flat_stylebox(Color(0.048, 0.045, 0.042, 0.92), 6, 16, 10)
 	style.content_margin_right = 20
 	style.border_color = Color(0.88, 0.79, 0.58, 0.48)
@@ -789,15 +861,20 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	style.shadow_size = 8
 	style.shadow_offset = Vector2(0, 3)
 	card.add_theme_stylebox_override("panel", style)
+	card.set_meta("shadow_style", style)
+	card.mouse_entered.connect(_on_shadow_row_hovered.bind(index, true))
+	card.mouse_exited.connect(_on_shadow_row_hovered.bind(index, false))
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 52)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hbox)
 
 	# Same footprint as Beat 2's HadesEmblem so the flip lines up seamlessly!
 	var diamond := MysteryDiamond.new()
 	diamond.custom_minimum_size = Vector2(88, 88)
 	diamond.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	diamond.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(diamond)
 
 	var q_lbl := Label.new()
@@ -807,26 +884,31 @@ func _create_preview_shadow_row(_index: int) -> Dictionary:
 	q_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	q_lbl.add_theme_font_override("font", _bold_font)
 	q_lbl.add_theme_font_size_override("font_size", 36)
+	q_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	diamond.add_child(q_lbl)
 
 	var mid := VBoxContainer.new()
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	mid.add_theme_constant_override("separation", 4)
+	mid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(mid)
 
 	var top_line := HBoxContainer.new()
+	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mid.add_child(top_line)
 
 	var title_lbl := Label.new()
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
 
 	var tag_col := VBoxContainer.new()
 	tag_col.alignment = BoxContainer.ALIGNMENT_CENTER
 	tag_col.add_theme_constant_override("separation", 0)
+	tag_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_col)
 
 	var tag_lbl := Label.new()
@@ -989,6 +1071,9 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 		var tgs: Label = sr["tag_sub_lbl"]
 		var dl: Label = sr["desc_lbl"]
 
+		var p_card: PanelContainer = sr["panel"]
+		p_card.set_meta("shadow_accent", accent)
+		p_card.set_meta("shadow_bright", accent_bright)
 		st.bg_color = shadow_bg
 		st.border_color = Color(accent.r, accent.g, accent.b, 0.56)
 		dm.border_col = Color(accent.r, accent.g, accent.b, 0.76)
@@ -1034,7 +1119,7 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 	_touched_milestone_ids = touched_ids
 	if animate_pop and newly_touched:
 		EventBus.request_sfx.emit("purchase")
-	if _phase == 0 and _hovered_milestone_dict.is_empty() and (touched_changed or not touched_now.is_empty()):
+	if _phase == 0 and _hovered_milestone_dict.is_empty() and touched_changed:
 		_show_milestone_callouts(touched_now)
 
 	if animate_pop:
@@ -1084,11 +1169,15 @@ func _on_confirm_pressed() -> void:
 	var fade_tw := create_tween().set_parallel(true)
 	fade_tw.tween_property(_gauge_dock, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
 	fade_tw.tween_property(_confirm_btn, "modulate:a", 0.0, 0.20).set_trans(Tween.TRANS_SINE)
+	if is_instance_valid(_scroll_hint_box):
+		fade_tw.tween_property(_scroll_hint_box, "modulate:a", 0.0, 0.20).set_trans(Tween.TRANS_SINE)
 	await fade_tw.finished
 	if not is_inside_tree():
 		return
 
 	_confirm_btn.visible = false
+	if is_instance_valid(_scroll_hint_box):
+		_scroll_hint_box.visible = false
 	_gauge_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	_launch_hades_card_flip()
@@ -1100,6 +1189,7 @@ func _launch_hades_card_flip() -> void:
 	var projected_paid := minf(_goal, _total_paid + _confirmed_offer)
 	_confirmed_shifted_odds = StoryManager.has_shifted_mayari_odds(projected_paid)
 	_rerolls_left = StoryManager.get_nightly_reroll_count(projected_paid)
+	_max_rerolls = _rerolls_left
 	_max_card_picks = StoryManager.get_max_mayari_card_picks(projected_paid)
 	_selected_indices.clear()
 	_show_keyword_callouts([])
@@ -1324,7 +1414,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 			var s_name := Label.new()
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
-			s_name.custom_minimum_size = Vector2(290, 0)
+			s_name.custom_minimum_size = Vector2(345, 0)
 			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
 			s_name.add_theme_font_size_override("font_size", lbl_sz)
 			s_name.add_theme_color_override("font_color", COL_CREAM)
@@ -1346,14 +1436,51 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	card.gui_input.connect(_on_row_gui_input.bind(index))
 	return card
 
+func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
+	if _phase != 0 or _is_locked or index < 0 or index >= _shadow_rows.size():
+		return
+	var active_idx := index if is_hovered else -1
+	if is_hovered:
+		EventBus.request_sfx.emit("interact")
+	for i in range(_shadow_rows.size()):
+		var p: PanelContainer = _shadow_rows[i]["panel"]
+		if not is_instance_valid(p):
+			continue
+		var st: StyleBoxFlat = _shadow_rows[i]["style"]
+		var acc: Color = p.get_meta("shadow_accent", COL_GOLD)
+		var brt: Color = p.get_meta("shadow_bright", COL_GOLD_BRIGHT)
+		p.pivot_offset = p.size * 0.5
+		var tw := create_tween()
+		if i == active_idx:
+			st.border_color = brt
+			st.border_width_left = 6
+			st.border_width_top = 2
+			st.border_width_right = 2
+			st.border_width_bottom = 2
+			tw.tween_property(p, "scale", Vector2(1.020, 1.020), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			tw.parallel().tween_property(p, "modulate", Color(1.07, 1.05, 1.02, 1.0), 0.12)
+		else:
+			st.border_color = Color(acc.r, acc.g, acc.b, 0.56)
+			st.border_width_left = 4
+			st.border_width_top = 1
+			st.border_width_right = 1
+			st.border_width_bottom = 1
+			var dim := Color(0.84, 0.80, 0.76, 0.92) if active_idx != -1 else Color.WHITE
+			tw.tween_property(p, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_SINE)
+			tw.parallel().tween_property(p, "modulate", dim, 0.14)
+
 func _on_row_hovered(index: int, is_hovered: bool) -> void:
 	if _card_picked or not _cards_ready or index < 0 or index >= _card_rows.size():
 		return
 	if is_hovered:
+		if _hovered_idx == index:
+			return
 		_hovered_idx = index
 		EventBus.request_sfx.emit("interact")
 		_show_keyword_callouts(_card_data_list[index].get("keywords", []), _card_rows[index])
 	elif _hovered_idx == index:
+		if is_instance_valid(_card_rows[index]) and _card_rows[index].get_global_rect().has_point(get_viewport().get_mouse_position()):
+			return
 		_hovered_idx = -1
 		_show_keyword_callouts([])
 
@@ -1398,7 +1525,7 @@ func _position_callout_beside(anchor_ctrl: Control) -> void:
 	var vp_sz := get_viewport().get_visible_rect().size
 	var rect := anchor_ctrl.get_global_rect()
 	var c_sz := _callout_col.get_combined_minimum_size()
-	var cw := clampf(c_sz.x, 220.0, 260.0)
+	var cw := clampf(c_sz.x, 260.0, 310.0)
 	var ch := maxf(c_sz.y, 72.0)
 	_callout_col.size = Vector2(cw, ch)
 	var tx := minf(rect.end.x + 14.0, vp_sz.x - cw - 10.0)
@@ -1409,6 +1536,9 @@ func _position_callout_beside(anchor_ctrl: Control) -> void:
 func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> void:
 	if not is_instance_valid(_callout_col):
 		return
+	if not keyword_ids.is_empty() and anchor_ctrl != null and anchor_ctrl == _callout_anchor and _callout_col.visible:
+		return
+	_callout_anchor = anchor_ctrl if not keyword_ids.is_empty() else null
 	if _callout_tween and _callout_tween.is_valid():
 		_callout_tween.kill()
 
@@ -1422,7 +1552,7 @@ func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> 
 		if info.is_empty():
 			continue
 		var box := PanelContainer.new()
-		box.custom_minimum_size = Vector2(236, 0)
+		box.custom_minimum_size = Vector2(280, 0)
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.95), 6, 14, 10)
 		bs.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
@@ -1435,24 +1565,24 @@ func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> 
 		box.add_theme_stylebox_override("panel", bs)
 
 		var bv := VBoxContainer.new()
-		bv.add_theme_constant_override("separation", 3)
+		bv.add_theme_constant_override("separation", 4)
 		bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(bv)
 
 		var kt := Label.new()
 		kt.text = str(info.get("title", ""))
 		kt.add_theme_font_override("font", _bold_font)
-		kt.add_theme_font_size_override("font_size", 15)
+		kt.add_theme_font_size_override("font_size", 21)
 		kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 		kt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bv.add_child(kt)
 
 		var kd := Label.new()
 		kd.text = str(info.get("desc", ""))
-		kd.custom_minimum_size = Vector2(204, 0)
+		kd.custom_minimum_size = Vector2(248, 0)
 		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
-		kd.add_theme_font_size_override("font_size", 13)
+		kd.add_theme_font_size_override("font_size", 18)
 		kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		kd.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bv.add_child(kd)
@@ -1494,6 +1624,7 @@ func _on_milestone_hovered(m: Dictionary) -> void:
 func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
 	if _phase != 0 or not is_instance_valid(_callout_col):
 		return
+	_callout_anchor = null
 	if _callout_tween and _callout_tween.is_valid():
 		_callout_tween.kill()
 	for child in _callout_col.get_children():
@@ -1509,7 +1640,7 @@ func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
 		var pct := int(roundf(float(m.get("ratio", 0.0)) * 100.0))
 		var already := _total_paid >= m_amt - 0.01
 		var tonight := (not already) and (_total_paid + _current_offer >= m_amt - 0.01)
-		var status_str := "UNLOCKED ✓" if already else ("✦ UNLOCKS TONIGHT!" if tonight else "₱%d MORE NEEDED" % int(ceilf(m_amt - _total_paid)))
+		var status_str := "Unlocked ✓" if already else ("✦ Unlocks Tonight!" if tonight else "₱%d more needed" % int(ceilf(m_amt - _total_paid)))
 		var status_col := COL_STAT_POS if (already or tonight) else COL_GOLD_BRIGHT
 
 		var box := PanelContainer.new()
@@ -1531,7 +1662,7 @@ func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
 		box.add_child(bv)
 
 		var kt := Label.new()
-		kt.text = "%d%% (₱%d) · %s" % [pct, int(m_amt), str(m.get("title", "")).to_upper()]
+		kt.text = "%d%% · %s" % [pct, str(m.get("title", ""))]
 		kt.custom_minimum_size = Vector2(204, 0)
 		kt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		kt.add_theme_font_override("font", _bold_font)
@@ -1569,7 +1700,7 @@ func _refresh_draft_controls() -> void:
 	if is_instance_valid(_reroll_btn):
 		_reroll_btn.visible = _cards_ready and not _card_picked and _rerolls_left > 0
 		_reroll_btn.disabled = not _cards_ready or _card_picked or _rerolls_left <= 0
-		_reroll_btn.text = "↻ Reroll (%d)" % _rerolls_left
+		_reroll_btn.text = ("↻ Reroll (%d)" % _rerolls_left) if _max_rerolls >= 2 else "↻ Reroll"
 	if is_instance_valid(_accept_cards_btn):
 		_accept_cards_btn.visible = _cards_ready and not _card_picked and _max_card_picks >= 2
 		var cnt := _selected_indices.size()
