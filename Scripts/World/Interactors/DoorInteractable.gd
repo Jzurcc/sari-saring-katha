@@ -38,13 +38,14 @@ func get_visual_nodes() -> Array[Node3D]:
 
 
 func on_hover(is_hovered: bool) -> void:
-	super.on_hover(is_hovered)
 	if not is_hovered:
+		super.on_hover(false)
 		EventBus.helper_prompt_requested.emit("", false)
 		return
 	if StoryManager.storefront_upgrade_level < 3:
-		EventBus.helper_prompt_requested.emit("Locked Door", true)
-	elif _is_player_outside():
+		return
+	super.on_hover(true)
+	if _is_player_outside():
 		EventBus.helper_prompt_requested.emit("Open Door — Return Inside [LMB]", true)
 	else:
 		EventBus.helper_prompt_requested.emit("Open Door — Step Outside [LMB]", true)
