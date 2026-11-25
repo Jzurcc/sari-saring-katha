@@ -155,7 +155,7 @@ func get_chatter_cooldown_remaining_hours() -> float:
 	if _next_chatter_ready_hour < 0.0:
 		return 0.0
 	var rem := _next_chatter_ready_hour - _get_current_hour()
-	if rem <= 0.01 or rem > CHATTER_COOLDOWN_HOURS + 0.5:
+	if rem <= 0.01:
 		_next_chatter_ready_hour = -1.0
 		return 0.0
 	return rem
@@ -170,7 +170,7 @@ func get_reveal_cooldown_remaining_hours() -> float:
 	if not has_unrevealed_events() or _next_reveal_ready_hour < 0.0:
 		return 0.0
 	var rem := _next_reveal_ready_hour - _get_current_hour()
-	if rem <= 0.01 or rem > EVENT_REVEAL_COOLDOWN_HOURS + 0.5:
+	if rem <= 0.01:
 		_next_reveal_ready_hour = -1.0
 		return 0.0
 	return rem

@@ -339,7 +339,7 @@ func get_delivery_cooldown_remaining_hours() -> float:
 	if delivery_cooldown_end_hour < 0.0:
 		return 0.0
 	var rem := delivery_cooldown_end_hour - _get_current_game_hour()
-	if rem <= 0.01 or rem > BASE_DELIVERY_COOLDOWN_HOURS + 0.5:
+	if rem <= 0.01:
 		delivery_cooldown_end_hour = -1.0
 		return 0.0
 	return rem
