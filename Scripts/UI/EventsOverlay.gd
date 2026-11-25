@@ -644,7 +644,7 @@ func _position_callout_beside(anchor_ctrl: Control) -> void:
 	var cw := clampf(c_sz.x, 260.0, 310.0)
 	var ch := maxf(c_sz.y, 72.0)
 	_callout_col.size = Vector2(cw, ch)
-	var tx := minf(rect.end.x + 14.0, vp_sz.x - cw - 10.0)
+	var tx := minf(rect.end.x + 44.0, vp_sz.x - cw - 6.0)
 	var mid_y := rect.position.y + rect.size.y * 0.5
 	var ty := clampf(mid_y - ch * 0.5, 16.0, vp_sz.y - ch - 16.0)
 	_callout_col.position = Vector2(tx, ty)
