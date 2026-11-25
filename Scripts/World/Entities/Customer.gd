@@ -258,8 +258,8 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 	icon.no_depth_test = true
 	icon.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 	icon.render_priority = 15
-	icon.pixel_size = 0.00080 if ranked_up else 0.00072
-	icon.offset = Vector2(-115.0, 0.0)
+	icon.pixel_size = 0.00105 if ranked_up else 0.00095
+	icon.offset = Vector2(138.0, 0.0)
 	icon.modulate = col
 	holder.add_child(icon)
 
@@ -272,8 +272,8 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 	lbl.font_size = 42 if ranked_up else 36
 	lbl.outline_size = 10
 	lbl.outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	lbl.offset = Vector2(14.0, 0.0)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lbl.offset = Vector2(-2.0, 0.0)
 	lbl.modulate = col
 	if ranked_up:
 		lbl.text = "+%d  ★ RANK %d!" % [delta, new_rank]
