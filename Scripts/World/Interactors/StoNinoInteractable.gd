@@ -13,7 +13,7 @@ func _ready() -> void:
 	add_to_group("sto_nino_altar")
 	outline_shader = preload("res://Assets/Shaders/item_outline_spatial.gdshader")
 	default_outline_color = Color(1.0, 0.82, 0.36, 1.0)
-	outline_width = 1.6
+	outline_width = 32.0
 
 	var visuals := get_visual_nodes()
 	if not visuals.is_empty():
@@ -27,7 +27,7 @@ func _ready() -> void:
 	_refresh_visual_state()
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(_sprite):
+	if not visible or StoryManager.sto_nino_upgrade_level < 1 or not is_instance_valid(_sprite):
 		return
 	# Gentle warm golden pulse when a blessing is ready to tap
 	if not StoryManager.has_active_sto_nino_blessing() and not StoryManager.is_past_closing_time():
@@ -38,15 +38,21 @@ func _process(delta: float) -> void:
 		_sprite.modulate = Color.WHITE
 
 func _refresh_visual_state() -> void:
+	var unlocked := StoryManager.sto_nino_upgrade_level >= 1
+	visible = unlocked
+	collision_layer = 1 if unlocked else 0
 	if is_instance_valid(_sprite) and StoryManager.has_active_sto_nino_blessing():
 		_sprite.modulate = Color.WHITE
 
 func _on_sto_nino_upgraded(_new_level: int) -> void:
+	_refresh_visual_state()
 	_play_blessing_bounce()
 	var burst_pos := _sprite.global_position + Vector3(0, 0.22, 0) if is_instance_valid(_sprite) else global_position + Vector3(0, 0.22, 0)
 	VisualEffectManager.spawn_heart_burst(burst_pos)
 
 func on_interact() -> void:
+	if StoryManager.sto_nino_upgrade_level < 1:
+		return
 	if Dialogic.current_timeline != null:
 		return
 	if StoryManager.is_past_closing_time():

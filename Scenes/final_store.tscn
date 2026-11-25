@@ -396,11 +396,48 @@ shape = SubResource("BoxShape3D_wqspr")
 [node name="Cube_002" parent="." index="34" unique_id=635445586]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19183683, 0.0063557625)
 
+[node name="Cube_008" parent="." index="35" unique_id=548639532]
+visible = false
+
+[node name="Cube_009" parent="." index="36" unique_id=1562353390]
+visible = false
+
+[node name="Cube_010" parent="." index="37" unique_id=1704082792]
+visible = false
+
+[node name="Cube_011" parent="." index="38" unique_id=1468879504]
+visible = false
+
+[node name="Cube_012" parent="." index="39" unique_id=1985484060]
+visible = false
+
+[node name="Cube_014" parent="." index="40" unique_id=612338444]
+visible = false
+
 [node name="Cylinder_003" parent="." index="41" unique_id=434664771]
 transform = Transform3D(0.004931079, 0.01599785, 1.4695757e-10, 4.98908e-10, -1.4868616e-17, -0.016740568, -0.015997853, 0.0049310788, -4.7677307e-10, -3.9195313, 4.6267858, -3.864512)
+visible = false
+
+[node name="Antena_001" parent="Cylinder_003" index="0" unique_id=39094368]
+visible = false
+
+[node name="Cylinder_004" parent="." index="42" unique_id=1776760526]
+visible = false
+
+[node name="Cylinder_005" parent="." index="43" unique_id=966240965]
+visible = false
+
+[node name="Patas_001" parent="." index="44" unique_id=416601092]
+visible = false
+
+[node name="Plane_002" parent="." index="45" unique_id=2131245899]
+visible = false
 
 [node name="Plane_003" parent="." index="46" unique_id=177935000]
 transform = Transform3D(0.014272323, 0.017071621, -3.7562128e-10, 1.0108147e-08, -2.1295776e-09, -0.007158679, -0.046303604, 0.0052620457, -1.6785295e-09, -4.0268493, 4.619988, -3.3465345)
+visible = false
+
+[node name="Plane_004" parent="." index="47" unique_id=438445340]
 visible = false
 
 [node name="Street_Lamp" parent="." index="48" unique_id=1522965279]

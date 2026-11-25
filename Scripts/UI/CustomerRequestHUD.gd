@@ -615,23 +615,20 @@ func _hide_hud() -> void:
 	)
 
 func _apply_portrait_bob(portrait: Control) -> void:
-	# Distinct cozy head-bob + independent gentle head-tilt for customer portraits
-	var base_y := portrait.position.y
-	var bob_amp := randf_range(2.2, 4.0)
-	var bob_half := randf_range(0.75, 1.25)
-	var bob_dir := 1.0 if randf() < 0.5 else -1.0
-
-	var bob_tw := portrait.create_tween().set_loops()
-	bob_tw.tween_property(portrait, "position:y", base_y - bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	bob_tw.tween_property(portrait, "position:y", base_y + bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-	var tilt_deg := randf_range(2.2, 4.8)
-	var tilt_half := randf_range(1.15, 1.85)
+	# Pure rotational head-tilt with anticipation + overshoot game juice (no vertical/horizontal position drift)
+	var tilt_deg := randf_range(4.2, 6.8)
 	var tilt_dir := 1.0 if randf() < 0.5 else -1.0
-	portrait.rotation_degrees = randf_range(-tilt_deg * 0.5, tilt_deg * 0.5)
+	var swing_dur := randf_range(0.62, 0.92)
+	var hold_dur := randf_range(0.18, 0.36)
+	portrait.rotation_degrees = -tilt_deg * tilt_dir
+
 	var tilt_tw := portrait.create_tween().set_loops()
-	tilt_tw.tween_property(portrait, "rotation_degrees", tilt_deg * tilt_dir, tilt_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tilt_tw.tween_property(portrait, "rotation_degrees", -tilt_deg * tilt_dir, tilt_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	portrait.set_meta("portrait_tilt_tween", tilt_tw)
+	# TRANS_BACK + EASE_IN_OUT gives natural anticipation pull-back before swinging and overshoot settle on arrival
+	tilt_tw.tween_property(portrait, "rotation_degrees", tilt_deg * tilt_dir, swing_dur).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
+	tilt_tw.tween_interval(hold_dur)
+	tilt_tw.tween_property(portrait, "rotation_degrees", -tilt_deg * tilt_dir, swing_dur).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
+	tilt_tw.tween_interval(hold_dur)
 
 func _apply_sway(icon: Control) -> void:
 	# Varied per-item rock + independent vertical float so neighboring items never bob in lockstep

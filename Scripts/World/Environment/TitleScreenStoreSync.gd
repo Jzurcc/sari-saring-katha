@@ -15,6 +15,7 @@ const TEX_STO_NINO: Texture2D = preload("res://Assets/ui/sto_nino2.png")
 const TEX_CAT: Texture2D = preload("res://Assets/ui/cat.png")
 const TEX_PERMIT_FRAME: Texture2D = preload("res://Assets/ui/picture_frame_stand.png")
 const TEX_TRASH: Texture2D = preload("res://Assets/ui/trash.png")
+const TEX_RADIO: Texture2D = preload("res://Assets/ui/Radio.png")
 
 const TEX_CANDY_MIX: Texture2D = preload("res://Assets/items/icons/21_candycontainer_mix.png")
 const TEX_CANDY_CHUBS: Texture2D = preload("res://Assets/items/icons/20_candycontainer_chubs.png")
@@ -86,6 +87,7 @@ func refresh_from_save() -> void:
 	var cat_level: int = int(story.get("cat_upgrade_level", 0))
 	var permit_level: int = int(story.get("permit_upgrade_level", 0))
 	var sto_nino_level: int = int(story.get("sto_nino_upgrade_level", 0))
+	var radio_level: int = int(story.get("radio_upgrade_level", 0))
 	var has_trash_can: bool = bool(story.get("has_trash_can", false))
 
 	var placed_set: Dictionary = {}
@@ -112,21 +114,36 @@ func refresh_from_save() -> void:
 		BaseMaterial3D.BILLBOARD_FIXED_Y,
 		SpriteBase3D.ALPHA_CUT_DISCARD
 	)
-	_sto_nino_sprite = _spawn_sprite_prop(
-		"StoNino",
-		TEX_STO_NINO,
-		Transform3D(
-			Vector3(-1.2988269e-08, 1.8073546e-09, -0.29999998),
-			Vector3(0.041347455, 0.297137, 0.0),
-			Vector3(0.297137, -0.041347455, -1.3113415e-08),
-			Vector3(4.3776584, 5.22742, -0.11046374)
-		),
-		BaseMaterial3D.BILLBOARD_FIXED_Y,
-		SpriteBase3D.ALPHA_CUT_DISCARD
-	)
-	_sto_nino_upgraded = sto_nino_level >= 1
-
 	# --- Store Upgrade Props ---
+	if sto_nino_level >= 1:
+		_sto_nino_sprite = _spawn_sprite_prop(
+			"StoNino",
+			TEX_STO_NINO,
+			Transform3D(
+				Vector3(-1.2988269e-08, 1.8073546e-09, -0.29999998),
+				Vector3(0.041347455, 0.297137, 0.0),
+				Vector3(0.297137, -0.041347455, -1.3113415e-08),
+				Vector3(4.3776584, 5.22742, -0.11046374)
+			),
+			BaseMaterial3D.BILLBOARD_FIXED_Y,
+			SpriteBase3D.ALPHA_CUT_DISCARD
+		)
+		_sto_nino_upgraded = true
+
+	if radio_level >= 1:
+		_spawn_sprite_prop(
+			"Radio",
+			TEX_RADIO,
+			Transform3D(
+				Vector3(0.15, 0.0, 0.0),
+				Vector3(0.0, 0.15, 0.0),
+				Vector3(0.0, 0.0, 0.15),
+				Vector3(-3.545242, 4.341693, 4.12174)
+			),
+			BaseMaterial3D.BILLBOARD_FIXED_Y,
+			SpriteBase3D.ALPHA_CUT_DISCARD
+		)
+
 	if bench_level >= 1:
 		_spawn_bench()
 
