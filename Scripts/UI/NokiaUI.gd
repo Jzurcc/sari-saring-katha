@@ -255,11 +255,11 @@ func _on_mario_call_finished(success: bool, action: String = "restock") -> void:
 	_is_calling = false
 	
 	if success:
-		var target_menu: Control = null
 		if action == "upgrade":
-			target_menu = get_node_or_null("UpgradeMenu")
-		else:
-			target_menu = store_menu if store_menu else get_node_or_null("RestockMenu")
+			_on_close_pressed()
+			get_tree().call_group("upgrade_tree_overlay", "open_tree")
+			return
+		var target_menu: Control = store_menu if store_menu else get_node_or_null("RestockMenu")
 		if target_menu:
 			target_menu.visible = true
 			if target_menu.has_method("open_menu"):

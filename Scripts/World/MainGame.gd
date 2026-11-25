@@ -87,6 +87,12 @@ func _ready() -> void:
 	journal_ov.name = "FolkloreJournalOverlay"
 	add_child(journal_ov)
 
+	# Instantiate Store Evolution & Upgrade Skill Tree ([U])
+	const UpgradeTreeScript := preload("res://Scripts/UI/UpgradeTreeOverlay.gd")
+	var tree_ov: Node = UpgradeTreeScript.new()
+	tree_ov.name = "UpgradeTreeOverlay"
+	add_child(tree_ov)
+
 	LogManager.debug("MainGame", "_ready() END")
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -96,6 +102,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if not get_tree().get_nodes_in_group("minigame_overlay_active").is_empty():
 			return
+		for u_ov in get_tree().get_nodes_in_group("upgrade_tree_overlay"):
+			if u_ov.get("is_open"):
+				return
 		for j_ov in get_tree().get_nodes_in_group("folklore_journal_overlay"):
 			if j_ov.get("is_open"):
 				return

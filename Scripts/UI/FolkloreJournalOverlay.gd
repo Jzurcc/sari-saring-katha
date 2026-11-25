@@ -87,6 +87,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 			if not get_tree().get_nodes_in_group("minigame_overlay_active").is_empty():
 				return
+			for u_ov in get_tree().get_nodes_in_group("upgrade_tree_overlay"):
+				if u_ov.get("is_open"):
+					return
 			get_viewport().set_input_as_handled()
 			open_journal()
 

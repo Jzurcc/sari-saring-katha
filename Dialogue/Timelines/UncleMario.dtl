@@ -1,20 +1,17 @@
 label Call
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Oh hello? What is it again? You need more stock or are we expanding the store?
+	UncleMario: Oh hello? What is it again? Need to restock your shelves?
 elif {Variation} == 2.0:
-	UncleMario: Uy, [i]anak[/i]! Calling Uncle already? [pause=0.4] Don't worry, I've got you covered. What do you need today?
+	UncleMario: Uy, [i]anak[/i]! Calling Uncle already? [pause=0.4] Don't worry, I've got your restock covered. What do you need today?
 else:
-	UncleMario: Hello? [pause=0.8] [shake rate=20 level=10]Yawn...[/shake] [pause=0.7] Oh, hello anak. I was just about to have my second coffee. Tell me what you need so I can get moving.
+	UncleMario: Hello? [pause=0.8] [shake rate=20 level=10]Yawn...[/shake] [pause=0.7] Oh, hello anak. I was just about to have my second coffee. Need a restock?
 - Restock my shelves.
 	[signal arg="mario_open_restock"]
 	UncleMario: Sige, just send me the list and I'll bring it right over!
-- Let's upgrade the store.
-	[signal arg="mario_open_upgrade"]
-	UncleMario: Oho, expanding already? Let's take a look at the upgrade packages!
 - Nevermind, wrong dial!
 	[signal arg="mario_cancel_call"]
-	UncleMario: Haha, okay lang, [i]anak[/i]! Just call me whenever you need anything.
+	UncleMario: Haha, okay lang, [i]anak[/i]! Just call me whenever you need stock.
 [end_timeline]
 
 label Busy

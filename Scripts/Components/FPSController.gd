@@ -131,8 +131,8 @@ func _physics_process(delta: float) -> void:
 		# FOV is now fixed to base_fov (75)
 		camera.fov = base_fov
 		
-		# Automatic Step Up for Stairs / Small Ledges
-		if (StoryManager.current_tier >= 10 or StoryManager.storefront_upgrade_level >= 3) and is_on_floor() and get_slide_collision_count() > 0 and input_dir.length_squared() > 0.01:
+		# Automatic Step Up for Stairs / Small Ledges (after Open Door capstone is unlocked)
+		if StoryManager.storefront_upgrade_level >= 3 and is_on_floor() and get_slide_collision_count() > 0 and input_dir.length_squared() > 0.01:
 			var is_wall = false
 			for i in range(get_slide_collision_count()):
 				var collision = get_slide_collision(i)
