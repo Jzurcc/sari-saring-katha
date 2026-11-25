@@ -32,6 +32,7 @@ var _cooldown: float = 0.0
 var _elapsed: float = 0.0
 var _hit_flash: float = 0.0
 var _miss_flash: float = 0.0
+var _prev_space_down: bool = false
 
 var _sipa_pos: Vector2 = Vector2.ZERO
 var _sipa_vel: Vector2 = Vector2.ZERO
@@ -111,6 +112,7 @@ func open_minigame(_config: Dictionary = {}) -> void:
 func _show_intro() -> void:
 	var vp := _get_vp_size()
 	_phase = "intro"
+	_prev_space_down = Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER)
 	_kicks = 0
 	_cooldown = 0.0
 	_elapsed = 0.0
@@ -177,20 +179,20 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			close_minigame(false, true)
 			return
-		if _phase == "intro" and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
+		if _phase == "intro" and event.keycode == KEY_ENTER:
 			get_viewport().set_input_as_handled()
 			_on_intro_start()
 			return
-		if event.keycode == KEY_SPACE and _phase == "playing":
+		if event.keycode == KEY_SPACE:
 			get_viewport().set_input_as_handled()
-			_attempt_kick()
 
 
 func _attempt_kick() -> void:
 	if _phase != "playing" or _cooldown > 0.0:
 		return
 	var b := _get_bounds()
-	var in_zone := _sipa_pos.y >= float(b["zone_top"]) and _sipa_pos.y <= float(b["zone_bottom"])
+	var half_h := SIPA_SIZE.y * 0.45
+	var in_zone := (_sipa_pos.y + half_h) >= float(b["zone_top"]) and (_sipa_pos.y - half_h) <= float(b["zone_bottom"])
 	if in_zone:
 		_kicks += 1
 		_cooldown = 0.0
@@ -223,6 +225,16 @@ func _attempt_kick() -> void:
 func _process(delta: float) -> void:
 	if not is_open:
 		return
+
+	# Edge-triggered hardware Space check so Dialogic/UI focus can never swallow Spacebar
+	var space_down := Input.is_key_pressed(KEY_SPACE)
+	var space_just_pressed := space_down and not _prev_space_down
+	_prev_space_down = space_down
+	if space_just_pressed:
+		if _phase == "intro":
+			_on_intro_start()
+		elif _phase == "playing":
+			_attempt_kick()
 
 	_hit_flash = maxf(0.0, _hit_flash - delta * 3.5)
 	_miss_flash = maxf(0.0, _miss_flash - delta * 3.0)
@@ -519,7 +531,8 @@ func _draw_field() -> void:
 	_field_draw.draw_line(Vector2(right, 110.0), Vector2(right, floor_y), Color(0.95, 0.82, 0.48, 0.16), 2.0)
 
 	# Bottom kick zone (translucent glowing band across the play perimeter)
-	var in_zone := _phase == "playing" and _sipa_pos.y >= zone_top and _sipa_pos.y <= zone_bottom
+	var half_h := SIPA_SIZE.y * 0.45
+	var in_zone := _phase == "playing" and (_sipa_pos.y + half_h) >= zone_top and (_sipa_pos.y - half_h) <= zone_bottom
 	var zone_col := Color(0.94, 0.76, 0.32, 0.16)
 	var border_col := Color(0.96, 0.80, 0.38, 0.65)
 	if _cooldown > 0.0:
