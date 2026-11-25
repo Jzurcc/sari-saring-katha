@@ -44,6 +44,22 @@ func is_any_open() -> bool:
 
 const LOLO_PILO_MINIGAMES: Array[String] = ["sipa", "teks"]
 
+func _hide_dialogic_for_minigame() -> void:
+	if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
+		Dialogic.paused = true
+		var layout = Dialogic.Styles.get_layout_node()
+		if is_instance_valid(layout) and "visible" in layout:
+			layout.visible = false
+
+
+func _restore_dialogic_after_minigame() -> void:
+	if is_instance_valid(Dialogic):
+		var layout = Dialogic.Styles.get_layout_node()
+		if is_instance_valid(layout) and "visible" in layout:
+			layout.visible = true
+		Dialogic.paused = false
+
+
 func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:
 	if is_any_open():
 		return
@@ -53,18 +69,15 @@ func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:
 	match id:
 		"mosquito", "mosquito_swat", "lamok":
 			_active_id = "mosquito"
-			if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
-				Dialogic.paused = true
+			_hide_dialogic_for_minigame()
 			mosquito_minigame.open_minigame(config)
 		"sipa":
 			_active_id = "sipa"
-			if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
-				Dialogic.paused = true
+			_hide_dialogic_for_minigame()
 			sipa_minigame.open_minigame(config)
 		"teks", "teks_memory":
 			_active_id = "teks"
-			if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
-				Dialogic.paused = true
+			_hide_dialogic_for_minigame()
 			teks_minigame.open_minigame(config)
 		_:
 			LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
@@ -106,8 +119,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
-	if is_instance_valid(Dialogic):
-		Dialogic.paused = false
+	_restore_dialogic_after_minigame()
 	if won:
 		if is_instance_valid(StoryManager):
 			StoryManager.add_player_xp(15, "minigame_" + minigame_id)

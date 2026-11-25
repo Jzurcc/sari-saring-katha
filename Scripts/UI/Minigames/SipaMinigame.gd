@@ -9,7 +9,7 @@ extends CanvasLayer
 signal minigame_finished(won: bool, result: Dictionary)
 
 const TEX_SIPA := "res://Assets/ui/minigames/sipa.png"
-const SIPA_SIZE := Vector2(54.0, 54.0)
+const SIPA_SIZE := Vector2(82.0, 82.0)
 const EARLY_COOLDOWN := 0.50
 const TARGET_KICKS := 12
 
@@ -169,7 +169,7 @@ func _start_countdown() -> void:
 	_kick_lbl.text = "Kicks: 0 / %d" % TARGET_KICKS
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_open:
 		return
 	if event is InputEventKey and event.pressed and not event.is_echo():
@@ -383,6 +383,7 @@ func _build_ui() -> void:
 	# Minimal floating close button top-right
 	var close_btn := Button.new()
 	close_btn.text = "✕"
+	close_btn.focus_mode = Control.FOCUS_NONE
 	close_btn.anchor_left = 1.0
 	close_btn.anchor_right = 1.0
 	close_btn.offset_left = -58
@@ -419,12 +420,12 @@ func _build_ui() -> void:
 	# Intro instructions pop-up
 	_intro_panel = PanelContainer.new()
 	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_intro_panel.custom_minimum_size = Vector2(430, 210)
-	_intro_panel.offset_left = -215
-	_intro_panel.offset_right = 215
-	_intro_panel.offset_top = -105
-	_intro_panel.offset_bottom = 105
-	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 14, 24, 20)
+	_intro_panel.custom_minimum_size = Vector2(540, 265)
+	_intro_panel.offset_left = -270
+	_intro_panel.offset_right = 270
+	_intro_panel.offset_top = -132
+	_intro_panel.offset_bottom = 132
+	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
 	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
 	istyle.set_border_width_all(2)
 	_intro_panel.add_theme_stylebox_override("panel", istyle)
@@ -433,14 +434,14 @@ func _build_ui() -> void:
 
 	var iv := VBoxContainer.new()
 	iv.alignment = BoxContainer.ALIGNMENT_CENTER
-	iv.add_theme_constant_override("separation", 12)
+	iv.add_theme_constant_override("separation", 14)
 	_intro_panel.add_child(iv)
 
 	var ititle := Label.new()
 	ititle.text = "How to Play: Sipa"
 	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ititle.add_theme_font_override("font", UIStyle.FONT_INDER)
-	ititle.add_theme_font_size_override("font_size", 24)
+	ititle.add_theme_font_size_override("font_size", 30)
 	ititle.add_theme_color_override("font_color", Color(1.0, 0.91, 0.64))
 	iv.add_child(ititle)
 
@@ -449,14 +450,17 @@ func _build_ui() -> void:
 	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	idesc.add_theme_font_size_override("font_size", 15)
+	idesc.add_theme_font_size_override("font_size", 20)
 	idesc.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
 	iv.add_child(idesc)
 
 	var start_btn := Button.new()
 	start_btn.text = "Start"
-	start_btn.custom_minimum_size = Vector2(150, 40)
+	start_btn.focus_mode = Control.FOCUS_NONE
+	start_btn.custom_minimum_size = Vector2(170, 46)
 	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
+	start_btn.add_theme_font_size_override("font_size", 20)
 	start_btn.pressed.connect(_on_intro_start)
 	iv.add_child(start_btn)
 
