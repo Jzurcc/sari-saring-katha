@@ -249,7 +249,8 @@ var _char_lookup: Dictionary = {} # resource_path -> CustomerData
 var _game_manager: GameManager = null
 
 # --- Player Level, XP & Tier Progression ---
-const MAX_PLAYER_LEVEL := 10
+const MAX_UNLOCKABLE_TIER := 10
+const MAX_PLAYER_LEVEL := 999
 const PLAYER_XP_THRESHOLDS: Array[int] = [0, 100, 150, 210, 280, 360, 450, 550, 670, 800]
 
 var player_level: int = 1
@@ -261,10 +262,17 @@ var _last_notified_tier: int = 0
 var purchase_counter: int = 0 # Legacy save field kept for backward compatibility
 
 func get_xp_for_next_level(lvl: int = player_level) -> int:
-	if lvl >= MAX_PLAYER_LEVEL:
-		return 0
-	var idx := clampi(lvl, 1, PLAYER_XP_THRESHOLDS.size() - 1)
-	return PLAYER_XP_THRESHOLDS[idx]
+	if lvl < 1:
+		return PLAYER_XP_THRESHOLDS[1]
+	if lvl < PLAYER_XP_THRESHOLDS.size():
+		return PLAYER_XP_THRESHOLDS[lvl]
+	return PLAYER_XP_THRESHOLDS[PLAYER_XP_THRESHOLDS.size() - 1] + (lvl - (PLAYER_XP_THRESHOLDS.size() - 1)) * 140
+
+## Scaling anti-softlock cash bonus awarded on every player level-up (Lv. 2 = ₱30, scales progressively & indefinitely).
+func get_level_up_money_reward(new_level: int) -> float:
+	var step := float(maxi(0, new_level - 2))
+	var raw := (30.0 + step * 10.0) * (1.0 + 0.04 * step)
+	return snapped(raw, 5.0)
 
 func get_xp_multiplier() -> float:
 	var mult := get_permit_xp_multiplier()
@@ -284,30 +292,35 @@ func add_player_xp(base_amount: int, reason: String = "") -> int:
 	if base_amount <= 0:
 		return 0
 	var gained := maxi(1, roundi(float(base_amount) * get_xp_multiplier()))
-	if player_level >= MAX_PLAYER_LEVEL:
-		EventBus.player_xp_changed.emit(player_level, 0, 0, gained, false)
-		return gained
 
 	player_xp += gained
 	var leveled_up := false
-	while player_level < MAX_PLAYER_LEVEL:
+	while true:
 		var needed := get_xp_for_next_level(player_level)
 		if needed <= 0 or player_xp < needed:
 			break
 		player_xp -= needed
 		player_level += 1
 		leveled_up = true
-		if player_level > max_unlocked_tier:
-			max_unlocked_tier = player_level
+		var tier_cap := mini(player_level, MAX_UNLOCKABLE_TIER)
+		if tier_cap > max_unlocked_tier:
+			max_unlocked_tier = tier_cap
 			_pending_tier_advance_source = "LevelUp"
 			_last_tier_unlocked_notification = max_unlocked_tier
-		LogManager.info("StoryManager", "PLAYER LEVEL UP -> Lv. %d! (Unlocked Tier %d & new upgrades)" % [player_level, max_unlocked_tier])
-		EventBus.player_leveled_up.emit(player_level)
-		if _pending_tier_advance_source == "":
-			EventBus.show_notification.emit("Player Level %d!" % player_level, "New store upgrades unlocked!", "purchase")
 
-	if player_level >= MAX_PLAYER_LEVEL:
-		player_xp = 0
+		var level_bonus := get_level_up_money_reward(player_level)
+		if not is_instance_valid(_game_manager):
+			_cache_node_refs()
+		if is_instance_valid(_game_manager) and level_bonus > 0.0:
+			_game_manager.money += level_bonus
+			EventBus.money_changed.emit(_game_manager.money)
+			EventBus.request_sfx.emit("money_gain")
+			record_daily_stat_add("tips_earned", level_bonus)
+
+		LogManager.info("StoryManager", "PLAYER LEVEL UP -> Lv. %d! (+₱%.0f bonus, Max Tier %d)" % [player_level, level_bonus, max_unlocked_tier])
+		EventBus.player_leveled_up.emit(player_level)
+		var sub_msg := "+₱%.0f Level-Up Bonus! New store upgrades unlocked!" % level_bonus if player_level <= MAX_UNLOCKABLE_TIER else "+₱%.0f Level-Up Bonus!" % level_bonus
+		EventBus.show_notification.emit("Player Level %d!" % player_level, sub_msg, "purchase")
 
 	LogManager.info("StoryManager", "Player XP +%d (%s) -> Lv. %d (%d/%d)" % [gained, reason, player_level, player_xp, get_xp_for_next_level()])
 	record_daily_stat_int("xp_earned", gained)
@@ -1495,7 +1508,7 @@ func load_save_data(data: Dictionary) -> void:
 	day = data.get("day", day)
 	current_tier = data.get("current_tier", current_tier)
 	max_unlocked_tier = data.get("max_unlocked_tier", max_unlocked_tier)
-	player_level = clampi(int(data.get("player_level", maxi(1, max_unlocked_tier))), 1, MAX_PLAYER_LEVEL)
+	player_level = maxi(1, int(data.get("player_level", maxi(1, max_unlocked_tier))))
 	player_xp = maxi(0, int(data.get("player_xp", 0)))
 	max_unlocked_tier = maxi(max_unlocked_tier, player_level)
 	EventBus.player_xp_changed.emit(player_level, player_xp, get_xp_for_next_level(), 0, false)

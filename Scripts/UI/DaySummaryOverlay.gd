@@ -1155,7 +1155,7 @@ func _run_sequence() -> void:
 			return
 
 	var needed := maxi(1, StoryManager.get_xp_for_next_level())
-	var xp_ratio := 1.0 if StoryManager.player_level >= StoryManager.MAX_PLAYER_LEVEL else clampf(float(StoryManager.player_xp) / float(needed), 0.0, 1.0)
+	var xp_ratio := clampf(float(StoryManager.player_xp) / float(needed), 0.0, 1.0)
 	if is_instance_valid(_xp_bar_track):
 		_xp_bar_track.visible = true
 		_xp_bar_track.modulate.a = 1.0
