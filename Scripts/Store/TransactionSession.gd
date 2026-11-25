@@ -764,7 +764,7 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 				if st_xp > 0:
 					StoryManager.add_player_xp(st_xp, "Tambayan Smalltalk")
 				if target.customer_data and is_instance_valid(CharacterProgressionManager):
-					CharacterProgressionManager.add_reputation(target.customer_data.resource_path, 10, "smalltalk")
+					CharacterProgressionManager.add_reputation(target.customer_data.resource_path, 7, "smalltalk")
 				target.dialogue_phase = Phase.NONE
 				target.leave_from_lingering()
 

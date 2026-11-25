@@ -198,36 +198,36 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			var eff_step: int = item.current_step - tol
 			var rep_delta: int = 0
 			if eff_step <= -3:
-				rep_delta = 21
-			elif eff_step == -2:
-				rep_delta = 19
-			elif eff_step == -1:
-				rep_delta = 17
-			elif eff_step == 0:
-				rep_delta = 15
-			elif eff_step == 1:
 				rep_delta = 14
-			elif eff_step == 2:
+			elif eff_step == -2:
+				rep_delta = 13
+			elif eff_step == -1:
+				rep_delta = 12
+			elif eff_step == 0:
 				rep_delta = 11
+			elif eff_step == 1:
+				rep_delta = 10
+			elif eff_step == 2:
+				rep_delta = 8
 			elif eff_step == 3:
-				rep_delta = 6
+				rep_delta = 4
 			elif eff_step == 4:
-				rep_delta = -5
+				rep_delta = -4
 			else:
-				rep_delta = -10
+				rep_delta = -8
 			# Cold/Warm fridge bonus/penalty
 			if item.category == "bottle" or item.category == "frozen":
-				rep_delta += (-5 if StoryManager.is_fridge_warm else 5)
+				rep_delta += (-3 if StoryManager.is_fridge_warm else 3)
 			# Favorite category match + first-time discovery!
 			if c_data and (item.category in c_data.get_favorite_categories()):
-				rep_delta += 8
+				rep_delta += 5
 				if CharacterProgressionManager.discover_favorite_category(customer_path, item.category):
-					rep_delta += 12
+					rep_delta += 10
 					var cat_label := StoryManager.get_category_display_name(item.category)
 					var cname := c_data.character_name if c_data.character_name != "" else c_data.get_clean_id().capitalize()
 					EventBus.show_notification.emit(
 						"Favorite Discovered!",
-						"%s loves %s! Logged in Lola's Journal [J] (+12 Rep)" % [cname, cat_label],
+						"%s loves %s! Logged in Lola's Journal [J] (+10 Rep)" % [cname, cat_label],
 						"purchase"
 					)
 			if rep_delta != 0:
