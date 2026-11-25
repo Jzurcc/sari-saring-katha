@@ -120,12 +120,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.keycode:
 			KEY_1:
 				get_viewport().set_input_as_handled()
-				if is_instance_valid(StoryManager):
-					StoryManager.debug_force_next_customer_id = "lolopilo"
-					EventBus.show_notification.emit("Debug Hotkey [1]", "Lolo Pilo queued as the next customer!", "interact")
+				launch_minigame("teks")
 			KEY_2:
 				get_viewport().set_input_as_handled()
 				launch_minigame("mosquito")
+			KEY_3:
+				get_viewport().set_input_as_handled()
+				launch_minigame("sipa")
 			KEY_F6:
 				get_viewport().set_input_as_handled()
 				launch_minigame("mosquito")
