@@ -230,33 +230,66 @@ func _on_reputation_changed(char_path: String, _new_rep: int, delta: int, new_ra
 	_spawn_floating_rep_popup(delta, new_rank, ranked_up)
 
 
+const TEX_REP_ICON: Texture2D = preload("res://Assets/ui/rep.png")
+
+
 func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> void:
-	var lbl := Label3D.new()
-	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lbl.no_depth_test = true
-	lbl.font_size = 42 if ranked_up else 34
-	lbl.outline_size = 10
-	lbl.outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
+	var col: Color
 	if ranked_up:
-		lbl.text = "★ RANK %d! (+%d Rep)" % [new_rank, delta]
-		lbl.modulate = Color(1.0, 0.88, 0.36, 1.0)
+		col = Color(1.0, 0.88, 0.36, 1.0)
 	elif delta > 0:
-		lbl.text = "+%d Rep" % delta
-		lbl.modulate = Color(0.72, 0.98, 0.58, 1.0)
+		col = Color(0.72, 0.98, 0.58, 1.0)
 	else:
-		lbl.text = "%d Rep" % delta
-		lbl.modulate = Color(1.0, 0.44, 0.40, 1.0)
+		col = Color(1.0, 0.44, 0.40, 1.0)
 
 	var base_y := 1.65
 	if customer_data and customer_data.sprite_texture and body_sprite:
 		base_y = (customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale) + 0.10
-	lbl.position = Vector3(randf_range(-0.14, 0.14), base_y, 0.05)
-	add_child(lbl)
 
-	var tw := lbl.create_tween()
-	tw.tween_property(lbl, "position:y", base_y + 0.65, 1.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 1.05).set_delay(0.35)
-	tw.tween_callback(lbl.queue_free)
+	var holder := Node3D.new()
+	holder.position = Vector3(randf_range(-0.14, 0.14), base_y, 0.05)
+	holder.scale = Vector3(0.65, 0.65, 0.65)
+	add_child(holder)
+
+	var icon := Sprite3D.new()
+	icon.texture = TEX_REP_ICON
+	icon.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	icon.shaded = false
+	icon.no_depth_test = true
+	icon.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
+	icon.render_priority = 15
+	icon.pixel_size = 0.00080 if ranked_up else 0.00072
+	icon.offset = Vector2(-115.0, 0.0)
+	icon.modulate = col
+	holder.add_child(icon)
+
+	var lbl := Label3D.new()
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.no_depth_test = true
+	lbl.render_priority = 15
+	lbl.outline_render_priority = 14
+	lbl.font = UIStyle.FONT_INDER
+	lbl.font_size = 42 if ranked_up else 36
+	lbl.outline_size = 10
+	lbl.outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	lbl.offset = Vector2(14.0, 0.0)
+	lbl.modulate = col
+	if ranked_up:
+		lbl.text = "+%d  ★ RANK %d!" % [delta, new_rank]
+	elif delta > 0:
+		lbl.text = "+%d" % delta
+	else:
+		lbl.text = "%d" % delta
+	holder.add_child(lbl)
+
+	var tw := holder.create_tween()
+	tw.tween_property(holder, "scale", Vector3.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(holder, "position:y", base_y + 0.65, 1.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(icon, "modulate:a", 0.0, 0.70).set_delay(0.35)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.70).set_delay(0.35)
+	tw.parallel().tween_property(lbl, "outline_modulate:a", 0.0, 0.70).set_delay(0.35)
+	tw.tween_callback(holder.queue_free)
 
 	# Tactile sprite bounce on positive Rep, subtle red pulse on negative Rep
 	if delta > 0 and is_instance_valid(body_sprite):
