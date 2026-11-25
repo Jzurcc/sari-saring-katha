@@ -75,13 +75,15 @@ func on_customer_arrived(customer: Customer) -> void:
 		generic_char_res.display_name = InventoryManager.current_character_name
 
 
-static func compute_overpriced_refusal_chance(item_data: ItemData) -> float:
+static func compute_overpriced_refusal_chance(item_data: ItemData, customer_data: CustomerData = null) -> float:
 	if item_data == null:
 		return 0.0
 	var tolerance: int = 0
 	if is_instance_valid(StoreEventManager):
 		tolerance = StoreEventManager.get_item_tolerance_offset(item_data)
 	tolerance += StoryManager.get_mayari_tolerance_offset()
+	if customer_data != null and is_instance_valid(CharacterProgressionManager):
+		tolerance += CharacterProgressionManager.get_reputation_tolerance_bonus(customer_data, item_data)
 	var effective_step: int = item_data.current_step - tolerance
 	if effective_step < 2:
 		return 0.0
@@ -125,7 +127,7 @@ func _should_refuse_for_high_price(customer: Customer, context: TransactionConte
 			return false
 	if not _matches_desired_preview(context, offered):
 		return false
-	var chance: float = compute_overpriced_refusal_chance(offered)
+	var chance: float = compute_overpriced_refusal_chance(offered, customer.customer_data)
 	return chance > 0.0 and randf() < chance
 
 
@@ -158,6 +160,8 @@ func _trigger_price_refusal(
 		"error"
 	)
 	StoryManager.record_missed_item(item_data)
+	if customer.customer_data and is_instance_valid(CharacterProgressionManager):
+		CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, -12, "price_refusal")
 
 	# Pick a natural refusal line and play walkout dialogue on the customer
 	var tmpl: String = PRICE_REFUSAL_LINES[randi() % PRICE_REFUSAL_LINES.size()]
@@ -565,6 +569,31 @@ func on_dialogic_signal(argument: String) -> void:
 		_mosquito_choice = "swat"
 	elif argument == "mosquito_choice_sorry":
 		_mosquito_choice = "sorry"
+	elif argument.begins_with("rep:"):
+		# Dialogic choice reputation modifier: "rep:+15", "rep:-10", or "rep:LoloPilo:+15"
+		var payload := argument.substr(4).strip_edges()
+		var target_path := ""
+		var delta_str := payload
+		if payload.find(":") != -1:
+			var parts := payload.split(":", false, 1)
+			var c_data := StoryManager._get_character_data(parts[0].strip_edges())
+			if c_data:
+				target_path = c_data.resource_path
+			delta_str = parts[1].strip_edges()
+		elif is_instance_valid(current_customer) and current_customer.customer_data:
+			target_path = current_customer.customer_data.resource_path
+		if target_path != "" and delta_str.is_valid_int():
+			CharacterProgressionManager.add_reputation(target_path, int(delta_str), "dialogue_choice")
+	elif argument.begins_with("flag:"):
+		# Persistent cross-character world flag: "flag:helped_ana" or "flag:key=value"
+		var fpayload := argument.substr(5).strip_edges()
+		if fpayload.find("=") != -1:
+			var fparts := fpayload.split("=", false, 1)
+			var fval_str := fparts[1].strip_edges().to_lower()
+			var fval: Variant = (false if fval_str == "false" else (true if fval_str == "true" else fparts[1].strip_edges()))
+			CharacterProgressionManager.set_world_flag(fparts[0].strip_edges(), fval)
+		else:
+			CharacterProgressionManager.set_world_flag(fpayload, true)
 	elif argument == "utang_accepted":
 		EventBus.utang_accepted.emit(current_customer)
 	elif argument == "utang_rejected":
@@ -734,6 +763,8 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 				var st_xp := StoryManager.get_bench_smalltalk_xp()
 				if st_xp > 0:
 					StoryManager.add_player_xp(st_xp, "Tambayan Smalltalk")
+				if target.customer_data and is_instance_valid(CharacterProgressionManager):
+					CharacterProgressionManager.add_reputation(target.customer_data.resource_path, 10, "smalltalk")
 				target.dialogue_phase = Phase.NONE
 				target.leave_from_lingering()
 

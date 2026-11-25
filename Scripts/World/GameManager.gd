@@ -178,6 +178,55 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			Dialogic.VAR.set_variable("Global_TipActive", true)
 			LogManager.info("GameManager", "Storefront Curb Appeal Appreciation Tip: +₱%.2f!" % app_tip)
 
+		# Reputation Rank 5+ Perk: +10% Scaling Cash Tip Bonus
+		if not wants_debt and customer_path != "" and is_instance_valid(CharacterProgressionManager):
+			var rep_tip_pct := CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
+			if rep_tip_pct > 0.0:
+				var rep_tip := StoryManager.calc_scaled_tip(base_sale, rep_tip_pct, 2.0, 18.0)
+				tip += rep_tip
+				_last_earning += rep_tip
+
+		# Reputation Gain/Loss from Sale (based on effective pricing step, coldness, and favorite category)
+		if customer_path != "" and is_instance_valid(CharacterProgressionManager):
+			var c_data: CustomerData = StoryManager._get_character_data(customer_path)
+			var tol := 0
+			if is_instance_valid(StoreEventManager):
+				tol += StoreEventManager.get_item_tolerance_offset(item)
+			tol += StoryManager.get_mayari_tolerance_offset()
+			if c_data:
+				tol += CharacterProgressionManager.get_reputation_tolerance_bonus(c_data, item)
+			var eff_step: int = item.current_step - tol
+			var rep_delta: int = 0
+			if eff_step <= -1:
+				rep_delta = 25
+			elif eff_step == 0:
+				rep_delta = 20
+			elif eff_step == 1:
+				rep_delta = 14
+			elif eff_step == 2:
+				rep_delta = 8
+			elif eff_step == 3:
+				rep_delta = -6
+			else:
+				rep_delta = -10
+			# Cold/Warm fridge bonus/penalty
+			if item.category == "bottle" or item.category == "frozen":
+				rep_delta += (-5 if StoryManager.is_fridge_warm else 5)
+			# Favorite category match + first-time discovery!
+			if c_data and (item.category in c_data.get_favorite_categories()):
+				rep_delta += 8
+				if CharacterProgressionManager.discover_favorite_category(customer_path, item.category):
+					rep_delta += 12
+					var cat_label := StoryManager.get_category_display_name(item.category)
+					var cname := c_data.character_name if c_data.character_name != "" else c_data.get_clean_id().capitalize()
+					EventBus.show_notification.emit(
+						"Favorite Discovered!",
+						"%s loves %s! Logged in Lola's Journal [J] (+12 Rep)" % [cname, cat_label],
+						"purchase"
+					)
+			if rep_delta != 0:
+				CharacterProgressionManager.add_reputation(customer_path, rep_delta, "sale")
+
 		StoryManager.record_daily_stat_add("cash_sales", base_sale)
 		if tip > 0.0:
 			StoryManager.record_daily_stat_add("tips_earned", tip)

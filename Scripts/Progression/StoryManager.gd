@@ -1954,8 +1954,12 @@ func _on_customer_satisfied(customer) -> void:
 					record_daily_stat_int("visits_served", 1)
 			else:
 				record_daily_stat_int("buyers_served", 1)
-				# Picky Cravings Omen upside: +18% Bundle Bonus when completing a full 2+ multi-item cash order!
+				# Full 2+ Multi-Item Basket Reputation Bonus (+6 Rep)
 				var ctx_done: TransactionContext = customer.transaction_context
+				if ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
+					if customer.customer_data and is_instance_valid(CharacterProgressionManager):
+						CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, 6, "full_basket")
+				# Picky Cravings Omen upside: +18% Bundle Bonus when completing a full 2+ multi-item cash order!
 				if has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS) and not ctx_done.wants_debt and ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
 					var basket_total := 0.0
 					for dit in ctx_done.delivered_items:

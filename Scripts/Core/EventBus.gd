@@ -115,6 +115,16 @@ signal start_minigame(minigame_id: String, config: Dictionary)
 @warning_ignore("unused_signal")
 signal minigame_completed(minigame_id: String, won: bool, result: Dictionary)
 
+# --- Reputation & Folklore Journal ---
+@warning_ignore("unused_signal")
+signal reputation_changed(character_path: String, new_rep: int, delta: int, new_rank: int, ranked_up: bool)
+@warning_ignore("unused_signal")
+signal favorite_category_discovered(character_path: String, category: String)
+@warning_ignore("unused_signal")
+signal world_flag_changed(flag_name: String, value: Variant)
+@warning_ignore("unused_signal")
+signal journal_toggled(is_open: bool)
+
 # --- Drag & Drop ---
 @warning_ignore("unused_signal")
 signal drag_started(item: DraggableItem)

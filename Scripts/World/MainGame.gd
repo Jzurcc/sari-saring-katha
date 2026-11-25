@@ -75,6 +75,18 @@ func _ready() -> void:
 	minigame_mgr.name = "MinigameOverlayManager"
 	add_child(minigame_mgr)
 
+	# Instantiate Reputation Rank-Up Celebration Toast HUD
+	const RepRankUpScript := preload("res://Scripts/UI/RepRankUpHUD.gd")
+	var rep_hud: Node = RepRankUpScript.new()
+	rep_hud.name = "RepRankUpHUD"
+	add_child(rep_hud)
+
+	# Instantiate Lola's Folklore Scrapbook / Journal ([J])
+	const JournalScript := preload("res://Scripts/UI/FolkloreJournalOverlay.gd")
+	var journal_ov: Node = JournalScript.new()
+	journal_ov.name = "FolkloreJournalOverlay"
+	add_child(journal_ov)
+
 	LogManager.debug("MainGame", "_ready() END")
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -84,6 +96,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if not get_tree().get_nodes_in_group("minigame_overlay_active").is_empty():
 			return
+		for j_ov in get_tree().get_nodes_in_group("folklore_journal_overlay"):
+			if j_ov.get("is_open"):
+				return
 		# Double-check open overlays so Escape closes them instead of opening Pause
 		for ev_ov in get_tree().get_nodes_in_group("events_overlay"):
 			if ev_ov.get("is_open"):

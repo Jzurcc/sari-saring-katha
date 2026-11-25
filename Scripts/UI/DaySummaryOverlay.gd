@@ -667,7 +667,27 @@ func _build_bottom_row() -> HBoxContainer:
 	row.add_child(hl_panel)
 
 	_highlight_nodes.clear()
-	if _highlights.is_empty():
+	var combined_hl: Array[String] = []
+	if is_instance_valid(CharacterProgressionManager) and not CharacterProgressionManager.todays_rep_deltas.is_empty():
+		var ranked_names: PackedStringArray = []
+		var total_rep_gained := 0
+		for cpath in CharacterProgressionManager.todays_rep_deltas.keys():
+			var d: Dictionary = CharacterProgressionManager.todays_rep_deltas[cpath]
+			var delta_val := int(d.get("delta", 0))
+			if delta_val > 0:
+				total_rep_gained += delta_val
+			if bool(d.get("ranked_up", false)):
+				var cd: CustomerData = StoryManager._get_character_data(str(cpath))
+				var cn := cd.character_name if (cd and cd.character_name != "") else str(cpath).get_file().get_basename()
+				ranked_names.append("%s (Rank %d)" % [cn, int(d.get("rank", 1))])
+		if not ranked_names.is_empty():
+			combined_hl.append("Reputation Rank Up: %s" % ", ".join(ranked_names))
+		elif total_rep_gained > 0:
+			combined_hl.append("Earned +%d Reputation across %d neighbor(s)" % [total_rep_gained, CharacterProgressionManager.todays_rep_deltas.size()])
+	for h_txt in _highlights:
+		combined_hl.append(str(h_txt))
+
+	if combined_hl.is_empty():
 		var none_lbl := Label.new()
 		none_lbl.text = "Another honest day behind the counter."
 		none_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
@@ -675,7 +695,7 @@ func _build_bottom_row() -> HBoxContainer:
 		none_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
 		hl_vb.add_child(none_lbl)
 	else:
-		for h_txt in _highlights:
+		for h_txt in combined_hl:
 			var hl := Label.new()
 			hl.text = "★  %s" % h_txt
 			hl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

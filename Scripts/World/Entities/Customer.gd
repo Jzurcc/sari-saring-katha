@@ -143,6 +143,8 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 		_attention_badge.position = Vector3(0.0, badge_y, 0.0)
 		_attention_badge.set_base_y(badge_y)
 		_update_attention_badge()
+		if not EventBus.reputation_changed.is_connected(_on_reputation_changed):
+			EventBus.reputation_changed.connect(_on_reputation_changed)
 
 	if transaction_context and transaction_context.blocks_phone_call:
 		MarioManager.is_mario_physically_present = true
@@ -218,6 +220,53 @@ func trigger_arrival() -> void:
 func _on_motion_enter_finished() -> void:
 	if not is_waiting and not _is_resolving and not is_lingering_visitor and not is_ambient_cameo:
 		arrived_at_counter()
+
+
+func _on_reputation_changed(char_path: String, _new_rep: int, delta: int, new_rank: int, ranked_up: bool) -> void:
+	if is_ambient_cameo or not is_instance_valid(body_sprite) or customer_data == null:
+		return
+	if char_path != customer_data.resource_path or delta == 0:
+		return
+	_spawn_floating_rep_popup(delta, new_rank, ranked_up)
+
+
+func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> void:
+	var lbl := Label3D.new()
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.no_depth_test = true
+	lbl.font_size = 42 if ranked_up else 34
+	lbl.outline_size = 10
+	lbl.outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
+	if ranked_up:
+		lbl.text = "★ RANK %d! (+%d Rep)" % [new_rank, delta]
+		lbl.modulate = Color(1.0, 0.88, 0.36, 1.0)
+	elif delta > 0:
+		lbl.text = "+%d Rep" % delta
+		lbl.modulate = Color(0.72, 0.98, 0.58, 1.0)
+	else:
+		lbl.text = "%d Rep" % delta
+		lbl.modulate = Color(1.0, 0.44, 0.40, 1.0)
+
+	var base_y := 1.65
+	if customer_data and customer_data.sprite_texture and body_sprite:
+		base_y = (customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale) + 0.10
+	lbl.position = Vector3(randf_range(-0.14, 0.14), base_y, 0.05)
+	add_child(lbl)
+
+	var tw := lbl.create_tween()
+	tw.tween_property(lbl, "position:y", base_y + 0.65, 1.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 1.05).set_delay(0.35)
+	tw.tween_callback(lbl.queue_free)
+
+	# Tactile sprite bounce on positive Rep, subtle red pulse on negative Rep
+	if delta > 0 and is_instance_valid(body_sprite):
+		var orig_scale := body_sprite.scale
+		var btw := create_tween()
+		btw.tween_property(body_sprite, "scale", Vector3(orig_scale.x * 1.07, orig_scale.y * 0.94, orig_scale.z), 0.08)
+		btw.tween_property(body_sprite, "scale", Vector3(orig_scale.x * 0.96, orig_scale.y * 1.06, orig_scale.z), 0.11)
+		btw.tween_property(body_sprite, "scale", orig_scale, 0.10)
+	elif delta < 0:
+		pulse_color(Color(1.0, 0.45, 0.40, 1.0), 0.25)
 
 
 func _on_motion_reposition_finished() -> void:

@@ -141,6 +141,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
 	_restore_dialogic_after_minigame()
+	# Award Reputation to the active counter customer (e.g. Lolo Pilo or Mosquito complainant)
+	var spawner := get_tree().get_first_node_in_group("customer_spawner")
+	if spawner and spawner.get("current_customer") and is_instance_valid(spawner.current_customer):
+		var cust = spawner.current_customer
+		if cust.customer_data and is_instance_valid(CharacterProgressionManager):
+			var rep_gain := 15 if won else 8
+			CharacterProgressionManager.add_reputation(cust.customer_data.resource_path, rep_gain, "minigame_" + minigame_id)
 	if won:
 		if is_instance_valid(StoryManager):
 			StoryManager.add_player_xp(15, "minigame_" + minigame_id)
