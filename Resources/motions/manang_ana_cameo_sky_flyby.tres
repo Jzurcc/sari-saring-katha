@@ -9,7 +9,7 @@ local_offset = Vector3(0, 3.6, -5.8)
 duration = 3.4
 transition = 0
 height_arc = 0.65
-target_opacity = 0.96
+target_opacity = 1.0
 opacity_fade_fraction = 0.15
 
 [sub_resource type="Resource" id="step_2"]
