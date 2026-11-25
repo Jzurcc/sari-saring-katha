@@ -1972,7 +1972,7 @@ func _on_customer_satisfied(customer) -> void:
 						_game_manager.money += bundle_bonus
 						EventBus.money_changed.emit(_game_manager.money)
 						record_daily_stat_add("tips_earned", bundle_bonus)
-						EventBus.show_notification.emit("Bundle Bonus!", "+₱%.2f for completing a %d-item order!" % [bundle_bonus, ctx_done.delivered_items.size()], "purchase")
+						EventBus.show_notification.emit("Bundle Bonus!", "+₱%.2f (%d-item order)" % [bundle_bonus, ctx_done.delivered_items.size()], "purchase")
 		
 	# Tutorial Persistence: If this encounter was the guided tutorial, mark it complete now.
 	if customer.transaction_context and customer.transaction_context.is_guided_tutorial:

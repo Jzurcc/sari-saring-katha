@@ -156,7 +156,7 @@ func _trigger_price_refusal(
 	VisualEffectManager.spawn_price_refusal_fx(customer, price)
 	EventBus.show_notification.emit(
 		"Price Refused!",
-		"%s walked out — %s (₱%.2f) was too steep!" % [char_name, item_data.item_name, price],
+		"%s refused %s (₱%.2f)" % [char_name, item_data.item_name, price],
 		"error"
 	)
 	StoryManager.record_missed_item(item_data)

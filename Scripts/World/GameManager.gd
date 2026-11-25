@@ -227,7 +227,7 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 					var cname := c_data.character_name if c_data.character_name != "" else c_data.get_clean_id().capitalize()
 					EventBus.show_notification.emit(
 						"Favorite Discovered!",
-						"%s loves %s! Logged in Lola's Journal [J] (+10 Rep)" % [cname, cat_label],
+						"%s loves %s! (+10 Rep)" % [cname, cat_label],
 						"purchase"
 					)
 			if rep_delta != 0:

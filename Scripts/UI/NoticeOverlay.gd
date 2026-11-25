@@ -3,9 +3,9 @@ extends CanvasLayer
 ## Sleek, minimal rounded-pill toast notification banner for store alerts,
 ## active lunar omens/favors, and purchase confirmations (no boxes/triangles).
 
-const COL_BG := Color(0.068, 0.058, 0.050, 0.94)
-const COL_CREAM := Color(1.0, 0.94, 0.82, 1.0)
-const COL_CREAM_MUTED := Color(0.84, 0.78, 0.68, 0.90)
+const COL_BG := Color(0.068, 0.058, 0.050, 0.95)
+const COL_CREAM := Color(1.0, 0.95, 0.84, 1.0)
+const COL_CREAM_MUTED := Color(0.95, 0.90, 0.80, 0.96)
 const COL_OUTLINE := Color(0.06, 0.045, 0.03, 0.95)
 
 @onready var control: Control = $Control
@@ -41,46 +41,48 @@ func _ready() -> void:
 func _build_banner() -> void:
 	_banner = PanelContainer.new()
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.custom_minimum_size = Vector2(320, 0)
-	_banner_style = UIStyle.create_flat_stylebox(COL_BG, 14, 22, 11)
-	_banner_style.set_border_width_all(1)
-	_banner_style.shadow_color = Color(0.0, 0.0, 0.0, 0.50)
-	_banner_style.shadow_size = 16
+	_banner.custom_minimum_size = Vector2(380, 0)
+	_banner_style = UIStyle.create_flat_stylebox(COL_BG, 16, 26, 14)
+	_banner_style.set_border_width_all(2)
+	_banner_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	_banner_style.shadow_size = 18
 	_banner_style.shadow_offset = Vector2(0, 6)
 	_banner.add_theme_stylebox_override("panel", _banner_style)
 	control.add_child(_banner)
 
 	var hbox := HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 12)
+	hbox.add_theme_constant_override("separation", 14)
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_banner.add_child(hbox)
 
 	_sigil_lbl = Label.new()
 	_sigil_lbl.text = "✦"
 	_sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_sigil_lbl.add_theme_font_size_override("font_size", 22)
+	_sigil_lbl.add_theme_font_size_override("font_size", 28)
 	_sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(_sigil_lbl)
 
 	var col := VBoxContainer.new()
 	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	col.add_theme_constant_override("separation", 1)
+	col.add_theme_constant_override("separation", 2)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(col)
 
 	_title_lbl = Label.new()
 	_title_lbl.add_theme_font_override("font", _bold_font)
-	_title_lbl.add_theme_font_size_override("font_size", 17)
+	_title_lbl.add_theme_font_size_override("font_size", 22)
 	_title_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
-	_title_lbl.add_theme_constant_override("outline_size", 3)
+	_title_lbl.add_theme_constant_override("outline_size", 4)
 	_title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_title_lbl)
 
 	_msg_lbl = Label.new()
 	_msg_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_msg_lbl.add_theme_font_size_override("font_size", 13)
+	_msg_lbl.add_theme_font_size_override("font_size", 17)
 	_msg_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	_msg_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	_msg_lbl.add_theme_constant_override("outline_size", 2)
 	_msg_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_msg_lbl)
 
@@ -154,7 +156,7 @@ func _animate_in(my_session: int) -> void:
 	_anim_tween.tween_property(_banner, "scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_anim_tween.tween_property(_banner, "position:y", 24.0, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-	await get_tree().create_timer(2.6).timeout
+	await get_tree().create_timer(3.2).timeout
 	if is_inside_tree() and my_session == _toast_session:
 		_animate_out(my_session)
 

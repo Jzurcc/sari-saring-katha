@@ -657,51 +657,50 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	if highest_maneki_lvl > StoryManager.maneki_upgrade_level:
 		StoryManager.purchase_maneki_upgrade(highest_maneki_lvl)
 		if spawn_in_tree:
-			EventBus.show_notification.emit("Lucky Waving Cat!", "%s placed — faster customer flow all day!" % highest_maneki_name, "purchase")
+			EventBus.show_notification.emit("Lucky Waving Cat!", "%s — faster customers!" % highest_maneki_name, "purchase")
 		LogManager.info("MarioManager", "Maneki-Neko upgraded to Level %d (%s)" % [highest_maneki_lvl, highest_maneki_name])
 
 	if highest_radio_lvl > StoryManager.radio_upgrade_level:
 		StoryManager.purchase_radio_upgrade(highest_radio_lvl)
 		if spawn_in_tree:
-			EventBus.show_notification.emit("Barangay Radio Upgraded!", "%s tuned in (%d Expected Regulars revealed)." % [highest_radio_name, StoryManager.get_revealed_regular_count()], "purchase")
+			EventBus.show_notification.emit("Radio Upgraded!", "%s (%d Regulars revealed)" % [highest_radio_name, StoryManager.get_revealed_regular_count()], "purchase")
 		LogManager.info("MarioManager", "Barangay Radio upgraded to Level %d (%s)" % [highest_radio_lvl, highest_radio_name])
 
 	if unlock_mario_deals and not StoryManager.has_mario_deals:
 		StoryManager.purchase_mario_deals_upgrade()
 		if spawn_in_tree:
-			EventBus.show_notification.emit("Wholesale Pass Active!", "Uncle Mario's Daily Sulit Deals (-20%) are now unlocked!", "purchase")
+			EventBus.show_notification.emit("Wholesale Pass Active!", "Daily Sulit Deals (-20%) unlocked!", "purchase")
 		LogManager.info("MarioManager", "Uncle Mario's Wholesale Pass unlocked on Mario arrival.")
 
 	if highest_sto_nino_lvl > StoryManager.sto_nino_upgrade_level:
 		StoryManager.purchase_sto_nino_upgrade(highest_sto_nino_lvl)
 		if spawn_in_tree:
-			EventBus.show_notification.emit("Sto. Niño Altar Upgraded!", "%s placed on your altar!" % highest_sto_nino_name, "purchase")
-			EventBus.show_notification.emit("Sto. Niño Devotion Upgraded!", "%s is now active!" % highest_sto_nino_name, "purchase")
+			EventBus.show_notification.emit("Sto. Niño Upgraded!", "%s is now active!" % highest_sto_nino_name, "purchase")
 		LogManager.info("MarioManager", "Sto. Niño upgraded to Level %d (%s)" % [highest_sto_nino_lvl, highest_sto_nino_name])
 
 	if highest_permit_lvl > StoryManager.permit_upgrade_level:
 		StoryManager.purchase_permit_upgrade(highest_permit_lvl)
 		if spawn_in_tree:
 			var pct := int(roundf((StoryManager.get_permit_xp_multiplier() - 1.0) * 100.0))
-			EventBus.show_notification.emit("Business Permit Upgraded!", "%s displayed (+%d%% Player XP)!" % [highest_permit_name, pct], "purchase")
+			EventBus.show_notification.emit("Permit Upgraded!", "%s (+%d%% XP)" % [highest_permit_name, pct], "purchase")
 		LogManager.info("MarioManager", "Business Permit upgraded to Level %d (%s)" % [highest_permit_lvl, highest_permit_name])
 
 	if highest_bench_lvl > StoryManager.bench_upgrade_level:
 		StoryManager.purchase_bench_upgrade(highest_bench_lvl)
 		if spawn_in_tree:
 			var notif_title := "Tambayan Bench Placed!" if highest_bench_lvl == 1 else "Tambayan Upgraded!"
-			EventBus.show_notification.emit(notif_title, "%s is now active outside your shop!" % highest_bench_name, "purchase")
+			EventBus.show_notification.emit(notif_title, "%s is now active!" % highest_bench_name, "purchase")
 		LogManager.info("MarioManager", "Store Bench upgraded to Level %d (%s)" % [highest_bench_lvl, highest_bench_name])
 
 	if highest_storefront_lvl > StoryManager.storefront_upgrade_level:
 		StoryManager.purchase_storefront_upgrade(highest_storefront_lvl)
 		if spawn_in_tree:
 			if highest_storefront_lvl == 1:
-				EventBus.show_notification.emit("Roof Signage Unlocked!", "Paint your signboard anytime via Upgrade Menu or Pause Menu!", "purchase")
+				EventBus.show_notification.emit("Roof Signage Unlocked!", "Paint it via Upgrade or Pause Menu!", "purchase")
 			elif highest_storefront_lvl == 2:
-				EventBus.show_notification.emit("Promo Poster Mounted!", "Paint your poster & add 3+ matching stickers to boost category demand!", "purchase")
+				EventBus.show_notification.emit("Promo Poster Mounted!", "Add 3+ matching stickers to boost demand!", "purchase")
 			else:
-				EventBus.show_notification.emit("The Door is Unlocked!", "A tarnished key fits the lock — click the door anytime to step outside!", "purchase")
+				EventBus.show_notification.emit("Door Unlocked!", "Click the door anytime to step outside!", "purchase")
 		LogManager.info("MarioManager", "Storefront upgraded to Level %d (%s)" % [highest_storefront_lvl, highest_storefront_name])
 
 	# Handle Tier Advancement and Samples
