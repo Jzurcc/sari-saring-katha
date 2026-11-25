@@ -149,16 +149,10 @@ func _trigger_price_refusal(
 	item.show_visuals()
 	item.return_to_start()
 
-	# World & UI Juice
+	# World & UI Juice (let the refusal dialogue & -Rep popup carry the message cleanly)
 	EventBus.request_camera_shake.emit(0.18, 0.22)
 	AudioManager.play_sfx("error")
 	customer.pulse_color(Color(1.0, 0.26, 0.22, 1.0))
-	VisualEffectManager.spawn_price_refusal_fx(customer, price)
-	EventBus.show_notification.emit(
-		"Price Refused!",
-		"%s refused %s (₱%.2f)" % [char_name, item_data.item_name, price],
-		"error"
-	)
 	StoryManager.record_missed_item(item_data)
 	if customer.customer_data and is_instance_valid(CharacterProgressionManager):
 		CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, -12, "price_refusal")
