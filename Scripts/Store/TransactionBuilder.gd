@@ -453,11 +453,12 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 
 	# Utang (Debt)
 	if transaction.transaction_type == TransactionContext.Type.PURCHASE and transaction.customer_data.can_request_utang():
-		transaction.wants_debt = true
+		transaction.wants_debt = randf() < transaction.customer_data.get_utang_chance()
 
 	# Repayment
 	var current_debt: float = sm.customer_debts.get(transaction.customer_data.resource_path, 0.0)
-	if current_debt > 0 and randf() < REPAYMENT_CHANCE:
+	var repay_chance: float = transaction.customer_data.get_repayment_chance() if transaction.customer_data else REPAYMENT_CHANCE
+	if current_debt > 0 and randf() < repay_chance:
 		transaction.is_repaying = true
 		transaction.repayment_amount = current_debt
 
@@ -576,7 +577,7 @@ static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -
 
 	tx.original_count = tx.desired_items.size()
 	if data.can_request_utang():
-		tx.wants_debt = true
+		tx.wants_debt = randf() < data.get_utang_chance()
 	if prefer_hint:
 		var main_item: ItemData = tx.desired_items[0]
 		var final_riddle_chance: float = 1.0 if data.get_clean_id() == "buboy" else sm.riddle_chance

@@ -34,6 +34,10 @@ const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd
 @export var prefers_riddles: bool = false
 ## If true, this customer requests to pay via Utang/debt on purchases (e.g. Manang Ana).
 @export var requests_utang: bool = false
+## Probability (0.0 to 1.0) that a purchase from this customer asks for Utang when requests_utang is true.
+@export_range(0.0, 1.0, 0.05) var utang_chance: float = 0.35
+## Probability (0.0 to 1.0) that this customer repays an active Utang balance on their next visit.
+@export_range(0.0, 1.0, 0.05) var repayment_chance: float = 0.30
 ## If true, this customer spreads rumors about previous customers (e.g. Danilo).
 @export var spreads_rumors: bool = false
 ## If true, generic transactions stay visit-only until reaching the final story chapter (e.g. Danilo).
@@ -85,6 +89,12 @@ func has_riddle_preference() -> bool:
 
 func can_request_utang() -> bool:
 	return requests_utang
+
+func get_utang_chance() -> float:
+	return clampf(utang_chance, 0.0, 1.0)
+
+func get_repayment_chance() -> float:
+	return clampf(repayment_chance, 0.0, 1.0)
 
 func can_spread_rumors() -> bool:
 	return spreads_rumors
