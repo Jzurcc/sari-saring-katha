@@ -45,6 +45,7 @@ var _sipa_sprite: TextureRect
 var _countdown_lbl: Label
 var _kick_lbl: Label
 var _status_lbl: Label
+var _intro_panel: PanelContainer
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
@@ -104,6 +105,28 @@ func open_minigame(_config: Dictionary = {}) -> void:
 	is_open = true
 	visible = true
 	add_to_group("minigame_overlay_active")
+	_show_intro()
+
+
+func _show_intro() -> void:
+	var vp := _get_vp_size()
+	_phase = "intro"
+	_kicks = 0
+	_cooldown = 0.0
+	_elapsed = 0.0
+	_sipa_pos = Vector2(vp.x * 0.5, vp.y * 0.28)
+	_sipa_vel = Vector2.ZERO
+	_sipa_rot = 0.0
+	_sync_sipa_visual()
+	_countdown_lbl.visible = false
+	_result_panel.visible = false
+	_intro_panel.visible = true
+	_kick_lbl.text = "Kicks: 0 / %d" % TARGET_KICKS
+	_status_lbl.text = ""
+
+
+func _on_intro_start() -> void:
+	_intro_panel.visible = false
 	_start_countdown()
 
 
@@ -153,6 +176,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()
 			close_minigame(false, true)
+			return
+		if _phase == "intro" and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
+			get_viewport().set_input_as_handled()
+			_on_intro_start()
 			return
 		if event.keycode == KEY_SPACE and _phase == "playing":
 			get_viewport().set_input_as_handled()
@@ -388,6 +415,50 @@ func _build_ui() -> void:
 	_countdown_lbl.add_theme_constant_override("outline_size", 10)
 	_countdown_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_countdown_lbl)
+
+	# Intro instructions pop-up
+	_intro_panel = PanelContainer.new()
+	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_intro_panel.custom_minimum_size = Vector2(430, 210)
+	_intro_panel.offset_left = -215
+	_intro_panel.offset_right = 215
+	_intro_panel.offset_top = -105
+	_intro_panel.offset_bottom = 105
+	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 14, 24, 20)
+	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
+	istyle.set_border_width_all(2)
+	_intro_panel.add_theme_stylebox_override("panel", istyle)
+	_intro_panel.visible = false
+	_root.add_child(_intro_panel)
+
+	var iv := VBoxContainer.new()
+	iv.alignment = BoxContainer.ALIGNMENT_CENTER
+	iv.add_theme_constant_override("separation", 12)
+	_intro_panel.add_child(iv)
+
+	var ititle := Label.new()
+	ititle.text = "How to Play: Sipa"
+	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ititle.add_theme_font_override("font", UIStyle.FONT_INDER)
+	ititle.add_theme_font_size_override("font_size", 24)
+	ititle.add_theme_color_override("font_color", Color(1.0, 0.91, 0.64))
+	iv.add_child(ititle)
+
+	var idesc := Label.new()
+	idesc.text = "Press Space or Click when the sipa enters the golden zone at the bottom to bounce it back up. Pressing too early triggers a short cooldown. Reach %d kicks to win!" % TARGET_KICKS
+	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
+	idesc.add_theme_font_size_override("font_size", 15)
+	idesc.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
+	iv.add_child(idesc)
+
+	var start_btn := Button.new()
+	start_btn.text = "Start"
+	start_btn.custom_minimum_size = Vector2(150, 40)
+	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start_btn.pressed.connect(_on_intro_start)
+	iv.add_child(start_btn)
 
 	# Result panel
 	_result_panel = PanelContainer.new()

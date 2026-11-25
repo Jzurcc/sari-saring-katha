@@ -58,6 +58,7 @@ var _flipped: Array[Dictionary] = []
 var _root: Control
 var _grid: GridContainer
 var _stats_lbl: Label
+var _intro_panel: PanelContainer
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
@@ -90,6 +91,13 @@ func open_minigame(_config: Dictionary = {}) -> void:
 	visible = true
 	add_to_group("minigame_overlay_active")
 	_start_round()
+	_locked = true
+	_intro_panel.visible = true
+
+
+func _on_intro_start() -> void:
+	_intro_panel.visible = false
+	_locked = false
 
 
 func close_minigame(won: bool = false, emit_result: bool = true) -> void:
@@ -112,9 +120,13 @@ func close_minigame(won: bool = false, emit_result: bool = true) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_open:
 		return
-	if event is InputEventKey and event.pressed and not event.is_echo() and event.keycode == KEY_ESCAPE:
-		get_viewport().set_input_as_handled()
-		close_minigame(false, true)
+	if event is InputEventKey and event.pressed and not event.is_echo():
+		if event.keycode == KEY_ESCAPE:
+			get_viewport().set_input_as_handled()
+			close_minigame(false, true)
+		elif _intro_panel.visible and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
+			get_viewport().set_input_as_handled()
+			_on_intro_start()
 
 
 func _start_round() -> void:
@@ -409,6 +421,50 @@ func _build_ui() -> void:
 	_grid.add_theme_constant_override("h_separation", 20)
 	_grid.add_theme_constant_override("v_separation", 16)
 	board_center.add_child(_grid)
+
+	# Intro instructions pop-up
+	_intro_panel = PanelContainer.new()
+	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_intro_panel.custom_minimum_size = Vector2(430, 200)
+	_intro_panel.offset_left = -215
+	_intro_panel.offset_right = 215
+	_intro_panel.offset_top = -100
+	_intro_panel.offset_bottom = 100
+	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 14, 24, 20)
+	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
+	istyle.set_border_width_all(2)
+	_intro_panel.add_theme_stylebox_override("panel", istyle)
+	_intro_panel.visible = false
+	_root.add_child(_intro_panel)
+
+	var iv := VBoxContainer.new()
+	iv.alignment = BoxContainer.ALIGNMENT_CENTER
+	iv.add_theme_constant_override("separation", 12)
+	_intro_panel.add_child(iv)
+
+	var ititle := Label.new()
+	ititle.text = "How to Play: Teks Memory"
+	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ititle.add_theme_font_override("font", UIStyle.FONT_INDER)
+	ititle.add_theme_font_size_override("font_size", 24)
+	ititle.add_theme_color_override("font_color", Color(1.0, 0.91, 0.64))
+	iv.add_child(ititle)
+
+	var idesc := Label.new()
+	idesc.text = "Click cards to flip them and match all %d pairs of Teks cards before you run out of %d tries!" % [TOTAL_PAIRS, MAX_TRIES]
+	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
+	idesc.add_theme_font_size_override("font_size", 15)
+	idesc.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
+	iv.add_child(idesc)
+
+	var start_btn := Button.new()
+	start_btn.text = "Start"
+	start_btn.custom_minimum_size = Vector2(150, 40)
+	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start_btn.pressed.connect(_on_intro_start)
+	iv.add_child(start_btn)
 
 	# Result panel
 	_result_panel = PanelContainer.new()
