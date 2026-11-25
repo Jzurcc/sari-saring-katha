@@ -12,8 +12,8 @@ const TEX_MOSQUITO_DEAD := "res://Assets/ui/minigames/mosquito/mosquito_dead.png
 const TEX_FIREFLY := "res://Assets/ui/minigames/mosquito/firefly.png"
 const TEX_FIREFLY_DEAD := "res://Assets/ui/minigames/mosquito/firefly_dead.png"
 
-const MOSQUITO_SIZE := Vector2(44.0, 44.0)
-const FIREFLY_SIZE := Vector2(42.0, 42.0)
+const MOSQUITO_SIZE := Vector2(128.0, 128.0)
+const FIREFLY_SIZE := Vector2(122.0, 122.0)
 const TARGET_SCORE := 12
 const MAX_LIVES := 3
 const ROUND_TIME := 25.0
@@ -154,9 +154,9 @@ func _start_round() -> void:
 
 func _clear_bugs() -> void:
 	for b in _bugs:
-		var node: Control = b.get("node")
-		if is_instance_valid(node):
-			node.queue_free()
+		var raw_node = b.get("node")
+		if is_instance_valid(raw_node):
+			(raw_node as Node).queue_free()
 	_bugs.clear()
 
 
@@ -211,12 +211,13 @@ func _process(delta: float) -> void:
 	var bounds := _get_vp_size()
 	for i in range(_bugs.size() - 1, -1, -1):
 		var b: Dictionary = _bugs[i]
-		var node: Control = b["node"]
-		if not is_instance_valid(node):
+		var raw_node = b.get("node")
+		if not is_instance_valid(raw_node):
 			_bugs.remove_at(i)
 			continue
 		if bool(b["dead"]):
 			continue
+		var node: Control = raw_node as Control
 
 		b["age"] = float(b["age"]) + delta
 		var pos: Vector2 = b["pos"]
@@ -227,8 +228,8 @@ func _process(delta: float) -> void:
 
 		# Bounce gently inside the visible screen once they have flown in from the edges
 		var entered: bool = bool(b["entered"])
-		var pad := 36.0
-		var top_pad := 115.0
+		var pad := 68.0
+		var top_pad := 142.0
 		if not entered:
 			if pos.x >= pad and pos.x <= bounds.x - pad and pos.y >= top_pad and pos.y <= bounds.y - pad:
 				b["entered"] = true
@@ -273,14 +274,24 @@ func _spawn_bug(is_firefly: bool) -> void:
 	# Fly in from left or right sides of the screen!
 	var from_left := randf() < 0.5
 	var pos := Vector2(
-		-24.0 if from_left else bounds.x + 24.0,
-		randf_range(135.0, bounds.y - 70.0)
+		-72.0 if from_left else bounds.x + 72.0,
+		randf_range(160.0, bounds.y - 90.0)
 	)
 	var target := Vector2(
 		randf_range(bounds.x * 0.25, bounds.x * 0.75),
-		randf_range(150.0, bounds.y - 100.0)
+		randf_range(175.0, bounds.y - 120.0)
 	)
-	var speed := randf_range(90.0, 145.0) if is_firefly else randf_range(155.0, 240.0)
+	var speed: float
+	if is_firefly:
+		speed = randf_range(75.0, 165.0)
+	else:
+		var roll := randf()
+		if roll < 0.30:
+			speed = randf_range(95.0, 145.0) # Slow drifter
+		elif roll < 0.75:
+			speed = randf_range(180.0, 255.0) # Normal buzz
+		else:
+			speed = randf_range(285.0, 365.0) # Fast dart!
 	var vel := (target - pos).normalized() * speed
 
 	tr.position = pos - sz * 0.5
@@ -333,6 +344,7 @@ func _on_bug_swatted(bug: Dictionary) -> void:
 	tw.tween_property(tr, "position:y", tr.position.y + 42.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.parallel().tween_property(tr, "modulate:a", 0.0, 0.35)
 	tw.tween_callback(func():
+		bug["node"] = null
 		if is_instance_valid(tr):
 			tr.queue_free()
 	)
@@ -381,7 +393,7 @@ func _refresh_hud() -> void:
 	for i in range(MAX_LIVES):
 		var icon := TextureRect.new()
 		icon.texture = _tex_firefly if i < _lives else _tex_firefly_dead
-		icon.custom_minimum_size = Vector2(26, 26)
+		icon.custom_minimum_size = Vector2(44, 44)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.modulate = Color(1.0, 0.98, 0.82, 1.0) if i < _lives else Color(0.55, 0.45, 0.45, 0.40)
