@@ -346,7 +346,10 @@ func _refresh_inspector() -> void:
 		_insp_level_lbl.text = "Available to Unlock" if state.begins_with("available") else "Locked"
 		_insp_level_lbl.add_theme_color_override("font_color", COL_TEXT if state.begins_with("available") else COL_MUTED)
 
-	_insp_desc_lbl.text = item.description if (item != null and item.description != "") else "Store evolution upgrade."
+	var desc_text := str(item.get_meta("upgrade_desc", "")) if item != null else ""
+	if desc_text == "" and str(def["kind"]) == "tier":
+		desc_text = "Expands your sari-sari store to Tier %d and unlocks new catalog stock." % int(def["tier"])
+	_insp_desc_lbl.text = desc_text if desc_text != "" else "Store evolution upgrade."
 
 	# Prerequisites checklist
 	for ch in _insp_prereqs_box.get_children():
