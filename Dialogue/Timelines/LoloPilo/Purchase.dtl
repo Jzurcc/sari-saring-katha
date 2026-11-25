@@ -1,0 +1,52 @@
+label Greeting
+if {Transaction_GreetingVar} <= 50:
+	LoloPilo: Ho-ho! Tabi-tabi po? Haha, no need, apo—I'm the one visiting your tindahan!
+else:
+	LoloPilo: Good day, apo! My old knees brought me all the way from the mango mound for a little merienda.
+
+if {Global_HighPriceActive}:
+	LoloPilo: Aba, apo... prices climbed higher than my old bamboo stilts! Easy on an old duwende's coins, ha?
+
+[end_timeline]
+
+label Talk
+if {Transaction_TalkVar} <= 50:
+	LoloPilo: Do you have a {Transaction_ItemWants} tucked away on those shelves, apo?
+else:
+	LoloPilo: I've been craving a {Transaction_ItemWants} all afternoon. Got one for old Lolo Pilo?
+- Just a moment, Lolo!
+	LoloPilo: Take your time, apo. No rush at all—I've lived a hundred years, I can wait a minute!
+	[end_timeline]
+- Sorry Lolo, we're out of stock.
+	LoloPilo: Ayy, sayang! No worries, apo. I'll wobble back another time!
+	[signal arg="refuse_service"]
+	[signal arg="story_success"]
+	[end_timeline]
+
+label Partial
+LoloPilo: Salamat, apo! Now if you could also hand over a {Transaction_ItemWants}, I'll be set!
+[end_timeline]
+
+label Satisfy
+if {Transaction_SatisfyVar} <= 50:
+	LoloPilo: Ah, just the thing! You run a fine tindahan, apo. May your coin jar never run dry!
+else:
+	LoloPilo: Ho-ho, perfect! Nothing beats a neighborhood shop with good heart. Salamat, apo!
+if {Global_TipActive}:
+	LoloPilo: Aba, such a fair price! Keep a little lucky change from an old duwende!
+[end_timeline]
+
+label WrongItem
+if {Transaction_WrongItemVar} <= 50:
+	LoloPilo: Hehe, my eyes may be old, apo, but that's not what I asked for!
+else:
+	LoloPilo: Ay, naku! Wrong pouch, apo—I was hoping for something else!
+[end_timeline]
+
+label PriceRefusal
+LoloPilo: Naku po, apo! Even the gold under my punso won't stretch for that price. Maybe next time!
+[end_timeline]
+
+label WarmDrink
+LoloPilo: Ayy, it's lukewarm, apo! Still, I won't let it go to waste.
+[end_timeline]

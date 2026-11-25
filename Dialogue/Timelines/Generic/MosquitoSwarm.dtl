@@ -1,0 +1,7 @@
+Customer: There's too many mosquitos here!
+- Let me swat those pests!
+	[signal arg="mosquito_choice_swat"]
+	[end_timeline]
+- Sorry, I can't do anything about it.
+	[signal arg="mosquito_choice_sorry"]
+	[end_timeline]

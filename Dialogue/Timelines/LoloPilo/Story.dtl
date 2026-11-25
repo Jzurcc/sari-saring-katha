@@ -1,0 +1,86 @@
+label Greeting
+if {Transaction_Chapter} == 0.0:
+	# Chapter 1: First meeting — specifically invites you to play Sipa!
+	LoloPilo: Ho-ho! Easy there, apo—no need to squint! Yes, I'm a duwende, and yes, I'm older than that mango tree down the road.
+	LoloPilo: Call me Lolo Pilo. I used to watch your lola run this counter back when kids still filled the street with laughter every afternoon.
+	LoloPilo: You look like you've been standing behind that register all day! Come on—let's wake up those reflexes.
+	LoloPilo: I brought my lucky sipa! Care for a quick round with an old champion?
+	- Let's play Sipa, Lolo!
+		LoloPilo: Ho-ho, that's the spirit! Watch the bottom line, don't swing too early, and keep it flying!
+		[signal arg="minigame:sipa"]
+		LoloPilo: Haha! Not bad at all, apo! My old bones feel twenty years lighter already.
+	- Maybe next time, Lolo.
+		LoloPilo: Ayy, busy shopkeeper! Fair enough, apo—I'll catch you for a round another day!
+	LoloPilo: I'll be dropping by whenever I feel like a match. See you soon, apo!
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 1.0:
+	# Chapter 2: Subsequent story arcs invite you to play without naming a specific minigame
+	LoloPilo: Magandang araw, apo! I was sorting through my little wooden chest under the punso and found my favorite old pastime.
+	LoloPilo: The street gets so quiet these days... everyone's staring at tiny screens instead of laughing together!
+	LoloPilo: Spare a minute for an old duwende? Let's play a quick game right here at the counter!
+	- Sure, Lolo! Let's play!
+		LoloPilo: Ho-ho! Now we're talking! Show me what you've got, apo!
+		[signal arg="minigame:lolo_pilo_random"]
+		LoloPilo: Haha, what a match! Nothing beats a little friendly competition!
+	- Sorry Lolo, I'm swamped right now.
+		LoloPilo: No harm done, apo. Duty first! Keep those shelves neat for me, ha?
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 2.0:
+	# Chapter 3: Sharing stories about the old barangay
+	LoloPilo: Ho-ho! Look at your tindahan, apo—always warm, always welcoming.
+	LoloPilo: You know why duwendes like me stay near shops like yours? Because laughter is better than gold.
+	LoloPilo: Come on, take a short breather from counting coins. Up for another game with Lolo Pilo?
+	- Always ready, Lolo!
+		LoloPilo: Hehe! Don't go easy on me just because of my beard!
+		[signal arg="minigame:lolo_pilo_random"]
+		LoloPilo: Bravo, apo! That brought back forty years of good memories in one minute!
+	- Let's play another day, Lolo.
+		LoloPilo: Alright, alright—save your energy for the rush, apo!
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 3.0:
+	# Chapter 4: Friendly rivalry
+	LoloPilo: Apo! I've been practicing since sunrise—even the chickens by the fence were cheering me on!
+	LoloPilo: I refuse to let a youngster outshine the undisputed barangay legend.
+	LoloPilo: Clear a little corner on the counter—care for a rematch?
+	- Bring it on, Lolo Pilo!
+		LoloPilo: Ho-ho! That's what I like to hear! Let's begin!
+		[signal arg="minigame:lolo_pilo_random"]
+		LoloPilo: Whew! You really keep me on my toes, apo. Best rival I've had in decades!
+	- I'll have to pass today, Lolo.
+		LoloPilo: Hmph! Ducking the champion, eh? Hehe, I'll let you off the hook today!
+	[signal arg="story_success"]
+	[end_timeline]
+
+elif {Transaction_Chapter} == 4.0:
+	# Chapter 5: Passing the torch
+	LoloPilo: You know, apo... a lot of the older spirits worry that Karimlan is forgetting how to play.
+	LoloPilo: That everything is just debt, bills, and hurrying home before dark.
+	LoloPilo: Whenever you stop to play a silly little game with an old duwende, you remind the whole block it's okay to smile.
+	LoloPilo: One more round for good luck, apo?
+	- Of course, Lolo!
+		LoloPilo: Ho-ho! Let's make it a good one!
+		[signal arg="minigame:lolo_pilo_random"]
+		LoloPilo: Splendid! You've got the heart of a true barangay champion, apo.
+	- Maybe later, Lolo.
+		LoloPilo: Whenever you're ready, apo. My pouch of games is always open.
+	[signal arg="story_success"]
+	[end_timeline]
+
+else:
+	# Chapter 6+: Warm repeatable finale / hangout game
+	LoloPilo: Ho-ho, my favorite opponent! The sun feels kinder whenever I stop by your tindahan.
+	LoloPilo: What do you say—one quick game to keep the good luck rolling?
+	- Let's play, Lolo!
+		LoloPilo: That's my apo! Ready... set... go!
+		[signal arg="minigame:lolo_pilo_random"]
+		LoloPilo: Haha! Always a joy, apo. May good fortune guard your shelves!
+	- Just chatting today, Lolo.
+		LoloPilo: Even just a hello from you is a prize in itself, apo. Take care!
+	[signal arg="story_success"]
+	[end_timeline]

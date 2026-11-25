@@ -35,6 +35,10 @@ extends Resource
 @export var extra_counter_slots: int = 0
 ## Bonus chance for customers to linger outside at the tambayan.
 @export var linger_chance_bonus: float = 0.0
+## Global price tolerance offset applied to ALL items (e.g. -1 during Mosquito Swarm).
+@export var global_tolerance_offset: int = 0
+## If true, excluded from random morning daily rolls (triggered by special encounters only).
+@export var excluded_from_daily_roll: bool = false
 
 func has_target_items() -> bool:
 	return not affected_categories.is_empty() or not affected_items.is_empty()
@@ -128,11 +132,17 @@ func build_stat_rows() -> Array[Dictionary]:
 			"value": ("+%d%%" % int(roundf(linger_chance_bonus * 100.0))),
 			"tone": "pos",
 		})
+	if global_tolerance_offset != 0:
+		rows.append({
+			"label": "All-Item Price Tolerance:",
+			"value": ("%+d" % global_tolerance_offset),
+			"tone": "pos" if global_tolerance_offset > 0 else "neg",
+		})
 	return rows
 
 func get_keywords() -> Array[String]:
 	var kws: Array[String] = []
-	if has_target_items() and tolerance_offset != 0:
+	if (has_target_items() and tolerance_offset != 0) or global_tolerance_offset != 0:
 		kws.append("price_tolerance")
 	if not is_equal_approx(foot_traffic_scale, 1.0):
 		kws.append("foot_traffic")

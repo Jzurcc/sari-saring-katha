@@ -1216,8 +1216,16 @@ func get_unplaced_containers_for_tier(tier: int) -> Array[ItemData]:
 	preload("res://Resources/customers/Sarimanok.tres"),
 	preload("res://Resources/customers/Danilo.tres"),
 	preload("res://Resources/customers/Brahim.tres"),
-	preload("res://Resources/customers/Rodel.tres")
+	preload("res://Resources/customers/Rodel.tres"),
+	preload("res://Resources/customers/LoloPilo.tres")
 ]
+
+# --- 4PM+ Daily Mosquito Swarm Encounter (Once per day) ---
+const MOSQUITO_START_HOUR := 16.0
+const MOSQUITO_HOURLY_CHANCE := 0.35
+var mosquito_swarm_pending: bool = false
+var mosquito_swarm_triggered_today: bool = false
+var _last_mosquito_check_hour: int = -1
 
 func _ready() -> void:
 	LogManager.info("StoryManager", "StoryManager._ready() START")
@@ -1249,9 +1257,30 @@ func _cache_node_refs() -> void:
 func _process(_delta: float) -> void:
 	if not active_blessing_cards.is_empty() and not sto_nino_blessing_all_day:
 		check_sto_nino_blessing_expiry()
+	_check_hourly_mosquito_swarm()
+
+func _check_hourly_mosquito_swarm() -> void:
+	if day <= 1 or mosquito_swarm_triggered_today or mosquito_swarm_pending:
+		return
+	if clock == null:
+		return
+	var cur_h := clock.get_effective_display_time()
+	if cur_h < MOSQUITO_START_HOUR:
+		return
+	var hr_bucket := int(floorf(cur_h))
+	if hr_bucket == _last_mosquito_check_hour:
+		return
+	_last_mosquito_check_hour = hr_bucket
+	if randf() < MOSQUITO_HOURLY_CHANCE:
+		mosquito_swarm_pending = true
+		mosquito_swarm_triggered_today = true
+		LogManager.info("StoryManager", "4PM+ Mosquito Swarm triggered at %d:00! Next customer will remark on mosquitoes." % hr_bucket)
 
 func _on_day_started(new_day: int) -> void:
 	LogManager.info("StoryManager", "StoryManager._on_day_started(%d) CALLED" % new_day)
+	mosquito_swarm_pending = false
+	mosquito_swarm_triggered_today = false
+	_last_mosquito_check_hour = -1
 	_cache_node_refs()
 	day = new_day
 	has_mayari_visited = false

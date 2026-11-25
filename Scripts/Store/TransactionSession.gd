@@ -12,7 +12,8 @@ enum Phase {
 	SOCIAL_VISIT,
 	SMALLTALK,
 	WRONG_ITEM,
-	REPAYMENT
+	REPAYMENT,
+	MOSQUITO_PREAMBLE
 }
 
 var phase: Phase = Phase.NONE
@@ -22,6 +23,7 @@ var guest_customer: Customer = null
 var _pending_dismiss: bool = false
 var _is_partial_success: bool = false
 var _greeting_interrupted: bool = false
+var _mosquito_choice: String = ""
 var _switching_customer_dialogue: bool = false
 var _switch_session_id: int = 0
 var _current_timeline_path: String = ""
@@ -214,6 +216,20 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 			start_dialogue(st_timeline, customer, Phase.SMALLTALK, "Smalltalk")
 		else:
 			start_dialogue("res://Dialogue/Timelines/Generic/Smalltalk.dtl", customer, Phase.SMALLTALK, "Smalltalk")
+		return
+
+	# 4PM+ Mosquito Swarm pre-greeting remark (once per day)
+	if is_instance_valid(StoryManager) and StoryManager.mosquito_swarm_pending \
+			and not customer.has_been_greeted \
+			and not customer.is_returning_for_smalltalk \
+			and customer.customer_data and not customer.customer_data.is_collector() \
+			and not customer.transaction_context.is_nightly_collection \
+			and not customer.transaction_context.is_guided_tutorial:
+		StoryManager.mosquito_swarm_pending = false
+		_mosquito_choice = ""
+		phase = Phase.MOSQUITO_PREAMBLE
+		customer.dialogue_phase = Phase.MOSQUITO_PREAMBLE
+		start_dialogue("res://Dialogue/Timelines/Generic/MosquitoSwarm.dtl", customer, Phase.MOSQUITO_PREAMBLE)
 		return
 
 	# Repayment preamble check
@@ -545,6 +561,10 @@ func on_dialogic_signal(argument: String) -> void:
 	elif argument == "event_announced":
 		if is_instance_valid(StoreEventManager):
 			StoreEventManager.mark_event_announced()
+	elif argument == "mosquito_choice_swat":
+		_mosquito_choice = "swat"
+	elif argument == "mosquito_choice_sorry":
+		_mosquito_choice = "sorry"
 	elif argument == "utang_accepted":
 		EventBus.utang_accepted.emit(current_customer)
 	elif argument == "utang_rejected":
@@ -741,6 +761,30 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 				target.dialogue_phase = Phase.NONE
 				if target.transaction_context:
 					EventBus.customer_order_updated.emit(target.get_order_hud_key(), target.transaction_context.desired_items, target.transaction_context.is_riddle)
+
+		Phase.MOSQUITO_PREAMBLE:
+			var choice := _mosquito_choice
+			_mosquito_choice = ""
+			if is_instance_valid(target):
+				target.dialogue_phase = Phase.NONE
+			if choice == "swat":
+				var on_done: Callable
+				on_done = func(mg_id: String, won: bool, _res: Dictionary):
+					if mg_id != "mosquito":
+						return
+					if EventBus.minigame_completed.is_connected(on_done):
+						EventBus.minigame_completed.disconnect(on_done)
+					if not won and is_instance_valid(StoreEventManager):
+						StoreEventManager.trigger_special_event("mosquito_swarm")
+					if is_instance_valid(target) and target.is_waiting:
+						on_customer_clicked(target, false)
+				EventBus.minigame_completed.connect(on_done)
+				EventBus.start_minigame.emit("mosquito", {})
+			else:
+				if is_instance_valid(StoreEventManager):
+					StoreEventManager.trigger_special_event("mosquito_swarm")
+				if is_instance_valid(target) and target.is_waiting:
+					on_customer_clicked(target, false)
 
 		Phase.WRONG_ITEM, Phase.TALK:
 			if is_instance_valid(target):

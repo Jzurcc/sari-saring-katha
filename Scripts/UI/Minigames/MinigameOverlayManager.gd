@@ -42,19 +42,29 @@ func is_any_open() -> bool:
 		or (is_instance_valid(teks_minigame) and teks_minigame.is_open)
 
 
+const LOLO_PILO_MINIGAMES: Array[String] = ["sipa", "teks"]
+
 func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:
 	if is_any_open():
 		return
 	var id := minigame_id.strip_edges().to_lower()
+	if id == "lolo_pilo_random" or id == "random":
+		id = LOLO_PILO_MINIGAMES[randi() % LOLO_PILO_MINIGAMES.size()]
 	match id:
 		"mosquito", "mosquito_swat", "lamok":
 			_active_id = "mosquito"
+			if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
+				Dialogic.paused = true
 			mosquito_minigame.open_minigame(config)
 		"sipa":
 			_active_id = "sipa"
+			if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
+				Dialogic.paused = true
 			sipa_minigame.open_minigame(config)
 		"teks", "teks_memory":
 			_active_id = "teks"
+			if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
+				Dialogic.paused = true
 			teks_minigame.open_minigame(config)
 		_:
 			LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
@@ -86,6 +96,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
+	if is_instance_valid(Dialogic):
+		Dialogic.paused = false
 	if won:
 		if is_instance_valid(StoryManager):
 			StoryManager.add_player_xp(15, "minigame_" + minigame_id)

@@ -1,0 +1,21 @@
+{
+"@path": "res://addons/dialogic/Resources/character.gd",
+"@subpath": NodePath(""),
+&"_translation_id": "",
+&"color": Color(0.88, 0.72, 0.34, 1),
+&"custom_info": {
+"prefix": "",
+"sound_mood_default": "",
+"sound_moods": {},
+"style": "FollowBubble",
+"suffix": ""
+},
+&"default_portrait": "",
+&"description": "A cheerful, competitive old Duwende who loves classic Filipino street games.",
+&"display_name": "Lolo Pilo",
+&"mirror": false,
+&"nicknames": ["Pilo", "Lolo"],
+&"offset": Vector2(0, 0),
+&"portraits": {},
+&"scale": 1.0
+}

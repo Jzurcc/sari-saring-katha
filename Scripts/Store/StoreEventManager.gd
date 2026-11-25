@@ -64,7 +64,10 @@ func roll_daily_events() -> void:
 	_daily_encounter_count = 0
 	_has_rolled_for_day = true
 
-	var pool: Array = _available_events.values().duplicate()
+	var pool: Array = []
+	for ev in _available_events.values():
+		if ev is StoreEventData and not ev.excluded_from_daily_roll:
+			pool.append(ev)
 	if pool.is_empty() or (is_instance_valid(StoryManager) and StoryManager.day <= 1):
 		LogManager.info("StoreEventManager", "Quiet day (Day 1 or no events configured).")
 		events_changed.emit(get_active_events())
@@ -105,7 +108,7 @@ func roll_bonus_slots_for_radio_upgrade() -> void:
 		return
 	var pool: Array = []
 	for ev in _available_events.values():
-		if not _active_events.has(ev):
+		if ev is StoreEventData and not ev.excluded_from_daily_roll and not _active_events.has(ev):
 			pool.append(ev)
 	pool.shuffle()
 	while _active_events.size() < max_slots and not pool.is_empty():
@@ -241,6 +244,12 @@ func get_item_demand_multiplier(item: ItemData) -> float:
 	return multiplier
 
 ## Gameplay modifier: applies to ALL active events (even if not yet revealed by Radio).
+func get_global_tolerance_offset() -> int:
+	var offset := 0
+	for event in _active_events:
+		offset += event.global_tolerance_offset
+	return offset
+
 func get_item_tolerance_offset(item: ItemData) -> int:
 	if not item:
 		return 0
@@ -248,7 +257,24 @@ func get_item_tolerance_offset(item: ItemData) -> int:
 	for event in _active_events:
 		if event.affects_item(item):
 			offset = maxi(offset, event.tolerance_offset)
-	return offset
+	return offset + get_global_tolerance_offset()
+
+## Activates and immediately reveals a special encounter event (e.g. Mosquito Swarm).
+func trigger_special_event(event_id: String) -> bool:
+	if not _available_events.has(event_id):
+		return false
+	var ev: StoreEventData = _available_events[event_id] as StoreEventData
+	if ev == null:
+		return false
+	if not _active_events.has(ev):
+		_active_events.append(ev)
+	if not _revealed_event_ids.has(ev.event_id):
+		_revealed_event_ids.append(ev.event_id)
+	events_changed.emit(get_active_events())
+	EventBus.restock_catalog_refresh.emit()
+	EventBus.show_notification.emit("New Event: %s" % ev.event_name, "All-Item Price Tolerance -1 for the rest of the day.", "error")
+	LogManager.info("StoreEventManager", "Triggered special event: %s" % ev.event_name)
+	return true
 
 func get_foot_traffic_time_scale() -> float:
 	var scale := 1.0

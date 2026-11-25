@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="CustomerData" format=3]
+
+[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo.dch" id="1_dch"]
+[ext_resource type="AudioStream" path="res://Audio/DialogueBlips/LoloPilo.wav" id="1_blip"]
+[ext_resource type="Script" path="res://Scripts/Data/CustomerData.gd" id="2_script"]
+[ext_resource type="Script" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
+[ext_resource type="Texture2D" path="res://Assets/characters/sprites/LoloPilo.png" id="4_sprite"]
+[ext_resource type="Script" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo/Purchase.dtl" id="pilo_purchase"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo/Visit.dtl" id="pilo_visit"]
+[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo/Story.dtl" id="pilo_story"]
+[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The 1968 Sipa Champ"
+categories = null
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Pastimes from the Punso"
+categories = null
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Better Than Gold"
+categories = null
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Barangay Rivalry"
+categories = null
+
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Never Forget How to Play"
+categories = null
+
+[sub_resource type="Resource" id="chapter_5"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Champion of Karimlan"
+categories = null
+
+[sub_resource type="Resource" id="arc_0"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 1: Street Games & Old Stories"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("pilo_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("pilo_visit")])
+
+[resource]
+script = ExtResource("2_script")
+character_name = "Lolo Pilo"
+dialogic_character = ExtResource("1_dch")
+sprite_texture = ExtResource("4_sprite")
+sprite_scale = 0.36
+dialogue_blip_sound = ExtResource("1_blip")
+dialogue_blip_volume = -6.0
+unlock_tier = 1
+max_story_chapters = 6
+favorite_categories = Array[String](["candy", "snack", "sachet"])
+story_timeline = ExtResource("pilo_story")
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0")])
+metadata/_custom_type_script = "res://Scripts/Data/CustomerData.gd"

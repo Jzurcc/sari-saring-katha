@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "mosquito_swarm"
+event_name = "Mosquito Swarm"
+description = "Thick dusk mosquitoes are buzzing all around the tindahan! Customers are irritable and less forgiving of markups for the rest of the day."
+rumor_text = "Whew, boss—the lamok are biting hard out here! Folks are losing patience fast around the counter."
+icon_path = "res://Assets/ui/minigames/mosquito/mosquito.png"
+affected_categories = Array[String]([])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.0
+tolerance_offset = 0
+global_tolerance_offset = -1
+excluded_from_daily_roll = true
