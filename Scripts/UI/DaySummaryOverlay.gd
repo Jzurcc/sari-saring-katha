@@ -790,6 +790,7 @@ func _make_condition_diamond(info: Dictionary) -> Control:
 	)
 
 	holder.mouse_entered.connect(func():
+		EventBus.request_sfx.emit("ui_hover")
 		var tw := holder.create_tween()
 		tw.tween_property(holder, "scale", Vector2(1.12, 1.12), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_show_hover_card(info)
@@ -1049,13 +1050,13 @@ func _animate_stat_entry(entry: Dictionary) -> void:
 
 	_grow_frame_to_fit(0.16)
 	# Reveal the row name first with a soft fade-in
+	EventBus.request_sfx.emit("ui_hover")
 	var rtw := create_tween()
 	rtw.tween_property(row, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
 	await rtw.finished
 	if not is_inside_tree():
 		return
 
-	EventBus.request_sfx.emit("interact")
 	if absf(target) > 0.01:
 		var dur := 0.34 if is_bold else 0.24
 		var tw := create_tween()
@@ -1066,6 +1067,15 @@ func _animate_stat_entry(entry: Dictionary) -> void:
 		await tw.finished
 		if not is_inside_tree():
 			return
+		# Distinct audio cue when the final value lands
+		if is_bold:
+			EventBus.request_sfx.emit("money_gain" if target >= 0.0 else "money_decrease")
+		elif prefix.begins_with("-") or target < 0.0:
+			EventBus.request_sfx.emit("money_decrease")
+		elif prefix.begins_with("+"):
+			EventBus.request_sfx.emit("pickup")
+		else:
+			EventBus.request_sfx.emit("interact")
 		# Subtle scale pop on final landed number
 		lbl.pivot_offset = Vector2(lbl.size.x, lbl.size.y * 0.5)
 		var pop := create_tween()
@@ -1074,6 +1084,7 @@ func _animate_stat_entry(entry: Dictionary) -> void:
 		pop.tween_property(lbl, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_SINE)
 		await pop.finished
 	else:
+		EventBus.request_sfx.emit("interact")
 		lbl.text = _format_val(0.0, prefix, suffix, is_int)
 		await get_tree().create_timer(0.08).timeout
 
@@ -1087,6 +1098,7 @@ func _run_sequence() -> void:
 		_mayari_portrait.offset_left = 78.0
 		_mayari_portrait.offset_right = 78.0
 
+	EventBus.request_sfx.emit("tab_switch")
 	var intro := create_tween()
 	intro.tween_property(_backdrop, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
 	intro.parallel().tween_property(_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
@@ -1130,6 +1142,7 @@ func _run_sequence() -> void:
 	if _skip_requested:
 		_perf_card.modulate.a = 1.0
 	else:
+		EventBus.request_sfx.emit("tab_switch")
 		var ptw := create_tween()
 		ptw.tween_property(_perf_card, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 		await ptw.finished
@@ -1152,6 +1165,7 @@ func _run_sequence() -> void:
 		if _skip_requested:
 			_xp_bar_fill.anchor_right = xp_ratio
 		elif xp_ratio > 0.005:
+			EventBus.request_sfx.emit("pickup")
 			var xtw := create_tween()
 			xtw.tween_property(_xp_bar_fill, "anchor_right", xp_ratio, 0.36).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 			await xtw.finished
@@ -1175,6 +1189,7 @@ func _run_sequence() -> void:
 	if _skip_requested:
 		_bottom_row.modulate.a = 1.0
 	else:
+		EventBus.request_sfx.emit("tab_switch")
 		var btw := create_tween()
 		btw.tween_property(_bottom_row, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 		await btw.finished
@@ -1189,7 +1204,7 @@ func _run_sequence() -> void:
 			d_node.scale = Vector2.ONE
 		else:
 			d_node.scale = Vector2(0.55, 0.55)
-			EventBus.request_sfx.emit("interact")
+			EventBus.request_sfx.emit("pickup")
 			var dtw := create_tween().set_parallel(true)
 			dtw.tween_property(d_node, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
 			dtw.tween_property(d_node, "scale", Vector2.ONE, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -1220,7 +1235,7 @@ func _run_sequence() -> void:
 		else:
 			_stamp_panel.scale = Vector2(2.35, 2.35)
 			_stamp_panel.modulate.a = 0.0
-			EventBus.request_sfx.emit("purchase")
+			EventBus.request_sfx.emit("purchase" if _grade in ["S", "A", "B"] else "drop")
 			var stw := create_tween()
 			stw.tween_property(_stamp_panel, "scale", Vector2.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			stw.parallel().tween_property(_stamp_panel, "modulate:a", 1.0, 0.14)
