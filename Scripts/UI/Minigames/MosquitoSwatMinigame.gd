@@ -20,12 +20,12 @@ const ROUND_TIME := 25.0
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.025, 0.022, 0.032, 0.80);
+uniform vec4 tint : source_color = vec4(0.02, 0.018, 0.028, 0.90);
 void fragment() {
 	vec2 d = UV - vec2(0.5);
 	float dist = length(d * vec2(1.12, 1.0));
-	float vig = smoothstep(0.16, 0.78, dist);
-	COLOR = vec4(tint.rgb, mix(0.22, tint.a, vig));
+	float vig = smoothstep(0.14, 0.74, dist);
+	COLOR = vec4(tint.rgb, mix(0.40, tint.a, vig));
 }
 """
 

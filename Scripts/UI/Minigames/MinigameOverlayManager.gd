@@ -44,20 +44,40 @@ func is_any_open() -> bool:
 
 const LOLO_PILO_MINIGAMES: Array[String] = ["sipa", "teks"]
 
+var _hidden_dialogic_nodes: Array[Node] = []
+
+
 func _hide_dialogic_for_minigame() -> void:
-	if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
-		Dialogic.paused = true
-		var layout = Dialogic.Styles.get_layout_node()
-		if is_instance_valid(layout) and "visible" in layout:
+	_hidden_dialogic_nodes.clear()
+	if not is_instance_valid(Dialogic) or Dialogic.current_timeline == null:
+		return
+	Dialogic.paused = true
+	if Dialogic.Text and Dialogic.Text.has_method("hide_textbox"):
+		Dialogic.Text.hide_textbox(true)
+	for text_node in get_tree().get_nodes_in_group("dialogic_dialog_text"):
+		if "textbox_root" in text_node and is_instance_valid(text_node.textbox_root) and text_node.textbox_root.visible:
+			text_node.textbox_root.visible = false
+			_hidden_dialogic_nodes.append(text_node.textbox_root)
+	var layout = Dialogic.Styles.get_layout_node()
+	if is_instance_valid(layout):
+		if "visible" in layout and layout.visible:
 			layout.visible = false
+			_hidden_dialogic_nodes.append(layout)
+		for ch in layout.get_children():
+			if (ch is CanvasLayer or ch is CanvasItem) and ch.visible:
+				ch.visible = false
+				_hidden_dialogic_nodes.append(ch)
 
 
 func _restore_dialogic_after_minigame() -> void:
+	for n in _hidden_dialogic_nodes:
+		if is_instance_valid(n) and "visible" in n:
+			n.visible = true
+	_hidden_dialogic_nodes.clear()
 	if is_instance_valid(Dialogic):
-		var layout = Dialogic.Styles.get_layout_node()
-		if is_instance_valid(layout) and "visible" in layout:
-			layout.visible = true
 		Dialogic.paused = false
+		if Dialogic.current_timeline != null and Dialogic.Text and Dialogic.Text.has_method("show_textbox"):
+			Dialogic.Text.show_textbox(true)
 
 
 func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:

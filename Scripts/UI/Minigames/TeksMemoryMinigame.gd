@@ -36,12 +36,12 @@ const PASTEL_BACKGROUNDS: Array[Color] = [
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.03, 0.024, 0.02, 0.84);
+uniform vec4 tint : source_color = vec4(0.025, 0.02, 0.016, 0.92);
 void fragment() {
 	vec2 d = UV - vec2(0.5);
 	float dist = length(d * vec2(1.12, 1.0));
-	float vig = smoothstep(0.16, 0.78, dist);
-	COLOR = vec4(tint.rgb, mix(0.32, tint.a, vig));
+	float vig = smoothstep(0.14, 0.74, dist);
+	COLOR = vec4(tint.rgb, mix(0.46, tint.a, vig));
 }
 """
 

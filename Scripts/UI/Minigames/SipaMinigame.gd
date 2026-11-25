@@ -15,12 +15,12 @@ const TARGET_KICKS := 12
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.03, 0.024, 0.02, 0.78);
+uniform vec4 tint : source_color = vec4(0.025, 0.02, 0.016, 0.90);
 void fragment() {
 	vec2 d = UV - vec2(0.5);
 	float dist = length(d * vec2(1.15, 1.0));
-	float vig = smoothstep(0.18, 0.78, dist);
-	COLOR = vec4(tint.rgb, mix(0.24, tint.a, vig));
+	float vig = smoothstep(0.14, 0.74, dist);
+	COLOR = vec4(tint.rgb, mix(0.42, tint.a, vig));
 }
 """
 
