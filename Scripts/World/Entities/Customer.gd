@@ -516,25 +516,30 @@ func _pop_linger_thought(my_session: int) -> void:
 	var pool: Array = []
 	match char_id:
 		"kuyakap":
-			pool = [["☁", Color(0.32, 0.36, 0.44)], ["♪", Color(0.55, 0.30, 0.14)], ["★", Color(0.76, 0.50, 0.10)], ["~", Color(0.38, 0.32, 0.28)]]
+			pool = [["cloud-fog", Color(0.32, 0.36, 0.44)], ["flame", Color(0.76, 0.34, 0.14)], ["coffee", Color(0.46, 0.26, 0.12)], ["moon-star", Color(0.44, 0.36, 0.62)]]
 		"buboy":
-			pool = [["★", Color(0.84, 0.56, 0.08)], ["♥", Color(0.84, 0.24, 0.30)], ["♪", Color(0.18, 0.52, 0.72)], ["?!", Color(0.78, 0.36, 0.12)]]
+			pool = [["sparkles", Color(0.84, 0.56, 0.08)], ["gift", Color(0.84, 0.24, 0.30)], ["party-popper", Color(0.78, 0.36, 0.12)], ["zap", Color(0.18, 0.52, 0.72)]]
 		"manangana":
-			pool = [["☽", Color(0.45, 0.32, 0.65)], ["♥", Color(0.82, 0.25, 0.34)], ["✦", Color(0.74, 0.52, 0.12)], ["♪", Color(0.24, 0.48, 0.46)]]
+			pool = [["moon", Color(0.45, 0.32, 0.65)], ["shopping-basket", Color(0.74, 0.46, 0.12)], ["heart-handshake", Color(0.82, 0.25, 0.34)], ["sparkles", Color(0.24, 0.48, 0.46)]]
 		"danilo":
-			pool = [["☕", Color(0.46, 0.26, 0.12)], ["♪", Color(0.28, 0.46, 0.58)], ["~", Color(0.45, 0.38, 0.30)], ["zzZ", Color(0.36, 0.40, 0.60)]]
+			pool = [["coffee", Color(0.46, 0.26, 0.12)], ["radio", Color(0.28, 0.46, 0.58)], ["mic-vocal", Color(0.58, 0.30, 0.22)], ["clock", Color(0.36, 0.40, 0.60)]]
 		"rosalyn":
-			pool = [["☽", Color(0.34, 0.42, 0.68)], ["✦", Color(0.42, 0.48, 0.66)], ["...", Color(0.38, 0.38, 0.46)], ["♥", Color(0.72, 0.36, 0.48)]]
+			pool = [["moon-star", Color(0.34, 0.42, 0.68)], ["ghost", Color(0.42, 0.48, 0.66)], ["cloud-fog", Color(0.38, 0.40, 0.50)], ["sparkles", Color(0.72, 0.36, 0.48)]]
 		"rodel":
-			pool = [["≈", Color(0.14, 0.50, 0.68)], ["✦", Color(0.20, 0.56, 0.60)], ["♪", Color(0.18, 0.48, 0.64)], ["♥", Color(0.78, 0.30, 0.38)]]
+			pool = [["cloud-rain", Color(0.14, 0.50, 0.68)], ["wind", Color(0.20, 0.56, 0.60)], ["snowflake", Color(0.18, 0.48, 0.68)], ["heart-pulse", Color(0.78, 0.30, 0.38)]]
 		"sarimanok":
-			pool = [["☀", Color(0.86, 0.48, 0.08)], ["★", Color(0.84, 0.58, 0.10)], ["♪", Color(0.76, 0.28, 0.26)], ["✦", Color(0.20, 0.54, 0.46)]]
+			pool = [["sun", Color(0.86, 0.48, 0.08)], ["sparkles", Color(0.84, 0.58, 0.10)], ["trophy", Color(0.76, 0.46, 0.12)], ["flame", Color(0.76, 0.28, 0.22)]]
 		"tk":
-			pool = [["?", Color(0.76, 0.38, 0.14)], ["?!", Color(0.80, 0.28, 0.22)], ["★", Color(0.74, 0.52, 0.12)], ["~", Color(0.38, 0.44, 0.52)]]
+			pool = [["wind", Color(0.34, 0.48, 0.58)], ["zap", Color(0.80, 0.38, 0.14)], ["route", Color(0.52, 0.36, 0.22)], ["sparkles", Color(0.74, 0.52, 0.12)]]
+		"lolopilo":
+			pool = [["coffee", Color(0.46, 0.26, 0.12)], ["gift", Color(0.76, 0.44, 0.14)], ["sun-medium", Color(0.82, 0.54, 0.10)], ["heart-handshake", Color(0.26, 0.52, 0.34)]]
+		"reynamayari":
+			pool = [["moon-star", Color(0.45, 0.34, 0.68)], ["moon", Color(0.34, 0.42, 0.68)], ["sparkles", Color(0.82, 0.56, 0.14)], ["award", Color(0.74, 0.50, 0.14)]]
 		_:
-			pool = [["♪", Color(0.28, 0.46, 0.58)], ["♥", Color(0.82, 0.26, 0.32)], ["★", Color(0.80, 0.54, 0.10)], ["✦", Color(0.44, 0.36, 0.58)]]
+			pool = [["coffee", Color(0.46, 0.26, 0.12)], ["sparkles", Color(0.80, 0.54, 0.10)], ["heart-handshake", Color(0.82, 0.26, 0.32)], ["shopping-basket", Color(0.28, 0.46, 0.58)]]
 	var pick: Array = pool.pick_random()
-	_attention_badge.show_thought(str(pick[0]), pick[1] as Color)
+	var icon_path := "res://Assets/ui/icons/%s.png" % str(pick[0])
+	_attention_badge.show_thought_icon(icon_path, pick[1] as Color)
 	_hide_thought_after(my_session, randf_range(2.4, 3.3))
 
 func _hide_thought_after(my_session: int, duration: float) -> void:

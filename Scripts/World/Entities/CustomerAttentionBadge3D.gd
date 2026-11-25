@@ -14,9 +14,11 @@ enum Mode {
 static var _ungreeted_tex: ImageTexture = null
 static var _smalltalk_tex: ImageTexture = null
 static var _thought_tex: ImageTexture = null
+static var _icon_cache: Dictionary = {}
 
 var _mode: Mode = Mode.HIDDEN
 var _bg_sprite: Sprite3D = null
+var _icon_sprite: Sprite3D = null
 var _base_y: float = 0.0
 var _mode_y_offset: float = 0.0
 var _bob_time: float = 0.0
@@ -150,6 +152,17 @@ func _ready() -> void:
 	_bg_sprite.render_priority = 10
 	add_child(_bg_sprite)
 
+	_icon_sprite = Sprite3D.new()
+	_icon_sprite.pixel_size = 0.00165
+	_icon_sprite.position = Vector3(0.0, 0.0, 0.0)
+	_icon_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_icon_sprite.shaded = false
+	_icon_sprite.no_depth_test = true
+	_icon_sprite.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
+	_icon_sprite.render_priority = 12
+	_icon_sprite.visible = false
+	add_child(_icon_sprite)
+
 	_bob_time = randf() * TAU
 	scale = Vector3.ZERO
 	visible = false
@@ -190,6 +203,8 @@ func set_mode(new_mode: Mode) -> void:
 	var target_scale := Vector3.ONE
 	var bg_y := -0.024
 	if new_mode == Mode.SMALLTALK:
+		if _icon_sprite:
+			_icon_sprite.visible = false
 		text = "•••"
 		font_size = 42
 		_mode_y_offset = 0.30
@@ -204,6 +219,8 @@ func set_mode(new_mode: Mode) -> void:
 		outline_modulate = Color(0.20, 0.14, 0.08, 0.45)
 		outline_size = 4
 	else:
+		if _icon_sprite:
+			_icon_sprite.visible = false
 		text = "!"
 		font_size = 54
 		_mode_y_offset = 0.0
@@ -224,10 +241,31 @@ func set_mode(new_mode: Mode) -> void:
 
 
 func show_thought(glyph: String, glyph_color: Color = Color(0.24, 0.16, 0.09, 1.0)) -> void:
+	if _icon_sprite:
+		_icon_sprite.visible = false
 	text = glyph
 	modulate = glyph_color
 	_mode = Mode.HIDDEN # Force re-pop animation even if showing a new thought
 	set_mode(Mode.THOUGHT)
+
+
+func show_thought_icon(icon_path: String, icon_color: Color = Color(0.24, 0.16, 0.09, 1.0)) -> void:
+	var tex: Texture2D = null
+	if _icon_cache.has(icon_path):
+		tex = _icon_cache[icon_path]
+	elif icon_path != "" and ResourceLoader.exists(icon_path):
+		tex = load(icon_path) as Texture2D
+		if tex != null:
+			_icon_cache[icon_path] = tex
+	if tex != null and _icon_sprite:
+		text = ""
+		_icon_sprite.texture = tex
+		_icon_sprite.modulate = icon_color
+		_icon_sprite.visible = true
+		_mode = Mode.HIDDEN # Force re-pop animation even if showing a new thought
+		set_mode(Mode.THOUGHT)
+	else:
+		show_thought("✦", icon_color)
 
 
 func is_showing_thought() -> bool:
