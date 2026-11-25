@@ -274,13 +274,15 @@ func _show_tooltip_for(node_id: String) -> void:
 	_tip_level.visible = _tip_level.text != ""
 
 	var desc := str(item.get_meta("upgrade_desc", "")) if item != null else ""
-	if desc == "" and str(def["kind"]) == "tier" and is_instance_valid(StoryManager):
+	if desc == "" and str(def["kind"]) == "tier" and is_instance_valid(InventoryManager):
+		var target_t := int(def["tier"])
 		var names: Array[String] = []
-		for ti in StoryManager.get_items_for_tier(int(def["tier"])):
-			names.append(ti.item_name)
-			if names.size() >= 4:
-				break
-		desc = ("Unlocks: " + ", ".join(names)) if not names.is_empty() else ("Expands store to Tier %d." % int(def["tier"]))
+		for ti in InventoryManager.get_all_items():
+			if ti != null and ti.can_be_sold and ti.tier == target_t:
+				names.append(ti.item_name)
+				if names.size() >= 4:
+					break
+		desc = ("Unlocks: " + ", ".join(names)) if not names.is_empty() else ("Expands store to Tier %d." % target_t)
 	_tip_desc.text = desc
 	_tip_desc.visible = desc != ""
 
