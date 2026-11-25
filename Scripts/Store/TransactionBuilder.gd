@@ -14,7 +14,7 @@ const GENERIC_VISIT_TIMELINE := "res://Dialogue/Timelines/Generic/Visit.dtl"
 
 const AWARENESS_CHANCE := 0.4
 const HIGH_PRICE_DESIRED_EXTREME_CHANCE := 0.70 # Desired item at effective step >= +3
-const HIGH_PRICE_STORE_CHANCE := 0.65           # Any stocked store item at effective step >= +3
+const HIGH_PRICE_STORE_CHANCE := 0.65 # Any stocked store item at effective step >= +3
 const REPAYMENT_CHANCE := 0.30
 const DISPLAY_POOL_CHANCE := 0.60
 const FAVORITE_CATEGORY_CHANCE := 0.70
@@ -146,15 +146,6 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 		LogManager.info("StoryManager", "FIRST ENCOUNTER: Forcing story for new character: %s" % char_data.get_clean_id())
 		return {"customer": char_data, "force_story": force_story}
 
-	# Priority 0.5: Pending Market Event Announcement (Danilo delivers the rumor — unless he was just here)
-	if is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
-		var danilo_candidates = unlocked.filter(func(c: CustomerData) -> bool: return c.get_clean_id() == "danilo" and c.resource_path != sm.last_character_path)
-		if not danilo_candidates.is_empty():
-			char_data = danilo_candidates[0]
-			force_story = false
-			LogManager.info("StoryManager", "EVENT PENDING: Forcing Danilo to deliver neighborhood event rumor.")
-			return {"customer": char_data, "force_story": force_story}
-
 	# Priority 1: Cooldown is 0, check for available story chapters
 	if CharacterProgressionManager.global_story_cooldown <= 0:
 		var story_candidates := unlocked.filter(func(c: CustomerData) -> bool:
@@ -201,20 +192,7 @@ static func build_transaction_context(
 	var is_collector: bool = data.is_collector()
 	var story_available: bool = allow_story and story_pending and CharacterProgressionManager.is_story_chapter_available(data, chapter)
 
-	if allow_story and not force_story and data.get_clean_id() == "danilo" and is_instance_valid(StoreEventManager) and StoreEventManager.has_pending_announcement():
-		var pending_event: StoreEventData = StoreEventManager.get_pending_event()
-		if pending_event:
-			transaction.transaction_type = TransactionContext.Type.VISIT
-			var visit_pool := data.get_visit_timelines(chapter)
-			if not visit_pool.is_empty():
-				transaction.timeline = visit_pool[0]
-			else:
-				transaction.timeline = load("res://Dialogue/Timelines/Danilo/Visit.dtl")
-			transaction.event_rumor_active = true
-			transaction.event_rumor_text = pending_event.rumor_text
-			transaction.pending_event_id = pending_event.event_id
-			LogManager.info("TransactionBuilder", "Configured Danilo visit to announce event: %s" % pending_event.event_name)
-	elif (chapter == 0 or force_story) and story_available and not is_collector:
+	if (chapter == 0 or force_story) and story_available and not is_collector:
 		transaction.transaction_type = TransactionContext.Type.STORY
 		transaction.timeline = data.story_timeline
 	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0 and not is_collector:
@@ -600,4 +578,3 @@ static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -
 
 	sm.update_transaction_item_string(tx)
 	return tx
-

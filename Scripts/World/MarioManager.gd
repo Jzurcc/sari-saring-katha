@@ -264,10 +264,9 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	if Dialogic.current_timeline != null:
 		label = "Busy"
 		success_expected = false
-	# 2. Rest check: if Mario is still on cooldown
-	elif InventoryManager.customers_needed_for_delivery > 0 and not bypass_cooldown:
-		# Update Dialogic variable for the restock dialogue to show remaining customers
-		Dialogic.VAR.set_variable("Transaction_MarioRestCount", InventoryManager.customers_needed_for_delivery)
+	# 2. Rest check: if Mario is still on cooldown (3 in-game hours, modified by Moon Cards)
+	elif InventoryManager.is_delivery_on_cooldown() and not bypass_cooldown:
+		Dialogic.VAR.set_variable("Transaction_MarioRestTime", InventoryManager.format_delivery_cooldown_remaining())
 		label = "CallRest"
 		success_expected = false
 	# 3. Missed upgrade call follow-up: player missed Mario's incoming upgrade call earlier

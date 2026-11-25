@@ -144,5 +144,19 @@ func _on_dialogue_about_to_show(info: Dictionary) -> void:
 				if m_data and m_data.dialogic_character and m_data.dialogic_character.resource_path == char_path:
 					char_to_play = m_data
 
+		# Strategy 5: Counter Radio Host (Papa Ulap) uses Radio.wav blip directly
+		if char_to_play == null and (char_path.ends_with("PapaUlap.dch") or info.character.display_name == "Papa Ulap"):
+			var radio_stream: AudioStream = null
+			if ResourceLoader.exists("res://Audio/DialogueBlips/Radio.wav"):
+				radio_stream = load("res://Audio/DialogueBlips/Radio.wav") as AudioStream
+			elif FileAccess.file_exists("res://Audio/DialogueBlips/Radio.wav"):
+				radio_stream = AudioStreamWAV.load_from_file("res://Audio/DialogueBlips/Radio.wav")
+			if radio_stream:
+				dialogue_blip_player.pitch_scale = randf_range(0.96, 1.06)
+				dialogue_blip_player.stream = radio_stream
+				dialogue_blip_player.volume_db = -3.0
+				dialogue_blip_player.play()
+			return
+
 		if char_to_play:
 			play_dialogue_blip(char_to_play)

@@ -643,7 +643,7 @@ func _select_category(cat_key: String) -> void:
 func _get_item_priority(item: ItemData) -> int:
 	# Lower number = higher priority in Recommended tab
 	var stock := InventoryManager.get_total_item_stock(item)
-	var is_hot := is_instance_valid(StoreEventManager) and StoreEventManager.get_item_demand_multiplier(item) > 1.05
+	var is_hot := is_instance_valid(StoreEventManager) and StoreEventManager.is_item_in_demand(item)
 	var is_missed := StoryManager.get_missed_count(item) > 0
 	var is_regular_match := not StoryManager.get_regulars_who_like_item(item, true).is_empty()
 	var is_deal := StoryManager.is_item_on_sulit_deal(item)
@@ -719,7 +719,7 @@ func _populate_grid(cat_key: String) -> void:
 		_product_grid.add_child(card)
 
 func _get_item_badge(item: ItemData) -> Dictionary:
-	if is_instance_valid(StoreEventManager) and StoreEventManager.get_item_demand_multiplier(item) > 1.05:
+	if is_instance_valid(StoreEventManager) and StoreEventManager.is_item_in_demand(item):
 		return {"text": "HOT", "color": COL_HOT}
 	if StoryManager.get_missed_count(item) > 0:
 		return {"text": "MISSED", "color": COL_CORAL}

@@ -12,7 +12,11 @@ var current_item_name: String = ""
 ## The display name of the current customer. Use as {InventoryManager.current_character_name} in .dtl files.
 var current_character_name: String = ""
 
-## Number of customers that must be served before Uncle Mario can restock again.
+## Base in-game hour cooldown before Uncle Mario can restock again.
+const BASE_DELIVERY_COOLDOWN_HOURS := 3.0
+## In-game hour when Uncle Mario's delivery cooldown expires (-1.0 = ready now).
+var delivery_cooldown_end_hour: float = -1.0
+## Legacy field kept for compatibility (now driven by in-game hours).
 var customers_needed_for_delivery: int = 0
 
 var _initialized: bool = false
@@ -29,8 +33,8 @@ func _ready() -> void:
 	initialize()
 
 func _on_day_boundary(_day_number: int) -> void:
-	if customers_needed_for_delivery > 0:
-		customers_needed_for_delivery = 0
+	if delivery_cooldown_end_hour >= 0.0 or customers_needed_for_delivery > 0:
+		clear_delivery_cooldown()
 		LogManager.info("InventoryManager", "Uncle Mario delivery cooldown reset for the new day.")
 
 ## Load all ItemData resources from subfolders and set initial stock.
@@ -322,19 +326,52 @@ func mark_item_inspected(item: ItemData) -> void:
 		_inspected_item_ids[id] = true
 		item_inspected.emit(id)
 
-func decrement_cooldown() -> void:
-	if customers_needed_for_delivery > 0:
-		customers_needed_for_delivery -= 1
+func _get_current_game_hour() -> float:
+	if is_instance_valid(StoryManager) and StoryManager.clock:
+		return StoryManager.clock.get_effective_display_time()
+	return 6.0
 
-## Set the post-order delivery cooldown (defaults to 2 customers, configurable via Player debug).
+func clear_delivery_cooldown() -> void:
+	delivery_cooldown_end_hour = -1.0
+	customers_needed_for_delivery = 0
+
+func get_delivery_cooldown_remaining_hours() -> float:
+	if delivery_cooldown_end_hour < 0.0:
+		return 0.0
+	var rem := delivery_cooldown_end_hour - _get_current_game_hour()
+	if rem <= 0.01 or rem > BASE_DELIVERY_COOLDOWN_HOURS + 0.5:
+		delivery_cooldown_end_hour = -1.0
+		return 0.0
+	return rem
+
+func is_delivery_on_cooldown() -> bool:
+	return get_delivery_cooldown_remaining_hours() > 0.0
+
+func format_delivery_cooldown_remaining() -> String:
+	var rem := get_delivery_cooldown_remaining_hours()
+	if rem <= 0.0:
+		return "a moment"
+	var total_mins := maxi(5, int(roundf(rem * 60.0)))
+	var hrs := total_mins / 60
+	var mins := total_mins % 60
+	if hrs > 0 and mins >= 10:
+		return "about %d hour(s) and %d minutes" % [hrs, mins]
+	elif hrs > 0:
+		return "about %d hour%s" % [hrs, "s" if hrs != 1 else ""]
+	return "about %d minutes" % mins
+
+## Legacy no-op (cooldown is now time-based: 3 in-game hours).
+func decrement_cooldown() -> void:
+	pass
+
+## Set the post-order delivery cooldown (3.0 in-game hours, modified by Mayari Moon Cards).
 func start_delivery_cooldown() -> void:
-	var player = get_tree().get_first_node_in_group("player")
-	if player and "debug_delivery_cooldown" in player:
-		customers_needed_for_delivery = player.debug_delivery_cooldown
-	else:
-		customers_needed_for_delivery = 2
-	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
-		customers_needed_for_delivery = maxi(0, customers_needed_for_delivery - 1)
+	var hours := BASE_DELIVERY_COOLDOWN_HOURS
+	if is_instance_valid(StoryManager) and StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
+		hours *= 0.65 # -35% Delivery Cooldown
+	delivery_cooldown_end_hour = _get_current_game_hour() + hours
+	customers_needed_for_delivery = 0
+	LogManager.info("InventoryManager", "Uncle Mario delivery cooldown started: %.2fh (ready at %.2fh)." % [hours, delivery_cooldown_end_hour])
 
 # ─── Persistence ──────────────────────────────────────────────────────────────
 
@@ -351,7 +388,7 @@ func get_save_data() -> Dictionary:
 		
 	return {
 		"stock": _stock.duplicate(),
-		"delivery_cooldown": customers_needed_for_delivery,
+		"delivery_cooldown_end_hour": delivery_cooldown_end_hour,
 		"prices": prices,
 		"steps": steps,
 		"configured_ids": _configured_item_ids.duplicate(),
@@ -391,7 +428,8 @@ func load_save_data(data: Dictionary) -> void:
 				item.current_step = 0 if saved_p <= 0.0 else item.get_step_from_price(saved_p)
 				item.selling_price = item.get_price_for_step(item.current_step)
 			
-	customers_needed_for_delivery = data.get("delivery_cooldown", 0)
+	delivery_cooldown_end_hour = float(data.get("delivery_cooldown_end_hour", -1.0))
+	customers_needed_for_delivery = 0
 	if get_tree():
 		get_tree().call_group("draggable_items", "_refresh_alt_badge")
 		get_tree().call_group("dispenser_containers", "_refresh_alt_badge")
@@ -408,5 +446,5 @@ func reset_state() -> void:
 		item.selling_price = 0.0 # Resets to default on next get_final_price call
 		item.is_manually_priced = false
 		
-	customers_needed_for_delivery = 0
+	clear_delivery_cooldown()
 	LogManager.info("InventoryManager", "Inventory reset for New Game. Prices and Config Flags cleared.")

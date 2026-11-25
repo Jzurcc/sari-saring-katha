@@ -1371,7 +1371,12 @@ func _create_radio_upgrade_bar(item: ItemData, target_level: int) -> PanelContai
 	var reveals: int = int(item.get_meta("reveals", target_level))
 	var sub_lbl := Label.new()
 	sub_lbl.add_theme_font_size_override("font_size", 13)
-	sub_lbl.text = "Reveals ALL Expected Regulars daily" if target_level >= 3 else "Reveals %d Expected Regular(s) daily" % reveals
+	if target_level == 1:
+		sub_lbl.text = "Counter Radio (Papa Ulap) • Reveals Market Events & 1 Regular"
+	elif target_level == 2:
+		sub_lbl.text = "+1 Daily Market Event (up to 2) • Reveals %d Regulars" % reveals
+	else:
+		sub_lbl.text = "+1 Daily Market Event (up to 3) • Reveals ALL Regulars"
 	sub_lbl.add_theme_color_override("font_color", Color("#FFECC4"))
 	info_vbox.add_child(sub_lbl)
 
@@ -2001,11 +2006,22 @@ func _update_detail_panel(item: ItemData) -> void:
 			unlocks_list.remove_child(child)
 			child.queue_free()
 		var next_txt := "All (3–4)" if r_lvl >= 3 else str(next_rev)
-		for line in [
-			"• Expected Regulars Revealed: %d → %s daily" % [prev_rev, next_txt],
-			"• Shows neighbor portraits & favorite cravings in Restock Menu",
-			"• Helps you stock the exact categories neighbors crave today"
-		]:
+		var prev_ev: int = int(StoryManager.RADIO_UPGRADE_SPECS[r_lvl - 1].get("max_events", 1))
+		var next_ev: int = int(StoryManager.RADIO_UPGRADE_SPECS[r_lvl].get("max_events", 1))
+		var radio_lines: Array[String] = []
+		if r_lvl == 1:
+			radio_lines = [
+				"• Places the Counter Radio so you can tune in to Papa Ulap",
+				"• Click to reveal today's hidden Market Event (shows HOT badges in Restock)",
+				"• Expected Regulars Revealed: %d → %s daily" % [prev_rev, next_txt],
+			]
+		else:
+			radio_lines = [
+				"• Max Daily Market Events: %d → %d (+1 possible event/day)" % [prev_ev, next_ev],
+				"• Tune in to Papa Ulap again after 4h to reveal the extra event",
+				"• Expected Regulars Revealed: %d → %s daily" % [prev_rev, next_txt],
+			]
+		for line in radio_lines:
 			var stat_lbl := Label.new()
 			stat_lbl.text = line
 			stat_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

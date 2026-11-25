@@ -1,0 +1,21 @@
+{
+"@path": "res://addons/dialogic/Resources/character.gd",
+"@subpath": NodePath(""),
+&"_translation_id": "",
+&"color": Color(0.54, 0.78, 0.94, 1),
+&"custom_info": {
+"prefix": "",
+"sound_mood_default": "",
+"sound_moods": {},
+"style": "FollowBubble",
+"suffix": ""
+},
+&"default_portrait": "",
+&"description": "An unseen Tawong Lipod (wind engkanto) broadcasting barangay weather, market events, and breezy neighborhood banter over the store counter radio.",
+&"display_name": "Papa Ulap",
+&"mirror": false,
+&"nicknames": [""],
+&"offset": Vector2(0, 0),
+&"portraits": {},
+&"scale": 1.0
+}
