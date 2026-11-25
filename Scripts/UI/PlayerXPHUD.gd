@@ -33,6 +33,7 @@ var _stripe_mat: ShaderMaterial
 const GAIN_BASE_Y := -28.0
 const GAIN_ROW_STEP := 22.0
 const MAX_GAIN_POPUPS := 5
+const POPUP_STAGGER_DELAY := 0.5
 
 var _lvl_lbl: Label
 var _xp_lbl: Label
@@ -47,6 +48,7 @@ var _hidden_offset_top: float = 0.0
 var _hidden_offset_bottom: float = 0.0
 
 var _is_shown: bool = false
+var _is_fully_shown: bool = false
 var _display_ratio: float = 0.0
 var _stripe_scroll: float = 0.0
 var _stripe_speed: float = IDLE_STRIPE_SPEED
@@ -54,6 +56,9 @@ var _stripe_alpha: float = IDLE_STRIPE_ALPHA
 var _anim_tween: Tween = null
 var _vis_tween: Tween = null
 var _hide_session_id: int = 0
+var _queue_session_id: int = 0
+var _xp_queue: Array[Dictionary] = []
+var _is_processing_queue: bool = false
 
 func _ready() -> void:
 	layer = 40
@@ -244,7 +249,7 @@ func _sync_immediate() -> void:
 		_xp_lbl.text = "%d / %d" % [cur, need]
 		_set_fill_ratio(float(cur) / float(need))
 
-func _animate_show() -> void:
+func _animate_show() -> Tween:
 	if _vis_tween and _vis_tween.is_valid():
 		_vis_tween.kill()
 	_holder.visible = true
@@ -253,12 +258,14 @@ func _animate_show() -> void:
 		_holder.offset_bottom = _hidden_offset_bottom
 		_holder.modulate.a = 0.0
 	_is_shown = true
+	_is_fully_shown = false
 
 	# Subtle overshoot sliding up into resting bottom-center position
 	_vis_tween = create_tween().set_parallel(true)
 	_vis_tween.tween_property(_holder, "offset_top", _rest_offset_top, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_vis_tween.tween_property(_holder, "offset_bottom", _rest_offset_bottom, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_vis_tween.tween_property(_holder, "modulate:a", 1.0, 0.20).set_trans(Tween.TRANS_SINE)
+	return _vis_tween
 
 func _schedule_hide(my_session: int) -> void:
 	await get_tree().create_timer(IDLE_HIDE_DELAY).timeout
@@ -267,6 +274,7 @@ func _schedule_hide(my_session: int) -> void:
 
 	if _vis_tween and _vis_tween.is_valid():
 		_vis_tween.kill()
+	_is_fully_shown = false
 
 	# Subtle anticipation lift (+10px up), then slower, silky-smooth drop off the bottom edge
 	_vis_tween = create_tween()
@@ -278,6 +286,7 @@ func _schedule_hide(my_session: int) -> void:
 	_vis_tween.tween_callback(func():
 		if my_session == _hide_session_id:
 			_is_shown = false
+			_is_fully_shown = false
 			_holder.visible = false
 	)
 
@@ -361,6 +370,9 @@ func _on_player_xp_changed(level: int, current_xp: int, xp_to_next: int, gained_
 
 	# Silent sync on save load / new game reset — keep bar hidden!
 	if gained_xp <= 0:
+		_queue_session_id += 1
+		_xp_queue.clear()
+		_is_processing_queue = false
 		if _anim_tween and _anim_tween.is_valid():
 			_anim_tween.kill()
 		_stripe_speed = IDLE_STRIPE_SPEED
@@ -373,11 +385,77 @@ func _on_player_xp_changed(level: int, current_xp: int, xp_to_next: int, gained_
 		return
 
 	_hide_session_id += 1
-	var my_session := _hide_session_id
-	_animate_show()
+	_xp_queue.append({
+		"level": level,
+		"current_xp": current_xp,
+		"xp_to_next": xp_to_next,
+		"gained_xp": gained_xp,
+		"leveled_up": leveled_up,
+		"target_ratio": target_ratio,
+	})
+	if not _is_processing_queue:
+		_process_xp_queue(_queue_session_id)
 
-	# Stacked "+XP" popups above the right side of the pill
-	_spawn_gain_popup(gained_xp)
+
+func _process_xp_queue(my_q_session: int) -> void:
+	_is_processing_queue = true
+
+	# 1. Slide the XP bar all the way up FIRST before any popup or bar fill begins
+	if not _is_fully_shown:
+		var show_tw := _animate_show()
+		if show_tw and show_tw.is_valid():
+			await show_tw.finished
+		if not is_inside_tree() or my_q_session != _queue_session_id:
+			_is_processing_queue = false
+			return
+		_is_fully_shown = true
+
+	# 2. Drain queued XP gains sequentially, with a 0.5s stagger between consecutive popups/fills
+	var processed_count := 0
+	while not _xp_queue.is_empty():
+		if processed_count > 0:
+			await get_tree().create_timer(POPUP_STAGGER_DELAY).timeout
+			if not is_inside_tree() or my_q_session != _queue_session_id:
+				_is_processing_queue = false
+				return
+		var ev: Dictionary = _xp_queue.pop_front()
+		processed_count += 1
+		_hide_session_id += 1
+		_spawn_gain_popup(int(ev["gained_xp"]))
+		_play_bar_fill(ev)
+
+	# 3. Wait for the final fill tween to finish, calm stripes back to idle, then schedule hide
+	if _anim_tween and _anim_tween.is_valid():
+		await _anim_tween.finished
+	if not is_inside_tree() or my_q_session != _queue_session_id:
+		_is_processing_queue = false
+		return
+
+	# If more XP arrived while the last fill was finishing, keep draining before hiding
+	if not _xp_queue.is_empty():
+		await get_tree().create_timer(POPUP_STAGGER_DELAY).timeout
+		if not is_inside_tree() or my_q_session != _queue_session_id:
+			_is_processing_queue = false
+			return
+		_process_xp_queue(my_q_session)
+		return
+
+	var my_hide_session := _hide_session_id
+	_anim_tween = create_tween()
+	_anim_tween.tween_property(self, "_stripe_speed", IDLE_STRIPE_SPEED, 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_anim_tween.parallel().tween_property(self, "_stripe_alpha", IDLE_STRIPE_ALPHA, 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_anim_tween.parallel().tween_method(_set_fill_color, COL_FILL_SURGE, COL_FILL_BASE, 0.48).set_trans(Tween.TRANS_SINE)
+	_anim_tween.parallel().tween_property(_frame_style, "border_color", COL_BORDER, 0.48).set_trans(Tween.TRANS_SINE)
+	_anim_tween.tween_callback(_schedule_hide.bind(my_hide_session))
+	_is_processing_queue = false
+
+
+func _play_bar_fill(ev: Dictionary) -> void:
+	var level: int = int(ev["level"])
+	var current_xp: int = int(ev["current_xp"])
+	var xp_to_next: int = int(ev["xp_to_next"])
+	var leveled_up: bool = bool(ev["leveled_up"])
+	var target_ratio: float = float(ev["target_ratio"])
 
 	if _anim_tween and _anim_tween.is_valid():
 		_anim_tween.kill()
@@ -405,10 +483,3 @@ func _on_player_xp_changed(level: int, current_xp: int, xp_to_next: int, gained_
 		_lvl_lbl.text = "Lv. %d" % level
 		_xp_lbl.text = "MAX" if xp_to_next <= 0 else "%d / %d" % [current_xp, xp_to_next]
 		_anim_tween.tween_method(_set_fill_ratio, _display_ratio, target_ratio, 0.56).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-
-	# Return stripes & glow back to calm idle, then start the 3s auto-hide countdown
-	_anim_tween.tween_property(self, "_stripe_speed", IDLE_STRIPE_SPEED, 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_anim_tween.parallel().tween_property(self, "_stripe_alpha", IDLE_STRIPE_ALPHA, 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_anim_tween.parallel().tween_method(_set_fill_color, COL_FILL_SURGE, COL_FILL_BASE, 0.48).set_trans(Tween.TRANS_SINE)
-	_anim_tween.parallel().tween_property(_frame_style, "border_color", COL_BORDER, 0.48).set_trans(Tween.TRANS_SINE)
-	_anim_tween.tween_callback(_schedule_hide.bind(my_session))
