@@ -124,3 +124,26 @@ Great fits that stay grounded at the counter and reuse existing mechanics:
   - **"Needs Restock" / Low-Stock Tab:** One dedicated view showing only `0` or low-stock items (plus any active Market Event `[IN DEMAND]` items) sorted by urgency.
   - **One-Click "Fill Low Stock" / Smart Restock Suggestions:** Auto-queues a balanced basket of your out-of-stock/low items within your current budget that you can tweak before confirming.
   - **Shelf & Fridge Capacity Meters:** Visual bar showing remaining Shelf vs. Fridge slots as you add items so you never hit surprise `"Shelf is full!"` errors.
+
+misc todo
+
+for events like payday rush or intense heatwave, let's jsut do it always like:
+
+Highlighted Demand:
+Highlighted Price Tolerance:
+
+and just bold the items that are highlighted in the description, like *Snacks, Canend Goods, and Noodles*
+
+also center the calendar in the calendar menu and enlargen the fonts of the month and year there a bit too.
+
+the space indicator in the dialogue should just be light cream like the dialogue, and can it be like on the edge of the bottom right instead of inside the dialogue?
+
+the +1 XP of lingering visitors every 2 seconds should actively bring up the player's level bar and the +1 in there, oh and perhaps the +1 XP should also float up from the character as if it's the source of it, also that is unlocked by default yes!
+
+also, make sure that the event/calendar menu has the same width and height size as the card selection menu in mayari, and that the card sizes and font sizes are the same as in there too, as I notice the event menu UI has font sizes of the description larger than that in the mayari menus.
+
+
+
+the animation from the offer menu to the card selection menu should be that the unrevealed favors etc etc SHOULD FLIP IN PLACE, as in it animates to reveal its card, not this current where it animates from below like out of place. also, the keywords should show at the center right of the hovered card, not at a select place, so it pops up from the card height middle of it, then multiple keywords there align nicely to the middle of it. also actually widen the event menu and mayari selection menus so that the event and cards will have more space for descriptions, wider, and retain the triangle so that it will not touch the 2nd stat when a card has one.
+
+also when customers dont tolerate prices, make them actually refuse and leave!

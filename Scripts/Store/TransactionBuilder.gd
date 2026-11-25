@@ -276,12 +276,17 @@ static func build_transaction_context(
 							transaction.best_item_name = fav_item.item_name
 						continue
 
-				# 2.5. Storefront Poster Featured Category promo pull (+25% direct category roll)
+				# 2.5. Storefront Featured Category promo pull (Signage and/or Poster)
 				if transaction.transaction_type == TransactionContext.Type.PURCHASE:
-					var featured_cat: String = sm.get_poster_featured_category()
-					if featured_cat != "" and not (featured_cat in excluded_cats) and randf() < 0.25:
+					var featured_cats: Array[String] = sm.get_active_featured_categories()
+					var eligible_feat: Array[String] = []
+					for fc in featured_cats:
+						if not (fc in excluded_cats):
+							eligible_feat.append(fc)
+					var pull_chance := 0.38 if eligible_feat.size() >= 2 else 0.25
+					if not eligible_feat.is_empty() and randf() < pull_chance:
 						var feat_item := OrderItemPicker.pick_from_categories_with_stock_bias(
-							[featured_cat],
+							eligible_feat,
 							sm.current_tier,
 							prefer_hint,
 							excluded_cats,

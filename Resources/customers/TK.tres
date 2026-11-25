@@ -10,8 +10,8 @@
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
-[ext_resource type="Resource" path="res://Resources/motions/tk_cameo_lost_wander.tres" id="motion_tk_cameo"]
-[ext_resource type="Resource" path="res://Resources/motions/tk_wrong_turn_enter.tres" id="motion_tk_wrong_turn"]
+[ext_resource type="Resource" uid="uid://b2xvvlu20dfrp" path="res://Resources/motions/tk_cameo_lost_wander.tres" id="motion_tk_cameo"]
+[ext_resource type="Resource" uid="uid://bfdfrex33yuiu" path="res://Resources/motions/tk_wrong_turn_enter.tres" id="motion_tk_wrong_turn"]
 [ext_resource type="Resource" uid="uid://bkxgcd1fe4pf" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
 [ext_resource type="Resource" uid="uid://crmfh6krc8b5c" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
 

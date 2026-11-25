@@ -136,11 +136,12 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			_last_earning += 3.0
 			LogManager.info("GameManager", "Moonlight Tips card granted +₱3.00 bonus tip!")
 
-		var featured_cat := StoryManager.get_poster_featured_category()
-		if not wants_debt and featured_cat != "" and item.category == featured_cat:
-			tip += 3.0
-			_last_earning += 3.0
-			LogManager.info("GameManager", "Poster Featured Category (%s) granted +₱3.00 promo bonus!" % featured_cat)
+		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
+		if not wants_debt and feat_boosts > 0:
+			var promo_bonus := 3.0 * float(feat_boosts)
+			tip += promo_bonus
+			_last_earning += promo_bonus
+			LogManager.info("GameManager", "Storefront Featured Category (%s x%d) granted +₱%.2f promo bonus!" % [item.category, feat_boosts, promo_bonus])
 
 		var sf_tip_chance := StoryManager.get_storefront_tip_chance()
 		if not wants_debt and sf_tip_chance > 0.0 and randf() < sf_tip_chance:

@@ -849,6 +849,8 @@ const STOREFRONT_UPGRADE_SPECS: Array[Dictionary] = [
 var storefront_upgrade_level: int = 0
 var has_custom_signage: bool = false
 var has_custom_poster: bool = false
+var signage_featured_category: String = ""
+var signage_last_edited_day: int = -1
 var poster_featured_category: String = ""
 var custom_signage_stickers: Array[Dictionary] = []
 var custom_poster_stickers: Array[Dictionary] = []
@@ -863,10 +865,40 @@ func get_storefront_price_relief() -> float:
 	var lvl := clampi(storefront_upgrade_level, 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
 	return float(STOREFRONT_UPGRADE_SPECS[lvl]["price_relief"])
 
+func get_signage_featured_category() -> String:
+	if storefront_upgrade_level >= 1 and has_custom_signage:
+		return signage_featured_category
+	return ""
+
 func get_poster_featured_category() -> String:
 	if storefront_upgrade_level >= 2 and has_custom_poster:
 		return poster_featured_category
 	return ""
+
+func get_active_featured_categories() -> Array[String]:
+	var cats: Array[String] = []
+	var sc := get_signage_featured_category()
+	if sc != "" and not cats.has(sc):
+		cats.append(sc)
+	var pc := get_poster_featured_category()
+	if pc != "" and not cats.has(pc):
+		cats.append(pc)
+	return cats
+
+func get_featured_category_boost_count(cat: String) -> int:
+	if cat == "":
+		return 0
+	var count := 0
+	if get_signage_featured_category() == cat:
+		count += 1
+	if get_poster_featured_category() == cat:
+		count += 1
+	return count
+
+func can_edit_storefront_slot(slot_name: String) -> bool:
+	if slot_name == "signage":
+		return signage_last_edited_day != day
+	return true
 
 func get_category_display_name(cat: String) -> String:
 	match cat.to_lower():
@@ -931,6 +963,8 @@ func save_storefront_artwork(slot_name: String, stickers: Array[Dictionary], fea
 	if slot_name == "signage":
 		custom_signage_stickers = cloned_stickers
 		has_custom_signage = true
+		signage_featured_category = featured_cat
+		signage_last_edited_day = day
 	elif slot_name == "poster":
 		custom_poster_stickers = cloned_stickers
 		has_custom_poster = true
@@ -957,6 +991,7 @@ func reset_storefront_artwork(slot_name: String) -> void:
 	if slot_name == "signage":
 		has_custom_signage = false
 		custom_signage_stickers.clear()
+		signage_featured_category = ""
 		for p in [SIGNAGE_IMAGE_PATH, SIGNAGE_PAINT_PATH]:
 			if FileAccess.file_exists(p):
 				DirAccess.remove_absolute(p)
@@ -1345,6 +1380,8 @@ func get_save_data() -> Dictionary:
 		"storefront_upgrade_level": storefront_upgrade_level,
 		"has_custom_signage": has_custom_signage,
 		"has_custom_poster": has_custom_poster,
+		"signage_featured_category": signage_featured_category,
+		"signage_last_edited_day": signage_last_edited_day,
 		"poster_featured_category": poster_featured_category,
 		"custom_signage_stickers": custom_signage_stickers.duplicate(true),
 		"custom_poster_stickers": custom_poster_stickers.duplicate(true),
@@ -1452,6 +1489,8 @@ func load_save_data(data: Dictionary) -> void:
 	storefront_upgrade_level = clampi(int(data.get("storefront_upgrade_level", 0)), 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
 	has_custom_signage = bool(data.get("has_custom_signage", false))
 	has_custom_poster = bool(data.get("has_custom_poster", false))
+	signage_featured_category = str(data.get("signage_featured_category", ""))
+	signage_last_edited_day = int(data.get("signage_last_edited_day", -1))
 	poster_featured_category = str(data.get("poster_featured_category", ""))
 	custom_signage_stickers.clear()
 	var raw_sig = data.get("custom_signage_stickers", [])
@@ -1575,6 +1614,8 @@ func reset_state() -> void:
 	storefront_upgrade_level = 0
 	has_custom_signage = false
 	has_custom_poster = false
+	signage_featured_category = ""
+	signage_last_edited_day = -1
 	poster_featured_category = ""
 	custom_signage_stickers.clear()
 	custom_poster_stickers.clear()

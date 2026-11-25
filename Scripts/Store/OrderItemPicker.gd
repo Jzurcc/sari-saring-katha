@@ -73,9 +73,11 @@ static func pick_weighted(pool: Array[ItemData], current_tier: int, max_tiers_by
 				weight = max(OLDER_TIER_FLOOR_WEIGHT, 1.0 - float(gap) * OLDER_TIER_DECAY)
 		if is_instance_valid(StoreEventManager):
 			weight *= StoreEventManager.get_item_demand_multiplier(item)
-		var featured_cat := StoryManager.get_poster_featured_category()
-		if featured_cat != "" and item.category == featured_cat:
+		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
+		if feat_boosts == 1:
 			weight *= 1.85
+		elif feat_boosts >= 2:
+			weight *= 2.65
 		weights.append(weight)
 		total_weight += weight
 
