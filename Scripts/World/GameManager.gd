@@ -31,6 +31,10 @@ var _last_earning: float = 0.0
 var _pending_quota: float = 0.0  # Quota for the day that just ended (cached before day increments)
 var _is_ending_day: bool = false
 var _is_tally_overlay_open: bool = false
+var _pending_mayari_milestone_queue: Array[String] = []
+var _mayari_milestone_said_also: bool = false
+var _mayari_milestones_spoken_count: int = 0
+var _mayari_tally_timeline_path: String = ""
 var _is_day_summary_open: bool = false
 var _day_summary_shown_for_day: int = -1
 var _mayari_card_hud: Node = null
@@ -262,6 +266,8 @@ func _play_sleep_sequence(ended_day_number: int) -> bool:
 func _on_dialogic_signal(argument: String) -> void:
 	if argument == "open_tally_offer" or argument == "deduct_quota":
 		_handle_open_tally_offer()
+	elif argument == "check_mayari_milestones":
+		_handle_check_mayari_milestones()
 	
 	# Let TutorialManager handle tutorial-specific signals
 	elif tutorial.handle_dialogic_signal(argument):
@@ -337,12 +343,19 @@ func _handle_open_tally_offer() -> void:
 
 	var prev_paid := StoryManager.tally_total_paid
 	StoryManager.tally_total_paid = minf(StoryManager.TALLY_GOAL, StoryManager.tally_total_paid + offer_amount)
+	_pending_mayari_milestone_queue.clear()
+	_mayari_milestone_said_also = false
+	_mayari_milestones_spoken_count = 0
+	_mayari_tally_timeline_path = timeline_path
 	for m in StoryManager.LEDGER_MILESTONES:
 		var m_amt := float(m["amount"])
 		if prev_paid < m_amt - 0.01 and StoryManager.tally_total_paid >= m_amt - 0.01:
+			var m_id := str(m["id"])
 			StoryManager.record_daily_list_entry("milestones_unlocked", str(m["title"]), false)
 			EventBus.show_notification.emit("Ledger Milestone: %s!" % str(m["title"]), str(m["desc"]), "purchase")
 			LogManager.info("GameManager", "Unlocked Silver Ledger Milestone: %s (₱%.0f)" % [str(m["title"]), m_amt])
+			if m_id != "sealed_ledger":
+				_pending_mayari_milestone_queue.append(m_id)
 
 	StoryManager.last_tally_tier = tier
 	StoryManager.pending_mayari_cards = selected_cards
@@ -399,6 +412,28 @@ func _handle_open_tally_offer() -> void:
 	else:
 		LogManager.warn("GameManager", "No matching tally reaction label in %s for tier '%s'. Ending timeline." % [timeline_path, tier])
 		Dialogic.end_timeline()
+
+## Advances through any Silver Ledger milestones newly unlocked tonight,
+## bridging multiple milestones with Reyna Mayari's "Also..." conjunction (Uncle Mario pattern).
+func _handle_check_mayari_milestones() -> void:
+	if _pending_mayari_milestone_queue.is_empty():
+		return
+	var tl_path := Dialogic.current_timeline.resource_path if Dialogic.current_timeline else _mayari_tally_timeline_path
+	if tl_path == "":
+		_pending_mayari_milestone_queue.clear()
+		return
+	if _mayari_milestones_spoken_count > 0 and not _mayari_milestone_said_also and StoryManager.is_label_in_timeline(tl_path, "MilestoneAlso"):
+		_mayari_milestone_said_also = true
+		Dialogic.Jump.jump_to_label("MilestoneAlso")
+		return
+	while not _pending_mayari_milestone_queue.is_empty():
+		var next_id: String = _pending_mayari_milestone_queue.pop_front()
+		var target_lbl := "Milestone_" + next_id
+		if StoryManager.is_label_in_timeline(tl_path, target_lbl):
+			_mayari_milestones_spoken_count += 1
+			_mayari_milestone_said_also = false
+			Dialogic.Jump.jump_to_label(target_lbl)
+			return
 
 ## Calculates and syncs today's nightly tally thresholds to Dialogic before Mayari arrives.
 func prepare_nightly_quota() -> float:

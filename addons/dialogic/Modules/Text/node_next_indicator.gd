@@ -120,12 +120,5 @@ func play_animation(_current_animation: int, _time: float) -> void:
 	if not is_instance_valid(_keycap_panel):
 		return
 
-	_keycap_panel.pivot_offset = _keycap_panel.get_combined_minimum_size() * 0.5
 	_keycap_panel.scale = Vector2.ONE
 	_keycap_panel.modulate.a = 1.0
-
-	tween = create_tween().set_loops()
-	tween.tween_property(_keycap_panel, "scale", Vector2(1.07, 1.07), 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.parallel().tween_property(_keycap_panel, "modulate:a", 0.62, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_property(_keycap_panel, "scale", Vector2.ONE, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	tween.parallel().tween_property(_keycap_panel, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

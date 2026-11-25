@@ -146,12 +146,14 @@ ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos. ...Acceptable.
 ReynaMayari: Your first offering has been recorded in silver ink. [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain on the ledger.
 ReynaMayari:  Do not disappoint me tomorrow.
 [signal arg="story_success"]
+[signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Generous
 ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos — more than I asked. [pause=0.5] ...That is unusual for a mortal.
 ReynaMayari:  Only [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. The silver spires remember generosity.
 [signal arg="story_success"]
+[signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Success
@@ -162,6 +164,7 @@ elif {Transaction_SatisfyVar} <= 66:
 else:
 	ReynaMayari:  You honor the pact well, child. [color=#f5d76e]{Global_TallyOffer}[/color] pesos recorded; [color=#b0c4de]{Global_TallyRemaining}[/color] remaining.
 [signal arg="story_success"]
+[signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Shortfall
@@ -172,6 +175,36 @@ if {Global_TallyOffer} <= 0:
 else:
 	ReynaMayari: [wave blue]Only {Global_TallyOffer} pesos?[/wave] [pause=0.5] That falls short of what the ledger expects.
 	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. Mind the ledger tomorrow, child.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label MilestoneAlso
+ReynaMayari: Also... [pause=0.35]
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_reroll_1
+ReynaMayari: You have passed the first seal of the Silver Ledger — [color=#f5d76e]Moon's Grace[/color]. [pause=0.4]
+ReynaMayari: From this night on, I will allow you a [color=#f5d76e]reroll[/color] whenever the moon's cards displease you. Use it wisely.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_daytime_mayari
+ReynaMayari: Your ledger has reached [color=#f5d76e]Daylight Audience[/color]. [pause=0.4]
+ReynaMayari: I find myself curious about what you sell beneath the sun. Expect me at your counter during business hours from time to time.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_shifted_odds_reroll_2
+ReynaMayari: Half the ledger stands paid in silver — [color=#f5d76e]Silver Favor[/color] is yours. [pause=0.4]
+ReynaMayari: The moon will tilt its hand more kindly toward Favors, and I grant you a [color=#f5d76e]second reroll[/color] each night.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_twin_moons
+ReynaMayari: Three-quarters of your grandmother's pact, honored — [color=#f5d76e]Twin Moons[/color]. [pause=0.4]
+ReynaMayari: Henceforth, you may claim up to [color=#f5d76e]two Moon Cards[/color] each night to shape tomorrow's trade.
+[signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label LedgerCleared

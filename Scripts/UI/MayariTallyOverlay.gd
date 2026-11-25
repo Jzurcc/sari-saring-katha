@@ -28,13 +28,13 @@ const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_BOLD_CREAM := "#FFF6E5"
 
 # Soft Pastel Tier Palette (Meager / Fair / Lavish / Sealed)
-const COL_TIER_MEAGER := Color(0.52, 0.72, 0.92, 1.0)          # Soft pastel omen blue
+const COL_TIER_MEAGER := Color(0.52, 0.72, 0.92, 1.0) # Soft pastel omen blue
 const COL_TIER_MEAGER_BRIGHT := Color(0.74, 0.87, 0.99, 1.0)
-const COL_TIER_FAIR := Color(0.88, 0.79, 0.58, 1.0)            # Soft buttercream gold
+const COL_TIER_FAIR := Color(0.88, 0.79, 0.58, 1.0) # Soft buttercream gold
 const COL_TIER_FAIR_BRIGHT := Color(0.98, 0.92, 0.76, 1.0)
-const COL_TIER_LAVISH := Color(0.95, 0.82, 0.46, 1.0)          # Soft warm favor gold
+const COL_TIER_LAVISH := Color(0.95, 0.82, 0.46, 1.0) # Soft warm favor gold
 const COL_TIER_LAVISH_BRIGHT := Color(1.0, 0.93, 0.68, 1.0)
-const COL_TIER_SEALED := Color(0.96, 0.91, 0.76, 1.0)          # Luminous champagne
+const COL_TIER_SEALED := Color(0.96, 0.91, 0.76, 1.0) # Luminous champagne
 const COL_TIER_SEALED_BRIGHT := Color(1.0, 0.98, 0.90, 1.0)
 
 ## Rotated mystery diamond for Beat 1 preview shadow cards (matches Beat 2 emblem footprint).
@@ -92,6 +92,9 @@ class UnifiedLedgerGauge extends Control:
 	var interactive: bool = true
 	var milestones: Array[Dictionary] = []
 	var _hovered_milestone_idx: int = -1
+	var _pulse_time: float = 0.0
+	var _pip_burst_timers: Dictionary = {} # idx -> float (0..1)
+	var _prev_tonight_ids: Array[String] = []
 
 	var _dragging: bool = false
 
@@ -225,6 +228,19 @@ void fragment() {
 		if _stripe_mat:
 			_stripe_mat.set_shader_parameter("scroll_offset", _stripe_scroll)
 			_stripe_mat.set_shader_parameter("base_color", fill_color)
+		var needs_redraw := not _prev_tonight_ids.is_empty()
+		if needs_redraw:
+			_pulse_time += delta
+		var expired: Array = []
+		for k in _pip_burst_timers.keys():
+			_pip_burst_timers[k] = float(_pip_burst_timers[k]) - delta * 2.2
+			if float(_pip_burst_timers[k]) <= 0.0:
+				expired.append(k)
+			needs_redraw = true
+		for k in expired:
+			_pip_burst_timers.erase(k)
+		if needs_redraw:
+			queue_redraw()
 
 	func _ratio_to_x(r: float) -> float:
 		var pad := 2.0
@@ -259,6 +275,23 @@ void fragment() {
 		gen_thresh = gen_t
 		fill_color = col
 		border_color = b_col
+
+		# Detect milestone pips newly touched by tonight's offer preview for burst animation
+		var cur_tonight: Array[String] = []
+		for i in range(milestones.size()):
+			var m: Dictionary = milestones[i]
+			var m_amt := float(m.get("amount", 0.0))
+			if m_amt <= 0.0 or m_amt >= goal - 0.01:
+				continue
+			var already := total_paid >= m_amt - 0.01
+			var tonight := (not already) and (total_paid + current_offer >= m_amt - 0.01)
+			if tonight:
+				var mid := str(m.get("id", str(i)))
+				cur_tonight.append(mid)
+				if not (mid in _prev_tonight_ids):
+					_pip_burst_timers[i] = 1.0
+		_prev_tonight_ids = cur_tonight
+
 		_sync_visuals()
 		queue_redraw()
 
@@ -358,13 +391,28 @@ void fragment() {
 			if m_amt <= 0.0 or m_amt >= g - 0.01:
 				continue
 			var mx := _ratio_to_x(m_amt / g)
+			var pip_c := Vector2(mx, BAR_Y + BAR_H * 0.5)
 			var already_unlocked := total_paid >= m_amt - 0.01
 			var unlocked_tonight := (not already_unlocked) and (total_paid + current_offer >= m_amt - 0.01)
 			var pip_col := Color(0.56, 0.96, 0.62, 1.0) if unlocked_tonight else (Color(1.0, 0.88, 0.52, 0.96) if already_unlocked else Color(0.70, 0.60, 0.44, 0.58))
-			var pip_r := 6.2 if _hovered_milestone_idx == i else (5.2 if (already_unlocked or unlocked_tonight) else 4.2)
-			draw_line(Vector2(mx, BAR_Y + 1.0), Vector2(mx, BAR_Y + BAR_H - 1.0), Color(pip_col.r, pip_col.g, pip_col.b, 0.45), 1.2, true)
-			_draw_diamond(Vector2(mx, BAR_Y + BAR_H * 0.5), pip_r + 1.6, Color(0.05, 0.04, 0.035, 0.92))
-			_draw_diamond(Vector2(mx, BAR_Y + BAR_H * 0.5), pip_r, pip_col)
+			var pulse := 0.5 + 0.5 * sin(_pulse_time * 5.2 + float(i) * 0.9)
+			var pip_r := 6.6 if _hovered_milestone_idx == i else ((5.8 + pulse * 1.1) if unlocked_tonight else (5.2 if already_unlocked else 4.2))
+			draw_line(Vector2(mx, BAR_Y + 1.0), Vector2(mx, BAR_Y + BAR_H - 1.0), Color(pip_col.r, pip_col.g, pip_col.b, 0.82 if unlocked_tonight else 0.45), 1.6 if unlocked_tonight else 1.2, true)
+			if unlocked_tonight:
+				# Luminous pulsing halo + subtle beacon ticks showing this milestone unlocks tonight!
+				var halo_r := pip_r + 4.2 + pulse * 2.4
+				_draw_diamond(pip_c, halo_r, Color(0.56, 0.98, 0.64, 0.24 + pulse * 0.16))
+				_draw_diamond_outline(pip_c, halo_r, Color(0.78, 1.0, 0.82, 0.58 + pulse * 0.30), 1.4)
+				draw_line(Vector2(mx, BAR_Y - 5.0), Vector2(mx, BAR_Y - 1.0), Color(0.72, 1.0, 0.78, 0.75 + pulse * 0.25), 1.6, true)
+				draw_line(Vector2(mx, BAR_Y + BAR_H + 1.0), Vector2(mx, BAR_Y + BAR_H + 5.0), Color(0.72, 1.0, 0.78, 0.75 + pulse * 0.25), 1.6, true)
+			if _pip_burst_timers.has(i):
+				var bt := clampf(float(_pip_burst_timers[i]), 0.0, 1.0)
+				var burst_r := pip_r + (1.0 - bt) * 18.0
+				_draw_diamond_outline(pip_c, burst_r, Color(0.86, 1.0, 0.82, bt * 0.95), 2.2)
+			_draw_diamond(pip_c, pip_r + 1.6, Color(0.05, 0.04, 0.035, 0.92))
+			_draw_diamond(pip_c, pip_r, pip_col)
+			if unlocked_tonight:
+				_draw_diamond(pip_c, pip_r * 0.42, Color(0.96, 1.0, 0.94, 0.95))
 
 		# Connector stem from floating readout down into glowing diamond handlebar thumb
 		draw_line(Vector2(cur_x, BAR_Y - 8.0), Vector2(cur_x, BAR_Y), Color(border_color.r, border_color.g, border_color.b, 0.72), 1.5, true)
@@ -385,6 +433,15 @@ void fragment() {
 			center + Vector2(0.0, r),
 			center + Vector2(-r, 0.0),
 		]), col)
+
+	func _draw_diamond_outline(center: Vector2, r: float, col: Color, width: float = 1.5) -> void:
+		draw_polyline(PackedVector2Array([
+			center + Vector2(0.0, -r),
+			center + Vector2(r, 0.0),
+			center + Vector2(0.0, r),
+			center + Vector2(-r, 0.0),
+			center + Vector2(0.0, -r),
+		]), col, width, true)
 
 var _bold_font: FontVariation
 
@@ -435,6 +492,8 @@ var _accept_style: StyleBoxFlat
 
 var _confirmed_offer: float = 0.0
 var _confirmed_tier: String = "balanced"
+var _touched_milestone_ids: Array[String] = []
+var _hovered_milestone_dict: Dictionary = {}
 
 func setup(player_money: float, total_paid: float, goal: float, min_amount: float, generous_amount: float) -> void:
 	_player_money = maxf(0.0, player_money)
@@ -957,6 +1016,27 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 	_apply_confirm_style(accent)
 	_unified_gauge.set_state(_total_paid, _goal, _current_offer, _max_offer, _min_amount, _generous_amount, accent, accent_bright)
 
+	# Track milestones newly touched by tonight's offer preview
+	var touched_now: Array[Dictionary] = []
+	var touched_ids: Array[String] = []
+	var newly_touched := false
+	for m in StoryManager.LEDGER_MILESTONES:
+		var m_amt := float(m.get("amount", 0.0))
+		if m_amt <= 0.0 or m_amt >= _goal - 0.01:
+			continue
+		if _total_paid < m_amt - 0.01 and _total_paid + _current_offer >= m_amt - 0.01:
+			var mid := str(m.get("id", ""))
+			touched_now.append(m)
+			touched_ids.append(mid)
+			if not (mid in _touched_milestone_ids):
+				newly_touched = true
+	var touched_changed := (touched_ids != _touched_milestone_ids)
+	_touched_milestone_ids = touched_ids
+	if animate_pop and newly_touched:
+		EventBus.request_sfx.emit("purchase")
+	if _phase == 0 and _hovered_milestone_dict.is_empty() and (touched_changed or not touched_now.is_empty()):
+		_show_milestone_callouts(touched_now)
+
 	if animate_pop:
 		_unified_gauge.pop_amount()
 		if tier_changed:
@@ -1399,64 +1479,84 @@ func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> 
 func _on_milestone_hovered(m: Dictionary) -> void:
 	if _phase != 0 or not is_instance_valid(_callout_col):
 		return
+	_hovered_milestone_dict = m
+	if not m.is_empty():
+		_show_milestone_callouts([m])
+		return
+	# When unhovering a pip, keep showing any milestones currently touched by the offer preview!
+	var touched_now: Array[Dictionary] = []
+	for lm in StoryManager.LEDGER_MILESTONES:
+		var m_amt := float(lm.get("amount", 0.0))
+		if m_amt > 0.0 and m_amt < _goal - 0.01 and _total_paid < m_amt - 0.01 and _total_paid + _current_offer >= m_amt - 0.01:
+			touched_now.append(lm)
+	_show_milestone_callouts(touched_now)
+
+func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
+	if _phase != 0 or not is_instance_valid(_callout_col):
+		return
 	if _callout_tween and _callout_tween.is_valid():
 		_callout_tween.kill()
 	for child in _callout_col.get_children():
 		_callout_col.remove_child(child)
 		child.queue_free()
-	if m.is_empty():
+	if milestone_list.is_empty():
 		_callout_col.visible = false
 		_callout_col.modulate.a = 0.0
 		return
 
-	var m_amt := float(m.get("amount", 0.0))
-	var pct := int(roundf(float(m.get("ratio", 0.0)) * 100.0))
-	var already := _total_paid >= m_amt - 0.01
-	var tonight := (not already) and (_total_paid + _current_offer >= m_amt - 0.01)
-	var status_str := "UNLOCKED ✓" if already else ("UNLOCKS TONIGHT!" if tonight else "₱%d MORE NEEDED" % int(ceilf(m_amt - _total_paid)))
-	var status_col := COL_STAT_POS if (already or tonight) else COL_GOLD_BRIGHT
+	for m in milestone_list:
+		var m_amt := float(m.get("amount", 0.0))
+		var pct := int(roundf(float(m.get("ratio", 0.0)) * 100.0))
+		var already := _total_paid >= m_amt - 0.01
+		var tonight := (not already) and (_total_paid + _current_offer >= m_amt - 0.01)
+		var status_str := "UNLOCKED ✓" if already else ("✦ UNLOCKS TONIGHT!" if tonight else "₱%d MORE NEEDED" % int(ceilf(m_amt - _total_paid)))
+		var status_col := COL_STAT_POS if (already or tonight) else COL_GOLD_BRIGHT
 
-	var box := PanelContainer.new()
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.96), 6, 14, 10)
-	bs.border_color = status_col
-	bs.border_width_left = 3
-	bs.border_width_top = 1
-	bs.border_width_right = 1
-	bs.border_width_bottom = 1
-	bs.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
-	bs.shadow_size = 12
-	box.add_theme_stylebox_override("panel", bs)
+		var box := PanelContainer.new()
+		box.custom_minimum_size = Vector2(236, 0)
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var bs := UIStyle.create_flat_stylebox(Color(0.062, 0.054, 0.046, 0.96), 6, 14, 10)
+		bs.border_color = status_col
+		bs.border_width_left = 3
+		bs.border_width_top = 1
+		bs.border_width_right = 1
+		bs.border_width_bottom = 1
+		bs.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+		bs.shadow_size = 12
+		box.add_theme_stylebox_override("panel", bs)
 
-	var bv := VBoxContainer.new()
-	bv.add_theme_constant_override("separation", 4)
-	bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(bv)
+		var bv := VBoxContainer.new()
+		bv.add_theme_constant_override("separation", 4)
+		bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(bv)
 
-	var kt := Label.new()
-	kt.text = "%d%% (₱%d) · %s" % [pct, int(m_amt), str(m.get("title", "")).to_upper()]
-	kt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	kt.add_theme_font_override("font", _bold_font)
-	kt.add_theme_font_size_override("font_size", 15)
-	kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	bv.add_child(kt)
+		var kt := Label.new()
+		kt.text = "%d%% (₱%d) · %s" % [pct, int(m_amt), str(m.get("title", "")).to_upper()]
+		kt.custom_minimum_size = Vector2(204, 0)
+		kt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kt.add_theme_font_override("font", _bold_font)
+		kt.add_theme_font_size_override("font_size", 15)
+		kt.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+		bv.add_child(kt)
 
-	var ks := Label.new()
-	ks.text = status_str
-	ks.add_theme_font_override("font", _bold_font)
-	ks.add_theme_font_size_override("font_size", 12)
-	ks.add_theme_color_override("font_color", status_col)
-	bv.add_child(ks)
+		var ks := Label.new()
+		ks.text = status_str
+		ks.add_theme_font_override("font", _bold_font)
+		ks.add_theme_font_size_override("font_size", 12)
+		ks.add_theme_color_override("font_color", status_col)
+		bv.add_child(ks)
 
-	var kd := Label.new()
-	kd.text = str(m.get("desc", ""))
-	kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	kd.add_theme_font_override("font", UIStyle.FONT_INDER)
-	kd.add_theme_font_size_override("font_size", 13)
-	kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
-	bv.add_child(kd)
+		var kd := Label.new()
+		kd.text = str(m.get("desc", ""))
+		kd.custom_minimum_size = Vector2(204, 0)
+		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
+		kd.add_theme_font_size_override("font_size", 13)
+		kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		bv.add_child(kd)
 
-	_callout_col.add_child(box)
+		_callout_col.add_child(box)
+
 	_callout_col.visible = true
 	_callout_col.reset_size()
 	if is_instance_valid(_gauge_dock):
