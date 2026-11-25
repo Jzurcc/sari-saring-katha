@@ -181,25 +181,52 @@ func has_mayari_card(card_id: String) -> bool:
 		return false
 	return active_mayari_card == card_id or (card_id in active_mayari_cards) or (card_id in active_blessing_cards)
 
+## Scales percentage-based tips/bonuses for late-game balance with generous hidden floor & cap.
+func calc_scaled_tip(sale_price: float, pct: float, min_tip: float, max_tip: float) -> float:
+	if sale_price <= 0.0 or pct <= 0.0:
+		return 0.0
+	return clampf(snapped(sale_price * pct, 0.5), min_tip, max_tip)
+
 func get_mayari_tolerance_offset() -> int:
+	var offset := 0
 	if has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
-		return 1
-	if has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH) or has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
-		return -1
-	return 0
+		offset += 1
+	if has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
+		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
+		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+		offset -= 1
+	return offset
 
 func get_restock_discount_multiplier() -> float:
+	var mult := 1.0
 	if has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
-		return 0.85
+		mult *= 0.85
 	if has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
-		return 0.90
-	return 1.0
+		mult *= 0.90
+	if has_mayari_card(MayariCardRegistry.CARD_TIGHT_WHOLESALE):
+		mult *= 1.20
+	return mult
 
 func get_item_restock_discount_multiplier(item: ItemData) -> float:
 	var mult := get_restock_discount_multiplier()
 	if item and is_item_on_sulit_deal(item):
-		mult *= 0.80
+		if has_mario_deals and has_mayari_card(MayariCardRegistry.CARD_WHOLESALE_BLESSING):
+			mult *= 0.65
+		else:
+			mult *= 0.80
 	return mult
+
+func get_foot_traffic_time_scale() -> float:
+	var scale := 1.0
+	if has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
+		scale *= 0.80
+	if has_mayari_card(MayariCardRegistry.CARD_EARLY_DUSK):
+		scale *= 0.75
+	if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP):
+		scale *= 0.85
+	return clampf(scale, 0.45, 1.0)
 
 func get_effective_closing_hour() -> float:
 	if has_mayari_card(MayariCardRegistry.CARD_MOON_HOLDS_SKY):
@@ -239,6 +266,10 @@ func get_xp_multiplier() -> float:
 	var mult := get_permit_xp_multiplier()
 	if has_mayari_card(MayariCardRegistry.CARD_SILVER_RENOWN):
 		mult *= 1.50
+	if has_mayari_card(MayariCardRegistry.CARD_QUIET_ECLIPSE):
+		mult *= 1.35
+	if has_mayari_card(MayariCardRegistry.CARD_TIGHT_WHOLESALE):
+		mult *= 1.30
 	if has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
 		mult *= 0.65
 	return mult
@@ -311,6 +342,8 @@ func get_fridge_drain_rate() -> float:
 	var rate := 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["drain_sec"])
 	if has_mayari_card(MayariCardRegistry.CARD_FROST_OF_BIRINGAN):
 		rate *= 0.60
+	if has_mayari_card(MayariCardRegistry.CARD_WARM_TRADE_WINDS):
+		rate *= 1.60
 	return rate
 
 func get_fridge_regen_rate() -> float:
@@ -361,7 +394,8 @@ var cat_upgrade_level: int = 0
 var _cat_upgrade_item_cache: Dictionary = {}
 
 func get_max_counter_slots() -> int:
-	return clampi(1 + cat_upgrade_level, 1, 3)
+	var bonus := 1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0
+	return clampi(1 + cat_upgrade_level + bonus, 1, 3)
 
 func get_cat_upgrade_item(level: int) -> ItemData:
 	var lvl := clampi(level, 1, CAT_UPGRADE_SPECS.size() - 1)
@@ -442,7 +476,10 @@ var _maneki_upgrade_item_cache: Dictionary = {}
 
 func get_customer_time_window_hours() -> float:
 	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)
-	return float(MANEKI_UPGRADE_SPECS[lvl]["customer_hours"])
+	var hrs := float(MANEKI_UPGRADE_SPECS[lvl]["customer_hours"])
+	if has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
+		hrs *= 1.50
+	return hrs
 
 func get_visit_time_window_hours() -> float:
 	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)
@@ -495,12 +532,19 @@ var radio_upgrade_level: int = 0
 var _radio_upgrade_item_cache: Dictionary = {}
 
 func get_revealed_regular_count() -> int:
+	if has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES):
+		return 0
 	var lvl := clampi(radio_upgrade_level, 0, RADIO_UPGRADE_SPECS.size() - 1)
 	return int(RADIO_UPGRADE_SPECS[lvl]["reveals"])
 
 func get_max_daily_events() -> int:
+	if has_mayari_card(MayariCardRegistry.CARD_QUIET_ECLIPSE):
+		return 0
 	var lvl := clampi(radio_upgrade_level, 0, RADIO_UPGRADE_SPECS.size() - 1)
-	return int(RADIO_UPGRADE_SPECS[lvl].get("max_events", 1))
+	var base := int(RADIO_UPGRADE_SPECS[lvl].get("max_events", 1))
+	if has_mayari_card(MayariCardRegistry.CARD_ECHOES_ON_THE_DIAL):
+		base += 1
+	return base
 
 func get_radio_upgrade_item(level: int) -> ItemData:
 	var lvl := clampi(level, 1, RADIO_UPGRADE_SPECS.size() - 1)
@@ -779,19 +823,28 @@ func get_bench_spec(level: int = -1) -> Dictionary:
 	return BENCH_UPGRADE_SPECS[lvl]
 
 func get_bench_linger_chance() -> float:
-	return float(get_bench_spec()["linger_chance"])
+	var ch := float(get_bench_spec()["linger_chance"])
+	if has_mayari_card(MayariCardRegistry.CARD_TAMBAYAN_WARMTH):
+		ch = minf(0.95, ch + 0.25)
+	return ch
 
 func get_bench_max_lingering() -> int:
-	return int(get_bench_spec()["max_lingering"])
+	var mx := int(get_bench_spec()["max_lingering"])
+	if has_mayari_card(MayariCardRegistry.CARD_TAMBAYAN_WARMTH):
+		mx += 1
+	return mx
 
 func get_bench_passive_xp() -> int:
-	return int(get_bench_spec()["passive_xp"])
+	var pxp := int(get_bench_spec()["passive_xp"])
+	if has_mayari_card(MayariCardRegistry.CARD_TAMBAYAN_WARMTH):
+		pxp = maxi(2, pxp * 2)
+	return pxp
 
 func get_bench_smalltalk_xp() -> int:
 	return int(get_bench_spec()["smalltalk_xp"])
 
 func can_bench_return_to_buy() -> bool:
-	return bool(get_bench_spec()["return_to_buy"])
+	return bool(get_bench_spec()["return_to_buy"]) or has_mayari_card(MayariCardRegistry.CARD_TAMBAYAN_WARMTH)
 
 func get_bench_upgrade_item(level: int) -> ItemData:
 	var lvl := clampi(level, 1, BENCH_UPGRADE_SPECS.size() - 1)
@@ -859,7 +912,10 @@ var _storefront_upgrade_item_cache: Dictionary = {}
 
 func get_storefront_tip_chance() -> float:
 	var lvl := clampi(storefront_upgrade_level, 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
-	return float(STOREFRONT_UPGRADE_SPECS[lvl]["tip_chance"])
+	var ch := float(STOREFRONT_UPGRADE_SPECS[lvl]["tip_chance"])
+	if has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW):
+		ch += 0.15
+	return clampf(ch, 0.0, 0.90)
 
 func get_storefront_price_relief() -> float:
 	var lvl := clampi(storefront_upgrade_level, 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
@@ -1015,7 +1071,7 @@ var todays_missed_items: Dictionary = {} # ItemData.resource_path -> int missed 
 func ensure_daily_demand_rolled() -> void:
 	if todays_expected_regulars.is_empty():
 		_roll_daily_expected_regulars()
-	if has_mario_deals and todays_sulit_deals.is_empty():
+	if (has_mario_deals or has_mayari_card(MayariCardRegistry.CARD_WHOLESALE_BLESSING)) and todays_sulit_deals.is_empty():
 		_roll_daily_sulit_deals()
 
 func _roll_daily_expected_regulars() -> void:
@@ -1063,7 +1119,7 @@ func get_revealed_expected_regulars() -> Array[CustomerData]:
 	return result
 
 func is_item_on_sulit_deal(item: ItemData) -> bool:
-	if not has_mario_deals or not item:
+	if (not has_mario_deals and not has_mayari_card(MayariCardRegistry.CARD_WHOLESALE_BLESSING)) or not item:
 		return false
 	return item.resource_path in todays_sulit_deals
 
@@ -1833,6 +1889,19 @@ func _on_customer_satisfied(customer) -> void:
 					record_daily_stat_int("visits_served", 1)
 			else:
 				record_daily_stat_int("buyers_served", 1)
+				# Picky Cravings Omen upside: +18% Bundle Bonus when completing a full 2+ multi-item cash order!
+				var ctx_done: TransactionContext = customer.transaction_context
+				if has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS) and not ctx_done.wants_debt and ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
+					var basket_total := 0.0
+					for dit in ctx_done.delivered_items:
+						if dit:
+							basket_total += dit.get_final_price()
+					var bundle_bonus := calc_scaled_tip(basket_total, 0.18, 5.0, 25.0)
+					if bundle_bonus > 0.0 and is_instance_valid(_game_manager):
+						_game_manager.money += bundle_bonus
+						EventBus.money_changed.emit(_game_manager.money)
+						record_daily_stat_add("tips_earned", bundle_bonus)
+						EventBus.show_notification.emit("Bundle Bonus!", "+₱%.2f for completing a %d-item order!" % [bundle_bonus, ctx_done.delivered_items.size()], "purchase")
 		
 	# Tutorial Persistence: If this encounter was the guided tutorial, mark it complete now.
 	if customer.transaction_context and customer.transaction_context.is_guided_tutorial:

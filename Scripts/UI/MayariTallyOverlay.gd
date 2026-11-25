@@ -1302,15 +1302,14 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	emblem.fill_color = Color(0.0, 0.0, 0.0, 0.0)
 	hbox.add_child(emblem)
 
-	var sigil_lbl := Label.new()
-	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sigil_lbl.text = str(c_data.get("sigil", "☽"))
-	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 36)
-	sigil_lbl.add_theme_color_override("font_color", accent_bright)
-	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem.add_child(sigil_lbl)
+	HadesEmblem.populate_emblem_glyph(
+		emblem,
+		str(c_data.get("icon", "")),
+		str(c_data.get("sigil", "☽")),
+		accent_bright,
+		36.0,
+		36
+	)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL

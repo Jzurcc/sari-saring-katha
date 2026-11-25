@@ -367,8 +367,11 @@ func decrement_cooldown() -> void:
 ## Set the post-order delivery cooldown (3.0 in-game hours, modified by Mayari Moon Cards).
 func start_delivery_cooldown() -> void:
 	var hours := BASE_DELIVERY_COOLDOWN_HOURS
-	if is_instance_valid(StoryManager) and StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
-		hours *= 0.65 # -35% Delivery Cooldown
+	if is_instance_valid(StoryManager):
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
+			hours *= 0.65 # -35% Delivery Cooldown
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY):
+			hours *= 1.65 # +65% Delivery Cooldown
 	delivery_cooldown_end_hour = _get_current_game_hour() + hours
 	customers_needed_for_delivery = 0
 	LogManager.info("InventoryManager", "Uncle Mario delivery cooldown started: %.2fh (ready at %.2fh)." % [hours, delivery_cooldown_end_hour])

@@ -225,7 +225,7 @@ static func build_transaction_context(
 			var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
 			var prefer_hint: bool = data.has_riddle_preference()
 			var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier) if transaction.transaction_type == TransactionContext.Type.PURCHASE else 1
-			if transaction.transaction_type == TransactionContext.Type.PURCHASE and sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS):
+			if transaction.transaction_type == TransactionContext.Type.PURCHASE and (sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS) or sm.has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS)):
 				target_item_count = maxi(target_item_count, randi_range(2, 3))
 
 			# Build general store pool (always filtering out excluded categories)
@@ -538,7 +538,7 @@ static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -
 	var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)
 	var prefer_hint: bool = data.has_riddle_preference()
 	var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier)
-	if sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS):
+	if sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS) or sm.has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS):
 		target_item_count = maxi(target_item_count, randi_range(2, 3))
 
 	var pool: Array[ItemData] = []

@@ -744,6 +744,7 @@ func _make_event_hover_info(ev: StoreEventData) -> Dictionary:
 	return {
 		"title": ev.event_name,
 		"sigil": _event_sigil(ev.event_id),
+		"icon": "res://Assets/ui/icons/zap.png",
 		"desc_rich": desc_rich,
 		"stats": stats,
 		"kind": "event",
@@ -754,6 +755,7 @@ func _make_card_hover_info(c_data: Dictionary, kind: String) -> Dictionary:
 	return {
 		"title": str(c_data.get("title", "Moon Card")),
 		"sigil": str(c_data.get("sigil", "☽")),
+		"icon": str(c_data.get("icon", "")),
 		"desc_rich": str(c_data.get("description_rich", c_data.get("description", ""))),
 		"stats": c_data.get("stats", []),
 		"kind": kind,
@@ -780,15 +782,14 @@ func _make_condition_diamond(info: Dictionary) -> Control:
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.add_child(emblem)
 
-	var sigil_lbl := Label.new()
-	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sigil_lbl.text = str(info.get("sigil", "✦"))
-	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 28)
-	sigil_lbl.add_theme_color_override("font_color", accent_bright)
-	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem.add_child(sigil_lbl)
+	HadesEmblem.populate_emblem_glyph(
+		emblem,
+		str(info.get("icon", "")),
+		str(info.get("sigil", "✦")),
+		accent_bright,
+		26.0,
+		28
+	)
 
 	holder.mouse_entered.connect(func():
 		var tw := holder.create_tween()
@@ -890,15 +891,14 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
-	var sigil_lbl := Label.new()
-	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sigil_lbl.text = str(info.get("sigil", "✦"))
-	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 36)
-	sigil_lbl.add_theme_color_override("font_color", accent_bright)
-	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem.add_child(sigil_lbl)
+	HadesEmblem.populate_emblem_glyph(
+		emblem,
+		str(info.get("icon", "")),
+		str(info.get("sigil", "✦")),
+		accent_bright,
+		36.0,
+		36
+	)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -134,7 +134,7 @@ func _refresh_icons() -> void:
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
 			var pe: Dictionary = HadesEmblem.palette("event")
-			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"])
+			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, "res://Assets/ui/icons/zap.png")
 			count += 1
 
 	# 2. Active Reyna Mayari Moon Card(s)
@@ -148,7 +148,7 @@ func _refresh_icons() -> void:
 			var pc: Dictionary = HadesEmblem.palette("favor" if is_fav else "chill")
 			var acc: Color = pc["accent"]
 			var acc_b: Color = pc["bright"]
-			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b)
+			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b, 0.0, str(card.get("icon", "")))
 			count += 1
 
 	# 3. Active Sto. Niño Blessings (with clockwise radial sweep when timed)
@@ -157,7 +157,7 @@ func _refresh_icons() -> void:
 	for b_id in StoryManager.active_blessing_cards:
 		var b_card := MayariCardRegistry.get_card(b_id)
 		if not b_card.is_empty():
-			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress)
+			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress, str(b_card.get("icon", "")))
 			_blessing_diamonds.append(d)
 			count += 1
 	if not _blessing_diamonds.is_empty():
@@ -288,15 +288,14 @@ func _build_moon_card_toast(c_data: Dictionary) -> PanelContainer:
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
-	var sigil_lbl := Label.new()
-	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sigil_lbl.text = str(c_data.get("sigil", "☽"))
-	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 34)
-	sigil_lbl.add_theme_color_override("font_color", accent_bright)
-	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem.add_child(sigil_lbl)
+	HadesEmblem.populate_emblem_glyph(
+		emblem,
+		str(c_data.get("icon", "")),
+		str(c_data.get("sigil", "☽")),
+		accent_bright,
+		34.0,
+		34
+	)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -376,7 +375,7 @@ func _build_moon_card_toast(c_data: Dictionary) -> PanelContainer:
 
 	return card
 
-func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0) -> MiniDiamondIcon:
+func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0, icon_path: String = "") -> MiniDiamondIcon:
 	var d := MiniDiamondIcon.new()
 	d.custom_minimum_size = Vector2(62, 62)
 	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -387,13 +386,5 @@ func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: 
 	d.radial_progress = progress
 	_row.add_child(d)
 
-	var lbl := Label.new()
-	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	lbl.text = sigil
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 26)
-	lbl.add_theme_color_override("font_color", accent_bright)
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	d.add_child(lbl)
+	HadesEmblem.populate_emblem_glyph(d, icon_path, sigil, accent_bright, 24.0, 26)
 	return d

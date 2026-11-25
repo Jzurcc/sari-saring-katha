@@ -518,9 +518,7 @@ func _on_wave_cleared() -> void:
 			_is_transitioning_wave = false
 			return
 
-	var delay := randf_range(0.4, 1.4)
-	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
-		delay *= 0.80
+	var delay := randf_range(0.4, 1.4) * StoryManager.get_foot_traffic_time_scale()
 	if StoryManager.is_past_closing_time():
 		delay = 1.0 # Short delay for Mayari arrival
 

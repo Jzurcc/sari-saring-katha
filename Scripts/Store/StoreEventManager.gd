@@ -201,7 +201,13 @@ func reveal_next_event() -> StoreEventData:
 		return null
 	_revealed_event_ids.append(ev.event_id)
 	if has_unrevealed_events():
-		_next_reveal_ready_hour = _get_current_hour() + EVENT_REVEAL_COOLDOWN_HOURS
+		var cd_hours := EVENT_REVEAL_COOLDOWN_HOURS
+		if is_instance_valid(StoryManager):
+			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_ECHOES_ON_THE_DIAL):
+				cd_hours *= 0.50
+			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES):
+				cd_hours *= 1.50
+		_next_reveal_ready_hour = _get_current_hour() + cd_hours
 	else:
 		_next_reveal_ready_hour = -1.0
 	start_chatter_cooldown()

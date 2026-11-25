@@ -73,6 +73,8 @@ static func pick_weighted(pool: Array[ItemData], current_tier: int, max_tiers_by
 				weight = max(OLDER_TIER_FLOOR_WEIGHT, 1.0 - float(gap) * OLDER_TIER_DECAY)
 		if is_instance_valid(StoreEventManager):
 			weight *= StoreEventManager.get_item_demand_multiplier(item)
+		if (item.category == "bottle" or item.category == "frozen") and StoryManager.has_mayari_card(MayariCardRegistry.CARD_WARM_TRADE_WINDS):
+			weight *= 1.40
 		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
 		if feat_boosts == 1:
 			weight *= 1.85

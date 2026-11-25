@@ -499,8 +499,10 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items := _pending_delivery_items.duplicate()
 	_pending_delivery_items.clear()
 
-	# Silver-Touched Bag Moon Card: slip 1-2 free bonus units of ordered regular items into delivery!
-	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG):
+	# Silver-Touched Bag (+1-2) and/or Foggy Highway (+1): slip free bonus units into delivery!
+	var has_silver_bag := StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG)
+	var has_foggy_hwy := StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY)
+	if has_silver_bag or has_foggy_hwy:
 		var eligible_regular: Array[ItemData] = []
 		for it in items.keys():
 			if _is_non_stock_upgrade(it):
@@ -509,7 +511,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 				continue
 			eligible_regular.append(it)
 		if not eligible_regular.is_empty():
-			var bonus_count := randi_range(1, 2)
+			var bonus_count := (randi_range(1, 2) if has_silver_bag else 0) + (1 if has_foggy_hwy else 0)
 			var granted := 0
 			for _b in range(bonus_count):
 				var chosen: ItemData = eligible_regular.pick_random()
@@ -518,8 +520,9 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 					items[chosen] = int(items[chosen]) + 1
 					granted += 1
 			if granted > 0 and spawn_in_tree:
-				LogManager.info("MarioManager", "Silver-Touched Bag granted +%d bonus item(s)!" % granted)
-				EventBus.show_notification.emit("Silver-Touched Bag!", "+%d free bonus item(s) slipped into your bag!" % granted, "purchase")
+				var src_name := "Silver-Touched Bag" if has_silver_bag else "Foggy Highway"
+				LogManager.info("MarioManager", "%s granted +%d bonus item(s)!" % [src_name, granted])
+				EventBus.show_notification.emit("%s!" % src_name, "+%d free bonus item(s) slipped into your bag!" % granted, "purchase")
 
 	# 1. Finalize Stock Immediately for regular shelf/fridge items.
 	# Candies & sachets are bagged physically and added to container stock when unpacked.

@@ -90,7 +90,12 @@ static func compute_overpriced_refusal_chance(item_data: ItemData) -> float:
 		4: base_chance = 0.70
 		_: base_chance = 0.88
 	var relief: float = StoryManager.get_storefront_price_relief()
-	var final_chance: float = base_chance - relief
+	var card_mod: float = 0.0
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+		card_mod += 0.20
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
+		card_mod -= 0.20
+	var final_chance: float = base_chance - relief + card_mod
 	return maxf(0.05, final_chance) if effective_step >= 3 else maxf(0.0, final_chance)
 
 

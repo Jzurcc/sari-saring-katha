@@ -13,8 +13,50 @@ var fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 var show_triangle: bool = true
 
 static var _tri_shader: Shader = null
+static var _icon_cache: Dictionary = {}
 var _tri_rect: ColorRect = null
 var _tri_mat: ShaderMaterial = null
+
+static func load_lucide_icon(icon_path: String) -> Texture2D:
+	if icon_path == "":
+		return null
+	if _icon_cache.has(icon_path):
+		return _icon_cache[icon_path]
+	var tex: Texture2D = null
+	if ResourceLoader.exists(icon_path):
+		tex = load(icon_path) as Texture2D
+	elif FileAccess.file_exists(icon_path):
+		var img := Image.load_from_file(icon_path)
+		if img and not img.is_empty():
+			tex = ImageTexture.create_from_image(img)
+	_icon_cache[icon_path] = tex
+	return tex
+
+static func populate_emblem_glyph(emblem: Control, icon_path: String, fallback_sigil: String, glyph_color: Color, icon_px: float = 36.0, fallback_font_px: int = 34) -> void:
+	var tex := load_lucide_icon(icon_path)
+	if tex != null:
+		var center := CenterContainer.new()
+		center.set_anchors_preset(Control.PRESET_FULL_RECT)
+		center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var tr := TextureRect.new()
+		tr.texture = tex
+		tr.custom_minimum_size = Vector2(icon_px, icon_px)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr.modulate = glyph_color
+		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		center.add_child(tr)
+		emblem.add_child(center)
+		return
+	var sigil_lbl := Label.new()
+	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sigil_lbl.text = fallback_sigil
+	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	sigil_lbl.add_theme_font_size_override("font_size", fallback_font_px)
+	sigil_lbl.add_theme_color_override("font_color", glyph_color)
+	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	emblem.add_child(sigil_lbl)
 
 static func palette(kind: String) -> Dictionary:
 	match kind:

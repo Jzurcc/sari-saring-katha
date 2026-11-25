@@ -107,7 +107,10 @@ func on_customer_dismissed() -> void:
 		return
 
 	if limit_time > 0.0:
-		var fast_forward_hours := window_hours / 2.0
+		var traffic_scale := 1.0
+		if is_instance_valid(_tree_owner) and _tree_owner.has_method("get_foot_traffic_time_scale"):
+			traffic_scale = _tree_owner.get_foot_traffic_time_scale()
+		var fast_forward_hours := (window_hours / 2.0) * traffic_scale
 		var half_window_target := limit_time - (window_hours - fast_forward_hours)
 		var clamped_target := minf(half_window_target, closing)
 		if clamped_target > current_display_time + 0.02:

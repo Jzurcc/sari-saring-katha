@@ -132,13 +132,34 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			_last_earning += tip
 			LogManager.info("GameManager", "Loss leader discount rewarded with a tip of +₱%.2f!" % tip)
 		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
-			tip += 3.0
-			_last_earning += 3.0
-			LogManager.info("GameManager", "Moonlight Tips card granted +₱3.00 bonus tip!")
+			var ml_tip := StoryManager.calc_scaled_tip(base_sale, 0.12, 3.0, 18.0)
+			tip += ml_tip
+			_last_earning += ml_tip
+		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
+			var fm_tip := StoryManager.calc_scaled_tip(base_sale, 0.10, 2.0, 14.0)
+			tip += fm_tip
+			_last_earning += fm_tip
+		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
+			if (item.category == "bottle" or item.category == "frozen") and not StoryManager.is_fridge_warm:
+				var cold_tip := StoryManager.calc_scaled_tip(base_sale, 0.12, 2.0, 15.0)
+				tip += cold_tip
+				_last_earning += cold_tip
+		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD) and item.current_step <= 1:
+			var fair_tip := StoryManager.calc_scaled_tip(base_sale, 0.15, 3.0, 16.0)
+			tip += fair_tip
+			_last_earning += fair_tip
+		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
+			var ev_cnt := StoreEventManager.get_all_active_events().size()
+			if ev_cnt > 0:
+				var ev_tip := StoryManager.calc_scaled_tip(base_sale, 0.10 * float(ev_cnt), 2.0 * float(ev_cnt), 18.0 * float(ev_cnt))
+				tip += ev_tip
+				_last_earning += ev_tip
 
 		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
 		if not wants_debt and feat_boosts > 0:
 			var promo_bonus := 3.0 * float(feat_boosts)
+			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW):
+				promo_bonus += StoryManager.calc_scaled_tip(base_sale, 0.15, 3.0, 20.0)
 			tip += promo_bonus
 			_last_earning += promo_bonus
 			LogManager.info("GameManager", "Storefront Featured Category (%s x%d) granted +₱%.2f promo bonus!" % [item.category, feat_boosts, promo_bonus])

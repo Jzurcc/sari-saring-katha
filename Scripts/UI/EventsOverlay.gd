@@ -448,7 +448,7 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 		{"label": "Highlighted Price Tolerance:", "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
 	]
 	var kws: Array = ["price_tolerance"] if ev.tolerance_offset != 0 else []
-	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws)
+	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws, "res://Assets/ui/icons/zap.png")
 
 func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
@@ -462,7 +462,8 @@ func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false) -> 
 		desc_rich,
 		stats,
 		kind_str,
-		kws
+		kws,
+		str(c_data.get("icon", ""))
 	)
 
 func _get_unified_card_height() -> float:
@@ -478,7 +479,7 @@ func _sync_card_heights() -> void:
 		if ch is PanelContainer and ch.has_meta("is_hades_card"):
 			ch.custom_minimum_size = Vector2(0, target_h)
 
-func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, keywords: Array = []) -> PanelContainer:
+func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, keywords: Array = [], icon_path: String = "") -> PanelContainer:
 	var pal: Dictionary = HadesEmblem.palette(kind)
 	var accent: Color = pal["accent"]
 	var accent_bright: Color = pal["bright"]
@@ -514,15 +515,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
-	var sigil_lbl := Label.new()
-	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-	sigil_lbl.text = sigil
-	sigil_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sigil_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	sigil_lbl.add_theme_font_size_override("font_size", 36)
-	sigil_lbl.add_theme_color_override("font_color", accent_bright)
-	sigil_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	emblem.add_child(sigil_lbl)
+	HadesEmblem.populate_emblem_glyph(emblem, icon_path, sigil, accent_bright, 36.0, 36)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
