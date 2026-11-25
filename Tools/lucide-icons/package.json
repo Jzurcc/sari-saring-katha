@@ -1,0 +1,14 @@
+{
+  "name": "sari-saring-katha-lucide-icons",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node convert.mjs",
+    "pick": "node pick.mjs"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "lucide-static": "latest"
+  }
+}

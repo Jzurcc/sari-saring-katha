@@ -22,3 +22,9 @@ export_presets.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Lucide icon generator tooling (bulk cache & deps stay local; picked icons go to Assets/ui/icons/)
+Tools/lucide-icons/node_modules/
+Tools/lucide-icons/png/
+tools/lucide-icons/node_modules/
+tools/lucide-icons/png/
