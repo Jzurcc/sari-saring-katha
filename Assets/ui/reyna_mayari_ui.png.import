@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dav7lf856fyro"
-path="res://.godot/imported/calendar_ui.jpg-4c730c21a09d6be07952e37307bd2dd7.ctex"
+uid="uid://mubae3fvpkix"
+path="res://.godot/imported/reyna_mayari_ui.png-ea861f35706ab043d455ba5606e6706d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ui/calendar_ui.jpg"
-dest_files=["res://.godot/imported/calendar_ui.jpg-4c730c21a09d6be07952e37307bd2dd7.ctex"]
+source_file="res://Assets/ui/reyna_mayari_ui.png"
+dest_files=["res://.godot/imported/reyna_mayari_ui.png-ea861f35706ab043d455ba5606e6706d.ctex"]
 
 [params]
 

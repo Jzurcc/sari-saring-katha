@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqrdplp65vab2"
-path="res://.godot/imported/ledger_ui.jpg-4fbbfd8b9a2703bddff0f4bd483a1e6b.ctex"
+uid="uid://bt4oos1mpp6h5"
+path="res://.godot/imported/calendar_ui.png-2a3a2e10c1627d81dacc370f18b4f61e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ui/ledger_ui.jpg"
-dest_files=["res://.godot/imported/ledger_ui.jpg-4fbbfd8b9a2703bddff0f4bd483a1e6b.ctex"]
+source_file="res://Assets/ui/calendar_ui.png"
+dest_files=["res://.godot/imported/calendar_ui.png-2a3a2e10c1627d81dacc370f18b4f61e.ctex"]
 
 [params]
 

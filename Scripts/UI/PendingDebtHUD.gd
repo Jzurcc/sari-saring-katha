@@ -102,14 +102,23 @@ func _build_ui() -> void:
 	col.add_child(_sub_lbl)
 
 func _refresh(immediate: bool = false) -> void:
-	var count := StoryManager.pending_debts.size()
+	var new_count := StoryManager.pending_debts.size()
+	var repay_count := StoryManager.pending_repayments.size()
+	var count := new_count + repay_count
 	if count <= 0:
 		_last_count = 0
 		_hide_pill(immediate)
 		return
 
-	_title_lbl.text = "Record Utang (%d)" % count if count > 1 else "Record Utang"
-	_sub_lbl.text = "Log %d unpaid loans in Notebook" % count if count > 1 else "Log unpaid loan in Notebook"
+	if new_count > 0 and repay_count > 0:
+		_title_lbl.text = "Update Utang Ledger (%d)" % count
+		_sub_lbl.text = "Log & cross off entries in Notebook"
+	elif repay_count > 0:
+		_title_lbl.text = "Cross Off Utang (%d)" % repay_count if repay_count > 1 else "Cross Off Utang"
+		_sub_lbl.text = "Mark %d repaid loans in Notebook" % repay_count if repay_count > 1 else "Cross off repaid loan in Notebook"
+	else:
+		_title_lbl.text = "Record Utang (%d)" % new_count if new_count > 1 else "Record Utang"
+		_sub_lbl.text = "Log %d unpaid loans in Notebook" % new_count if new_count > 1 else "Log unpaid loan in Notebook"
 
 	if not _is_shown:
 		_show_pill(immediate)
