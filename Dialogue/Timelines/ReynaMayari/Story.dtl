@@ -26,8 +26,8 @@ if {Transaction_Chapter} == 0.0:
 		ReynaMayari: It is not a debt in the way you understand it. [pause=0.5] It is more like... a subscription.
 		ReynaMayari: Paid nightly. In full. [pause=0.4] For as long as the store stands and someone of her line keeps it.
 		ReynaMayari: The remaining balance is considerable. But it is not unmanageable. [pause=0.3] Your grandmother made sure of that.
-	ReynaMayari: The remaining tally on Lola's ledger stands at [color=#b0c4de]{Global_TallyGoal}[/color] pesos.
-	ReynaMayari: Each night, you will decide what to offer. Tonight, I expect at least [color=#b0c4de]{Global_TallyMin}[/color] pesos.
+	ReynaMayari: The remaining tally on Lola's ledger stands at [color=#2d527c]{Global_TallyGoal}[/color] pesos.
+	ReynaMayari: Each night, you will decide what to offer. Tonight, I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos.
 	ReynaMayari: Do not be frightened. She was not. [pause=0.3] And you have her eyes.
 	[signal arg="open_tally_offer"]
 	[wait time="0.5"]
@@ -142,27 +142,27 @@ elif {Transaction_Chapter} == 8.0:
 	[end_timeline]
 
 label SuccessFirst
-ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos. ...Acceptable.
-ReynaMayari: Your first offering has been recorded in silver ink. [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain on the ledger.
+ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos. ...Acceptable.
+ReynaMayari: Your first offering has been recorded in silver ink. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
 ReynaMayari:  Do not disappoint me tomorrow.
 [signal arg="story_success"]
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Generous
-ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos — more than I asked. [pause=0.5] ...That is unusual for a mortal.
-ReynaMayari:  Only [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. The silver spires remember generosity.
+ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos — more than I asked. [pause=0.5] ...That is unusual for a mortal.
+ReynaMayari:  Only [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. The silver spires remember generosity.
 [signal arg="story_success"]
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Success
 if {Transaction_SatisfyVar} <= 33:
-	ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos. The balance holds for now — [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain on the ledger.
+	ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos. The balance holds for now — [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
 elif {Transaction_SatisfyVar} <= 66:
-	ReynaMayari:  [color=#f5d76e]{Global_TallyOffer}[/color] pesos is a passable offering. [color=#b0c4de]{Global_TallyRemaining}[/color] left to settle.
+	ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos is a passable offering. [color=#2d527c]{Global_TallyRemaining}[/color] left to settle.
 else:
-	ReynaMayari:  You honor the pact well, child. [color=#f5d76e]{Global_TallyOffer}[/color] pesos recorded; [color=#b0c4de]{Global_TallyRemaining}[/color] remaining.
+	ReynaMayari:  You honor the pact well, child. [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded; [color=#2d527c]{Global_TallyRemaining}[/color] remaining.
 [signal arg="story_success"]
 [signal arg="check_mayari_milestones"]
 [end_timeline]
@@ -171,10 +171,10 @@ label Shortfall
 label Angry
 if {Global_TallyOffer} <= 0:
 	ReynaMayari: [wave blue]Nothing at all tonight?[/wave] [pause=0.5] Not a single coin for the pact?
-	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos still weigh on this store. Expect a chill over Karimlan tomorrow.
+	ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos still weigh on this store. Expect a chill over Karimlan tomorrow.
 else:
 	ReynaMayari: [wave blue]Only {Global_TallyOffer} pesos?[/wave] [pause=0.5] That falls short of what the ledger expects.
-	ReynaMayari: [color=#b0c4de]{Global_TallyRemaining}[/color] pesos remain. Mind the ledger tomorrow, child.
+	ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. Mind the ledger tomorrow, child.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
@@ -184,26 +184,26 @@ ReynaMayari: Also... [pause=0.35]
 [end_timeline]
 
 label Milestone_reroll_1
-ReynaMayari: You have passed the first seal of the Silver Ledger — [color=#f5d76e]Moon's Grace[/color]. [pause=0.4]
-ReynaMayari: From this night on, I will allow you a [color=#f5d76e]reroll[/color] whenever the moon's cards displease you. Use it wisely.
+ReynaMayari: You have passed the first seal of the Silver Ledger — [color=#9a630a]Moon's Grace[/color]. [pause=0.4]
+ReynaMayari: From this night on, I will allow you a [color=#9a630a]reroll[/color] whenever the moon's cards displease you. Use it wisely.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_daytime_mayari
-ReynaMayari: Your ledger has reached [color=#f5d76e]Daylight Audience[/color]. [pause=0.4]
+ReynaMayari: Your ledger has reached [color=#9a630a]Daylight Audience[/color]. [pause=0.4]
 ReynaMayari: I find myself curious about what you sell beneath the sun. Expect me at your counter during business hours from time to time.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_shifted_odds_reroll_2
-ReynaMayari: Half the ledger stands paid in silver — [color=#f5d76e]Silver Favor[/color] is yours. [pause=0.4]
-ReynaMayari: The moon will tilt its hand more kindly toward Favors, and I grant you a [color=#f5d76e]second reroll[/color] each night.
+ReynaMayari: Half the ledger stands paid in silver — [color=#9a630a]Silver Favor[/color] is yours. [pause=0.4]
+ReynaMayari: The moon will tilt its hand more kindly toward Favors, and I grant you a [color=#9a630a]second reroll[/color] each night.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_twin_moons
-ReynaMayari: Three-quarters of your grandmother's pact, honored — [color=#f5d76e]Twin Moons[/color]. [pause=0.4]
-ReynaMayari: Henceforth, you may claim up to [color=#f5d76e]two Moon Cards[/color] each night to shape tomorrow's trade.
+ReynaMayari: Three-quarters of your grandmother's pact, honored — [color=#9a630a]Twin Moons[/color]. [pause=0.4]
+ReynaMayari: Henceforth, you may claim up to [color=#9a630a]two Moon Cards[/color] each night to shape tomorrow's trade.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
