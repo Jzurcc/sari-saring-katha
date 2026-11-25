@@ -76,17 +76,19 @@ func _init_library() -> void:
 	}
 
 func play_sfx(sfx_name: String) -> void:
+	play_sfx_pitched(sfx_name, randf_range(0.9, 1.1), 0.0)
+
+
+func play_sfx_pitched(sfx_name: String, pitch: float = 1.0, vol_delta_db: float = 0.0) -> void:
 	if sfx_library.has(sfx_name):
 		var p = sfx_players[_next_sfx_player_idx]
 		_next_sfx_player_idx = (_next_sfx_player_idx + 1) % SFX_POOL_SIZE
 
 		p.stream = sfx_library[sfx_name]
-		p.pitch_scale = randf_range(0.9, 1.1)
+		p.pitch_scale = clampf(pitch, 0.4, 2.5)
 
-		if sfx_volume_offsets.has(sfx_name):
-			p.volume_db = sfx_volume_offsets[sfx_name]
-		else:
-			p.volume_db = 0.0
+		var base_db: float = float(sfx_volume_offsets.get(sfx_name, 0.0))
+		p.volume_db = base_db + vol_delta_db
 
 		p.play()
 

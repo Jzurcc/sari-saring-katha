@@ -9,6 +9,7 @@ extends CanvasLayer
 signal minigame_finished(won: bool, result: Dictionary)
 
 const TEX_SIPA := "res://Assets/ui/minigames/sipa.png"
+const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const SIPA_SIZE := Vector2(82.0, 82.0)
 const EARLY_COOLDOWN := 0.50
 const TARGET_KICKS := 12
@@ -32,6 +33,7 @@ var _cooldown: float = 0.0
 var _elapsed: float = 0.0
 var _hit_flash: float = 0.0
 var _miss_flash: float = 0.0
+var _hitstop: float = 0.0
 var _prev_space_down: bool = false
 
 var _sipa_pos: Vector2 = Vector2.ZERO
@@ -122,12 +124,13 @@ func _show_intro() -> void:
 	_sync_sipa_visual()
 	_countdown_lbl.visible = false
 	_result_panel.visible = false
-	_intro_panel.visible = true
+	Juice.pop_panel_in(_intro_panel)
 	_kick_lbl.text = "Kicks: 0 / %d" % TARGET_KICKS
 	_status_lbl.text = ""
 
 
 func _on_intro_start() -> void:
+	Juice.play_sfx("tab_switch", 1.15)
 	_intro_panel.visible = false
 	_start_countdown()
 
@@ -167,6 +170,8 @@ func _start_countdown() -> void:
 	_sync_sipa_visual()
 	_countdown_lbl.visible = true
 	_countdown_lbl.text = "3"
+	Juice.pop_control(_countdown_lbl, 1.35, 0.28)
+	Juice.play_sfx("ui_hover", 0.85, 1.0)
 	_status_lbl.text = "Get ready..."
 	_kick_lbl.text = "Kicks: 0 / %d" % TARGET_KICKS
 
@@ -197,6 +202,11 @@ func _attempt_kick() -> void:
 		_kicks += 1
 		_cooldown = 0.0
 		_hit_flash = 1.0
+		_hitstop = 0.032
+		var zone_center := (float(b["zone_top"]) + float(b["zone_bottom"])) * 0.5
+		var zone_half := (float(b["zone_bottom"]) - float(b["zone_top"])) * 0.5
+		var is_perfect := absf(_sipa_pos.y - zone_center) <= zone_half * 0.45
+
 		var vp_scale := _get_vp_size().y / 720.0
 		var speed_scale := 1.0 + float(_kicks) * 0.06
 		var bounce_vy := -randf_range(640.0, 740.0) * vp_scale * minf(1.42, speed_scale)
@@ -207,10 +217,25 @@ func _attempt_kick() -> void:
 		_sipa_vel = Vector2(bounce_vx, bounce_vy)
 		_sipa_ang_vel = randf_range(-8.0, 8.0)
 
-		EventBus.request_sfx.emit("interact")
+		# Escalating combo pitch + tactile plastic kick thwack
+		var combo_pitch := 0.92 + float(_kicks) * 0.055
+		Juice.play_sfx("pickup", combo_pitch, 1.0)
+		Juice.play_sfx("plastic", 1.08 + float(_kicks) * 0.03, -5.0)
+		if is_perfect:
+			Juice.play_sfx("interact", combo_pitch + 0.18, 0.5)
+
+		# Squash & stretch on the sipa + screen punch + spark burst
+		if is_instance_valid(_sipa_sprite):
+			_sipa_sprite.scale = Vector2(1.42, 0.62)
+			var sq := _sipa_sprite.create_tween()
+			sq.tween_property(_sipa_sprite, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		Juice.shake_control(_root, 7.5 if is_perfect else 4.5, 0.16)
+		Juice.spawn_burst(_root, _sipa_pos, Color(1.0, 0.88, 0.36) if is_perfect else Color(0.62, 0.96, 0.56), 14 if is_perfect else 9, 130.0)
+		Juice.pop_control(_kick_lbl, 1.24, 0.20)
+
 		_kick_lbl.text = "Kicks: %d / %d" % [_kicks, TARGET_KICKS]
-		_status_lbl.text = "Swak! Keep it up!"
-		_spawn_feedback("Swak!", Color(0.62, 0.96, 0.56))
+		_status_lbl.text = "Perfect kick!" if is_perfect else "Swak! Keep it up!"
+		_spawn_feedback("PERFECT!" if is_perfect else "Swak!", Color(1.0, 0.90, 0.38) if is_perfect else Color(0.62, 0.96, 0.56))
 
 		if _kicks >= TARGET_KICKS:
 			_finish_round(true, "Sipa Champion!", "You kept the sipa airborne for %d kicks!" % _kicks)
@@ -219,7 +244,8 @@ func _attempt_kick() -> void:
 		_miss_flash = 1.0
 		_status_lbl.text = "Too early — cooldown!"
 		_spawn_feedback("Too early!", Color(0.98, 0.45, 0.42))
-		EventBus.request_sfx.emit("error")
+		Juice.play_sfx("error", 0.88, 0.5)
+		Juice.shake_control(_root, 8.5, 0.20)
 
 
 func _process(delta: float) -> void:
@@ -245,15 +271,22 @@ func _process(delta: float) -> void:
 		var cur_int := ceili(_countdown_t)
 		if cur_int != prev_int and cur_int > 0:
 			_countdown_lbl.text = str(cur_int)
-			EventBus.request_sfx.emit("interact")
+			Juice.pop_control(_countdown_lbl, 1.35, 0.28)
+			Juice.play_sfx("ui_hover", 0.85 + float(3 - cur_int) * 0.15, 1.0)
 		if _countdown_t <= 0.0:
 			_phase = "playing"
 			_countdown_lbl.visible = false
 			_status_lbl.text = "Press Space or Click when the sipa enters the golden zone"
 			_sipa_vel = Vector2(randf_range(-75.0, 75.0), 40.0)
 			_sipa_ang_vel = 2.5
-			EventBus.request_sfx.emit("interact")
+			Juice.play_sfx("pickup", 1.38, 1.5)
+			_spawn_feedback("GO!", Color(1.0, 0.92, 0.54))
 	elif _phase == "playing":
+		if _hitstop > 0.0:
+			_hitstop = maxf(0.0, _hitstop - delta)
+			if is_instance_valid(_field_draw):
+				_field_draw.queue_redraw()
+			return
 		_elapsed += delta
 		if _cooldown > 0.0:
 			_cooldown = maxf(0.0, _cooldown - delta)
@@ -272,17 +305,22 @@ func _process(delta: float) -> void:
 		if _sipa_pos.x < float(b["left"]) + pad_x:
 			_sipa_pos.x = float(b["left"]) + pad_x
 			_sipa_vel.x = absf(_sipa_vel.x) * 0.92
+			Juice.play_sfx("ui_hover", 1.25, -6.0)
+			Juice.spawn_burst(_root, Vector2(float(b["left"]), _sipa_pos.y), Color(1.0, 0.88, 0.56), 5, 55.0)
 		elif _sipa_pos.x > float(b["right"]) - pad_x:
 			_sipa_pos.x = float(b["right"]) - pad_x
 			_sipa_vel.x = -absf(_sipa_vel.x) * 0.92
+			Juice.play_sfx("ui_hover", 1.25, -6.0)
+			Juice.spawn_burst(_root, Vector2(float(b["right"]), _sipa_pos.y), Color(1.0, 0.88, 0.56), 5, 55.0)
 		if _sipa_pos.y < float(b["top"]):
 			_sipa_pos.y = float(b["top"])
 			_sipa_vel.y = absf(_sipa_vel.y) * 0.45
+			Juice.play_sfx("ui_hover", 1.35, -7.0)
 
 		_sync_sipa_visual()
 
 		if _sipa_pos.y >= float(b["floor_y"]):
-			EventBus.request_sfx.emit("error")
+			Juice.shake_control(_root, 14.0, 0.30)
 			_finish_round(false, "Dropped the Sipa!", "You reached %d / %d kicks. Better timing next round!" % [_kicks, TARGET_KICKS])
 
 	if is_instance_valid(_field_draw):
@@ -321,7 +359,14 @@ func _finish_round(won: bool, title: String, sub: String) -> void:
 	_result_title.add_theme_color_override("font_color", Color(0.62, 0.96, 0.56) if won else Color(0.98, 0.48, 0.45))
 	_result_sub.text = sub
 	_result_panel.set_meta("won", won)
-	_result_panel.visible = true
+	Juice.pop_panel_in(_result_panel)
+	if won:
+		Juice.play_win_fanfare(self)
+		var vp := _get_vp_size()
+		Juice.spawn_burst(_root, vp * Vector2(0.35, 0.45), Color(1.0, 0.88, 0.36), 14, 180.0)
+		Juice.spawn_burst(_root, vp * Vector2(0.65, 0.45), Color(0.60, 0.96, 0.58), 14, 180.0)
+	else:
+		Juice.play_lose_sting(self)
 
 
 func _build_ui() -> void:

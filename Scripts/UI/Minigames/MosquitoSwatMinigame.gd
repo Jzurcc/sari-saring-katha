@@ -8,6 +8,7 @@ extends CanvasLayer
 signal minigame_finished(won: bool, result: Dictionary)
 
 const TEX_MOSQUITO := "res://Assets/ui/minigames/mosquito/mosquito.png"
+const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const TEX_MOSQUITO_DEAD := "res://Assets/ui/minigames/mosquito/mosquito_dead.png"
 const TEX_FIREFLY := "res://Assets/ui/minigames/mosquito/firefly.png"
 const TEX_FIREFLY_DEAD := "res://Assets/ui/minigames/mosquito/firefly_dead.png"
@@ -35,6 +36,9 @@ var _score: int = 0
 var _lives: int = MAX_LIVES
 var _time_left: float = ROUND_TIME
 var _spawn_timer: float = 0.0
+var _streak: int = 0
+var _streak_timer: float = 0.0
+var _last_tick_sec: int = -1
 var _bugs: Array[Dictionary] = []
 var _ripples: Array[Dictionary] = []
 
@@ -106,11 +110,12 @@ func _show_intro() -> void:
 	_time_left = ROUND_TIME
 	_active = false
 	_result_panel.visible = false
-	_intro_panel.visible = true
+	Juice.pop_panel_in(_intro_panel)
 	_refresh_hud()
 
 
 func _on_intro_start() -> void:
+	Juice.play_sfx("tab_switch", 1.15)
 	_intro_panel.visible = false
 	_start_round()
 
@@ -142,8 +147,12 @@ func _start_round() -> void:
 	_lives = MAX_LIVES
 	_time_left = ROUND_TIME
 	_spawn_timer = 0.25
+	_streak = 0
+	_streak_timer = 0.0
+	_last_tick_sec = -1
 	_active = true
 	_result_panel.visible = false
+	Juice.play_sfx("pickup", 1.18, 0.5)
 	_refresh_hud()
 	# Spawn initial wave flying in from screen edges
 	for _i in range(4):
@@ -186,8 +195,19 @@ func _process(delta: float) -> void:
 	if not _active:
 		return
 
+	if _streak_timer > 0.0:
+		_streak_timer = maxf(0.0, _streak_timer - delta)
+		if _streak_timer <= 0.0:
+			_streak = 0
+
 	_time_left = maxf(0.0, _time_left - delta)
 	_refresh_timer_label()
+	if _time_left > 0.0 and _time_left <= 5.0:
+		var sec := ceili(_time_left)
+		if sec != _last_tick_sec:
+			_last_tick_sec = sec
+			Juice.play_sfx("ui_hover", 1.38, -3.0)
+			Juice.pop_control(_timer_lbl, 1.24, 0.18)
 	if _time_left <= 0.0:
 		_finish_round(false, "Time's Up!", "The mosquitoes took over the counter. Swatted %d / %d." % [_score, TARGET_SCORE])
 		return
@@ -328,15 +348,29 @@ func _on_bug_swatted(bug: Dictionary) -> void:
 	if is_firefly:
 		tr.texture = _tex_firefly_dead
 		_lives = maxi(0, _lives - 1)
+		_streak = 0
+		_streak_timer = 0.0
 		_ripples.append({"pos": pos, "t": 0.0, "color": Color(0.98, 0.35, 0.32, 0.9)})
 		_spawn_floating_text(pos, "-1 Firefly!", Color(1.0, 0.45, 0.40))
-		EventBus.request_sfx.emit("error")
+		Juice.play_sfx("error", 0.78, 1.5)
+		Juice.shake_control(_root, 13.0, 0.26)
+		Juice.spawn_burst(_arena, pos, Color(1.0, 0.42, 0.36), 12, 120.0)
+		Juice.pop_control(_lives_box, 1.22, 0.22)
 	else:
 		tr.texture = _tex_mosq_dead
 		_score += 1
+		_streak += 1
+		_streak_timer = 1.65
 		_ripples.append({"pos": pos, "t": 0.0, "color": Color(0.98, 0.84, 0.42, 0.9)})
-		_spawn_floating_text(pos, "+1", Color(0.68, 0.96, 0.58))
-		EventBus.request_sfx.emit("interact")
+		var popup_txt := "+1" if _streak <= 1 else ("x%d!" % _streak if _streak < 4 else "COMBO x%d!" % _streak)
+		var popup_col := Color(0.68, 0.96, 0.58) if _streak <= 1 else (Color(1.0, 0.90, 0.42) if _streak < 4 else Color(1.0, 0.68, 0.28))
+		_spawn_floating_text(pos, popup_txt, popup_col)
+		# Tactile plastic slap + escalating pitch chime!
+		Juice.play_sfx("plastic", minf(1.65, 1.0 + float(_streak) * 0.06), -2.5)
+		Juice.play_sfx("pickup", minf(1.60, 0.94 + float(_score) * 0.045), 0.5)
+		Juice.shake_control(_root, minf(8.0, 3.8 + float(_streak) * 0.8), 0.14)
+		Juice.spawn_burst(_arena, pos, popup_col, mini(14, 7 + _streak * 2), 110.0)
+		Juice.pop_control(_score_lbl, 1.24, 0.18)
 
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var tw := tr.create_tween()
@@ -379,7 +413,14 @@ func _finish_round(won: bool, title: String, subtitle: String) -> void:
 	_result_title.add_theme_color_override("font_color", Color(0.62, 0.96, 0.56) if won else Color(0.98, 0.48, 0.45))
 	_result_sub.text = subtitle
 	_result_panel.set_meta("won", won)
-	_result_panel.visible = true
+	Juice.pop_panel_in(_result_panel)
+	if won:
+		Juice.play_win_fanfare(self)
+		var vp := _get_vp_size()
+		Juice.spawn_burst(_root, vp * Vector2(0.35, 0.45), Color(1.0, 0.88, 0.36), 14, 180.0)
+		Juice.spawn_burst(_root, vp * Vector2(0.65, 0.45), Color(0.60, 0.96, 0.58), 14, 180.0)
+	else:
+		Juice.play_lose_sting(self)
 
 
 func _refresh_hud() -> void:
@@ -422,10 +463,15 @@ func _build_ui() -> void:
 	vig.material = mat
 	_root.add_child(vig)
 
-	# Fullscreen bug arena
+	# Fullscreen bug arena (empty-air clicks play a crisp whoosh + faint swat ring)
 	_arena = Control.new()
 	_arena.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_arena.clip_contents = true
+	_arena.gui_input.connect(func(ev: InputEvent):
+		if _active and ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			_ripples.append({"pos": (ev as InputEventMouseButton).position, "t": 0.0, "color": Color(0.86, 0.84, 0.78, 0.38)})
+			Juice.play_sfx("tab_switch", 1.48, -8.0)
+	)
 	_root.add_child(_arena)
 
 	_arena_fx = Control.new()

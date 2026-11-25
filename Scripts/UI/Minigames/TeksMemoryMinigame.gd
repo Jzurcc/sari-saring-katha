@@ -47,11 +47,13 @@ void fragment() {
 
 const TOTAL_PAIRS := 6
 const MAX_TRIES := 14
+const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 
 var is_open: bool = false
 var _locked: bool = false
 var _pairs_found: int = 0
 var _tries_left: int = MAX_TRIES
+var _streak: int = 0
 var _cards: Array[Dictionary] = []
 var _flipped: Array[Dictionary] = []
 
@@ -92,10 +94,11 @@ func open_minigame(_config: Dictionary = {}) -> void:
 	add_to_group("minigame_overlay_active")
 	_start_round()
 	_locked = true
-	_intro_panel.visible = true
+	Juice.pop_panel_in(_intro_panel)
 
 
 func _on_intro_start() -> void:
+	Juice.play_sfx("tab_switch", 1.15)
 	_intro_panel.visible = false
 	_locked = false
 
@@ -133,6 +136,7 @@ func _start_round() -> void:
 	_locked = false
 	_pairs_found = 0
 	_tries_left = MAX_TRIES
+	_streak = 0
 	_flipped.clear()
 	_cards.clear()
 	_result_panel.visible = false
@@ -277,6 +281,17 @@ func _create_teks_card(entry: Dictionary) -> Dictionary:
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
 			_on_card_clicked(card_dict)
 	)
+	holder.mouse_entered.connect(func():
+		if not _locked and not bool(card_dict["face_up"]) and not bool(card_dict["matched"]):
+			Juice.play_sfx("ui_hover", 1.12, -10.0)
+			var htw := holder.create_tween()
+			htw.tween_property(holder, "scale", Vector2(1.06, 1.06), 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	)
+	holder.mouse_exited.connect(func():
+		if not bool(card_dict["face_up"]) and not bool(card_dict["matched"]):
+			var htw := holder.create_tween()
+			htw.tween_property(holder, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	)
 	return card_dict
 
 
@@ -285,7 +300,7 @@ func _on_card_clicked(card: Dictionary) -> void:
 		return
 	_flip_card(card, true)
 	_flipped.append(card)
-	EventBus.request_sfx.emit("interact")
+	Juice.play_sfx("tab_switch", 1.08, 0.0)
 
 	if _flipped.size() == 2:
 		_locked = true
@@ -295,23 +310,45 @@ func _on_card_clicked(card: Dictionary) -> void:
 			a["matched"] = true
 			b["matched"] = true
 			_pairs_found += 1
+			_streak += 1
 			_flipped.clear()
 			_refresh_hud()
+			Juice.pop_control(_stats_lbl, 1.22, 0.20)
+			# Escalating match fanfare + spark bursts on both cards!
+			var match_pitch := minf(1.65, 1.0 + float(_streak) * 0.13)
+			Juice.play_sfx("pickup", match_pitch, 1.5)
+			Juice.play_sfx("interact", match_pitch + 0.18, 0.0)
 			for m in [a, b]:
 				var r: Control = m["root"]
+				var center_pos := r.global_position + r.size * 0.5
+				Juice.spawn_burst(_root, center_pos, Color(1.0, 0.88, 0.36), 10, 100.0)
 				var tw := r.create_tween()
-				tw.tween_property(r, "scale", Vector2(1.08, 1.08), 0.10)
-				tw.tween_property(r, "scale", Vector2.ONE, 0.12)
+				tw.tween_property(r, "scale", Vector2(1.13, 1.13), 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+				tw.tween_property(r, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE)
+			_spawn_match_label(
+				((a["root"] as Control).global_position + (b["root"] as Control).global_position) * 0.5 + Vector2(63, 40),
+				"MATCH!" if _streak <= 1 else "STREAK x%d!" % _streak,
+				Color(0.68, 0.96, 0.58) if _streak <= 1 else Color(1.0, 0.90, 0.38)
+			)
 			_locked = false
 			if _pairs_found >= TOTAL_PAIRS:
 				_finish_round(true, "Teks Master!", "Matched all %d pairs with %d tries to spare!" % [TOTAL_PAIRS, _tries_left])
 		else:
+			_streak = 0
 			_tries_left = maxi(0, _tries_left - 1)
 			_refresh_hud()
+			Juice.play_sfx("drop", 0.78, 0.0)
+			for m in [a, b]:
+				var r: Control = m["root"]
+				var wtw := r.create_tween()
+				wtw.tween_property(r, "rotation", 0.06, 0.06)
+				wtw.tween_property(r, "rotation", -0.06, 0.08)
+				wtw.tween_property(r, "rotation", 0.0, 0.06)
 			var timer := get_tree().create_timer(0.65)
 			timer.timeout.connect(func():
 				if not is_open:
 					return
+				Juice.play_sfx("tab_switch", 0.84, -4.0)
 				_flip_card(a, false)
 				_flip_card(b, false)
 				_flipped.clear()
@@ -319,6 +356,23 @@ func _on_card_clicked(card: Dictionary) -> void:
 				if _tries_left <= 0 and _pairs_found < TOTAL_PAIRS:
 					_finish_round(false, "Out of Tries!", "Matched %d / %d Teks pairs." % [_pairs_found, TOTAL_PAIRS])
 			)
+
+
+func _spawn_match_label(pos: Vector2, txt: String, col: Color) -> void:
+	var lbl := Label.new()
+	lbl.text = txt
+	lbl.position = pos - Vector2(54, 16)
+	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	lbl.add_theme_font_size_override("font_size", 24)
+	lbl.add_theme_color_override("font_color", col)
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.90))
+	lbl.add_theme_constant_override("outline_size", 5)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(lbl)
+	var tw := lbl.create_tween()
+	tw.tween_property(lbl, "position:y", lbl.position.y - 44.0, 0.60).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.60)
+	tw.tween_callback(lbl.queue_free)
 
 
 func _flip_card(card: Dictionary, show_front: bool) -> void:
@@ -347,7 +401,14 @@ func _finish_round(won: bool, title: String, sub: String) -> void:
 	_result_title.add_theme_color_override("font_color", Color(0.62, 0.96, 0.56) if won else Color(0.98, 0.48, 0.45))
 	_result_sub.text = sub
 	_result_panel.set_meta("won", won)
-	_result_panel.visible = true
+	Juice.pop_panel_in(_result_panel)
+	if won:
+		Juice.play_win_fanfare(self)
+		var vp := get_viewport().get_visible_rect().size
+		Juice.spawn_burst(_root, vp * Vector2(0.35, 0.45), Color(1.0, 0.88, 0.36), 14, 180.0)
+		Juice.spawn_burst(_root, vp * Vector2(0.65, 0.45), Color(0.60, 0.96, 0.58), 14, 180.0)
+	else:
+		Juice.play_lose_sting(self)
 
 
 func _build_ui() -> void:
