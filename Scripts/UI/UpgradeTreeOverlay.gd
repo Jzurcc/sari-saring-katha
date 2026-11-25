@@ -2,9 +2,9 @@ class_name UpgradeTreeOverlay
 extends CanvasLayer
 
 ## Cozy Store Upgrades Skill Tree ([U]).
-## Wooden-framed kraft-parchment board matching Sari-Saring Katha's warm branding:
-## clean square icon nodes, orthogonal wooden paths (no grid, no pan/zoom),
-## succinct hover tooltips, and Uncle Mario delivery queued on close.
+## Compact wooden-framed kraft-parchment board: Store Tiers 2->10 along the bottom,
+## 4 vertical branches rising to [Open the Door], succinct hover tooltips using the
+## EventsOverlay stat-row format, and Uncle Mario delivery queued on close.
 
 const Registry := preload("res://Scripts/Progression/UpgradeTreeRegistry.gd")
 
@@ -18,10 +18,15 @@ const COL_INK := Color(0.20, 0.12, 0.07, 0.96)
 const COL_PATH_OUTLINE := Color(0.24, 0.14, 0.08, 0.92)
 const COL_PATH_LIT := Color(0.86, 0.62, 0.24, 1.0)
 const COL_PATH_AVAIL := Color(0.72, 0.54, 0.30, 0.88)
-const COL_PATH_LOCKED := Color(0.56, 0.46, 0.35, 0.48)
+const COL_PATH_LOCKED := Color(0.56, 0.46, 0.35, 0.45)
 
-const ICON_SIZE := Vector2(52, 52)
-const CAPSTONE_SIZE := Vector2(64, 64)
+# Matches EventsOverlay stat-row palette
+const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
+const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
+const COL_GOLD_BRIGHT := Color(1.0, 0.875, 0.56, 1.0)
+
+const ICON_SIZE := Vector2(48, 48)
+const CAPSTONE_SIZE := Vector2(58, 58)
 
 var is_open: bool = false
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
@@ -37,12 +42,12 @@ var _tree_area: Control
 var _path_drawer: Control
 var _node_buttons: Dictionary = {} # node_id -> Button
 
-var _stats_lbl: Label
 var _money_lbl: Label
 var _pending_lbl: Label
 var _tooltip: PanelContainer
 var _tip_title: Label
 var _tip_level: Label
+var _tip_stats_box: VBoxContainer
 var _tip_desc: Label
 var _tip_status: Label
 
@@ -129,27 +134,25 @@ func _node_center(lpos: Vector2) -> Vector2:
 	if not is_instance_valid(_tree_area):
 		return Vector2.ZERO
 	var sz := _tree_area.size
-	var pad_x := 110.0
-	var pad_top := 52.0
-	var pad_bot := 46.0
+	var pad_x := 46.0
+	var pad_top := 42.0
+	var pad_bot := 40.0
 	var usable_w := maxf(200.0, sz.x - pad_x * 2.0)
-	var usable_h := maxf(200.0, sz.y - pad_top - pad_bot)
-	# Logical x in [-2.85 .. +2.85], logical y in [0.0 .. 9.4] (bottom-up)
-	var nx := (lpos.x + 2.85) / 5.70
-	var ny := 1.0 - (lpos.y / 9.4)
+	var usable_h := maxf(180.0, sz.y - pad_top - pad_bot)
+	# Logical x in [0 .. 8], logical y in [0 .. 4] (bottom-up)
+	var nx := lpos.x / 8.0
+	var ny := 1.0 - (lpos.y / 4.0)
 	return Vector2(pad_x + nx * usable_w, pad_top + ny * usable_h)
 
 
 func _refresh_all() -> void:
 	var money := _get_money()
-	if is_instance_valid(_stats_lbl) and is_instance_valid(StoryManager):
-		_stats_lbl.text = "Lv. %d   •   Tier %d" % [StoryManager.player_level, StoryManager.current_tier]
 	if is_instance_valid(_money_lbl):
 		_money_lbl.text = "₱%.2f" % money
 	if is_instance_valid(_pending_lbl):
 		var cnt := _pending_delivery_items.size()
 		_pending_lbl.visible = cnt > 0
-		_pending_lbl.text = "Mario Delivery: %d" % cnt
+		_pending_lbl.text = "Queued: %d" % cnt
 
 	_layout_nodes()
 	if _hovered_id != "":
@@ -176,7 +179,7 @@ func _layout_nodes() -> void:
 		_path_drawer.queue_redraw()
 
 
-func _style_node_button(btn: Button, def: Dictionary, ev: Dictionary, hovered: bool) -> void:
+func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: bool) -> void:
 	var state := str(ev["state"])
 	var cur_lvl := int(ev["cur_level"])
 	var max_lvl := int(ev["max_level"])
@@ -205,15 +208,8 @@ func _style_node_button(btn: Button, def: Dictionary, ev: Dictionary, hovered: b
 		"available_poor":
 			bg = Color(0.92, 0.84, 0.68, 1.0)
 			border_col = Color(0.68, 0.34, 0.20, 0.95)
-			border_w = 2
 			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
 			badge_col = Color(0.65, 0.18, 0.14, 1.0)
-		"locked_level":
-			bg = Color(0.76, 0.66, 0.52, 0.92)
-			border_col = Color(0.42, 0.30, 0.20, 0.90)
-			icon_mod = Color(0.65, 0.60, 0.55, 0.85)
-			badge_text = "%d/%d" % [cur_lvl, max_lvl]
-			badge_col = Color(0.35, 0.24, 0.16, 1.0)
 		_:
 			bg = Color(0.68, 0.58, 0.44, 0.88)
 			border_col = Color(0.34, 0.23, 0.14, 0.85)
@@ -225,11 +221,11 @@ func _style_node_button(btn: Button, def: Dictionary, ev: Dictionary, hovered: b
 		border_col = Color(1.0, 0.86, 0.44, 1.0)
 		border_w = 3
 
-	var st := UIStyle.create_flat_stylebox(bg, 6, 5, 5)
+	var st := UIStyle.create_flat_stylebox(bg, 6, 4, 4)
 	st.border_color = border_col
 	st.set_border_width_all(border_w)
-	st.shadow_color = Color(0.18, 0.10, 0.04, 0.35)
-	st.shadow_size = 4
+	st.shadow_color = Color(0.18, 0.10, 0.04, 0.32)
+	st.shadow_size = 3
 
 	var hov := st.duplicate()
 	hov.bg_color = bg.lightened(0.06)
@@ -268,13 +264,44 @@ func _show_tooltip_for(node_id: String) -> void:
 
 	_tip_title.text = item.item_name if (item != null and item.item_name != "") else str(def["title"])
 	if max_lvl > 1:
-		_tip_level.text = "Lv. %d / %d" % [cur_lvl, max_lvl]
+		_tip_level.text = "Lv.%d/%d" % [cur_lvl, max_lvl]
 	else:
 		_tip_level.text = "Owned" if state == "maxed" else ""
 	_tip_level.visible = _tip_level.text != ""
 
-	var desc := str(item.get_meta("upgrade_desc", "")) if item != null else ""
-	if desc == "" and str(def["kind"]) == "tier" and is_instance_valid(InventoryManager):
+	# Render Event-Card-style stat rows
+	for ch in _tip_stats_box.get_children():
+		ch.queue_free()
+	var stats := Registry.get_node_stats(node_id, target_lvl)
+	_tip_stats_box.visible = not stats.is_empty()
+	for st in stats:
+		var s_row := HBoxContainer.new()
+		s_row.add_theme_constant_override("separation", 8)
+		s_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_tip_stats_box.add_child(s_row)
+
+		var s_name := Label.new()
+		s_name.text = "▸ " + str(st.get("label", ""))
+		s_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
+		s_name.add_theme_font_size_override("font_size", 13)
+		s_name.add_theme_color_override("font_color", COL_CREAM)
+		s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		s_row.add_child(s_name)
+
+		var s_val := Label.new()
+		s_val.text = str(st.get("value", ""))
+		s_val.add_theme_font_override("font", _bold_font)
+		s_val.add_theme_font_size_override("font_size", 14)
+		var tone := str(st.get("tone", "pos"))
+		var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
+		s_val.add_theme_color_override("font_color", val_col)
+		s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		s_row.add_child(s_val)
+
+	# Succinct note for Tier items or special perks
+	var desc := ""
+	if str(def["kind"]) == "tier" and is_instance_valid(InventoryManager):
 		var target_t := int(def["tier"])
 		var names: Array[String] = []
 		for ti in InventoryManager.get_all_items():
@@ -282,7 +309,8 @@ func _show_tooltip_for(node_id: String) -> void:
 				names.append(ti.item_name)
 				if names.size() >= 4:
 					break
-		desc = ("Unlocks: " + ", ".join(names)) if not names.is_empty() else ("Expands store to Tier %d." % target_t)
+		if not names.is_empty():
+			desc = "Adds: " + ", ".join(names)
 	_tip_desc.text = desc
 	_tip_desc.visible = desc != ""
 
@@ -293,34 +321,28 @@ func _show_tooltip_for(node_id: String) -> void:
 
 	if can_paint:
 		_tip_status.text = "Owned  •  Click to Paint"
-		_tip_status.add_theme_color_override("font_color", Color(0.96, 0.80, 0.40))
+		_tip_status.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	elif state == "maxed":
 		_tip_status.text = "Maxed Out" if max_lvl > 1 else "Owned"
-		_tip_status.add_theme_color_override("font_color", Color(0.62, 0.90, 0.62))
+		_tip_status.add_theme_color_override("font_color", COL_STAT_POS)
 	elif mario_busy:
 		_tip_status.text = "Mario is delivering..."
 		_tip_status.add_theme_color_override("font_color", Color(0.84, 0.78, 0.68))
 	elif bool(ev["can_buy"]):
-		var verb := "Upgrade to Lv.%d" % target_lvl if cur_lvl >= 1 else "Unlock"
+		var verb := "Upgrade" if cur_lvl >= 1 else "Unlock"
 		_tip_status.text = "Click to %s  ·  ₱%.0f" % [verb, cost]
-		_tip_status.add_theme_color_override("font_color", Color(0.56, 0.94, 0.62))
+		_tip_status.add_theme_color_override("font_color", COL_STAT_POS)
 	elif state == "available_poor":
 		_tip_status.text = "Need ₱%.0f" % cost
-		_tip_status.add_theme_color_override("font_color", Color(0.96, 0.56, 0.50))
-	elif state == "locked":
+		_tip_status.add_theme_color_override("font_color", COL_STAT_NEG)
+	else:
 		var missing: Array[String] = []
 		for pre_id in def.get("prereqs", []):
 			if not Registry.is_node_unlocked_in_tree(str(pre_id), _pending_levels):
 				var pdef := Registry.get_node_def(str(pre_id))
 				missing.append(str(pdef.get("title", pre_id)))
-		if not missing.is_empty():
-			_tip_status.text = "Requires: " + ", ".join(missing)
-		else:
-			_tip_status.text = str(ev["reason"])
-		_tip_status.add_theme_color_override("font_color", Color(0.88, 0.72, 0.52))
-	else:
-		_tip_status.text = str(ev["reason"])
-		_tip_status.add_theme_color_override("font_color", Color(0.88, 0.72, 0.52))
+		_tip_status.text = ("Requires: " + ", ".join(missing)) if not missing.is_empty() else str(ev["reason"])
+		_tip_status.add_theme_color_override("font_color", Color(0.90, 0.74, 0.52))
 
 	_tooltip.visible = true
 	_tooltip.reset_size()
@@ -337,9 +359,9 @@ func _position_tooltip_beside(node_id: String) -> void:
 	var vp := get_viewport().get_visible_rect().size
 	var tsz := _tooltip.size
 	var tx := br.end.x + 12.0
-	if tx + tsz.x > vp.x - 14.0:
+	if tx + tsz.x > vp.x - 12.0:
 		tx = br.position.x - tsz.x - 12.0
-	var ty := clampf(br.position.y + br.size.y * 0.5 - tsz.y * 0.5, 14.0, vp.y - tsz.y - 14.0)
+	var ty := clampf(br.position.y + br.size.y * 0.5 - tsz.y * 0.5, 12.0, vp.y - tsz.y - 12.0)
 	_tooltip.global_position = Vector2(tx, ty)
 
 
@@ -348,7 +370,6 @@ func _on_node_pressed(node_id: String) -> void:
 	if def.is_empty():
 		return
 
-	# Owned Signage / Poster opens Paint Studio directly
 	var kind := str(def["kind"])
 	var sf_lvl := int(def.get("storefront_level", 0))
 	if kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl:
@@ -406,13 +427,17 @@ func _draw_paths() -> void:
 			var parent_pt := _node_center(pdef["pos"])
 			var parent_unlocked := Registry.is_node_unlocked_in_tree(str(pre_id), _pending_levels)
 
-			var mid_y := lerpf(parent_pt.y, child_pt.y, 0.5)
-			var pts := PackedVector2Array([
-				parent_pt,
-				Vector2(parent_pt.x, mid_y),
-				Vector2(child_pt.x, mid_y),
-				child_pt,
-			])
+			var pts: PackedVector2Array
+			if is_equal_approx(parent_pt.y, child_pt.y) or is_equal_approx(parent_pt.x, child_pt.x):
+				pts = PackedVector2Array([parent_pt, child_pt])
+			else:
+				var mid_y := lerpf(parent_pt.y, child_pt.y, 0.5)
+				pts = PackedVector2Array([
+					parent_pt,
+					Vector2(parent_pt.x, mid_y),
+					Vector2(child_pt.x, mid_y),
+					child_pt,
+				])
 
 			var fill_col := COL_PATH_LOCKED
 			if parent_unlocked and child_unlocked:
@@ -420,8 +445,8 @@ func _draw_paths() -> void:
 			elif parent_unlocked and child_avail:
 				fill_col = COL_PATH_AVAIL
 
-			_path_drawer.draw_polyline(pts, COL_PATH_OUTLINE, 9.0, true)
-			_path_drawer.draw_polyline(pts, fill_col, 4.5, true)
+			_path_drawer.draw_polyline(pts, COL_PATH_OUTLINE, 8.0, true)
+			_path_drawer.draw_polyline(pts, fill_col, 4.0, true)
 
 
 func _build_ui() -> void:
@@ -429,10 +454,9 @@ func _build_ui() -> void:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
 
-	# Warm dimmed backdrop (clicking outside closes)
 	var backdrop := ColorRect.new()
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
-	backdrop.color = Color(0.04, 0.03, 0.02, 0.72)
+	backdrop.color = Color(0.04, 0.03, 0.02, 0.65)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
 	backdrop.gui_input.connect(func(ev: InputEvent):
 		if ev is InputEventMouseButton and ev.pressed and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
@@ -440,13 +464,13 @@ func _build_ui() -> void:
 	)
 	_root.add_child(backdrop)
 
-	# Centered cozy wooden-framed board
+	# Tighter, compact centered wooden board (~780 x 560 on 1600x900)
 	_board_panel = PanelContainer.new()
-	_board_panel.anchor_left = 0.08
-	_board_panel.anchor_right = 0.92
-	_board_panel.anchor_top = 0.05
-	_board_panel.anchor_bottom = 0.95
-	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 12, 16, 14)
+	_board_panel.anchor_left = 0.255
+	_board_panel.anchor_right = 0.745
+	_board_panel.anchor_top = 0.165
+	_board_panel.anchor_bottom = 0.835
+	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 12, 14, 12)
 	wood_st.border_color = COL_BRASS
 	wood_st.set_border_width_all(3)
 	wood_st.shadow_color = Color(0, 0, 0, 0.60)
@@ -455,55 +479,48 @@ func _build_ui() -> void:
 	_root.add_child(_board_panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 8)
 	_board_panel.add_child(vbox)
 
 	# Compact top bar
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 16)
+	top.add_theme_constant_override("separation", 12)
 	vbox.add_child(top)
 
 	var title := Label.new()
 	title.text = "Store Upgrades"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_override("font", _bold_font)
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 21)
 	title.add_theme_color_override("font_color", COL_CREAM)
 	top.add_child(title)
 
-	_stats_lbl = Label.new()
-	_stats_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_stats_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_stats_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_stats_lbl.add_theme_font_size_override("font_size", 16)
-	_stats_lbl.add_theme_color_override("font_color", Color(0.86, 0.78, 0.64))
-	top.add_child(_stats_lbl)
-
 	_pending_lbl = Label.new()
 	_pending_lbl.add_theme_font_override("font", _bold_font)
-	_pending_lbl.add_theme_font_size_override("font_size", 15)
-	_pending_lbl.add_theme_color_override("font_color", Color(0.98, 0.82, 0.44))
+	_pending_lbl.add_theme_font_size_override("font_size", 14)
+	_pending_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	top.add_child(_pending_lbl)
 
 	_money_lbl = Label.new()
 	_money_lbl.add_theme_font_override("font", _bold_font)
-	_money_lbl.add_theme_font_size_override("font_size", 22)
-	_money_lbl.add_theme_color_override("font_color", Color(0.64, 0.92, 0.58))
+	_money_lbl.add_theme_font_size_override("font_size", 20)
+	_money_lbl.add_theme_color_override("font_color", COL_STAT_POS)
 	top.add_child(_money_lbl)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.tooltip_text = "Close [U / Esc]"
-	close_btn.custom_minimum_size = Vector2(38, 38)
+	close_btn.custom_minimum_size = Vector2(34, 34)
 	close_btn.focus_mode = Control.FOCUS_NONE
 	close_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	UIStyle.style_button(close_btn, COL_WOOD_MID, COL_CREAM, 18.0, 8)
+	UIStyle.style_button(close_btn, COL_WOOD_MID, COL_CREAM, 16.0, 8)
 	close_btn.pressed.connect(close_tree)
 	top.add_child(close_btn)
 
 	# Inner kraft-parchment board
 	var parchment := PanelContainer.new()
 	parchment.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var pst := UIStyle.create_flat_stylebox(COL_PARCHMENT, 8, 8, 8)
+	var pst := UIStyle.create_flat_stylebox(COL_PARCHMENT, 8, 6, 6)
 	pst.border_color = COL_PARCHMENT_EDGE
 	pst.set_border_width_all(2)
 	parchment.add_theme_stylebox_override("panel", pst)
@@ -527,13 +544,13 @@ func _build_ui() -> void:
 		_tree_area.add_child(btn)
 		_node_buttons[nid] = btn
 
-	# Succinct floating tooltip (warm espresso + brass border)
+	# Succinct floating tooltip (warm espresso + brass border, Event-Card stats)
 	_tooltip = PanelContainer.new()
 	_tooltip.visible = false
 	_tooltip.z_index = 40
-	_tooltip.custom_minimum_size = Vector2(230, 0)
+	_tooltip.custom_minimum_size = Vector2(235, 0)
 	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var tst := UIStyle.create_flat_stylebox(Color(0.09, 0.07, 0.055, 0.96), 8, 14, 10)
+	var tst := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.042, 0.96), 8, 12, 10)
 	tst.border_color = COL_BRASS
 	tst.set_border_width_all(2)
 	tst.shadow_color = Color(0, 0, 0, 0.50)
@@ -542,7 +559,7 @@ func _build_ui() -> void:
 	_root.add_child(_tooltip)
 
 	var tv := VBoxContainer.new()
-	tv.add_theme_constant_override("separation", 4)
+	tv.add_theme_constant_override("separation", 5)
 	tv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tooltip.add_child(tv)
 
@@ -562,22 +579,27 @@ func _build_ui() -> void:
 	_tip_level = Label.new()
 	_tip_level.add_theme_font_override("font", _bold_font)
 	_tip_level.add_theme_font_size_override("font_size", 13)
-	_tip_level.add_theme_color_override("font_color", Color(0.95, 0.78, 0.38))
+	_tip_level.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_tip_level.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thead.add_child(_tip_level)
 
+	_tip_stats_box = VBoxContainer.new()
+	_tip_stats_box.add_theme_constant_override("separation", 2)
+	_tip_stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tv.add_child(_tip_stats_box)
+
 	_tip_desc = Label.new()
-	_tip_desc.custom_minimum_size = Vector2(240, 0)
+	_tip_desc.custom_minimum_size = Vector2(220, 0)
 	_tip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip_desc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_tip_desc.add_theme_font_size_override("font_size", 13)
-	_tip_desc.add_theme_color_override("font_color", Color(0.86, 0.82, 0.74))
+	_tip_desc.add_theme_font_size_override("font_size", 12)
+	_tip_desc.add_theme_color_override("font_color", Color(0.82, 0.76, 0.66))
 	_tip_desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_desc)
 
 	_tip_status = Label.new()
 	_tip_status.add_theme_font_override("font", _bold_font)
-	_tip_status.add_theme_font_size_override("font_size", 14)
+	_tip_status.add_theme_font_size_override("font_size", 13)
 	_tip_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_status)
 
@@ -605,8 +627,8 @@ func _create_node_button(node_id: String) -> Button:
 	badge.anchor_right = 1.0
 	badge.anchor_top = 1.0
 	badge.anchor_bottom = 1.0
-	badge.offset_left = -36
-	badge.offset_top = -18
+	badge.offset_left = -34
+	badge.offset_top = -17
 	badge.offset_right = -2
 	badge.offset_bottom = -1
 	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
