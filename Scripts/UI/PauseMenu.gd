@@ -17,6 +17,8 @@ const NORMAL_CUTOFF: float = 20500.0 # Full range frequency
 const FADE_DURATION: float = 0.4
 
 var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
+var _previous_clock_running: bool = false
+var _previous_dialogic_paused: bool = false
 var _paint_signage_btn: Button = null
 var _paint_poster_btn: Button = null
 
@@ -109,9 +111,11 @@ func pause() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
 	if has_node("/root/StoryManager"):
+		_previous_clock_running = StoryManager.is_clock_running
 		StoryManager.is_clock_running = false
 	
 	if has_node("/root/Dialogic"):
+		_previous_dialogic_paused = Dialogic.paused
 		Dialogic.paused = true
 	
 	_duck_audio(true)
@@ -126,10 +130,10 @@ func resume() -> void:
 	Input.mouse_mode = _previous_mouse_mode
 	
 	if has_node("/root/StoryManager"):
-		StoryManager.is_clock_running = true
+		StoryManager.is_clock_running = _previous_clock_running
 
 	if has_node("/root/Dialogic"):
-		Dialogic.paused = false
+		Dialogic.paused = _previous_dialogic_paused
 		
 	_duck_audio(false)
 

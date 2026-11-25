@@ -530,8 +530,8 @@ func setup(player_money: float, total_paid: float, goal: float, min_amount: floa
 	_current_offer = 0.0
 
 func _ready() -> void:
-	layer = 110
-	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 95
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	_bold_font = FontVariation.new()
 	_bold_font.base_font = UIStyle.FONT_INDER
 	_bold_font.variation_embolden = 0.65
