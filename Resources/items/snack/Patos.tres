@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Patos"
 texture = ExtResource("2_tex")
-price = 9.0
+price = 10.0
 item_hint = "is cheesy"
 display_height_meters = 0.6
 opaque_rect = Rect2i(78, 11, 335, 471)

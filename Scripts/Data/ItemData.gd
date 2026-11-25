@@ -64,11 +64,11 @@ func get_visual_aspect() -> float:
 	return 1.0
 
 ## Calculates the peso increment per step for this product based on wholesale cost.
-## Candies (<= 3.0): 1.50 per step. Regular items: 3.0 + 15% of wholesale cost (snapped to 0.50).
+## Candies (<= 3.0): 2.00 per step. Regular items: 4.0 + 22% of wholesale cost (snapped to 0.50, capped at 18.00).
 func get_step_increment() -> float:
 	if price <= 3.0:
-		return 1.5
-	return snapped(3.0 + price * 0.15, 0.5)
+		return 2.0
+	return minf(18.0, snapped(4.0 + price * 0.22, 0.5))
 
 ## Calculates the selling price for a given discrete step (-3 to +3).
 ## Step 0 = wholesale cost (price). Negative steps sell at a loss.

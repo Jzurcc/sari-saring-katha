@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Pampanga's Good Tocino"
 texture = ExtResource("2_tex")
-price = 55.0
+price = 60.0
 type = 1
 category = "frozen"
 tier = 9

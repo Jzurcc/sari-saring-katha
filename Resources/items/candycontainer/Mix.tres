@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Mix"
 texture = ExtResource("2_tex")
-price = 80.0
+price = 65.0
 can_be_sold = false
 category = "candycontainer"
 tier = 2

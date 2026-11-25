@@ -44,8 +44,8 @@ var last_mayari_collection_successful: bool = true
 
 # --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
 const TALLY_GOAL := 1500.0
-const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 50.0, 60.0, 75.0, 90.0, 105.0, 120.0]
-const TALLY_GEN_SCHEDULE: Array[float] = [65.0, 80.0, 95.0, 115.0, 135.0, 155.0, 175.0]
+const TALLY_MIN_SCHEDULE: Array[float] = [35.0, 45.0, 55.0, 65.0, 80.0, 90.0, 105.0]
+const TALLY_GEN_SCHEDULE: Array[float] = [55.0, 70.0, 85.0, 100.0, 120.0, 135.0, 155.0]
 
 const LEDGER_MILESTONES: Array[Dictionary] = [
 	{"id": "reroll_1", "ratio": 0.15, "amount": 225.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
@@ -331,9 +331,9 @@ var _upgrade_item_cache: Dictionary = {}
 ## Level 0 = stock fridge; Levels 1..3 = Magnetic Door Gasket, Heavy-Duty Insulation, Inverter Frost Compressor.
 const FRIDGE_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "Stock Refrigerator", "cost": 0.0, "drain_sec": 3.5, "regen_sec": 7.0, "desc": "Standard sari-sari fridge."},
-	{"level": 1, "req_level": 2, "name": "Magnetic Door Gasket", "cost": 75.0, "drain_sec": 7.0, "regen_sec": 5.5, "desc": "Seals cold leaks when the door swings open."},
-	{"level": 2, "req_level": 5, "name": "Heavy-Duty Insulation", "cost": 140.0, "drain_sec": 12.0, "regen_sec": 4.25, "desc": "Thick thermal lining keeps chilled stock frosty longer."},
-	{"level": 3, "req_level": 9, "name": "Inverter Frost Compressor", "cost": 230.0, "drain_sec": 18.0, "regen_sec": 3.25, "desc": "Commercial inverter cooling snaps back to ice-cold fast."},
+	{"level": 1, "req_level": 2, "name": "Magnetic Door Gasket", "cost": 65.0, "drain_sec": 7.0, "regen_sec": 5.5, "desc": "Seals cold leaks when the door swings open."},
+	{"level": 2, "req_level": 5, "name": "Heavy-Duty Insulation", "cost": 120.0, "drain_sec": 12.0, "regen_sec": 4.25, "desc": "Thick thermal lining keeps chilled stock frosty longer."},
+	{"level": 3, "req_level": 9, "name": "Inverter Frost Compressor", "cost": 195.0, "drain_sec": 18.0, "regen_sec": 3.25, "desc": "Commercial inverter cooling snaps back to ice-cold fast."},
 ]
 const FRIDGE_WARM_VALUE_MULTIPLIER := 0.75
 const FRIDGE_WARM_RECOVER_THRESHOLD := 50.0
@@ -395,8 +395,8 @@ func purchase_fridge_upgrade(level: int) -> void:
 # --- Store Cats (Counter Slots 1 -> 2 -> 3) ---
 const CAT_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time."},
-	{"level": 1, "req_level": 2, "name": "Lucky Cat: Mingming", "cost": 85.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once."},
-	{"level": 2, "req_level": 6, "name": "Cat Food", "cost": 180.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots."},
+	{"level": 1, "req_level": 2, "name": "Lucky Cat: Mingming", "cost": 75.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once."},
+	{"level": 2, "req_level": 6, "name": "Cat Food", "cost": 150.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots."},
 ]
 var cat_upgrade_level: int = 0
 var _cat_upgrade_item_cache: Dictionary = {}
@@ -442,7 +442,7 @@ func purchase_cat_upgrade(level: int) -> void:
 	_save_progression()
 
 # --- Store Props (Trash Can) ---
-const TRASH_CAN_COST := 45.0
+const TRASH_CAN_COST := 40.0
 var has_trash_can: bool = false
 var _trash_can_upgrade_item: ItemData = null
 
@@ -478,8 +478,8 @@ func purchase_trash_can_upgrade() -> void:
 # --- Lucky Waving Cat: Maneki-Neko (Shorter Time Windows -> More Customers/Day) ---
 const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows."},
-	{"level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 95.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day."},
-	{"level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 195.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day."},
+	{"level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 80.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day."},
+	{"level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 165.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day."},
 ]
 var maneki_upgrade_level: int = 0
 var _maneki_upgrade_item_cache: Dictionary = {}
@@ -534,9 +534,9 @@ func purchase_maneki_upgrade(level: int) -> void:
 # --- Barangay Transistor Radio (Papa Ulap Broadcasts, +1 Daily Events, Expected Regulars) ---
 const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "max_events": 1, "desc": "Daily Market Events and Expected Regulars stay hidden."},
-	{"level": 1, "req_level": 1, "name": "Counter Transistor Radio", "cost": 55.0, "reveals": 1, "max_events": 1, "desc": "Places a Counter Radio tuned to Papa Ulap! Click to reveal today's hidden Market Event (and unlocks 1 Expected Regular in the Restock Menu)."},
-	{"level": 2, "req_level": 4, "name": "Copper Tuning Coil", "cost": 110.0, "reveals": 2, "max_events": 2, "desc": "Upgrades the radio's internal coil for stronger reception — unlocks +1 possible Market Event every day (tune in again after 4h to reveal it) and reveals 2 Expected Regulars."},
-	{"level": 3, "req_level": 7, "name": "High-Gain Signal Amplifier", "cost": 185.0, "reveals": 4, "max_events": 3, "desc": "Boosts the radio's receiver circuitry for crystal-clear airwaves! Unlocks another +1 possible Market Event daily (up to 3/day) and reveals all Expected Regulars."},
+	{"level": 1, "req_level": 1, "name": "Counter Transistor Radio", "cost": 50.0, "reveals": 1, "max_events": 1, "desc": "Places a Counter Radio tuned to Papa Ulap! Click to reveal today's hidden Market Event (and unlocks 1 Expected Regular in the Restock Menu)."},
+	{"level": 2, "req_level": 4, "name": "Copper Tuning Coil", "cost": 95.0, "reveals": 2, "max_events": 2, "desc": "Upgrades the radio's internal coil for stronger reception — unlocks +1 possible Market Event every day (tune in again after 4h to reveal it) and reveals 2 Expected Regulars."},
+	{"level": 3, "req_level": 7, "name": "High-Gain Signal Amplifier", "cost": 155.0, "reveals": 4, "max_events": 3, "desc": "Boosts the radio's receiver circuitry for crystal-clear airwaves! Unlocks another +1 possible Market Event daily (up to 3/day) and reveals all Expected Regulars."},
 ]
 var radio_upgrade_level: int = 0
 var _radio_upgrade_item_cache: Dictionary = {}
@@ -600,7 +600,7 @@ func purchase_radio_upgrade(level: int) -> void:
 	_save_progression()
 
 # --- Uncle Mario's Wholesale Pass (Unlocks Daily Sulit Deals -20%) ---
-const MARIO_DEALS_COST := 90.0
+const MARIO_DEALS_COST := 75.0
 var has_mario_deals: bool = false
 var _mario_deals_upgrade_item: ItemData = null
 
@@ -635,9 +635,9 @@ func purchase_mario_deals_upgrade() -> void:
 # --- Sto. Niño Altar Blessings (Random Favors on Tap) ---
 const STO_NINO_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Sto. Niño Altar", "cost": 0.0, "duration_hours": 0.0, "favor_count": 0, "all_day": false, "desc": "Purchase the Sto. Niño Altar upgrade to pray for daily Favors."},
-	{"level": 1, "req_level": 2, "name": "Sto. Niño Altar", "cost": 85.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Places a blessed Sto. Niño statue on your altar! Tap Sto. Niño for 1 random Favor lasting 8 hours (only 2 taps for the whole day)."},
-	{"level": 2, "req_level": 5, "name": "Double Devotion", "cost": 165.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "Earn Sto. Niño's abundant grace. Grants 2 distinct random Favors at once for 8 hours!"},
-	{"level": 3, "req_level": 9, "name": "Perpetual Benediction", "cost": 270.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Unbroken protection over your tindahan. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
+	{"level": 1, "req_level": 2, "name": "Sto. Niño Altar", "cost": 75.0, "duration_hours": 8.0, "favor_count": 1, "all_day": false, "desc": "Places a blessed Sto. Niño statue on your altar! Tap Sto. Niño for 1 random Favor lasting 8 hours (only 2 taps for the whole day)."},
+	{"level": 2, "req_level": 5, "name": "Double Devotion", "cost": 140.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "Earn Sto. Niño's abundant grace. Grants 2 distinct random Favors at once for 8 hours!"},
+	{"level": 3, "req_level": 9, "name": "Perpetual Benediction", "cost": 225.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Unbroken protection over your tindahan. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
 ]
 var sto_nino_upgrade_level: int = 0
 var active_blessing_cards: Array[String] = []
@@ -771,9 +771,9 @@ func _clear_sto_nino_blessing() -> void:
 # --- Framed Business Permit (Permanent Player XP Multiplier) ---
 const PERMIT_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Business Permit", "cost": 0.0, "xp_mult": 1.0, "desc": "Standard Player XP gain."},
-	{"level": 1, "req_level": 2, "name": "Barangay Business Permit", "cost": 80.0, "xp_mult": 1.15, "desc": "Official framed permit displayed in your shop. Permanently grants +15% Player XP from all sales, visits, and stories."},
-	{"level": 2, "req_level": 5, "name": "Municipal Store Accreditation", "cost": 165.0, "xp_mult": 1.30, "desc": "Recognized across the town of Karimlan. Permanently boosts Player XP gain to +30%."},
-	{"level": 3, "req_level": 9, "name": "Karimlan Heritage Recognition", "cost": 275.0, "xp_mult": 1.50, "desc": "Honored as a beloved neighborhood landmark. Permanently boosts Player XP gain to +50%."},
+	{"level": 1, "req_level": 2, "name": "Barangay Business Permit", "cost": 70.0, "xp_mult": 1.15, "desc": "Official framed permit displayed in your shop. Permanently grants +15% Player XP from all sales, visits, and stories."},
+	{"level": 2, "req_level": 5, "name": "Municipal Store Accreditation", "cost": 140.0, "xp_mult": 1.30, "desc": "Recognized across the town of Karimlan. Permanently boosts Player XP gain to +30%."},
+	{"level": 3, "req_level": 9, "name": "Karimlan Heritage Recognition", "cost": 230.0, "xp_mult": 1.50, "desc": "Honored as a beloved neighborhood landmark. Permanently boosts Player XP gain to +50%."},
 ]
 var permit_upgrade_level: int = 0
 var _permit_upgrade_item_cache: Dictionary = {}
@@ -820,9 +820,9 @@ func purchase_permit_upgrade(level: int) -> void:
 # --- Sari-Sari Tambayan Bench (Lingering Visitors, Passive XP & Return-to-Buy) ---
 const BENCH_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Store Bench", "cost": 0.0, "linger_chance": 0.60, "max_lingering": 2, "passive_xp": 1, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Up to 2 visitors may linger outside (60% chance), granting +1 passive Player XP every 2s per lingering visitor."},
-	{"level": 1, "req_level": 2, "name": "Sari-Sari Tambayan Bench", "cost": 90.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Places a cozy wooden bench outside your tindahan! Boosts lingering chance (60% → 75%) and lets up to 3 neighbors hang out at once (+1 passive XP / 2s each)."},
-	{"level": 2, "req_level": 5, "name": "Tambayan Hospitality", "cost": 175.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 2, "smalltalk_xp": 8, "return_to_buy": false, "desc": "Neighbors love chatting by your bench! Doubles passive Player XP from lingering visitors (+1 → +2 XP every 2s each), plus +8 bonus XP when they return for smalltalk."},
-	{"level": 3, "req_level": 8, "name": "Craving Comebacks", "cost": 260.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 2, "smalltalk_xp": 8, "return_to_buy": true, "desc": "Hanging out works up an appetite! Returning tambayan visitors now have a chance to step back up and place a real purchase order before heading home."},
+	{"level": 1, "req_level": 2, "name": "Sari-Sari Tambayan Bench", "cost": 75.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 1, "smalltalk_xp": 0, "return_to_buy": false, "desc": "Places a cozy wooden bench outside your tindahan! Boosts lingering chance (60% → 75%) and lets up to 3 neighbors hang out at once (+1 passive XP / 2s each)."},
+	{"level": 2, "req_level": 5, "name": "Tambayan Hospitality", "cost": 145.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 2, "smalltalk_xp": 8, "return_to_buy": false, "desc": "Neighbors love chatting by your bench! Doubles passive Player XP from lingering visitors (+1 → +2 XP every 2s each), plus +8 bonus XP when they return for smalltalk."},
+	{"level": 3, "req_level": 8, "name": "Craving Comebacks", "cost": 215.0, "linger_chance": 0.75, "max_lingering": 3, "passive_xp": 2, "smalltalk_xp": 8, "return_to_buy": true, "desc": "Hanging out works up an appetite! Returning tambayan visitors now have a chance to step back up and place a real purchase order before heading home."},
 ]
 var bench_upgrade_level: int = 0
 var _bench_upgrade_item_cache: Dictionary = {}
@@ -906,9 +906,9 @@ const POSTER_PAINT_PATH := "user://custom_poster_paint.png"
 
 const STOREFRONT_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "Standard Storefront", "cost": 0.0, "tip_chance": 0.0, "price_relief": 0.0, "desc": "Classic neighborhood sari-sari storefront."},
-	{"level": 1, "req_level": 2, "name": "Hand-Drawn Roof Signage", "cost": 80.0, "tip_chance": 0.15, "price_relief": 0.15, "desc": "Paint your own giant roof signboard! Grants +15% Appreciation Tip chance (₱3–₱6) on cash sales, softens markup pushback, and displays on the Main Menu."},
-	{"level": 2, "req_level": 5, "name": "Storefront Promo Poster", "cost": 155.0, "tip_chance": 0.25, "price_relief": 0.25, "desc": "Mount a custom portrait poster in front of the store! Add 3+ product stickers of one category to activate a Featured Category (+demand & +₱3 promo bonus)."},
-	{"level": 3, "req_level": 10, "name": "Open Door", "cost": 350.0, "tip_chance": 0.30, "price_relief": 0.30, "desc": "A tarnished brass key hangs quietly behind the counter... Unlocks the store door so you can finally step outside and wander Karimlan."},
+	{"level": 1, "req_level": 2, "name": "Hand-Drawn Roof Signage", "cost": 70.0, "tip_chance": 0.15, "price_relief": 0.15, "desc": "Paint your own giant roof signboard! Grants +15% Appreciation Tip chance (₱3–₱6) on cash sales, softens markup pushback, and displays on the Main Menu."},
+	{"level": 2, "req_level": 5, "name": "Storefront Promo Poster", "cost": 135.0, "tip_chance": 0.25, "price_relief": 0.25, "desc": "Mount a custom portrait poster in front of the store! Add 3+ product stickers of one category to activate a Featured Category (+demand & +₱3 promo bonus)."},
+	{"level": 3, "req_level": 10, "name": "Open Door", "cost": 290.0, "tip_chance": 0.30, "price_relief": 0.30, "desc": "A tarnished brass key hangs quietly behind the counter... Unlocks the store door so you can finally step outside and wander Karimlan."},
 ]
 
 var storefront_upgrade_level: int = 0
@@ -1310,8 +1310,8 @@ func advance_tier(source: String = "Manual") -> void:
 
 func get_upgrade_cost(target_tier: int) -> float:
 	var step := float(maxi(0, target_tier - 2))
-	var linear_base := 80.0 + step * 20.0
-	var scaled := linear_base * (1.0 + 0.05 * step)
+	var linear_base := 70.0 + step * 15.0
+	var scaled := linear_base * (1.0 + 0.03 * step)
 	return roundf(scaled / 5.0) * 5.0
 
 ## Returns a virtual ItemData representating a store upgrade for a specific tier.

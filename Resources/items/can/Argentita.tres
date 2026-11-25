@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 item_name = "Argentita Corned Beef"
 texture = ExtResource("2_tex")
-price = 14.0
+price = 16.0
 category = "can"
 item_hint = "is beefy and corned"
 display_height_meters = 0.35
