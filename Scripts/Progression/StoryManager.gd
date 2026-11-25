@@ -319,8 +319,10 @@ func add_player_xp(base_amount: int, reason: String = "") -> int:
 
 		LogManager.info("StoryManager", "PLAYER LEVEL UP -> Lv. %d! (+₱%.0f bonus, Max Tier %d)" % [player_level, level_bonus, max_unlocked_tier])
 		EventBus.player_leveled_up.emit(player_level)
-		var sub_msg := "+₱%.0f Level-Up Bonus! New store upgrades unlocked!" % level_bonus if player_level <= MAX_UNLOCKABLE_TIER else "+₱%.0f Level-Up Bonus!" % level_bonus
-		EventBus.show_notification.emit("Player Level %d!" % player_level, sub_msg, "purchase")
+		# Tier-unlocking levels (Lv. 2..MAX_UNLOCKABLE_TIER) already show TierAdvanceOverlay with item previews;
+		# only show the toast for post-max-tier bonus levels where no overlay pops up.
+		if player_level > MAX_UNLOCKABLE_TIER:
+			EventBus.show_notification.emit("Player Level %d!" % player_level, "+₱%.0f Level-Up Bonus!" % level_bonus, "purchase")
 
 	LogManager.info("StoryManager", "Player XP +%d (%s) -> Lv. %d (%d/%d)" % [gained, reason, player_level, player_xp, get_xp_for_next_level()])
 	record_daily_stat_int("xp_earned", gained)
