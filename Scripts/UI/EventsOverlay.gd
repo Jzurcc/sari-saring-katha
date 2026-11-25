@@ -433,22 +433,20 @@ func _format_natural_list(names: PackedStringArray) -> String:
 	return "%s, and %s" % [", ".join(leading), names[count - 1]]
 
 func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
-	var target_names: PackedStringArray = []
-	for cat in ev.affected_categories:
-		target_names.append(_category_display(cat))
-	if target_names.is_empty():
-		for it in ev.affected_items:
-			if it:
-				target_names.append(it.item_name)
-	var targets_str := _format_natural_list(target_names)
-	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
-	var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
-	var stats: Array = [
-		{"label": "Highlighted Demand:", "value": "+%d%%" % demand_pct, "tone": "pos"},
-		{"label": "Highlighted Price Tolerance:", "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
-	]
-	var kws: Array = ["price_tolerance"] if ev.tolerance_offset != 0 else []
-	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws, "res://Assets/ui/icons/zap.png")
+	var desc_rich := ev.description
+	if ev.has_target_items():
+		var target_names: PackedStringArray = []
+		for cat in ev.affected_categories:
+			target_names.append(_category_display(cat))
+		if target_names.is_empty():
+			for it in ev.affected_items:
+				if it:
+					target_names.append(it.item_name)
+		var targets_str := _format_natural_list(target_names)
+		desc_rich = "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
+	var stats: Array = ev.build_stat_rows()
+	var kws: Array = ev.get_keywords()
+	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws, ev.get_icon_path())
 
 func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR

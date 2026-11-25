@@ -207,6 +207,8 @@ func get_restock_discount_multiplier() -> float:
 		mult *= 0.90
 	if has_mayari_card(MayariCardRegistry.CARD_TIGHT_WHOLESALE):
 		mult *= 1.20
+	if is_instance_valid(StoreEventManager):
+		mult *= StoreEventManager.get_restock_cost_multiplier()
 	return mult
 
 func get_item_restock_discount_multiplier(item: ItemData) -> float:
@@ -226,7 +228,9 @@ func get_foot_traffic_time_scale() -> float:
 		scale *= 0.75
 	if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP):
 		scale *= 0.85
-	return clampf(scale, 0.45, 1.0)
+	if is_instance_valid(StoreEventManager):
+		scale *= StoreEventManager.get_foot_traffic_time_scale()
+	return clampf(scale, 0.45, 1.35)
 
 func get_effective_closing_hour() -> float:
 	if has_mayari_card(MayariCardRegistry.CARD_MOON_HOLDS_SKY):
@@ -272,6 +276,8 @@ func get_xp_multiplier() -> float:
 		mult *= 1.30
 	if has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
 		mult *= 0.65
+	if is_instance_valid(StoreEventManager):
+		mult *= StoreEventManager.get_xp_multiplier()
 	return mult
 
 func add_player_xp(base_amount: int, reason: String = "") -> int:
@@ -344,6 +350,8 @@ func get_fridge_drain_rate() -> float:
 		rate *= 0.60
 	if has_mayari_card(MayariCardRegistry.CARD_WARM_TRADE_WINDS):
 		rate *= 1.60
+	if is_instance_valid(StoreEventManager):
+		rate *= StoreEventManager.get_fridge_drain_multiplier()
 	return rate
 
 func get_fridge_regen_rate() -> float:
@@ -395,6 +403,8 @@ var _cat_upgrade_item_cache: Dictionary = {}
 
 func get_max_counter_slots() -> int:
 	var bonus := 1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0
+	if is_instance_valid(StoreEventManager):
+		bonus += StoreEventManager.get_extra_counter_slots()
 	return clampi(1 + cat_upgrade_level + bonus, 1, 3)
 
 func get_cat_upgrade_item(level: int) -> ItemData:
@@ -825,8 +835,10 @@ func get_bench_spec(level: int = -1) -> Dictionary:
 func get_bench_linger_chance() -> float:
 	var ch := float(get_bench_spec()["linger_chance"])
 	if has_mayari_card(MayariCardRegistry.CARD_TAMBAYAN_WARMTH):
-		ch = minf(0.95, ch + 0.25)
-	return ch
+		ch += 0.25
+	if is_instance_valid(StoreEventManager):
+		ch += StoreEventManager.get_linger_chance_bonus()
+	return minf(0.95, ch)
 
 func get_bench_max_lingering() -> int:
 	var mx := int(get_bench_spec()["max_lingering"])

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "videoke_night"
+event_name = "Street Videoke & Tambay"
+description = "Someone rolled out a videoke machine down the block. Neighbors linger longer by your bench, tip generously, and buy drinks, snacks, and smokes."
+rumor_text = "Can you hear 'My Way' echoing down the alley, boss? Someone rented a videoke machine! Neighbors are gonna hang out longer, tip extra, and keep coming back for drinks, pulutan snacks, and smokes."
+icon_path = "res://Assets/ui/icons/mic-vocal.png"
+affected_categories = Array[String](["bottle", "cigarette", "snack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.2
+tolerance_offset = 1
+tip_bonus_pct = 0.12
+linger_chance_bonus = 0.25

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "school_dismissal"
+event_name = "School Dismissal Rush"
+description = "Classes let out early for a school program. Students flock down the road hunting for candies, chips, and frozen treats."
+rumor_text = "Heads up, boss! Karimlan Elementary let the kids out early today. A wave of students is heading down your street looking for candy, snacks, and cold treats."
+icon_path = "res://Assets/ui/icons/backpack.png"
+affected_categories = Array[String](["candy", "snack", "frozen"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.5
+tolerance_offset = 2
+foot_traffic_scale = 0.85

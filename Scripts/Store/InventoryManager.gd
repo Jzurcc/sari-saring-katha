@@ -372,6 +372,8 @@ func start_delivery_cooldown() -> void:
 			hours *= 0.65 # -35% Delivery Cooldown
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY):
 			hours *= 1.65 # +65% Delivery Cooldown
+	if is_instance_valid(StoreEventManager):
+		hours *= StoreEventManager.get_delivery_cooldown_multiplier()
 	delivery_cooldown_end_hour = _get_current_game_hour() + hours
 	customers_needed_for_delivery = 0
 	LogManager.info("InventoryManager", "Uncle Mario delivery cooldown started: %.2fh (ready at %.2fh)." % [hours, delivery_cooldown_end_hour])

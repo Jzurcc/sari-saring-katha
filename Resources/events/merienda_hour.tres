@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "merienda_hour"
+event_name = "Merienda Craze"
+description = "Everyone's craving an afternoon merienda combo. Customers frequently bundle coffee sachets, snacks, and instant noodles together."
+rumor_text = "Smells like hot water and noodles all over the block, boss. Folks are in a merienda mood today—expect plenty of combo orders for coffee sachets, snacks, and pancit packs."
+icon_path = "res://Assets/ui/icons/coffee.png"
+affected_categories = Array[String](["sachet", "snack", "pack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.2
+tolerance_offset = 2
+multi_item_chance_bonus = 0.20

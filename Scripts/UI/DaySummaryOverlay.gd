@@ -727,24 +727,22 @@ func _format_natural_list(names: PackedStringArray) -> String:
 
 
 func _make_event_hover_info(ev: StoreEventData) -> Dictionary:
-	var target_names := PackedStringArray()
-	for cat in ev.affected_categories:
-		target_names.append(_category_display(cat))
-	if target_names.is_empty():
-		for it in ev.affected_items:
-			if it:
-				target_names.append(it.item_name)
-	var targets_str := _format_natural_list(target_names)
-	var desc_rich := "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
-	var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
-	var stats: Array = [
-		{"label": "Highlighted Demand:", "value": "+%d%%" % demand_pct, "tone": "pos"},
-		{"label": "Highlighted Price Tolerance:", "value": "+%d" % ev.tolerance_offset, "tone": "pos"},
-	]
+	var desc_rich := ev.description
+	if ev.has_target_items():
+		var target_names := PackedStringArray()
+		for cat in ev.affected_categories:
+			target_names.append(_category_display(cat))
+		if target_names.is_empty():
+			for it in ev.affected_items:
+				if it:
+					target_names.append(it.item_name)
+		var targets_str := _format_natural_list(target_names)
+		desc_rich = "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
+	var stats: Array = ev.build_stat_rows()
 	return {
 		"title": ev.event_name,
 		"sigil": _event_sigil(ev.event_id),
-		"icon": "res://Assets/ui/icons/zap.png",
+		"icon": ev.get_icon_path(),
 		"desc_rich": desc_rich,
 		"stats": stats,
 		"kind": "event",

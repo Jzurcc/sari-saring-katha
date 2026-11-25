@@ -177,8 +177,11 @@ func refresh_events() -> void:
 		vbox.add_child(name_lbl)
 
 		# Modifier summary
+		var mod_parts: PackedStringArray = []
+		for row in event.build_stat_rows():
+			mod_parts.append("%s %s" % [str(row.get("label", "")).trim_suffix(":"), str(row.get("value", ""))])
 		var mod_lbl := Label.new()
-		mod_lbl.text = "Demand: %.1fx   •   Tolerance: +%d steps" % [event.demand_multiplier, event.tolerance_offset]
+		mod_lbl.text = "   •   ".join(mod_parts) if not mod_parts.is_empty() else "Market conditions active"
 		mod_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		mod_lbl.add_theme_font_override("font", FONT_INDER)
 		mod_lbl.add_theme_font_size_override("font_size", 15)

@@ -6,9 +6,11 @@
 script = ExtResource("1_script")
 event_id = "summer_heat"
 event_name = "Intense Heatwave"
-description = "Blistering afternoon heat. Trike drivers and kids are desperate for cold drinks, juices, and sweet candy."
-rumor_text = "Whew. Boss, it's brutal out there today. Even the stray dogs are hiding under the jeepneys. Anyone passing by is gonna want cold drinks and candy to cool down."
-affected_categories = ["bottle", "candy"]
-affected_items = []
+description = "Blistering afternoon heat strains your Fridge, but trike drivers and kids are desperate for cold drinks, frozen treats, and candy."
+rumor_text = "Whew. Boss, it's brutal out there today. Even the stray dogs are hiding under the jeepneys. Anyone passing by is gonna want cold drinks, ice candy, and sweets to cool down."
+icon_path = "res://Assets/ui/icons/sun.png"
+affected_categories = Array[String](["bottle", "frozen", "candy"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
 demand_multiplier = 2.5
 tolerance_offset = 2
+fridge_drain_multiplier = 1.25

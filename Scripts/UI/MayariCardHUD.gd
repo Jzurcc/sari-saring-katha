@@ -134,7 +134,7 @@ func _refresh_icons() -> void:
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
 			var pe: Dictionary = HadesEmblem.palette("event")
-			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, "res://Assets/ui/icons/zap.png")
+			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, ev.get_icon_path())
 			count += 1
 
 	# 2. Active Reyna Mayari Moon Card(s)

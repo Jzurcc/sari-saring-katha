@@ -6,9 +6,11 @@
 script = ExtResource("1_script")
 event_id = "brownout_notice"
 event_name = "Scheduled Power Outage"
-description = "Power lines are getting serviced tonight. Expect a spike in demand for canned rations, matches, and cigarettes."
-rumor_text = "Psst. Boss. Overheard the linemen by the main road. Power's getting cut tonight for line repairs. Expect folks looking for canned food and smokes before it gets dark."
-affected_categories = ["can", "cigarette"]
-affected_items = []
+description = "Power lines are getting serviced tonight. Voltage dips strain your Fridge while neighbors stock up on canned rations and smokes."
+rumor_text = "Psst. Boss. Overheard the linemen by the main road. Power's getting cut tonight for line repairs. Expect folks looking for canned food and smokes before it gets dark—and watch your fridge!"
+icon_path = "res://Assets/ui/icons/zap.png"
+affected_categories = Array[String](["can", "cigarette"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
 demand_multiplier = 2.0
 tolerance_offset = 2
+fridge_drain_multiplier = 1.30

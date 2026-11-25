@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "barangay_fiesta"
+event_name = "Barangay Fiesta"
+description = "Banderitas line the street! Extra neighbors crowd your counter at once, linger by your tambayan, and grab festive snacks and drinks."
+rumor_text = "Mabuhay, Karimlan! Banderitas are up across the street—it's Barangay Fiesta today! Expect a lively crowd packing your counter and hanging out by your stoop all day."
+icon_path = "res://Assets/ui/icons/party-popper.png"
+affected_categories = Array[String](["snack", "bottle", "candy"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.8
+tolerance_offset = 1
+foot_traffic_scale = 0.80
+extra_counter_slots = 1
+linger_chance_bonus = 0.25

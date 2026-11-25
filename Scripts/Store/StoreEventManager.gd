@@ -250,6 +250,60 @@ func get_item_tolerance_offset(item: ItemData) -> int:
 			offset = maxi(offset, event.tolerance_offset)
 	return offset
 
+func get_foot_traffic_time_scale() -> float:
+	var scale := 1.0
+	for event in _active_events:
+		scale *= event.foot_traffic_scale
+	return clampf(scale, 0.50, 1.50)
+
+func get_multi_item_chance_bonus() -> float:
+	var bonus := 0.0
+	for event in _active_events:
+		bonus += event.multi_item_chance_bonus
+	return clampf(bonus, 0.0, 0.65)
+
+func get_cash_tip_bonus_pct() -> float:
+	var pct := 0.0
+	for event in _active_events:
+		pct += event.tip_bonus_pct
+	return clampf(pct, 0.0, 0.50)
+
+func get_xp_multiplier() -> float:
+	var mult := 1.0
+	for event in _active_events:
+		mult *= event.xp_multiplier
+	return clampf(mult, 0.50, 2.50)
+
+func get_restock_cost_multiplier() -> float:
+	var mult := 1.0
+	for event in _active_events:
+		mult *= event.restock_cost_multiplier
+	return clampf(mult, 0.50, 2.0)
+
+func get_delivery_cooldown_multiplier() -> float:
+	var mult := 1.0
+	for event in _active_events:
+		mult *= event.delivery_cooldown_multiplier
+	return clampf(mult, 0.40, 2.0)
+
+func get_fridge_drain_multiplier() -> float:
+	var mult := 1.0
+	for event in _active_events:
+		mult *= event.fridge_drain_multiplier
+	return clampf(mult, 0.40, 2.50)
+
+func get_extra_counter_slots() -> int:
+	var extra := 0
+	for event in _active_events:
+		extra += event.extra_counter_slots
+	return extra
+
+func get_linger_chance_bonus() -> float:
+	var bonus := 0.0
+	for event in _active_events:
+		bonus += event.linger_chance_bonus
+	return clampf(bonus, 0.0, 0.50)
+
 ## UI indicator check: returns true ONLY if a REVEALED event targets this item.
 func is_item_in_demand(item: ItemData) -> bool:
 	if not item:

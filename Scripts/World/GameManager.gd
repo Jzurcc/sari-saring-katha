@@ -154,6 +154,12 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 				var ev_tip := StoryManager.calc_scaled_tip(base_sale, 0.10 * float(ev_cnt), 2.0 * float(ev_cnt), 18.0 * float(ev_cnt))
 				tip += ev_tip
 				_last_earning += ev_tip
+		if not wants_debt and is_instance_valid(StoreEventManager):
+			var ev_tip_pct := StoreEventManager.get_cash_tip_bonus_pct()
+			if ev_tip_pct > 0.0:
+				var event_bonus_tip := StoryManager.calc_scaled_tip(base_sale, ev_tip_pct, 2.0, 20.0)
+				tip += event_bonus_tip
+				_last_earning += event_bonus_tip
 
 		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
 		if not wants_debt and feat_boosts > 0:
