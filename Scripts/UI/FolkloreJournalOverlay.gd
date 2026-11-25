@@ -3,16 +3,17 @@ extends CanvasLayer
 
 ## Lola's Folklore Scrapbook / Journal (Diegetic Two-Page Spiral Notebook UI).
 ## Press [J] to toggle. Uses Assets/ui/journal_ui.png (2180x1460) with aspect-locked
-## layout, 2 spreads (4 pages) per neighbor so fonts stay large and legible,
-## full-body character sprites, sharp line-by-line black redaction bars with
-## Reputation prompts, and silhouette + '?' previews for locked depictions.
+## layout and 3 airy spreads (6 pages) per neighbor to avoid information overload:
+##   Spread 1: Profile & Reputation (Left) | Favorites, Perks & Story Progress (Right)
+##   Spread 2: Ranks 1–2 Field Notes (Left) | Rank 3 Real-Life Depiction (Right)
+##   Spread 3: Ranks 4–5 Field Notes (Left) | Rank 6 Seal & Epilogue (Right)
 
 const FolkloreCatalogScript := preload("res://Scripts/Progression/FolkloreCatalog.gd")
 
 const JOURNAL_TEX_PATH := "res://Assets/ui/journal_ui.png"
 const INK_FONT_PATH := "res://Assets/Fonts/Inder/Inder-Regular.ttf"
 const JOURNAL_ASPECT := 2180.0 / 1460.0
-const SPREADS_PER_NEIGHBOR := 2
+const SPREADS_PER_NEIGHBOR := 3
 
 # Diegetic ink palette (matches NotebookUI.gd)
 const INK_DARK := Color(0.14, 0.16, 0.28, 0.96)       # Ballpoint blue-black ink
@@ -264,18 +265,25 @@ func _rebuild_spread() -> void:
 	var entry: Dictionary = FolkloreCatalogScript.get_entry(clean_id)
 	var sprite_tex := _resolve_sprite_texture(c, entry)
 
-	if _sub_page == 0:
-		if is_instance_valid(_left_hdr):
-			_left_hdr.text = "LOLA'S FOLKLORE SCRAPBOOK"
-		if is_instance_valid(_right_hdr):
-			_right_hdr.text = "FOLKLORE FIELD NOTES"
-		_build_spread_one(c, cpath, entry, sprite_tex, met, rank, prog)
-	else:
-		if is_instance_valid(_left_hdr):
-			_left_hdr.text = "ARCHIVAL DEPICTION"
-		if is_instance_valid(_right_hdr):
-			_right_hdr.text = "FOLKLORE FIELD NOTES (CONT.)"
-		_build_spread_two(entry, sprite_tex, rank)
+	match _sub_page:
+		0:
+			if is_instance_valid(_left_hdr):
+				_left_hdr.text = "LOLA'S FOLKLORE SCRAPBOOK"
+			if is_instance_valid(_right_hdr):
+				_right_hdr.text = "NEIGHBOR NOTES"
+			_build_spread_one(c, cpath, entry, sprite_tex, met, rank, prog)
+		1:
+			if is_instance_valid(_left_hdr):
+				_left_hdr.text = "FOLKLORE FIELD NOTES"
+			if is_instance_valid(_right_hdr):
+				_right_hdr.text = "ARCHIVAL DEPICTION"
+			_build_spread_two(entry, rank)
+		_:
+			if is_instance_valid(_left_hdr):
+				_left_hdr.text = "FOLKLORE FIELD NOTES (CONT.)"
+			if is_instance_valid(_right_hdr):
+				_right_hdr.text = "CONFIDANT SEAL"
+			_build_spread_three(entry, rank)
 
 
 func _build_spread_one(
@@ -287,20 +295,19 @@ func _build_spread_one(
 	rank: int,
 	prog: Dictionary
 ) -> void:
-	# ─── SPREAD 1 LEFT PAGE: Full-Body Sprite, Rank, Favorites, Perks & Story ───
+	# ─── SPREAD 1 LEFT PAGE: Full Sprite, Name, Creature, Region & Reputation ───
 	var top_row := HBoxContainer.new()
-	top_row.add_theme_constant_override("separation", 14)
+	top_row.add_theme_constant_override("separation", 18)
 	_left_page.add_child(top_row)
 
-	# Full-body sprite standing directly on the ruled page (silhouette + '?' when unmet)
-	var sprite_box := _build_image_preview(sprite_tex, Vector2(142, 224), not met, 68)
+	var sprite_box := _build_sprite_preview(sprite_tex, Vector2(168, 310), not met, 76)
 	sprite_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top_row.add_child(sprite_box)
 
 	var id_col := VBoxContainer.new()
 	id_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	id_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	id_col.add_theme_constant_override("separation", 6)
+	id_col.add_theme_constant_override("separation", 10)
 	top_row.add_child(id_col)
 
 	if met:
@@ -308,7 +315,7 @@ func _build_spread_one(
 		name_lbl.text = c.character_name if c.character_name != "" else c.get_clean_id().capitalize()
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_lbl.add_theme_font_override("font", _bold_font)
-		name_lbl.add_theme_font_size_override("font_size", 32)
+		name_lbl.add_theme_font_size_override("font_size", 34)
 		name_lbl.add_theme_color_override("font_color", INK_HEADER)
 		id_col.add_child(name_lbl)
 
@@ -316,23 +323,34 @@ func _build_spread_one(
 		creature_lbl.text = str(entry.get("creature", "Neighbor"))
 		creature_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		creature_lbl.add_theme_font_override("font", _ink_font)
-		creature_lbl.add_theme_font_size_override("font_size", 19)
+		creature_lbl.add_theme_font_size_override("font_size", 21)
 		creature_lbl.add_theme_color_override("font_color", INK_RED)
 		id_col.add_child(creature_lbl)
+
+		var reg_lbl := Label.new()
+		reg_lbl.text = str(entry.get("region", "Unknown"))
+		reg_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		reg_lbl.add_theme_font_override("font", _ink_font)
+		reg_lbl.add_theme_font_size_override("font_size", 17)
+		reg_lbl.add_theme_color_override("font_color", INK_MUTED)
+		id_col.add_child(reg_lbl)
 	else:
-		_add_redacted_lines(id_col, [0.85], 28.0, "")
-		_add_redacted_lines(id_col, [0.68], 18.0, "Meet this neighbor at the store to record their profile.")
+		_add_redacted_lines(id_col, [0.86], 30.0, "")
+		_add_redacted_lines(id_col, [0.72, 0.54], 19.0, "Meet this neighbor at the store to record their profile.")
+
+	_add_ink_divider(_left_page)
+	_add_section_header(_left_page, "REPUTATION")
 
 	var rank_lbl := Label.new()
 	rank_lbl.text = "Rank %d / 6 — %s" % [rank, CharacterProgressionManager.get_rep_rank_title(rank)]
 	rank_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rank_lbl.add_theme_font_override("font", _bold_font)
-	rank_lbl.add_theme_font_size_override("font_size", 18)
+	rank_lbl.add_theme_font_size_override("font_size", 20)
 	rank_lbl.add_theme_color_override("font_color", INK_DARK)
-	id_col.add_child(rank_lbl)
+	_left_page.add_child(rank_lbl)
 
 	var rep_bar := ProgressBar.new()
-	rep_bar.custom_minimum_size = Vector2(0, 12)
+	rep_bar.custom_minimum_size = Vector2(0, 14)
 	rep_bar.max_value = 100.0
 	rep_bar.value = float(prog["ratio"]) * 100.0
 	rep_bar.show_percentage = false
@@ -340,31 +358,31 @@ func _build_spread_one(
 	var rb_fill := UIStyle.create_flat_stylebox(Color(0.76, 0.48, 0.12, 0.96), 4, 0, 0)
 	rep_bar.add_theme_stylebox_override("background", rb_bg)
 	rep_bar.add_theme_stylebox_override("fill", rb_fill)
-	id_col.add_child(rep_bar)
+	_left_page.add_child(rep_bar)
 
 	var rep_num := Label.new()
-	rep_num.text = ("MAX RANK REACHED" if bool(prog["is_max"]) else ("%d / %d Rep to next rank" % [int(prog["current"]), int(prog["needed"])])) if met else "Serve to earn Reputation"
+	rep_num.text = ("MAX RANK REACHED" if bool(prog["is_max"]) else ("%d / %d Rep to next rank" % [int(prog["current"]), int(prog["needed"])])) if met else "Serve this neighbor to start earning Reputation."
 	rep_num.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rep_num.add_theme_font_override("font", _ink_font)
-	rep_num.add_theme_font_size_override("font_size", 15)
+	rep_num.add_theme_font_size_override("font_size", 16)
 	rep_num.add_theme_color_override("font_color", INK_MUTED)
-	id_col.add_child(rep_num)
+	_left_page.add_child(rep_num)
 
-	_add_ink_divider(_left_page)
-	_add_section_header(_left_page, "FAVORITE CATEGORIES")
+	# ─── SPREAD 1 RIGHT PAGE: Favorite Categories, Perks & Story Progress ───
+	_add_section_header(_right_page, "FAVORITE CATEGORIES")
 
 	var favs: Array[String] = c.get_favorite_categories()
 	var fav_row := HFlowContainer.new()
 	fav_row.add_theme_constant_override("h_separation", 10)
-	fav_row.add_theme_constant_override("v_separation", 6)
-	_left_page.add_child(fav_row)
+	fav_row.add_theme_constant_override("v_separation", 8)
+	_right_page.add_child(fav_row)
 
 	var any_hidden_fav := false
 	if favs.is_empty():
 		var none_lbl := Label.new()
 		none_lbl.text = "No known favorites"
 		none_lbl.add_theme_font_override("font", _ink_font)
-		none_lbl.add_theme_font_size_override("font_size", 17)
+		none_lbl.add_theme_font_size_override("font_size", 18)
 		none_lbl.add_theme_color_override("font_color", INK_MUTED)
 		fav_row.add_child(none_lbl)
 	else:
@@ -372,14 +390,14 @@ func _build_spread_one(
 			var discovered := CharacterProgressionManager.is_favorite_discovered(cpath, cat)
 			if discovered:
 				var pill := PanelContainer.new()
-				var pst := UIStyle.create_flat_stylebox(Color(0.88, 0.76, 0.46, 0.36), 0, 10, 3)
+				var pst := UIStyle.create_flat_stylebox(Color(0.88, 0.76, 0.46, 0.36), 0, 12, 4)
 				pst.border_color = INK_GOLD
 				pst.set_border_width_all(1)
 				pill.add_theme_stylebox_override("panel", pst)
 				var plbl := Label.new()
 				plbl.text = StoryManager.get_category_display_name(cat)
 				plbl.add_theme_font_override("font", _bold_font)
-				plbl.add_theme_font_size_override("font_size", 17)
+				plbl.add_theme_font_size_override("font_size", 18)
 				plbl.add_theme_color_override("font_color", INK_HEADER)
 				pill.add_child(plbl)
 				fav_row.add_child(pill)
@@ -387,19 +405,19 @@ func _build_spread_one(
 				any_hidden_fav = true
 				var blk := ColorRect.new()
 				blk.color = REDACT_BLACK
-				blk.custom_minimum_size = Vector2(96, 26)
+				blk.custom_minimum_size = Vector2(104, 28)
 				fav_row.add_child(blk)
 
 	if any_hidden_fav:
 		var fav_hint := Label.new()
 		fav_hint.text = "Serve favorite items to uncover."
 		fav_hint.add_theme_font_override("font", _ink_font)
-		fav_hint.add_theme_font_size_override("font_size", 15)
+		fav_hint.add_theme_font_size_override("font_size", 16)
 		fav_hint.add_theme_color_override("font_color", INK_MUTED)
-		_left_page.add_child(fav_hint)
+		_right_page.add_child(fav_hint)
 
-	_add_ink_divider(_left_page)
-	_add_section_header(_left_page, "REPUTATION PERKS")
+	_add_ink_divider(_right_page)
+	_add_section_header(_right_page, "REPUTATION PERKS")
 	var perk_lines: Array[Dictionary] = [
 		{"req": 3, "text": "Rank 3: +1 Price Tolerance on Favorites"},
 		{"req": 5, "text": "Rank 5: +10% Scaling Cash Tip Bonus"},
@@ -414,17 +432,17 @@ func _build_spread_one(
 			pl.text = "✓ " + str(p["text"])
 			pl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			pl.add_theme_font_override("font", _ink_font)
-			pl.add_theme_font_size_override("font_size", 17)
+			pl.add_theme_font_size_override("font_size", 18)
 			pl.add_theme_color_override("font_color", INK_GREEN)
-			_left_page.add_child(pl)
+			_right_page.add_child(pl)
 		else:
 			any_locked_perk = true
 			var prow := HBoxContainer.new()
 			prow.add_theme_constant_override("separation", 10)
-			_left_page.add_child(prow)
+			_right_page.add_child(prow)
 			var bar := ColorRect.new()
 			bar.color = REDACT_BLACK
-			bar.custom_minimum_size = Vector2(215, 18)
+			bar.custom_minimum_size = Vector2(225, 20)
 			bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			prow.add_child(bar)
 			var req_lbl := Label.new()
@@ -438,12 +456,12 @@ func _build_spread_one(
 		var perk_hint := Label.new()
 		perk_hint.text = "Gain Reputation to unlock hidden perks."
 		perk_hint.add_theme_font_override("font", _ink_font)
-		perk_hint.add_theme_font_size_override("font_size", 15)
+		perk_hint.add_theme_font_size_override("font_size", 16)
 		perk_hint.add_theme_color_override("font_color", INK_MUTED)
-		_left_page.add_child(perk_hint)
+		_right_page.add_child(perk_hint)
 
-	_add_ink_divider(_left_page)
-	_add_section_header(_left_page, "STORY PROGRESS  (3 ARCS • 6 CHAPTERS)")
+	_add_ink_divider(_right_page)
+	_add_section_header(_right_page, "STORY PROGRESS  (3 ARCS • 6 CHAPTERS)")
 	var cur_ch := CharacterProgressionManager.get_chapter(cpath)
 	for arc_i in range(3):
 		var c1 := arc_i * 2 + 1
@@ -457,38 +475,44 @@ func _build_spread_one(
 			"●" if done2 else "○", c2
 		]
 		a_lbl.add_theme_font_override("font", _ink_font)
-		a_lbl.add_theme_font_size_override("font_size", 17)
+		a_lbl.add_theme_font_size_override("font_size", 18)
 		a_lbl.add_theme_color_override("font_color", INK_DARK if (done1 or done2) else INK_MUTED)
-		_left_page.add_child(a_lbl)
-
-	# ─── SPREAD 1 RIGHT PAGE: Region + Rank 1 & Rank 2 Field Notes ───
-	if met:
-		var reg_lbl := Label.new()
-		reg_lbl.text = "REGION: " + str(entry.get("region", "Unknown"))
-		reg_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		reg_lbl.add_theme_font_override("font", _bold_font)
-		reg_lbl.add_theme_font_size_override("font_size", 17)
-		reg_lbl.add_theme_color_override("font_color", INK_GOLD)
-		_right_page.add_child(reg_lbl)
-	else:
-		_add_redacted_lines(_right_page, [0.74], 18.0, "Meet this neighbor to record region.")
-
-	_add_ink_divider(_right_page)
-	_add_folklore_block(_right_page, "Rank 1 — Regional Origin", str(entry.get("rank1_origin", "")), rank >= 1, 1)
-	_add_ink_divider(_right_page)
-	_add_folklore_block(_right_page, "Rank 2 — Traditional Beliefs & Taboos", str(entry.get("rank2_taboos", "")), rank >= 2, 2)
+		_right_page.add_child(a_lbl)
 
 
-func _build_spread_two(entry: Dictionary, sprite_tex: Texture2D, rank: int) -> void:
-	# ─── SPREAD 2 LEFT PAGE: Rank 3 Real-Life Depiction ───
-	_add_depiction_block(_left_page, entry, sprite_tex, rank >= 3)
+func _build_spread_two(entry: Dictionary, rank: int) -> void:
+	# ─── SPREAD 2 LEFT PAGE: Ranks 1 & 2 Folklore Notes ───
+	_add_folklore_block(_left_page, "Rank 1 — Regional Origin", str(entry.get("rank1_origin", "")), rank >= 1, 1)
+	_add_ink_divider(_left_page)
+	_add_folklore_block(_left_page, "Rank 2 — Traditional Beliefs & Taboos", str(entry.get("rank2_taboos", "")), rank >= 2, 2)
 
-	# ─── SPREAD 2 RIGHT PAGE: Ranks 4, 5 & 6 Field Notes ───
-	_add_folklore_block(_right_page, "Rank 4 — Historical & Real-World Origins", str(entry.get("rank4_history", "")), rank >= 4, 4)
-	_add_ink_divider(_right_page)
-	_add_folklore_block(_right_page, "Rank 5 — Rare Folklore Trivia", str(entry.get("rank5_trivia", "")), rank >= 5, 5)
-	_add_ink_divider(_right_page)
+	# ─── SPREAD 2 RIGHT PAGE: Rank 3 Real-Life Depiction ───
+	_add_depiction_block(_right_page, entry, rank >= 3)
+
+
+func _build_spread_three(entry: Dictionary, rank: int) -> void:
+	# ─── SPREAD 3 LEFT PAGE: Ranks 4 & 5 Deep Folklore ───
+	_add_folklore_block(_left_page, "Rank 4 — Historical & Real-World Origins", str(entry.get("rank4_history", "")), rank >= 4, 4)
+	_add_ink_divider(_left_page)
+	_add_folklore_block(_left_page, "Rank 5 — Rare Folklore Trivia", str(entry.get("rank5_trivia", "")), rank >= 5, 5)
+
+	# ─── SPREAD 3 RIGHT PAGE: Rank 6 Confidant Seal & Epilogue ───
 	_add_folklore_block(_right_page, "Rank 6 — Confidant Seal & Epilogue", str(entry.get("rank6_epilogue", "")), rank >= 6, 6)
+	if rank >= 6:
+		_add_ink_divider(_right_page)
+		var seal := PanelContainer.new()
+		var sst := UIStyle.create_flat_stylebox(Color(0.88, 0.76, 0.46, 0.28), 0, 14, 10)
+		sst.border_color = INK_RED
+		sst.set_border_width_all(2)
+		seal.add_theme_stylebox_override("panel", sst)
+		var slbl := Label.new()
+		slbl.text = "★  CONFIDANT SEAL OF KARIMLAN  ★"
+		slbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		slbl.add_theme_font_override("font", _bold_font)
+		slbl.add_theme_font_size_override("font_size", 18)
+		slbl.add_theme_color_override("font_color", INK_RED)
+		seal.add_child(slbl)
+		_right_page.add_child(seal)
 
 
 func _resolve_sprite_texture(c: CustomerData, entry: Dictionary) -> Texture2D:
@@ -500,7 +524,7 @@ func _resolve_sprite_texture(c: CustomerData, entry: Dictionary) -> Texture2D:
 	return null
 
 
-func _build_image_preview(tex: Texture2D, min_size: Vector2, is_locked: bool, q_size: int) -> Control:
+func _build_sprite_preview(tex: Texture2D, min_size: Vector2, is_locked: bool, q_size: int) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = min_size
 
@@ -519,19 +543,55 @@ func _build_image_preview(tex: Texture2D, min_size: Vector2, is_locked: bool, q_
 		holder.add_child(fallback_blk)
 
 	if is_locked:
-		var q_lbl := Label.new()
-		q_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
-		q_lbl.text = "?"
-		q_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		q_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		q_lbl.add_theme_font_override("font", _bold_font)
-		q_lbl.add_theme_font_size_override("font_size", q_size)
-		q_lbl.add_theme_color_override("font_color", Color(0.97, 0.91, 0.77, 0.98))
-		q_lbl.add_theme_constant_override("outline_size", 7)
-		q_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.03, 0.02, 0.96))
-		holder.add_child(q_lbl)
+		holder.add_child(_make_question_overlay(q_size))
 
 	return holder
+
+
+func _build_rect_placeholder(min_size: Vector2, is_locked: bool, q_size: int, unlocked_text: String = "") -> Control:
+	var holder := Control.new()
+	holder.custom_minimum_size = min_size
+
+	if is_locked:
+		var blk := ColorRect.new()
+		blk.set_anchors_preset(Control.PRESET_FULL_RECT)
+		blk.color = REDACT_BLACK
+		holder.add_child(blk)
+		holder.add_child(_make_question_overlay(q_size))
+	else:
+		var frame := PanelContainer.new()
+		frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+		var fst := UIStyle.create_flat_stylebox(Color(0.92, 0.86, 0.74, 0.40), 0, 12, 12)
+		fst.border_color = Color(0.54, 0.42, 0.30, 0.65)
+		fst.set_border_width_all(2)
+		frame.add_theme_stylebox_override("panel", fst)
+		holder.add_child(frame)
+
+		var lbl := Label.new()
+		lbl.text = unlocked_text
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl.add_theme_font_override("font", _ink_font)
+		lbl.add_theme_font_size_override("font_size", 17)
+		lbl.add_theme_color_override("font_color", INK_MUTED)
+		frame.add_child(lbl)
+
+	return holder
+
+
+func _make_question_overlay(q_size: int) -> Label:
+	var q_lbl := Label.new()
+	q_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	q_lbl.text = "?"
+	q_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	q_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	q_lbl.add_theme_font_override("font", _bold_font)
+	q_lbl.add_theme_font_size_override("font_size", q_size)
+	q_lbl.add_theme_color_override("font_color", Color(0.97, 0.91, 0.77, 0.98))
+	q_lbl.add_theme_constant_override("outline_size", 7)
+	q_lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.03, 0.02, 0.96))
+	return q_lbl
 
 
 func _add_redacted_lines(parent: Control, ratios: Array, line_height: float, prompt_text: String) -> void:
@@ -570,8 +630,8 @@ func _add_redacted_lines(parent: Control, ratios: Array, line_height: float, pro
 
 func _add_ink_divider(parent: VBoxContainer) -> void:
 	var pad := MarginContainer.new()
-	pad.add_theme_constant_override("margin_top", 2)
-	pad.add_theme_constant_override("margin_bottom", 2)
+	pad.add_theme_constant_override("margin_top", 4)
+	pad.add_theme_constant_override("margin_bottom", 4)
 	parent.add_child(pad)
 
 	var line := ColorRect.new()
@@ -585,14 +645,14 @@ func _add_section_header(parent: VBoxContainer, text: String) -> void:
 	lbl.text = text
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.add_theme_font_override("font", _bold_font)
-	lbl.add_theme_font_size_override("font_size", 17)
+	lbl.add_theme_font_size_override("font_size", 18)
 	lbl.add_theme_color_override("font_color", INK_GOLD)
 	parent.add_child(lbl)
 
 
 func _add_folklore_block(parent: VBoxContainer, heading: String, body: String, unlocked: bool, req_rank: int) -> void:
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
+	v.add_theme_constant_override("separation", 8)
 	parent.add_child(v)
 
 	if unlocked:
@@ -600,7 +660,7 @@ func _add_folklore_block(parent: VBoxContainer, heading: String, body: String, u
 		h.text = heading
 		h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		h.add_theme_font_override("font", _bold_font)
-		h.add_theme_font_size_override("font_size", 20)
+		h.add_theme_font_size_override("font_size", 21)
 		h.add_theme_color_override("font_color", INK_HEADER)
 		v.add_child(h)
 
@@ -608,33 +668,33 @@ func _add_folklore_block(parent: VBoxContainer, heading: String, body: String, u
 		b.text = body
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.add_theme_font_override("font", _ink_font)
-		b.add_theme_font_size_override("font_size", 18)
-		b.add_theme_constant_override("line_spacing", 4)
+		b.add_theme_font_size_override("font_size", 19)
+		b.add_theme_constant_override("line_spacing", 5)
 		b.add_theme_color_override("font_color", INK_DARK)
 		v.add_child(b)
 	else:
-		_add_redacted_lines(v, [0.68], 21.0, "")
+		_add_redacted_lines(v, [0.68], 22.0, "")
 		var rank_title := CharacterProgressionManager.get_rep_rank_title(req_rank)
 		var prompt := "Meet this neighbor (Rank 1) to reveal." if req_rank <= 1 else ("Gain Reputation to Rank %d (%s) to reveal." % [req_rank, rank_title])
-		_add_redacted_lines(v, [0.96, 1.0, 0.72], 18.0, prompt)
+		_add_redacted_lines(v, [0.96, 1.0, 0.72], 19.0, prompt)
 
 
-func _add_depiction_block(parent: VBoxContainer, entry: Dictionary, sprite_tex: Texture2D, unlocked: bool) -> void:
+func _add_depiction_block(parent: VBoxContainer, entry: Dictionary, unlocked: bool) -> void:
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 10)
+	v.add_theme_constant_override("separation", 12)
 	parent.add_child(v)
 
 	var dep_path := str(entry.get("rank3_depiction_path", ""))
-	var dep_tex: Texture2D = load(dep_path) if (dep_path != "" and ResourceLoader.exists(dep_path)) else sprite_tex
+	var has_art := dep_path != "" and ResourceLoader.exists(dep_path)
 
 	if not unlocked:
 		_add_redacted_lines(v, [0.76], 22.0, "")
-		var preview := _build_image_preview(dep_tex, Vector2(0, 270), true, 88)
-		v.add_child(preview)
+		var placeholder := _build_rect_placeholder(Vector2(0, 220), true, 88)
+		v.add_child(placeholder)
 		_add_redacted_lines(
 			v,
 			[0.95, 1.0, 0.74, 0.54],
-			18.0,
+			19.0,
 			"Reach Rank 3 (Regular) to reveal depiction & lore."
 		)
 		return
@@ -647,9 +707,16 @@ func _add_depiction_block(parent: VBoxContainer, entry: Dictionary, sprite_tex: 
 	title.add_theme_color_override("font_color", INK_RED)
 	v.add_child(title)
 
-	if dep_tex != null:
-		var preview := _build_image_preview(dep_tex, Vector2(0, 270), false, 0)
-		v.add_child(preview)
+	if has_art:
+		var img := TextureRect.new()
+		img.custom_minimum_size = Vector2(0, 220)
+		img.texture = load(dep_path) as Texture2D
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		v.add_child(img)
+	else:
+		var placeholder := _build_rect_placeholder(Vector2(0, 200), false, 0, "Archival Illustration\n(Placeholder)")
+		v.add_child(placeholder)
 
 	var cap := Label.new()
 	cap.text = str(entry.get("rank3_depiction_caption", ""))
@@ -818,19 +885,19 @@ func _build_ui() -> void:
 	_left_scroll = ScrollContainer.new()
 	_left_scroll.anchor_left = 0.098
 	_left_scroll.anchor_right = 0.448
-	_left_scroll.anchor_top = 0.126
-	_left_scroll.anchor_bottom = 0.908
+	_left_scroll.anchor_top = 0.130
+	_left_scroll.anchor_bottom = 0.906
 	_left_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_book_rect.add_child(_left_scroll)
 
 	_left_page = VBoxContainer.new()
 	_left_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_left_page.add_theme_constant_override("separation", 8)
+	_left_page.add_theme_constant_override("separation", 12)
 	_left_scroll.add_child(_left_page)
 
 	# Right Page Top Header (cleanly left of NO./DATE)
 	_right_hdr = Label.new()
-	_right_hdr.text = "FOLKLORE FIELD NOTES"
+	_right_hdr.text = "NEIGHBOR NOTES"
 	_right_hdr.anchor_left = 0.598
 	_right_hdr.anchor_right = 0.840
 	_right_hdr.anchor_top = 0.064
@@ -853,7 +920,7 @@ func _build_ui() -> void:
 
 	_right_page = VBoxContainer.new()
 	_right_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_right_page.add_theme_constant_override("separation", 10)
+	_right_page.add_theme_constant_override("separation", 12)
 	_right_scroll.add_child(_right_page)
 
 	# Bottom-margin footers
