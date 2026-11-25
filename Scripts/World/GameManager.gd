@@ -198,21 +198,21 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			var eff_step: int = item.current_step - tol
 			var rep_delta: int = 0
 			if eff_step <= -3:
-				rep_delta = 22
+				rep_delta = 30
 			elif eff_step == -2:
-				rep_delta = 19
+				rep_delta = 27
 			elif eff_step == -1:
-				rep_delta = 16
+				rep_delta = 24
 			elif eff_step == 0:
-				rep_delta = 14
+				rep_delta = 21
 			elif eff_step == 1:
-				rep_delta = 12
+				rep_delta = 18
 			elif eff_step == 2:
-				rep_delta = 8
+				rep_delta = 14
 			elif eff_step == 3:
-				rep_delta = -4
+				rep_delta = -3
 			elif eff_step == 4:
-				rep_delta = -7
+				rep_delta = -6
 			else:
 				rep_delta = -10
 			# Cold/Warm fridge bonus/penalty
