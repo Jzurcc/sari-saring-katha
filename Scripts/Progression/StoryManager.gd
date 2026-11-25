@@ -43,16 +43,16 @@ var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 
 # --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
-const TALLY_GOAL := 1500.0
+const TALLY_GOAL := 2000.0
 const TALLY_MIN_SCHEDULE: Array[float] = [35.0, 45.0, 55.0, 65.0, 80.0, 90.0, 105.0]
 const TALLY_GEN_SCHEDULE: Array[float] = [55.0, 70.0, 85.0, 100.0, 120.0, 135.0, 155.0]
 
 const LEDGER_MILESTONES: Array[Dictionary] = [
-	{"id": "reroll_1", "ratio": 0.15, "amount": 225.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
-	{"id": "daytime_mayari", "ratio": 0.30, "amount": 450.0, "title": "Daylight Audience", "desc": "Reyna Mayari can now visit and shop during the day like a regular neighbor."},
-	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 750.0, "title": "Silver Favor", "desc": "Fair odds shift to 65% Favor / 35% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
-	{"id": "twin_moons", "ratio": 0.75, "amount": 1125.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards per night (choose 1 or 2)."},
-	{"id": "sealed_ledger", "ratio": 1.00, "amount": 1500.0, "title": "Patron of the Moon", "desc": "Permanently seals the Silver Ledger."},
+	{"id": "reroll_1", "ratio": 0.15, "amount": 300.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
+	{"id": "daytime_mayari", "ratio": 0.30, "amount": 600.0, "title": "Daylight Audience", "desc": "Reyna Mayari can now visit and shop during the day like a regular neighbor."},
+	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 1000.0, "title": "Silver Favor", "desc": "Fair odds shift to 65% Favor / 35% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
+	{"id": "twin_moons", "ratio": 0.75, "amount": 1500.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards per night (choose 1 or 2)."},
+	{"id": "sealed_ledger", "ratio": 1.00, "amount": 2000.0, "title": "Patron of the Moon", "desc": "Permanently seals the Silver Ledger."},
 ]
 
 var tally_total_paid: float = 0.0

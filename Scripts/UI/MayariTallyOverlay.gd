@@ -80,7 +80,7 @@ class UnifiedLedgerGauge extends Control:
 	const BAR_H := 22.0
 
 	var total_paid: float = 0.0
-	var goal: float = 1500.0
+	var goal: float = 2000.0
 	var current_offer: float = 0.0
 	var max_offer: float = 100.0
 	var min_thresh: float = 40.0
@@ -468,7 +468,7 @@ var _bold_font: FontVariation
 
 var _player_money: float = 0.0
 var _total_paid: float = 0.0
-var _goal: float = 1500.0
+var _goal: float = 2000.0
 var _min_amount: float = 40.0
 var _generous_amount: float = 65.0
 var _max_offer: float = 0.0
