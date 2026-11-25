@@ -1226,6 +1226,7 @@ const MOSQUITO_DAILY_CHANCE := 0.40
 var mosquito_swarm_pending: bool = false
 var mosquito_swarm_triggered_today: bool = false
 var _mosquito_trigger_hour: float = -1.0 # < 0 means no mosquito swarm today
+var debug_force_next_customer_id: String = ""
 
 func _ready() -> void:
 	LogManager.info("StoryManager", "StoryManager._ready() START")
@@ -1733,6 +1734,14 @@ func reset_state() -> void:
 	SaveManager.delete_save()
 
 func get_next_transaction(exclude_paths: Array[String] = [], is_wave_joiner: bool = false) -> TransactionContext:
+	if debug_force_next_customer_id != "":
+		var forced := _get_character_data(debug_force_next_customer_id)
+		debug_force_next_customer_id = ""
+		if forced and not (forced.resource_path in exclude_paths):
+			var tx := TransactionContext.new()
+			tx.customer_data = forced
+			_build_transaction_context(tx, forced, false)
+			return tx
 	return TransactionBuilder.build_next_transaction(self, exclude_paths, is_wave_joiner)
 
 func get_collection_transaction() -> TransactionContext:

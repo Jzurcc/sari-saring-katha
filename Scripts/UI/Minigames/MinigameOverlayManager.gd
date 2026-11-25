@@ -81,8 +81,18 @@ func _on_dialogic_signal(arg: String) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if is_any_open():
 		return
+	if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
+		return
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		match event.keycode:
+			KEY_1:
+				get_viewport().set_input_as_handled()
+				if is_instance_valid(StoryManager):
+					StoryManager.debug_force_next_customer_id = "lolopilo"
+					EventBus.show_notification.emit("Debug Hotkey [1]", "Lolo Pilo queued as the next customer!", "interact")
+			KEY_2:
+				get_viewport().set_input_as_handled()
+				launch_minigame("mosquito")
 			KEY_F6:
 				get_viewport().set_input_as_handled()
 				launch_minigame("mosquito")
