@@ -14,7 +14,9 @@ enum ItemType {
 @export var price: float = 10.0
 ## The current selling price to customers. Initialized to 105% of price if set to 0.
 @export var selling_price: float = 0.0
-## Current discrete pricing step: -3 (loss leader) to +3 (heavy markup). 0 = wholesale cost.
+## Current discrete pricing step: -3 (loss leader) to +5 (extreme markup). 0 = wholesale cost.
+const MIN_STEP := -3
+const MAX_STEP := 5
 @export var current_step: int = 0
 ## Whether the player has manually adjusted this price.
 @export var is_manually_priced: bool = false
@@ -64,26 +66,26 @@ func get_visual_aspect() -> float:
 	return 1.0
 
 ## Calculates the peso increment per step for this product based on wholesale cost.
-## Candies (<= 3.0): 2.00 per step. Regular items: 4.0 + 22% of wholesale cost (snapped to 0.50, capped at 18.00).
+## Candies (<= 3.0): 1.50 per step. Regular items: 3.5 + 18% of wholesale cost (snapped to 0.50, capped at 16.00).
 func get_step_increment() -> float:
 	if price <= 3.0:
-		return 2.0
-	return minf(18.0, snapped(4.0 + price * 0.22, 0.5))
+		return 1.5
+	return minf(16.0, snapped(3.5 + price * 0.18, 0.5))
 
-## Calculates the selling price for a given discrete step (-3 to +3).
+## Calculates the selling price for a given discrete step (-3 to +5).
 ## Step 0 = wholesale cost (price). Negative steps sell at a loss.
 func get_price_for_step(step_idx: int) -> float:
-	var clamped_step := clampi(step_idx, -3, 3)
+	var clamped_step := clampi(step_idx, MIN_STEP, MAX_STEP)
 	var inc := get_step_increment()
 	return max(1.0, snapped(price + float(clamped_step) * inc, 0.5))
 
-## Calculates the nearest discrete step (-3 to +3) corresponding to a given price.
+## Calculates the nearest discrete step (-3 to +5) corresponding to a given price.
 func get_step_from_price(target_price: float) -> int:
 	var inc := get_step_increment()
 	if inc <= 0.001:
 		return 0
 	var calc_step := roundi((target_price - price) / inc)
-	return clampi(calc_step, -3, 3)
+	return clampi(calc_step, MIN_STEP, MAX_STEP)
 
 ## Returns the current final selling price.
 func get_final_price() -> float:
@@ -99,10 +101,10 @@ func get_final_price() -> float:
 		
 	return max(1.0, selling_price)
 
-## Returns the maximum selling price (at step +3).
+## Returns the maximum selling price (at step +5).
 func get_max_selling_price() -> float:
-	return get_price_for_step(3)
+	return get_price_for_step(MAX_STEP)
 
 ## Returns the minimum selling price (at step -3).
 func get_min_selling_price() -> float:
-	return get_price_for_step(-3)
+	return get_price_for_step(MIN_STEP)

@@ -203,13 +203,13 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	else:
 		chill_status_label.hide()
 
-	# 7-Step Circle Track: • for selected and ◦ for not selected
+	# 9-Step Circle Track (-3 to +5): • for selected and ◦ for not selected
 	var pips := ""
-	for i in range(-3, 4):
+	for i in range(ItemData.MIN_STEP, ItemData.MAX_STEP + 1):
 		if i == step:
-			pips += "•  "
+			pips += "• "
 		else:
-			pips += "◦  "
+			pips += "◦ "
 	step_pips_label.text = pips.strip_edges()
 
 	# Comparison readout & coloring (reflects active warm penalty on fridge items)
@@ -221,8 +221,8 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		step_pips_label.add_theme_color_override("font_color", Color("#FF9566"))
 	elif step > 0:
 		comparison_label.text = "+₱%.2f" % diff
-		var factor = float(step) / 3.0
-		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.35, 0.2), factor)
+		var factor = float(step) / float(ItemData.MAX_STEP)
+		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.30, 0.18), factor)
 		comparison_label.add_theme_color_override("font_color", markup_color)
 		step_pips_label.add_theme_color_override("font_color", markup_color)
 	elif step < 0:
@@ -235,8 +235,8 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		step_pips_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78, 0.8))
 
 	# Arrow Dimming
-	left_arrow.modulate = Color(1, 1, 1, 0.3) if step <= -3 else Color(1, 1, 1, 1.0)
-	right_arrow.modulate = Color(1, 1, 1, 0.3) if step >= 3 else Color(1, 1, 1, 1.0)
+	left_arrow.modulate = Color(1, 1, 1, 0.3) if step <= ItemData.MIN_STEP else Color(1, 1, 1, 1.0)
+	right_arrow.modulate = Color(1, 1, 1, 0.3) if step >= ItemData.MAX_STEP else Color(1, 1, 1, 1.0)
 
 	# In Demand Badge (without emoji)
 	var in_demand: bool = false

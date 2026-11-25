@@ -186,7 +186,7 @@ func set_item_step(items: Array[ItemData], new_step: int) -> void:
 		return
 	var ref_item: ItemData = items[0]
 	var old_price: float = ref_item.get_final_price()
-	var clamped_step := clampi(new_step, -3, 3)
+	var clamped_step := clampi(new_step, ItemData.MIN_STEP, ItemData.MAX_STEP)
 	
 	for item in items:
 		if item:
@@ -425,7 +425,7 @@ func load_save_data(data: Dictionary) -> void:
 				item.current_step = 0
 				item.selling_price = item.get_price_for_step(0)
 			elif saved_steps.has(path):
-				item.current_step = clampi(int(saved_steps[path]), -3, 3)
+				item.current_step = clampi(int(saved_steps[path]), ItemData.MIN_STEP, ItemData.MAX_STEP)
 				item.selling_price = item.get_price_for_step(item.current_step)
 			else:
 				# Legacy save: migrate manually set float price to closest discrete step

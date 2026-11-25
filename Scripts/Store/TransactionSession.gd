@@ -89,8 +89,8 @@ static func compute_overpriced_refusal_chance(item_data: ItemData) -> float:
 	match effective_step:
 		2: base_chance = 0.20
 		3: base_chance = 0.45
-		4: base_chance = 0.70
-		_: base_chance = 0.88
+		4: base_chance = 0.72
+		_: base_chance = 0.92
 	var relief: float = StoryManager.get_storefront_price_relief()
 	var card_mod: float = 0.0
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):

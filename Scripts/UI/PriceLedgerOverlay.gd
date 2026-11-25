@@ -426,7 +426,7 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 func _adjust_step(item: ItemData, delta: int) -> void:
 	if not item:
 		return
-	var new_step := clampi(item.current_step + delta, -3, 3)
+	var new_step := clampi(item.current_step + delta, ItemData.MIN_STEP, ItemData.MAX_STEP)
 	if new_step == item.current_step:
 		return
 		
@@ -452,13 +452,13 @@ func _update_row_display(item: ItemData) -> void:
 	var base_price: float = item.price
 	var diff: float = final_price - base_price
 
-	# Circle track string: • for selected and ◦ for not selected
+	# Circle track string (-3 to +5): • for selected and ◦ for not selected
 	var pips_text := ""
-	for i in range(-3, 4):
+	for i in range(ItemData.MIN_STEP, ItemData.MAX_STEP + 1):
 		if i == step:
-			pips_text += "•  "
+			pips_text += "• "
 		else:
-			pips_text += "◦  "
+			pips_text += "◦ "
 	pips_lbl.text = pips_text.strip_edges()
 
 	# Price and status readout
@@ -466,8 +466,8 @@ func _update_row_display(item: ItemData) -> void:
 
 	if step > 0:
 		step_info_lbl.text = "+₱%.2f" % diff
-		var factor = float(step) / 3.0
-		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.35, 0.2), factor)
+		var factor = float(step) / float(ItemData.MAX_STEP)
+		var markup_color = Color(1.0, 0.85, 0.3).lerp(Color(1.0, 0.30, 0.18), factor)
 		price_lbl.add_theme_color_override("font_color", markup_color)
 		step_info_lbl.add_theme_color_override("font_color", markup_color)
 	elif step < 0:
@@ -479,5 +479,5 @@ func _update_row_display(item: ItemData) -> void:
 		price_lbl.add_theme_color_override("font_color", Color(0.92, 0.9, 0.78))
 		step_info_lbl.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 
-	minus_btn.disabled = (step <= -3)
-	plus_btn.disabled = (step >= 3)
+	minus_btn.disabled = (step <= ItemData.MIN_STEP)
+	plus_btn.disabled = (step >= ItemData.MAX_STEP)
