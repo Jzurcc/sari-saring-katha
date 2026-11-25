@@ -69,12 +69,20 @@ func _ready() -> void:
 	fridge_hud.name = "FridgeColdnessHUD"
 	add_child(fridge_hud)
 
+	# Instantiate Interactive Minigame Overlay Manager (Mosquito Swat, Sipa, Teks Memory)
+	const MinigameMgrScript := preload("res://Scripts/UI/Minigames/MinigameOverlayManager.gd")
+	var minigame_mgr: Node = MinigameMgrScript.new()
+	minigame_mgr.name = "MinigameOverlayManager"
+	add_child(minigame_mgr)
+
 	LogManager.debug("MainGame", "_ready() END")
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Escape toggles pause menu (only if no sub-menu/overlay consumed it first)
 	if (event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed)) and not event.is_echo():
 		if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
+			return
+		if not get_tree().get_nodes_in_group("minigame_overlay_active").is_empty():
 			return
 		# Double-check open overlays so Escape closes them instead of opening Pause
 		for ev_ov in get_tree().get_nodes_in_group("events_overlay"):

@@ -109,6 +109,12 @@ signal nokia_opened()
 @warning_ignore("unused_signal")
 signal nokia_closed()
 
+# --- Minigames ---
+@warning_ignore("unused_signal")
+signal start_minigame(minigame_id: String, config: Dictionary)
+@warning_ignore("unused_signal")
+signal minigame_completed(minigame_id: String, won: bool, result: Dictionary)
+
 # --- Drag & Drop ---
 @warning_ignore("unused_signal")
 signal drag_started(item: DraggableItem)
