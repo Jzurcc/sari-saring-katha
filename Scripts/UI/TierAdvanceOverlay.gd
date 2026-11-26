@@ -118,8 +118,8 @@ func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData])
 			continue
 
 		var holder := VBoxContainer.new()
-		holder.alignment = BoxContainer.ALIGNMENT_CENTER
-		holder.custom_minimum_size = Vector2(92, 102)
+		holder.alignment = BoxContainer.ALIGNMENT_BEGIN
+		holder.custom_minimum_size = Vector2(108, 114)
 		holder.add_theme_constant_override("separation", 4)
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -143,8 +143,9 @@ func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData])
 		var nm := Label.new()
 		nm.text = item.item_name
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		nm.clip_text = true
-		nm.custom_minimum_size = Vector2(88, 0)
+		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		nm.max_lines_visible = 2
+		nm.custom_minimum_size = Vector2(104, 0)
 		nm.add_theme_font_override("font", UIStyle.FONT_INDER)
 		nm.add_theme_font_size_override("font_size", 13)
 		nm.add_theme_color_override("font_color", COL_CREAM_MUTED)
