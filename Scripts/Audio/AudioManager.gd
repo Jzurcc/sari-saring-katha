@@ -4,7 +4,7 @@ extends Node
 ## Coordinates soundtrack playlists, day/afternoon/dusk phase transitions,
 ## character theme crossfades, ambient environment audio, and delegates SFX/settings.
 
-enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
+enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK, CLOSING }
 
 const FADE_DURATION: float = 0.8
 const OVERRIDE_FADE_DURATION: float = 1.25
@@ -48,6 +48,7 @@ var audio_halo_price_sole = preload("res://Audio/Soundtracks/What is Halo-price 
 # Special context override tracks
 var audio_modern_times = preload("res://Audio/Soundtracks/Moddern Times.mp3")
 var audio_so_what = preload("res://Audio/Soundtracks/So What.mp3")
+var audio_sneaky_plan = preload("res://Audio/Soundtracks/The Sneaky Plan.mp3")
 var audio_eat_or_not: AudioStream = null
 
 var audio_calming_morning = preload("res://Audio/SFX/Calming Morning Sounds.mp3")
@@ -77,6 +78,7 @@ var sfx_fridge_hum = preload("res://Audio/SFX/refrigerator.mp3")
 	audio_halo_price_sole: "What is \"Halo-price Sole\"?",
 	audio_modern_times: "Modern Times",
 	audio_so_what: "So What",
+	audio_sneaky_plan: "The Sneaky Plan",
 }
 
 var _time_of_day_node: Node = null
@@ -220,7 +222,11 @@ func _update_audio_for_time(time: float) -> void:
 	var new_phase = BGMPhase.NONE
 	var is_night = false
 
-	if time >= 4.0 and time < 11.0:
+	var is_closing := is_instance_valid(StoryManager) and StoryManager.is_past_closing_time()
+	if is_closing:
+		new_phase = BGMPhase.CLOSING
+		is_night = true
+	elif time >= 4.0 and time < 11.0:
 		new_phase = BGMPhase.MORNING
 	elif time >= 11.0 and time < 18.0:
 		new_phase = BGMPhase.AFTERNOON
@@ -259,6 +265,8 @@ func _get_phase_pool(phase: BGMPhase) -> Array:
 			return [audio_fantastic_idea, audio_not_me, audio_hermit_crab, audio_silly_day, audio_ready_to_eat, audio_happy_hop]
 		BGMPhase.DUSK:
 			return [audio_sleepy, audio_naptime, audio_little_steps, audio_dark_humor, audio_halo_price_sole]
+		BGMPhase.CLOSING:
+			return [audio_sneaky_plan]
 	return []
 
 func _apply_bgm_gain(gain: float) -> void:
