@@ -62,6 +62,7 @@ var _quip: String = ""
 var _highlights: Array[String] = []
 
 var _skip_requested: bool = false
+var _last_skip_tap_msec: int = -10000
 var _tally_finished: bool = false
 var _closing: bool = false
 
@@ -1281,7 +1282,11 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_SPACE or event.keycode == KEY_SPACE or event.is_action_pressed("ui_accept")):
 		is_skip = true
 	if is_skip and not _tally_finished:
-		_skip_requested = true
+		var now_msec := Time.get_ticks_msec()
+		if now_msec - _last_skip_tap_msec <= 650:
+			_skip_requested = true
+		else:
+			_last_skip_tap_msec = now_msec
 		get_viewport().set_input_as_handled()
 
 
