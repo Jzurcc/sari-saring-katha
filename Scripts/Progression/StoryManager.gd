@@ -1917,7 +1917,7 @@ func award_customer_completion_xp(customer: Customer) -> void:
 		return
 	if customer.get_meta("_xp_awarded", false):
 		return
-	if not customer.transaction_context or customer.transaction_context.is_guided_tutorial:
+	if not customer.transaction_context:
 		return
 	if customer.customer_data != null and customer.customer_data.is_collector():
 		return
