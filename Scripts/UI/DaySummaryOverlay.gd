@@ -36,7 +36,8 @@ const SHORT_MONTHS: Array[String] = [
 var _bold_font: FontVariation
 var _root: Control
 var _backdrop: ColorRect
-var _banner: PanelContainer
+var _banner: Control
+var _skip_hint_pill: PanelContainer
 var _frame: PanelContainer
 var _mayari_portrait: TextureRect
 var _close_btn: Button
@@ -86,8 +87,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("day_summary_overlay_active")
 	_bold_font = FontVariation.new()
-	_bold_font.base_font = UIStyle.FONT_INDER
-	_bold_font.variation_embolden = 0.65
+	_bold_font.base_font = UIStyle.FONT_FREDOKA_SEMIBOLD
 	_build_ui()
 	_run_sequence()
 
@@ -269,43 +269,69 @@ func _build_ui() -> void:
 	_backdrop.color = Color(0.030, 0.024, 0.020, 0.82)
 	_root.add_child(_backdrop)
 
-	# Top Header Banner (centered, 64% width)
-	_banner = PanelContainer.new()
+	# Borderless 5%-Safe Top Header (Nightly Ledger + short date pill "Aug 14" + Skip hint)
+	_banner = HBoxContainer.new()
 	_banner.anchor_left = 0.18
 	_banner.anchor_right = 0.82
-	_banner.anchor_top = 0.026
-	_banner.anchor_bottom = 0.114
-	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 8, 32, 10)
-	b_style.border_color = COL_GOLD
-	b_style.set_border_width_all(2)
-	b_style.shadow_color = Color(0.0, 0.0, 0.0, 0.58)
-	b_style.shadow_size = 16
-	_banner.add_theme_stylebox_override("panel", b_style)
+	_banner.anchor_top = 0.042
+	_banner.anchor_bottom = 0.128
+	_banner.alignment = BoxContainer.ALIGNMENT_CENTER
+	_banner.add_theme_constant_override("separation", 16)
 	_root.add_child(_banner)
 
-	var bv := VBoxContainer.new()
-	bv.alignment = BoxContainer.ALIGNMENT_CENTER
-	bv.add_theme_constant_override("separation", 2)
-	_banner.add_child(bv)
+	var left_hdr := HBoxContainer.new()
+	left_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_hdr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	left_hdr.add_theme_constant_override("separation", 14)
+	_banner.add_child(left_hdr)
 
-	var title_row := HBoxContainer.new()
-	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_row.add_theme_constant_override("separation", 16)
-	bv.add_child(title_row)
+	var hdr_title := Label.new()
+	hdr_title.text = "Nightly Ledger"
+	hdr_title.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	hdr_title.add_theme_font_size_override("font_size", 32)
+	hdr_title.add_theme_color_override("font_color", COL_WHITE_HDR)
+	hdr_title.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
+	hdr_title.add_theme_constant_override("outline_size", 3)
+	left_hdr.add_child(hdr_title)
 
-	for s_orn in ["◈", "Nightly Ledger  ·  %s" % _format_short_date(_day_number), "◈"]:
-		var lbl := Label.new()
-		lbl.text = s_orn
-		if s_orn == "◈":
-			lbl.add_theme_font_size_override("font_size", 22)
-			lbl.add_theme_color_override("font_color", COL_GOLD)
-		else:
-			lbl.add_theme_font_override("font", _bold_font)
-			lbl.add_theme_font_size_override("font_size", 32)
-			lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
-			lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
-			lbl.add_theme_constant_override("outline_size", 4)
-		title_row.add_child(lbl)
+	var date_pill := PanelContainer.new()
+	date_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var dp_st := UIStyle.create_flat_stylebox(Color(0.09, 0.078, 0.066, 0.94), 9, 14, 6)
+	dp_st.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.68)
+	dp_st.set_border_width_all(1)
+	date_pill.add_theme_stylebox_override("panel", dp_st)
+	left_hdr.add_child(date_pill)
+
+	var date_lbl := Label.new()
+	date_lbl.text = _format_short_date(_day_number)
+	date_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	date_lbl.add_theme_font_size_override("font_size", 17)
+	date_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	date_pill.add_child(date_lbl)
+
+	_skip_hint_pill = PanelContainer.new()
+	_skip_hint_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_skip_hint_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sk_st := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.88), 8, 12, 6)
+	sk_st.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.42)
+	sk_st.set_border_width_all(1)
+	_skip_hint_pill.add_theme_stylebox_override("panel", sk_st)
+	_banner.add_child(_skip_hint_pill)
+
+	var sk_row := HBoxContainer.new()
+	sk_row.add_theme_constant_override("separation", 8)
+	sk_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_skip_hint_pill.add_child(sk_row)
+
+	sk_row.add_child(TopBannerQueue.create_keycap_pill("Space"))
+
+	var sk_lbl := Label.new()
+	sk_lbl.text = "Double-tap to skip"
+	sk_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
+	sk_lbl.add_theme_font_size_override("font_size", 14)
+	sk_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	sk_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sk_row.add_child(sk_lbl)
 
 	# Main Center Frame (grows taller per animated line like an unrolling ledger!)
 	_frame = PanelContainer.new()
@@ -360,7 +386,7 @@ func _build_ui() -> void:
 	_stamp_panel.z_index = 14
 	_stamp_panel.visible = false
 	_stamp_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var st_style := UIStyle.create_flat_stylebox(Color(0.09, 0.075, 0.06, 0.96), 10, 14, 8)
+	var st_style := UIStyle.create_flat_stylebox(Color(0.09, 0.075, 0.06, 0.96), 10, 6, 6)
 	st_style.border_color = _grade_col
 	st_style.set_border_width_all(3)
 	st_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
@@ -368,23 +394,31 @@ func _build_ui() -> void:
 	_stamp_panel.add_theme_stylebox_override("panel", st_style)
 	_root.add_child(_stamp_panel)
 
+	var inner_seal := PanelContainer.new()
+	inner_seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var is_style := UIStyle.create_flat_stylebox(Color(0.0, 0.0, 0.0, 0.0), 7, 10, 4)
+	is_style.border_color = Color(_grade_col.r, _grade_col.g, _grade_col.b, 0.55)
+	is_style.set_border_width_all(1)
+	inner_seal.add_theme_stylebox_override("panel", is_style)
+	_stamp_panel.add_child(inner_seal)
+
 	var sv := VBoxContainer.new()
 	sv.alignment = BoxContainer.ALIGNMENT_CENTER
 	sv.add_theme_constant_override("separation", 0)
-	_stamp_panel.add_child(sv)
+	inner_seal.add_child(sv)
 
 	var g_lbl := Label.new()
 	g_lbl.text = _grade
 	g_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	g_lbl.add_theme_font_override("font", _bold_font)
-	g_lbl.add_theme_font_size_override("font_size", 50)
+	g_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	g_lbl.add_theme_font_size_override("font_size", 54)
 	g_lbl.add_theme_color_override("font_color", _grade_col)
 	sv.add_child(g_lbl)
 
 	var gt_lbl := Label.new()
 	gt_lbl.text = _grade_title
 	gt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	gt_lbl.add_theme_font_override("font", _bold_font)
+	gt_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	gt_lbl.add_theme_font_size_override("font_size", 17)
 	gt_lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 	sv.add_child(gt_lbl)
@@ -456,7 +490,7 @@ func _build_ui() -> void:
 	_root.add_child(_hover_card_holder)
 
 
-func _make_section_card(title: String) -> Array:
+func _make_section_card(title: String, icon_path: String = "") -> Array:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var st := UIStyle.create_flat_stylebox(COL_CARD_BG, 8, 20, 12)
@@ -471,12 +505,28 @@ func _make_section_card(title: String) -> Array:
 	vb.add_theme_constant_override("separation", 6)
 	panel.add_child(vb)
 
+	var hdr_row := HBoxContainer.new()
+	hdr_row.add_theme_constant_override("separation", 9)
+	vb.add_child(hdr_row)
+
+	if icon_path != "":
+		var tex := HadesEmblem.load_lucide_icon(icon_path)
+		if tex != null:
+			var ico := TextureRect.new()
+			ico.texture = tex
+			ico.custom_minimum_size = Vector2(20, 20)
+			ico.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			ico.modulate = COL_GOLD_BRIGHT
+			hdr_row.add_child(ico)
+
 	var hdr := Label.new()
 	hdr.text = title
-	hdr.add_theme_font_override("font", _bold_font)
-	hdr.add_theme_font_size_override("font_size", 19)
+	hdr.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	hdr.add_theme_font_size_override("font_size", 20)
 	hdr.add_theme_color_override("font_color", COL_WHITE_HDR)
-	vb.add_child(hdr)
+	hdr_row.add_child(hdr)
 	return [panel, vb]
 
 
@@ -517,7 +567,7 @@ func _create_stat_row(parent: VBoxContainer, label_txt: String, target: float, p
 
 
 func _build_cashflow_card() -> PanelContainer:
-	var built := _make_section_card("Cashflow & Ledger")
+	var built := _make_section_card("Cashflow & Ledger", "res://Assets/ui/icons/banknote.png")
 	var panel: PanelContainer = built[0]
 	var vb: VBoxContainer = built[1]
 
@@ -550,7 +600,7 @@ func _build_cashflow_card() -> PanelContainer:
 
 
 func _build_performance_card() -> PanelContainer:
-	var built := _make_section_card("Store Performance")
+	var built := _make_section_card("Store Performance", "res://Assets/ui/icons/trending-up.png")
 	var panel: PanelContainer = built[0]
 	var vb: VBoxContainer = built[1]
 
@@ -622,26 +672,18 @@ func _build_bottom_row() -> HBoxContainer:
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 12)
 
-	# Left: Today's Conditions (Larger Diamond Icons + Hover Event Card at cursor)
-	var cond_built := _make_section_card("Today's Conditions")
+	# Left: Today's Conditions (Adaptive scrollable grid for 8+ late-game conditions)
+	var cond_built := _make_section_card("Today's Conditions", "res://Assets/ui/icons/sparkles.png")
 	var cond_panel: PanelContainer = cond_built[0]
 	var cond_vb: VBoxContainer = cond_built[1]
 	cond_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	cond_panel.size_flags_stretch_ratio = 0.42
+	cond_panel.size_flags_stretch_ratio = 0.44
 	row.add_child(cond_panel)
 
-	var icons_flow := HFlowContainer.new()
-	icons_flow.add_theme_constant_override("h_separation", 14)
-	icons_flow.add_theme_constant_override("v_separation", 10)
-	cond_vb.add_child(icons_flow)
-
-	_condition_nodes.clear()
+	var all_cond_infos: Array[Dictionary] = []
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
-			var c_info := _make_event_hover_info(ev)
-			var d_btn := _make_condition_diamond(c_info)
-			icons_flow.add_child(d_btn)
-			_condition_nodes.append(d_btn)
+			all_cond_infos.append(_make_event_hover_info(ev))
 
 	var mayari_ids: Array[String] = StoryManager.active_mayari_cards
 	if mayari_ids.is_empty() and StoryManager.active_mayari_card != "":
@@ -650,40 +692,70 @@ func _build_bottom_row() -> HBoxContainer:
 		var c := MayariCardRegistry.get_card(mid)
 		if not c.is_empty():
 			var kind_str := "favor" if MayariCardRegistry.is_favor(mid) else "omen"
-			var c_info := _make_card_hover_info(c, kind_str)
-			var d_btn := _make_condition_diamond(c_info)
-			icons_flow.add_child(d_btn)
-			_condition_nodes.append(d_btn)
+			all_cond_infos.append(_make_card_hover_info(c, kind_str))
 
 	for bid in _stats.get("blessings_used", []):
 		var bc := MayariCardRegistry.get_card(str(bid))
 		if not bc.is_empty():
-			var c_info := _make_card_hover_info(bc, "blessing")
-			var d_btn := _make_condition_diamond(c_info)
-			icons_flow.add_child(d_btn)
-			_condition_nodes.append(d_btn)
+			all_cond_infos.append(_make_card_hover_info(bc, "blessing"))
+
+	# Adaptive diamond sizing so 8+ late-game conditions stay crisp & compact
+	var cond_cnt := all_cond_infos.size()
+	var diamond_px := 64 if cond_cnt <= 6 else (54 if cond_cnt <= 10 else 48)
+	var sep_px := 12 if cond_cnt <= 6 else 8
+
+	var cond_scroll := ScrollContainer.new()
+	cond_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	cond_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	cond_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if cond_cnt > 8:
+		cond_scroll.custom_minimum_size = Vector2(0, 144)
+	else:
+		cond_scroll.custom_minimum_size = Vector2(0, diamond_px + 26)
+	cond_vb.add_child(cond_scroll)
+
+	var flow_pad := MarginContainer.new()
+	flow_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	flow_pad.add_theme_constant_override("margin_top", 10)
+	flow_pad.add_theme_constant_override("margin_bottom", 10)
+	flow_pad.add_theme_constant_override("margin_left", 8)
+	flow_pad.add_theme_constant_override("margin_right", 12)
+	cond_scroll.add_child(flow_pad)
+
+	var icons_flow := HFlowContainer.new()
+	icons_flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icons_flow.add_theme_constant_override("h_separation", sep_px)
+	icons_flow.add_theme_constant_override("v_separation", sep_px)
+	flow_pad.add_child(icons_flow)
+
+	_condition_nodes.clear()
+	for c_info in all_cond_infos:
+		var d_btn := _make_condition_diamond(c_info, diamond_px)
+		icons_flow.add_child(d_btn)
+		_condition_nodes.append(d_btn)
 
 	if _condition_nodes.is_empty():
+		cond_scroll.visible = false
 		var quiet := Label.new()
 		quiet.text = "Quiet day in Karimlan."
-		quiet.add_theme_font_override("font", UIStyle.FONT_INDER)
+		quiet.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
 		quiet.add_theme_font_size_override("font_size", 16)
 		quiet.add_theme_color_override("font_color", COL_GOLD_LABEL)
 		cond_vb.add_child(quiet)
 	else:
 		var hint_lbl := Label.new()
-		hint_lbl.text = "Hover a diamond to inspect"
-		hint_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		hint_lbl.add_theme_font_size_override("font_size", 13)
+		hint_lbl.text = "Hover an event to inspect" + (" · Scroll for more" if cond_cnt > 10 else "")
+		hint_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
+		hint_lbl.add_theme_font_size_override("font_size", 14)
 		hint_lbl.add_theme_color_override("font_color", COL_GOLD_ZERO)
 		cond_vb.add_child(hint_lbl)
 
 	# Right: Top 3 Highlights of the Day
-	var hl_built := _make_section_card("Highlights of the Day")
+	var hl_built := _make_section_card("Highlights of the Day", "res://Assets/ui/icons/award.png")
 	var hl_panel: PanelContainer = hl_built[0]
 	var hl_vb: VBoxContainer = hl_built[1]
 	hl_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hl_panel.size_flags_stretch_ratio = 0.58
+	hl_panel.size_flags_stretch_ratio = 0.56
 	row.add_child(hl_panel)
 
 	_highlight_nodes.clear()
@@ -780,6 +852,7 @@ func _make_event_hover_info(ev: StoreEventData) -> Dictionary:
 		desc_rich = "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
 	var stats: Array = ev.build_stat_rows()
 	return {
+		"fx_id": ev.event_id,
 		"title": ev.event_name,
 		"sigil": _event_sigil(ev.event_id),
 		"icon": ev.get_icon_path(),
@@ -790,7 +863,9 @@ func _make_event_hover_info(ev: StoreEventData) -> Dictionary:
 
 
 func _make_card_hover_info(c_data: Dictionary, kind: String) -> Dictionary:
+	var raw_id := str(c_data.get("id", c_data.get("title", "")))
 	return {
+		"fx_id": ("blessing_" + raw_id) if kind == "blessing" else raw_id,
 		"title": str(c_data.get("title", "Moon Card")),
 		"sigil": str(c_data.get("sigil", "☽")),
 		"icon": str(c_data.get("icon", "")),
@@ -800,16 +875,16 @@ func _make_card_hover_info(c_data: Dictionary, kind: String) -> Dictionary:
 	}
 
 
-func _make_condition_diamond(info: Dictionary) -> Control:
+func _make_condition_diamond(info: Dictionary, diamond_px: int = 64) -> Control:
 	var pal: Dictionary = HadesEmblem.palette(str(info.get("kind", "event")))
 	var accent: Color = pal["accent"]
 	var accent_bright: Color = pal["bright"]
 
 	var holder := Control.new()
-	holder.custom_minimum_size = Vector2(68, 68)
+	holder.custom_minimum_size = Vector2(diamond_px, diamond_px)
 	holder.mouse_filter = Control.MOUSE_FILTER_STOP
 	holder.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	holder.pivot_offset = Vector2(34, 34)
+	holder.pivot_offset = Vector2(diamond_px * 0.5, diamond_px * 0.5)
 	holder.modulate.a = 0.0
 
 	var emblem := HadesEmblem.new()
@@ -817,16 +892,18 @@ func _make_condition_diamond(info: Dictionary) -> Control:
 	emblem.set_anchors_preset(Control.PRESET_FULL_RECT)
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
+	emblem.set_fx_from_id(str(info.get("fx_id", info.get("title", ""))))
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.add_child(emblem)
 
+	var icon_px := roundf(float(diamond_px) * 0.40)
 	HadesEmblem.populate_emblem_glyph(
 		emblem,
 		str(info.get("icon", "")),
 		str(info.get("sigil", "✦")),
 		accent_bright,
-		26.0,
-		28
+		icon_px,
+		int(icon_px)
 	)
 
 	holder.mouse_entered.connect(func():
@@ -927,6 +1004,7 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
+	emblem.set_fx_from_id(str(info.get("fx_id", info.get("title", ""))))
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
@@ -951,19 +1029,19 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	text_col.add_child(top_line)
 
 	var title_lbl := Label.new()
-	title_lbl.text = str(info.get("title", "Condition")).to_upper()
+	title_lbl.text = str(info.get("title", "Condition"))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 25)
+	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
 
 	var tag_lbl := Label.new()
-	tag_lbl.text = tag
+	tag_lbl.text = tag.capitalize()
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	tag_lbl.add_theme_font_override("font", _bold_font)
-	tag_lbl.add_theme_font_size_override("font_size", 22)
+	tag_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	tag_lbl.add_theme_font_size_override("font_size", 18)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_lbl)
@@ -1284,6 +1362,9 @@ func _run_sequence() -> void:
 				return
 
 	_tally_finished = true
+	if is_instance_valid(_skip_hint_pill):
+		var sk_tw := create_tween()
+		sk_tw.tween_property(_skip_hint_pill, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
 	if is_instance_valid(_close_btn):
 		_close_btn.visible = true
 		_close_btn.disabled = false
@@ -1303,6 +1384,10 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		is_skip = true
 	elif event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_SPACE or event.keycode == KEY_SPACE or event.is_action_pressed("ui_accept")):
+		if _tally_finished:
+			_on_close_pressed()
+			get_viewport().set_input_as_handled()
+			return
 		is_skip = true
 	if is_skip and not _tally_finished:
 		var now_msec := Time.get_ticks_msec()
