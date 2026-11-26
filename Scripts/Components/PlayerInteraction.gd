@@ -90,8 +90,7 @@ func _physics_process(_delta: float) -> void:
 			_last_hovered = null
 		var held_screen := DragManager.get_held_item_screen_center()
 		if held_screen != Vector2.ZERO:
-			var held_world := project_ray_origin(held_screen) + project_ray_normal(held_screen) * 1.35
-			PricingOverlay.show_item(held_item.item_data, held_world, true)
+			PricingOverlay.show_held_item(held_item.item_data, held_screen)
 		_was_dragging = true
 		return
 

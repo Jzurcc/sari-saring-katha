@@ -140,6 +140,8 @@ class PriceStepGauge extends Control:
 
 var pricing_ui: Sprite3D
 var pricing_viewport: SubViewport
+var _held_layer: CanvasLayer
+var _held_rect: TextureRect
 var _tag_stack: VBoxContainer
 var pricing_panel: PanelContainer
 var tier_label: Label
@@ -188,8 +190,8 @@ func _ready() -> void:
 	_tag_stack.anchor_bottom = 0.5
 	_tag_stack.offset_left = -225.0
 	_tag_stack.offset_right = 225.0
-	_tag_stack.offset_top = -TAG_LIFT_Y - 170.0
-	_tag_stack.offset_bottom = -TAG_LIFT_Y + 150.0
+	_tag_stack.offset_top = - TAG_LIFT_Y - 170.0
+	_tag_stack.offset_bottom = - TAG_LIFT_Y + 150.0
 	_tag_stack.alignment = BoxContainer.ALIGNMENT_END
 	_tag_stack.add_theme_constant_override("separation", 0)
 	root_ctrl.add_child(_tag_stack)
@@ -321,8 +323,8 @@ func _ready() -> void:
 	_tolerance_col.anchor_bottom = 0.5
 	_tolerance_col.offset_left = 244.0
 	_tolerance_col.offset_right = 730.0
-	_tolerance_col.offset_top = -TAG_LIFT_Y - 240.0
-	_tolerance_col.offset_bottom = -TAG_LIFT_Y + 230.0
+	_tolerance_col.offset_top = - TAG_LIFT_Y - 240.0
+	_tolerance_col.offset_bottom = - TAG_LIFT_Y + 230.0
 	_tolerance_col.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tolerance_col.add_theme_constant_override("separation", 12)
 	_tolerance_col.hide()
@@ -339,6 +341,19 @@ func _ready() -> void:
 	pricing_ui.shaded = false
 	pricing_ui.render_priority = 100
 	add_child(pricing_ui)
+
+	# 2D CanvasLayer (layer = 110 > DragManager's layer = 100) so held-item Pricing Lens renders ON TOP of held items
+	_held_layer = CanvasLayer.new()
+	_held_layer.layer = 110
+	_held_layer.visible = false
+	add_child(_held_layer)
+
+	_held_rect = TextureRect.new()
+	_held_rect.texture = pricing_viewport.get_texture()
+	_held_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_held_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_held_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_held_layer.add_child(_held_rect)
 
 	EventBus.fridge_coldness_changed.connect(_on_fridge_coldness_changed)
 	hide_ui()
@@ -545,22 +560,22 @@ func _rebuild_tolerance_tooltips(item_data: ItemData, is_fridge_item: bool, is_w
 		)
 		if has_mayari_silver:
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SILVER_TOLERANCE).get("icon", ""))
-			_add_effect_tooltip("Silver Tolerance", [{"label": "Price Tolerance", "value": "+1", "tone": "pos"}], "favor", c_ico)
+			_add_effect_tooltip("Silver Tolerance", [ {"label": "Price Tolerance", "value": "+1", "tone": "pos"}], "favor", c_ico)
 			total_tol += 1
 			count += 1
 		if MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_blessing_cards:
 			var b_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SILVER_TOLERANCE).get("icon", ""))
-			_add_effect_tooltip("Sto. Niño Blessing", [{"label": "Price Tolerance", "value": "+1", "tone": "pos"}], "blessing", b_ico)
+			_add_effect_tooltip("Sto. Niño Blessing", [ {"label": "Price Tolerance", "value": "+1", "tone": "pos"}], "blessing", b_ico)
 			total_tol += 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH).get("icon", ""))
-			_add_effect_tooltip("Eerie Mist Rush", [{"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
+			_add_effect_tooltip("Eerie Mist Rush", [ {"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_RELUCTANT_CARE).get("icon", ""))
-			_add_effect_tooltip("Reluctant Care", [{"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
+			_add_effect_tooltip("Reluctant Care", [ {"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
@@ -581,21 +596,21 @@ func _rebuild_tolerance_tooltips(item_data: ItemData, is_fridge_item: bool, is_w
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS).get("icon", ""))
-			_add_effect_tooltip("Moonlight Tips", [{"label": "Tip Bonus", "value": "+12%", "tone": "pos"}], "favor", c_ico)
+			_add_effect_tooltip("Moonlight Tips", [ {"label": "Tip Bonus", "value": "+12%", "tone": "pos"}], "favor", c_ico)
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_FADING_MEMORY).get("icon", ""))
-			_add_effect_tooltip("Fading Memory", [{"label": "Tip Bonus", "value": "+10%", "tone": "pos"}], "favor", c_ico)
+			_add_effect_tooltip("Fading Memory", [ {"label": "Tip Bonus", "value": "+10%", "tone": "pos"}], "favor", c_ico)
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
 			var ev_cnt := StoreEventManager.get_active_events().size()
 			if ev_cnt > 0:
 				var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_STATIC_AIRWAVES).get("icon", ""))
-				_add_effect_tooltip("Static Airwaves", [{"label": "Sale Bonus", "value": "+%d%%" % (ev_cnt * 10), "tone": "pos"}], "favor", c_ico)
+				_add_effect_tooltip("Static Airwaves", [ {"label": "Sale Bonus", "value": "+%d%%" % (ev_cnt * 10), "tone": "pos"}], "favor", c_ico)
 				count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW) and StoryManager.get_featured_category_boost_count(item_data.category) > 0:
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_CURBSIDE_GLOW).get("icon", ""))
-			_add_effect_tooltip("Curbside Glow", [{"label": "Sale Bonus", "value": "+15%", "tone": "pos"}], "favor", c_ico)
+			_add_effect_tooltip("Curbside Glow", [ {"label": "Sale Bonus", "value": "+15%", "tone": "pos"}], "favor", c_ico)
 			count += 1
 
 	# 3. Active waiting counter customers who are currently requesting items
@@ -620,7 +635,7 @@ func _rebuild_tolerance_tooltips(item_data: ItemData, is_fridge_item: bool, is_w
 					var cname: String = cust.customer_data.character_name if cust.customer_data.character_name != "" else cust.customer_data.get_clean_id().capitalize()
 					var card_title := ("%s's Favorite" % cname) if is_fav else cname
 					var disp_bonus := maxi(1, bonus) if is_fav else bonus
-					_add_effect_tooltip(card_title, [{"label": "Price Tolerance", "value": "%+d" % disp_bonus, "tone": "pos"}], "customer", ICON_VISITOR)
+					_add_effect_tooltip(card_title, [ {"label": "Price Tolerance", "value": "%+d" % disp_bonus, "tone": "pos"}], "customer", ICON_VISITOR)
 					best_cust_bonus = maxi(best_cust_bonus, bonus)
 					count += 1
 
@@ -637,7 +652,7 @@ func _get_step_status_word(step: int, eff_tol: int, is_warm: bool) -> String:
 			-2: return "Suki Deal"
 			-3: return "Generous"
 			-4: return "Neighborly Gift"
-			_:  return "Pure Charity"
+			_: return "Pure Charity"
 	var eff_step: int = step - eff_tol
 	if step == 0 and eff_step <= 2:
 		return "Base"
@@ -683,7 +698,7 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		hide_ui()
 		return
 
-	var same_item := (_current_item == item_data and pricing_ui.visible)
+	var same_item := (_current_item == item_data and (pricing_ui.visible or (is_instance_valid(_held_layer) and _held_layer.visible)))
 	var prev_step := _last_step
 
 	_current_item = item_data
@@ -776,11 +791,30 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		var h: float = item_data.display_height_meters
 		pricing_ui.global_position = basis_position + Vector3(0, h * 0.5, 0.0)
 
+	if is_instance_valid(_held_layer):
+		_held_layer.visible = false
 	pricing_ui.show()
 	if same_item and prev_step != -999 and step != prev_step:
 		_play_step_juice(signi(step - prev_step))
 	else:
 		pricing_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## Displays the Pricing Lens as a 2D overlay on layer 110 (above DragManager's layer 100)
+## centered right on the held item's screen position.
+func show_held_item(item_data: ItemData, screen_center: Vector2) -> void:
+	if not item_data:
+		hide_ui()
+		return
+	show_item(item_data, Vector3.ZERO, true)
+	pricing_ui.hide()
+	if is_instance_valid(_held_layer) and is_instance_valid(_held_rect):
+		var vp_sz := get_viewport().get_visible_rect().size
+		var sc := clampf(vp_sz.y / 1080.0, 0.5, 1.5) * 0.72
+		var rect_sz := Vector2(pricing_viewport.size) * sc
+		_held_rect.size = rect_sz
+		_held_rect.position = screen_center - rect_sz * 0.5
+		_held_layer.visible = true
 
 
 func hide_ui() -> void:
@@ -789,3 +823,5 @@ func hide_ui() -> void:
 	if _juice_tween and _juice_tween.is_valid():
 		_juice_tween.kill()
 	pricing_ui.hide()
+	if is_instance_valid(_held_layer):
+		_held_layer.visible = false
