@@ -6,7 +6,8 @@ extends Node
 
 enum BGMPhase { NONE, MORNING, AFTERNOON, DUSK }
 
-const FADE_DURATION: float = 0.5
+const FADE_DURATION: float = 0.8
+const OVERRIDE_FADE_DURATION: float = 1.25
 
 var settings: AudioSettings = AudioSettings.new()
 var sfx_pool: SFXPool
@@ -84,11 +85,15 @@ var _playlist_index: int = 0
 var _phase_bags: Dictionary = {} # BGMPhase -> Array of remaining unplayed AudioStreams
 var _last_bgm_stream: AudioStream = null
 var _last_emitted_title: String = ""
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _bgm_gain: float = 1.0
+var _override_gain: float = 0.0
 var bgm_transition_tween: Tween
 var crossfade_tween: Tween
 
 func _ready() -> void:
 	randomize()
+	_rng.seed = int(Time.get_unix_time_from_system()) ^ int(Time.get_ticks_usec())
 	name = "AudioManager"
 	process_mode = PROCESS_MODE_ALWAYS
 
@@ -167,11 +172,12 @@ func _bind_initial_scene() -> void:
 				_bind_time_of_day(tod)
 
 func _on_node_added(node: Node) -> void:
-	if node is TimeOfDay or node.name == "TimeOfDay":
-		_bind_time_of_day(node)
-	elif node.name in ["MainMenu", "IntroCutscene"]:
+	var cur_scene := get_tree().current_scene
+	if node.name in ["MainMenu", "IntroCutscene"]:
 		_unbind_time_of_day()
 		_change_bgm_phase(BGMPhase.NONE)
+	elif (node is TimeOfDay or node.name == "TimeOfDay") and (cur_scene == null or not (cur_scene.name in ["MainMenu", "IntroCutscene"])):
+		_bind_time_of_day(node)
 
 func _bind_time_of_day(tod: Node) -> void:
 	if _time_of_day_node == tod:
@@ -238,6 +244,23 @@ func _get_phase_pool(phase: BGMPhase) -> Array:
 			return [audio_sleepy, audio_naptime, audio_little_steps, audio_dark_humor, audio_halo_price_sole]
 	return []
 
+func _apply_bgm_gain(gain: float) -> void:
+	_bgm_gain = clampf(gain, 0.0, 1.0)
+	if is_instance_valid(bgm_player):
+		bgm_player.volume_db = -80.0 if _bgm_gain <= 0.0005 else linear_to_db(_bgm_gain * db_to_linear(base_volume_db))
+
+func _apply_override_gain(gain: float) -> void:
+	_override_gain = clampf(gain, 0.0, 1.0)
+	if is_instance_valid(override_player):
+		override_player.volume_db = -80.0 if _override_gain <= 0.0005 else linear_to_db(_override_gain * db_to_linear(base_volume_db))
+
+func _shuffle_with_rng(arr: Array) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j := _rng.randi_range(0, i)
+		var tmp = arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp
+
 ## Draws the next track from a persistent per-phase shuffle bag so every track in a phase
 ## is heard before any track repeats (even across consecutive days).
 func _draw_next_track_for_phase(phase: BGMPhase) -> AudioStream:
@@ -255,10 +278,10 @@ func _draw_next_track_for_phase(phase: BGMPhase) -> AudioStream:
 	var bag: Array = _phase_bags.get(phase, [])
 	if bag.is_empty():
 		bag = pool.duplicate()
-		bag.shuffle()
+		_shuffle_with_rng(bag)
 		# Avoid repeating the exact last played song right across a bag refill
 		if bag.size() > 1 and bag[bag.size() - 1] == _last_bgm_stream:
-			var swap_idx := randi() % (bag.size() - 1)
+			var swap_idx := _rng.randi_range(0, bag.size() - 2)
 			var tmp = bag[bag.size() - 1]
 			bag[bag.size() - 1] = bag[swap_idx]
 			bag[swap_idx] = tmp
@@ -280,21 +303,21 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		bgm_transition_tween.kill()
 
 	bgm_transition_tween = create_tween()
-	var is_first_play = not bgm_player.playing or bgm_player.volume_db <= -79.0
+	var is_first_play = not bgm_player.playing or _bgm_gain <= 0.001
 
 	if not is_first_play:
-		bgm_transition_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
+		bgm_transition_tween.tween_method(_apply_bgm_gain, _bgm_gain, 0.0, FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		bgm_transition_tween.tween_callback(func(): bgm_player.stop())
 
 	bgm_transition_tween.tween_callback(func():
 		bgm_player.stream = next_stream
-		bgm_player.volume_db = -80.0
+		_apply_bgm_gain(0.0)
 		bgm_player.play()
 		if not override_player.playing:
 			_emit_music_change(bgm_player.stream)
 	)
-	var target_vol = -80.0 if override_player.playing else base_volume_db
-	bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
+	var target_gain := 0.0 if override_player.playing else 1.0
+	bgm_transition_tween.tween_method(_apply_bgm_gain, 0.0, target_gain, FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 func _update_fridge_hum(phase: BGMPhase) -> void:
 	if not fridge_hum_player:
@@ -311,7 +334,7 @@ func _on_bgm_finished() -> void:
 		return
 
 	bgm_player.stream = next_stream
-	bgm_player.volume_db = -80.0 if override_player.playing else base_volume_db
+	_apply_bgm_gain(0.0 if override_player.playing else 1.0)
 	bgm_player.play()
 	if not override_player.playing:
 		_emit_music_change(bgm_player.stream)
@@ -320,8 +343,8 @@ func _on_override_finished() -> void:
 	if override_player.stream:
 		override_player.play()
 
-## Crossfades the current BGM silently into the background (continuing to play at -80 dB)
-## while an override track takes over.
+## Smoothly crossfades the current BGM silently into the background (continuing to play at 0 gain)
+## while an override track takes over using linear-amplitude fading.
 func play_bgm_override(stream: AudioStream) -> void:
 	if not stream:
 		return
@@ -330,12 +353,12 @@ func play_bgm_override(stream: AudioStream) -> void:
 
 	if override_player.stream != stream or not override_player.playing:
 		override_player.stream = stream
-		override_player.volume_db = -80.0
+		_apply_override_gain(0.0)
 		override_player.play()
 
-	crossfade_tween = create_tween()
-	crossfade_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
-	crossfade_tween.parallel().tween_property(override_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
+	crossfade_tween = create_tween().set_parallel(true)
+	crossfade_tween.tween_method(_apply_bgm_gain, _bgm_gain, 0.0, OVERRIDE_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	crossfade_tween.tween_method(_apply_override_gain, _override_gain, 1.0, OVERRIDE_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 	_emit_music_change(override_player.stream)
 
@@ -348,7 +371,7 @@ func play_minigame_bgm(minigame_id: String) -> void:
 	else:
 		play_bgm_override(audio_so_what)
 
-## Fades out the override track and brings the silently-playing background BGM back up.
+## Smoothly fades out the override track and brings the silently-playing background BGM back up.
 func stop_bgm_override() -> void:
 	if not override_player.playing:
 		return
@@ -357,8 +380,10 @@ func stop_bgm_override() -> void:
 		crossfade_tween.kill()
 
 	crossfade_tween = create_tween()
-	crossfade_tween.tween_property(bgm_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
-	crossfade_tween.parallel().tween_property(override_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
+	crossfade_tween.set_parallel(true)
+	crossfade_tween.tween_method(_apply_bgm_gain, _bgm_gain, 1.0, OVERRIDE_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	crossfade_tween.tween_method(_apply_override_gain, _override_gain, 0.0, OVERRIDE_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	crossfade_tween.set_parallel(false)
 	crossfade_tween.tween_callback(func(): override_player.stop())
 
 	_emit_music_change(bgm_player.stream)
