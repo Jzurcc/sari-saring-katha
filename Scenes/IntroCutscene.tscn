@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/Sky3D.tscn" id="6_cysq5"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="7_7h0lc"]
 [ext_resource type="Script" path="res://Scripts/World/Environment/FlickerLight.gd" id="8_qkryq"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-Medium.ttf" id="9_fredoka_med"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf" id="10_fredoka_semi"]
 
 [node name="IntroCutscene" type="Node" unique_id=1041759822]
 script = ExtResource("1_manager")
@@ -39,6 +41,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.921569, 0.792157, 1)
 theme_override_colors/font_outline_color = Color(0.482353, 0.305882, 0.101961, 1)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("9_fredoka_med")
 theme_override_font_sizes/font_size = 24
 text = "Testing dialogue sequence..."
 horizontal_alignment = 1
@@ -57,6 +60,7 @@ offset_right = -50.0
 offset_bottom = -30.0
 grow_horizontal = 0
 grow_vertical = 0
+theme_override_fonts/font = ExtResource("9_fredoka_med")
 text = "▼ Click to continue"
 horizontal_alignment = 2
 
@@ -77,6 +81,7 @@ theme_override_colors/font_color = Color(1, 0.921569, 0.792157, 1)
 theme_override_colors/font_hover_color = Color(1, 0.921569, 0.792157, 1)
 theme_override_colors/font_outline_color = Color(0.482353, 0.305882, 0.101961, 1)
 theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("10_fredoka_semi")
 theme_override_font_sizes/font_size = 37
 text = "SKIP >>"
 flat = true
