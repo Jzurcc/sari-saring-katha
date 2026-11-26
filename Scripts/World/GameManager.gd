@@ -221,28 +221,28 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 	if tip_eff_step <= -5:
 		var extra_below := float(-5 - tip_eff_step)
 		base_tip_chance = minf(1.0, 0.95 + extra_below * 0.025)
-		base_tip_pct = 0.45 + extra_below * 0.10
-		flat_tip = 9.0 + extra_below * 3.0
+		base_tip_pct = 0.36 + extra_below * 0.08
+		flat_tip = 12.0 + extra_below * 4.0
 	else:
 		match tip_eff_step:
 			-4:
-				base_tip_chance = 0.88; base_tip_pct = 0.38; flat_tip = 8.0
+				base_tip_chance = 0.88; base_tip_pct = 0.30; flat_tip = 10.0
 			-3:
-				base_tip_chance = 0.80; base_tip_pct = 0.32; flat_tip = 7.0
+				base_tip_chance = 0.80; base_tip_pct = 0.25; flat_tip = 9.0
 			-2:
-				base_tip_chance = 0.70; base_tip_pct = 0.27; flat_tip = 6.0
+				base_tip_chance = 0.70; base_tip_pct = 0.21; flat_tip = 8.0
 			-1:
-				base_tip_chance = 0.58; base_tip_pct = 0.23; flat_tip = 5.0
+				base_tip_chance = 0.58; base_tip_pct = 0.17; flat_tip = 7.0
 			0:
-				base_tip_chance = 0.45; base_tip_pct = 0.20; flat_tip = 4.0
+				base_tip_chance = 0.45; base_tip_pct = 0.14; flat_tip = 6.0
 			1:
-				base_tip_chance = 0.32; base_tip_pct = 0.17; flat_tip = 3.5
+				base_tip_chance = 0.32; base_tip_pct = 0.12; flat_tip = 5.0
 			2:
-				base_tip_chance = 0.22; base_tip_pct = 0.15; flat_tip = 3.0
+				base_tip_chance = 0.22; base_tip_pct = 0.10; flat_tip = 4.0
 			3:
-				base_tip_chance = 0.15; base_tip_pct = 0.13; flat_tip = 2.5
+				base_tip_chance = 0.15; base_tip_pct = 0.09; flat_tip = 3.5
 			4:
-				base_tip_chance = 0.10; base_tip_pct = 0.12; flat_tip = 2.0
+				base_tip_chance = 0.10; base_tip_pct = 0.08; flat_tip = 3.0
 			_:
 				base_tip_chance = 0.0; base_tip_pct = 0.0; flat_tip = 0.0
 
