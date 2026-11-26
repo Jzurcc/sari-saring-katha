@@ -11,6 +11,7 @@ const TIMELINE_PATH := "res://Dialogue/Timelines/PapaUlap.dtl"
 const CHARACTER_PATH := "res://Dialogue/Timelines/PapaUlap.dch"
 
 var _visual_base_scale: Vector3 = Vector3.ONE
+var _sprite_base_y: float = 0.0
 var _pulse_time: float = 0.0
 var _sprite: Sprite3D = null
 var _speech_anchor: Marker3D = null
@@ -30,7 +31,12 @@ func _ready() -> void:
 		_visual_base_scale = visuals[0].scale
 		if visuals[0] is Sprite3D:
 			_sprite = visuals[0] as Sprite3D
-			_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	if _sprite == null:
+		_sprite = get_node_or_null("Sprite3D") as Sprite3D
+	if is_instance_valid(_sprite):
+		_visual_base_scale = _sprite.scale
+		_sprite_base_y = _sprite.position.y
+		_sprite.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
 
 	_speech_anchor = get_node_or_null("SpeechMarker") as Marker3D
 	if _speech_anchor == null:
@@ -53,26 +59,29 @@ func _process(delta: float) -> void:
 	var ready_to_tune := is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast() and not StoryManager.is_past_closing_time() and Dialogic.current_timeline == null
 	if ready_to_tune:
 		_pulse_time += delta
-		# Rhythmic 2-beat speaking cadence (squish-stretch bursts with brief breath pause)
-		var cycle := fmod(_pulse_time, 1.45)
+		# Lively, unmistakable 2-beat speaking squash-and-stretch + tiny hop
+		var cycle := fmod(_pulse_time, 1.10)
 		var beat := 0.0
-		if cycle < 0.24:
-			beat = sin((cycle / 0.24) * PI)
-		elif cycle >= 0.30 and cycle < 0.54:
-			beat = sin(((cycle - 0.30) / 0.24) * PI) * 0.80
-		var sx := 1.0 + beat * 0.075
-		var sy := 1.0 - beat * 0.060 + sin(_pulse_time * 3.2) * 0.015
+		if cycle < 0.26:
+			beat = sin((cycle / 0.26) * PI)
+		elif cycle >= 0.34 and cycle < 0.60:
+			beat = sin(((cycle - 0.34) / 0.26) * PI) * 0.85
+		var sx := 1.0 + beat * 0.16
+		var sy := 1.0 - beat * 0.12 + sin(_pulse_time * 4.5) * 0.02
 		_sprite.scale = Vector3(_visual_base_scale.x * sx, _visual_base_scale.y * sy, _visual_base_scale.z * sx)
-		var glow := 0.5 + 0.5 * sin(_pulse_time * 3.2)
-		_sprite.modulate = Color(1.0, 0.94 + glow * 0.06, 0.82 + glow * 0.18, 1.0)
+		_sprite.position.y = _sprite_base_y + beat * 0.028
+		var glow := 0.5 + 0.5 * sin(_pulse_time * 4.5)
+		_sprite.modulate = Color(1.0 + glow * 0.12, 0.94 + glow * 0.10, 0.78 + glow * 0.20, 1.0)
 	else:
 		_pulse_time = 0.0
 		_sprite.scale = _sprite.scale.lerp(_visual_base_scale, clampf(delta * 10.0, 0.0, 1.0))
+		_sprite.position.y = lerpf(_sprite.position.y, _sprite_base_y, clampf(delta * 10.0, 0.0, 1.0))
 		_sprite.modulate = Color.WHITE
 
 func _refresh_pulse_state() -> void:
 	if is_instance_valid(_sprite) and (not is_instance_valid(StoreEventManager) or not StoreEventManager.can_reveal_next_broadcast()):
 		_sprite.scale = _visual_base_scale
+		_sprite.position.y = _sprite_base_y
 		_sprite.modulate = Color.WHITE
 
 func _refresh_visual_state(play_pop_in: bool = false) -> void:
