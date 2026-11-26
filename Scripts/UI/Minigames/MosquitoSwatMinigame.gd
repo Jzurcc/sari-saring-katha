@@ -347,7 +347,7 @@ func _spawn_bug(is_firefly: bool) -> void:
 	var diff_t := _get_diff_t()
 	var speed: float
 	if is_firefly:
-		speed = randf_range(65.0, 140.0) * lerpf(0.85, 1.08, diff_t)
+		speed = randf_range(120.0, 220.0) * lerpf(0.88, 1.12, diff_t)
 	else:
 		var roll := randf()
 		var base_speed: float
@@ -509,7 +509,7 @@ func _refresh_hud() -> void:
 	for i in range(MAX_LIVES):
 		var icon := TextureRect.new()
 		icon.texture = _tex_firefly if i < _lives else _tex_firefly_dead
-		icon.custom_minimum_size = Vector2(44, 44)
+		icon.custom_minimum_size = Vector2(58, 58)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.modulate = Color(1.0, 0.98, 0.82, 1.0) if i < _lives else Color(0.55, 0.45, 0.45, 0.40)
