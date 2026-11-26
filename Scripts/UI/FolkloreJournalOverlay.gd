@@ -36,12 +36,12 @@ const COL_SILHOUETTE := Color(0.04, 0.035, 0.03, 0.96)
 const ROMAN_NUMERALS: Array[String] = ["", "I", "II", "III", "IV", "V", "VI"]
 
 const RANK_CHAPTER_HEADINGS: Dictionary = {
-	1: "Regional Origin & First Sightings",
-	2: "Traditional Beliefs, Offerings & Taboos",
-	3: "Archival Depiction & Field Study",
-	4: "Historical & Cultural Roots",
-	5: "Rare Folklore Trivia & Local Accounts",
-	6: "Confidant Epilogue & Personal Bond",
+	1: "Identity & Regional Origins",
+	2: "Traditional Beliefs, Customs & Taboos",
+	3: "Appearance, Traits & Encounters",
+	4: "Etymology & Historical Roots",
+	5: "Lesser-Known Variations & Rare Trivia",
+	6: "Living Tradition & Modern Legacy",
 }
 
 var is_open: bool = false
@@ -1081,8 +1081,6 @@ func _resolve_rank_content(entry: Dictionary, r: int) -> Dictionary:
 		2:
 			body = str(entry.get("rank2_taboos", ""))
 		3:
-			if media_title != "":
-				heading = media_title
 			body = str(entry.get("rank3_body", ""))
 			if body == "":
 				body = media_caption
