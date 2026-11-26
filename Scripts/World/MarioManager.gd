@@ -21,9 +21,9 @@ var is_restocking_active: bool = false
 var is_mario_physically_present: bool = false
 
 # Delivery Positions (3D)
-const START_POS = Vector3(-15.299, 3.206, 20.0)
-const TARGET_POS = Vector3(-15.299, 3.206, -6.055)
-const EXIT_POS = Vector3(-15.299, 3.206, -45.0)
+const START_POS = Vector3(-15.299, 2.856, 20.0)
+const TARGET_POS = Vector3(-15.299, 2.856, -6.055)
+const EXIT_POS = Vector3(-15.299, 2.856, -45.0)
 const DEFAULT_PLASTIC_MARKER_POS := Vector3(0.9908627, 0.9105438, 2.585338)
 
 # Timing
@@ -145,17 +145,58 @@ func _show_incoming_call_banner() -> void:
 	_ring_ui_panel.offset_bottom = -28.0
 	_ring_ui_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	var style := UIStyle.create_flat_stylebox(Color(0.082, 0.078, 0.071, 0.92), 10, 22, 14)
+	var style := TopBannerQueue.create_banner_style(UIStyle.COLOR_GOLD_TEXT, 18, 12)
 	_ring_ui_panel.add_theme_stylebox_override("panel", style)
 	root.add_child(_ring_ui_panel)
 
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ring_ui_panel.add_child(hbox)
+
+	var icon_box := PanelContainer.new()
+	icon_box.custom_minimum_size = Vector2(38, 38)
+	icon_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ib_st := UIStyle.create_flat_stylebox(Color(0.18, 0.14, 0.06, 0.94), 9, 6, 6)
+	ib_st.border_color = Color(UIStyle.COLOR_GOLD_TEXT.r, UIStyle.COLOR_GOLD_TEXT.g, UIStyle.COLOR_GOLD_TEXT.b, 0.65)
+	ib_st.set_border_width_all(1)
+	icon_box.add_theme_stylebox_override("panel", ib_st)
+	hbox.add_child(icon_box)
+
+	var icon_center := CenterContainer.new()
+	icon_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_box.add_child(icon_center)
+
+	var phone_ico := TextureRect.new()
+	phone_ico.texture = load("res://Assets/ui/icons/phone-incoming.png")
+	phone_ico.custom_minimum_size = Vector2(22, 22)
+	phone_ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	phone_ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	phone_ico.modulate = UIStyle.COLOR_GOLD_TEXT
+	phone_ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_center.add_child(phone_ico)
+
+	var vcol := VBoxContainer.new()
+	vcol.add_theme_constant_override("separation", 1)
+	vcol.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_child(vcol)
+
+	var hdr := Label.new()
+	hdr.text = "Incoming Call"
+	hdr.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	hdr.add_theme_font_size_override("font_size", 18)
+	hdr.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
+	hdr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vcol.add_child(hdr)
+
 	var lbl := Label.new()
 	lbl.text = "Someone's calling on the phone."
-	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	lbl.add_theme_font_size_override("font_size", 19)
-	lbl.add_theme_color_override("font_color", UIStyle.COLOR_GOLD_TEXT)
+	lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_color_override("font_color", TopBannerQueue.COL_CREAM_MUTED)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ring_ui_panel.add_child(lbl)
+	vcol.add_child(lbl)
 
 	# Toast slide-in from bottom-right + gentle hover bob
 	_ring_ui_panel.modulate.a = 0.0
