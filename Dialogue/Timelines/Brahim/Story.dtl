@@ -140,6 +140,8 @@ Brahim: Got that one, salamat. [pause=0.3] I'm still looking for [color=#0f6e2f]
 
 label Satisfy
 Brahim: Perfect, just what I needed. Salamat!
+if {Global_TipActive}:
+	Brahim: Keep the change—you've earned it.
 [signal arg="story_success"]
 [end_timeline]
 

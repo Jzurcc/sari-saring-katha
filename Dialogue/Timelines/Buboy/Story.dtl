@@ -424,6 +424,8 @@ if {Transaction_WantsDebt}:
 	Buboy: Bye!
 else:
 	Buboy: Salamat!
+	if {Global_TipActive}:
+		Buboy: Keep the extra coins po! Hihi!
 	Buboy: I'm running away now!
 	Buboy: Bye!
 [signal arg="story_success"]

@@ -147,6 +147,8 @@ if {Transaction_WantsDebt}:
 	ManangAna: Salamat talaga, anak.
 else:
 	ManangAna:  Salamat, anak. Get some rest when you can, ha?
+	if {Global_TipActive}:
+		ManangAna: Here—keep the change, anak. You priced it so kindly.
 [signal arg="story_success"]
 [end_timeline]
 

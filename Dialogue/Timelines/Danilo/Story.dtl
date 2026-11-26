@@ -216,6 +216,8 @@ if {Transaction_WantsDebt}:
 else:
 	if {Transaction_Chapter} == 8.0:
 		Danilo: Salamat, boss. This is the life.
+	if {Global_TipActive}:
+		Danilo: Keep the change, boss. Fair prices deserve a little extra.
 [signal arg="story_success"]
 [end_timeline]
 

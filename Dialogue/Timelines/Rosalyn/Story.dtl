@@ -108,6 +108,8 @@ Rosalyn: [wave]I just need {Transaction_ItemWants}...[/wave]
 
 label Satisfy
 Rosalyn: [wave]Oh! [pause=1.0] Thank you. [pause=1.0] It... [pause=1.0] um... [pause=1.0] it feels very real.[/wave]
+if {Global_TipActive}:
+	Rosalyn: [wave]Um... please keep the extra change. You're very kind.[/wave]
 [signal arg="story_success"]
 [end_timeline]
 

@@ -160,6 +160,8 @@ if {Transaction_WantsDebt}:
 	KuyaKap: Salamat talaga, apo. Mag-iingat ka.
 else:
 	KuyaKap: Salamat! See you tomorrow.
+	if {Global_TipActive}:
+		KuyaKap: Aba, that was quite fair. Keep the change, apo!
 [signal arg="story_success"]
 [end_timeline]
 

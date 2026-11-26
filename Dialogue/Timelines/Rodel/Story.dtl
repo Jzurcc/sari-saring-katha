@@ -102,6 +102,8 @@ Rodel: My hydro-stasis is partially stabilized. [pause=0.4] I still require the 
 
 label Satisfy
 Rodel: Refreshing. [pause=0.6] My Thank-currents to you, Ambassador.
+if {Global_TipActive}:
+	Rodel: Keep the surplus coins—a fair tide rewards a generous shore.
 [signal arg="story_success"]
 [end_timeline]
 

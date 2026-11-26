@@ -145,6 +145,8 @@ TK: Okay, good start fam! [pause=0.3] Still need the [color=#0f6e2f]{Transaction
 
 label Satisfy
 TK: Perfect! This is exactly what I needed. [pause=0.4] Peace and hydration, man. Literal goals.
+if {Global_TipActive}:
+	TK: Yo, that price is solid—keep the change, boss!
 [signal arg="story_success"]
 [end_timeline]
 
