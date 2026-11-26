@@ -7,6 +7,7 @@ extends CanvasLayer
 ## EventsOverlay stat-row format, and Uncle Mario delivery queued on close.
 
 const Registry := preload("res://Scripts/Progression/UpgradeTreeRegistry.gd")
+const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const PESO_ICON_TEX := preload("res://Assets/ui/peso_icon.png")
 
 const COL_WOOD_DARK := Color(0.24, 0.14, 0.09, 0.99)
@@ -27,21 +28,30 @@ const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_GOLD_BRIGHT := Color(1.0, 0.875, 0.56, 1.0)
 
-const ICON_SIZE := Vector2(86, 86)
-const CAPSTONE_SIZE := Vector2(102, 102)
+const ICON_SIZE := Vector2(74, 74)
+const CAPSTONE_SIZE := Vector2(88, 88)
 
 var is_open: bool = false
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 var _hovered_id: String = ""
+var _anim_time: float = 0.0
 
 var _pending_levels: Dictionary = {}         # node_id -> int
 var _pending_delivery_items: Dictionary = {} # ItemData -> 1
+
+# Active unlock celebration FX:
+# _path_surges: Array of {"pts": PackedVector2Array, "t": float, "dur": float}
+# _unlock_rings: Array of {"center": Vector2, "t": float, "dur": float, "base_r": float, "col": Color}
+var _path_surges: Array[Dictionary] = []
+var _unlock_rings: Array[Dictionary] = []
+var _hover_tweens: Dictionary = {} # node_id -> Tween
 
 var _bold_font: FontVariation
 var _root: Control
 var _board_panel: PanelContainer
 var _tree_area: Control
 var _path_drawer: Control
+var _fx_drawer: Control
 var _node_buttons: Dictionary = {} # node_id -> Button
 
 var _money_lbl: Label # legacy; the HUD money counter is elevated instead
@@ -70,6 +80,28 @@ func _ready() -> void:
 
 	_build_ui()
 	visible = false
+	set_process(false)
+
+
+func _process(delta: float) -> void:
+	if not is_open:
+		return
+	_anim_time += delta
+
+	for i in range(_path_surges.size() - 1, -1, -1):
+		_path_surges[i]["t"] = float(_path_surges[i]["t"]) + delta
+		if float(_path_surges[i]["t"]) >= float(_path_surges[i]["dur"]):
+			_path_surges.remove_at(i)
+
+	for i in range(_unlock_rings.size() - 1, -1, -1):
+		_unlock_rings[i]["t"] = float(_unlock_rings[i]["t"]) + delta
+		if float(_unlock_rings[i]["t"]) >= float(_unlock_rings[i]["dur"]):
+			_unlock_rings.remove_at(i)
+
+	if is_instance_valid(_path_drawer):
+		_path_drawer.queue_redraw()
+	if is_instance_valid(_fx_drawer):
+		_fx_drawer.queue_redraw()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -100,16 +132,40 @@ func open_tree(_focus_node_id: String = "") -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	is_open = true
 	visible = true
+	set_process(true)
 	_hovered_id = ""
 	_pending_levels.clear()
 	_pending_delivery_items.clear()
+	_path_surges.clear()
+	_unlock_rings.clear()
 	if is_instance_valid(_tooltip):
 		_tooltip.visible = false
 
 	EventBus.request_sfx.emit("tab_switch")
 	_elevate_hud_money()
 	_refresh_all()
-	call_deferred("_layout_nodes")
+	call_deferred("_play_open_cascade")
+
+
+func _play_open_cascade() -> void:
+	_layout_nodes()
+	if is_instance_valid(_board_panel):
+		_board_panel.modulate.a = 0.0
+		var btw := create_tween()
+		btw.tween_property(_board_panel, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	for n in Registry.get_all_nodes():
+		var nid := str(n["id"])
+		var btn: Button = _node_buttons.get(nid)
+		if not is_instance_valid(btn):
+			continue
+		var row_y := float(n["pos"].y)
+		btn.pivot_offset = btn.size * 0.5
+		btn.scale = Vector2(0.72, 0.72)
+		btn.modulate.a = 0.0
+		var tw := create_tween()
+		tw.tween_interval(row_y * 0.035)
+		tw.tween_property(btn, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(btn, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func close_tree() -> void:
@@ -117,6 +173,7 @@ func close_tree() -> void:
 		return
 	is_open = false
 	visible = false
+	set_process(false)
 	_hovered_id = ""
 	if is_instance_valid(_tooltip):
 		_tooltip.visible = false
@@ -171,15 +228,14 @@ func _node_center(lpos: Vector2) -> Vector2:
 	if not is_instance_valid(_tree_area):
 		return Vector2.ZERO
 	var sz := _tree_area.size
-	var pad_x := 72.0
-	var pad_top := 62.0
-	var pad_bot := 56.0
-	var usable_w := maxf(240.0, sz.x - pad_x * 2.0)
-	var usable_h := maxf(200.0, sz.y - pad_top - pad_bot)
+	var usable_w := clampf(sz.x * 0.75, 240.0, 1100.0)
+	var usable_h := clampf(sz.y * 0.78, 180.0, 580.0)
+	var start_x := (sz.x - usable_w) * 0.5
+	var start_y := (sz.y - usable_h) * 0.5 - 8.0
 	# Logical x in [0 .. 9], logical y in [0 .. 4] (bottom-up)
 	var nx := lpos.x / 9.0
 	var ny := 1.0 - (lpos.y / 4.0)
-	return Vector2(pad_x + nx * usable_w, pad_top + ny * usable_h)
+	return Vector2(start_x + nx * usable_w, start_y + ny * usable_h)
 
 
 func _refresh_all() -> void:
@@ -218,8 +274,6 @@ func _layout_nodes() -> void:
 
 func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: bool) -> void:
 	var state := str(ev["state"])
-	var cur_lvl := int(ev["cur_level"])
-	var max_lvl := int(ev["max_level"])
 	var item: ItemData = ev.get("item")
 
 	var bg := Color(0.14, 0.12, 0.10, 0.95)
@@ -234,24 +288,17 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 			bg = Color(0.24, 0.19, 0.11, 0.98)
 			border_col = Color(0.92, 0.74, 0.34, 1.0)
 			border_w = 3
-			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
-			badge_col = COL_GOLD_BRIGHT
 		"available":
 			bg = Color(0.16, 0.14, 0.115, 0.96)
 			border_col = Color(0.46, 0.86, 0.50, 1.0)
 			border_w = 3
-			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
-			badge_col = COL_STAT_POS
 		"available_poor":
 			bg = Color(0.14, 0.12, 0.10, 0.92)
 			border_col = Color(0.88, 0.44, 0.40, 0.90)
-			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
-			badge_col = COL_STAT_NEG
 		_:
 			bg = Color(0.09, 0.08, 0.07, 0.84)
 			border_col = Color(0.32, 0.25, 0.18, 0.65)
 			icon_mod = Color(0.48, 0.42, 0.36, 0.46)
-			badge_text = ""
 
 	if hovered:
 		border_col = Color(1.0, 0.88, 0.52, 1.0)
@@ -303,8 +350,10 @@ func _show_tooltip_for(node_id: String) -> void:
 	var item: ItemData = ev.get("item")
 
 	_tip_title.text = item.item_name if (item != null and item.item_name != "") else str(def["title"])
-	if max_lvl > 1:
-		_tip_level.text = "Lv.%d/%d" % [cur_lvl, max_lvl]
+	if str(def["kind"]) == "tier_hub":
+		_tip_level.text = "Tier %d" % (cur_lvl + 1)
+	elif max_lvl > 1:
+		_tip_level.text = "Lv.%d" % cur_lvl
 	else:
 		_tip_level.text = "Owned" if state == "maxed" else ""
 	_tip_level.visible = _tip_level.text != ""
@@ -427,24 +476,30 @@ func _on_node_pressed(node_id: String) -> void:
 	var sf_lvl := int(def.get("storefront_level", 0))
 	if kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl:
 		var slot := "signage" if sf_lvl == 1 else "poster"
+		if not StoryManager.can_edit_storefront_slot(slot):
+			AudioManager.play_sfx("error")
+			EventBus.show_notification.emit(
+				"Signage Already Edited Today",
+				"You can only edit your Roof Signage once per day. Come back tomorrow!",
+				"error"
+			)
+			return
 		close_tree()
-		for pm in get_tree().get_nodes_in_group("pause_menu"):
-			if pm.has_method("_open_storefront_canvas"):
-				pm._open_storefront_canvas(slot)
-				return
 		var ov := StorefrontCanvasOverlay.new()
-		get_tree().current_scene.add_child(ov)
-		ov.open_canvas(slot)
+		get_tree().root.add_child(ov)
+		ov.open_editor(slot)
 		return
 
 	if is_instance_valid(MarioManager) and MarioManager.is_restocking_active:
 		AudioManager.play_sfx("error")
+		_shake_node(node_id)
 		return
 
 	var money := _get_money()
 	var ev := Registry.evaluate_node(node_id, money, _pending_levels)
 	if not bool(ev["can_buy"]):
 		AudioManager.play_sfx("error")
+		_shake_node(node_id)
 		return
 
 	var item: ItemData = ev.get("item")
@@ -460,6 +515,87 @@ func _on_node_pressed(node_id: String) -> void:
 	_pending_delivery_items[item] = 1
 	AudioManager.play_sfx("purchase")
 	_refresh_all()
+	_play_unlock_celebration(node_id, def)
+
+
+func _shake_node(node_id: String) -> void:
+	var btn: Button = _node_buttons.get(node_id)
+	if not is_instance_valid(btn):
+		return
+	var def := Registry.get_node_def(node_id)
+	if def.is_empty():
+		return
+	var sz := CAPSTONE_SIZE if (node_id == "open_door" or node_id == "store_tier") else ICON_SIZE
+	var base_x := (_node_center(def["pos"]) - sz * 0.5).x
+	var tw := create_tween()
+	tw.tween_property(btn, "position:x", base_x - 6.0, 0.04)
+	tw.tween_property(btn, "position:x", base_x + 6.0, 0.04)
+	tw.tween_property(btn, "position:x", base_x - 4.0, 0.04)
+	tw.tween_property(btn, "position:x", base_x, 0.05)
+
+
+func _build_curve_between(parent_pt: Vector2, child_pt: Vector2) -> PackedVector2Array:
+	if is_equal_approx(parent_pt.y, child_pt.y) or is_equal_approx(parent_pt.x, child_pt.x):
+		return _sample_cubic_bezier(parent_pt, parent_pt.lerp(child_pt, 0.33), parent_pt.lerp(child_pt, 0.66), child_pt, 20)
+	var dx := absf(child_pt.x - parent_pt.x)
+	var dy := child_pt.y - parent_pt.y
+	var lift := clampf(absf(dy) * 0.55 + dx * 0.08, 36.0, 190.0)
+	var dir_y := -1.0 if dy < 0.0 else 1.0
+	var c1 := Vector2(parent_pt.x, parent_pt.y + dir_y * lift)
+	var c2 := Vector2(child_pt.x, child_pt.y - dir_y * lift)
+	return _sample_cubic_bezier(parent_pt, c1, c2, child_pt, 24)
+
+
+func _point_along_polyline(pts: PackedVector2Array, frac: float) -> Vector2:
+	if pts.is_empty():
+		return Vector2.ZERO
+	if pts.size() == 1:
+		return pts[0]
+	var f := clampf(frac, 0.0, 1.0) * float(pts.size() - 1)
+	var idx := clampi(int(floorf(f)), 0, pts.size() - 2)
+	return pts[idx].lerp(pts[idx + 1], f - float(idx))
+
+
+func _play_unlock_celebration(node_id: String, def: Dictionary) -> void:
+	var btn: Button = _node_buttons.get(node_id)
+	var center := _node_center(def["pos"])
+	if is_instance_valid(btn):
+		btn.pivot_offset = btn.size * 0.5
+		btn.modulate = Color(1.55, 1.48, 1.22, 1.0)
+		var tw := create_tween()
+		tw.tween_property(btn, "scale", Vector2(1.26, 0.88), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2(0.94, 1.12), 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2(1.08, 1.08) if _hovered_id == node_id else Vector2.ONE, 0.18).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		var ftw := create_tween()
+		ftw.tween_property(btn, "modulate", Color.WHITE, 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Expanding golden shockwave ring + dual sparkle shower
+	var sz := CAPSTONE_SIZE if (node_id == "open_door" or node_id == "store_tier") else ICON_SIZE
+	_unlock_rings.append({"center": center, "t": 0.0, "dur": 0.52, "base_r": sz.x * 0.48, "col": COL_GOLD_BRIGHT})
+	if is_instance_valid(_tree_area):
+		Juice.spawn_burst(_tree_area, center, COL_GOLD_BRIGHT, 16, 130.0)
+		Juice.spawn_burst(_tree_area, center, COL_STAT_POS, 8, 95.0)
+
+	# Race golden surge waves along incoming prerequisite lines AND outward toward newly available children
+	for pre_id in def.get("prereqs", []):
+		var pdef := Registry.get_node_def(str(pre_id))
+		if not pdef.is_empty():
+			_path_surges.append({"pts": _build_curve_between(_node_center(pdef["pos"]), center), "t": 0.0, "dur": 0.42})
+
+	var money := _get_money()
+	for child_def in Registry.get_all_nodes():
+		if node_id in child_def.get("prereqs", []):
+			var cid := str(child_def["id"])
+			var cev := Registry.evaluate_node(cid, money, _pending_levels)
+			if str(cev["state"]).begins_with("available"):
+				_path_surges.append({"pts": _build_curve_between(center, _node_center(child_def["pos"])), "t": 0.0, "dur": 0.48})
+				var cbtn: Button = _node_buttons.get(cid)
+				if is_instance_valid(cbtn):
+					cbtn.pivot_offset = cbtn.size * 0.5
+					var ctw := create_tween()
+					ctw.tween_interval(0.18)
+					ctw.tween_property(cbtn, "scale", Vector2(1.12, 1.12), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+					ctw.tween_property(cbtn, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _sample_cubic_bezier(p0: Vector2, c1: Vector2, c2: Vector2, p3: Vector2, steps: int = 22) -> PackedVector2Array:
@@ -476,6 +612,27 @@ func _draw_paths() -> void:
 	if not is_instance_valid(_path_drawer):
 		return
 	var money := _get_money()
+	var pulse := 0.5 + 0.5 * sin(_anim_time * 3.2)
+
+	# 1. Breathing ambient aura behind available and owned nodes
+	for n in Registry.get_all_nodes():
+		var nid := str(n["id"])
+		var npt := _node_center(n["pos"])
+		var ev := Registry.evaluate_node(nid, money, _pending_levels)
+		var st := str(ev["state"])
+		var sz := CAPSTONE_SIZE if (nid == "open_door" or nid == "store_tier") else ICON_SIZE
+		var half := sz * 0.5
+		if st == "available":
+			var grow := 4.0 + pulse * 5.0
+			var aura_rect := Rect2(npt - half - Vector2(grow, grow), sz + Vector2(grow * 2.0, grow * 2.0))
+			_path_drawer.draw_rect(aura_rect, Color(0.46, 0.90, 0.52, 0.12 + pulse * 0.14), false, 3.0)
+		elif st == "maxed" or nid == "store_tier":
+			var grow_m := 3.0 + pulse * 2.5
+			var gold_rect := Rect2(npt - half - Vector2(grow_m, grow_m), sz + Vector2(grow_m * 2.0, grow_m * 2.0))
+			_path_drawer.draw_rect(gold_rect, Color(0.96, 0.78, 0.34, 0.10 + pulse * 0.08), false, 2.5)
+
+	# 2. Connector lines + soft glow + flowing energy beads tracing along active paths
+	var path_idx := 0
 	for n in Registry.get_all_nodes():
 		var child_id := str(n["id"])
 		var child_pt := _node_center(n["pos"])
@@ -484,33 +641,68 @@ func _draw_paths() -> void:
 		var child_avail := str(child_ev["state"]).begins_with("available")
 
 		for pre_id in n.get("prereqs", []):
-			var pdef := Registry.get_node_def(str(pre_id))
+			var pre_str := str(pre_id)
+			var pdef := Registry.get_node_def(pre_str)
 			if pdef.is_empty():
 				continue
+			path_idx += 1
 			var parent_pt := _node_center(pdef["pos"])
-			var parent_unlocked := Registry.is_node_unlocked_in_tree(str(pre_id), _pending_levels)
+			var parent_unlocked := Registry.is_node_unlocked_in_tree(pre_str, _pending_levels)
+			var pts := _build_curve_between(parent_pt, child_pt)
 
-			var pts: PackedVector2Array
-			if is_equal_approx(parent_pt.y, child_pt.y) or is_equal_approx(parent_pt.x, child_pt.x):
-				pts = PackedVector2Array([parent_pt, child_pt])
-			else:
-				var dx := absf(child_pt.x - parent_pt.x)
-				var dy := child_pt.y - parent_pt.y
-				# Smooth cubic Bézier S-curve (vertical tangents at both ends; gentle arc for wide spans)
-				var lift := clampf(absf(dy) * 0.55 + dx * 0.08, 42.0, 220.0)
-				var dir_y := -1.0 if dy < 0.0 else 1.0
-				var c1 := Vector2(parent_pt.x, parent_pt.y + dir_y * lift)
-				var c2 := Vector2(child_pt.x, child_pt.y - dir_y * lift)
-				pts = _sample_cubic_bezier(parent_pt, c1, c2, child_pt, 22)
+			var is_lit := parent_unlocked and child_unlocked
+			var is_avail_edge := parent_unlocked and child_avail
+			var is_hovered_edge := (_hovered_id != "" and (_hovered_id == child_id or _hovered_id == pre_str))
 
 			var fill_col := COL_PATH_LOCKED
-			if parent_unlocked and child_unlocked:
-				fill_col = COL_PATH_LIT
-			elif parent_unlocked and child_avail:
-				fill_col = COL_PATH_AVAIL
+			if is_lit:
+				fill_col = COL_PATH_LIT.lightened(0.12 if is_hovered_edge else 0.0)
+			elif is_avail_edge:
+				fill_col = COL_PATH_AVAIL.lightened(0.14 if is_hovered_edge else 0.0)
+			elif is_hovered_edge:
+				fill_col = Color(0.62, 0.50, 0.34, 0.80)
 
-			_path_drawer.draw_polyline(pts, COL_PATH_OUTLINE, 8.0, true)
-			_path_drawer.draw_polyline(pts, fill_col, 4.0, true)
+			if is_lit or is_avail_edge:
+				var glow_alpha := (0.24 if is_lit else 0.18) + pulse * 0.08 + (0.14 if is_hovered_edge else 0.0)
+				_path_drawer.draw_polyline(pts, Color(fill_col.r, fill_col.g, fill_col.b, glow_alpha), 12.0, true)
+
+			_path_drawer.draw_polyline(pts, COL_PATH_OUTLINE, 7.5, true)
+			_path_drawer.draw_polyline(pts, fill_col, 3.8 if (is_lit or is_avail_edge) else 3.0, true)
+
+			# Travelling light bead tracing upward along unlocked & available branches
+			if is_lit or is_avail_edge:
+				var speed := 0.42 if is_lit else 0.30
+				var phase := fmod(_anim_time * speed + float(path_idx) * 0.19, 1.0)
+				var bead_pt := _point_along_polyline(pts, phase)
+				var bead_col := Color(1.0, 0.94, 0.68, 0.92) if is_lit else Color(0.72, 1.0, 0.76, 0.88)
+				var fade_ends := sin(phase * PI)
+				_path_drawer.draw_circle(bead_pt, 6.5, Color(bead_col.r, bead_col.g, bead_col.b, 0.28 * fade_ends))
+				_path_drawer.draw_circle(bead_pt, 3.2, Color(bead_col.r, bead_col.g, bead_col.b, 0.95 * fade_ends))
+
+
+func _draw_fx() -> void:
+	if not is_instance_valid(_fx_drawer):
+		return
+	# Unlock surge waves racing along curves
+	for s in _path_surges:
+		var prog := clampf(float(s["t"]) / maxf(0.01, float(s["dur"])), 0.0, 1.0)
+		var eased := 1.0 - pow(1.0 - prog, 2.2)
+		var pts: PackedVector2Array = s["pts"]
+		var head := _point_along_polyline(pts, eased)
+		var tail := _point_along_polyline(pts, maxf(0.0, eased - 0.18))
+		var alpha := 1.0 - prog
+		_fx_drawer.draw_line(tail, head, Color(1.0, 0.92, 0.58, 0.65 * alpha), 7.0, true)
+		_fx_drawer.draw_circle(head, 9.0, Color(1.0, 0.95, 0.70, 0.42 * alpha))
+		_fx_drawer.draw_circle(head, 4.5, Color(1.0, 1.0, 0.92, 0.98 * alpha))
+
+	# Unlock expanding shockwave rings
+	for r in _unlock_rings:
+		var prog := clampf(float(r["t"]) / maxf(0.01, float(r["dur"])), 0.0, 1.0)
+		var eased := 1.0 - pow(1.0 - prog, 3.0)
+		var radius := float(r["base_r"]) * lerpf(0.85, 2.15, eased)
+		var col: Color = r["col"]
+		var alpha := (1.0 - prog) * 0.85
+		_fx_drawer.draw_arc(r["center"], radius, 0.0, TAU, 40, Color(col.r, col.g, col.b, alpha), lerpf(4.5, 1.2, prog), true)
 
 
 func _build_ui() -> void:
@@ -614,6 +806,13 @@ func _build_ui() -> void:
 		var btn := _create_node_button(nid)
 		_tree_area.add_child(btn)
 		_node_buttons[nid] = btn
+
+	_fx_drawer = Control.new()
+	_fx_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fx_drawer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fx_drawer.z_index = 15
+	_fx_drawer.draw.connect(_draw_fx)
+	_tree_area.add_child(_fx_drawer)
 
 	# Floating tooltip (warm espresso + brass border, restored description + Event-Card stats + Peso price)
 	_tooltip = PanelContainer.new()
@@ -739,7 +938,7 @@ func _create_node_button(node_id: String) -> Button:
 	lock_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	lock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lock_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lock_lbl.add_theme_font_size_override("font_size", 34)
+	lock_lbl.add_theme_font_size_override("font_size", 28)
 	lock_lbl.add_theme_color_override("font_color", Color(0.98, 0.94, 0.84, 0.96))
 	lock_lbl.add_theme_color_override("font_outline_color", Color(0.14, 0.09, 0.05, 0.92))
 	lock_lbl.add_theme_constant_override("outline_size", 6)
@@ -749,10 +948,13 @@ func _create_node_button(node_id: String) -> Button:
 
 	btn.mouse_entered.connect(func():
 		_hovered_id = node_id
+		Juice.play_sfx("ui_hover", 1.12, -6.0)
+		_tween_node_hover(node_id, btn, true)
 		_layout_nodes()
 		_show_tooltip_for(node_id)
 	)
 	btn.mouse_exited.connect(func():
+		_tween_node_hover(node_id, btn, false)
 		if _hovered_id == node_id:
 			_hovered_id = ""
 			if is_instance_valid(_tooltip):
@@ -761,3 +963,16 @@ func _create_node_button(node_id: String) -> Button:
 	)
 	btn.pressed.connect(func(): _on_node_pressed(node_id))
 	return btn
+
+
+func _tween_node_hover(node_id: String, btn: Button, hovered: bool) -> void:
+	if not is_instance_valid(btn):
+		return
+	var prev: Tween = _hover_tweens.get(node_id)
+	if prev and prev.is_valid():
+		prev.kill()
+	btn.pivot_offset = btn.size * 0.5
+	var tw := create_tween()
+	var target_s := Vector2(1.09, 1.09) if hovered else Vector2.ONE
+	tw.tween_property(btn, "scale", target_s, 0.14).set_trans(Tween.TRANS_BACK if hovered else Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_hover_tweens[node_id] = tw
