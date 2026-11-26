@@ -632,7 +632,12 @@ func _get_step_status_word(step: int, eff_tol: int, is_warm: bool) -> String:
 	if is_warm:
 		return "Warm"
 	if step < 0:
-		return "Discount"
+		match step:
+			-1: return "Friendly"
+			-2: return "Suki Deal"
+			-3: return "Generous"
+			-4: return "Neighborly Gift"
+			_:  return "Pure Charity"
 	var eff_step: int = step - eff_tol
 	if step == 0 and eff_step <= 2:
 		return "Base"
@@ -642,7 +647,9 @@ func _get_step_status_word(step: int, eff_tol: int, is_warm: bool) -> String:
 		return "Sweet Spot"
 	if eff_step == 3:
 		return "Risky"
-	return "Overpriced"
+	if eff_step == 4:
+		return "Overpriced"
+	return "Outrageous"
 
 
 func _play_step_juice(dir: int) -> void:
