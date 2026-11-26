@@ -2,8 +2,8 @@ class_name MayariCardHUD
 extends CanvasLayer
 
 ## Compact top-left icon strip displaying rotated diamond emblems for all currently
-## active Neighborhood Events and Reyna Mayari Moon Cards, paired with a [K] keycap.
-## Pressing K opens the full Hades-styled Neighborhood Events overlay.
+## active Neighborhood Events, Today's Visitors, and Reyna Mayari Moon Cards, paired with a [C] keycap.
+## Pressing C opens the full Calendar & Events overlay.
 
 const HadesEmblem = preload("res://Scripts/UI/HadesDiamondEmblem.gd")
 const COL_EVENT := Color(0.95, 0.65, 0.24, 1.0)
@@ -19,18 +19,34 @@ class MiniDiamondIcon extends Control:
 	var fill_color: Color = Color(0.12, 0.09, 0.06, 0.95)
 	## 0.0 = fresh (no overlay), 1.0 = fully elapsed (clockwise dark radial sweep)
 	var radial_progress: float = 0.0
+	## Compiled signature ambient effect from DiamondFXLibrary
+	var fx_kind: String = "prism_pulse"
+	var fx_phase: float = 0.0
+	var anim_time: float = 0.0
 
 	func _draw() -> void:
 		var c := size * 0.5
-		var r := minf(size.x, size.y) * 0.45
+		var r := minf(size.x, size.y) * 0.43
+		var t := anim_time + fx_phase
+
+		if fx_kind != "":
+			DiamondFXLibrary.draw_pre_fx(self, fx_kind, c, r, accent, accent_bright, t)
+
 		var outer := _diamond_pts(c, r)
 		draw_colored_polygon(outer, Color(0.05, 0.04, 0.035, 0.94))
-		draw_polyline(_closed_pts(outer), accent_bright, 2.5, true)
+		draw_polyline(_closed_pts(outer), accent_bright, 2.6, true)
 		var inner := _diamond_pts(c, r * 0.80)
 		draw_colored_polygon(inner, fill_color)
+
+		if fx_kind != "":
+			DiamondFXLibrary.draw_inner_fx(self, fx_kind, c, r, accent, accent_bright, t)
+
 		if radial_progress > 0.002:
 			_draw_clockwise_sweep(c, r * 1.35, inner, clampf(radial_progress, 0.0, 1.0))
-		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.65), 1.3, true)
+		draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.68), 1.3, true)
+
+		if fx_kind != "":
+			DiamondFXLibrary.draw_post_fx(self, fx_kind, c, r, outer, accent, accent_bright, t)
 
 	func _draw_clockwise_sweep(center: Vector2, sweep_r: float, clip_poly: PackedVector2Array, frac: float) -> void:
 		if frac >= 0.998:
@@ -64,8 +80,10 @@ class MiniDiamondIcon extends Control:
 
 var _root: Control
 var _row: HBoxContainer
+var _all_diamonds: Array[MiniDiamondIcon] = []
 var _blessing_diamonds: Array[MiniDiamondIcon] = []
 var _last_blessing_progress: float = -1.0
+var _anim_time: float = 0.0
 var _bold_font: FontVariation
 var _morning_banner: VBoxContainer = null
 var _morning_tween: Tween = null
@@ -73,27 +91,33 @@ var _morning_tween: Tween = null
 func _ready() -> void:
 	layer = 40
 	_bold_font = FontVariation.new()
-	_bold_font.base_font = UIStyle.FONT_INDER
-	_bold_font.variation_embolden = 0.65
+	_bold_font.base_font = UIStyle.FONT_FREDOKA_SEMIBOLD
 	_build_ui()
 	EventBus.mayari_card_changed.connect(func(_id): _refresh_icons())
 	EventBus.morning_mayari_cards_announced.connect(_show_morning_card_banner)
 	EventBus.sto_nino_blessing_changed.connect(_refresh_icons)
+	EventBus.restock_catalog_refresh.connect(_refresh_icons)
 	EventBus.day_started.connect(func(_d): _refresh_icons())
 	if is_instance_valid(StoreEventManager):
 		StoreEventManager.events_changed.connect(func(_ev): _refresh_icons())
 	_refresh_icons()
 
-func _process(_delta: float) -> void:
-	if _blessing_diamonds.is_empty():
+func _process(delta: float) -> void:
+	if _all_diamonds.is_empty():
 		return
-	var p := StoryManager.get_sto_nino_blessing_progress()
-	if absf(p - _last_blessing_progress) >= 0.004:
-		_last_blessing_progress = p
-		for d in _blessing_diamonds:
-			if is_instance_valid(d):
-				d.radial_progress = p
-				d.queue_redraw()
+	_anim_time += delta
+	var b_prog := StoryManager.get_sto_nino_blessing_progress() if not _blessing_diamonds.is_empty() else 0.0
+	for d in _all_diamonds:
+		if is_instance_valid(d):
+			d.anim_time = _anim_time
+			if d in _blessing_diamonds:
+				d.radial_progress = b_prog
+			d.queue_redraw()
+	if not _blessing_diamonds.is_empty():
+		_last_blessing_progress = b_prog
+
+func _get_fx_for_id(id_str: String) -> String:
+	return DiamondFXLibrary.fx_kind_for_id(id_str)
 
 func _build_ui() -> void:
 	_root = Control.new()
@@ -103,11 +127,14 @@ func _build_ui() -> void:
 
 	_row = HBoxContainer.new()
 	_row.anchor_left = 0.0
+	_row.anchor_right = 0.0
 	_row.anchor_top = 0.5
 	_row.anchor_bottom = 0.5
+	_row.grow_horizontal = Control.GROW_DIRECTION_END
+	_row.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_row.offset_left = 22.0
-	_row.offset_top = -150.0
-	_row.offset_bottom = 150.0
+	_row.offset_top = 0.0
+	_row.offset_bottom = 0.0
 	_row.add_theme_constant_override("separation", 10)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_row)
@@ -122,26 +149,49 @@ func _event_sigil(event_id: String) -> String:
 		_: return "✦"
 
 func _refresh_icons() -> void:
+	_all_diamonds.clear()
 	_blessing_diamonds.clear()
 	_last_blessing_progress = -1.0
 	for child in _row.get_children():
 		_row.remove_child(child)
 		child.queue_free()
 
-	var diamonds_col := VBoxContainer.new()
-	diamonds_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	diamonds_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	diamonds_col.add_theme_constant_override("separation", 10)
-	diamonds_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_row.add_child(diamonds_col)
+	const MAX_PER_COL := 7
+	var col_1 := VBoxContainer.new()
+	col_1.alignment = BoxContainer.ALIGNMENT_CENTER
+	col_1.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	col_1.add_theme_constant_override("separation", 10)
+	col_1.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_row.add_child(col_1)
 
+	var col_2: VBoxContainer = null
 	var count := 0
+
+	var get_target_col := func() -> VBoxContainer:
+		if count < MAX_PER_COL:
+			return col_1
+		if col_2 == null:
+			col_2 = VBoxContainer.new()
+			col_2.alignment = BoxContainer.ALIGNMENT_CENTER
+			col_2.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			col_2.add_theme_constant_override("separation", 10)
+			col_2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_row.add_child(col_2)
+		return col_2
 
 	# 1. Active Neighborhood Events
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
 			var pe: Dictionary = HadesEmblem.palette("event")
-			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, ev.get_icon_path(), diamonds_col)
+			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, ev.get_icon_path(), get_target_col.call(), _get_fx_for_id(ev.event_id), DiamondFXLibrary.fx_phase_for_id(ev.event_id))
+			count += 1
+
+	# 1B. Radio-Revealed Today's Visitors
+	if is_instance_valid(StoryManager):
+		for vis in StoryManager.get_revealed_expected_regulars():
+			var pv: Dictionary = HadesEmblem.palette("event")
+			var vis_key := "visitor_" + vis.character_name
+			_add_diamond("!", pv["accent"], pv["bright"], 0.0, "res://Assets/ui/icons/user-round-exclamation-point.png", get_target_col.call(), _get_fx_for_id(vis_key), DiamondFXLibrary.fx_phase_for_id(vis_key))
 			count += 1
 
 	# 2. Active Reyna Mayari Moon Card(s)
@@ -155,7 +205,7 @@ func _refresh_icons() -> void:
 			var pc: Dictionary = HadesEmblem.palette("favor" if is_fav else "chill")
 			var acc: Color = pc["accent"]
 			var acc_b: Color = pc["bright"]
-			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b, 0.0, str(card.get("icon", "")), diamonds_col)
+			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b, 0.0, str(card.get("icon", "")), get_target_col.call(), _get_fx_for_id(mid), DiamondFXLibrary.fx_phase_for_id(mid))
 			count += 1
 
 	# 3. Active Sto. Niño Blessings (with clockwise radial sweep when timed)
@@ -164,7 +214,8 @@ func _refresh_icons() -> void:
 	for b_id in StoryManager.active_blessing_cards:
 		var b_card := MayariCardRegistry.get_card(b_id)
 		if not b_card.is_empty():
-			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress, str(b_card.get("icon", "")), diamonds_col)
+			var bless_key := "blessing_" + b_id
+			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress, str(b_card.get("icon", "")), get_target_col.call(), _get_fx_for_id(bless_key), DiamondFXLibrary.fx_phase_for_id(bless_key))
 			_blessing_diamonds.append(d)
 			count += 1
 	if not _blessing_diamonds.is_empty():
@@ -174,17 +225,17 @@ func _refresh_icons() -> void:
 		_row.visible = false
 		return
 
-	# Compact [K] keycap pill right beside the active event icons
+	# Compact [C] keycap pill right beside the active event icons
 	var key_panel := PanelContainer.new()
 	key_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var ks := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.86), 6, 10, 4)
-	ks.border_color = Color(0.86, 0.66, 0.30, 0.78)
+	var ks := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.88), 6, 10, 4)
+	ks.border_color = Color(0.86, 0.66, 0.30, 0.82)
 	ks.set_border_width_all(1)
 	key_panel.add_theme_stylebox_override("panel", ks)
 	var key_lbl := Label.new()
 	key_lbl.text = "C"
-	key_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	key_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
 	key_lbl.add_theme_font_size_override("font_size", 16)
 	key_lbl.add_theme_color_override("font_color", Color(1.0, 0.93, 0.78, 1.0))
 	key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -223,7 +274,7 @@ func _show_morning_card_banner(card_ids: Array) -> void:
 		var c_data := MayariCardRegistry.get_card(str(cid))
 		if c_data.is_empty():
 			continue
-		_morning_banner.add_child(_build_moon_card_toast(c_data))
+		_morning_banner.add_child(_build_moon_card_toast(c_data, str(cid)))
 		built_count += 1
 
 	if built_count == 0:
@@ -258,7 +309,7 @@ func _show_morning_card_banner(card_ids: Array) -> void:
 	)
 
 
-func _build_moon_card_toast(c_data: Dictionary) -> PanelContainer:
+func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
 	var pal: Dictionary = HadesEmblem.palette("favor" if is_fav else "omen")
 	var accent: Color = pal["accent"]
@@ -292,6 +343,7 @@ func _build_moon_card_toast(c_data: Dictionary) -> PanelContainer:
 	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
+	emblem.set_fx_from_id(card_id if card_id != "" else str(c_data.get("id", c_data.get("title", ""))))
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
@@ -382,16 +434,19 @@ func _build_moon_card_toast(c_data: Dictionary) -> PanelContainer:
 
 	return card
 
-func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0, icon_path: String = "", target_parent: Control = null) -> MiniDiamondIcon:
+func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0, icon_path: String = "", target_parent: Control = null, fx_kind: String = "pulse_glow", fx_phase: float = 0.0) -> MiniDiamondIcon:
 	var d := MiniDiamondIcon.new()
-	d.custom_minimum_size = Vector2(62, 62)
+	d.custom_minimum_size = Vector2(74, 74)
 	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	d.accent = accent
 	d.accent_bright = accent_bright
 	d.fill_color = Color(accent.r * 0.28, accent.g * 0.21, accent.b * 0.14, 0.95)
 	d.radial_progress = progress
+	d.fx_kind = fx_kind
+	d.fx_phase = fx_phase
 	(target_parent if target_parent != null else _row).add_child(d)
+	_all_diamonds.append(d)
 
-	HadesEmblem.populate_emblem_glyph(d, icon_path, sigil, accent_bright, 24.0, 26)
+	HadesEmblem.populate_emblem_glyph(d, icon_path, sigil, accent_bright, 28.0, 30)
 	return d
