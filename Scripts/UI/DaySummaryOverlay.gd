@@ -62,6 +62,7 @@ var _quip: String = ""
 var _highlights: Array[String] = []
 
 var _skip_requested: bool = false
+var _last_skip_tap_msec: int = -10000
 var _tally_finished: bool = false
 var _closing: bool = false
 
