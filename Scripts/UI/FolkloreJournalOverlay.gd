@@ -67,7 +67,7 @@ var _roster_cards: Dictionary = {} # path -> Button
 # Right workspace nodes
 var _hero_panel: PanelContainer
 var _hero_box: HBoxContainer
-var _rank_track_box: HBoxContainer
+var _rank_track_box: VBoxContainer
 var _rank_buttons: Array[Button] = []
 var _reader_panel: PanelContainer
 var _reader_holder: MarginContainer
@@ -316,11 +316,11 @@ func _build_ui() -> void:
 	body_split.add_theme_constant_override("separation", 16)
 	outer_vbox.add_child(body_split)
 
-	# Left Rail: Fixed-width Neighbor Roster (never squished by right workspace)
+	# Left Rail: Fixed-width Neighbor Roster (generous width, never squished)
 	_rail_panel = PanelContainer.new()
 	_rail_panel.size_flags_horizontal = Control.SIZE_FILL
 	_rail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_rail_panel.custom_minimum_size = Vector2(310, 0)
+	_rail_panel.custom_minimum_size = Vector2(355, 0)
 	_rail_panel.add_theme_stylebox_override("panel", _make_box_style(COL_SURFACE, COL_BORDER, 14, 12, 12))
 	body_split.add_child(_rail_panel)
 
@@ -346,24 +346,26 @@ func _build_ui() -> void:
 
 	_hero_panel = PanelContainer.new()
 	_hero_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hero_panel.add_theme_stylebox_override("panel", _make_box_style(COL_PANEL, COL_BORDER, 14, 18, 14))
+	_hero_panel.add_theme_stylebox_override("panel", _make_box_style(COL_PANEL, COL_BORDER, 14, 16, 12))
 	right_col.add_child(_hero_panel)
 
 	_hero_box = HBoxContainer.new()
 	_hero_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hero_box.add_theme_constant_override("separation", 18)
+	_hero_box.add_theme_constant_override("separation", 16)
 	_hero_panel.add_child(_hero_box)
 
-	_rank_track_box = HBoxContainer.new()
-	_rank_track_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_rank_track_box.add_theme_constant_override("separation", 8)
-	right_col.add_child(_rank_track_box)
+	# Bottom Split: Tall Editorial Folklore Reader (Left) + Vertical Ranks I-VI Column (Right)
+	var bottom_split := HBoxContainer.new()
+	bottom_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	bottom_split.add_theme_constant_override("separation", 12)
+	right_col.add_child(bottom_split)
 
 	_reader_panel = PanelContainer.new()
 	_reader_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_reader_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_reader_panel.add_theme_stylebox_override("panel", _make_box_style(COL_SURFACE, COL_BORDER, 14, 0, 0))
-	right_col.add_child(_reader_panel)
+	bottom_split.add_child(_reader_panel)
 
 	_reader_holder = MarginContainer.new()
 	_reader_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -373,6 +375,13 @@ func _build_ui() -> void:
 	_reader_holder.add_theme_constant_override("margin_top", 18)
 	_reader_holder.add_theme_constant_override("margin_bottom", 18)
 	_reader_panel.add_child(_reader_holder)
+
+	_rank_track_box = VBoxContainer.new()
+	_rank_track_box.size_flags_horizontal = Control.SIZE_FILL
+	_rank_track_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_rank_track_box.custom_minimum_size = Vector2(182, 0)
+	_rank_track_box.add_theme_constant_override("separation", 8)
+	bottom_split.add_child(_rank_track_box)
 
 	# ─── 3. BOTTOM INPUT LEGEND BAR ───
 	outer_vbox.add_child(_build_bottom_legend())
@@ -766,26 +775,27 @@ func _rebuild_hero_banner() -> void:
 	var prog := CharacterProgressionManager.get_rep_rank_progress(cpath)
 	var entry: Dictionary = FolkloreCatalogScript.get_entry(c.get_clean_id())
 
-	# 1) Left Column (45%): Portrait + Identity + Reputation + Favorites + Perks (1 per row)
+	# 1) Left Column (38%): Compact Portrait + Identity + Reputation + Favorites
 	var left_prog := VBoxContainer.new()
 	left_prog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_prog.size_flags_stretch_ratio = 0.45
-	left_prog.add_theme_constant_override("separation", 10)
+	left_prog.size_flags_stretch_ratio = 0.38
+	left_prog.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	left_prog.add_theme_constant_override("separation", 8)
 	_hero_box.add_child(left_prog)
 
 	var id_row := HBoxContainer.new()
-	id_row.add_theme_constant_override("separation", 14)
+	id_row.add_theme_constant_override("separation", 12)
 	left_prog.add_child(id_row)
 
 	var portrait_tex := _resolve_portrait_texture(c, entry)
-	var p_frame := _build_avatar_frame(portrait_tex, Vector2(84, 84), not met, rank >= 6)
+	var p_frame := _build_avatar_frame(portrait_tex, Vector2(78, 78), not met, rank >= 6)
 	p_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	id_row.add_child(p_frame)
 
 	var mid_col := VBoxContainer.new()
 	mid_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	mid_col.add_theme_constant_override("separation", 4)
+	mid_col.add_theme_constant_override("separation", 3)
 	id_row.add_child(mid_col)
 
 	var title_row := HBoxContainer.new()
@@ -793,12 +803,12 @@ func _rebuild_hero_banner() -> void:
 	mid_col.add_child(title_row)
 
 	var disp_name := (c.character_name if c.character_name != "" else c.get_clean_id().capitalize()) if met else "??? (Unmet Neighbor)"
-	title_row.add_child(_make_label(disp_name, 26, COL_CREAM, true))
+	title_row.add_child(_make_label(disp_name, 24, COL_CREAM, true))
 
 	if rank >= 6:
 		var seal_pill := PanelContainer.new()
 		seal_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		seal_pill.add_theme_stylebox_override("panel", _make_box_style(Color(0.32, 0.22, 0.08, 0.96), COL_GOLD_BRIGHT, 8, 10, 3))
+		seal_pill.add_theme_stylebox_override("panel", _make_box_style(Color(0.32, 0.22, 0.08, 0.96), COL_GOLD_BRIGHT, 8, 8, 2))
 		seal_pill.add_child(_make_label("★ CONFIDANT", 14, COL_GOLD_BRIGHT, true))
 		title_row.add_child(seal_pill)
 
@@ -806,7 +816,7 @@ func _rebuild_hero_banner() -> void:
 		str(entry.get("creature", "Neighbor")) if met else "Unknown",
 		str(entry.get("region", "Karimlan")) if met else "Meet at store"
 	]
-	var fl_lbl := _make_label(folklore_line, 15, COL_GOLD if met else COL_LOCKED, false)
+	var fl_lbl := _make_label(folklore_line, 14, COL_GOLD if met else COL_LOCKED, false)
 	fl_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mid_col.add_child(fl_lbl)
 
@@ -820,13 +830,13 @@ func _rebuild_hero_banner() -> void:
 	rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rep_hdr.add_child(rl)
 
-	var rep_status := "MAX RANK" if bool(prog["is_max"]) else ("%d / %d Rep" % [int(prog["current"]), int(prog["needed"])])
+	var rep_status := "MAX" if bool(prog["is_max"]) else ("%d / %d Rep" % [int(prog["current"]), int(prog["needed"])])
 	if not met:
 		rep_status = "0 Rep"
 	rep_hdr.add_child(_make_label(rep_status, 14, COL_GOLD_BRIGHT if bool(prog["is_max"]) else COL_MUTED, false))
 
 	var rep_bar := ProgressBar.new()
-	rep_bar.custom_minimum_size = Vector2(0, 10)
+	rep_bar.custom_minimum_size = Vector2(0, 9)
 	rep_bar.max_value = 100.0
 	rep_bar.value = float(prog["ratio"]) * 100.0 if met else 0.0
 	rep_bar.show_percentage = false
@@ -837,10 +847,10 @@ func _rebuild_hero_banner() -> void:
 	# Favorites row
 	var fav_row := HFlowContainer.new()
 	fav_row.add_theme_constant_override("h_separation", 6)
-	fav_row.add_theme_constant_override("v_separation", 6)
+	fav_row.add_theme_constant_override("v_separation", 4)
 	left_prog.add_child(fav_row)
 
-	fav_row.add_child(_make_label("Favorites:", 15, COL_MUTED, true))
+	fav_row.add_child(_make_label("Favorites:", 14, COL_MUTED, true))
 	var favs: Array[String] = c.get_favorite_categories()
 	if favs.is_empty():
 		fav_row.add_child(_make_badge("None", COL_CARD, COL_BORDER, COL_MUTED))
@@ -851,24 +861,6 @@ func _rebuild_hero_banner() -> void:
 			else:
 				fav_row.add_child(_make_badge("? Undiscovered", COL_CARD, COL_BORDER, COL_LOCKED))
 
-	# Perks: 1 perk per row!
-	var perks_col := VBoxContainer.new()
-	perks_col.add_theme_constant_override("separation", 5)
-	left_prog.add_child(perks_col)
-
-	perks_col.add_child(_make_label("REPUTATION PERKS", 14, COL_GOLD, true))
-	var perk_defs: Array[Dictionary] = [
-		{"req": 3, "label": "+1 Fav Price Tolerance"},
-		{"req": 5, "label": "+10% Cash Tip Bonus"},
-		{"req": 6, "label": "+1 Global Price Tolerance"},
-	]
-	for p in perk_defs:
-		var req := int(p["req"])
-		var unlocked_p := rank >= req
-		var p_txt := ("✓  Rank %d: %s" % [req, str(p["label"])]) if unlocked_p else ("🔒  Rank %d: %s" % [req, str(p["label"])])
-		var p_lbl := _make_label(p_txt, 15, COL_POSITIVE if unlocked_p else COL_LOCKED, unlocked_p)
-		perks_col.add_child(p_lbl)
-
 	# Subtle divider
 	var vsep := VSeparator.new()
 	var vs_st := StyleBoxFlat.new()
@@ -878,12 +870,19 @@ func _rebuild_hero_banner() -> void:
 	vsep.add_theme_stylebox_override("separator", vs_st)
 	_hero_box.add_child(vsep)
 
-	# 2) Right Column (55%): Dedicated Story Arcs & Named Chapters with Checkbox Icons
+	# 2) Right Combined Progression Area (62%): Story Progression + Reputation Perks side-by-side
+	var prog_split := HBoxContainer.new()
+	prog_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	prog_split.size_flags_stretch_ratio = 0.62
+	prog_split.add_theme_constant_override("separation", 14)
+	_hero_box.add_child(prog_split)
+
+	# 2a) Story Arcs & Chapters (62% of right area, compact 142px height)
 	var story_col := VBoxContainer.new()
 	story_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	story_col.size_flags_stretch_ratio = 0.55
-	story_col.add_theme_constant_override("separation", 6)
-	_hero_box.add_child(story_col)
+	story_col.size_flags_stretch_ratio = 0.62
+	story_col.add_theme_constant_override("separation", 5)
+	prog_split.add_child(story_col)
 
 	var total_ch := c.chapters.size()
 	var cur_ch := CharacterProgressionManager.get_chapter(cpath)
@@ -891,21 +890,21 @@ func _rebuild_hero_banner() -> void:
 	story_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	story_col.add_child(story_hdr)
 
-	var sh_lbl := _make_label("STORY PROGRESSION", 15, COL_GOLD, true)
+	var sh_lbl := _make_label("STORY PROGRESSION", 14, COL_GOLD, true)
 	sh_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	story_hdr.add_child(sh_lbl)
-	story_hdr.add_child(_make_label("%d / %d Chapters" % [mini(cur_ch, total_ch), total_ch], 14, COL_MUTED, false))
+	story_hdr.add_child(_make_label("%d / %d" % [mini(cur_ch, total_ch), total_ch], 14, COL_MUTED, false))
 
 	var story_scroll := ScrollContainer.new()
 	story_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	story_scroll.custom_minimum_size = Vector2(0, 195)
+	story_scroll.custom_minimum_size = Vector2(0, 138)
 	story_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_style_scrollbar(story_scroll)
 	story_col.add_child(story_scroll)
 
 	var arcs_vbox := VBoxContainer.new()
 	arcs_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	arcs_vbox.add_theme_constant_override("separation", 8)
+	arcs_vbox.add_theme_constant_override("separation", 6)
 	story_scroll.add_child(arcs_vbox)
 
 	var num_arcs := maxi(1, ceili(float(total_ch) / 3.0))
@@ -913,7 +912,7 @@ func _rebuild_hero_banner() -> void:
 		var arc_title := c.get_arc_name(arc_i)
 		if arc_title == "":
 			arc_title = "Arc %d" % (arc_i + 1)
-		var arc_lbl := _make_label(arc_title, 15, COL_GOLD_BRIGHT, true)
+		var arc_lbl := _make_label(arc_title, 14, COL_GOLD_BRIGHT, true)
 		arc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		arcs_vbox.add_child(arc_lbl)
 
@@ -925,12 +924,12 @@ func _rebuild_hero_banner() -> void:
 			if ch_name == "":
 				ch_name = "Chapter %d" % (ch_idx + 1)
 			var ch_row := HBoxContainer.new()
-			ch_row.add_theme_constant_override("separation", 8)
+			ch_row.add_theme_constant_override("separation", 7)
 			arcs_vbox.add_child(ch_row)
 
 			var cb := TextureRect.new()
 			cb.texture = IC_CHECKBOX_ON if done else IC_CHECKBOX_OFF
-			cb.custom_minimum_size = Vector2(18, 18)
+			cb.custom_minimum_size = Vector2(16, 16)
 			cb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			cb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			cb.modulate = COL_POSITIVE if done else COL_LOCKED
@@ -938,10 +937,37 @@ func _rebuild_hero_banner() -> void:
 			ch_row.add_child(cb)
 
 			var ch_txt := "%d. %s" % [ch_idx + 1, ch_name if (done or ch_idx == cur_ch) else "???"]
-			var ch_lbl := _make_label(ch_txt, 15, COL_CREAM if done else (COL_MUTED if ch_idx == cur_ch else COL_LOCKED), done)
+			var ch_lbl := _make_label(ch_txt, 14, COL_CREAM if done else (COL_MUTED if ch_idx == cur_ch else COL_LOCKED), done)
 			ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 			ch_row.add_child(ch_lbl)
+
+	# Divider between Story & Perks
+	var vsep2 := VSeparator.new()
+	vsep2.add_theme_stylebox_override("separator", vs_st)
+	prog_split.add_child(vsep2)
+
+	# 2b) Reputation Perks (38% of right area, 1 perk per row)
+	var perks_col := VBoxContainer.new()
+	perks_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	perks_col.size_flags_stretch_ratio = 0.38
+	perks_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	perks_col.add_theme_constant_override("separation", 8)
+	prog_split.add_child(perks_col)
+
+	perks_col.add_child(_make_label("REPUTATION PERKS", 14, COL_GOLD, true))
+	var perk_defs: Array[Dictionary] = [
+		{"req": 3, "label": "+1 Fav Price Tolerance"},
+		{"req": 5, "label": "+10% Cash Tip Bonus"},
+		{"req": 6, "label": "+1 Global Price Tolerance"},
+	]
+	for p in perk_defs:
+		var req := int(p["req"])
+		var unlocked_p := rank >= req
+		var p_txt := ("✓ R%d: %s" % [req, str(p["label"])]) if unlocked_p else ("🔒 R%d: %s" % [req, str(p["label"])])
+		var p_lbl := _make_label(p_txt, 14, COL_POSITIVE if unlocked_p else COL_LOCKED, unlocked_p)
+		p_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		perks_col.add_child(p_lbl)
 
 
 func _rebuild_rank_track() -> void:
@@ -958,8 +984,9 @@ func _rebuild_rank_track() -> void:
 		var has_perk := (r == 3 or r == 5 or r == 6)
 
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(0, 56)
+		btn.custom_minimum_size = Vector2(0, 52)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		btn.focus_mode = Control.FOCUS_NONE
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		_apply_rank_tab_theme(btn, active, unlocked)
