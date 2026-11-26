@@ -385,15 +385,15 @@ func _build_ui() -> void:
 	gt_lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 	sv.add_child(gt_lbl)
 
-	# Compact "Close Shop" button aligned to the ledger's right edge (hidden until tally finishes)
+	# Compact "Close Shop" button centered on the ledger's bottom edge (hidden until tally finishes)
 	_close_btn = Button.new()
 	_close_btn.text = "Close Shop"
-	_close_btn.anchor_left = 0.86
-	_close_btn.anchor_right = 0.86
-	_close_btn.anchor_top = 0.945
-	_close_btn.anchor_bottom = 0.945
-	_close_btn.offset_left = -168.0
-	_close_btn.offset_right = 0.0
+	_close_btn.anchor_left = 0.5
+	_close_btn.anchor_right = 0.5
+	_close_btn.anchor_top = 0.885
+	_close_btn.anchor_bottom = 0.885
+	_close_btn.offset_left = -84.0
+	_close_btn.offset_right = 84.0
 	_close_btn.offset_top = -24.0
 	_close_btn.offset_bottom = 24.0
 	_close_btn.z_index = 14
