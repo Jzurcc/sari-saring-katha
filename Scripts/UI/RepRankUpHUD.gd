@@ -5,7 +5,6 @@ extends CanvasLayer
 ## Routed through TopBannerQueue (FIFO) with shared warm espresso visual shell.
 
 const FolkloreCatalogScript := preload("res://Scripts/Progression/FolkloreCatalog.gd")
-const ICON_REP: Texture2D = preload("res://Assets/ui/rep.png")
 
 var _root: Control
 var _bold_font: FontVariation
@@ -77,20 +76,6 @@ func _show_rank_up_toast(c_data: CustomerData, new_rank: int) -> void:
 	vcol.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(vcol)
 
-	var eyebrow_row := HBoxContainer.new()
-	eyebrow_row.add_theme_constant_override("separation", 6)
-	eyebrow_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vcol.add_child(eyebrow_row)
-
-	var rep_icon := TextureRect.new()
-	rep_icon.texture = ICON_REP
-	rep_icon.custom_minimum_size = Vector2(18, 18)
-	rep_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	rep_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	rep_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	rep_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	eyebrow_row.add_child(rep_icon)
-
 	var eyebrow := Label.new()
 	eyebrow.text = "REPUTATION RANK UP!"
 	eyebrow.add_theme_font_override("font", _bold_font)
@@ -99,7 +84,7 @@ func _show_rank_up_toast(c_data: CustomerData, new_rank: int) -> void:
 	eyebrow.add_theme_color_override("font_outline_color", TopBannerQueue.COL_OUTLINE)
 	eyebrow.add_theme_constant_override("outline_size", 3)
 	eyebrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	eyebrow_row.add_child(eyebrow)
+	vcol.add_child(eyebrow)
 
 	var title := Label.new()
 	var cname := c_data.character_name if c_data.character_name != "" else c_data.get_clean_id().capitalize()
