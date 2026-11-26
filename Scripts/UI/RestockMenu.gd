@@ -618,7 +618,7 @@ func _build_regulars_popover() -> void:
 	_regulars_popover.add_child(pv)
 
 	var phdr := Label.new()
-	phdr.text = "Today's Visitors"
+	phdr.text = "Active Effects"
 	phdr.add_theme_font_override("font", _bold_font)
 	phdr.add_theme_font_size_override("font_size", 17)
 	phdr.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
@@ -1030,72 +1030,95 @@ func _get_unlocked_items_for_category(cat_key: String) -> Array[ItemData]:
 
 # ── Regulars Popover & Capacity / Wallet ─────────────────────────────────────
 
+func _make_active_effect_card(title: String, subtitle: String, accent: Color) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(280, 0)
+	var st := UIStyle.create_flat_stylebox(Color(0.068, 0.058, 0.050, 0.98), 10, 14, 9)
+	st.border_color = Color(accent.r, accent.g, accent.b, 0.85)
+	st.border_width_left = 3
+	st.border_width_top = 1
+	st.border_width_right = 1
+	st.border_width_bottom = 1
+	card.add_theme_stylebox_override("panel", st)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 3)
+	card.add_child(vb)
+
+	var t_lbl := Label.new()
+	t_lbl.text = title
+	t_lbl.add_theme_font_override("font", _bold_font)
+	t_lbl.add_theme_font_size_override("font_size", 15)
+	t_lbl.add_theme_color_override("font_color", accent)
+	vb.add_child(t_lbl)
+
+	if subtitle != "":
+		var s_lbl := Label.new()
+		s_lbl.text = subtitle
+		s_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		s_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+		s_lbl.add_theme_font_size_override("font_size", 13)
+		s_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		vb.add_child(s_lbl)
+	return card
+
+
 func _refresh_regulars_popover_content() -> void:
 	for child in _regulars_list_box.get_children():
 		child.queue_free()
 
-	var revealed := StoryManager.get_revealed_expected_regulars()
-	var max_slots := StoryManager.get_revealed_regular_count()
-	var suffix := " ▴" if (_regulars_popover and _regulars_popover.visible) else " ▾"
-	_regulars_btn.text = ("Today's Visitors (%d)%s" % [revealed.size(), suffix]) if revealed.size() > 0 else ("Today's Visitors%s" % suffix)
+	var cards: Array[PanelContainer] = []
 
-	if max_slots <= 0:
-		var hint := Label.new()
-		hint.text = "Upgrade the Barangay Radio to reveal\nwhich visitors are dropping by today."
-		hint.add_theme_font_override("font", UIStyle.FONT_INDER)
-		hint.add_theme_font_size_override("font_size", 15)
-		hint.add_theme_color_override("font_color", COL_CREAM_MUTED)
-		_regulars_list_box.add_child(hint)
-		return
+	# 1. Revealed Neighborhood Events
+	if is_instance_valid(StoreEventManager):
+		for ev in StoreEventManager.get_active_events():
+			var cats := PackedStringArray()
+			for cat in ev.affected_categories:
+				var ui_key := "sachets" if cat == "sachet" else cat
+				cats.append(str(category_labels.get(ui_key, cat.capitalize())))
+			var sub := ("In Demand: " + ", ".join(cats)) if not cats.is_empty() else ev.description
+			cards.append(_make_active_effect_card(ev.event_name, sub, Color(0.56, 0.90, 0.60, 1.0)))
 
-	if revealed.is_empty():
-		var tune_hint := Label.new()
-		tune_hint.text = "Tune in to Papa Ulap on your Counter Radio\nto spot Today's Visitors."
-		tune_hint.add_theme_font_override("font", UIStyle.FONT_INDER)
-		tune_hint.add_theme_font_size_override("font_size", 15)
-		tune_hint.add_theme_color_override("font_color", COL_CREAM_MUTED)
-		_regulars_list_box.add_child(tune_hint)
-		return
-
-	for c in revealed:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-
-		var portrait_tex: Texture2D = UIStyle.get_customer_portrait(c.character_name)
-		if portrait_tex == null:
-			portrait_tex = c.sprite_texture
-		if portrait_tex:
-			var thumb := TextureRect.new()
-			thumb.custom_minimum_size = Vector2(36, 36)
-			thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			thumb.texture = portrait_tex
-			row.add_child(thumb)
-
+	# 2. Revealed Today's Visitors
+	for c in StoryManager.get_revealed_expected_regulars():
 		var fav_names: PackedStringArray = []
 		for f_cat in c.get_favorite_categories():
 			var ui_key := "sachets" if f_cat == "sachet" else f_cat
 			fav_names.append(str(category_labels.get(ui_key, f_cat.capitalize())))
-		var fav_str := ", ".join(fav_names)
+		var fav_str := ("Likes: " + ", ".join(fav_names)) if not fav_names.is_empty() else "Visiting today (+120% spawn)"
+		cards.append(_make_active_effect_card("Visitor: %s" % c.character_name, fav_str, Color(0.56, 0.90, 0.60, 1.0)))
 
-		var lbl := Label.new()
-		lbl.text = "%s  •  %s" % [c.character_name, fav_str]
-		lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		lbl.add_theme_font_size_override("font_size", 15)
-		lbl.add_theme_color_override("font_color", COL_CREAM)
-		row.add_child(lbl)
+	# 3. Active Reyna Mayari Moon Cards
+	var m_ids: Array[String] = StoryManager.active_mayari_cards
+	if m_ids.is_empty() and StoryManager.active_mayari_card != "":
+		m_ids = [StoryManager.active_mayari_card]
+	for mid in m_ids:
+		var mc := MayariCardRegistry.get_card(mid)
+		if not mc.is_empty():
+			var col := COL_GOLD_BRIGHT if MayariCardRegistry.is_favor(mid) else COL_CORAL
+			cards.append(_make_active_effect_card(str(mc.get("title", mid)), str(mc.get("description", "")), col))
 
-		_regulars_list_box.add_child(row)
+	# 4. Active Sto. Niño Blessings
+	for bid in StoryManager.active_blessing_cards:
+		var bc := MayariCardRegistry.get_card(bid)
+		if not bc.is_empty():
+			cards.append(_make_active_effect_card("Sto. Niño: %s" % str(bc.get("title", bid)), str(bc.get("description", "")), COL_GOLD_BRIGHT))
 
-	var hidden_left := maxi(0, StoryManager.todays_expected_regulars.size() - revealed.size())
-	if hidden_left > 0:
-		var more_lbl := Label.new()
-		more_lbl.text = "+%d more hidden (upgrade Barangay Radio)" % hidden_left
-		more_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		more_lbl.add_theme_font_size_override("font_size", 14)
-		more_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
-		_regulars_list_box.add_child(more_lbl)
+	var suffix := " ▴" if (_regulars_popover and _regulars_popover.visible) else " ▾"
+	_regulars_btn.text = ("Active Effects (%d)%s" % [cards.size(), suffix]) if cards.size() > 0 else ("Active Effects%s" % suffix)
+
+	if cards.is_empty():
+		var empty := Label.new()
+		empty.text = "No active effects or revealed events today."
+		empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+		empty.add_theme_font_size_override("font_size", 14)
+		empty.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		_regulars_list_box.add_child(empty)
+		return
+
+	for card in cards:
+		_regulars_list_box.add_child(card)
 
 
 func _refresh_capacity_and_wallet() -> void:
