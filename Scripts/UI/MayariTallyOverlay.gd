@@ -769,12 +769,12 @@ func _build_ui() -> void:
 
 	# ── 3B. BEAT 2 REROLL & ACCEPT CARDS BUTTONS (Straddling frame's bottom border) ──
 	_reroll_btn = Button.new()
-	_reroll_btn.anchor_left = 0.220
-	_reroll_btn.anchor_right = 0.220
-	_reroll_btn.anchor_top = 0.855
-	_reroll_btn.anchor_bottom = 0.855
-	_reroll_btn.offset_left = 18.0
-	_reroll_btn.offset_right = 104.0
+	_reroll_btn.anchor_left = 0.5
+	_reroll_btn.anchor_right = 0.5
+	_reroll_btn.anchor_top = 0.915
+	_reroll_btn.anchor_bottom = 0.915
+	_reroll_btn.offset_left = -46.0
+	_reroll_btn.offset_right = 46.0
 	_reroll_btn.offset_top = -26.0
 	_reroll_btn.offset_bottom = 26.0
 	_reroll_btn.z_index = 12
