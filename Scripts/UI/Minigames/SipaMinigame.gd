@@ -11,8 +11,18 @@ signal minigame_finished(won: bool, result: Dictionary)
 const TEX_SIPA := "res://Assets/ui/minigames/sipa.png"
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const SIPA_SIZE := Vector2(82.0, 82.0)
-const EARLY_COOLDOWN := 0.50
-const TARGET_KICKS := 12
+const EARLY_COOLDOWN := 0.45
+const XP_CAP_KICKS := 32
+
+const NEIGHBOR_SCORES: Array[Dictionary] = [
+	{"name": "Lolo Pilo", "score": 32, "portrait": "res://Assets/characters/portraits/LoloPilo Face.png"},
+	{"name": "Buboy", "score": 21, "portrait": "res://Assets/characters/portraits/Buboy Face.png"},
+	{"name": "T.K.", "score": 15, "portrait": "res://Assets/characters/portraits/TK Face.png"},
+	{"name": "Kuya Kap", "score": 10, "portrait": "res://Assets/characters/portraits/Kuya_Kap Face.png"},
+	{"name": "Danilo", "score": 6, "portrait": "res://Assets/characters/portraits/Danilo Face.png"},
+	{"name": "Manang Ana", "score": 0, "portrait": "res://Assets/characters/portraits/ManangAna Face.png"},
+	{"name": "Rosalyn", "score": 0, "portrait": "res://Assets/characters/portraits/Rosalyn Face.png"},
+]
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
@@ -52,6 +62,7 @@ var _intro_panel: PanelContainer
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
+var _board_rows: Array[Dictionary] = []
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -79,11 +90,14 @@ func _get_vp_size() -> Vector2:
 func _get_bounds() -> Dictionary:
 	var vp := _get_vp_size()
 	var left := vp.x * 0.16
-	var right := vp.x * 0.84
+	var right := vp.x * 0.80
 	var top := 118.0
 	var floor_y := vp.y - 46.0
-	var zone_bottom := floor_y - 16.0
-	var zone_top := zone_bottom - clampf(vp.y * 0.17, 105.0, 145.0)
+	var zone_bottom := floor_y - 14.0
+	# Starts generous/tall so early kicks are forgiving, then gradually narrows up to kick 32+
+	var diff_t := clampf(float(_kicks) / float(XP_CAP_KICKS), 0.0, 1.0)
+	var base_zone_h := lerpf(168.0, 96.0, diff_t) * (vp.y / 720.0)
+	var zone_top := zone_bottom - clampf(base_zone_h, 88.0, 210.0)
 	return {
 		"left": left,
 		"right": right,
@@ -125,8 +139,9 @@ func _show_intro() -> void:
 	_countdown_lbl.visible = false
 	_result_panel.visible = false
 	Juice.pop_panel_in(_intro_panel)
-	_kick_lbl.text = "Kicks: 0 / %d" % TARGET_KICKS
+	_kick_lbl.text = "Kicks: 0"
 	_status_lbl.text = ""
+	_refresh_leaderboard()
 
 
 func _on_intro_start() -> void:
@@ -148,7 +163,7 @@ func close_minigame(won: bool = false, emit_result: bool = true) -> void:
 		minigame_finished.emit(won, {
 			"id": "sipa",
 			"kicks": _kicks,
-			"target": TARGET_KICKS,
+			"xp_cap": XP_CAP_KICKS,
 			"elapsed": _elapsed,
 		})
 
@@ -173,7 +188,8 @@ func _start_countdown() -> void:
 	Juice.pop_control(_countdown_lbl, 1.35, 0.28)
 	Juice.play_sfx("ui_hover", 0.85, 1.0)
 	_status_lbl.text = "Get ready..."
-	_kick_lbl.text = "Kicks: 0 / %d" % TARGET_KICKS
+	_kick_lbl.text = "Kicks: 0"
+	_refresh_leaderboard()
 
 
 func _input(event: InputEvent) -> void:
@@ -208,21 +224,21 @@ func _attempt_kick() -> void:
 		var is_perfect := absf(_sipa_pos.y - zone_center) <= zone_half * 0.45
 
 		var vp_scale := _get_vp_size().y / 720.0
-		var speed_scale := 1.0 + float(_kicks) * 0.06
-		var bounce_vy := -randf_range(640.0, 740.0) * vp_scale * minf(1.42, speed_scale)
-		var drift_range := (140.0 + float(_kicks) * 26.0) * vp_scale
+		var diff_t := clampf(float(_kicks) / float(XP_CAP_KICKS), 0.0, 1.0)
+		var bounce_vy := -randf_range(580.0, 650.0) * vp_scale * lerpf(0.92, 1.36, diff_t)
+		var drift_range := lerpf(85.0, 290.0, diff_t) * vp_scale
 		var bounce_vx := randf_range(-drift_range, drift_range)
-		if absf(bounce_vx) < 48.0:
-			bounce_vx = (48.0 if randf() < 0.5 else -48.0)
+		if absf(bounce_vx) < 42.0:
+			bounce_vx = (42.0 if randf() < 0.5 else -42.0)
 		_sipa_vel = Vector2(bounce_vx, bounce_vy)
 		_sipa_ang_vel = randf_range(-8.0, 8.0)
 
 		# Escalating combo pitch + tactile plastic kick thwack
-		var combo_pitch := 0.92 + float(_kicks) * 0.055
+		var combo_pitch := minf(1.85, 0.92 + float(_kicks) * 0.032)
 		Juice.play_sfx("pickup", combo_pitch, 1.0)
-		Juice.play_sfx("plastic", 1.08 + float(_kicks) * 0.03, -5.0)
+		Juice.play_sfx("plastic", minf(1.75, 1.06 + float(_kicks) * 0.022), -5.0)
 		if is_perfect:
-			Juice.play_sfx("interact", combo_pitch + 0.18, 0.5)
+			Juice.play_sfx("interact", combo_pitch + 0.16, 0.5)
 
 		# Squash & stretch on the sipa + screen punch + spark burst
 		if is_instance_valid(_sipa_sprite):
@@ -233,12 +249,18 @@ func _attempt_kick() -> void:
 		Juice.spawn_burst(_root, _sipa_pos, Color(1.0, 0.88, 0.36) if is_perfect else Color(0.62, 0.96, 0.56), 14 if is_perfect else 9, 130.0)
 		Juice.pop_control(_kick_lbl, 1.24, 0.20)
 
-		_kick_lbl.text = "Kicks: %d / %d" % [_kicks, TARGET_KICKS]
+		_kick_lbl.text = "Kicks: %d" % _kicks
 		_status_lbl.text = "Perfect kick!" if is_perfect else "Swak! Keep it up!"
 		_spawn_feedback("PERFECT!" if is_perfect else "Swak!", Color(1.0, 0.90, 0.38) if is_perfect else Color(0.62, 0.96, 0.56))
+		_refresh_leaderboard()
 
-		if _kicks >= TARGET_KICKS:
-			_finish_round(true, "Sipa Champion!", "You kept the sipa airborne for %d kicks!" % _kicks)
+		for entry in NEIGHBOR_SCORES:
+			var target_score: int = int(entry["score"])
+			if target_score > 0 and _kicks == target_score + 1:
+				_status_lbl.text = "You beat %s's record (%d)!" % [str(entry["name"]), target_score]
+				_spawn_feedback("Beat %s!" % str(entry["name"]), Color(1.0, 0.90, 0.42))
+				Juice.play_sfx("interact", 1.42, 1.0)
+				break
 	else:
 		_cooldown = EARLY_COOLDOWN
 		_miss_flash = 1.0
@@ -295,8 +317,9 @@ func _process(delta: float) -> void:
 
 		var b := _get_bounds()
 		var vp_scale := _get_vp_size().y / 720.0
-		var diff_mult := 1.0 + minf(0.85, float(_kicks) * 0.068 + _elapsed * 0.012)
-		var gravity := 820.0 * vp_scale * diff_mult
+		var diff_t := clampf(float(_kicks) / float(XP_CAP_KICKS), 0.0, 1.0)
+		var endless_extra := minf(0.35, maxf(0.0, float(_kicks - XP_CAP_KICKS)) * 0.015)
+		var gravity := lerpf(580.0, 1120.0, diff_t) * (1.0 + endless_extra) * vp_scale
 		_sipa_vel.y += gravity * delta
 		_sipa_pos += _sipa_vel * delta
 		_sipa_rot += _sipa_ang_vel * delta
@@ -321,7 +344,13 @@ func _process(delta: float) -> void:
 
 		if _sipa_pos.y >= float(b["floor_y"]):
 			Juice.shake_control(_root, 14.0, 0.30)
-			_finish_round(false, "Dropped the Sipa!", "You reached %d / %d kicks. Better timing next round!" % [_kicks, TARGET_KICKS])
+			var won := _kicks >= 6
+			if _kicks > XP_CAP_KICKS:
+				_finish_round(true, "New Barangay Champion!", "You beat Lolo Pilo's record with %d kicks! (Bonus XP capped at %d)" % [_kicks, XP_CAP_KICKS])
+			elif won:
+				_finish_round(true, "Great Rally!", "You kept the sipa airborne for %d kicks! Try to beat Lolo Pilo's 32!" % _kicks)
+			else:
+				_finish_round(false, "Dropped the Sipa!", "You reached %d kicks. Keep practicing your timing!" % _kicks)
 
 	if is_instance_valid(_field_draw):
 		_field_draw.queue_redraw()
@@ -450,6 +479,76 @@ func _build_ui() -> void:
 	close_btn.pressed.connect(func(): close_minigame(false, true))
 	_root.add_child(close_btn)
 
+	# Top-Right Neighbor Leaderboard (Barangay Records)
+	var board_panel := PanelContainer.new()
+	board_panel.anchor_left = 1.0
+	board_panel.anchor_right = 1.0
+	board_panel.anchor_top = 0.0
+	board_panel.offset_left = -228
+	board_panel.offset_right = -18
+	board_panel.offset_top = 68
+	board_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bstyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.84), 10, 12, 10)
+	bstyle.border_color = Color(0.86, 0.70, 0.36, 0.55)
+	bstyle.set_border_width_all(1)
+	board_panel.add_theme_stylebox_override("panel", bstyle)
+	_root.add_child(board_panel)
+
+	var bv := VBoxContainer.new()
+	bv.add_theme_constant_override("separation", 5)
+	bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_panel.add_child(bv)
+
+	var btitle := Label.new()
+	btitle.text = "Barangay Records"
+	btitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btitle.add_theme_font_override("font", UIStyle.FONT_INDER)
+	btitle.add_theme_font_size_override("font_size", 14)
+	btitle.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62))
+	btitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bv.add_child(btitle)
+
+	_board_rows.clear()
+	for entry in NEIGHBOR_SCORES:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bv.add_child(row)
+
+		var portrait := TextureRect.new()
+		portrait.texture = _load_tex(str(entry["portrait"]))
+		portrait.custom_minimum_size = Vector2(26, 26)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(portrait)
+
+		var nlbl := Label.new()
+		nlbl.text = str(entry["name"])
+		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nlbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		nlbl.add_theme_font_size_override("font_size", 13)
+		nlbl.add_theme_color_override("font_color", Color(0.94, 0.90, 0.82))
+		nlbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(nlbl)
+
+		var slbl := Label.new()
+		slbl.text = str(int(entry["score"]))
+		slbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		slbl.custom_minimum_size = Vector2(34, 0)
+		slbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		slbl.add_theme_font_size_override("font_size", 13)
+		slbl.add_theme_color_override("font_color", Color(0.98, 0.84, 0.46))
+		slbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(slbl)
+
+		_board_rows.append({
+			"score": int(entry["score"]),
+			"name_lbl": nlbl,
+			"score_lbl": slbl,
+			"row": row,
+		})
+
 	# Sipa Sprite
 	_sipa_sprite = TextureRect.new()
 	_sipa_sprite.texture = _sipa_tex
@@ -503,7 +602,7 @@ func _build_ui() -> void:
 	iv.add_child(ititle)
 
 	var idesc := Label.new()
-	idesc.text = "Press Space or Click when the sipa enters the golden zone at the bottom to bounce it back up. Pressing too early triggers a short cooldown. Reach %d kicks to win!" % TARGET_KICKS
+	idesc.text = "Press Space or Click when the sipa enters the golden zone at the bottom to keep it airborne as long as you can. The zone narrows and gravity builds as your kicks climb — try to beat Lolo Pilo's record of 32!"
 	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
@@ -561,6 +660,23 @@ func _build_ui() -> void:
 	cont_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	cont_btn.pressed.connect(func(): close_minigame(bool(_result_panel.get_meta("won", false)), true))
 	rv.add_child(cont_btn)
+
+
+func _refresh_leaderboard() -> void:
+	for item in _board_rows:
+		var target_score: int = int(item["score"])
+		var beaten := (_kicks > target_score) if target_score > 0 else (_kicks >= 1)
+		var nlbl: Label = item["name_lbl"]
+		var slbl: Label = item["score_lbl"]
+		if beaten:
+			nlbl.add_theme_color_override("font_color", Color(0.68, 0.96, 0.62))
+			slbl.add_theme_color_override("font_color", Color(0.68, 0.96, 0.62))
+			slbl.text = "%d ✓" % target_score
+		else:
+			var is_zero := target_score == 0
+			nlbl.add_theme_color_override("font_color", Color(0.76, 0.72, 0.66) if is_zero else Color(0.94, 0.90, 0.82))
+			slbl.add_theme_color_override("font_color", Color(0.68, 0.64, 0.58) if is_zero else Color(0.98, 0.84, 0.46))
+			slbl.text = str(target_score)
 
 
 func _draw_field() -> void:

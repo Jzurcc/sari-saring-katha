@@ -49,6 +49,16 @@ const TOTAL_PAIRS := 6
 const MAX_TRIES := 14
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 
+const NEIGHBOR_RECORDS: Array[Dictionary] = [
+	{"name": "Lolo Pilo", "pairs": 6, "left": 8, "label": "6/6 (+8)", "portrait": "res://Assets/characters/portraits/LoloPilo Face.png"},
+	{"name": "Buboy", "pairs": 6, "left": 5, "label": "6/6 (+5)", "portrait": "res://Assets/characters/portraits/Buboy Face.png"},
+	{"name": "T.K.", "pairs": 6, "left": 2, "label": "6/6 (+2)", "portrait": "res://Assets/characters/portraits/TK Face.png"},
+	{"name": "Kuya Kap", "pairs": 5, "left": 0, "label": "5/6", "portrait": "res://Assets/characters/portraits/Kuya_Kap Face.png"},
+	{"name": "Danilo", "pairs": 3, "left": 0, "label": "3/6", "portrait": "res://Assets/characters/portraits/Danilo Face.png"},
+	{"name": "Manang Ana", "pairs": 0, "left": 0, "label": "0", "portrait": "res://Assets/characters/portraits/ManangAna Face.png"},
+	{"name": "Rosalyn", "pairs": 0, "left": 0, "label": "0", "portrait": "res://Assets/characters/portraits/Rosalyn Face.png"},
+]
+
 var is_open: bool = false
 var _locked: bool = false
 var _pairs_found: int = 0
@@ -64,6 +74,7 @@ var _intro_panel: PanelContainer
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
+var _board_rows: Array[Dictionary] = []
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -393,6 +404,32 @@ func _refresh_hud() -> void:
 	_stats_lbl.text = "Pairs: %d / %d   •   Tries Left: %d" % [_pairs_found, TOTAL_PAIRS, _tries_left]
 	var col := Color(0.98, 0.48, 0.44) if _tries_left <= 3 else Color(0.96, 0.91, 0.78)
 	_stats_lbl.add_theme_color_override("font_color", col)
+	_refresh_leaderboard()
+
+
+func _refresh_leaderboard() -> void:
+	for item in _board_rows:
+		var req_pairs: int = int(item["pairs"])
+		var req_left: int = int(item["left"])
+		var base_lbl: String = str(item["label"])
+		var beaten := false
+		if req_pairs == 0:
+			beaten = _pairs_found >= 1
+		elif req_pairs < TOTAL_PAIRS:
+			beaten = _pairs_found > req_pairs
+		else:
+			beaten = _pairs_found >= TOTAL_PAIRS and _tries_left > req_left
+		var nlbl: Label = item["name_lbl"]
+		var slbl: Label = item["score_lbl"]
+		if beaten:
+			nlbl.add_theme_color_override("font_color", Color(0.68, 0.96, 0.62))
+			slbl.add_theme_color_override("font_color", Color(0.68, 0.96, 0.62))
+			slbl.text = "%s ✓" % base_lbl
+		else:
+			var is_zero := req_pairs == 0
+			nlbl.add_theme_color_override("font_color", Color(0.76, 0.72, 0.66) if is_zero else Color(0.94, 0.90, 0.82))
+			slbl.add_theme_color_override("font_color", Color(0.68, 0.64, 0.58) if is_zero else Color(0.98, 0.84, 0.46))
+			slbl.text = base_lbl
 
 
 func _finish_round(won: bool, title: String, sub: String) -> void:
@@ -468,6 +505,77 @@ func _build_ui() -> void:
 	close_btn.offset_bottom = 58
 	close_btn.pressed.connect(func(): close_minigame(false, true))
 	_root.add_child(close_btn)
+
+	# Top-Right Neighbor Leaderboard (Barangay Records)
+	var board_panel := PanelContainer.new()
+	board_panel.anchor_left = 1.0
+	board_panel.anchor_right = 1.0
+	board_panel.anchor_top = 0.0
+	board_panel.offset_left = -246
+	board_panel.offset_right = -18
+	board_panel.offset_top = 68
+	board_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bstyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.84), 10, 12, 10)
+	bstyle.border_color = Color(0.86, 0.70, 0.36, 0.55)
+	bstyle.set_border_width_all(1)
+	board_panel.add_theme_stylebox_override("panel", bstyle)
+	_root.add_child(board_panel)
+
+	var bv := VBoxContainer.new()
+	bv.add_theme_constant_override("separation", 5)
+	bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_panel.add_child(bv)
+
+	var btitle := Label.new()
+	btitle.text = "Barangay Records"
+	btitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btitle.add_theme_font_override("font", UIStyle.FONT_INDER)
+	btitle.add_theme_font_size_override("font_size", 14)
+	btitle.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62))
+	btitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bv.add_child(btitle)
+
+	_board_rows.clear()
+	for entry in NEIGHBOR_RECORDS:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bv.add_child(row)
+
+		var portrait := TextureRect.new()
+		portrait.texture = _load_tex(str(entry["portrait"]))
+		portrait.custom_minimum_size = Vector2(26, 26)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(portrait)
+
+		var nlbl := Label.new()
+		nlbl.text = str(entry["name"])
+		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nlbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		nlbl.add_theme_font_size_override("font_size", 13)
+		nlbl.add_theme_color_override("font_color", Color(0.94, 0.90, 0.82))
+		nlbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(nlbl)
+
+		var slbl := Label.new()
+		slbl.text = str(entry["label"])
+		slbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		slbl.custom_minimum_size = Vector2(64, 0)
+		slbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+		slbl.add_theme_font_size_override("font_size", 12)
+		slbl.add_theme_color_override("font_color", Color(0.98, 0.84, 0.46))
+		slbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(slbl)
+
+		_board_rows.append({
+			"pairs": int(entry["pairs"]),
+			"left": int(entry["left"]),
+			"label": str(entry["label"]),
+			"name_lbl": nlbl,
+			"score_lbl": slbl,
+		})
 
 	# Centered 4x3 Teks Grid floating over vignette
 	var board_center := CenterContainer.new()

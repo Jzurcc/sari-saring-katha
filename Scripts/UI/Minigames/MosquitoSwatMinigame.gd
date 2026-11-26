@@ -154,11 +154,14 @@ func _start_round() -> void:
 	_result_panel.visible = false
 	Juice.play_sfx("pickup", 1.18, 0.5)
 	_refresh_hud()
-	# Spawn initial wave flying in from screen edges
-	for _i in range(4):
+	# Spawn gentle initial wave flying in from screen edges
+	for _i in range(3):
 		_spawn_bug(false)
-	for _j in range(2):
-		_spawn_bug(true)
+	_spawn_bug(true)
+
+
+func _get_diff_t() -> float:
+	return clampf(float(_score) / float(TARGET_SCORE), 0.0, 1.0)
 
 
 func _clear_bugs() -> void:
@@ -214,6 +217,9 @@ func _process(delta: float) -> void:
 
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
+		var diff_t := _get_diff_t()
+		var max_mosq := int(roundf(lerpf(4.0, 7.0, diff_t)))
+		var max_ff := int(roundf(lerpf(2.0, 4.0, diff_t)))
 		var live_mosq := 0
 		var live_ff := 0
 		for b in _bugs:
@@ -222,11 +228,11 @@ func _process(delta: float) -> void:
 					live_ff += 1
 				else:
 					live_mosq += 1
-		if live_mosq < 7:
+		if live_mosq < max_mosq:
 			_spawn_bug(false)
-		if live_ff < 4 and randf() < 0.45:
+		if live_ff < max_ff and randf() < lerpf(0.28, 0.48, diff_t):
 			_spawn_bug(true)
-		_spawn_timer = randf_range(0.50, 0.90)
+		_spawn_timer = lerpf(1.05, 0.48, diff_t) + randf_range(-0.08, 0.12)
 
 	var bounds := _get_vp_size()
 	for i in range(_bugs.size() - 1, -1, -1):
@@ -301,22 +307,26 @@ func _spawn_bug(is_firefly: bool) -> void:
 		randf_range(bounds.x * 0.25, bounds.x * 0.75),
 		randf_range(175.0, bounds.y - 120.0)
 	)
+	var diff_t := _get_diff_t()
 	var speed: float
 	if is_firefly:
-		speed = randf_range(75.0, 165.0)
+		speed = randf_range(65.0, 140.0) * lerpf(0.85, 1.08, diff_t)
 	else:
 		var roll := randf()
+		var base_speed: float
 		if roll < 0.30:
-			speed = randf_range(95.0, 145.0) # Slow drifter
+			base_speed = randf_range(95.0, 145.0) # Slow drifter
 		elif roll < 0.75:
-			speed = randf_range(180.0, 255.0) # Normal buzz
+			base_speed = randf_range(175.0, 245.0) # Normal buzz
 		else:
-			speed = randf_range(285.0, 365.0) # Fast dart!
+			base_speed = randf_range(265.0, 345.0) # Fast dart!
+		speed = base_speed * lerpf(0.56, 1.12, diff_t)
 	var vel := (target - pos).normalized() * speed
 
 	tr.position = pos - sz * 0.5
 	_arena.add_child(tr)
 
+	var amp_mult := lerpf(0.60, 1.08, diff_t)
 	var bug_dict := {
 		"node": tr,
 		"is_firefly": is_firefly,
@@ -325,8 +335,8 @@ func _spawn_bug(is_firefly: bool) -> void:
 		"pos": pos,
 		"vel": vel,
 		"age": 0.0,
-		"freq": randf_range(2.2, 4.2) if is_firefly else randf_range(5.2, 9.2),
-		"amp": randf_range(22.0, 48.0) if is_firefly else randf_range(44.0, 88.0),
+		"freq": randf_range(2.2, 4.2) if is_firefly else randf_range(4.4, 8.2),
+		"amp": randf_range(20.0, 44.0) if is_firefly else randf_range(38.0, 82.0) * amp_mult,
 		"phase": randf() * TAU,
 	}
 	_bugs.append(bug_dict)

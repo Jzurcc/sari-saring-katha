@@ -215,8 +215,27 @@ func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -
 		var cust = spawner.current_customer
 		if cust.customer_data and is_instance_valid(CharacterProgressionManager):
 			var rep_gain := 15 if won else 8
+			if minigame_id == "sipa":
+				var kicks := int(result.get("kicks", 0))
+				rep_gain = 22 if kicks >= 32 else (15 if kicks >= 6 else 8)
 			CharacterProgressionManager.add_reputation(cust.customer_data.resource_path, rep_gain, "minigame_" + minigame_id)
-	if won:
+	if minigame_id == "sipa":
+		var kicks := int(result.get("kicks", 0))
+		var xp_cap := int(result.get("xp_cap", 32))
+		var capped_kicks := mini(kicks, xp_cap)
+		if capped_kicks > 0:
+			var xp_gain := capped_kicks
+			var cash_gain := float(capped_kicks)
+			if is_instance_valid(StoryManager):
+				StoryManager.add_player_xp(xp_gain, "minigame_sipa")
+			var gm := get_tree().get_first_node_in_group("game_manager")
+			if gm and "money" in gm:
+				gm.money += cash_gain
+				EventBus.money_changed.emit(gm.money)
+			var title := "New Sipa Record!" if kicks > xp_cap else "Sipa Complete!"
+			var cap_note := " (max cap)" if kicks >= xp_cap else ""
+			EventBus.show_notification.emit(title, "+₱%d  •  +%d XP%s" % [int(cash_gain), xp_gain, cap_note], "purchase")
+	elif won:
 		if is_instance_valid(StoryManager):
 			StoryManager.add_player_xp(15, "minigame_" + minigame_id)
 		var gm := get_tree().get_first_node_in_group("game_manager")
