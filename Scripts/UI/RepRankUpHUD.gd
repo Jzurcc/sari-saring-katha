@@ -115,6 +115,7 @@ func _show_rank_up_toast(c_data: CustomerData, new_rank: int) -> void:
 
 	var perk := Label.new()
 	perk.text = "%s  •  Press [J] for Journal" % CharacterProgressionManager.get_rep_rank_perk_summary(new_rank)
+	perk.custom_minimum_size = Vector2(420, 0)
 	perk.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	perk.add_theme_font_override("font", UIStyle.FONT_INDER)
 	perk.add_theme_font_size_override("font_size", 14)
@@ -126,12 +127,13 @@ func _show_rank_up_toast(c_data: CustomerData, new_rank: int) -> void:
 
 	EventBus.request_sfx.emit("purchase")
 
-	panel.size = Vector2.ZERO
+	panel.reset_size()
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if not is_inside_tree() or not is_instance_valid(panel):
 		TopBannerQueue.complete()
 		return
+	panel.reset_size()
 
 	var vp_width := get_viewport().get_visible_rect().size.x
 	panel.position = Vector2((vp_width - panel.size.x) * 0.5, -panel.size.y - 14.0)
@@ -139,11 +141,10 @@ func _show_rank_up_toast(c_data: CustomerData, new_rank: int) -> void:
 	panel.scale = Vector2(0.88, 0.88)
 
 	_tween = create_tween()
-	_tween.set_parallel(true)
 	_tween.tween_property(panel, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
-	_tween.tween_property(panel, "scale", Vector2(1.03, 1.03), 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tween.tween_property(panel, "position:y", 24.0, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tween.chain().tween_property(panel, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_tween.parallel().tween_property(panel, "scale", Vector2(1.03, 1.03), 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tween.parallel().tween_property(panel, "position:y", 24.0, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tween.tween_property(panel, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_tween.tween_interval(3.3)
 	_tween.tween_property(panel, "position:y", -panel.size.y - 16.0, 0.30).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	_tween.parallel().tween_property(panel, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)

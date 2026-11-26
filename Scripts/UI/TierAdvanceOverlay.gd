@@ -167,12 +167,13 @@ func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData])
 
 	control.visible = true
 	_banner.modulate.a = 0.0
-	_banner.size = Vector2.ZERO
+	_banner.reset_size()
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if not is_inside_tree() or my_session != _session_id:
 		TopBannerQueue.complete()
 		return
+	_banner.reset_size()
 
 	var vp_width := get_viewport().get_visible_rect().size.x
 	_banner.position = Vector2((vp_width - _banner.size.x) * 0.5, -_banner.size.y - 16.0)

@@ -213,13 +213,14 @@ func _animate_in(my_session: int) -> void:
 	layer = 100
 	control.visible = true
 	_banner.modulate.a = 0.0
-	_banner.size = Vector2.ZERO
+	_banner.reset_size()
 
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if not is_inside_tree() or my_session != _toast_session:
 		TopBannerQueue.complete()
 		return
+	_banner.reset_size()
 
 	var vp_size := get_viewport().get_visible_rect().size
 	_banner.position = Vector2((vp_size.x - _banner.size.x) * 0.5, -_banner.size.y - 12.0)
