@@ -71,7 +71,7 @@ const _CAT_ICONS: Dictionary = {
 	"bottle": preload("res://Assets/ui/icons/coffee.png"),
 	"sachet": preload("res://Assets/ui/icons/coffee.png"),
 	"sachets": preload("res://Assets/ui/icons/coffee.png"),
-	"can": preload("res://Tools/lucide-icons/png/can.png"),
+	"can": preload("res://Assets/ui/icons/can.png"),
 	"candy": preload("res://Assets/ui/icons/gift.png"),
 	"frozen": preload("res://Assets/ui/icons/snowflake.png"),
 	"cigarette": preload("res://Assets/ui/icons/flame.png"),
