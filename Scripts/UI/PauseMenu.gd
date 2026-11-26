@@ -2,8 +2,6 @@ extends Control
 
 @onready var buttons = $Buttons
 @onready var options_overlay    : Control = $OptionsOverlay
-@onready var collection_overlay : Control = $CollectionOverlay
-@onready var story_overlay      : Control = $StoryProgressOverlay
 
 var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
 var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
@@ -19,8 +17,6 @@ const FADE_DURATION: float = 0.4
 var _previous_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 var _previous_clock_running: bool = false
 var _previous_dialogic_paused: bool = false
-var _paint_signage_btn: Button = null
-var _paint_poster_btn: Button = null
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -30,14 +26,8 @@ func _ready() -> void:
 	add_child(_ui_player)
 	
 	options_overlay.hide()
-	collection_overlay.hide()
-	
 	options_overlay.closed.connect(_on_options_closed)
-	collection_overlay.closed.connect(_on_collection_closed)
-	story_overlay.closed.connect(_on_characters_closed)
 
-	_setup_storefront_buttons()
-	
 	for btn in buttons.get_children():
 		if btn is Button:
 			btn.mouse_entered.connect(_play_hover)
@@ -46,65 +36,7 @@ func _ready() -> void:
 	# Initial state
 	hide()
 
-func _setup_storefront_buttons() -> void:
-	var template := buttons.get_node_or_null("SaveGame") as Button
-	if not template:
-		return
-	var insert_idx := template.get_index()
-
-	_paint_signage_btn = template.duplicate(0) as Button
-	_paint_signage_btn.name = "PaintSignage"
-	_paint_signage_btn.text = "PAINT SIGNAGE"
-	_paint_signage_btn.add_theme_font_size_override("font_size", 42)
-	_paint_signage_btn.pressed.connect(_on_paint_storefront_pressed.bind("signage"))
-	buttons.add_child(_paint_signage_btn)
-	buttons.move_child(_paint_signage_btn, insert_idx)
-
-	_paint_poster_btn = template.duplicate(0) as Button
-	_paint_poster_btn.name = "PaintPoster"
-	_paint_poster_btn.text = "PAINT POSTER"
-	_paint_poster_btn.add_theme_font_size_override("font_size", 42)
-	_paint_poster_btn.pressed.connect(_on_paint_storefront_pressed.bind("poster"))
-	buttons.add_child(_paint_poster_btn)
-	buttons.move_child(_paint_poster_btn, insert_idx + 1)
-
-	_refresh_storefront_buttons()
-
-func _refresh_storefront_buttons() -> void:
-	if is_instance_valid(_paint_signage_btn):
-		_paint_signage_btn.visible = StoryManager.storefront_upgrade_level >= 1
-		var can_edit_sig := StoryManager.can_edit_storefront_slot("signage")
-		_paint_signage_btn.text = "PAINT SIGNAGE" if can_edit_sig else "PAINT SIGNAGE (EDITED TODAY)"
-	if is_instance_valid(_paint_poster_btn):
-		_paint_poster_btn.visible = StoryManager.storefront_upgrade_level >= 2
-
-func _on_paint_storefront_pressed(slot_name: String) -> void:
-	if not StoryManager.can_edit_storefront_slot(slot_name):
-		AudioManager.play_sfx("error")
-		EventBus.show_notification.emit(
-			"Signage Already Edited Today",
-			"You can only edit your Roof Signage once per day. Come back tomorrow!",
-			"error"
-		)
-		return
-	_play_click()
-	hide()
-	var overlay_cls = preload("res://Scripts/UI/StorefrontCanvasOverlay.gd")
-	var overlay = overlay_cls.new()
-	overlay.layer = 105
-	get_tree().root.add_child(overlay)
-	overlay.closed.connect(func(_saved: bool):
-		if is_instance_valid(self):
-			show()
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-			_refresh_storefront_buttons()
-			_update_menu_interaction(true)
-			buttons.get_node("Resume").grab_focus()
-	)
-	overlay.open_editor(slot_name)
-
 func pause() -> void:
-	_refresh_storefront_buttons()
 	show()
 	get_tree().paused = true
 	_previous_mouse_mode = Input.mouse_mode
@@ -149,24 +81,6 @@ func _on_settings_pressed() -> void:
 func _on_options_closed() -> void:
 	_update_menu_interaction(true)
 	buttons.get_node("Settings").grab_focus()
-
-func _on_collection_pressed() -> void:
-	_play_click()
-	collection_overlay.open()
-	_update_menu_interaction(false)
-
-func _on_collection_closed() -> void:
-	_update_menu_interaction(true)
-	buttons.get_node("Collection").grab_focus()
-
-func _on_characters_pressed() -> void:
-	_play_click()
-	story_overlay.open()
-	_update_menu_interaction(false)
-
-func _on_characters_closed() -> void:
-	_update_menu_interaction(true)
-	buttons.get_node("Characters").grab_focus()
 
 func _on_main_menu_pressed() -> void:
 	_play_confirm()
@@ -241,10 +155,6 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			if options_overlay.visible:
 				options_overlay.close()
-			elif collection_overlay.visible:
-				collection_overlay.close()
-			elif story_overlay.visible:
-				story_overlay.close()
 			else:
 				_play_confirm() # Play sfx_9 when resuming via Escape
 				resume()

@@ -4,8 +4,6 @@ extends Control
 
 # Standalone UI components
 @onready var options_overlay    : Control = $OptionsOverlay
-@onready var collection_overlay : Control = $CollectionOverlay
-@onready var story_overlay      : Control = $StoryProgressOverlay
 @onready var confirm_overlay    : Control = $ConfirmationOverlay
 
 var target_scene = "res://Scenes/IntroCutscene.tscn"
@@ -35,14 +33,7 @@ func _ready() -> void:
 	_ui_player.bus = "SFX"
 	add_child(_ui_player)
 	options_overlay.hide()
-	collection_overlay.hide()
-	if has_node("StoryProgressOverlay"):
-		story_overlay.hide()
-	
 	options_overlay.closed.connect(_on_options_closed)
-	collection_overlay.closed.connect(_on_collection_closed)
-	if has_node("StoryProgressOverlay"):
-		story_overlay.closed.connect(_on_story_progress_closed)
 
 	confirm_overlay.confirmed.connect(_on_new_game_confirmed)
 	confirm_overlay.cancelled.connect(func(): _update_menu_interaction(true))
@@ -183,26 +174,6 @@ func _on_options_pressed() -> void:
 	_update_menu_interaction(false)
 
 func _on_options_closed() -> void:
-	_update_menu_interaction(true)
-
-
-# ─── Collection overlay ───────────────────────────────────────────────────────
-
-func _on_collection_pressed() -> void:
-	_play_click()
-	collection_overlay.open()
-	_update_menu_interaction(false)
-
-func _on_collection_closed() -> void:
-	_update_menu_interaction(true)
-
-func _on_story_progress_pressed() -> void:
-	_play_click()
-	if story_overlay:
-		story_overlay.open()
-		_update_menu_interaction(false)
-
-func _on_story_progress_closed() -> void:
 	_update_menu_interaction(true)
 
 func _update_menu_interaction(enabled: bool) -> void:
