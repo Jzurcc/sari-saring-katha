@@ -2,9 +2,9 @@ class_name TalismanTraceMinigame
 extends CanvasLayer
 
 ## Anting-Anting / Talisman Tracing Minigame tied to Brahim's albularyo arc.
-## Reuses CanvasDrawSurface (brush/eraser/undo/redo/clear, without stickers or uploads)
-## directly over Assets/ui/talisman.png with 10 progressive dashed sacred-geometry sigils
-## and a coverage + precision accuracy evaluator.
+## Features 20 progressive multi-color, multi-brush-size sacred sigils rendered as
+## smooth rounded hollow brush guides directly over Assets/ui/talisman.png, with
+## overlap-friendly color-bitmask + coverage + precision accuracy evaluation.
 
 signal minigame_finished(won: bool, result: Dictionary)
 
@@ -17,19 +17,18 @@ const ICON_ERASER := "res://Assets/ui/lucide/eraser.png"
 const ICON_UNDO := "res://Assets/ui/lucide/undo-2.png"
 const ICON_REDO := "res://Assets/ui/lucide/redo-2.png"
 const ICON_TRASH := "res://Assets/ui/lucide/trash-2.png"
-const ICON_SPARKLES := "res://Assets/ui/lucide/sparkles.png"
+const ICON_SPARKLES := "res://Assets/ui/icons/sparkles.png"
 const ICON_CLOSE := "res://Assets/ui/lucide/x.png"
 
 # Matches 1792x2400 aspect ratio (~0.747) at crisp interactive resolution
 const CANVAS_SIZE := Vector2i(560, 750)
 
-# Safe inner drawable face of Assets/ui/talisman.png (normalized UVs):
-# x in [0.16, 0.84], y in [0.16, 0.89] — keeps clear of top hanging loop & outer ink rim.
+# Safe inner drawable face of Assets/ui/talisman.png (normalized UVs)
 const SAFE_CENTER := Vector2(0.50, 0.525)
 const SAFE_RX := 0.28
 const SAFE_RY := 0.30
 
-# Warm Espresso + Antique Gold + Cream palette (matches RestockMenu, UpgradeTreeOverlay, StorefrontCanvasOverlay)
+# Warm Espresso + Antique Gold + Cream palette
 const COL_BACKDROP := Color(0.06, 0.04, 0.03, 0.82)
 const COL_DOCK_BG := Color(0.11, 0.08, 0.06, 0.94)
 const COL_CARD_BG := Color(0.12, 0.09, 0.07, 0.97)
@@ -40,17 +39,23 @@ const COL_MUTED := Color(0.76, 0.70, 0.62, 1.0)
 const COL_SUCCESS := Color(0.42, 0.82, 0.52, 1.0)
 const COL_FAIL := Color(0.90, 0.40, 0.34, 1.0)
 
+# Color indices: 0 = Charcoal, 1 = Crimson, 2 = Indigo, 3 = Sacred Gold
+const INK_CHARCOAL := 0
+const INK_CRIMSON := 1
+const INK_INDIGO := 2
+const INK_GOLD := 3
+
 const INK_SWATCHES: Array[Dictionary] = [
-	{"name": "Charcoal", "color": Color(0.11, 0.08, 0.06, 1.0)},
-	{"name": "Orasyon Crimson", "color": Color(0.56, 0.11, 0.09, 1.0)},
-	{"name": "Indigo Night", "color": Color(0.11, 0.18, 0.34, 1.0)},
-	{"name": "Sacred Gold", "color": Color(1.00, 0.94, 0.70, 1.0)},
+	{"name": "Charcoal", "color": Color(0.11, 0.08, 0.06, 1.0), "guide": Color(0.14, 0.10, 0.08, 1.0)},
+	{"name": "Orasyon Crimson", "color": Color(0.68, 0.14, 0.12, 1.0), "guide": Color(0.78, 0.16, 0.14, 1.0)},
+	{"name": "Indigo Night", "color": Color(0.13, 0.24, 0.52, 1.0), "guide": Color(0.18, 0.34, 0.70, 1.0)},
+	{"name": "Sacred Gold", "color": Color(1.00, 0.90, 0.52, 1.0), "guide": Color(0.98, 0.82, 0.26, 1.0)},
 ]
 
 var is_open: bool = false
 
 var _patterns: Array[Dictionary] = []
-var _current_level: int = 1 # 1..10
+var _current_level: int = 1 # 1..20
 var _locked_level: bool = false
 var _best_accuracy_this_session: int = 0
 var _last_result: Dictionary = {}
@@ -58,8 +63,10 @@ var _dash_phase: float = 0.0
 var _is_evaluating: bool = false
 var _guide_polylines_norm: Array = []
 var _guide_mask: PackedByteArray = PackedByteArray()
+var _guide_color_bits: PackedByteArray = PackedByteArray()
 var _guide_core_pixels: int = 0
 var _current_brush_size_index: int = 1
+var _current_ink_index: int = 0
 
 var _talisman_tex: Texture2D = null
 var _brahim_tex: Texture2D = null
@@ -89,7 +96,7 @@ var _result_overlay: ColorRect
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_score: Label
-var _result_breakdown: Label
+var _result_stats_row: HBoxContainer
 var _result_retry_btn: Button
 var _result_done_btn: Button
 
@@ -126,7 +133,6 @@ func open_minigame(config: Dictionary = {}) -> void:
 	_best_accuracy_this_session = 0
 	_last_result = {}
 
-	# Determine starting level (1..10): random (visits) > explicit level (story) > saved progress
 	var start_lvl := 1
 	_locked_level = bool(config.get("lock_level", false))
 	if bool(config.get("random", false)):
@@ -139,7 +145,6 @@ func open_minigame(config: Dictionary = {}) -> void:
 		start_lvl = clampi(int(saved_lvl), 1, _patterns.size())
 
 	_load_level(start_lvl)
-	_select_ink_color(0)
 	_select_tool(CanvasDrawSurface.Tool.BRUSH)
 
 	_result_overlay.visible = false
@@ -151,7 +156,6 @@ func open_minigame(config: Dictionary = {}) -> void:
 		_intro_overlay.visible = false
 		_canvas.input_enabled = true
 
-	# Subtle fade-in of root
 	_root.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_property(_root, "modulate:a", 1.0, 0.20).set_trans(Tween.TRANS_SINE)
@@ -204,6 +208,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_E:
 			get_viewport().set_input_as_handled()
 			_select_tool(CanvasDrawSurface.Tool.ERASER)
+		elif event.keycode == KEY_1:
+			get_viewport().set_input_as_handled()
+			_select_ink_color(0)
+		elif event.keycode == KEY_2:
+			get_viewport().set_input_as_handled()
+			_select_ink_color(1)
+		elif event.keycode == KEY_3:
+			get_viewport().set_input_as_handled()
+			_select_ink_color(2)
+		elif event.keycode == KEY_4:
+			get_viewport().set_input_as_handled()
+			_select_ink_color(3)
 		elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
 			get_viewport().set_input_as_handled()
 			if _canvas.has_any_ink():
@@ -211,7 +227,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 # =============================================================================
-# UI CONSTRUCTION (Dark Warm Espresso + Antique Gold + Cream)
+# UI CONSTRUCTION (Dark Warm Espresso + Antique Gold + Fredoka)
 # =============================================================================
 
 func _build_ui() -> void:
@@ -249,7 +265,6 @@ func _build_ui() -> void:
 	header.add_theme_constant_override("separation", 16)
 	main_vbox.add_child(header)
 
-	# Left: Brahim portrait + Title/Subtitle
 	var title_box := HBoxContainer.new()
 	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_box.add_theme_constant_override("separation", 14)
@@ -279,19 +294,18 @@ func _build_ui() -> void:
 
 	_title_label = Label.new()
 	_title_label.text = "Anting-Anting Inscription"
-	_title_label.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_title_label.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	_title_label.add_theme_font_size_override("font_size", 28)
 	_title_label.add_theme_color_override("font_color", COL_CREAM)
 	titles_v.add_child(_title_label)
 
 	_subtitle_label = Label.new()
-	_subtitle_label.text = "Trace the dashed sigil carefully to empower Brahim's talisman."
-	_subtitle_label.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_subtitle_label.text = "Match each stroke's ink color and brush width to empower Brahim's talisman."
+	_subtitle_label.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
 	_subtitle_label.add_theme_font_size_override("font_size", 15)
 	_subtitle_label.add_theme_color_override("font_color", COL_MUTED)
 	titles_v.add_child(_subtitle_label)
 
-	# Center-Right: Stage stepper + Required accuracy pill
 	var meta_box := HBoxContainer.new()
 	meta_box.alignment = BoxContainer.ALIGNMENT_END
 	meta_box.add_theme_constant_override("separation", 12)
@@ -312,10 +326,10 @@ func _build_ui() -> void:
 	stage_h.add_child(_prev_stage_btn)
 
 	_stage_label = Label.new()
-	_stage_label.text = "Sigil 1 / 10"
-	_stage_label.custom_minimum_size = Vector2(94, 0)
+	_stage_label.text = "Sigil 1 / 20"
+	_stage_label.custom_minimum_size = Vector2(96, 0)
 	_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_stage_label.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_stage_label.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_stage_label.add_theme_font_size_override("font_size", 16)
 	_stage_label.add_theme_color_override("font_color", COL_CREAM)
 	stage_h.add_child(_stage_label)
@@ -331,13 +345,14 @@ func _build_ui() -> void:
 
 	_target_badge_label = Label.new()
 	_target_badge_label.text = "Target: 62%"
-	_target_badge_label.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_target_badge_label.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_target_badge_label.add_theme_font_size_override("font_size", 17)
 	_target_badge_label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62, 1.0))
 	target_pill.add_child(_target_badge_label)
 
-	# Close button (48x48, matching other overlays)
-	var close_btn := _make_lucide_button(ICON_CLOSE, "✕", Vector2(46, 46), "Close (Esc)")
+	# Standardized 48x48 coral-bordered espresso close button
+	var close_btn := Button.new()
+	Juice.style_close_button(close_btn)
 	close_btn.pressed.connect(func():
 		_close_minigame(false, {"level": _current_level, "accuracy": _best_accuracy_this_session, "cancelled": true})
 	)
@@ -363,7 +378,7 @@ func _build_ui() -> void:
 	_canvas.stroke_committed.connect(func(_c): Juice.play_sfx("interact", randf_range(0.96, 1.06), -8.0))
 	_stage_container.add_child(_canvas)
 
-	# --- BOTTOM DOCK (Streamlined StorefrontCanvasOverlay dock — NO stickers / NO uploads) ---
+	# --- BOTTOM DOCK ---
 	var dock_center := HBoxContainer.new()
 	dock_center.alignment = BoxContainer.ALIGNMENT_CENTER
 	dock_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -378,7 +393,7 @@ func _build_ui() -> void:
 	dock_row.add_theme_constant_override("separation", 14)
 	dock_panel.add_child(dock_row)
 
-	# 1) Ritual Ink Swatches
+	# 1) Ritual Ink Swatches (1..4)
 	var swatch_box := HBoxContainer.new()
 	swatch_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	swatch_box.add_theme_constant_override("separation", 8)
@@ -387,10 +402,10 @@ func _build_ui() -> void:
 	for i in range(INK_SWATCHES.size()):
 		var sw_info: Dictionary = INK_SWATCHES[i]
 		var sw_btn := Button.new()
-		sw_btn.custom_minimum_size = Vector2(34, 34)
+		sw_btn.custom_minimum_size = Vector2(36, 36)
 		sw_btn.focus_mode = Control.FOCUS_NONE
 		sw_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		sw_btn.tooltip_text = str(sw_info["name"])
+		sw_btn.tooltip_text = "%s [%d]" % [str(sw_info["name"]), i + 1]
 		sw_btn.pressed.connect(_select_ink_color.bind(i))
 		swatch_box.add_child(sw_btn)
 		_swatch_buttons.append(sw_btn)
@@ -421,9 +436,10 @@ func _build_ui() -> void:
 
 	var dot_labels: Array[String] = ["•", "●", "⬤", "⬤"]
 	var dot_fonts: Array[int] = [14, 18, 22, 27]
+	var size_names: Array[String] = ["Fine Brush", "Medium Brush", "Bold Brush", "Broad Brush"]
 	for i in range(4):
 		var sb := _make_icon_text_button(dot_labels[i], Vector2(38, 38), dot_fonts[i])
-		sb.tooltip_text = "Brush Size %d" % (i + 1)
+		sb.tooltip_text = size_names[i]
 		sb.pressed.connect(_select_size.bind(i))
 		size_box.add_child(sb)
 		_size_buttons.append(sb)
@@ -466,6 +482,7 @@ func _build_ui() -> void:
 		_inscribe_btn.icon = load(ICON_SPARKLES)
 		_inscribe_btn.expand_icon = false
 	Juice.style_primary_button(_inscribe_btn, Vector2(228, 46))
+	_inscribe_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_inscribe_btn.disabled = true
 	_inscribe_btn.pressed.connect(_on_inscribe_pressed)
 	dock_row.add_child(_inscribe_btn)
@@ -487,7 +504,7 @@ func _build_intro_modal() -> void:
 	_intro_overlay.add_child(center)
 
 	_intro_panel = PanelContainer.new()
-	_intro_panel.custom_minimum_size = Vector2(540, 0)
+	_intro_panel.custom_minimum_size = Vector2(560, 0)
 	_intro_panel.add_theme_stylebox_override("panel", _make_pill_style(COL_CARD_BG, COL_GOLD, 18, 30, 26))
 	center.add_child(_intro_panel)
 
@@ -499,16 +516,16 @@ func _build_intro_modal() -> void:
 	var h := Label.new()
 	h.text = "Brahim's Anting-Anting"
 	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	h.add_theme_font_override("font", UIStyle.FONT_INDER)
+	h.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	h.add_theme_font_size_override("font_size", 30)
 	h.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62, 1.0))
 	v.add_child(h)
 
 	var body := Label.new()
-	body.text = "Trace the dashed lines to inscribe the talisman.\nMatch your brush size to the line thickness and avoid stray marks."
+	body.text = "Trace each hollow brush guide to inscribe the talisman.\nMatch both the ink color ([1]–[4]) and brush thickness — overlapping strokes accept either color!"
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body.add_theme_font_override("font", UIStyle.FONT_INDER)
+	body.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
 	body.add_theme_font_size_override("font_size", 18)
 	body.add_theme_color_override("font_color", COL_CREAM)
 	v.add_child(body)
@@ -516,6 +533,7 @@ func _build_intro_modal() -> void:
 	var start_btn := Button.new()
 	start_btn.text = "Begin Inscription"
 	Juice.style_primary_button(start_btn, Vector2(220, 48))
+	start_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	start_btn.pressed.connect(_dismiss_intro)
 	v.add_child(start_btn)
 
@@ -533,7 +551,7 @@ func _build_result_modal() -> void:
 	_result_overlay.add_child(center)
 
 	_result_panel = PanelContainer.new()
-	_result_panel.custom_minimum_size = Vector2(540, 0)
+	_result_panel.custom_minimum_size = Vector2(560, 0)
 	_result_panel.add_theme_stylebox_override("panel", _make_pill_style(COL_CARD_BG, COL_GOLD, 18, 30, 26))
 	center.add_child(_result_panel)
 
@@ -544,23 +562,21 @@ func _build_result_modal() -> void:
 
 	_result_title = Label.new()
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_title.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_result_title.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	_result_title.add_theme_font_size_override("font_size", 32)
 	v.add_child(_result_title)
 
 	_result_score = Label.new()
 	_result_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_score.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_result_score.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_result_score.add_theme_font_size_override("font_size", 24)
 	_result_score.add_theme_color_override("font_color", COL_CREAM)
 	v.add_child(_result_score)
 
-	_result_breakdown = Label.new()
-	_result_breakdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_breakdown.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_breakdown.add_theme_font_size_override("font_size", 16)
-	_result_breakdown.add_theme_color_override("font_color", COL_MUTED)
-	v.add_child(_result_breakdown)
+	_result_stats_row = HBoxContainer.new()
+	_result_stats_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_result_stats_row.add_theme_constant_override("separation", 12)
+	v.add_child(_result_stats_row)
 
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -578,6 +594,7 @@ func _build_result_modal() -> void:
 	_result_done_btn = Button.new()
 	_result_done_btn.text = "Continue"
 	Juice.style_primary_button(_result_done_btn, Vector2(175, 46))
+	_result_done_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_result_done_btn.pressed.connect(func():
 		_close_minigame(bool(_last_result.get("won", false)), _last_result)
 	)
@@ -608,8 +625,10 @@ func _load_level(lvl: int) -> void:
 	var pat: Dictionary = _patterns[_current_level - 1]
 	_guide_polylines_norm = pat["strokes"]
 	_current_brush_size_index = clampi(int(pat.get("brush_size_index", 1)), 0, 3)
+	var first_col := _get_stroke_color_index(_guide_polylines_norm[0]) if not _guide_polylines_norm.is_empty() else 0
 	_select_size(_current_brush_size_index)
-	_rebuild_guide_mask(float(pat.get("grace_px", 6.0)))
+	_select_ink_color(first_col)
+	_rebuild_guide_mask(float(pat.get("grace_px", 6.5)))
 
 	_title_label.text = "%s — %s" % [str(pat["roman"]), str(pat["name"])]
 	_subtitle_label.text = str(pat["subtitle"])
@@ -638,20 +657,32 @@ func _get_stroke_size_index(stroke_entry) -> int:
 	return _current_brush_size_index
 
 
+func _get_stroke_color_index(stroke_entry) -> int:
+	if stroke_entry is Dictionary:
+		return clampi(int(stroke_entry.get("color", 0)), 0, INK_SWATCHES.size() - 1)
+	return 0
+
+
 func _rebuild_guide_mask(grace_px: float) -> void:
 	# Exact raster mask matching CANVAS_SIZE (560x750):
-	# 0 = outside line (stray ink), 1 = grace margin, 2 = core guide band
+	# _guide_mask: 0 = outside line, 1 = grace margin, 2 = core guide band
+	# _guide_color_bits: 4-bit bitmask of allowed ink color indices (overlapping strokes set multiple bits!)
 	var w := CANVAS_SIZE.x
 	var h := CANVAS_SIZE.y
 	_guide_mask = PackedByteArray()
 	_guide_mask.resize(w * h)
 	_guide_mask.fill(0)
+	_guide_color_bits = PackedByteArray()
+	_guide_color_bits.resize(w * h)
+	_guide_color_bits.fill(0)
 
 	for stroke_entry in _guide_polylines_norm:
 		var stroke := _get_stroke_pts(stroke_entry)
 		if stroke.size() < 2:
 			continue
 		var s_idx := _get_stroke_size_index(stroke_entry)
+		var c_idx := _get_stroke_color_index(stroke_entry)
+		var c_bit: int = 1 << c_idx
 		var brush_r := CanvasDrawSurface.BRUSH_SIZES[s_idx]
 		var core_r := maxf(3.0, brush_r * 0.78)
 		var allow_r := brush_r + grace_px
@@ -682,8 +713,11 @@ func _rebuild_guide_mask(grace_px: float) -> void:
 						var d_sq := dx * dx + dy_sq
 						if d_sq <= core_r_sq:
 							_guide_mask[row_off + px] = 2
-						elif d_sq <= allow_r_sq and _guide_mask[row_off + px] == 0:
-							_guide_mask[row_off + px] = 1
+							_guide_color_bits[row_off + px] = _guide_color_bits[row_off + px] | c_bit
+						elif d_sq <= allow_r_sq:
+							if _guide_mask[row_off + px] == 0:
+								_guide_mask[row_off + px] = 1
+							_guide_color_bits[row_off + px] = _guide_color_bits[row_off + px] | c_bit
 
 	_guide_core_pixels = 0
 	for i in range(_guide_mask.size()):
@@ -693,6 +727,7 @@ func _rebuild_guide_mask(grace_px: float) -> void:
 
 func _select_ink_color(idx: int) -> void:
 	idx = clampi(idx, 0, INK_SWATCHES.size() - 1)
+	_current_ink_index = idx
 	_canvas.brush_color = INK_SWATCHES[idx]["color"]
 	if _canvas.active_tool == CanvasDrawSurface.Tool.ERASER:
 		_select_tool(CanvasDrawSurface.Tool.BRUSH)
@@ -701,9 +736,9 @@ func _select_ink_color(idx: int) -> void:
 		var col: Color = INK_SWATCHES[i]["color"]
 		var st := StyleBoxFlat.new()
 		st.bg_color = col
-		st.set_corner_radius_all(17)
+		st.set_corner_radius_all(18)
 		if i == idx:
-			st.border_color = Color(1.0, 0.92, 0.65, 1.0)
+			st.border_color = Color(1.0, 0.94, 0.68, 1.0)
 			st.set_border_width_all(3)
 		else:
 			st.border_color = Color(0.86, 0.67, 0.32, 0.45)
@@ -738,36 +773,50 @@ func _on_stroke_updated() -> void:
 
 
 # =============================================================================
-# DASHED GUIDE RENDERER (Draws directly onto the weathered brownish-yellow talisman)
+# ROUNDED HOLLOW GUIDE RENDERER (Color-coded & brush-width matched, zero square caps!)
 # =============================================================================
 
 func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> void:
 	if _guide_polylines_norm.is_empty():
 		return
-	var dash_len := 11.0
-	var gap_len := 9.0
-	var cycle := dash_len + gap_len
 	var screen_scale := canvas_rect.size.x / maxf(1.0, float(CANVAS_SIZE.x))
-	var glow_col := Color(1.0, 0.94, 0.72, 0.30)
-	var core_col := Color(0.20, 0.11, 0.04, 0.78)
+	var bead_spacing := 16.0
 
 	for stroke_entry in _guide_polylines_norm:
 		var stroke := _get_stroke_pts(stroke_entry)
 		if stroke.size() < 2:
 			continue
 		var s_idx := _get_stroke_size_index(stroke_entry)
-		var brush_r := CanvasDrawSurface.BRUSH_SIZES[s_idx]
-		var glow_w := clampf(brush_r * 1.45 * screen_scale, 5.5, 22.0)
-		var core_w := clampf(brush_r * 0.42 * screen_scale, 2.2, 7.5)
-		var pts: Array[Vector2] = []
+		var c_idx := _get_stroke_color_index(stroke_entry)
+		var guide_col: Color = INK_SWATCHES[c_idx]["guide"]
+		var brush_r := CanvasDrawSurface.BRUSH_SIZES[s_idx] * screen_scale
+		var outer_w := clampf(brush_r * 1.92, 6.0, 34.0)
+		var inner_w := maxf(2.0, outer_w - 4.2)
+
+		var pts := PackedVector2Array()
 		for norm_pt in stroke:
 			pts.append(Vector2(
 				canvas_rect.position.x + norm_pt.x * canvas_rect.size.x,
 				canvas_rect.position.y + norm_pt.y * canvas_rect.size.y
 			))
 
-		# Walk polyline and draw crisp dual-layer dashes
-		var dist_acc := -fmod(_dash_phase, cycle)
+		# 1. Soft rounded outer brush band (rounded circles at every vertex/endpoint eliminate square corners!)
+		var rim_col := Color(guide_col.r, guide_col.g, guide_col.b, 0.36)
+		surface.draw_polyline(pts, rim_col, outer_w, true)
+		for pt in pts:
+			surface.draw_circle(pt, outer_w * 0.5, rim_col)
+
+		# 2. Bright hollow interior wash so the exact brush diameter reads clearly as a rounded hollow tube
+		var hollow_col := Color(0.96, 0.90, 0.74, 0.34)
+		surface.draw_polyline(pts, hollow_col, inner_w, true)
+		for pt in pts:
+			surface.draw_circle(pt, inner_w * 0.5, hollow_col)
+
+		# 3. Gliding rounded bead dots along the centerline in the stroke's ink color (never square dashes!)
+		var bead_r := clampf(brush_r * 0.28, 2.0, 5.2)
+		var bead_col := Color(guide_col.r, guide_col.g, guide_col.b, 0.86)
+		var bead_halo := Color(1.0, 0.96, 0.84, 0.48)
+		var dist_acc := -fmod(_dash_phase, bead_spacing)
 		for i in range(pts.size() - 1):
 			var a := pts[i]
 			var b := pts[i + 1]
@@ -775,30 +824,23 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 			if seg_len < 0.01:
 				continue
 			var dir := (b - a) / seg_len
-			var pos := 0.0
-			var safety := 0
-			while pos < seg_len and safety < 512:
-				safety += 1
-				var in_cycle := fposmod(dist_acc + pos, cycle)
-				if in_cycle < dash_len:
-					var draw_len := minf(dash_len - in_cycle, seg_len - pos)
-					var p0 := a + dir * pos
-					var p1 := a + dir * (pos + draw_len)
-					surface.draw_line(p0, p1, glow_col, glow_w, true)
-					surface.draw_line(p0, p1, core_col, core_w, true)
-					pos += maxf(0.5, draw_len)
-				else:
-					var skip_len := minf(cycle - in_cycle, seg_len - pos)
-					pos += maxf(0.5, skip_len)
+			var pos := fposmod(-dist_acc, bead_spacing)
+			while pos <= seg_len:
+				var bp := a + dir * pos
+				surface.draw_circle(bp, bead_r + 1.4, bead_halo)
+				surface.draw_circle(bp, bead_r, bead_col)
+				pos += bead_spacing
 			dist_acc += seg_len
 
-		# Subtle warm gold anchor dot at the start of each stroke
-		surface.draw_circle(pts[0], 5.2, Color(1.0, 0.90, 0.58, 0.55))
-		surface.draw_circle(pts[0], 2.6, Color(0.24, 0.13, 0.05, 0.85))
+		# 4. Crisp color-coded start anchor ring at pts[0]
+		var start_r := clampf(brush_r * 0.62, 5.5, 11.0)
+		surface.draw_circle(pts[0], start_r + 1.5, Color(1.0, 0.95, 0.80, 0.75))
+		surface.draw_circle(pts[0], start_r, Color(guide_col.r, guide_col.g, guide_col.b, 0.92))
+		surface.draw_circle(pts[0], start_r * 0.42, Color(1.0, 0.97, 0.88, 0.92))
 
 
 # =============================================================================
-# ACCURACY EVALUATION ENGINE (Coverage + Precision)
+# ACCURACY EVALUATION ENGINE (Coverage + Overlap-Safe Color Match + Precision)
 # =============================================================================
 
 func _on_inscribe_pressed() -> void:
@@ -811,6 +853,7 @@ func _on_inscribe_pressed() -> void:
 	var eval := _evaluate_tracing()
 	var accuracy_pct: int = int(eval["accuracy"])
 	var coverage_pct: int = int(eval["coverage"])
+	var color_pct: int = int(eval["color_match"])
 	var precision_pct: int = int(eval["precision"])
 	var stray_pct: int = int(eval["stray"])
 	var target_pct: int = int(pat["required_accuracy"])
@@ -818,7 +861,6 @@ func _on_inscribe_pressed() -> void:
 
 	_best_accuracy_this_session = maxi(_best_accuracy_this_session, accuracy_pct)
 
-	# Persist Brahim's next unlocked talisman level on success
 	if won and is_instance_valid(StoryManager) and StoryManager.has_method("set_world_flag"):
 		var cur_saved := int(StoryManager.get_world_flag("brahim_talisman_level", 1))
 		if _current_level >= cur_saved and _current_level < _patterns.size():
@@ -829,13 +871,13 @@ func _on_inscribe_pressed() -> void:
 		"talisman_name": str(pat["name"]),
 		"accuracy": accuracy_pct,
 		"coverage": coverage_pct,
+		"color_match": color_pct,
 		"precision": precision_pct,
 		"stray": stray_pct,
 		"target": target_pct,
 		"won": won,
 	}
 
-	# Visual & audio celebration or shake feedback
 	var burst_origin := _stage_container.global_position + _stage_container.size * 0.5
 	if won:
 		Juice.play_win_fanfare(self)
@@ -844,56 +886,81 @@ func _on_inscribe_pressed() -> void:
 		Juice.play_lose_sting(self)
 		Juice.shake_control(_stage_container, 9.0, 0.25)
 
-	_show_result_modal(won, pat, accuracy_pct, coverage_pct, precision_pct, stray_pct, target_pct)
+	_show_result_modal(won, pat, accuracy_pct, coverage_pct, color_pct, precision_pct, target_pct)
 	_is_evaluating = false
+
+
+func _nearest_swatch_index(r: float, g: float, b: float) -> int:
+	var best_idx := 0
+	var best_d := 999.0
+	for i in range(INK_SWATCHES.size()):
+		var c: Color = INK_SWATCHES[i]["color"]
+		var dr := r - c.r
+		var dg := g - c.g
+		var db := b - c.b
+		var d := dr * dr + dg * dg + db * db
+		if d < best_d:
+			best_d = d
+			best_idx = i
+	return best_idx
 
 
 func _evaluate_tracing() -> Dictionary:
 	var img := _canvas.get_raw_paint_image()
 	if img == null or _guide_mask.is_empty() or _guide_core_pixels <= 0:
-		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
+		return {"accuracy": 0, "coverage": 0, "color_match": 0, "precision": 0, "stray": 0}
 
 	var bytes := img.get_data()
 	var pixel_count := _guide_mask.size()
 	if bytes.size() < pixel_count * 4:
-		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
+		return {"accuracy": 0, "coverage": 0, "color_match": 0, "precision": 0, "stray": 0}
 
 	var covered_core := 0
+	var color_matched_core := 0
 	var total_ink := 0
 	var on_path_ink := 0
 
-	# Exact pixel-by-pixel comparison against the pre-rasterized guide mask
 	for i in range(pixel_count):
-		var inked := bytes[i * 4 + 3] > 35
+		var a_byte := bytes[i * 4 + 3]
+		if a_byte <= 35:
+			continue
+		total_ink += 1
 		var m := _guide_mask[i]
-		if inked:
-			total_ink += 1
-			if m >= 1:
-				on_path_ink += 1
-			if m == 2:
-				covered_core += 1
+		if m >= 1:
+			on_path_ink += 1
+		if m == 2:
+			covered_core += 1
+			var r := float(bytes[i * 4]) / 255.0
+			var g := float(bytes[i * 4 + 1]) / 255.0
+			var b := float(bytes[i * 4 + 2]) / 255.0
+			var sw_idx := _nearest_swatch_index(r, g, b)
+			if (_guide_color_bits[i] & (1 << sw_idx)) != 0:
+				color_matched_core += 1
 
 	if total_ink < 24:
-		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
+		return {"accuracy": 0, "coverage": 0, "color_match": 0, "precision": 0, "stray": 0}
 
 	var coverage := clampf(float(covered_core) / float(_guide_core_pixels), 0.0, 1.0)
+	var color_ratio := clampf(float(color_matched_core) / float(maxi(1, covered_core)), 0.0, 1.0)
 	var precision := clampf(float(on_path_ink) / float(total_ink), 0.0, 1.0)
 	var stray_ratio := clampf(1.0 - precision, 0.0, 1.0)
 
-	# Harmonic mean (F1) of exact coverage & precision, minus explicit penalty for stray ink outside the band
-	var f1 := (2.0 * coverage * precision) / maxf(0.0001, coverage + precision)
-	var stray_penalty := maxf(0.0, stray_ratio - 0.04) * 0.45
+	# Color-weighted effective coverage: right color = 100% credit, wrong color = 35% credit
+	var eff_coverage := coverage * (0.35 + 0.65 * color_ratio)
+	var f1 := (2.0 * eff_coverage * precision) / maxf(0.0001, eff_coverage + precision)
+	var stray_penalty := maxf(0.0, stray_ratio - 0.04) * 0.42
 	var combined := clampf(f1 - stray_penalty, 0.0, 1.0)
 
 	return {
 		"accuracy": int(roundf(combined * 100.0)),
 		"coverage": int(roundf(coverage * 100.0)),
+		"color_match": int(roundf(color_ratio * 100.0)),
 		"precision": int(roundf(precision * 100.0)),
 		"stray": int(roundf(stray_ratio * 100.0)),
 	}
 
 
-func _show_result_modal(won: bool, _pat: Dictionary, acc: int, cov: int, prec: int, stray: int, target: int) -> void:
+func _show_result_modal(won: bool, _pat: Dictionary, acc: int, cov: int, col_pct: int, prec: int, target: int) -> void:
 	if won:
 		_result_title.text = "Anting-Anting Empowered!"
 		_result_title.add_theme_color_override("font_color", COL_SUCCESS)
@@ -904,7 +971,12 @@ func _show_result_modal(won: bool, _pat: Dictionary, acc: int, cov: int, prec: i
 		_result_retry_btn.visible = true
 
 	_result_score.text = "Accuracy: %d%%  (Target: %d%%)" % [acc, target]
-	_result_breakdown.text = "Coverage: %d%%   •   Precision: %d%%   •   Stray Ink: %d%%" % [cov, prec, stray]
+	for ch in _result_stats_row.get_children():
+		_result_stats_row.remove_child(ch)
+		ch.queue_free()
+	_result_stats_row.add_child(Juice.make_stat_chip("Coverage", "%d%%" % cov, Juice.COL_SUCCESS if cov >= 70 else Juice.COL_CREAM))
+	_result_stats_row.add_child(Juice.make_stat_chip("Color Match", "%d%%" % col_pct, Juice.COL_GOLD_BRIGHT if col_pct >= 75 else Juice.COL_DANGER))
+	_result_stats_row.add_child(Juice.make_stat_chip("Precision", "%d%%" % prec, Juice.COL_CREAM))
 
 	_result_overlay.visible = true
 	call_deferred("_pop_result_deferred")
@@ -916,11 +988,10 @@ func _pop_result_deferred() -> void:
 
 
 # =============================================================================
-# 10 PROGRESSIVE ANTING-ANTING TALISMAN PATTERNS (All strictly inside safe face)
+# 20 PROGRESSIVE MULTI-COLOR & MULTI-SIZE TALISMAN PUZZLES (English / Taglish)
 # =============================================================================
 
 func _pt(nx: float, ny: float) -> Vector2:
-	# Maps local [-1, 1] x [-1, 1] into safe drawable area of talisman.png
 	return Vector2(SAFE_CENTER.x + nx * SAFE_RX, SAFE_CENTER.y + ny * SAFE_RY)
 
 
@@ -946,187 +1017,351 @@ func _poly_pts(verts: Array[Vector2], closed: bool = true) -> Array:
 	return out
 
 
-func _st(pts: Array, size_idx: int) -> Dictionary:
-	return {"pts": pts, "size": size_idx}
+func _st(pts: Array, size_idx: int, color_idx: int = INK_CHARCOAL) -> Dictionary:
+	return {"pts": pts, "size": size_idx, "color": color_idx}
 
 
 func _build_talisman_patterns() -> Array[Dictionary]:
 	var sets: Array[Dictionary] = []
 
-	# 1. Krus ng Simula — Novice Ward (Bold brush, 62% target)
+	# 1. First Ward (Bold Charcoal + Medium Crimson)
 	sets.append({
 		"roman": "I",
-		"name": "Krus ng Simula",
-		"subtitle": "Novice Ward • Bold brush • Steady cross & center diamond.",
-		"required_accuracy": 62,
+		"name": "First Ward",
+		"subtitle": "Bold Charcoal pillar & Medium Crimson crossbar.",
+		"required_accuracy": 60,
 		"brush_size_index": 2,
 		"grace_px": 8.0,
 		"strokes": [
-			[_pt(0.0, -0.78), _pt(0.0, 0.78)],
-			[_pt(-0.62, -0.10), _pt(0.62, -0.10)],
-			_poly_pts([Vector2(0.0, -0.34), Vector2(0.24, -0.10), Vector2(0.0, 0.14), Vector2(-0.24, -0.10)], true),
+			_st([_pt(0.0, -0.76), _pt(0.0, 0.76)], 2, INK_CHARCOAL),
+			_st([_pt(-0.62, -0.10), _pt(0.62, -0.10)], 1, INK_CRIMSON),
 		],
 	})
 
-	# 2. Buwan ni Mayari — Lunar Charm (Bold brush, 65% target)
+	# 2. Moonlit Crescent (Bold Indigo crescent + Fine Gold star)
 	sets.append({
 		"roman": "II",
-		"name": "Buwan ni Mayari",
-		"subtitle": "Lunar Charm • Bold brush • Crescent curve with guiding star.",
-		"required_accuracy": 65,
+		"name": "Moonlit Crescent",
+		"subtitle": "Bold Indigo crescent with a Fine Sacred Gold star.",
+		"required_accuracy": 62,
 		"brush_size_index": 2,
 		"grace_px": 7.5,
 		"strokes": [
-			_arc_pts(0.08, 0.0, 0.62, 0.68, deg_to_rad(52.0), deg_to_rad(308.0), 28),
-			_arc_pts(0.24, 0.0, 0.44, 0.54, deg_to_rad(68.0), deg_to_rad(292.0), 24),
-			[_pt(0.32, -0.18), _pt(0.32, 0.18)],
-			[_pt(0.14, 0.0), _pt(0.50, 0.0)],
+			_st(_arc_pts(0.08, 0.0, 0.62, 0.68, deg_to_rad(52.0), deg_to_rad(308.0), 28), 2, INK_INDIGO),
+			_st(_arc_pts(0.24, 0.0, 0.44, 0.54, deg_to_rad(68.0), deg_to_rad(292.0), 24), 1, INK_INDIGO),
+			_st([_pt(0.32, -0.20), _pt(0.32, 0.20)], 0, INK_GOLD),
+			_st([_pt(0.12, 0.0), _pt(0.52, 0.0)], 0, INK_GOLD),
 		],
 	})
 
-	# 3. Mata ng Bantay — Watcher's Eye (Medium eye + Fine lashes, 68% target)
+	# 3. Morning Sun (Bold Gold core + Medium Crimson cardinal rays)
 	sets.append({
 		"roman": "III",
-		"name": "Mata ng Bantay",
-		"subtitle": "Watcher's Eye • Medium & fine brushes • Protective almond eye.",
-		"required_accuracy": 68,
+		"name": "Morning Sun",
+		"subtitle": "Bold Sacred Gold sun & Medium Crimson rays.",
+		"required_accuracy": 63,
+		"brush_size_index": 2,
+		"grace_px": 7.5,
+		"strokes": [
+			_st(_circle_pts(0.0, 0.0, 0.34, 0.32, 28), 2, INK_GOLD),
+			_st([_pt(0.0, -0.44), _pt(0.0, -0.78)], 1, INK_CRIMSON),
+			_st([_pt(0.0, 0.44), _pt(0.0, 0.78)], 1, INK_CRIMSON),
+			_st([_pt(-0.44, 0.0), _pt(-0.76, 0.0)], 1, INK_CRIMSON),
+			_st([_pt(0.44, 0.0), _pt(0.76, 0.0)], 1, INK_CRIMSON),
+		],
+	})
+
+	# 4. Watcher's Eye (Medium Indigo almond + Bold Charcoal iris + Fine Gold lashes)
+	sets.append({
+		"roman": "IV",
+		"name": "Watcher's Eye",
+		"subtitle": "Medium Indigo eye, Bold Charcoal iris & Fine Gold lashes.",
+		"required_accuracy": 65,
 		"brush_size_index": 1,
 		"grace_px": 7.0,
 		"strokes": [
-			_st(_arc_pts(0.0, 0.28, 0.78, 0.62, deg_to_rad(212.0), deg_to_rad(328.0), 24), 1),
-			_st(_arc_pts(0.0, -0.28, 0.78, 0.62, deg_to_rad(32.0), deg_to_rad(148.0), 24), 1),
-			_st(_circle_pts(0.0, 0.0, 0.24, 0.23, 24), 1),
-			_st([_pt(0.0, -0.62), _pt(0.0, -0.40)], 0),
-			_st([_pt(0.0, 0.40), _pt(0.0, 0.62)], 0),
+			_st(_arc_pts(0.0, 0.28, 0.78, 0.62, deg_to_rad(212.0), deg_to_rad(328.0), 24), 1, INK_INDIGO),
+			_st(_arc_pts(0.0, -0.28, 0.78, 0.62, deg_to_rad(32.0), deg_to_rad(148.0), 24), 1, INK_INDIGO),
+			_st(_circle_pts(0.0, 0.0, 0.22, 0.22, 24), 2, INK_CHARCOAL),
+			_st([_pt(0.0, -0.64), _pt(0.0, -0.40)], 0, INK_GOLD),
+			_st([_pt(0.0, 0.40), _pt(0.0, 0.64)], 0, INK_GOLD),
 		],
 	})
 
-	# 4. Tala ng Gabay — Guiding Star (Medium star + Fine inner ring, 70% target)
-	sets.append({
-		"roman": "IV",
-		"name": "Tala ng Gabay",
-		"subtitle": "Guiding Star • Medium & fine brushes • Four-pointed star & inner ring.",
-		"required_accuracy": 70,
-		"brush_size_index": 1,
-		"grace_px": 6.5,
-		"strokes": [
-			_st(_poly_pts([
-				Vector2(0.0, -0.82), Vector2(0.18, -0.18),
-				Vector2(0.76, 0.0), Vector2(0.18, 0.18),
-				Vector2(0.0, 0.82), Vector2(-0.18, 0.18),
-				Vector2(-0.76, 0.0), Vector2(-0.18, -0.18),
-			], true), 1),
-			_st(_circle_pts(0.0, 0.0, 0.34, 0.32, 28), 0),
-		],
-	})
-
-	# 5. Tatsulok ng Lunas — Healing Triad (Bold triangle + Medium ring & bar, 72% target)
+	# 5. Healing Triad (Bold Crimson triangle + Medium Gold ring + Fine Charcoal spark)
 	sets.append({
 		"roman": "V",
-		"name": "Tatsulok ng Lunas",
-		"subtitle": "Healing Triad • Bold & medium brushes • Sacred triangle & inner ring.",
-		"required_accuracy": 72,
+		"name": "Healing Triad",
+		"subtitle": "Bold Crimson triangle, Medium Gold ring & Fine Charcoal bar.",
+		"required_accuracy": 66,
 		"brush_size_index": 2,
-		"grace_px": 6.5,
+		"grace_px": 7.0,
 		"strokes": [
-			_st(_poly_pts([Vector2(0.0, -0.78), Vector2(0.74, 0.52), Vector2(-0.74, 0.52)], true), 2),
-			_st(_circle_pts(0.0, 0.08, 0.24, 0.23, 24), 1),
-			_st([_pt(-0.56, 0.74), _pt(0.56, 0.74)], 1),
-			_st([_pt(0.0, -0.44), _pt(0.0, -0.16)], 0),
+			_st(_poly_pts([Vector2(0.0, -0.76), Vector2(0.72, 0.50), Vector2(-0.72, 0.50)], true), 2, INK_CRIMSON),
+			_st(_circle_pts(0.0, 0.08, 0.24, 0.23, 24), 1, INK_GOLD),
+			_st([_pt(-0.54, 0.74), _pt(0.54, 0.74)], 0, INK_CHARCOAL),
 		],
 	})
 
-	# 6. Sinag ng Araw — Sunburst Sigil (Bold core + Medium/Fine alternating rays, 75% target)
-	var sun_strokes: Array = [_st(_circle_pts(0.0, 0.0, 0.34, 0.32, 28), 2)]
-	for i in range(8):
-		var ang := float(i) * (TAU / 8.0)
-		var r_in := 0.44
-		var r_out := 0.78 if i % 2 == 0 else 0.66
-		sun_strokes.append(_st([
-			_pt(cos(ang) * r_in, sin(ang) * r_in),
-			_pt(cos(ang) * r_out, sin(ang) * r_out),
-		], 1 if i % 2 == 0 else 0))
+	# 6. Talisman Cross (Bold Charcoal cross + Medium Gold diamond + Fine Crimson accents)
 	sets.append({
 		"roman": "VI",
-		"name": "Sinag ng Araw",
-		"subtitle": "Sunburst Sigil • Bold, medium & fine brushes • Solar core & eight rays.",
-		"required_accuracy": 75,
+		"name": "Talisman Cross",
+		"subtitle": "Bold Charcoal cross, Medium Gold diamond & Fine Crimson tips.",
+		"required_accuracy": 68,
 		"brush_size_index": 2,
-		"grace_px": 6.0,
-		"strokes": sun_strokes,
+		"grace_px": 6.8,
+		"strokes": [
+			_st([_pt(0.0, -0.76), _pt(0.0, 0.76)], 2, INK_CHARCOAL),
+			_st([_pt(-0.60, -0.10), _pt(0.60, -0.10)], 2, INK_CHARCOAL),
+			_st(_poly_pts([Vector2(0.0, -0.36), Vector2(0.26, -0.10), Vector2(0.0, 0.16), Vector2(-0.26, -0.10)], true), 1, INK_GOLD),
+			_st([_pt(-0.16, -0.76), _pt(0.16, -0.76)], 0, INK_CRIMSON),
+			_st([_pt(-0.16, 0.76), _pt(0.16, 0.76)], 0, INK_CRIMSON),
+		],
 	})
 
-	# 7. Kalasag ng Hangin — Wind Shield (Bold crest + Medium chevron + Fine spirals, 77% target)
+	# 7. Suki's Lantern (Medium Crimson diamond lantern + Bold Gold flame + Fine Indigo tassel)
 	sets.append({
 		"roman": "VII",
-		"name": "Kalasag ng Hangin",
-		"subtitle": "Wind Shield • Bold, medium & fine brushes • Crest, chevron & spirals.",
+		"name": "Suki's Lantern",
+		"subtitle": "Medium Crimson lantern, Bold Gold core & Fine Indigo tassel.",
+		"required_accuracy": 69,
+		"brush_size_index": 1,
+		"grace_px": 6.5,
+		"strokes": [
+			_st(_poly_pts([Vector2(0.0, -0.68), Vector2(0.54, -0.08), Vector2(0.0, 0.44), Vector2(-0.54, -0.08)], true), 1, INK_CRIMSON),
+			_st(_circle_pts(0.0, -0.10, 0.18, 0.18, 20), 2, INK_GOLD),
+			_st([_pt(0.0, 0.44), _pt(0.0, 0.80)], 0, INK_INDIGO),
+			_st([_pt(-0.24, -0.78), _pt(0.24, -0.78)], 1, INK_CHARCOAL),
+		],
+	})
+
+	# 8. Sari-Sari Bell (Bold Gold dome + Medium Crimson rim + Fine Charcoal clapper)
+	sets.append({
+		"roman": "VIII",
+		"name": "Sari-Sari Bell",
+		"subtitle": "Bold Gold bell dome, Medium Crimson rim & Fine Charcoal clapper.",
+		"required_accuracy": 70,
+		"brush_size_index": 2,
+		"grace_px": 6.5,
+		"strokes": [
+			_st(_arc_pts(0.0, 0.18, 0.56, 0.72, deg_to_rad(180.0), deg_to_rad(360.0), 26), 2, INK_GOLD),
+			_st([_pt(-0.68, 0.24), _pt(0.68, 0.24)], 1, INK_CRIMSON),
+			_st(_circle_pts(0.0, 0.48, 0.14, 0.14, 18), 0, INK_CHARCOAL),
+			_st([_pt(0.0, -0.72), _pt(0.0, -0.54)], 1, INK_CHARCOAL),
+		],
+	})
+
+	# 9. Twin Waves (Bold Indigo waves + Medium Gold horizon + Fine Crimson sun)
+	sets.append({
+		"roman": "IX",
+		"name": "Twin Waves",
+		"subtitle": "Bold Indigo sea arcs, Medium Gold horizon & Fine Crimson sun.",
+		"required_accuracy": 71,
+		"brush_size_index": 2,
+		"grace_px": 6.5,
+		"strokes": [
+			_st(_arc_pts(-0.34, 0.36, 0.36, 0.24, deg_to_rad(180.0), deg_to_rad(360.0), 18), 2, INK_INDIGO),
+			_st(_arc_pts(0.34, 0.36, 0.36, 0.24, deg_to_rad(0.0), deg_to_rad(180.0), 18), 2, INK_INDIGO),
+			_st([_pt(-0.70, 0.04), _pt(0.70, 0.04)], 1, INK_GOLD),
+			_st(_arc_pts(0.0, 0.02, 0.38, 0.36, deg_to_rad(180.0), deg_to_rad(360.0), 22), 0, INK_CRIMSON),
+		],
+	})
+
+	# 10. Wind Shield (Bold Charcoal crest + Medium Indigo chevron + Fine Gold curls)
+	sets.append({
+		"roman": "X",
+		"name": "Wind Shield",
+		"subtitle": "Bold Charcoal crest, Medium Indigo chevron & Fine Gold curls.",
+		"required_accuracy": 72,
+		"brush_size_index": 2,
+		"grace_px": 6.2,
+		"strokes": [
+			_st(_poly_pts([
+				Vector2(-0.66, -0.66), Vector2(0.66, -0.66),
+				Vector2(0.66, 0.08), Vector2(0.0, 0.80),
+				Vector2(-0.66, 0.08),
+			], true), 2, INK_CHARCOAL),
+			_st([_pt(-0.42, -0.16), _pt(0.0, 0.26), _pt(0.42, -0.16)], 1, INK_INDIGO),
+			_st(_arc_pts(-0.32, -0.44, 0.16, 0.14, deg_to_rad(180.0), deg_to_rad(420.0), 14), 0, INK_GOLD),
+			_st(_arc_pts(0.32, -0.44, 0.16, 0.14, deg_to_rad(120.0), deg_to_rad(360.0), 14), 0, INK_GOLD),
+		],
+	})
+
+	# 11. Guiding Compass (Medium Gold 4-point star + Bold Indigo ring + Fine Crimson ticks)
+	sets.append({
+		"roman": "XI",
+		"name": "Guiding Compass",
+		"subtitle": "Bold Indigo ring, Medium Gold star & Fine Crimson ticks.",
+		"required_accuracy": 73,
+		"brush_size_index": 1,
+		"grace_px": 6.0,
+		"strokes": [
+			_st(_circle_pts(0.0, 0.0, 0.42, 0.40, 28), 2, INK_INDIGO),
+			_st(_poly_pts([
+				Vector2(0.0, -0.80), Vector2(0.16, -0.16),
+				Vector2(0.74, 0.0), Vector2(0.16, 0.16),
+				Vector2(0.0, 0.80), Vector2(-0.16, 0.16),
+				Vector2(-0.74, 0.0), Vector2(-0.16, -0.16),
+			], true), 1, INK_GOLD),
+			_st([_pt(-0.56, -0.56), _pt(-0.36, -0.36)], 0, INK_CRIMSON),
+			_st([_pt(0.56, -0.56), _pt(0.36, -0.36)], 0, INK_CRIMSON),
+		],
+	})
+
+	# 12. Agimat Hourglass (Bold Charcoal glass + Medium Gold core + Fine Crimson caps)
+	sets.append({
+		"roman": "XII",
+		"name": "Agimat Hourglass",
+		"subtitle": "Bold Charcoal hourglass, Medium Gold core & Fine Crimson caps.",
+		"required_accuracy": 74,
+		"brush_size_index": 2,
+		"grace_px": 6.0,
+		"strokes": [
+			_st(_poly_pts([Vector2(-0.58, -0.68), Vector2(0.58, -0.68), Vector2(-0.58, 0.68), Vector2(0.58, 0.68)], true), 2, INK_CHARCOAL),
+			_st(_circle_pts(0.0, 0.0, 0.18, 0.18, 20), 1, INK_GOLD),
+			_st([_pt(-0.68, -0.80), _pt(0.68, -0.80)], 0, INK_CRIMSON),
+			_st([_pt(-0.68, 0.80), _pt(0.68, 0.80)], 0, INK_CRIMSON),
+		],
+	})
+
+	# 13. Balete Roots (Bold Charcoal trunk + Medium Indigo canopy + Fine Gold roots & moon)
+	sets.append({
+		"roman": "XIII",
+		"name": "Balete Roots",
+		"subtitle": "Bold Charcoal trunk, Medium Indigo canopy & Fine Gold roots.",
+		"required_accuracy": 75,
+		"brush_size_index": 2,
+		"grace_px": 5.8,
+		"strokes": [
+			_st([_pt(0.0, -0.22), _pt(0.0, 0.42)], 2, INK_CHARCOAL),
+			_st(_arc_pts(0.0, -0.26, 0.62, 0.44, deg_to_rad(180.0), deg_to_rad(360.0), 24), 1, INK_INDIGO),
+			_st([_pt(0.0, 0.42), _pt(-0.56, 0.76)], 0, INK_GOLD),
+			_st([_pt(0.0, 0.42), _pt(0.56, 0.76)], 0, INK_GOLD),
+			_st([_pt(0.0, 0.42), _pt(0.0, 0.80)], 0, INK_GOLD),
+			_st(_circle_pts(0.0, -0.44, 0.14, 0.14, 18), 0, INK_CRIMSON),
+		],
+	})
+
+	# 14. Flame of Biringan (Bold Crimson outer flame + Medium Gold inner flame + Fine Indigo ring)
+	sets.append({
+		"roman": "XIV",
+		"name": "Flame of Biringan",
+		"subtitle": "Bold Crimson flame, Medium Gold heart & Fine Indigo base.",
+		"required_accuracy": 76,
+		"brush_size_index": 2,
+		"grace_px": 5.8,
+		"strokes": [
+			_st(_poly_pts([Vector2(0.0, -0.82), Vector2(0.58, 0.12), Vector2(0.32, 0.56), Vector2(-0.32, 0.56), Vector2(-0.58, 0.12)], true), 2, INK_CRIMSON),
+			_st(_poly_pts([Vector2(0.0, -0.42), Vector2(0.28, 0.18), Vector2(0.0, 0.44), Vector2(-0.28, 0.18)], true), 1, INK_GOLD),
+			_st([_pt(-0.56, 0.76), _pt(0.56, 0.76)], 0, INK_INDIGO),
+		],
+	})
+
+	# 15. Interlaced Star (Medium Indigo ring + Fine Crimson up-tri + Fine Gold down-tri)
+	sets.append({
+		"roman": "XV",
+		"name": "Interlaced Star",
+		"subtitle": "Medium Indigo ring with Crimson & Sacred Gold interlaced triangles.",
 		"required_accuracy": 77,
+		"brush_size_index": 1,
+		"grace_px": 5.5,
+		"strokes": [
+			_st(_circle_pts(0.0, 0.0, 0.74, 0.70, 36), 1, INK_INDIGO),
+			_st(_poly_pts([Vector2(0.0, -0.64), Vector2(0.58, 0.34), Vector2(-0.58, 0.34)], true), 0, INK_CRIMSON),
+			_st(_poly_pts([Vector2(0.0, 0.64), Vector2(0.58, -0.34), Vector2(-0.58, -0.34)], true), 0, INK_GOLD),
+		],
+	})
+
+	# 16. Crown of Mayari (Bold Gold crescent + Medium Indigo halo + Fine Crimson jewels)
+	sets.append({
+		"roman": "XVI",
+		"name": "Crown of Mayari",
+		"subtitle": "Bold Gold crown, Medium Indigo halo & Fine Crimson jewels.",
+		"required_accuracy": 78,
 		"brush_size_index": 2,
 		"grace_px": 5.5,
 		"strokes": [
 			_st(_poly_pts([
-				Vector2(-0.68, -0.68), Vector2(0.68, -0.68),
-				Vector2(0.68, 0.08), Vector2(0.0, 0.82),
-				Vector2(-0.68, 0.08),
-			], true), 2),
-			_st([_pt(-0.42, -0.18), _pt(0.0, 0.24), _pt(0.42, -0.18)], 1),
-			_st([_pt(0.0, -0.54), _pt(0.0, 0.56)], 1),
-			_st(_arc_pts(-0.34, -0.44, 0.16, 0.14, deg_to_rad(180.0), deg_to_rad(420.0), 14), 0),
-			_st(_arc_pts(0.34, -0.44, 0.16, 0.14, deg_to_rad(120.0), deg_to_rad(360.0), 14), 0),
+				Vector2(-0.64, 0.38), Vector2(-0.64, -0.26), Vector2(-0.28, 0.08),
+				Vector2(0.0, -0.44), Vector2(0.28, 0.08), Vector2(0.64, -0.26), Vector2(0.64, 0.38),
+			], true), 2, INK_GOLD),
+			_st(_arc_pts(0.0, -0.20, 0.52, 0.48, deg_to_rad(195.0), deg_to_rad(345.0), 22), 1, INK_INDIGO),
+			_st([_pt(-0.56, 0.62), _pt(0.56, 0.62)], 0, INK_CRIMSON),
+			_st(_circle_pts(0.0, -0.64, 0.11, 0.11, 16), 0, INK_CRIMSON),
 		],
 	})
 
-	# 8. Selyo ng Bituin — Hexagram Ward (Medium ring + Fine interlaced triangles, 80% target)
+	# 17. Orasyon Scales (Bold Charcoal beam + Medium Gold pans + Fine Indigo ring)
 	sets.append({
-		"roman": "VIII",
-		"name": "Selyo ng Bituin",
-		"subtitle": "Interlaced Star Seal • Medium & fine brushes • Sacred ring & twin triangles.",
-		"required_accuracy": 80,
-		"brush_size_index": 1,
+		"roman": "XVII",
+		"name": "Orasyon Scales",
+		"subtitle": "Bold Charcoal beam, Medium Gold pans & Fine Indigo fulcrum.",
+		"required_accuracy": 79,
+		"brush_size_index": 2,
 		"grace_px": 5.5,
 		"strokes": [
-			_st(_circle_pts(0.0, 0.0, 0.74, 0.70, 36), 1),
-			_st(_poly_pts([Vector2(0.0, -0.64), Vector2(0.58, 0.34), Vector2(-0.58, 0.34)], true), 0),
-			_st(_poly_pts([Vector2(0.0, 0.64), Vector2(0.58, -0.34), Vector2(-0.58, -0.34)], true), 0),
+			_st([_pt(0.0, -0.66), _pt(0.0, 0.68)], 2, INK_CHARCOAL),
+			_st([_pt(-0.68, -0.28), _pt(0.68, -0.28)], 2, INK_CHARCOAL),
+			_st(_arc_pts(-0.56, 0.14, 0.22, 0.18, deg_to_rad(0.0), deg_to_rad(180.0), 16), 1, INK_GOLD),
+			_st(_arc_pts(0.56, 0.14, 0.22, 0.18, deg_to_rad(0.0), deg_to_rad(180.0), 16), 1, INK_GOLD),
+			_st(_circle_pts(0.0, -0.28, 0.16, 0.16, 18), 0, INK_INDIGO),
+			_st([_pt(-0.38, 0.72), _pt(0.38, 0.72)], 1, INK_CRIMSON),
 		],
 	})
 
-	# 9. Orasyon ng Balete — Balete Seal (Medium outer ring + Fine inner seal, 82% target)
+	# 18. Kapre's Ember (Bold Crimson diamond + Medium Charcoal wisps + Fine Gold sparks)
 	sets.append({
-		"roman": "IX",
-		"name": "Orasyon ng Balete",
-		"subtitle": "Balete Seal • Medium & fine brushes • Twin rings, pillar, crescent & triad.",
-		"required_accuracy": 82,
+		"roman": "XVIII",
+		"name": "Kapre's Ember",
+		"subtitle": "Bold Crimson ember, Medium Charcoal smoke & Fine Gold sparks.",
+		"required_accuracy": 80,
+		"brush_size_index": 2,
+		"grace_px": 5.2,
+		"strokes": [
+			_st(_poly_pts([Vector2(0.0, -0.24), Vector2(0.46, 0.24), Vector2(0.0, 0.72), Vector2(-0.46, 0.24)], true), 2, INK_CRIMSON),
+			_st(_arc_pts(-0.18, -0.44, 0.22, 0.26, deg_to_rad(90.0), deg_to_rad(270.0), 16), 1, INK_CHARCOAL),
+			_st(_arc_pts(0.18, -0.58, 0.22, 0.24, deg_to_rad(-90.0), deg_to_rad(90.0), 16), 1, INK_CHARCOAL),
+			_st([_pt(-0.58, -0.22), _pt(-0.38, -0.02)], 0, INK_GOLD),
+			_st([_pt(0.58, -0.22), _pt(0.38, -0.02)], 0, INK_GOLD),
+			_st(_circle_pts(0.0, 0.24, 0.16, 0.16, 18), 0, INK_GOLD),
+		],
+	})
+
+	# 19. Midnight Seal (Medium Indigo twin rings + Bold Charcoal pillar + Fine Gold & Crimson wards)
+	sets.append({
+		"roman": "XIX",
+		"name": "Midnight Seal",
+		"subtitle": "Indigo twin rings, Charcoal pillar, Gold crescent & Crimson triad.",
+		"required_accuracy": 81,
 		"brush_size_index": 1,
 		"grace_px": 5.0,
 		"strokes": [
-			_st(_circle_pts(0.0, 0.0, 0.76, 0.72, 36), 1),
-			_st(_circle_pts(0.0, 0.0, 0.48, 0.46, 30), 0),
-			_st([_pt(0.0, -0.72), _pt(0.0, 0.72)], 1),
-			_st([_pt(-0.46, 0.0), _pt(0.46, 0.0)], 0),
-			_st(_arc_pts(0.0, -0.48, 0.24, 0.18, deg_to_rad(15.0), deg_to_rad(165.0), 16), 0),
-			_st(_poly_pts([Vector2(0.0, 0.22), Vector2(0.24, 0.56), Vector2(-0.24, 0.56)], true), 0),
+			_st(_circle_pts(0.0, 0.0, 0.76, 0.72, 36), 1, INK_INDIGO),
+			_st(_circle_pts(0.0, 0.0, 0.48, 0.46, 30), 0, INK_INDIGO),
+			_st([_pt(0.0, -0.72), _pt(0.0, 0.72)], 2, INK_CHARCOAL),
+			_st(_arc_pts(0.0, -0.46, 0.24, 0.18, deg_to_rad(15.0), deg_to_rad(165.0), 16), 0, INK_GOLD),
+			_st(_poly_pts([Vector2(0.0, 0.20), Vector2(0.26, 0.56), Vector2(-0.26, 0.56)], true), 0, INK_CRIMSON),
 		],
 	})
 
-	# 10. Dakilang Anting-Anting — Grand Agimat (Bold frame + Medium ring + Fine inner triad & wards, 85% target)
+	# 20. Grand Agimat (All 4 inks & 3 brush sizes!)
 	sets.append({
-		"roman": "X",
-		"name": "Dakilang Anting-Anting",
-		"subtitle": "Master Agimat • Bold, medium & fine brushes • Frame, ring, triad & wards.",
-		"required_accuracy": 85,
+		"roman": "XX",
+		"name": "Grand Agimat",
+		"subtitle": "Master sigil • All four ritual inks & three brush thicknesses.",
+		"required_accuracy": 83,
 		"brush_size_index": 2,
-		"grace_px": 4.5,
+		"grace_px": 4.8,
 		"strokes": [
-			_st(_poly_pts([Vector2(0.0, -0.84), Vector2(0.76, 0.0), Vector2(0.0, 0.84), Vector2(-0.76, 0.0)], true), 2),
-			_st(_circle_pts(0.0, 0.0, 0.50, 0.48, 34), 1),
-			_st(_poly_pts([Vector2(0.0, -0.36), Vector2(0.34, 0.26), Vector2(-0.34, 0.26)], true), 0),
-			_st(_circle_pts(0.0, 0.04, 0.14, 0.14, 18), 0),
-			_st([_pt(-0.62, -0.62), _pt(-0.38, -0.38)], 0),
-			_st([_pt(0.62, -0.62), _pt(0.38, -0.38)], 0),
-			_st([_pt(-0.62, 0.62), _pt(-0.38, 0.38)], 0),
-			_st([_pt(0.62, 0.62), _pt(0.38, 0.38)], 0),
+			_st(_poly_pts([Vector2(0.0, -0.84), Vector2(0.76, 0.0), Vector2(0.0, 0.84), Vector2(-0.76, 0.0)], true), 2, INK_CHARCOAL),
+			_st(_circle_pts(0.0, 0.0, 0.50, 0.48, 34), 1, INK_INDIGO),
+			_st(_poly_pts([Vector2(0.0, -0.36), Vector2(0.34, 0.26), Vector2(-0.34, 0.26)], true), 1, INK_CRIMSON),
+			_st(_circle_pts(0.0, 0.04, 0.14, 0.14, 18), 0, INK_GOLD),
+			_st([_pt(-0.62, -0.62), _pt(-0.38, -0.38)], 0, INK_GOLD),
+			_st([_pt(0.62, -0.62), _pt(0.38, -0.38)], 0, INK_GOLD),
+			_st([_pt(-0.62, 0.62), _pt(-0.38, 0.38)], 0, INK_GOLD),
+			_st([_pt(0.62, 0.62), _pt(0.38, 0.38)], 0, INK_GOLD),
 		],
 	})
 
@@ -1167,7 +1402,7 @@ func _make_icon_text_button(label_text: String, min_sz: Vector2, font_sz: int) -
 	btn.custom_minimum_size = min_sz
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.add_theme_font_override("font", UIStyle.FONT_INDER)
+	btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	btn.add_theme_font_size_override("font_size", font_sz)
 	_apply_toggle_button_style(btn, false)
 	return btn
@@ -1185,7 +1420,7 @@ func _make_lucide_button(icon_path: String, fallback_text: String, min_sz: Vecto
 		btn.expand_icon = false
 	else:
 		btn.text = fallback_text
-		btn.add_theme_font_override("font", UIStyle.FONT_INDER)
+		btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 		btn.add_theme_font_size_override("font_size", 16)
 	_apply_toggle_button_style(btn, false)
 	return btn
@@ -1197,7 +1432,7 @@ func _make_secondary_button(label_text: String, min_sz: Vector2) -> Button:
 	btn.custom_minimum_size = min_sz
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	btn.add_theme_font_override("font", UIStyle.FONT_INDER)
+	btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	btn.add_theme_font_size_override("font_size", 19)
 	var st := _make_pill_style(Color(0.18, 0.13, 0.09, 0.96), COL_GOLD_SOFT, 10, 16, 8)
 	var hov := st.duplicate() as StyleBoxFlat

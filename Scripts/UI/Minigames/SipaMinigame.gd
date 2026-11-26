@@ -8,8 +8,8 @@ extends CanvasLayer
 
 signal minigame_finished(won: bool, result: Dictionary)
 
-const TEX_SIPA := "res://Assets/ui/minigames/sipa.png"
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
+const TEX_SIPA := "res://Assets/ui/minigames/sipa.png"
 const SIPA_SIZE := Vector2(82.0, 82.0)
 const EARLY_COOLDOWN := 0.45
 const XP_CAP_KICKS := 32
@@ -36,10 +36,11 @@ void fragment() {
 """
 
 var is_open: bool = false
-var _phase: String = "idle" # countdown, playing, finished
+var _phase: String = "idle" # intro, countdown, playing, finished
 var _countdown_t: float = 3.0
 var _kicks: int = 0
 var _score: int = 0
+var _perfects: int = 0
 var _start_diff: float = 0.0
 var _cooldown: float = 0.0
 var _elapsed: float = 0.0
@@ -58,12 +59,16 @@ var _root: Control
 var _field_draw: Control
 var _sipa_sprite: TextureRect
 var _countdown_lbl: Label
-var _kick_lbl: Label
+var _score_val_lbl: Label
+var _kicks_val_lbl: Label
 var _status_lbl: Label
+var _intro_overlay: ColorRect
 var _intro_panel: PanelContainer
+var _result_overlay: ColorRect
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
+var _result_stats_row: HBoxContainer
 var _board_rows: Array[Dictionary] = []
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
@@ -96,10 +101,10 @@ func _get_diff_t() -> float:
 
 func _get_bounds() -> Dictionary:
 	var vp := _get_vp_size()
-	var left := vp.x * 0.16
-	var right := vp.x * 0.80
-	var top := 118.0
-	var floor_y := vp.y - 46.0
+	var left := vp.x * 0.14
+	var right := minf(vp.x * 0.76, vp.x - 320.0)
+	var top := 132.0
+	var floor_y := vp.y - 68.0
 	var zone_bottom := floor_y - 14.0
 	# Starts generous/tall on Day 1, gradually narrows with score and later days
 	var diff_t := _get_diff_t()
@@ -135,30 +140,39 @@ func open_minigame(_config: Dictionary = {}) -> void:
 
 
 func _show_intro() -> void:
+	var b := _get_bounds()
+	var cx := (float(b["left"]) + float(b["right"])) * 0.5
 	var vp := _get_vp_size()
 	_phase = "intro"
 	_prev_space_down = Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER)
 	_kicks = 0
 	_score = 0
+	_perfects = 0
 	var day_idx := maxi(0, StoryManager.day - 1) if is_instance_valid(StoryManager) else 0
 	_start_diff = clampf(float(day_idx) * 0.055, 0.0, 0.40)
 	_cooldown = 0.0
 	_elapsed = 0.0
-	_sipa_pos = Vector2(vp.x * 0.5, vp.y * 0.28)
+	_sipa_pos = Vector2(cx, vp.y * 0.30)
 	_sipa_vel = Vector2.ZERO
 	_sipa_rot = 0.0
 	_sync_sipa_visual()
 	_countdown_lbl.visible = false
-	_result_panel.visible = false
-	Juice.pop_panel_in(_intro_panel)
-	_kick_lbl.text = "Score: 0  •  Kicks: 0"
-	_status_lbl.text = ""
+	_result_overlay.visible = false
+	_intro_overlay.visible = true
+	call_deferred("_pop_intro_deferred")
+	_refresh_hud_counters()
+	_set_status("Ready to rally", Juice.COL_MUTED)
 	_refresh_leaderboard()
+
+
+func _pop_intro_deferred() -> void:
+	if is_instance_valid(_intro_panel):
+		Juice.pop_panel_in(_intro_panel)
 
 
 func _on_intro_start() -> void:
 	Juice.play_sfx("tab_switch", 1.15)
-	_intro_panel.visible = false
+	_intro_overlay.visible = false
 	_start_countdown()
 
 
@@ -182,17 +196,20 @@ func close_minigame(won: bool = false, emit_result: bool = true) -> void:
 
 
 func _start_countdown() -> void:
+	var b := _get_bounds()
+	var cx := (float(b["left"]) + float(b["right"])) * 0.5
 	var vp := _get_vp_size()
 	_phase = "countdown"
 	_countdown_t = 3.0
 	_kicks = 0
 	_score = 0
+	_perfects = 0
 	_cooldown = 0.0
 	_elapsed = 0.0
 	_hit_flash = 0.0
 	_miss_flash = 0.0
-	_result_panel.visible = false
-	_sipa_pos = Vector2(vp.x * 0.5, vp.y * 0.28)
+	_result_overlay.visible = false
+	_sipa_pos = Vector2(cx, vp.y * 0.30)
 	_sipa_vel = Vector2.ZERO
 	_sipa_rot = 0.0
 	_sipa_ang_vel = 0.0
@@ -201,8 +218,8 @@ func _start_countdown() -> void:
 	_countdown_lbl.text = "3"
 	Juice.pop_control(_countdown_lbl, 1.35, 0.28)
 	Juice.play_sfx("ui_hover", 0.85, 1.0)
-	_status_lbl.text = "Get ready..."
-	_kick_lbl.text = "Score: 0  •  Kicks: 0"
+	_set_status("Get ready...", Juice.COL_GOLD_BRIGHT)
+	_refresh_hud_counters()
 	_refresh_leaderboard()
 
 
@@ -212,11 +229,18 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		if event.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()
-			close_minigame(false, true)
+			if _result_overlay.visible:
+				close_minigame(bool(_result_panel.get_meta("won", false)), true)
+			else:
+				close_minigame(false, true)
 			return
 		if _phase == "intro" and event.keycode == KEY_ENTER:
 			get_viewport().set_input_as_handled()
 			_on_intro_start()
+			return
+		if _phase == "finished" and (event.keycode == KEY_ENTER or event.keycode == KEY_SPACE):
+			get_viewport().set_input_as_handled()
+			close_minigame(bool(_result_panel.get_meta("won", false)), true)
 			return
 		if event.keycode == KEY_SPACE:
 			get_viewport().set_input_as_handled()
@@ -236,6 +260,8 @@ func _attempt_kick() -> void:
 		var zone_center := (float(b["zone_top"]) + float(b["zone_bottom"])) * 0.5
 		var zone_half := (float(b["zone_bottom"]) - float(b["zone_top"])) * 0.5
 		var is_perfect := absf(_sipa_pos.y - zone_center) <= zone_half * 0.45
+		if is_perfect:
+			_perfects += 1
 
 		var prev_score := _score
 		var pts := 20 if is_perfect else 10
@@ -264,28 +290,41 @@ func _attempt_kick() -> void:
 			var sq := _sipa_sprite.create_tween()
 			sq.tween_property(_sipa_sprite, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 		Juice.shake_control(_root, 7.5 if is_perfect else 4.5, 0.16)
-		Juice.spawn_burst(_root, _sipa_pos, Color(1.0, 0.88, 0.36) if is_perfect else Color(0.62, 0.96, 0.56), 14 if is_perfect else 9, 130.0)
-		Juice.pop_control(_kick_lbl, 1.24, 0.20)
+		Juice.spawn_burst(_root, _sipa_pos, Color(1.0, 0.88, 0.36) if is_perfect else Juice.COL_SUCCESS, 14 if is_perfect else 9, 130.0)
+		Juice.pop_control(_score_val_lbl, 1.24, 0.18)
 
-		_kick_lbl.text = "Score: %d  •  Kicks: %d" % [_score, _kicks]
-		_status_lbl.text = "Perfect! +%d" % pts if is_perfect else "Swak! +%d" % pts
-		_spawn_feedback("PERFECT! +%d" % pts if is_perfect else "Swak! +%d" % pts, Color(1.0, 0.90, 0.38) if is_perfect else Color(0.62, 0.96, 0.56), 0.0)
+		_refresh_hud_counters()
+		_set_status("Perfect! +%d" % pts if is_perfect else "Swak! +%d" % pts, Juice.COL_GOLD_BRIGHT if is_perfect else Juice.COL_SUCCESS)
+		_spawn_feedback("PERFECT! +%d" % pts if is_perfect else "Swak! +%d" % pts, Color(1.0, 0.90, 0.38) if is_perfect else Juice.COL_SUCCESS, 0.0)
 		_refresh_leaderboard()
 
 		for entry in NEIGHBOR_SCORES:
 			var target_score: int = int(entry["score"])
 			if target_score > 0 and prev_score <= target_score and _score > target_score:
-				_status_lbl.text = "You beat %s's record (%d)!" % [str(entry["name"]), target_score]
+				_set_status("Beat %s's record (%d)!" % [str(entry["name"]), target_score], Juice.COL_GOLD_BRIGHT)
 				_spawn_feedback("Beat %s!" % str(entry["name"]), Color(1.0, 0.90, 0.42), -62.0)
 				Juice.play_sfx("interact", 1.42, 1.0)
 				break
 	else:
 		_cooldown = EARLY_COOLDOWN
 		_miss_flash = 1.0
-		_status_lbl.text = "Too early — cooldown!"
-		_spawn_feedback("Too early!", Color(0.98, 0.45, 0.42))
+		_set_status("Too early — cooldown!", Juice.COL_DANGER)
+		_spawn_feedback("Too early!", Juice.COL_DANGER)
 		Juice.play_sfx("error", 0.88, 0.5)
 		Juice.shake_control(_root, 8.5, 0.20)
+
+
+func _refresh_hud_counters() -> void:
+	if is_instance_valid(_score_val_lbl):
+		_score_val_lbl.text = str(_score)
+	if is_instance_valid(_kicks_val_lbl):
+		_kicks_val_lbl.text = str(_kicks)
+
+
+func _set_status(txt: String, col: Color) -> void:
+	if is_instance_valid(_status_lbl):
+		_status_lbl.text = txt
+		_status_lbl.add_theme_color_override("font_color", col)
 
 
 func _process(delta: float) -> void:
@@ -316,7 +355,7 @@ func _process(delta: float) -> void:
 		if _countdown_t <= 0.0:
 			_phase = "playing"
 			_countdown_lbl.visible = false
-			_status_lbl.text = "Press Space or Click when the sipa enters the golden zone"
+			_set_status("Kick in the golden zone!", Juice.COL_CREAM)
 			_sipa_vel = Vector2(randf_range(-75.0, 75.0), 40.0)
 			_sipa_ang_vel = 2.5
 			Juice.play_sfx("pickup", 1.38, 1.5)
@@ -331,7 +370,7 @@ func _process(delta: float) -> void:
 		if _cooldown > 0.0:
 			_cooldown = maxf(0.0, _cooldown - delta)
 			if _cooldown <= 0.0:
-				_status_lbl.text = "Ready — press Space in the golden zone"
+				_set_status("Ready!", Juice.COL_SUCCESS)
 
 		var b := _get_bounds()
 		var vp_scale := _get_vp_size().y / 720.0
@@ -366,7 +405,7 @@ func _process(delta: float) -> void:
 			if _kicks > XP_CAP_KICKS:
 				_finish_round(true, "New Barangay Champion!", "You beat Lolo Pilo's record with %d kicks! (Bonus XP capped at %d)" % [_kicks, XP_CAP_KICKS])
 			elif won:
-				_finish_round(true, "Great Rally!", "You kept the sipa airborne for %d kicks! Try to beat Lolo Pilo's 32!" % _kicks)
+				_finish_round(true, "Great Rally!", "You kept the sipa airborne for %d kicks! Try to beat Lolo Pilo's 480!" % _kicks)
 			else:
 				_finish_round(false, "Dropped the Sipa!", "You reached %d kicks. Keep practicing your timing!" % _kicks)
 
@@ -386,27 +425,32 @@ func _spawn_feedback(txt: String, col: Color, y_extra_offset: float = 0.0) -> vo
 	var b := _get_bounds()
 	var lbl := Label.new()
 	lbl.text = txt
-	lbl.position = Vector2(_sipa_pos.x - 56.0, float(b["zone_top"]) - 34.0 + y_extra_offset)
-	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	lbl.add_theme_font_size_override("font_size", 22)
-	lbl.add_theme_color_override("font_color", col)
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	lbl.add_theme_constant_override("outline_size", 5)
+	lbl.position = Vector2(_sipa_pos.x - 62.0, float(b["zone_top"]) - 36.0 + y_extra_offset)
+	Juice.style_hud_label(lbl, UIStyle.FONT_FREDOKA_BOLD, 23, col, 5)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(lbl)
 	var tw := lbl.create_tween()
-	tw.tween_property(lbl, "position:y", lbl.position.y - 46.0, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.55)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 46.0, 0.52).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.52)
 	tw.tween_callback(lbl.queue_free)
 
 
 func _finish_round(won: bool, title: String, sub: String) -> void:
 	_phase = "finished"
 	_result_title.text = title
-	_result_title.add_theme_color_override("font_color", Color(0.62, 0.96, 0.56) if won else Color(0.98, 0.48, 0.45))
+	_result_title.add_theme_color_override("font_color", Juice.COL_SUCCESS if won else Juice.COL_DANGER)
 	_result_sub.text = sub
 	_result_panel.set_meta("won", won)
-	Juice.pop_panel_in(_result_panel)
+
+	for ch in _result_stats_row.get_children():
+		_result_stats_row.remove_child(ch)
+		ch.queue_free()
+	_result_stats_row.add_child(Juice.make_stat_chip("Score", str(_score), Juice.COL_GOLD_BRIGHT))
+	_result_stats_row.add_child(Juice.make_stat_chip("Kicks", str(_kicks), Juice.COL_SUCCESS if won else Juice.COL_CREAM))
+	_result_stats_row.add_child(Juice.make_stat_chip("Perfects", str(_perfects), Color(1.0, 0.84, 0.42)))
+
+	_result_overlay.visible = true
+	call_deferred("_pop_result_deferred")
 	if won:
 		Juice.play_win_fanfare(self)
 		var vp := _get_vp_size()
@@ -414,6 +458,11 @@ func _finish_round(won: bool, title: String, sub: String) -> void:
 		Juice.spawn_burst(_root, vp * Vector2(0.65, 0.45), Color(0.60, 0.96, 0.58), 14, 180.0)
 	else:
 		Juice.play_lose_sting(self)
+
+
+func _pop_result_deferred() -> void:
+	if is_instance_valid(_result_panel):
+		Juice.pop_panel_in(_result_panel)
 
 
 func _build_ui() -> void:
@@ -441,88 +490,151 @@ func _build_ui() -> void:
 	)
 	add_child(_root)
 
-	# Fullscreen custom draw layer (perimeter guides + kick zone + shadow)
+	# Fullscreen custom draw layer (perimeter guides + kick zone + sweet spot + shadow)
 	_field_draw = Control.new()
 	_field_draw.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_field_draw.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_field_draw.draw.connect(_draw_field)
 	_root.add_child(_field_draw)
 
-	# Floating Top-Center Title & Kicks (no box, Title Case)
+	# --- TOP SAFE-ZONE HEADER + CONTRASTING HUD BAR ---
 	var header := VBoxContainer.new()
 	header.anchor_left = 0.5
 	header.anchor_right = 0.5
 	header.anchor_top = 0.0
-	header.offset_left = -260
-	header.offset_right = 260
+	header.offset_left = -320
+	header.offset_right = 320
 	header.offset_top = 22
-	header.add_theme_constant_override("separation", 4)
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 6)
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(header)
 
 	var title := Label.new()
 	title.text = "Sipa Challenge"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title.add_theme_font_size_override("font_size", 32)
-	title.add_theme_color_override("font_color", Color(1.0, 0.93, 0.72))
-	title.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.92))
-	title.add_theme_constant_override("outline_size", 6)
+	Juice.style_hud_label(title, UIStyle.FONT_FREDOKA_BOLD, 30, Juice.COL_GOLD_BRIGHT, 5)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(title)
 
-	_kick_lbl = Label.new()
-	_kick_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_kick_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_kick_lbl.add_theme_font_size_override("font_size", 21)
-	_kick_lbl.add_theme_color_override("font_color", Color(0.70, 0.96, 0.62))
-	_kick_lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.9))
-	_kick_lbl.add_theme_constant_override("outline_size", 5)
-	header.add_child(_kick_lbl)
+	var hud_center := HBoxContainer.new()
+	hud_center.alignment = BoxContainer.ALIGNMENT_CENTER
+	hud_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(hud_center)
+
+	var hud_pill := PanelContainer.new()
+	hud_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_pill.add_theme_stylebox_override("panel", Juice.make_pill_style(Juice.COL_HUD_BG, Juice.COL_GOLD_SOFT, 14, 18, 8, 2))
+	hud_center.add_child(hud_pill)
+
+	var hud_row := HBoxContainer.new()
+	hud_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hud_row.add_theme_constant_override("separation", 14)
+	hud_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_pill.add_child(hud_row)
+
+	# Score pair
+	var sc_box := HBoxContainer.new()
+	sc_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	sc_box.add_theme_constant_override("separation", 6)
+	sc_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_row.add_child(sc_box)
+
+	var sc_k := Label.new()
+	sc_k.text = "Score"
+	sc_k.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	sc_k.add_theme_font_size_override("font_size", 15)
+	sc_k.add_theme_color_override("font_color", Juice.COL_MUTED)
+	sc_k.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sc_box.add_child(sc_k)
+
+	_score_val_lbl = Label.new()
+	_score_val_lbl.text = "0"
+	_score_val_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	_score_val_lbl.add_theme_font_size_override("font_size", 22)
+	_score_val_lbl.add_theme_color_override("font_color", Juice.COL_GOLD_BRIGHT)
+	_score_val_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sc_box.add_child(_score_val_lbl)
+
+	hud_row.add_child(Juice.make_vsep(22.0))
+
+	# Kicks pair
+	var kk_box := HBoxContainer.new()
+	kk_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	kk_box.add_theme_constant_override("separation", 6)
+	kk_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_row.add_child(kk_box)
+
+	var kk_k := Label.new()
+	kk_k.text = "Kicks"
+	kk_k.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	kk_k.add_theme_font_size_override("font_size", 15)
+	kk_k.add_theme_color_override("font_color", Juice.COL_MUTED)
+	kk_k.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kk_box.add_child(kk_k)
+
+	_kicks_val_lbl = Label.new()
+	_kicks_val_lbl.text = "0"
+	_kicks_val_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	_kicks_val_lbl.add_theme_font_size_override("font_size", 22)
+	_kicks_val_lbl.add_theme_color_override("font_color", Juice.COL_SUCCESS)
+	_kicks_val_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	kk_box.add_child(_kicks_val_lbl)
+
+	hud_row.add_child(Juice.make_vsep(22.0))
 
 	_status_lbl = Label.new()
+	_status_lbl.custom_minimum_size = Vector2(165, 0)
 	_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_status_lbl.add_theme_font_size_override("font_size", 15)
-	_status_lbl.add_theme_color_override("font_color", Color(0.96, 0.90, 0.78, 0.88))
-	_status_lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.85))
-	_status_lbl.add_theme_constant_override("outline_size", 4)
-	header.add_child(_status_lbl)
+	_status_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	_status_lbl.add_theme_font_size_override("font_size", 16)
+	_status_lbl.add_theme_color_override("font_color", Juice.COL_CREAM)
+	_status_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_row.add_child(_status_lbl)
 
-	# Minimal floating close button top-right
+	# Standardized 48x48 close button in top-right safe zone
 	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.focus_mode = Control.FOCUS_NONE
+	Juice.style_close_button(close_btn)
 	close_btn.anchor_left = 1.0
 	close_btn.anchor_right = 1.0
-	close_btn.offset_left = -58
-	close_btn.offset_right = -18
-	close_btn.offset_top = 18
-	close_btn.offset_bottom = 58
+	close_btn.offset_left = -84
+	close_btn.offset_right = -36
+	close_btn.offset_top = 24
+	close_btn.offset_bottom = 72
 	close_btn.pressed.connect(func(): close_minigame(false, true))
 	_root.add_child(close_btn)
 
-	# Top-Right Neighbor Leaderboard (Barangay Records — frameless floating over vignette)
+	# --- TOP-RIGHT BARANGAY RECORDS CARD (Safe Zone) ---
+	var board_card := PanelContainer.new()
+	board_card.anchor_left = 1.0
+	board_card.anchor_right = 1.0
+	board_card.anchor_top = 0.0
+	board_card.offset_left = -304
+	board_card.offset_right = -36
+	board_card.offset_top = 86
+	board_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_card.add_theme_stylebox_override("panel", Juice.make_pill_style(Color(0.09, 0.07, 0.055, 0.84), Juice.COL_GOLD_SOFT, 14, 14, 12, 1))
+	_root.add_child(board_card)
+
 	var bv := VBoxContainer.new()
-	bv.anchor_left = 1.0
-	bv.anchor_right = 1.0
-	bv.anchor_top = 0.0
-	bv.offset_left = -286
-	bv.offset_right = -24
-	bv.offset_top = 74
 	bv.add_theme_constant_override("separation", 8)
 	bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(bv)
+	board_card.add_child(bv)
 
+	var bhdr := HBoxContainer.new()
+	bhdr.alignment = BoxContainer.ALIGNMENT_CENTER
+	bhdr.add_theme_constant_override("separation", 8)
+	bhdr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bv.add_child(bhdr)
+
+	bhdr.add_child(Juice.make_icon_rect(Juice.ICON_TROPHY, Vector2(18, 18), Juice.COL_GOLD_BRIGHT))
 	var btitle := Label.new()
 	btitle.text = "Barangay Records"
-	btitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	btitle.add_theme_font_override("font", UIStyle.FONT_INDER)
-	btitle.add_theme_font_size_override("font_size", 20)
-	btitle.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62))
-	btitle.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.92))
-	btitle.add_theme_constant_override("outline_size", 5)
+	btitle.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	btitle.add_theme_font_size_override("font_size", 17)
+	btitle.add_theme_color_override("font_color", Juice.COL_GOLD_BRIGHT)
 	btitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bv.add_child(btitle)
+	bhdr.add_child(btitle)
 
 	_board_rows.clear()
 	for entry in NEIGHBOR_SCORES:
@@ -531,23 +643,32 @@ func _build_ui() -> void:
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bv.add_child(row)
 
+		var pframe := PanelContainer.new()
+		pframe.custom_minimum_size = Vector2(36, 36)
+		pframe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var pst := StyleBoxFlat.new()
+		pst.bg_color = Color(0.16, 0.12, 0.09, 0.96)
+		pst.border_color = Juice.COL_GOLD_SOFT
+		pst.set_border_width_all(1)
+		pst.set_corner_radius_all(18)
+		pst.set_content_margin_all(2)
+		pframe.add_theme_stylebox_override("panel", pst)
+		row.add_child(pframe)
+
 		var portrait := TextureRect.new()
 		portrait.texture = _load_tex(str(entry["portrait"]))
-		portrait.custom_minimum_size = Vector2(38, 38)
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(portrait)
+		pframe.add_child(portrait)
 
 		var nlbl := Label.new()
 		nlbl.text = str(entry["name"])
 		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nlbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		nlbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		nlbl.add_theme_font_size_override("font_size", 18)
-		nlbl.add_theme_color_override("font_color", Color(0.94, 0.90, 0.82))
-		nlbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.90))
-		nlbl.add_theme_constant_override("outline_size", 4)
+		nlbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		nlbl.add_theme_font_size_override("font_size", 16)
+		nlbl.add_theme_color_override("font_color", Juice.COL_CREAM)
 		nlbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(nlbl)
 
@@ -555,12 +676,10 @@ func _build_ui() -> void:
 		slbl.text = str(int(entry["score"]))
 		slbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		slbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		slbl.custom_minimum_size = Vector2(48, 0)
-		slbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		slbl.add_theme_font_size_override("font_size", 18)
-		slbl.add_theme_color_override("font_color", Color(0.98, 0.84, 0.46))
-		slbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.90))
-		slbl.add_theme_constant_override("outline_size", 4)
+		slbl.custom_minimum_size = Vector2(56, 0)
+		slbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+		slbl.add_theme_font_size_override("font_size", 16)
+		slbl.add_theme_color_override("font_color", Juice.COL_GOLD_BRIGHT)
 		slbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(slbl)
 
@@ -570,6 +689,48 @@ func _build_ui() -> void:
 			"score_lbl": slbl,
 			"row": row,
 		})
+
+	# Bottom safe-zone keycap prompt pill
+	var hint_wrap := HBoxContainer.new()
+	hint_wrap.anchor_left = 0.5
+	hint_wrap.anchor_right = 0.5
+	hint_wrap.anchor_top = 1.0
+	hint_wrap.anchor_bottom = 1.0
+	hint_wrap.offset_left = -280
+	hint_wrap.offset_right = 280
+	hint_wrap.offset_top = -52
+	hint_wrap.offset_bottom = -18
+	hint_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+	hint_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(hint_wrap)
+
+	var hint_pill := PanelContainer.new()
+	hint_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_pill.add_theme_stylebox_override("panel", Juice.make_pill_style(Color(0.08, 0.06, 0.05, 0.78), Color(0.88, 0.70, 0.34, 0.26), 12, 16, 6, 1))
+	hint_wrap.add_child(hint_pill)
+
+	var hint_row := HBoxContainer.new()
+	hint_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hint_row.add_theme_constant_override("separation", 8)
+	hint_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_pill.add_child(hint_row)
+
+	hint_row.add_child(Juice.make_keycap_pill("Space"))
+	var or_lbl := Label.new()
+	or_lbl.text = "or"
+	or_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	or_lbl.add_theme_font_size_override("font_size", 14)
+	or_lbl.add_theme_color_override("font_color", Juice.COL_MUTED)
+	or_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_row.add_child(or_lbl)
+	hint_row.add_child(Juice.make_keycap_pill("Click"))
+	var htxt := Label.new()
+	htxt.text = "Kick in the golden zone • Hit center for Perfect (+20)"
+	htxt.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	htxt.add_theme_font_size_override("font_size", 15)
+	htxt.add_theme_color_override("font_color", Juice.COL_CREAM)
+	htxt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_row.add_child(htxt)
 
 	# Sipa Sprite
 	_sipa_sprite = TextureRect.new()
@@ -587,94 +748,86 @@ func _build_ui() -> void:
 	_countdown_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_countdown_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_countdown_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_countdown_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_countdown_lbl.add_theme_font_size_override("font_size", 96)
-	_countdown_lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.62))
-	_countdown_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.92))
-	_countdown_lbl.add_theme_constant_override("outline_size", 10)
+	Juice.style_hud_label(_countdown_lbl, UIStyle.FONT_FREDOKA_BOLD, 96, Juice.COL_GOLD_BRIGHT, 10)
 	_countdown_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_countdown_lbl)
 
-	# Intro instructions pop-up
-	_intro_panel = PanelContainer.new()
-	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_intro_panel.custom_minimum_size = Vector2(540, 265)
-	_intro_panel.offset_left = -270
-	_intro_panel.offset_right = 270
-	_intro_panel.offset_top = -132
-	_intro_panel.offset_bottom = 132
-	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
-	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
-	istyle.set_border_width_all(2)
-	_intro_panel.add_theme_stylebox_override("panel", istyle)
-	_intro_panel.visible = false
-	_root.add_child(_intro_panel)
-
-	var iv := VBoxContainer.new()
-	iv.alignment = BoxContainer.ALIGNMENT_CENTER
-	iv.add_theme_constant_override("separation", 14)
-	_intro_panel.add_child(iv)
+	# --- INTRO MODAL (Responsive CenterContainer) ---
+	var intro_shell := Juice.make_modal_shell(_root, Vector2(560, 0))
+	_intro_overlay = intro_shell["overlay"]
+	_intro_panel = intro_shell["panel"]
+	var iv: VBoxContainer = intro_shell["vbox"]
 
 	var ititle := Label.new()
-	ititle.text = "How to Play: Sipa"
+	ititle.text = "Sipa Challenge"
 	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ititle.add_theme_font_override("font", UIStyle.FONT_INDER)
-	ititle.add_theme_font_size_override("font_size", 34)
-	ititle.add_theme_color_override("font_color", Color(1.0, 0.91, 0.64))
+	ititle.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	ititle.add_theme_font_size_override("font_size", 32)
+	ititle.add_theme_color_override("font_color", Juice.COL_GOLD_BRIGHT)
 	iv.add_child(ititle)
 
+	var keys_row := HBoxContainer.new()
+	keys_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	keys_row.add_theme_constant_override("separation", 10)
+	iv.add_child(keys_row)
+	keys_row.add_child(Juice.make_keycap_pill("Space"))
+	var slash := Label.new()
+	slash.text = "or"
+	slash.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	slash.add_theme_font_size_override("font_size", 15)
+	slash.add_theme_color_override("font_color", Juice.COL_MUTED)
+	keys_row.add_child(slash)
+	keys_row.add_child(Juice.make_keycap_pill("Left Click"))
+	var act := Label.new()
+	act.text = "to Kick"
+	act.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	act.add_theme_font_size_override("font_size", 16)
+	act.add_theme_color_override("font_color", Juice.COL_CREAM)
+	keys_row.add_child(act)
+
 	var idesc := Label.new()
-	idesc.text = "Press Space or Click when the sipa enters the golden zone at the bottom to keep it airborne as long as you can. The zone narrows and gravity builds as your kicks climb — try to beat Lolo Pilo's record!"
+	idesc.text = "Kick when the sipa enters the golden zone to keep it airborne. Aim for the center line for Perfect (+20) points — the zone narrows and gravity builds as you climb!"
 	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	idesc.add_theme_font_size_override("font_size", 22)
-	idesc.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
+	idesc.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	idesc.add_theme_font_size_override("font_size", 18)
+	idesc.add_theme_color_override("font_color", Juice.COL_CREAM)
 	iv.add_child(idesc)
 
 	var start_btn := Button.new()
-	start_btn.text = "Start"
-	Juice.style_primary_button(start_btn)
+	start_btn.text = "Start Rally"
+	Juice.style_primary_button(start_btn, Vector2(220, 50))
 	start_btn.pressed.connect(_on_intro_start)
 	iv.add_child(start_btn)
 
-	# Result panel
-	_result_panel = PanelContainer.new()
-	_result_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_result_panel.custom_minimum_size = Vector2(460, 230)
-	_result_panel.offset_left = -230
-	_result_panel.offset_right = 230
-	_result_panel.offset_top = -115
-	_result_panel.offset_bottom = 115
-	var rs := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
-	rs.border_color = Color(0.92, 0.72, 0.32, 0.92)
-	rs.set_border_width_all(2)
-	_result_panel.add_theme_stylebox_override("panel", rs)
-	_result_panel.visible = false
-	_root.add_child(_result_panel)
-
-	var rv := VBoxContainer.new()
-	rv.alignment = BoxContainer.ALIGNMENT_CENTER
-	rv.add_theme_constant_override("separation", 14)
-	_result_panel.add_child(rv)
+	# --- RESULT MODAL ---
+	var res_shell := Juice.make_modal_shell(_root, Vector2(520, 0))
+	_result_overlay = res_shell["overlay"]
+	_result_panel = res_shell["panel"]
+	var rv: VBoxContainer = res_shell["vbox"]
 
 	_result_title = Label.new()
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_title.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_title.add_theme_font_size_override("font_size", 34)
+	_result_title.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	_result_title.add_theme_font_size_override("font_size", 32)
 	rv.add_child(_result_title)
 
 	_result_sub = Label.new()
 	_result_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_result_sub.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_sub.add_theme_font_size_override("font_size", 20)
-	_result_sub.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
+	_result_sub.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	_result_sub.add_theme_font_size_override("font_size", 18)
+	_result_sub.add_theme_color_override("font_color", Juice.COL_CREAM)
 	rv.add_child(_result_sub)
+
+	_result_stats_row = HBoxContainer.new()
+	_result_stats_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_result_stats_row.add_theme_constant_override("separation", 12)
+	rv.add_child(_result_stats_row)
 
 	var cont_btn := Button.new()
 	cont_btn.text = "Continue"
-	Juice.style_primary_button(cont_btn)
+	Juice.style_primary_button(cont_btn, Vector2(210, 50))
 	cont_btn.pressed.connect(func(): close_minigame(bool(_result_panel.get_meta("won", false)), true))
 	rv.add_child(cont_btn)
 
@@ -686,13 +839,13 @@ func _refresh_leaderboard() -> void:
 		var nlbl: Label = item["name_lbl"]
 		var slbl: Label = item["score_lbl"]
 		if beaten:
-			nlbl.add_theme_color_override("font_color", Color(0.68, 0.96, 0.62))
-			slbl.add_theme_color_override("font_color", Color(0.68, 0.96, 0.62))
+			nlbl.add_theme_color_override("font_color", Juice.COL_SUCCESS)
+			slbl.add_theme_color_override("font_color", Juice.COL_SUCCESS)
 			slbl.text = "%d ✓" % target_score
 		else:
 			var is_zero := target_score == 0
-			nlbl.add_theme_color_override("font_color", Color(0.76, 0.72, 0.66) if is_zero else Color(0.94, 0.90, 0.82))
-			slbl.add_theme_color_override("font_color", Color(0.68, 0.64, 0.58) if is_zero else Color(0.98, 0.84, 0.46))
+			nlbl.add_theme_color_override("font_color", Juice.COL_MUTED if is_zero else Juice.COL_CREAM)
+			slbl.add_theme_color_override("font_color", Juice.COL_MUTED if is_zero else Juice.COL_GOLD_BRIGHT)
 			slbl.text = str(target_score)
 
 
@@ -703,37 +856,42 @@ func _draw_field() -> void:
 	var zone_top: float = float(b["zone_top"])
 	var zone_bottom: float = float(b["zone_bottom"])
 	var floor_y: float = float(b["floor_y"])
+	var zone_mid := (zone_top + zone_bottom) * 0.5
 
 	# Subtle glowing side perimeter rails
-	_field_draw.draw_line(Vector2(left, 110.0), Vector2(left, floor_y), Color(0.95, 0.82, 0.48, 0.16), 2.0)
-	_field_draw.draw_line(Vector2(right, 110.0), Vector2(right, floor_y), Color(0.95, 0.82, 0.48, 0.16), 2.0)
+	_field_draw.draw_line(Vector2(left, 126.0), Vector2(left, floor_y), Color(0.95, 0.82, 0.48, 0.18), 2.0)
+	_field_draw.draw_line(Vector2(right, 126.0), Vector2(right, floor_y), Color(0.95, 0.82, 0.48, 0.18), 2.0)
 
 	# Bottom kick zone (translucent glowing band across the play perimeter)
 	var half_h := SIPA_SIZE.y * 0.45
 	var in_zone := _phase == "playing" and (_sipa_pos.y + half_h) >= zone_top and (_sipa_pos.y - half_h) <= zone_bottom
 	var zone_col := Color(0.94, 0.76, 0.32, 0.16)
-	var border_col := Color(0.96, 0.80, 0.38, 0.65)
+	var border_col := Color(0.96, 0.80, 0.38, 0.68)
 	if _cooldown > 0.0:
-		zone_col = Color(0.88, 0.28, 0.24, 0.20)
-		border_col = Color(0.96, 0.38, 0.34, 0.82)
+		zone_col = Color(0.88, 0.28, 0.24, 0.22)
+		border_col = Color(0.96, 0.38, 0.34, 0.86)
 	elif in_zone:
 		zone_col = Color(0.46, 0.90, 0.44, 0.26)
-		border_col = Color(0.66, 0.98, 0.58, 0.95)
+		border_col = Color(0.66, 0.98, 0.58, 0.96)
 	if _hit_flash > 0.0:
 		zone_col = zone_col.lerp(Color(0.65, 1.0, 0.58, 0.48), _hit_flash)
 
 	var zone_rect := Rect2(left, zone_top, right - left, zone_bottom - zone_top)
 	_field_draw.draw_rect(zone_rect, zone_col, true)
-	_field_draw.draw_line(Vector2(left, zone_top), Vector2(right, zone_top), border_col, 2.5)
-	_field_draw.draw_line(Vector2(left, zone_bottom), Vector2(right, zone_bottom), border_col, 2.5)
+	_field_draw.draw_line(Vector2(left, zone_top), Vector2(right, zone_top), border_col, 2.5, true)
+	_field_draw.draw_line(Vector2(left, zone_bottom), Vector2(right, zone_bottom), border_col, 2.5, true)
+
+	# Diegetic Perfect (+20) Sweet-Spot center guide line
+	var sweet_col := Color(1.0, 0.92, 0.54, 0.55 if in_zone else 0.30)
+	_field_draw.draw_dashed_line(Vector2(left + 12.0, zone_mid), Vector2(right - 12.0, zone_mid), sweet_col, 2.0, 10.0)
 
 	# Cooldown bar when early-press locked
 	if _cooldown > 0.0:
 		var frac := clampf(_cooldown / EARLY_COOLDOWN, 0.0, 1.0)
-		var cd_rect := Rect2(left + 6.0, zone_bottom - 9.0, (right - left - 12.0) * frac, 5.0)
-		_field_draw.draw_rect(cd_rect, Color(0.98, 0.42, 0.38, 0.92), true)
+		var cd_rect := Rect2(left + 8.0, zone_bottom - 9.0, (right - left - 16.0) * frac, 5.0)
+		_field_draw.draw_rect(cd_rect, Color(0.98, 0.42, 0.38, 0.94), true)
 
 	# Floor line + subtle sipa shadow
-	_field_draw.draw_line(Vector2(left, floor_y), Vector2(right, floor_y), Color(0.92, 0.38, 0.34, 0.55), 2.5)
+	_field_draw.draw_line(Vector2(left, floor_y), Vector2(right, floor_y), Color(0.92, 0.38, 0.34, 0.58), 2.5, true)
 	var height_ratio := clampf(1.0 - (floor_y - _sipa_pos.y) / floor_y, 0.15, 1.0)
-	_field_draw.draw_circle(Vector2(_sipa_pos.x, floor_y + 4.0), 22.0 * height_ratio, Color(0.0, 0.0, 0.0, 0.36 * height_ratio))
+	_field_draw.draw_circle(Vector2(_sipa_pos.x, floor_y + 4.0), 22.0 * height_ratio, Color(0.0, 0.0, 0.0, 0.38 * height_ratio))

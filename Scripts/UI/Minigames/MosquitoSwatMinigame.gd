@@ -7,8 +7,8 @@ extends CanvasLayer
 
 signal minigame_finished(won: bool, result: Dictionary)
 
-const TEX_MOSQUITO := "res://Assets/ui/minigames/mosquito/mosquito.png"
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
+const TEX_MOSQUITO := "res://Assets/ui/minigames/mosquito/mosquito.png"
 const TEX_MOSQUITO_DEAD := "res://Assets/ui/minigames/mosquito/mosquito_dead.png"
 const TEX_FIREFLY := "res://Assets/ui/minigames/mosquito/firefly.png"
 const TEX_FIREFLY_DEAD := "res://Assets/ui/minigames/mosquito/firefly_dead.png"
@@ -59,11 +59,17 @@ var _arena_fx: Control
 var _score_bar: ProgressBar
 var _score_lbl: Label
 var _timer_lbl: Label
+var _timer_icon: TextureRect
+var _streak_pill: PanelContainer
+var _streak_lbl: Label
 var _lives_box: HBoxContainer
+var _intro_overlay: ColorRect
 var _intro_panel: PanelContainer
+var _result_overlay: ColorRect
 var _result_panel: PanelContainer
 var _result_title: Label
 var _result_sub: Label
+var _result_stats_row: HBoxContainer
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
 
@@ -142,15 +148,24 @@ func _show_intro() -> void:
 	_score = 0
 	_lives = MAX_LIVES
 	_time_left = ROUND_TIME
+	_streak = 0
+	_streak_timer = 0.0
+	_last_tick_sec = -1
 	_active = false
-	_result_panel.visible = false
-	Juice.pop_panel_in(_intro_panel)
+	_result_overlay.visible = false
+	_intro_overlay.visible = true
+	call_deferred("_pop_intro_deferred")
 	_refresh_hud()
+
+
+func _pop_intro_deferred() -> void:
+	if is_instance_valid(_intro_panel):
+		Juice.pop_panel_in(_intro_panel)
 
 
 func _on_intro_start() -> void:
 	Juice.play_sfx("tab_switch", 1.15)
-	_intro_panel.visible = false
+	_intro_overlay.visible = false
 	_start_round()
 
 
@@ -168,7 +183,7 @@ func close_minigame(won: bool = false, emit_result: bool = true) -> void:
 		minigame_finished.emit(won, {
 			"id": "mosquito",
 			"score": _score,
-			"target": TARGET_SCORE,
+			"target": _target_score,
 			"lives_left": _lives,
 			"time_left": _time_left,
 		})
@@ -183,11 +198,12 @@ func _start_round() -> void:
 	_spawn_timer = 0.25
 	_streak = 0
 	_streak_timer = 0.0
+	_last_tick_sec = -1
 	var day_idx := maxi(0, StoryManager.day - 1) if is_instance_valid(StoryManager) else 0
 	_start_diff = clampf(float(day_idx) * 0.07, 0.0, 0.48)
 	_target_score = TARGET_SCORE + (2 if day_idx >= 3 else 0) + (2 if day_idx >= 6 else 0)
 	_active = true
-	_result_panel.visible = false
+	_result_overlay.visible = false
 	Juice.play_sfx("pickup", 1.18, 0.5)
 	_refresh_hud()
 	# Spawn gentle initial wave (slightly more fireflies & bugs on later days)
@@ -218,10 +234,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.is_echo():
 		if event.keycode == KEY_ESCAPE:
 			get_viewport().set_input_as_handled()
-			close_minigame(false, true)
-		elif _intro_panel.visible and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
+			if _result_overlay.visible:
+				close_minigame(bool(_result_panel.get_meta("won", false)), true)
+			else:
+				close_minigame(false, true)
+		elif _intro_overlay.visible and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
 			get_viewport().set_input_as_handled()
 			_on_intro_start()
+		elif _result_overlay.visible and (event.keycode == KEY_SPACE or event.keycode == KEY_ENTER):
+			get_viewport().set_input_as_handled()
+			close_minigame(bool(_result_panel.get_meta("won", false)), true)
 
 
 func _process(delta: float) -> void:
@@ -242,6 +264,7 @@ func _process(delta: float) -> void:
 		_streak_timer = maxf(0.0, _streak_timer - delta)
 		if _streak_timer <= 0.0:
 			_streak = 0
+			_refresh_streak_pill()
 
 	_time_left = maxf(0.0, _time_left - delta)
 	_refresh_timer_label()
@@ -252,7 +275,7 @@ func _process(delta: float) -> void:
 			Juice.play_sfx("ui_hover", 1.38, -3.0)
 			Juice.pop_control(_timer_lbl, 1.24, 0.18)
 	if _time_left <= 0.0:
-		_finish_round(false, "Time's Up!", "The mosquitoes took over the counter. Swatted %d / %d." % [_score, TARGET_SCORE])
+		_finish_round(false, "Time's Up!", "The mosquitoes took over the counter. Swatted %d / %d." % [_score, _target_score])
 		return
 
 	_spawn_timer -= delta
@@ -295,7 +318,7 @@ func _process(delta: float) -> void:
 		# Bounce gently inside the visible screen once they have flown in from the edges
 		var entered: bool = bool(b["entered"])
 		var pad := 68.0
-		var top_pad := 142.0
+		var top_pad := 148.0
 		if not entered:
 			if pos.x >= pad and pos.x <= bounds.x - pad and pos.y >= top_pad and pos.y <= bounds.y - pad:
 				b["entered"] = true
@@ -305,13 +328,13 @@ func _process(delta: float) -> void:
 				vel.x = absf(vel.x)
 			elif pos.x > bounds.x - pad:
 				pos.x = bounds.x - pad
-				vel.x = - absf(vel.x)
+				vel.x = -absf(vel.x)
 			if pos.y < top_pad:
 				pos.y = top_pad
 				vel.y = absf(vel.y)
 			elif pos.y > bounds.y - pad:
 				pos.y = bounds.y - pad
-				vel.y = - absf(vel.y)
+				vel.y = -absf(vel.y)
 
 		b["pos"] = pos
 		b["vel"] = vel
@@ -347,19 +370,15 @@ func _spawn_bug(is_firefly: bool) -> void:
 		randf_range(175.0, bounds.y - 120.0)
 	)
 	var diff_t := _get_diff_t()
-	var speed: float
-	if is_firefly:
-		speed = randf_range(120.0, 220.0) * lerpf(0.88, 1.12, diff_t)
+	var roll := randf()
+	var base_speed: float
+	if roll < 0.30:
+		base_speed = randf_range(190.0, 290.0) # Slow drifter
+	elif roll < 0.75:
+		base_speed = randf_range(350.0, 490.0) # Normal buzz
 	else:
-		var roll := randf()
-		var base_speed: float
-		if roll < 0.30:
-			base_speed = randf_range(190.0, 290.0) # Slow drifter
-		elif roll < 0.75:
-			base_speed = randf_range(350.0, 490.0) # Normal buzz
-		else:
-			base_speed = randf_range(530.0, 690.0) # Fast dart!
-		speed = base_speed * lerpf(0.56, 1.12, diff_t)
+		base_speed = randf_range(530.0, 690.0) # Fast dart!
+	var speed: float = base_speed * lerpf(0.56, 1.12, diff_t)
 	var vel := (target - pos).normalized() * speed
 
 	tr.position = pos - sz * 0.5
@@ -428,7 +447,7 @@ func _on_bug_swatted(bug: Dictionary) -> void:
 		_streak = 0
 		_streak_timer = 0.0
 		_ripples.append({"pos": pos, "t": 0.0, "color": Color(0.98, 0.35, 0.32, 0.9)})
-		_spawn_floating_text(pos, "-1 Firefly!", Color(1.0, 0.45, 0.40))
+		_spawn_floating_text(pos, "-1 Firefly!", Juice.COL_DANGER)
 		Juice.play_sfx("error", 0.78, 1.5)
 		Juice.shake_control(_root, 13.0, 0.26)
 		Juice.spawn_burst(_arena, pos, Color(1.0, 0.42, 0.36), 12, 120.0)
@@ -440,7 +459,7 @@ func _on_bug_swatted(bug: Dictionary) -> void:
 		_streak_timer = 1.65
 		_ripples.append({"pos": pos, "t": 0.0, "color": Color(0.98, 0.84, 0.42, 0.9)})
 		var popup_txt := "+1" if _streak <= 1 else ("x%d!" % _streak if _streak < 4 else "COMBO x%d!" % _streak)
-		var popup_col := Color(0.68, 0.96, 0.58) if _streak <= 1 else (Color(1.0, 0.90, 0.42) if _streak < 4 else Color(1.0, 0.68, 0.28))
+		var popup_col := Juice.COL_SUCCESS if _streak <= 1 else (Color(1.0, 0.90, 0.42) if _streak < 4 else Color(1.0, 0.68, 0.28))
 		_spawn_floating_text(pos, popup_txt, popup_col)
 		# Tactile plastic slap + escalating pitch chime!
 		Juice.play_sfx("plastic", minf(1.65, 1.0 + float(_streak) * 0.06), -2.5)
@@ -470,27 +489,32 @@ func _on_bug_swatted(bug: Dictionary) -> void:
 func _spawn_floating_text(pos: Vector2, txt: String, col: Color) -> void:
 	var lbl := Label.new()
 	lbl.text = txt
-	lbl.position = pos - Vector2(36, 16)
-	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	lbl.add_theme_font_size_override("font_size", 19)
-	lbl.add_theme_color_override("font_color", col)
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	lbl.add_theme_constant_override("outline_size", 4)
+	lbl.position = pos - Vector2(40, 18)
+	Juice.style_hud_label(lbl, UIStyle.FONT_FREDOKA_BOLD, 21, col, 4)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_arena.add_child(lbl)
 	var tw := lbl.create_tween()
-	tw.tween_property(lbl, "position:y", lbl.position.y - 38.0, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.55)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 38.0, 0.50).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.50)
 	tw.tween_callback(lbl.queue_free)
 
 
 func _finish_round(won: bool, title: String, subtitle: String) -> void:
 	_active = false
 	_result_title.text = title
-	_result_title.add_theme_color_override("font_color", Color(0.62, 0.96, 0.56) if won else Color(0.98, 0.48, 0.45))
+	_result_title.add_theme_color_override("font_color", Juice.COL_SUCCESS if won else Juice.COL_DANGER)
 	_result_sub.text = subtitle
 	_result_panel.set_meta("won", won)
-	Juice.pop_panel_in(_result_panel)
+
+	for ch in _result_stats_row.get_children():
+		_result_stats_row.remove_child(ch)
+		ch.queue_free()
+	_result_stats_row.add_child(Juice.make_stat_chip("Swatted", "%d / %d" % [_score, _target_score], Juice.COL_SUCCESS if won else Juice.COL_CREAM))
+	_result_stats_row.add_child(Juice.make_stat_chip("Fireflies Safe", "%d / %d" % [_lives, MAX_LIVES], Juice.COL_GOLD_BRIGHT if _lives > 0 else Juice.COL_DANGER))
+	_result_stats_row.add_child(Juice.make_stat_chip("Time Left", "%.1fs" % _time_left, Juice.COL_CREAM))
+
+	_result_overlay.visible = true
+	call_deferred("_pop_result_deferred")
 	if won:
 		Juice.play_win_fanfare(self)
 		var vp := _get_vp_size()
@@ -500,28 +524,52 @@ func _finish_round(won: bool, title: String, subtitle: String) -> void:
 		Juice.play_lose_sting(self)
 
 
+func _pop_result_deferred() -> void:
+	if is_instance_valid(_result_panel):
+		Juice.pop_panel_in(_result_panel)
+
+
 func _refresh_hud() -> void:
 	_score_bar.max_value = _target_score
 	_score_bar.value = _score
 	_score_lbl.text = "%d / %d" % [_score, _target_score]
 	_refresh_timer_label()
+	_refresh_streak_pill()
 
 	for ch in _lives_box.get_children():
+		_lives_box.remove_child(ch)
 		ch.queue_free()
 	for i in range(MAX_LIVES):
 		var icon := TextureRect.new()
 		icon.texture = _tex_firefly if i < _lives else _tex_firefly_dead
-		icon.custom_minimum_size = Vector2(58, 58)
+		icon.custom_minimum_size = Vector2(44, 44)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.modulate = Color(1.0, 0.98, 0.82, 1.0) if i < _lives else Color(0.55, 0.45, 0.45, 0.40)
+		icon.modulate = Color(1.0, 0.98, 0.82, 1.0) if i < _lives else Color(0.55, 0.45, 0.45, 0.38)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_lives_box.add_child(icon)
 
 
+func _refresh_streak_pill() -> void:
+	if not is_instance_valid(_streak_pill):
+		return
+	if _streak >= 2:
+		_streak_pill.visible = true
+		_streak_lbl.text = "x%d Streak" % _streak
+		var col := Color(1.0, 0.72, 0.30) if _streak >= 4 else Juice.COL_GOLD_BRIGHT
+		_streak_lbl.add_theme_color_override("font_color", col)
+		Juice.pop_control(_streak_pill, 1.15, 0.16)
+	else:
+		_streak_pill.visible = false
+
+
 func _refresh_timer_label() -> void:
+	var low := _time_left <= 6.0
 	_timer_lbl.text = "%.1fs" % _time_left
-	var col := Color(0.98, 0.45, 0.40) if _time_left <= 6.0 else Color(1.0, 0.93, 0.74)
+	var col := Juice.COL_DANGER if low else Juice.COL_GOLD_BRIGHT
 	_timer_lbl.add_theme_color_override("font_color", col)
+	if is_instance_valid(_timer_icon):
+		_timer_icon.modulate = col
 
 
 func _build_ui() -> void:
@@ -561,182 +609,251 @@ func _build_ui() -> void:
 	_arena_fx.draw.connect(_draw_arena_fx)
 	_arena.add_child(_arena_fx)
 
-	# Floating Top-Center Title & Compact HUD (no outer box, Title Case)
+	# --- TOP SAFE-ZONE HEADER + CONTRASTING HUD BAR ---
 	var header := VBoxContainer.new()
 	header.anchor_left = 0.5
 	header.anchor_right = 0.5
 	header.anchor_top = 0.0
-	header.offset_left = -280
-	header.offset_right = 280
-	header.offset_top = 18
-	header.add_theme_constant_override("separation", 6)
+	header.offset_left = -340
+	header.offset_right = 340
+	header.offset_top = 24
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 8)
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(header)
 
 	var title := Label.new()
 	title.text = "Dusk Lamp Swat"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title.add_theme_font_size_override("font_size", 32)
-	title.add_theme_color_override("font_color", Color(1.0, 0.93, 0.72))
-	title.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.92))
-	title.add_theme_constant_override("outline_size", 6)
+	Juice.style_hud_label(title, UIStyle.FONT_FREDOKA_BOLD, 30, Juice.COL_GOLD_BRIGHT, 5)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_child(title)
+
+	var hud_center := HBoxContainer.new()
+	hud_center.alignment = BoxContainer.ALIGNMENT_CENTER
+	hud_center.add_theme_constant_override("separation", 10)
+	hud_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(hud_center)
+
+	var hud_pill := PanelContainer.new()
+	hud_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_pill.add_theme_stylebox_override("panel", Juice.make_pill_style(Juice.COL_HUD_BG, Juice.COL_GOLD_SOFT, 14, 18, 8, 2))
+	hud_center.add_child(hud_pill)
 
 	var hud_row := HBoxContainer.new()
 	hud_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	hud_row.add_theme_constant_override("separation", 18)
+	hud_row.add_theme_constant_override("separation", 14)
 	hud_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_child(hud_row)
+	hud_pill.add_child(hud_row)
 
+	# Score progress bar + numeric readout
 	var score_wrap := HBoxContainer.new()
-	score_wrap.add_theme_constant_override("separation", 8)
+	score_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+	score_wrap.add_theme_constant_override("separation", 10)
+	score_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud_row.add_child(score_wrap)
 
 	_score_bar = ProgressBar.new()
-	_score_bar.custom_minimum_size = Vector2(180, 14)
+	_score_bar.custom_minimum_size = Vector2(168, 14)
 	_score_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_score_bar.show_percentage = false
-	var sb_bg := UIStyle.create_flat_stylebox(Color(0.10, 0.09, 0.08, 0.85), 7, 0, 0)
-	var sb_fill := UIStyle.create_flat_stylebox(Color(0.45, 0.86, 0.46, 1.0), 7, 0, 0)
+	_score_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb_bg := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.04, 0.92), 7, 0, 0)
+	sb_bg.border_color = Color(0.88, 0.70, 0.34, 0.28)
+	sb_bg.set_border_width_all(1)
+	var sb_fill := UIStyle.create_flat_stylebox(Juice.COL_SUCCESS, 7, 0, 0)
 	_score_bar.add_theme_stylebox_override("background", sb_bg)
 	_score_bar.add_theme_stylebox_override("fill", sb_fill)
 	score_wrap.add_child(_score_bar)
 
 	_score_lbl = Label.new()
-	_score_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_score_lbl.add_theme_font_size_override("font_size", 17)
-	_score_lbl.add_theme_color_override("font_color", Color(0.96, 0.91, 0.80))
-	_score_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	_score_lbl.add_theme_constant_override("outline_size", 4)
+	_score_lbl.custom_minimum_size = Vector2(58, 0)
+	_score_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	_score_lbl.add_theme_font_size_override("font_size", 18)
+	_score_lbl.add_theme_color_override("font_color", Juice.COL_CREAM)
+	_score_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	score_wrap.add_child(_score_lbl)
 
+	hud_row.add_child(Juice.make_vsep(24.0))
+
+	# Firefly Lives
 	_lives_box = HBoxContainer.new()
-	_lives_box.add_theme_constant_override("separation", 4)
+	_lives_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	_lives_box.add_theme_constant_override("separation", 2)
+	_lives_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hud_row.add_child(_lives_box)
 
+	hud_row.add_child(Juice.make_vsep(24.0))
+
+	# Timer with Lucide clock icon
+	var timer_wrap := HBoxContainer.new()
+	timer_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+	timer_wrap.add_theme_constant_override("separation", 6)
+	timer_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud_row.add_child(timer_wrap)
+
+	_timer_icon = Juice.make_icon_rect(Juice.ICON_CLOCK, Vector2(18, 18), Juice.COL_GOLD_BRIGHT)
+	timer_wrap.add_child(_timer_icon)
+
 	_timer_lbl = Label.new()
-	_timer_lbl.custom_minimum_size = Vector2(64, 0)
-	_timer_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_timer_lbl.custom_minimum_size = Vector2(58, 0)
+	_timer_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	_timer_lbl.add_theme_font_size_override("font_size", 20)
-	_timer_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	_timer_lbl.add_theme_constant_override("outline_size", 4)
-	hud_row.add_child(_timer_lbl)
+	_timer_lbl.add_theme_color_override("font_color", Juice.COL_GOLD_BRIGHT)
+	_timer_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	timer_wrap.add_child(_timer_lbl)
 
-	# Subtle bottom hint
+	# Contextual Streak Pill (appears only when streak >= 2)
+	_streak_pill = PanelContainer.new()
+	_streak_pill.visible = false
+	_streak_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_streak_pill.add_theme_stylebox_override("panel", Juice.make_pill_style(Color(0.22, 0.14, 0.06, 0.94), Juice.COL_GOLD, 12, 12, 6, 2))
+	hud_center.add_child(_streak_pill)
+
+	_streak_lbl = Label.new()
+	_streak_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	_streak_lbl.add_theme_font_size_override("font_size", 16)
+	_streak_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_streak_pill.add_child(_streak_lbl)
+
+	# Bottom safe-zone hint pill
+	var hint_wrap := HBoxContainer.new()
+	hint_wrap.anchor_left = 0.5
+	hint_wrap.anchor_right = 0.5
+	hint_wrap.anchor_top = 1.0
+	hint_wrap.anchor_bottom = 1.0
+	hint_wrap.offset_left = -280
+	hint_wrap.offset_right = 280
+	hint_wrap.offset_top = -54
+	hint_wrap.offset_bottom = -20
+	hint_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+	hint_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(hint_wrap)
+
+	var hint_pill := PanelContainer.new()
+	hint_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_pill.add_theme_stylebox_override("panel", Juice.make_pill_style(Color(0.08, 0.06, 0.05, 0.78), Color(0.88, 0.70, 0.34, 0.26), 12, 16, 6, 1))
+	hint_wrap.add_child(hint_pill)
+
+	var hint_row := HBoxContainer.new()
+	hint_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hint_row.add_theme_constant_override("separation", 8)
+	hint_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_pill.add_child(hint_row)
+
+	hint_row.add_child(Juice.make_keycap_pill("Click"))
 	var hint := Label.new()
-	hint.text = "Click mosquitoes to swat them — avoid the glowing fireflies"
-	hint.anchor_left = 0.5
-	hint.anchor_right = 0.5
-	hint.anchor_top = 1.0
-	hint.anchor_bottom = 1.0
-	hint.offset_left = -260
-	hint.offset_right = 260
-	hint.offset_top = -36
-	hint.offset_bottom = -12
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_override("font", UIStyle.FONT_INDER)
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", Color(0.92, 0.86, 0.74, 0.82))
-	hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	hint.add_theme_constant_override("outline_size", 3)
+	hint.text = "Swat mosquitoes — spare the glowing fireflies"
+	hint.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	hint.add_theme_font_size_override("font_size", 15)
+	hint.add_theme_color_override("font_color", Juice.COL_CREAM)
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(hint)
+	hint_row.add_child(hint)
 
-	# Minimal floating close button top-right
+	# Standardized 48x48 close button in top-right safe zone
 	var close_btn := Button.new()
-	close_btn.text = "✕"
+	Juice.style_close_button(close_btn)
 	close_btn.anchor_left = 1.0
 	close_btn.anchor_right = 1.0
-	close_btn.offset_left = -58
-	close_btn.offset_right = -18
-	close_btn.offset_top = 18
-	close_btn.offset_bottom = 58
+	close_btn.offset_left = -84
+	close_btn.offset_right = -36
+	close_btn.offset_top = 24
+	close_btn.offset_bottom = 72
 	close_btn.pressed.connect(func(): close_minigame(false, true))
 	_root.add_child(close_btn)
 
-	# Intro instructions pop-up
-	_intro_panel = PanelContainer.new()
-	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_intro_panel.custom_minimum_size = Vector2(540, 265)
-	_intro_panel.offset_left = -270
-	_intro_panel.offset_right = 270
-	_intro_panel.offset_top = -132
-	_intro_panel.offset_bottom = 132
-	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
-	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
-	istyle.set_border_width_all(2)
-	_intro_panel.add_theme_stylebox_override("panel", istyle)
-	_intro_panel.visible = false
-	_root.add_child(_intro_panel)
-
-	var iv := VBoxContainer.new()
-	iv.alignment = BoxContainer.ALIGNMENT_CENTER
-	iv.add_theme_constant_override("separation", 14)
-	_intro_panel.add_child(iv)
+	# --- INTRO MODAL (Responsive CenterContainer + Visual Target Preview) ---
+	var intro_shell := Juice.make_modal_shell(_root, Vector2(560, 0))
+	_intro_overlay = intro_shell["overlay"]
+	_intro_panel = intro_shell["panel"]
+	var iv: VBoxContainer = intro_shell["vbox"]
 
 	var ititle := Label.new()
-	ititle.text = "How to Play: Dusk Lamp Swat"
+	ititle.text = "Dusk Lamp Swat"
 	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ititle.add_theme_font_override("font", UIStyle.FONT_INDER)
-	ititle.add_theme_font_size_override("font_size", 34)
-	ititle.add_theme_color_override("font_color", Color(1.0, 0.91, 0.64))
+	ititle.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	ititle.add_theme_font_size_override("font_size", 32)
+	ititle.add_theme_color_override("font_color", Juice.COL_GOLD_BRIGHT)
 	iv.add_child(ititle)
 
+	# Visual glance row: Swat Mosquito vs Spare Firefly
+	var preview_row := HBoxContainer.new()
+	preview_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	preview_row.add_theme_constant_override("separation", 16)
+	iv.add_child(preview_row)
+
+	preview_row.add_child(_make_bug_badge(_tex_mosq, "SWAT", Juice.COL_SUCCESS))
+	preview_row.add_child(_make_bug_badge(_tex_firefly, "SPARE", Juice.COL_DANGER))
+
 	var idesc := Label.new()
-	idesc.text = "Click the mosquitoes flying across the screen to swat them before time runs out. Don't swat the glowing fireflies — you only have %d firefly lives!" % MAX_LIVES
+	idesc.text = "Click mosquitoes before time runs out. Sparing the glowing fireflies keeps your %d lives safe!" % MAX_LIVES
 	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	idesc.add_theme_font_size_override("font_size", 22)
-	idesc.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
+	idesc.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	idesc.add_theme_font_size_override("font_size", 18)
+	idesc.add_theme_color_override("font_color", Juice.COL_CREAM)
 	iv.add_child(idesc)
 
 	var start_btn := Button.new()
-	start_btn.text = "Start"
-	Juice.style_primary_button(start_btn)
+	start_btn.text = "Start Swatting"
+	Juice.style_primary_button(start_btn, Vector2(220, 50))
 	start_btn.pressed.connect(_on_intro_start)
 	iv.add_child(start_btn)
 
-	# Result panel
-	_result_panel = PanelContainer.new()
-	_result_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_result_panel.custom_minimum_size = Vector2(460, 230)
-	_result_panel.offset_left = -230
-	_result_panel.offset_right = 230
-	_result_panel.offset_top = -115
-	_result_panel.offset_bottom = 115
-	var rs := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
-	rs.border_color = Color(0.92, 0.72, 0.32, 0.92)
-	rs.set_border_width_all(2)
-	_result_panel.add_theme_stylebox_override("panel", rs)
-	_result_panel.visible = false
-	_root.add_child(_result_panel)
-
-	var rv := VBoxContainer.new()
-	rv.alignment = BoxContainer.ALIGNMENT_CENTER
-	rv.add_theme_constant_override("separation", 14)
-	_result_panel.add_child(rv)
+	# --- RESULT MODAL ---
+	var res_shell := Juice.make_modal_shell(_root, Vector2(520, 0))
+	_result_overlay = res_shell["overlay"]
+	_result_panel = res_shell["panel"]
+	var rv: VBoxContainer = res_shell["vbox"]
 
 	_result_title = Label.new()
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_title.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_title.add_theme_font_size_override("font_size", 34)
+	_result_title.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	_result_title.add_theme_font_size_override("font_size", 32)
 	rv.add_child(_result_title)
 
 	_result_sub = Label.new()
 	_result_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_result_sub.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_sub.add_theme_font_size_override("font_size", 20)
-	_result_sub.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
+	_result_sub.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	_result_sub.add_theme_font_size_override("font_size", 18)
+	_result_sub.add_theme_color_override("font_color", Juice.COL_CREAM)
 	rv.add_child(_result_sub)
+
+	_result_stats_row = HBoxContainer.new()
+	_result_stats_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_result_stats_row.add_theme_constant_override("separation", 12)
+	rv.add_child(_result_stats_row)
 
 	var cont_btn := Button.new()
 	cont_btn.text = "Continue"
-	Juice.style_primary_button(cont_btn)
+	Juice.style_primary_button(cont_btn, Vector2(210, 50))
 	cont_btn.pressed.connect(func(): close_minigame(bool(_result_panel.get_meta("won", false)), true))
 	rv.add_child(cont_btn)
+
+
+func _make_bug_badge(tex: Texture2D, badge_text: String, col: Color) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", Juice.make_pill_style(Color(0.15, 0.11, 0.08, 0.94), Color(col.r, col.g, col.b, 0.65), 12, 16, 10, 2))
+	var h := HBoxContainer.new()
+	h.alignment = BoxContainer.ALIGNMENT_CENTER
+	h.add_theme_constant_override("separation", 10)
+	p.add_child(h)
+
+	var tr := TextureRect.new()
+	tr.texture = tex
+	tr.custom_minimum_size = Vector2(52, 52)
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	h.add_child(tr)
+
+	var lbl := Label.new()
+	lbl.text = badge_text
+	lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", col)
+	h.add_child(lbl)
+	return p
 
 
 func _draw_arena_fx() -> void:
