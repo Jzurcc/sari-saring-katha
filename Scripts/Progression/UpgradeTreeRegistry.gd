@@ -52,8 +52,8 @@ const NODES: Array[Dictionary] = [
 	{"id": "signage", "title": "Roof Signage", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "storefront_step", "storefront_level": 1},
 	{"id": "poster", "title": "Promo Poster", "pos": Vector2(8.0, 2.2), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
 
-	# ── CAPSTONE: Open the Door (Top-Center, requires only Lv. 1 of each branch lead) ──
-	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.0, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["wholesale_pass", "trash_can", "maneki_1", "poster"], "kind": "storefront_step", "storefront_level": 3},
+	# ── CAPSTONE: Open the Door (Top-Center, requires final upgrades of Permit, Fridge, Bench, Radio, Sto. Niño) ──
+	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.0, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_3", "fridge_3", "bench_3", "radio_3", "sto_nino_3"], "kind": "storefront_step", "storefront_level": 3},
 ]
 
 
