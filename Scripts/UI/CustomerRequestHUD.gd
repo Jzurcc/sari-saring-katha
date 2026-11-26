@@ -38,6 +38,8 @@ func _ready() -> void:
 	EventBus.customer_order_cleared.connect(_on_order_cleared)
 	EventBus.transaction_completed.connect(_on_transaction_completed)
 	EventBus.tier_advanced.connect(_on_tier_advanced)
+	if is_instance_valid(InventoryManager) and not InventoryManager.stock_changed.is_connected(_on_stock_changed):
+		InventoryManager.stock_changed.connect(_on_stock_changed)
 	EventBus.customer_hover_changed.connect(_on_customer_hover_changed)
 
 func _on_transaction_completed(_item: ItemData, was_correct: bool, _wants_debt: bool, customer_path: String) -> void:
@@ -54,6 +56,10 @@ func _find_row_key_by_path(customer_path: String) -> String:
 		if norm_key == file_id:
 			return str(key)
 	return ""
+
+func _on_stock_changed(_item: ItemData = null, _new_stock: int = 0) -> void:
+	_on_tier_advanced(StoryManager.current_tier, "stock_changed")
+
 
 func _on_tier_advanced(_new_tier: int, _source: String) -> void:
 	if not is_visible_hud:
@@ -436,7 +442,12 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 			riddle_badge.hide()
 		icon.show()
 		icon.texture = _get_trimmed_item_texture(item)
-		icon.modulate = Color(0.2, 0.2, 0.2, 1) if item.tier > StoryManager.current_tier else Color.WHITE
+		if item.tier > StoryManager.current_tier:
+			icon.modulate = Color(0.18, 0.18, 0.18, 0.92) # Locked tier silhouette
+		elif is_instance_valid(InventoryManager) and not InventoryManager.is_in_stock(item):
+			icon.modulate = Color(0.55, 0.44, 0.44, 0.60) # Out of stock faded shade
+		else:
+			icon.modulate = Color.WHITE
 
 func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool, stagger_delay: float = 0.0) -> void:
 	var slot_size := _get_slot_size_for_item(item, is_riddle)
