@@ -76,8 +76,14 @@ var category_labels: Dictionary = {
 
 var _bold_font: FontVariation
 
+# Dedicated high CanvasLayer (55) hides other HUD elements; main HUD MoneyContainer is elevated into it
+var _overlay_layer: CanvasLayer
+var _overlay_root: Control
+var _hud_money: Control
+var _hud_money_parent: Node
+var _hud_money_index: int = 0
+
 # Top Header & Toolbar references
-var _money_lbl: Label
 var _shelf_cap_lbl: Label
 var _fridge_cap_lbl: Label
 var _category_dropdown: OptionButton
@@ -149,15 +155,54 @@ func _unhandled_input(event: InputEvent) -> void:
 			_set_slip_open(not _slip_open)
 
 
+func _exit_tree() -> void:
+	_restore_hud_money()
+
+
+func _elevate_hud_money() -> void:
+	if is_instance_valid(_hud_money) or not is_instance_valid(_overlay_root):
+		return
+	var cur_scene := get_tree().current_scene
+	if not is_instance_valid(cur_scene):
+		return
+	var m := cur_scene.get_node_or_null("CanvasLayer/LeftHUD/MoneyContainer") as Control
+	if m == null:
+		return
+	_hud_money = m
+	_hud_money_parent = m.get_parent()
+	_hud_money_index = m.get_index()
+	m.reparent(_overlay_root, true)
+	if is_instance_valid(_regulars_backdrop):
+		_overlay_root.move_child(m, _regulars_backdrop.get_index())
+
+
+func _restore_hud_money() -> void:
+	if not is_instance_valid(_hud_money):
+		return
+	if is_instance_valid(_hud_money_parent):
+		_hud_money.reparent(_hud_money_parent, true)
+		_hud_money_parent.move_child(_hud_money, mini(_hud_money_index, _hud_money_parent.get_child_count() - 1))
+	_hud_money = null
+
+
 # ── UI Construction ──────────────────────────────────────────────────────────
 
 func _build_ui() -> void:
+	_overlay_layer = CanvasLayer.new()
+	_overlay_layer.layer = 55
+	_overlay_layer.visible = false
+	add_child(_overlay_layer)
+
+	_overlay_root = Control.new()
+	_overlay_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_overlay_layer.add_child(_overlay_root)
+
 	# 1. Clean borderless full-screen Dark Warm Espresso backdrop
 	var backdrop := ColorRect.new()
 	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
 	backdrop.color = COL_BACKDROP
 	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(backdrop)
+	_overlay_root.add_child(backdrop)
 
 	# 2. Title-Safe Container (5% margins on all sides = 90% safe area)
 	var safe_root := VBoxContainer.new()
@@ -166,7 +211,7 @@ func _build_ui() -> void:
 	safe_root.anchor_top = 0.045
 	safe_root.anchor_bottom = 0.955
 	safe_root.add_theme_constant_override("separation", 16)
-	add_child(safe_root)
+	_overlay_root.add_child(safe_root)
 
 	_build_top_bar(safe_root)
 	_build_toolbar(safe_root)
@@ -180,33 +225,10 @@ func _build_top_bar(parent: VBoxContainer) -> void:
 	top_bar.add_theme_constant_override("separation", 14)
 	parent.add_child(top_bar)
 
-	# Top-Left: White Money readout (matches Main HUD & Store Upgrades) + quiet capacity pills
-	var money_row := HBoxContainer.new()
-	money_row.add_theme_constant_override("separation", 8)
-	money_row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	top_bar.add_child(money_row)
-
-	var peso_tex := TextureRect.new()
-	peso_tex.texture = PESO_ICON
-	peso_tex.custom_minimum_size = Vector2(30, 30)
-	peso_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	peso_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	peso_tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	peso_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	money_row.add_child(peso_tex)
-
-	_money_lbl = Label.new()
-	_money_lbl.text = "0.00"
-	_money_lbl.add_theme_font_override("font", _bold_font)
-	_money_lbl.add_theme_font_size_override("font_size", 28)
-	_money_lbl.add_theme_color_override("font_color", Color.WHITE)
-	_money_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
-	_money_lbl.add_theme_constant_override("outline_size", 4)
-	money_row.add_child(_money_lbl)
-
-	var cap_spacer := Control.new()
-	cap_spacer.custom_minimum_size = Vector2(12, 0)
-	top_bar.add_child(cap_spacer)
+	# Leave clean breathing room on the top-left for the elevated main HUD MoneyContainer
+	var money_spacer := Control.new()
+	money_spacer.custom_minimum_size = Vector2(210, 0)
+	top_bar.add_child(money_spacer)
 
 	_shelf_cap_lbl = _make_status_pill(top_bar, "Shelf 0/36")
 	_fridge_cap_lbl = _make_status_pill(top_bar, "Fridge 0/12")
@@ -461,7 +483,7 @@ func _build_regulars_popover() -> void:
 		if ev is InputEventMouseButton and ev.pressed:
 			_set_regulars_open(false)
 	)
-	add_child(_regulars_backdrop)
+	_overlay_root.add_child(_regulars_backdrop)
 
 	_regulars_popover = PanelContainer.new()
 	_regulars_popover.visible = false
@@ -472,7 +494,7 @@ func _build_regulars_popover() -> void:
 	ps.shadow_size = 18
 	ps.shadow_offset = Vector2(0, 6)
 	_regulars_popover.add_theme_stylebox_override("panel", ps)
-	add_child(_regulars_popover)
+	_overlay_root.add_child(_regulars_popover)
 
 	var pv := VBoxContainer.new()
 	pv.add_theme_constant_override("separation", 10)
@@ -514,7 +536,7 @@ func _build_regulars_popover() -> void:
 func _build_delayed_tooltip() -> void:
 	_tooltip_timer = Timer.new()
 	_tooltip_timer.one_shot = true
-	_tooltip_timer.wait_time = 0.35
+	_tooltip_timer.wait_time = 0.10
 	_tooltip_timer.timeout.connect(_show_delayed_tooltip)
 	add_child(_tooltip_timer)
 
@@ -528,7 +550,7 @@ func _build_delayed_tooltip() -> void:
 	ts.shadow_size = 14
 	ts.shadow_offset = Vector2(0, 4)
 	_tooltip_panel.add_theme_stylebox_override("panel", ts)
-	add_child(_tooltip_panel)
+	_overlay_root.add_child(_tooltip_panel)
 
 	var tv := VBoxContainer.new()
 	tv.add_theme_constant_override("separation", 4)
@@ -647,16 +669,18 @@ func open_menu() -> void:
 	_refresh_capacity_and_wallet()
 
 	show()
+	_overlay_layer.visible = true
+	_elevate_hud_money()
 	_animate_entrance()
 
 
 func _animate_entrance() -> void:
-	modulate.a = 0.0
-	scale = Vector2(0.98, 0.98)
-	pivot_offset = get_viewport_rect().size * 0.5
+	_overlay_root.modulate.a = 0.0
+	_overlay_root.scale = Vector2(0.985, 0.985)
+	_overlay_root.pivot_offset = get_viewport_rect().size * 0.5
 	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_overlay_root, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_overlay_root, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _set_slip_open(open_state: bool) -> void:
@@ -897,10 +921,6 @@ func _refresh_capacity_and_wallet() -> void:
 		_fridge_cap_lbl.text = "Fridge %d/%d" % [fridge_owned, fridge_limit]
 		_fridge_cap_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 
-	var money := _get_money()
-	_money_lbl.text = "%.2f" % money
-	_money_lbl.add_theme_color_override("font_color", COL_CORAL if order.total_price > money else Color.WHITE)
-
 
 # ── Calm Product Cards (Click to +1, Contextual Stepper when qty > 0) ────────
 
@@ -1105,19 +1125,13 @@ func _refresh_single_card(item: ItemData) -> void:
 	var is_deal := StoryManager.is_item_on_sulit_deal(item)
 	var is_hot := is_instance_valid(StoreEventManager) and StoreEventManager.is_item_in_demand(item)
 
-	# Top pill: redundant color + text label for Deals / Demand / Out of Stock
+	# Top pill: redundant color + text label for Deals / Demand only (no Out badge)
 	if is_deal:
 		status_pill.visible = true
 		status_lbl.text = "-20%"
 		status_lbl.add_theme_color_override("font_color", COL_POSITIVE)
 		status_style.border_color = COL_POSITIVE
 		status_style.bg_color = Color(COL_POSITIVE.r, COL_POSITIVE.g, COL_POSITIVE.b, 0.16)
-	elif stock <= 0 and in_basket <= 0:
-		status_pill.visible = true
-		status_lbl.text = "Out"
-		status_lbl.add_theme_color_override("font_color", COL_CORAL)
-		status_style.border_color = COL_CORAL
-		status_style.bg_color = Color(COL_CORAL.r, COL_CORAL.g, COL_CORAL.b, 0.16)
 	elif is_hot:
 		status_pill.visible = true
 		status_lbl.text = "Hot"
@@ -1212,7 +1226,7 @@ func _on_card_mouse_entered(item: ItemData, card: Control) -> void:
 	_hovered_card = card
 	_refresh_single_card(item)
 	_tooltip_panel.visible = false
-	_tooltip_timer.start(0.35)
+	_tooltip_timer.start(0.10)
 
 
 func _on_card_mouse_exited(item: ItemData, _card: Control) -> void:
@@ -1247,15 +1261,14 @@ func _show_delayed_tooltip() -> void:
 	_tooltip_panel.position = pos
 
 	var tw := create_tween()
-	tw.tween_property(_tooltip_panel, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_tooltip_panel, "modulate:a", 1.0, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _populate_tooltip(item: ItemData) -> void:
 	_tooltip_title_lbl.text = item.item_name
-	var eff_cost := order.get_effective_unit_price(item)
-	var sell := item.get_final_price()
-	var profit := sell - eff_cost
-	_tooltip_price_lbl.text = "Wholesale ₱%.0f  •  Sell ₱%.0f  (+₱%.0f profit)" % [eff_cost, sell, profit]
+	var ui_cat_key := "sachets" if item.category == "sachet" else item.category
+	var cat_label := str(category_labels.get(ui_cat_key, item.category.capitalize()))
+	_tooltip_price_lbl.text = "%s  •  Tier %d" % [cat_label, item.tier]
 
 	var notes: PackedStringArray = []
 	var stock := InventoryManager.get_total_item_stock(item)
@@ -1465,11 +1478,13 @@ func _close_restock_screen() -> void:
 	_hide_tooltip()
 	_set_regulars_open(false)
 	var tween := create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.tween_property(_overlay_root, "modulate:a", 0.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func():
+		_restore_hud_money()
+		_overlay_layer.visible = false
+		_overlay_root.modulate.a = 1.0
 		menu_close_requested.emit()
 		hide()
-		modulate.a = 1.0
 	)
 
 
