@@ -26,6 +26,17 @@ signal menu_close_requested
 @export var detail_icon_size := Vector2(56, 56)
 
 const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
+const IC_SPARKLES: Texture2D = preload("res://Assets/ui/icons/sparkles.png")
+const IC_LAYERS: Texture2D = preload("res://Assets/ui/icons/layers-2.png")
+const IC_PACKAGE: Texture2D = preload("res://Assets/ui/icons/package.png")
+const IC_COFFEE: Texture2D = preload("res://Assets/ui/icons/coffee.png")
+const IC_GIFT: Texture2D = preload("res://Assets/ui/icons/gift.png")
+const IC_SNOWFLAKE: Texture2D = preload("res://Assets/ui/icons/snowflake.png")
+const IC_FLAME: Texture2D = preload("res://Assets/ui/icons/flame.png")
+const IC_USERS: Texture2D = preload("res://Assets/ui/icons/users.png")
+const IC_BASKET: Texture2D = preload("res://Assets/ui/icons/shopping-basket.png")
+const IC_TRUCK: Texture2D = preload("res://Assets/ui/icons/truck.png")
+const IC_ZAP: Texture2D = preload("res://Assets/ui/icons/zap.png")
 
 # Palette: Borderless Dark Warm Espresso + Antique Gold + Crisp Cream
 const COL_BACKDROP := Color(0.052, 0.044, 0.038, 0.95)
@@ -86,7 +97,10 @@ var _hud_money_index: int = 0
 # Top Header & Toolbar references
 var _shelf_cap_lbl: Label
 var _fridge_cap_lbl: Label
-var _category_dropdown: OptionButton
+var _category_btn: Button
+var _category_backdrop: Control
+var _category_popover: PanelContainer
+var _category_list_box: VBoxContainer
 var _regulars_btn: Button
 var _slip_toggle_btn: Button
 var _quick_order_btn: Button
@@ -141,7 +155,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		if _regulars_popover and _regulars_popover.visible:
+		if _category_popover and _category_popover.visible:
+			_set_category_open(false)
+		elif _regulars_popover and _regulars_popover.visible:
 			_set_regulars_open(false)
 		elif _slip_open:
 			_set_slip_open(false)
@@ -172,7 +188,9 @@ func _elevate_hud_money() -> void:
 	_hud_money_parent = m.get_parent()
 	_hud_money_index = m.get_index()
 	m.reparent(_overlay_root, true)
-	if is_instance_valid(_regulars_backdrop):
+	if is_instance_valid(_category_backdrop):
+		_overlay_root.move_child(m, _category_backdrop.get_index())
+	elif is_instance_valid(_regulars_backdrop):
 		_overlay_root.move_child(m, _regulars_backdrop.get_index())
 
 
@@ -216,6 +234,7 @@ func _build_ui() -> void:
 	_build_top_bar(safe_root)
 	_build_toolbar(safe_root)
 	_build_body_area(safe_root)
+	_build_category_popover()
 	_build_regulars_popover()
 	_build_delayed_tooltip()
 
@@ -224,14 +243,6 @@ func _build_top_bar(parent: VBoxContainer) -> void:
 	var top_bar := HBoxContainer.new()
 	top_bar.add_theme_constant_override("separation", 14)
 	parent.add_child(top_bar)
-
-	# Leave clean breathing room on the top-left for the elevated main HUD MoneyContainer
-	var money_spacer := Control.new()
-	money_spacer.custom_minimum_size = Vector2(210, 0)
-	top_bar.add_child(money_spacer)
-
-	_shelf_cap_lbl = _make_status_pill(top_bar, "Shelf 0/36")
-	_fridge_cap_lbl = _make_status_pill(top_bar, "Fridge 0/12")
 
 	var mid_spacer := Control.new()
 	mid_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -264,39 +275,90 @@ func _build_toolbar(parent: VBoxContainer) -> void:
 	bar.add_theme_constant_override("separation", 12)
 	parent.add_child(bar)
 
-	# Category Dropdown (replaces 10-button tab strip)
-	_category_dropdown = OptionButton.new()
-	_category_dropdown.custom_minimum_size = Vector2(0, 48)
-	_category_dropdown.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_category_dropdown.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_category_dropdown.add_theme_font_override("font", _bold_font)
-	_category_dropdown.add_theme_font_size_override("font_size", 18)
-	_apply_button_theme(_category_dropdown, COL_SURFACE, COL_GOLD, COL_CREAM, 10, 18)
-	var popup := _category_dropdown.get_popup()
-	popup.add_theme_font_override("font", UIStyle.FONT_INDER)
-	popup.add_theme_font_size_override("font_size", 17)
-	popup.add_theme_color_override("font_color", COL_CREAM)
-	popup.add_theme_color_override("font_hover_color", COL_GOLD_BRIGHT)
-	popup.add_theme_color_override("font_disabled_color", Color(0.55, 0.50, 0.44, 0.55))
-	var pop_style := UIStyle.create_flat_stylebox(COL_DRAWER, 10, 14, 10)
-	pop_style.border_color = COL_GOLD
-	pop_style.set_border_width_all(2)
-	popup.add_theme_stylebox_override("panel", pop_style)
-	var pop_hover := UIStyle.create_flat_stylebox(Color(0.24, 0.19, 0.13, 1.0), 6, 10, 6)
-	popup.add_theme_stylebox_override("hover", pop_hover)
-	_category_dropdown.item_selected.connect(_on_category_dropdown_selected)
-	bar.add_child(_category_dropdown)
+	# Custom Lucide-icon Category Dropdown Button (100% reliable on CanvasLayer 55)
+	_category_btn = Button.new()
+	_category_btn.text = "Recommended ▾"
+	_category_btn.icon = IC_SPARKLES
+	_category_btn.custom_minimum_size = Vector2(0, 48)
+	_category_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_category_btn.add_theme_font_override("font", _bold_font)
+	_category_btn.add_theme_font_size_override("font_size", 18)
+	_category_btn.add_theme_constant_override("icon_max_width", 20)
+	_category_btn.add_theme_constant_override("h_separation", 8)
+	_apply_button_theme(_category_btn, COL_SURFACE, COL_GOLD, COL_CREAM, 10, 16)
+	_category_btn.pressed.connect(func(): _set_category_open(not _category_popover.visible))
+	bar.add_child(_category_btn)
 
 	# Toggleable Regulars & Quick-Fill Popover Button (closed by default)
 	_regulars_btn = Button.new()
 	_regulars_btn.text = "Today's Regulars ▾"
+	_regulars_btn.icon = IC_USERS
 	_regulars_btn.custom_minimum_size = Vector2(0, 48)
 	_regulars_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_regulars_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
 	_regulars_btn.add_theme_font_size_override("font_size", 17)
+	_regulars_btn.add_theme_constant_override("icon_max_width", 20)
+	_regulars_btn.add_theme_constant_override("h_separation", 8)
 	_apply_button_theme(_regulars_btn, COL_SURFACE, COL_BORDER_SUBTLE, COL_CREAM, 10, 16)
 	_regulars_btn.pressed.connect(func(): _set_regulars_open(not _regulars_popover.visible))
 	bar.add_child(_regulars_btn)
+
+	# Single Combined Shelf + Fridge Storage Rectangle (bigger & right beside Regulars)
+	var storage_panel := PanelContainer.new()
+	storage_panel.custom_minimum_size = Vector2(0, 48)
+	storage_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var st_style := UIStyle.create_flat_stylebox(COL_SURFACE, 10, 16, 8)
+	st_style.border_color = COL_BORDER_SUBTLE
+	st_style.set_border_width_all(1)
+	storage_panel.add_theme_stylebox_override("panel", st_style)
+	bar.add_child(storage_panel)
+
+	var st_row := HBoxContainer.new()
+	st_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	st_row.add_theme_constant_override("separation", 10)
+	storage_panel.add_child(st_row)
+
+	var sh_ic := TextureRect.new()
+	sh_ic.texture = IC_PACKAGE
+	sh_ic.custom_minimum_size = Vector2(20, 20)
+	sh_ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sh_ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	sh_ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	sh_ic.modulate = COL_GOLD_BRIGHT
+	st_row.add_child(sh_ic)
+
+	_shelf_cap_lbl = Label.new()
+	_shelf_cap_lbl.text = "Shelf 0/36"
+	_shelf_cap_lbl.add_theme_font_override("font", _bold_font)
+	_shelf_cap_lbl.add_theme_font_size_override("font_size", 17)
+	_shelf_cap_lbl.add_theme_color_override("font_color", COL_CREAM)
+	_shelf_cap_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	_shelf_cap_lbl.add_theme_constant_override("outline_size", 3)
+	st_row.add_child(_shelf_cap_lbl)
+
+	var divider := Label.new()
+	divider.text = "•"
+	divider.add_theme_font_size_override("font_size", 17)
+	divider.add_theme_color_override("font_color", COL_BORDER_SUBTLE)
+	st_row.add_child(divider)
+
+	var fr_ic := TextureRect.new()
+	fr_ic.texture = IC_SNOWFLAKE
+	fr_ic.custom_minimum_size = Vector2(20, 20)
+	fr_ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	fr_ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	fr_ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	fr_ic.modulate = COL_GOLD_BRIGHT
+	st_row.add_child(fr_ic)
+
+	_fridge_cap_lbl = Label.new()
+	_fridge_cap_lbl.text = "Fridge 0/12"
+	_fridge_cap_lbl.add_theme_font_override("font", _bold_font)
+	_fridge_cap_lbl.add_theme_font_size_override("font_size", 17)
+	_fridge_cap_lbl.add_theme_color_override("font_color", COL_CREAM)
+	_fridge_cap_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	_fridge_cap_lbl.add_theme_constant_override("outline_size", 3)
+	st_row.add_child(_fridge_cap_lbl)
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -305,21 +367,27 @@ func _build_toolbar(parent: VBoxContainer) -> void:
 	# Toggleable Order Slip Drawer Button
 	_slip_toggle_btn = Button.new()
 	_slip_toggle_btn.text = "Order Slip (0) ◂"
+	_slip_toggle_btn.icon = IC_BASKET
 	_slip_toggle_btn.custom_minimum_size = Vector2(0, 48)
 	_slip_toggle_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_slip_toggle_btn.add_theme_font_override("font", _bold_font)
 	_slip_toggle_btn.add_theme_font_size_override("font_size", 17)
-	_apply_button_theme(_slip_toggle_btn, COL_SURFACE, COL_BORDER_SUBTLE, COL_CREAM, 10, 18)
+	_slip_toggle_btn.add_theme_constant_override("icon_max_width", 20)
+	_slip_toggle_btn.add_theme_constant_override("h_separation", 8)
+	_apply_button_theme(_slip_toggle_btn, COL_SURFACE, COL_BORDER_SUBTLE, COL_CREAM, 10, 16)
 	_slip_toggle_btn.pressed.connect(func(): _set_slip_open(not _slip_open))
 	bar.add_child(_slip_toggle_btn)
 
 	# Direct Primary Order CTA (so players can order immediately without even opening the slip)
 	_quick_order_btn = Button.new()
 	_quick_order_btn.text = "Order"
+	_quick_order_btn.icon = IC_TRUCK
 	_quick_order_btn.custom_minimum_size = Vector2(0, 48)
 	_quick_order_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_quick_order_btn.add_theme_font_override("font", _bold_font)
 	_quick_order_btn.add_theme_font_size_override("font_size", 18)
+	_quick_order_btn.add_theme_constant_override("icon_max_width", 20)
+	_quick_order_btn.add_theme_constant_override("h_separation", 8)
 	_quick_order_btn.pressed.connect(_on_confirm_pressed)
 	bar.add_child(_quick_order_btn)
 
@@ -336,6 +404,7 @@ func _build_body_area(parent: VBoxContainer) -> void:
 	_grid_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_grid_scroll.size_flags_stretch_ratio = 1.0
 	_grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_style_warm_scrollbar(_grid_scroll)
 	body_split.add_child(_grid_scroll)
 
 	var grid_col := VBoxContainer.new()
@@ -421,6 +490,7 @@ func _build_body_area(parent: VBoxContainer) -> void:
 	var list_scroll := ScrollContainer.new()
 	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_style_warm_scrollbar(list_scroll)
 	dv.add_child(list_scroll)
 
 	_order_list_container = VBoxContainer.new()
@@ -466,12 +536,73 @@ func _build_body_area(parent: VBoxContainer) -> void:
 
 	_drawer_order_btn = Button.new()
 	_drawer_order_btn.text = "Order Delivery"
+	_drawer_order_btn.icon = IC_TRUCK
 	_drawer_order_btn.custom_minimum_size = Vector2(0, 48)
 	_drawer_order_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_drawer_order_btn.add_theme_font_override("font", _bold_font)
 	_drawer_order_btn.add_theme_font_size_override("font_size", 18)
+	_drawer_order_btn.add_theme_constant_override("icon_max_width", 20)
+	_drawer_order_btn.add_theme_constant_override("h_separation", 8)
 	_drawer_order_btn.pressed.connect(_on_confirm_pressed)
 	dv.add_child(_drawer_order_btn)
+
+
+func _style_warm_scrollbar(scroll: ScrollContainer) -> void:
+	var vbar := scroll.get_v_scroll_bar()
+	if not is_instance_valid(vbar):
+		return
+	var track := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.04, 0.72), 6, 3, 4)
+	var grab := UIStyle.create_flat_stylebox(COL_GOLD, 6, 3, 4)
+	var grab_hov := UIStyle.create_flat_stylebox(COL_GOLD_BRIGHT, 6, 3, 4)
+	var grab_prs := UIStyle.create_flat_stylebox(COL_GOLD.darkened(0.12), 6, 3, 4)
+	vbar.add_theme_stylebox_override("scroll", track)
+	vbar.add_theme_stylebox_override("grabber", grab)
+	vbar.add_theme_stylebox_override("grabber_highlight", grab_hov)
+	vbar.add_theme_stylebox_override("grabber_pressed", grab_prs)
+
+
+func _get_category_icon(cat_key: String) -> Texture2D:
+	match cat_key:
+		"recommended":
+			return IC_SPARKLES
+		"all":
+			return IC_LAYERS
+		"bottle", "sachets":
+			return IC_COFFEE
+		"candy":
+			return IC_GIFT
+		"frozen":
+			return IC_SNOWFLAKE
+		"cigarette":
+			return IC_FLAME
+		_:
+			return IC_PACKAGE
+
+
+func _build_category_popover() -> void:
+	_category_backdrop = Control.new()
+	_category_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_category_backdrop.visible = false
+	_category_backdrop.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed:
+			_set_category_open(false)
+	)
+	_overlay_root.add_child(_category_backdrop)
+
+	_category_popover = PanelContainer.new()
+	_category_popover.visible = false
+	var ps := UIStyle.create_flat_stylebox(COL_DRAWER, 12, 10, 10)
+	ps.border_color = COL_GOLD
+	ps.set_border_width_all(2)
+	ps.shadow_color = Color(0.0, 0.0, 0.0, 0.68)
+	ps.shadow_size = 18
+	ps.shadow_offset = Vector2(0, 6)
+	_category_popover.add_theme_stylebox_override("panel", ps)
+	_overlay_root.add_child(_category_popover)
+
+	_category_list_box = VBoxContainer.new()
+	_category_list_box.add_theme_constant_override("separation", 4)
+	_category_popover.add_child(_category_list_box)
 
 
 func _build_regulars_popover() -> void:
@@ -521,10 +652,13 @@ func _build_regulars_popover() -> void:
 
 	_fill_rec_btn = Button.new()
 	_fill_rec_btn.text = "Auto-Fill Recommended Stock"
+	_fill_rec_btn.icon = IC_ZAP
 	_fill_rec_btn.custom_minimum_size = Vector2(0, 46)
 	_fill_rec_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_fill_rec_btn.add_theme_font_override("font", _bold_font)
 	_fill_rec_btn.add_theme_font_size_override("font_size", 16)
+	_fill_rec_btn.add_theme_constant_override("icon_max_width", 18)
+	_fill_rec_btn.add_theme_constant_override("h_separation", 8)
 	_apply_button_theme(_fill_rec_btn, Color(0.32, 0.24, 0.13, 0.98), COL_GOLD, COL_CREAM, 8, 16)
 	_fill_rec_btn.pressed.connect(func():
 		_on_fill_recommended_pressed()
@@ -655,6 +789,7 @@ func open_menu() -> void:
 	StoryManager.ensure_daily_demand_rolled()
 	_build_category_cache()
 	order.clear()
+	_set_category_open(false)
 	_set_regulars_open(false)
 	_set_slip_open(false)
 	_hide_tooltip()
@@ -698,9 +833,28 @@ func _set_slip_open(open_state: bool) -> void:
 	_update_slip_toggle_ui()
 
 
+func _set_category_open(open_state: bool) -> void:
+	if not _category_popover:
+		return
+	if open_state:
+		_set_regulars_open(false)
+		_rebuild_category_dropdown()
+	_category_backdrop.visible = open_state
+	_category_popover.visible = open_state
+	_update_category_button_label()
+	if open_state:
+		var btn_rect := _category_btn.get_global_rect()
+		_category_popover.position = Vector2(btn_rect.position.x, btn_rect.end.y + 8.0)
+		_category_popover.modulate.a = 0.0
+		var tw := create_tween()
+		tw.tween_property(_category_popover, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
 func _set_regulars_open(open_state: bool) -> void:
 	if not _regulars_popover:
 		return
+	if open_state:
+		_set_category_open(false)
 	_regulars_backdrop.visible = open_state
 	_regulars_popover.visible = open_state
 	var rev_count := StoryManager.get_revealed_expected_regulars().size()
@@ -712,10 +866,10 @@ func _set_regulars_open(open_state: bool) -> void:
 		_regulars_popover.position = Vector2(btn_rect.position.x, btn_rect.end.y + 8.0)
 		_regulars_popover.modulate.a = 0.0
 		var tw := create_tween()
-		tw.tween_property(_regulars_popover, "modulate:a", 1.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(_regulars_popover, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
-# ── Category Cache & Dropdown ────────────────────────────────────────────────
+# ── Category Cache & Custom Lucide Dropdown ──────────────────────────────────
 
 func _build_category_cache() -> void:
 	_category_cache.clear()
@@ -733,43 +887,59 @@ func _build_category_cache() -> void:
 		_category_cache[cat].append(item)
 
 
+func _update_category_button_label() -> void:
+	if not _category_btn:
+		return
+	var base_label := str(category_labels.get(current_category, current_category.capitalize()))
+	var cnt := _get_unlocked_items_for_category(current_category).size()
+	var arrow := " ▴" if (_category_popover and _category_popover.visible) else " ▾"
+	_category_btn.text = "%s (%d)%s" % [base_label, cnt, arrow]
+	_category_btn.icon = _get_category_icon(current_category)
+
+
 func _rebuild_category_dropdown() -> void:
-	_category_dropdown.clear()
+	if not _category_list_box:
+		return
+	for child in _category_list_box.get_children():
+		child.queue_free()
 	_dropdown_keys.clear()
 
-	var selected_idx := 0
 	for cat_key in category_tabs:
 		var unlocked_items := _get_unlocked_items_for_category(cat_key)
 		var is_locked := unlocked_items.is_empty() and cat_key != "recommended" and cat_key != "all"
 		var base_label := str(category_labels.get(cat_key, cat_key.capitalize()))
-		var idx := _dropdown_keys.size()
 		_dropdown_keys.append(cat_key)
 
-		if is_locked:
-			_category_dropdown.add_item("%s (Locked)" % base_label, idx)
-			_category_dropdown.set_item_disabled(idx, true)
-		else:
-			_category_dropdown.add_item("%s (%d)" % [base_label, unlocked_items.size()], idx)
+		var opt := Button.new()
+		opt.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		opt.icon = _get_category_icon(cat_key)
+		opt.custom_minimum_size = Vector2(240, 44)
+		opt.disabled = is_locked
+		opt.mouse_default_cursor_shape = Control.CURSOR_ARROW if is_locked else Control.CURSOR_POINTING_HAND
+		opt.add_theme_font_override("font", _bold_font if cat_key == current_category else UIStyle.FONT_INDER)
+		opt.add_theme_font_size_override("font_size", 17)
+		opt.add_theme_constant_override("icon_max_width", 20)
+		opt.add_theme_constant_override("h_separation", 10)
+		opt.text = ("%s (Locked)" % base_label) if is_locked else ("%s (%d)" % [base_label, unlocked_items.size()])
 
-		if cat_key == current_category and not is_locked:
-			selected_idx = idx
+		var is_active := (cat_key == current_category)
+		var bg := COL_CARD_ACTIVE if is_active else Color(0.11, 0.095, 0.082, 0.90)
+		var border := COL_GOLD if is_active else Color(0.0, 0.0, 0.0, 0.0)
+		var txt := COL_GOLD_BRIGHT if is_active else COL_CREAM
+		_apply_button_theme(opt, bg, border, txt, 8, 14)
+		opt.pressed.connect(func():
+			AudioManager.play_sfx("tab_switch")
+			_select_category(cat_key)
+			_set_category_open(false)
+		)
+		_category_list_box.add_child(opt)
 
-	_category_dropdown.select(selected_idx)
-
-
-func _on_category_dropdown_selected(index: int) -> void:
-	if index < 0 or index >= _dropdown_keys.size():
-		return
-	var cat_key := _dropdown_keys[index]
-	AudioManager.play_sfx("tab_switch")
-	_select_category(cat_key)
+	_update_category_button_label()
 
 
 func _select_category(cat_key: String) -> void:
 	current_category = cat_key
-	var idx := _dropdown_keys.find(cat_key)
-	if idx >= 0 and _category_dropdown.selected != idx:
-		_category_dropdown.select(idx)
+	_update_category_button_label()
 	_hide_tooltip()
 	_populate_grid(cat_key)
 
@@ -1476,6 +1646,7 @@ func _create_order_row(item: ItemData, count: int) -> PanelContainer:
 
 func _close_restock_screen() -> void:
 	_hide_tooltip()
+	_set_category_open(false)
 	_set_regulars_open(false)
 	var tween := create_tween()
 	tween.tween_property(_overlay_root, "modulate:a", 0.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
