@@ -246,10 +246,13 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 	if customer_data and customer_data.sprite_texture and body_sprite:
 		base_y = (customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale) + 0.10
 
+	var start_pos := global_position + Vector3(randf_range(-0.14, 0.14), base_y, 0.05)
 	var holder := Node3D.new()
-	holder.position = Vector3(randf_range(-0.14, 0.14), base_y, 0.05)
+	holder.top_level = true
 	holder.scale = Vector3(0.65, 0.65, 0.65)
-	add_child(holder)
+	var parent_node: Node = get_tree().current_scene if (get_tree() and get_tree().current_scene) else self
+	parent_node.add_child(holder)
+	holder.global_position = start_pos
 
 	var icon := Sprite3D.new()
 	icon.texture = TEX_REP_ICON
@@ -285,7 +288,7 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 
 	var tw := holder.create_tween()
 	tw.tween_property(holder, "scale", Vector3.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(holder, "position:y", base_y + 0.65, 1.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(holder, "global_position:y", start_pos.y + 0.65, 1.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(icon, "modulate:a", 0.0, 0.70).set_delay(0.35)
 	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.70).set_delay(0.35)
 	tw.parallel().tween_property(lbl, "outline_modulate:a", 0.0, 0.70).set_delay(0.35)
