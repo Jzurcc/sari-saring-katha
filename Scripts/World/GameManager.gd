@@ -415,8 +415,9 @@ func _handle_open_tally_offer() -> void:
 		dialog_layout.hide()
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
+	var was_already_cleared := StoryManager.is_tally_cleared()
 	var overlay := MayariTallyOverlayScript.new()
-	if StoryManager.is_tally_cleared():
+	if was_already_cleared:
 		overlay.setup_sealed_card_draft()
 	else:
 		overlay.setup(
@@ -505,7 +506,9 @@ func _handle_open_tally_offer() -> void:
 
 	Dialogic.paused = false
 	var target_label := ""
-	if tier == "cleared" and StoryManager.is_label_in_timeline(timeline_path, "LedgerCleared"):
+	if was_already_cleared and StoryManager.is_label_in_timeline(timeline_path, "SealedOutro"):
+		target_label = "SealedOutro"
+	elif tier == "cleared" and StoryManager.is_label_in_timeline(timeline_path, "LedgerCleared"):
 		target_label = "LedgerCleared"
 	elif tier == "generous" and StoryManager.is_label_in_timeline(timeline_path, "Generous"):
 		target_label = "Generous"

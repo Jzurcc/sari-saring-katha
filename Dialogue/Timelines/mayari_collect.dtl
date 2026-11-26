@@ -1,8 +1,28 @@
 label Greeting
 label CollectionIntro
+if {Global_TallyRemaining} <= 0:
+	jump SealedIntro
 ReynaMayari: I am here for tonight's tally.
 ReynaMayari: The remaining balance on Lola's ledger is [color=#2d527c]{Global_TallyRemaining}[/color] of [color=#2d527c]{Global_TallyGoal}[/color] pesos.
 ReynaMayari: Tonight, I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos. Decide what you will offer. [pause=0.4]
+[signal arg="open_tally_offer"]
+[wait time="0.5"]
+[end_timeline]
+
+label SealedIntro
+set {Variation} = range(1,7).pick_random()
+if {Variation} == 1.0:
+	ReynaMayari: Good evening, Patron of the Moon. [pause=0.4] No coins are owed tonight — I come only to offer the moon's blessing for tomorrow.
+elif {Variation} == 2.0:
+	ReynaMayari: The Silver Ledger rests sealed in Biringan, yet I still find myself walking down your lane at dusk. [pause=0.4] Choose which lunar favor shall watch over your shelves tomorrow.
+elif {Variation} == 3.0:
+	ReynaMayari: Another busy day in Karimlan, I see. [pause=0.4] Keep your earnings, child — let us simply read what fortune the moonlight offers for the morrow.
+elif {Variation} == 4.0:
+	ReynaMayari: Your grandmother's debt is long settled, yet a queen honors her friends. [pause=0.4] Come — draw tonight's moon cards before you lock the shutters.
+elif {Variation} == 5.0:
+	ReynaMayari: The evening air is calm over your sari-sari store. [pause=0.4] No tribute is asked of you — only tell me which blessing you wish to carry into dawn.
+else:
+	ReynaMayari: Still awake by the counter, suki? [pause=0.4] The silver spires owe you no ledger, only gratitude. Pick your favor for tomorrow's trade.
 [signal arg="open_tally_offer"]
 [wait time="0.5"]
 [end_timeline]
@@ -72,4 +92,20 @@ ReynaMayari: It is done. [pause=0.5]
 ReynaMayari: Every last peso of your bloodline's tally has been settled.
 ReynaMayari: As Queen of Biringan, I declare the pact sealed and renewed. Karimlan rests under my protection. [pause=0.4]
 ReynaMayari: Keep your coins from now on, child. [pause=0.3] I will... see myself out.
+[end_timeline]
+
+label SealedOutro
+set {Variation} = range(1,7).pick_random()
+if {Variation} == 1.0:
+	ReynaMayari: It is set in silver. [pause=0.4] Rest well tonight, Patron — tomorrow's tide will be kind to your counter.
+elif {Variation} == 2.0:
+	ReynaMayari: A wise choice. [pause=0.4] Lock up and get some sleep; Karimlan is safe beneath my watch.
+elif {Variation} == 3.0:
+	ReynaMayari: The moon hears you. [pause=0.4] May your shelves stay full and your neighbors leave smiling tomorrow.
+elif {Variation} == 4.0:
+	ReynaMayari: Done. [pause=0.4] Perhaps I will drop by for some candy in the daylight too. Until tomorrow.
+elif {Variation} == 5.0:
+	ReynaMayari: Your blessing is woven into the morning breeze. [pause=0.4] Good night, child — Lola would be proud of this little shop.
+else:
+	ReynaMayari: Then let tomorrow shine brightly over Karimlan. [pause=0.4] Until our next evening beneath the moon.
 [end_timeline]
