@@ -1,206 +1,287 @@
 class_name HaggleOverlay
 extends CanvasLayer
 
-## Frameless, vignette-style Tawad / Haggle HUD triggered when a customer balks at a high price.
-## Does NOT hijack the mouse — keeps FPS look intact while blocking other counter interactions.
-## Scroll wheel (or A/D / Left/Right) adjusts the long price-step gauge; [F] confirms the offer
-## and [Esc] lets the customer go. Acceptance/rejection plays directly on the customer's dialogue.
+## "Tawaran Card Duel" — Gift-of-Gab-inspired verbal haggle minigame!
+## Plays "So What" minigame BGM while keeping the 3D customer framed behind a warm vignette.
+## Play 2–3 persuasion, banter, or concession cards (Click or [1]/[2]/[3]) to fill the
+## Convince meter to 100% before the customer's Patience runs out — with quick-react
+## [Space]/Click Counter rings when pushing bold markups!
 
 signal haggle_finished(accepted: bool, offered_step: int)
 
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
-const INDER_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
 
-const COL_GOLD := Color(0.835, 0.624, 0.278, 0.92)
+const IC_SPARKLES: Texture2D = preload("res://Assets/ui/icons/sparkles.png")
+const IC_FLAME: Texture2D = preload("res://Assets/ui/icons/flame.png")
+const IC_TRUCK: Texture2D = preload("res://Assets/ui/icons/truck.png")
+const IC_HEART: Texture2D = preload("res://Assets/ui/icons/heart-handshake.png")
+const IC_PERCENT: Texture2D = preload("res://Assets/ui/icons/percent.png")
+const IC_COFFEE: Texture2D = preload("res://Assets/ui/icons/coffee.png")
+const IC_AWARD: Texture2D = preload("res://Assets/ui/icons/award.png")
+const IC_SCALE: Texture2D = preload("res://Assets/ui/icons/scale.png")
+
+# Warm Espresso + Antique Gold + Cream palette (grounded in game-ui-design)
+const COL_ESPRESSO := Color(0.075, 0.062, 0.052, 0.96)
+const COL_CARD := Color(0.125, 0.104, 0.088, 0.97)
+const COL_CARD_HOVER := Color(0.175, 0.145, 0.120, 0.99)
+const COL_GOLD := Color(0.86, 0.67, 0.32, 1.0)
+const COL_GOLD_BRIGHT := Color(1.0, 0.90, 0.58, 1.0)
 const COL_GOLD_SOFT := Color(0.96, 0.85, 0.52, 1.0)
-const COL_CREAM := Color(1.0, 0.935, 0.815, 1.0)
-const COL_CREAM_MUTED := Color(0.88, 0.82, 0.72, 0.90)
-const COL_OUTLINE := Color(0.04, 0.03, 0.025, 0.94)
-const COL_GOOD := Color(0.50, 0.88, 0.58, 1.0)
+const COL_CREAM := Color(1.0, 0.95, 0.86, 1.0)
+const COL_CREAM_MUTED := Color(0.84, 0.78, 0.69, 0.92)
+const COL_OUTLINE := Color(0.04, 0.03, 0.025, 0.95)
+const COL_GOOD := Color(0.48, 0.90, 0.58, 1.0)
 const COL_WARN := Color(0.98, 0.68, 0.28, 1.0)
 const COL_BAD := Color(0.96, 0.42, 0.34, 1.0)
+const COL_TEAL := Color(0.46, 0.86, 0.94, 1.0)
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.02, 0.018, 0.016, 0.82);
+uniform vec4 tint : source_color = vec4(0.025, 0.020, 0.016, 0.84);
 void fragment() {
 	vec2 d = UV - vec2(0.5);
 	float dist = length(d * vec2(1.12, 1.0));
-	float vig = smoothstep(0.18, 0.78, dist);
-	COLOR = vec4(tint.rgb, mix(0.22, tint.a, vig));
+	float vig = smoothstep(0.16, 0.78, dist);
+	COLOR = vec4(tint.rgb, mix(0.26, tint.a, vig));
 }
 """
 
+const OPENING_LINES: Array[String] = [
+	"Whoa, wait lang — isn't this a bit steep today?",
+	"Hala, that's pricier than usual ha! Any wiggle room?",
+	"Wait muna, boss... my budget's a little tight right now.",
+	"Ang mahal naman! Can we talk about that price real quick?",
+	"Hold on, suki — wasn't this cheaper the other day?",
+]
 
-class HaggleGauge extends Control:
-	var min_step: int = ItemData.MIN_STEP
-	var max_step: int = ItemData.MAX_STEP
-	var original_step: int = 3
-	var current_step: int = 2
-	var accent_color: Color = Color(0.96, 0.85, 0.52, 1.0)
+const MID_BANTER_LINES: Array[String] = [
+	"Hmm... fair point, pero still feels a bit high.",
+	"Okay, I hear you — convince me a little more!",
+	"Naku, you really know how to sell your stock ha.",
+	"Wait lang, let me check my coins... almost sold!",
+	"Alright, alright, you're making a pretty good case...",
+]
 
-	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
-		var pts := PackedVector2Array([
-			center + Vector2(0.0, -r),
-			center + Vector2(r, 0.0),
-			center + Vector2(0.0, r),
-			center + Vector2(-r, 0.0),
-		])
-		draw_colored_polygon(pts, col)
+const COUNTER_RETORT_LINES: Array[String] = [
+	"Hold on — isn't it cheaper down at the palengke?!",
+	"Teka lang! The other store sells this for way less!",
+	"Come on, boss, don't bola me on the markup!",
+	"Whoa, easy there — that's still pretty steep ha!",
+]
 
-	func _step_to_x(st: int) -> float:
-		var pad_x := 22.0
-		var bar_w := maxf(40.0, size.x - pad_x * 2.0)
-		var span := float(max_step - min_step)
-		if span <= 0.0:
-			return pad_x
-		var t := clampf(float(st - min_step) / span, 0.0, 1.0)
-		return pad_x + t * bar_w
+const WIN_LINES: Array[String] = [
+	"Sige na nga, deal! You drive a good bargain.",
+	"Alright, fair enough! Worth it naman — I'll take it.",
+	"Okay, sold! Can't argue with that, boss.",
+]
+
+const LOSE_LINES: Array[String] = [
+	"Ay nako, never mind na lang — too rich for me today!",
+	"Sorry boss, pass muna ako at that price.",
+]
+
+const CARD_POOL_BOLD: Array[Dictionary] = [
+	{
+		"id": "hold_firm",
+		"title": "Stand By Quality",
+		"tag": "BOLD",
+		"icon": IC_FLAME,
+		"accent": COL_WARN,
+		"convince": 42,
+		"patience_delta": 0,
+		"step_delta": 0,
+		"triggers_counter": true,
+		"desc": "+42% Convince\nTriggers a quick Counter! ring",
+	},
+	{
+		"id": "prime_pick",
+		"title": "Best on the Shelf",
+		"tag": "BOLD",
+		"icon": IC_AWARD,
+		"accent": COL_WARN,
+		"convince": 45,
+		"patience_delta": 0,
+		"step_delta": 0,
+		"triggers_counter": true,
+		"desc": "+45% Convince\nTriggers a quick Counter! ring",
+	},
+]
+
+const CARD_POOL_BANTER: Array[Dictionary] = [
+	{
+		"id": "bola_talk",
+		"title": "Bola-Bola Banter",
+		"tag": "CHARM",
+		"icon": IC_SPARKLES,
+		"accent": COL_GOLD_BRIGHT,
+		"convince": 32,
+		"patience_delta": -1,
+		"step_delta": 0,
+		"triggers_counter": false,
+		"desc": "+32% Convince\nCosts 1 Patience",
+	},
+	{
+		"id": "fresh_stock",
+		"title": "Fresh Delivery",
+		"tag": "PITCH",
+		"icon": IC_TRUCK,
+		"accent": COL_TEAL,
+		"convince": 30,
+		"patience_delta": -1,
+		"step_delta": 0,
+		"triggers_counter": false,
+		"desc": "+30% Convince\nCosts 1 Patience",
+	},
+	{
+		"id": "goodwill",
+		"title": "Neighborly Word",
+		"tag": "CHARM",
+		"icon": IC_HEART,
+		"accent": COL_GOLD_BRIGHT,
+		"convince": 34,
+		"patience_delta": -1,
+		"step_delta": 0,
+		"triggers_counter": false,
+		"desc": "+34% Convince\nCosts 1 Patience",
+	},
+]
+
+const CARD_POOL_TACTICAL: Array[Dictionary] = [
+	{
+		"id": "small_tawad",
+		"title": "Small Tawad",
+		"tag": "DEAL",
+		"icon": IC_PERCENT,
+		"accent": COL_GOOD,
+		"convince": 44,
+		"patience_delta": 1,
+		"step_delta": -1,
+		"triggers_counter": false,
+		"desc": "Lower price 1 step\n+44% Convince & +1 Patience",
+	},
+	{
+		"id": "cool_chat",
+		"title": "Easy Kumusta",
+		"tag": "CALM",
+		"icon": IC_COFFEE,
+		"accent": COL_TEAL,
+		"convince": 18,
+		"patience_delta": 1,
+		"step_delta": 0,
+		"triggers_counter": false,
+		"desc": "+18% Convince\nRestores +1 Patience",
+	},
+]
+
+
+## Custom shrinking timing ring for the Gift-of-Gab Counter! QTE prompt.
+class CounterRingControl extends Control:
+	var progress: float = 0.0 # 0.0 -> 1.0 (sweet spot at 0.62..0.92)
+	var flash_col: Color = Color(1.0, 0.90, 0.58, 1.0)
 
 	func _draw() -> void:
-		var pad_x := 22.0
-		var bar_h := 28.0
-		var bar_y := (size.y - bar_h) * 0.5
-		var bar_w := maxf(40.0, size.x - pad_x * 2.0)
-		var bar_rect := Rect2(pad_x, bar_y, bar_w, bar_h)
+		var c := size * 0.5
+		var target_r := 38.0
+		var start_r := 86.0
+		var cur_r := lerpf(start_r, 24.0, clampf(progress, 0.0, 1.0))
 
-		# Recessed obsidian track
-		draw_rect(bar_rect, Color(0.032, 0.028, 0.024, 0.92), true)
+		# Dark backdrop disc
+		draw_circle(c, target_r + 8.0, Color(0.05, 0.04, 0.035, 0.92))
+		# Sweet-spot gold band (0.62..0.92 maps to r ~ 49..29, centered on target_r = 38)
+		draw_arc(c, target_r, 0.0, TAU, 56, Color(0.48, 0.90, 0.58, 0.38), 11.0, true)
+		draw_arc(c, target_r, 0.0, TAU, 56, COL_GOLD_BRIGHT, 2.6, true)
 
-		# Locked region above original_step (cannot haggle upward)
-		var orig_x := _step_to_x(original_step)
-		if orig_x < pad_x + bar_w - 1.0:
-			draw_rect(Rect2(orig_x, bar_y + 2.0, (pad_x + bar_w) - orig_x, bar_h - 4.0), Color(0.18, 0.14, 0.12, 0.45), true)
-
-		# Step ticks (-5 .. +5)
-		for i in range(min_step + 1, max_step):
-			var nx := _step_to_x(i)
-			var is_zero := (i == 0)
-			var tick_col := Color(0.96, 0.86, 0.58, 0.65) if is_zero else Color(1.0, 0.92, 0.78, 0.18)
-			var y_in := 1.0 if is_zero else 6.0
-			draw_line(Vector2(nx, bar_y + y_in), Vector2(nx, bar_y + bar_h - y_in), tick_col, 2.0 if is_zero else 1.2, true)
-
-		# Fill from wholesale 0 to current_step
-		var zero_x := _step_to_x(0)
-		var cur_x := _step_to_x(current_step)
-		if absf(cur_x - zero_x) > 1.0:
-			var x0 := minf(zero_x, cur_x)
-			var x1 := maxf(zero_x, cur_x)
-			draw_rect(Rect2(x0, bar_y + 2.0, x1 - x0, bar_h - 4.0), accent_color, true)
-			draw_rect(Rect2(x0, bar_y + 2.0, x1 - x0, 5.0), Color(1.0, 0.96, 0.86, 0.25), true)
-
-		# Antique gold outer border
-		var frame_col := Color(0.835, 0.624, 0.278, 0.92)
-		draw_rect(bar_rect, frame_col, false, 2.0)
-
-		# End caps & wholesale 0 marker
-		_draw_diamond(Vector2(pad_x, bar_y + bar_h * 0.5), 5.5, frame_col)
-		_draw_diamond(Vector2(pad_x + bar_w, bar_y + bar_h * 0.5), 5.5, frame_col)
-		_draw_diamond(Vector2(zero_x, bar_y + bar_h + 8.0), 3.8, Color(0.86, 0.72, 0.42, 0.85))
-
-		# Original price pin
-		draw_line(Vector2(orig_x, bar_y - 6.0), Vector2(orig_x, bar_y + bar_h + 6.0), Color(0.96, 0.48, 0.40, 0.75), 2.0, true)
-
-		# Active glowing diamond thumb
-		var thumb_c := Vector2(cur_x, bar_y + bar_h * 0.5)
-		_draw_diamond(thumb_c, 14.0, Color(accent_color.r, accent_color.g, accent_color.b, 0.30))
-		_draw_diamond(thumb_c, 10.0, Color(0.06, 0.05, 0.04, 0.96))
-		_draw_diamond(thumb_c, 7.2, accent_color.lightened(0.25))
+		# Shrinking outer ring
+		var in_zone := (progress >= 0.58 and progress <= 0.94)
+		var ring_col := COL_GOOD if in_zone else flash_col
+		draw_arc(c, cur_r, 0.0, TAU, 64, ring_col, 4.0 if in_zone else 3.0, true)
 
 
 var _item_data: ItemData
 var _customer_data: CustomerData
 var _customer_node: Node3D
 var _original_step: int = 3
-var _offered_step: int = 2
+var _offered_step: int = 3
 var _tolerance: int = 0
 var _resolved: bool = false
 var _showing_intro: bool = false
+var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
-var _bold_font: FontVariation
+# Duel state
+var _convince: float = 0.0 # 0..100
+var _display_convince: float = 0.0
+var _max_patience: int = 3
+var _patience: int = 3
+var _power_scale: float = 1.0
+var _current_hand: Array[Dictionary] = []
+var _busy_animating: bool = false
+
+# Counter QTE state
+var _counter_active: bool = false
+var _counter_elapsed: float = 0.0
+const COUNTER_DURATION := 1.25
+
+# UI nodes
 var _root: Control
+var _safe_root: MarginContainer
+var _main_vbox: VBoxContainer
 var _fade_rect: ColorRect
-var _content: VBoxContainer
 var _intro_panel: PanelContainer
-var _gauge: HaggleGauge
-var _price_lbl: Label
-var _diff_lbl: Label
-var _chance_lbl: Label
+
+var _convince_fill: Control
+var _convince_pct_lbl: Label
+var _patience_box: HBoxContainer
+var _offer_price_lbl: Label
+var _offer_step_lbl: Label
+var _banter_panel: PanelContainer
+var _banter_lbl: Label
+
+var _counter_holder: VBoxContainer
+var _counter_ring: CounterRingControl
+var _hand_row: HBoxContainer
+var _card_buttons: Array[Button] = []
 
 
 static func compute_haggle_accept_chance(offered_step: int, tolerance: int, original_step: int = 3) -> float:
-	# Offering the exact same price the customer already balked at almost never works
 	var steps_dropped: int = original_step - offered_step
 	if steps_dropped <= 0:
 		return 0.05
-
 	var eff_step: int = offered_step - tolerance
-	var base: float
-	match eff_step:
-		5, 6, 7, 8, 9, 10:
-			base = 0.05
-		4:
-			base = 0.10
-		3:
-			base = 0.22
-		2:
-			base = 0.38
-		1:
-			base = 0.56
-		0:
-			base = 0.74
-		-1:
-			base = 0.84
-		-2:
-			base = 0.91
-		-3:
-			base = 0.96
-		_:
-			base = 1.0
-
-	# Sticker-shock penalty when customer was initially hit with a steep markup (+4 or +5)
-	var shock_penalty: float = 0.0
-	if original_step >= 5:
-		shock_penalty = 0.19 if offered_step >= 0 else 0.10
-	elif original_step == 4:
-		shock_penalty = 0.09 if offered_step >= 0 else 0.04
-
-	# Barely budging by 1 step feels stingy
-	var stingy_penalty: float = 0.10 if steps_dropped == 1 else 0.0
-
+	var base: float = clampf(0.74 - float(eff_step) * 0.17, 0.05, 1.0)
+	var shock_penalty: float = 0.19 if (original_step >= 5 and offered_step >= 0) else (0.09 if original_step == 4 else 0.0)
 	var relief: float = StoryManager.get_storefront_price_relief() if is_instance_valid(StoryManager) else 0.0
-	var card_mod: float = 0.0
-	if is_instance_valid(StoryManager):
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
-			card_mod += 0.15
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-			card_mod -= 0.15
-
-	# Hard ceiling: base retail price (step >= 0) is never guaranteed, especially after +5 gouging
-	var max_cap: float = 1.0
-	if original_step >= 5:
-		max_cap = 0.72 if offered_step >= 0 else 0.95
-	elif original_step == 4:
-		max_cap = 0.82 if offered_step >= 0 else 0.98
-	elif offered_step >= 0:
-		max_cap = 0.90
-
-	return clampf(base - shock_penalty - stingy_penalty + (relief * 0.65) + card_mod, 0.05, max_cap)
+	return clampf(base - shock_penalty + (relief * 0.65), 0.05, 0.95)
 
 
 func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node3D = null) -> void:
 	_item_data = item_data
 	_customer_data = customer_data
 	_customer_node = customer_node
-	_original_step = item_data.current_step
-	_offered_step = maxi(ItemData.MIN_STEP, _original_step - 1)
+	_original_step = item_data.current_step if item_data else 3
+	# Start right at the player's asking price — play well to win full markup, or concede a step with Small Tawad!
+	_offered_step = _original_step
 	_tolerance = 0
-	if is_instance_valid(StoreEventManager):
+	if is_instance_valid(StoreEventManager) and item_data:
 		_tolerance += StoreEventManager.get_item_tolerance_offset(item_data)
 	if is_instance_valid(StoryManager):
 		_tolerance += StoryManager.get_mayari_tolerance_offset()
-	if customer_data != null and is_instance_valid(CharacterProgressionManager):
+	if customer_data != null and is_instance_valid(CharacterProgressionManager) and item_data:
 		_tolerance += CharacterProgressionManager.get_reputation_tolerance_bonus(customer_data, item_data)
+
+	var eff_over := maxi(1, _original_step - _tolerance)
+	# Reasonable markups start with head-start momentum; extreme +5 gouging pushes back harder
+	_convince = clampf(32.0 - float(eff_over - 2) * 10.0, 0.0, 35.0)
+	_max_patience = 3
+	if is_instance_valid(StoryManager):
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
+			_max_patience += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+			_max_patience = maxi(2, _max_patience - 1)
+	_patience = _max_patience
+
+	var relief: float = StoryManager.get_storefront_price_relief() if is_instance_valid(StoryManager) else 0.0
+	_power_scale = clampf(1.12 - float(eff_over - 3) * 0.12 + relief * 0.5, 0.78, 1.30)
+	_display_convince = _convince
 
 
 func _ready() -> void:
@@ -209,85 +290,110 @@ func _ready() -> void:
 	add_to_group("minigame_overlay_active")
 	add_to_group("haggle_overlay_active")
 
-	_bold_font = FontVariation.new()
-	_bold_font.base_font = INDER_FONT
-	_bold_font.variation_embolden = 0.55
+	_prev_mouse_mode = Input.mouse_mode
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+	if is_instance_valid(AudioManager):
+		AudioManager.play_minigame_bgm("haggle")
 
 	_build_ui()
-	_refresh_ui()
-	var already_seen: bool = is_instance_valid(CharacterProgressionManager) and bool(CharacterProgressionManager.get_world_flag("haggle_tutorial_seen", false))
+	_refresh_top_hud(false)
+	_deal_new_hand(false)
+
+	var already_seen: bool = is_instance_valid(CharacterProgressionManager) and bool(CharacterProgressionManager.get_world_flag("haggle_card_tutorial_seen", false))
 	_showing_intro = Juice.are_minigame_tutorials_enabled() and not already_seen
 	_intro_panel.visible = _showing_intro
-	_content.visible = not _showing_intro
+	_safe_root.visible = not _showing_intro
 	if _showing_intro:
 		Juice.pop_panel_in(_intro_panel)
+	else:
+		_animate_open_domino()
 
-	# Quick black fade transition into haggle
-	_fade_rect.color.a = 0.85
+	_fade_rect.color.a = 0.80
 	var ftw := create_tween()
 	ftw.tween_property(_fade_rect, "color:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _process(delta: float) -> void:
-	if _resolved or not is_instance_valid(_customer_node):
-		return
-	var cam := get_viewport().get_camera_3d()
-	if not is_instance_valid(cam):
-		return
-	var target_pos := _customer_node.global_position + Vector3(0.0, 1.35, 0.0)
-	var marker := _customer_node.get_node_or_null("SpeechMarker") as Node3D
-	if is_instance_valid(marker):
-		target_pos = marker.global_position - Vector3(0.0, 0.22, 0.0)
-	if cam.global_position.distance_squared_to(target_pos) > 0.01:
-		var target_basis := cam.global_transform.looking_at(target_pos, Vector3.UP).basis
-		cam.global_transform.basis = cam.global_transform.basis.slerp(target_basis, clampf(delta * 7.5, 0.0, 1.0))
+	if not _resolved and Input.get_mouse_mode() != Input.MOUSE_MODE_VISIBLE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+	# Smoothly keep camera looking toward the customer behind the vignette
+	if not _resolved and is_instance_valid(_customer_node):
+		var cam := get_viewport().get_camera_3d()
+		if is_instance_valid(cam):
+			var target_pos := _customer_node.global_position + Vector3(0.0, 1.32, 0.0)
+			var marker := _customer_node.get_node_or_null("SpeechMarker") as Node3D
+			if is_instance_valid(marker):
+				target_pos = marker.global_position - Vector3(0.0, 0.24, 0.0)
+			if cam.global_position.distance_squared_to(target_pos) > 0.01:
+				var target_basis := cam.global_transform.looking_at(target_pos, Vector3.UP).basis
+				cam.global_transform.basis = cam.global_transform.basis.slerp(target_basis, clampf(delta * 6.5, 0.0, 1.0))
+
+	# Smooth Convince bar fill interpolation
+	if absf(_display_convince - _convince) > 0.05:
+		_display_convince = lerpf(_display_convince, _convince, clampf(delta * 11.0, 0.0, 1.0))
+		if is_instance_valid(_convince_fill):
+			_convince_fill.anchor_right = clampf(_display_convince / 100.0, 0.0, 1.0)
+
+	# Active Counter! shrinking-ring QTE
+	if _counter_active and not _resolved:
+		_counter_elapsed += delta
+		var prog := _counter_elapsed / COUNTER_DURATION
+		if is_instance_valid(_counter_ring):
+			_counter_ring.progress = prog
+			_counter_ring.queue_redraw()
+		if prog >= 1.0:
+			_resolve_counter_qte(false)
 
 
 func _input(event: InputEvent) -> void:
 	if _resolved:
 		return
 	if event is InputEventMouseMotion:
-		# Keep camera smoothly locked onto the customer while haggling
-		get_viewport().set_input_as_handled()
 		return
+
 	if _showing_intro:
 		if event is InputEventKey and event.pressed and not event.is_echo():
-			if event.keycode in [KEY_F, KEY_SPACE, KEY_ENTER]:
+			if event.keycode in [KEY_F, KEY_SPACE, KEY_ENTER, KEY_1, KEY_2, KEY_3]:
 				get_viewport().set_input_as_handled()
 				_dismiss_intro()
 			elif event.keycode == KEY_ESCAPE:
 				get_viewport().set_input_as_handled()
 				_decline_haggle()
-		elif event is InputEventMouseButton and event.pressed:
+		elif event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 			get_viewport().set_input_as_handled()
-			if (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
-				_dismiss_intro()
+			_dismiss_intro()
 		return
-	if event is InputEventMouseButton and event.pressed:
-		var mb := event as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+
+	if _counter_active:
+		if event is InputEventKey and event.pressed and not event.is_echo():
+			if event.keycode in [KEY_SPACE, KEY_F, KEY_ENTER]:
+				get_viewport().set_input_as_handled()
+				var hit_good := (_counter_elapsed / COUNTER_DURATION) >= 0.55 and (_counter_elapsed / COUNTER_DURATION) <= 0.96
+				_resolve_counter_qte(hit_good)
+				return
+			elif event.keycode == KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_decline_haggle()
+				return
+		elif event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 			get_viewport().set_input_as_handled()
-			_nudge_step(1)
+			var hit_good := (_counter_elapsed / COUNTER_DURATION) >= 0.55 and (_counter_elapsed / COUNTER_DURATION) <= 0.96
+			_resolve_counter_qte(hit_good)
 			return
-		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			get_viewport().set_input_as_handled()
-			_nudge_step(-1)
-			return
-		elif mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_RIGHT:
-			# Block tending to other customers while haggling
-			get_viewport().set_input_as_handled()
-			return
-	elif event is InputEventKey and event.pressed and not event.is_echo():
+
+	if event is InputEventKey and event.pressed and not event.is_echo():
 		match event.keycode:
-			KEY_LEFT, KEY_A:
+			KEY_1:
 				get_viewport().set_input_as_handled()
-				_nudge_step(-1)
-			KEY_RIGHT, KEY_D:
+				_on_card_selected(0)
+			KEY_2:
 				get_viewport().set_input_as_handled()
-				_nudge_step(1)
-			KEY_F, KEY_ENTER:
+				_on_card_selected(1)
+			KEY_3:
 				get_viewport().set_input_as_handled()
-				_confirm_offer()
+				_on_card_selected(2)
 			KEY_ESCAPE:
 				get_viewport().set_input_as_handled()
 				_decline_haggle()
@@ -298,74 +404,208 @@ func _dismiss_intro() -> void:
 		return
 	_showing_intro = false
 	_intro_panel.visible = false
-	_content.visible = true
+	_safe_root.visible = true
 	if is_instance_valid(CharacterProgressionManager):
-		CharacterProgressionManager.set_world_flag("haggle_tutorial_seen", true)
+		CharacterProgressionManager.set_world_flag("haggle_card_tutorial_seen", true)
 	Juice.play_sfx("tab_switch", 1.15)
+	_animate_open_domino()
 
 
-func _nudge_step(delta: int) -> void:
-	if _resolved:
+func _animate_open_domino() -> void:
+	if not is_instance_valid(_main_vbox):
 		return
-	var max_offer := maxi(ItemData.MIN_STEP, _original_step - 1)
-	var next_st := clampi(_offered_step + delta, ItemData.MIN_STEP, max_offer)
-	if next_st != _offered_step:
-		_offered_step = next_st
-		Juice.play_sfx("ui_hover", 1.05 + float(_offered_step) * 0.03, -4.0)
-		_refresh_ui()
+	for i in range(_main_vbox.get_child_count()):
+		var ch := _main_vbox.get_child(i)
+		if ch is Control and ch.visible:
+			ch.modulate.a = 0.0
+			var tw := create_tween()
+			tw.tween_property(ch, "modulate:a", 1.0, 0.18).set_delay(0.04 * float(i)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_animate_hand_domino()
 
 
-func _price_for_step(st: int) -> float:
-	if _item_data == null:
-		return 0.0
-	return _item_data.get_price_for_step(st)
+func _animate_hand_domino() -> void:
+	for i in range(_card_buttons.size()):
+		var btn := _card_buttons[i]
+		if not is_instance_valid(btn):
+			continue
+		btn.modulate.a = 0.0
+		btn.pivot_offset = btn.size * 0.5
+		btn.scale = Vector2(0.90, 0.90)
+		var d := 0.045 * float(i)
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(btn, "modulate:a", 1.0, 0.18).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(btn, "scale", Vector2.ONE, 0.22).set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func _refresh_ui() -> void:
-	if _item_data == null:
+func _scaled_convince(raw_val: int) -> int:
+	return maxi(10, int(roundf(float(raw_val) * _power_scale)))
+
+
+func _deal_new_hand(animate: bool = true) -> void:
+	_current_hand.clear()
+	for ch in _hand_row.get_children():
+		ch.queue_free()
+	_card_buttons.clear()
+
+	# Always deal 1 Bold card, 1 Banter card, and 1 Tactical card (Small Tawad if above min step, else Calm)
+	var bold_card: Dictionary = CARD_POOL_BOLD[randi() % CARD_POOL_BOLD.size()].duplicate()
+	var banter_card: Dictionary = CARD_POOL_BANTER[randi() % CARD_POOL_BANTER.size()].duplicate()
+	var can_drop_step := (_offered_step > maxi(ItemData.MIN_STEP, 0))
+	var tact_card: Dictionary
+	if can_drop_step and (_patience <= 2 or randf() < 0.65):
+		tact_card = CARD_POOL_TACTICAL[0].duplicate() # Small Tawad
+	else:
+		tact_card = CARD_POOL_TACTICAL[1].duplicate() # Easy Kumusta
+
+	_current_hand = [bold_card, banter_card, tact_card]
+
+	for i in range(_current_hand.size()):
+		var c_def: Dictionary = _current_hand[i]
+		var btn := _build_card_button(c_def, i)
+		_hand_row.add_child(btn)
+		_card_buttons.append(btn)
+
+	if animate:
+		call_deferred("_animate_hand_domino")
+
+
+func _on_card_selected(idx: int) -> void:
+	if _resolved or _busy_animating or _counter_active or idx < 0 or idx >= _current_hand.size():
 		return
-	var offered_price := _price_for_step(_offered_step)
-	var orig_price := _price_for_step(_original_step)
-	var chance := compute_haggle_accept_chance(_offered_step, _tolerance, _original_step)
-	var pct := int(roundf(chance * 100.0))
+	_busy_animating = true
+	var c_def: Dictionary = _current_hand[idx]
+	var gain := _scaled_convince(int(c_def["convince"]))
+	var pat_delta := int(c_def["patience_delta"])
+	var step_delta := int(c_def["step_delta"])
+	var wants_counter := bool(c_def["triggers_counter"])
 
-	var col := COL_GOOD if chance >= 0.75 else (COL_WARN if chance >= 0.45 else COL_BAD)
+	Juice.play_sfx("tab_switch", 1.12, -1.0)
 
-	_gauge.min_step = ItemData.MIN_STEP
-	_gauge.max_step = ItemData.MAX_STEP
-	_gauge.original_step = _original_step
-	_gauge.current_step = _offered_step
-	_gauge.accent_color = col
-	_gauge.queue_redraw()
+	# Punchy slam animation on the played card
+	if idx < _card_buttons.size() and is_instance_valid(_card_buttons[idx]):
+		var played_btn := _card_buttons[idx]
+		played_btn.pivot_offset = played_btn.size * 0.5
+		var ptw := create_tween().set_parallel(true)
+		ptw.tween_property(played_btn, "scale", Vector2(1.12, 1.12), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		ptw.tween_property(played_btn, "position:y", played_btn.position.y - 18.0, 0.12).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
-	_price_lbl.text = "₱%.2f" % offered_price
-	var savings := maxf(0.0, orig_price - offered_price)
-	_diff_lbl.text = "-₱%.2f off" % savings
-	_diff_lbl.add_theme_color_override("font_color", COL_GOOD)
+	if step_delta != 0:
+		_offered_step = clampi(_offered_step + step_delta, ItemData.MIN_STEP, _original_step)
+		Juice.play_sfx("price_change", 1.05, -2.0)
 
-	_chance_lbl.text = "%d%%" % pct
-	_chance_lbl.add_theme_color_override("font_color", col)
+	_convince = clampf(_convince + float(gain), 0.0, 100.0)
+	if pat_delta != 0:
+		_patience = clampi(_patience + pat_delta, 0, _max_patience)
+
+	_refresh_top_hud(true)
+
+	await get_tree().create_timer(0.18).timeout
+	if not is_inside_tree() or _resolved:
+		return
+
+	# Immediate win if Convince reached 100%!
+	if _convince >= 99.9:
+		_trigger_end_sequence(true)
+		return
+
+	# Immediate walkout if Patience dropped to 0!
+	if _patience <= 0:
+		_trigger_end_sequence(false)
+		return
+
+	# Bold card provokes a Gift-of-Gab Counter! QTE ring
+	if wants_counter:
+		_start_counter_qte()
+		return
+
+	# Otherwise customer replies with banter and next hand deals in
+	_set_banter_line(MID_BANTER_LINES[randi() % MID_BANTER_LINES.size()], COL_CREAM)
+	_busy_animating = false
+	_deal_new_hand(true)
 
 
-func _confirm_offer() -> void:
+func _start_counter_qte() -> void:
+	_counter_active = true
+	_counter_elapsed = 0.0
+	_hand_row.visible = false
+	_counter_holder.visible = true
+	_counter_holder.modulate.a = 0.0
+	_counter_holder.scale = Vector2(0.88, 0.88)
+	_counter_holder.pivot_offset = _counter_holder.size * 0.5
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_counter_holder, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_counter_holder, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	_set_banter_line(COUNTER_RETORT_LINES[randi() % COUNTER_RETORT_LINES.size()], COL_WARN)
+	Juice.play_sfx("interact", 1.25, -2.0)
+
+
+func _resolve_counter_qte(success: bool) -> void:
+	if not _counter_active or _resolved:
+		return
+	_counter_active = false
+	_counter_holder.visible = false
+	_hand_row.visible = true
+
+	if success:
+		Juice.play_sfx("pickup", 1.22, 0.0)
+		_convince = clampf(_convince + 15.0, 0.0, 100.0)
+		_set_banter_line("Nice comeback! That actually makes a lot of sense...", COL_GOOD)
+	else:
+		Juice.play_sfx("error", 0.92, -1.0)
+		_patience = maxi(0, _patience - 1)
+		_shake_control(_banter_panel)
+		_set_banter_line("Hmm, see? Still feels overpriced to me, boss!", COL_BAD)
+
+	_refresh_top_hud(true)
+
+	if _convince >= 99.9:
+		_trigger_end_sequence(true)
+		return
+	if _patience <= 0:
+		_trigger_end_sequence(false)
+		return
+
+	_busy_animating = false
+	_deal_new_hand(true)
+
+
+func _trigger_end_sequence(won: bool) -> void:
 	if _resolved:
 		return
 	_resolved = true
-	var chance := compute_haggle_accept_chance(_offered_step, _tolerance, _original_step)
-	var accepted := randf() < chance
-	Juice.play_sfx("pickup" if accepted else "error", 1.18 if accepted else 0.90, 0.5)
-	_finish(accepted, _offered_step)
+	_counter_active = false
+	_counter_holder.visible = false
+	for btn in _card_buttons:
+		if is_instance_valid(btn):
+			btn.disabled = true
+
+	if won:
+		Juice.play_sfx("pickup", 1.20, 0.8)
+		_set_banter_line(WIN_LINES[randi() % WIN_LINES.size()], COL_GOOD)
+	else:
+		Juice.play_sfx("error", 0.88, 0.4)
+		_set_banter_line(LOSE_LINES[randi() % LOSE_LINES.size()], COL_BAD)
+		_shake_control(_banter_panel)
+
+	await get_tree().create_timer(0.55).timeout
+	if not is_inside_tree():
+		return
+	_finish(won, _offered_step if won else _original_step)
 
 
 func _decline_haggle() -> void:
 	if _resolved:
 		return
 	_resolved = true
-	Juice.play_sfx("tab_switch", 0.85, -3.0)
+	Juice.play_sfx("drop", 0.92, -2.0)
 	_finish(false, _original_step)
 
 
 func _finish(accepted: bool, offered_step: int) -> void:
+	if is_instance_valid(AudioManager):
+		AudioManager.stop_bgm_override()
+	Input.mouse_mode = _prev_mouse_mode
 	if is_in_group("minigame_overlay_active"):
 		remove_from_group("minigame_overlay_active")
 	if is_in_group("haggle_overlay_active"):
@@ -374,61 +614,84 @@ func _finish(accepted: bool, offered_step: int) -> void:
 	queue_free()
 
 
-func _make_outlined_label(txt: String, font_res: Font, sz: int, col: Color, outline_sz: int = 5) -> Label:
+# ── Visual Updates & Helpers ─────────────────────────────────────────────────
+
+func _set_banter_line(txt: String, col: Color = COL_CREAM) -> void:
+	if not is_instance_valid(_banter_lbl):
+		return
+	_banter_lbl.text = "\"%s\"" % txt
+	_banter_lbl.add_theme_color_override("font_color", col)
+	if is_instance_valid(_banter_panel):
+		_banter_panel.pivot_offset = _banter_panel.size * 0.5
+		_banter_panel.scale = Vector2(0.96, 0.96)
+		var tw := create_tween()
+		tw.tween_property(_banter_panel, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _shake_control(ctrl: Control) -> void:
+	if not is_instance_valid(ctrl):
+		return
+	var tw := create_tween()
+	tw.tween_property(ctrl, "position:x", -10.0, 0.045).as_relative().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(ctrl, "position:x", 18.0, 0.055).as_relative().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(ctrl, "position:x", -12.0, 0.055).as_relative().set_trans(Tween.TRANS_SINE)
+	tw.tween_property(ctrl, "position:x", 4.0, 0.045).as_relative().set_trans(Tween.TRANS_SINE)
+
+
+func _refresh_top_hud(animate_pop: bool = false) -> void:
+	var pct := int(roundf(_convince))
+	if is_instance_valid(_convince_pct_lbl):
+		_convince_pct_lbl.text = "%d%%" % pct
+		var pcol := COL_GOOD if pct >= 75 else (COL_GOLD_BRIGHT if pct >= 40 else COL_CREAM)
+		_convince_pct_lbl.add_theme_color_override("font_color", pcol)
+		if animate_pop:
+			_convince_pct_lbl.pivot_offset = _convince_pct_lbl.size * 0.5
+			_convince_pct_lbl.scale = Vector2(1.18, 1.18)
+			var tw := create_tween()
+			tw.tween_property(_convince_pct_lbl, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	if is_instance_valid(_patience_box):
+		for ch in _patience_box.get_children():
+			ch.queue_free()
+		for i in range(_max_patience):
+			var filled := (i < _patience)
+			var pip := Label.new()
+			pip.text = "◆" if filled else "◇"
+			pip.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+			pip.add_theme_font_size_override("font_size", 22)
+			var p_col := (COL_BAD if _patience == 1 else COL_GOLD_BRIGHT) if filled else Color(0.45, 0.40, 0.35, 0.55)
+			pip.add_theme_color_override("font_color", p_col)
+			_patience_box.add_child(pip)
+
+	if _item_data != null and is_instance_valid(_offer_price_lbl):
+		var cur_price := _item_data.get_price_for_step(_offered_step)
+		_offer_price_lbl.text = "₱%.2f" % cur_price
+		var step_sign := "+" if _offered_step > 0 else ""
+		_offer_step_lbl.text = "Offer (%s%d step)" % [step_sign, _offered_step]
+		_offer_step_lbl.add_theme_color_override("font_color", UIStyle.get_price_step_color(_offered_step, _tolerance))
+
+
+func _make_label(txt: String, sz: int, col: Color, semibold: bool = false, outline_sz: int = 3) -> Label:
 	var lbl := Label.new()
 	lbl.text = txt
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_override("font", font_res)
+	lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD if semibold else UIStyle.FONT_FREDOKA_REG)
 	lbl.add_theme_font_size_override("font_size", sz)
 	lbl.add_theme_color_override("font_color", col)
-	lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
-	lbl.add_theme_constant_override("outline_size", outline_sz)
+	if outline_sz > 0:
+		lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+		lbl.add_theme_constant_override("outline_size", outline_sz)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return lbl
 
 
-func _make_keycap_hint(key_text: String, action_text: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 7)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var cap := PanelContainer.new()
-	cap.custom_minimum_size = Vector2(28, 28)
-	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var cap_style := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 6, 7, 2)
-	cap_style.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.85)
-	cap_style.set_border_width_all(1)
-	cap_style.border_width_bottom = 2
-	cap_style.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
-	cap_style.shadow_size = 6
-	cap.add_theme_stylebox_override("panel", cap_style)
-	row.add_child(cap)
-
-	var klbl := Label.new()
-	klbl.text = key_text
-	klbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	klbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	klbl.add_theme_font_override("font", _bold_font)
-	klbl.add_theme_font_size_override("font_size", 15)
-	klbl.add_theme_color_override("font_color", COL_GOLD_SOFT)
-	klbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cap.add_child(klbl)
-
-	var albl := _make_outlined_label(action_text, INDER_FONT, 15, COL_CREAM_MUTED, 3)
-	albl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(albl)
-	return row
-
+# ── UI Construction (5% Safe Zone, 3-Zone Layout) ────────────────────────────
 
 func _build_ui() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_root)
 
-	# Soft fullscreen vignette (overscanned, no heavy box)
 	var vig := ColorRect.new()
 	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vig.offset_left = -24
@@ -443,87 +706,350 @@ func _build_ui() -> void:
 	vig.material = mat
 	_root.add_child(vig)
 
-	# Top-center title: "Haggling {Customer Name} for {Item Name}"
-	var iname := _item_data.item_name if _item_data else "Item"
+	# 5% Title-Safe Container (game-ui-design compliance)
+	_safe_root = MarginContainer.new()
+	_safe_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_safe_root.add_theme_constant_override("margin_left", 72)
+	_safe_root.add_theme_constant_override("margin_right", 72)
+	_safe_root.add_theme_constant_override("margin_top", 42)
+	_safe_root.add_theme_constant_override("margin_bottom", 38)
+	_root.add_child(_safe_root)
+
+	_main_vbox = VBoxContainer.new()
+	_main_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_main_vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_main_vbox.add_theme_constant_override("separation", 14)
+	_safe_root.add_child(_main_vbox)
+
+	# ─── ZONE 1: TOP STATUS BAR (Customer Portrait + Patience + Convince Meter + Current Offer) ───
+	_main_vbox.add_child(_build_top_status_bar())
+
+	# Middle Spacer (keeps center of screen open so you see the 3D customer!)
+	var mid_spacer := Control.new()
+	mid_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	mid_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_main_vbox.add_child(mid_spacer)
+
+	# ─── ZONE 2: BANTER BUBBLE + COUNTER! RING PROMPT ───
+	var center_stack := VBoxContainer.new()
+	center_stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	center_stack.add_theme_constant_override("separation", 14)
+	center_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_main_vbox.add_child(center_stack)
+
+	_banter_panel = PanelContainer.new()
+	_banter_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_banter_panel.custom_minimum_size = Vector2(540, 0)
+	_banter_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bst := UIStyle.create_flat_stylebox(COL_ESPRESSO, 14, 24, 14)
+	bst.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.78)
+	bst.set_border_width_all(2)
+	bst.shadow_size = 12
+	bst.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	_banter_panel.add_theme_stylebox_override("panel", bst)
+	center_stack.add_child(_banter_panel)
+
+	_banter_lbl = _make_label("\"%s\"" % OPENING_LINES[randi() % OPENING_LINES.size()], 21, COL_CREAM, true, 3)
+	_banter_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banter_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_banter_panel.add_child(_banter_lbl)
+
+	# Shrinking-ring Counter! QTE prompt (hidden until a Bold card provokes pushback)
+	_counter_holder = VBoxContainer.new()
+	_counter_holder.visible = false
+	_counter_holder.alignment = BoxContainer.ALIGNMENT_CENTER
+	_counter_holder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_counter_holder.add_theme_constant_override("separation", 6)
+	_counter_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center_stack.add_child(_counter_holder)
+
+	_counter_ring = CounterRingControl.new()
+	_counter_ring.custom_minimum_size = Vector2(180, 180)
+	_counter_ring.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_counter_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_counter_holder.add_child(_counter_ring)
+
+	var ring_center_lbl := _make_label("COUNTER!", 20, COL_GOLD_BRIGHT, true, 4)
+	ring_center_lbl.set_anchors_preset(Control.PRESET_CENTER)
+	ring_center_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ring_center_lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	ring_center_lbl.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_counter_ring.add_child(ring_center_lbl)
+
+	var counter_hint := _make_label("Press [Space] or Click when the ring hits the gold circle!", 17, COL_GOOD, true, 4)
+	counter_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_counter_holder.add_child(counter_hint)
+
+	# ─── ZONE 3: 3-CARD HAND + INPUT LEGEND ───
+	_hand_row = HBoxContainer.new()
+	_hand_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_hand_row.add_theme_constant_override("separation", 18)
+	_main_vbox.add_child(_hand_row)
+
+	var legend := HBoxContainer.new()
+	legend.alignment = BoxContainer.ALIGNMENT_CENTER
+	legend.add_theme_constant_override("separation", 24)
+	legend.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	legend.add_child(_make_keycap_hint("1 / 2 / 3", "Play Card"))
+	legend.add_child(_make_keycap_hint("Click", "Select Card"))
+	legend.add_child(_make_keycap_hint("Esc", "Let Them Go"))
+	_main_vbox.add_child(legend)
+
+	_build_intro_modal()
+
+	_fade_rect = ColorRect.new()
+	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade_rect.color = Color(0.015, 0.012, 0.010, 0.0)
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fade_rect)
+
+
+func _build_top_status_bar() -> PanelContainer:
+	var bar_panel := PanelContainer.new()
+	bar_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	bar_panel.custom_minimum_size = Vector2(880, 0)
+	var st := UIStyle.create_flat_stylebox(COL_ESPRESSO, 14, 22, 14)
+	st.border_color = COL_GOLD
+	st.set_border_width_all(2)
+	st.shadow_size = 14
+	st.shadow_color = Color(0.0, 0.0, 0.0, 0.60)
+	bar_panel.add_theme_stylebox_override("panel", st)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 22)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	bar_panel.add_child(row)
+
+	# Left: Portrait + Name + Patience Pips
+	var cust_box := HBoxContainer.new()
+	cust_box.add_theme_constant_override("separation", 12)
+	row.add_child(cust_box)
+
 	var cname := (_customer_data.character_name if (_customer_data != null and _customer_data.character_name != "") else "Neighbor")
-	var top_title := _make_outlined_label("Haggling %s for %s" % [cname, iname], _bold_font, 24, COL_GOLD_SOFT, 5)
-	top_title.anchor_left = 0.5
-	top_title.anchor_right = 0.5
-	top_title.anchor_top = 0.0
-	top_title.anchor_bottom = 0.0
-	top_title.offset_left = -360
-	top_title.offset_right = 360
-	top_title.offset_top = 28
-	top_title.offset_bottom = 66
-	_root.add_child(top_title)
+	var ptex := UIStyle.get_customer_portrait(cname)
+	if ptex != null:
+		var pframe := PanelContainer.new()
+		var pst := UIStyle.create_flat_stylebox(Color(0.14, 0.11, 0.09, 0.96), 999, 3, 3)
+		pst.border_color = COL_GOLD
+		pst.set_border_width_all(2)
+		pframe.add_theme_stylebox_override("panel", pst)
+		var prect := TextureRect.new()
+		prect.texture = ptex
+		prect.custom_minimum_size = Vector2(52, 52)
+		prect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		prect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pframe.add_child(prect)
+		cust_box.add_child(pframe)
 
-	# Frameless floating haggle HUD anchored cleanly at lower-center
-	_content = VBoxContainer.new()
-	_content.anchor_left = 0.5
-	_content.anchor_right = 0.5
-	_content.anchor_top = 1.0
-	_content.anchor_bottom = 1.0
-	_content.offset_left = -330
-	_content.offset_right = 330
-	_content.offset_top = -205
-	_content.offset_bottom = -26
-	_content.alignment = BoxContainer.ALIGNMENT_CENTER
-	_content.add_theme_constant_override("separation", 8)
-	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(_content)
+	var cust_v := VBoxContainer.new()
+	cust_v.alignment = BoxContainer.ALIGNMENT_CENTER
+	cust_v.add_theme_constant_override("separation", 2)
+	cust_box.add_child(cust_v)
 
-	# Compact horizontal readout: Offered Price + Acceptance %
-	var readout := HBoxContainer.new()
-	readout.alignment = BoxContainer.ALIGNMENT_CENTER
-	readout.add_theme_constant_override("separation", 24)
-	readout.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content.add_child(readout)
+	cust_v.add_child(_make_label(cname, 20, COL_CREAM, true, 2))
 
-	_price_lbl = _make_outlined_label("₱0.00", _bold_font, 40, COL_CREAM, 6)
-	readout.add_child(_price_lbl)
+	var pat_row := HBoxContainer.new()
+	pat_row.add_theme_constant_override("separation", 6)
+	cust_v.add_child(pat_row)
+	var pat_lbl := _make_label("Patience:", 15, COL_CREAM_MUTED, false, 2)
+	pat_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pat_row.add_child(pat_lbl)
+	_patience_box = HBoxContainer.new()
+	_patience_box.add_theme_constant_override("separation", 4)
+	pat_row.add_child(_patience_box)
 
-	var chance_wrap := HBoxContainer.new()
-	chance_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
-	chance_wrap.add_theme_constant_override("separation", 6)
-	chance_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	readout.add_child(chance_wrap)
+	# Center: Convince Meter (0% -> 100%)
+	var meter_v := VBoxContainer.new()
+	meter_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	meter_v.alignment = BoxContainer.ALIGNMENT_CENTER
+	meter_v.add_theme_constant_override("separation", 6)
+	row.add_child(meter_v)
 
-	_chance_lbl = _make_outlined_label("80%", _bold_font, 32, COL_GOOD, 5)
-	chance_wrap.add_child(_chance_lbl)
+	var meter_hdr := HBoxContainer.new()
+	meter_v.add_child(meter_hdr)
+	var iname := _item_data.item_name if _item_data else "Item"
+	var mtitle := _make_label("Convince on %s" % iname, 17, COL_GOLD_SOFT, true, 2)
+	mtitle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	meter_hdr.add_child(mtitle)
+	_convince_pct_lbl = _make_label("0%", 20, COL_CREAM, true, 3)
+	meter_hdr.add_child(_convince_pct_lbl)
 
-	var chance_sub := _make_outlined_label("chance", INDER_FONT, 17, COL_CREAM_MUTED, 4)
-	chance_wrap.add_child(chance_sub)
+	var track := Panel.new()
+	track.custom_minimum_size = Vector2(320, 20)
+	var tst := UIStyle.create_flat_stylebox(Color(0.035, 0.030, 0.026, 0.98), 8, 0, 0)
+	tst.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.72)
+	tst.set_border_width_all(1)
+	track.add_theme_stylebox_override("panel", tst)
+	meter_v.add_child(track)
 
-	# Long frameless Haggle Gauge
-	_gauge = HaggleGauge.new()
-	_gauge.custom_minimum_size = Vector2(620, 52)
-	_gauge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_content.add_child(_gauge)
+	var fill_panel := Panel.new()
+	fill_panel.anchor_left = 0.0
+	fill_panel.anchor_top = 0.0
+	fill_panel.anchor_bottom = 1.0
+	fill_panel.anchor_right = clampf(_convince / 100.0, 0.0, 1.0)
+	fill_panel.offset_left = 2
+	fill_panel.offset_top = 2
+	fill_panel.offset_right = -2
+	fill_panel.offset_bottom = -2
+	var fst := UIStyle.create_flat_stylebox(COL_GOLD_BRIGHT, 6, 0, 0)
+	fill_panel.add_theme_stylebox_override("panel", fst)
+	track.add_child(fill_panel)
+	_convince_fill = fill_panel
 
-	_diff_lbl = _make_outlined_label("", INDER_FONT, 16, COL_GOOD, 4)
-	_content.add_child(_diff_lbl)
+	# Right: Current Offer Readout
+	var offer_v := VBoxContainer.new()
+	offer_v.alignment = BoxContainer.ALIGNMENT_CENTER
+	offer_v.add_theme_constant_override("separation", 1)
+	row.add_child(offer_v)
 
-	var hint_row := HBoxContainer.new()
-	hint_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	hint_row.add_theme_constant_override("separation", 22)
-	hint_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint_row.add_child(_make_keycap_hint("↕", "Adjust"))
-	hint_row.add_child(_make_keycap_hint("F", "Offer"))
-	hint_row.add_child(_make_keycap_hint("Esc", "Let Them Go"))
-	_content.add_child(hint_row)
+	_offer_price_lbl = _make_label("₱0.00", 28, COL_GOLD_BRIGHT, true, 3)
+	_offer_price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	offer_v.add_child(_offer_price_lbl)
 
-	# How-to-Play intro panel (respects Minigame Tutorials setting)
+	_offer_step_lbl = _make_label("Offer (+3 step)", 14, COL_CREAM_MUTED, true, 2)
+	_offer_step_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	offer_v.add_child(_offer_step_lbl)
+
+	return bar_panel
+
+
+func _build_card_button(c_def: Dictionary, idx: int) -> Button:
+	var accent: Color = c_def["accent"]
+	var eff_gain := _scaled_convince(int(c_def["convince"]))
+	var desc_txt := str(c_def["desc"]).replace("+%d%%" % int(c_def["convince"]), "+%d%%" % eff_gain)
+
+	var btn := Button.new()
+	btn.custom_minimum_size = Vector2(246, 178)
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	var normal_st := UIStyle.create_flat_stylebox(COL_CARD, 14, 16, 14)
+	normal_st.border_color = Color(accent.r, accent.g, accent.b, 0.72)
+	normal_st.set_border_width_all(2)
+	normal_st.border_width_top = 4
+	normal_st.shadow_size = 10
+	normal_st.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+
+	var hover_st := normal_st.duplicate() as StyleBoxFlat
+	hover_st.bg_color = COL_CARD_HOVER
+	hover_st.border_color = COL_GOLD_BRIGHT
+	hover_st.shadow_size = 16
+
+	btn.add_theme_stylebox_override("normal", normal_st)
+	btn.add_theme_stylebox_override("hover", hover_st)
+	btn.add_theme_stylebox_override("pressed", hover_st)
+	btn.add_theme_stylebox_override("disabled", normal_st)
+
+	var vb := VBoxContainer.new()
+	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vb.offset_left = 16
+	vb.offset_right = -16
+	vb.offset_top = 12
+	vb.offset_bottom = -12
+	vb.add_theme_constant_override("separation", 8)
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(vb)
+
+	# Card Top Row: [1/2/3] Keycap + Archetype Tag + Icon
+	var top_r := HBoxContainer.new()
+	top_r.add_theme_constant_override("separation", 8)
+	top_r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(top_r)
+
+	var kcap := PanelContainer.new()
+	kcap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var kst := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.94), 6, 8, 2)
+	kst.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.85)
+	kst.set_border_width_all(1)
+	kcap.add_theme_stylebox_override("panel", kst)
+	kcap.add_child(_make_label(str(idx + 1), 14, COL_GOLD_BRIGHT, true, 0))
+	top_r.add_child(kcap)
+
+	var tag_lbl := _make_label(str(c_def["tag"]), 14, accent, true, 2)
+	tag_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tag_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	top_r.add_child(tag_lbl)
+
+	var ico := TextureRect.new()
+	ico.texture = c_def["icon"]
+	ico.custom_minimum_size = Vector2(22, 22)
+	ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ico.modulate = accent
+	ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_r.add_child(ico)
+
+	# Card Title
+	var t_lbl := _make_label(str(c_def["title"]), 21, COL_CREAM, true, 3)
+	vb.add_child(t_lbl)
+
+	var sep := ColorRect.new()
+	sep.custom_minimum_size = Vector2(0, 1)
+	sep.color = Color(accent.r, accent.g, accent.b, 0.28)
+	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(sep)
+
+	# Card Effect Text
+	var d_lbl := _make_label(desc_txt, 16, COL_CREAM_MUTED, false, 2)
+	d_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	d_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vb.add_child(d_lbl)
+
+	btn.mouse_entered.connect(func():
+		if _busy_animating or _resolved:
+			return
+		Juice.play_sfx("ui_hover", 1.08, -5.0)
+		btn.pivot_offset = btn.size * 0.5
+		var htw := create_tween()
+		htw.tween_property(btn, "scale", Vector2(1.05, 1.05), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	)
+	btn.mouse_exited.connect(func():
+		if _busy_animating or _resolved:
+			return
+		btn.pivot_offset = btn.size * 0.5
+		var htw := create_tween()
+		htw.tween_property(btn, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	)
+	btn.pressed.connect(_on_card_selected.bind(idx))
+	return btn
+
+
+func _make_keycap_hint(key_text: String, action_text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 7)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var cap := PanelContainer.new()
+	cap.custom_minimum_size = Vector2(28, 28)
+	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var cap_style := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.94), 6, 8, 3)
+	cap_style.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.88)
+	cap_style.set_border_width_all(1)
+	cap.add_theme_stylebox_override("panel", cap_style)
+	row.add_child(cap)
+
+	cap.add_child(_make_label(key_text, 14, COL_GOLD_BRIGHT, true, 0))
+	var albl := _make_label(action_text, 15, COL_CREAM_MUTED, false, 3)
+	albl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(albl)
+	return row
+
+
+func _build_intro_modal() -> void:
 	_intro_panel = PanelContainer.new()
 	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_intro_panel.custom_minimum_size = Vector2(540, 250)
-	_intro_panel.offset_left = -270
-	_intro_panel.offset_right = 270
-	_intro_panel.offset_top = -125
-	_intro_panel.offset_bottom = 125
-	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
-	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
+	_intro_panel.custom_minimum_size = Vector2(560, 260)
+	_intro_panel.offset_left = -280
+	_intro_panel.offset_right = 280
+	_intro_panel.offset_top = -130
+	_intro_panel.offset_bottom = 130
+	var istyle := UIStyle.create_flat_stylebox(COL_ESPRESSO, 14, 28, 24)
+	istyle.border_color = COL_GOLD
 	istyle.set_border_width_all(2)
+	istyle.shadow_size = 18
+	istyle.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
 	_intro_panel.add_theme_stylebox_override("panel", istyle)
 	_intro_panel.visible = false
 	_root.add_child(_intro_panel)
@@ -533,34 +1059,21 @@ func _build_ui() -> void:
 	iv.add_theme_constant_override("separation", 14)
 	_intro_panel.add_child(iv)
 
-	var ititle := Label.new()
-	ititle.text = "How to Play: Haggle (Tawad)"
+	var ititle := _make_label("Tawaran Card Duel", 28, COL_GOLD_BRIGHT, true, 3)
 	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ititle.add_theme_font_override("font", _bold_font)
-	ititle.add_theme_font_size_override("font_size", 30)
-	ititle.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	iv.add_child(ititle)
 
-	var idesc := Label.new()
-	idesc.text = "This customer hesitated at the price! Use the Scroll Wheel to lower your offer for this sale only — lower prices raise their acceptance chance. Press [F] to Offer or [Esc] to let them go."
+	var idesc := _make_label(
+		"Your neighbor hesitated at the markup! Play persuasion cards ([1], [2], [3] or Click) to fill the Convince meter to 100% before their Patience runs out.\n\nBold cards hit hard — time [Space] or Click on the Counter! ring to parry pushback!",
+		18,
+		COL_CREAM,
+		false,
+		2
+	)
 	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	idesc.add_theme_font_override("font", INDER_FONT)
-	idesc.add_theme_font_size_override("font_size", 20)
-	idesc.add_theme_color_override("font_color", COL_CREAM)
 	iv.add_child(idesc)
 
-	var ihint := Label.new()
-	ihint.text = "Press [F], [Space], or Click to begin"
+	var ihint := _make_label("Press [Space] or Click to start", 17, COL_GOLD_SOFT, true, 2)
 	ihint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ihint.add_theme_font_override("font", _bold_font)
-	ihint.add_theme_font_size_override("font_size", 17)
-	ihint.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	iv.add_child(ihint)
-
-	# Quick black fade curtain on top
-	_fade_rect = ColorRect.new()
-	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_fade_rect.color = Color(0.015, 0.012, 0.010, 0.0)
-	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_fade_rect)
