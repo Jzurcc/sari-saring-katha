@@ -387,17 +387,21 @@ func _build_ui() -> void:
 	gt_lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 	sv.add_child(gt_lbl)
 
-	# Compact "Close Shop" button centered on the ledger's bottom edge (hidden until tally finishes)
+	# Compact "Close Shop" button in the bottom-right corner outside the ledger (hidden until tally finishes)
 	_close_btn = Button.new()
 	_close_btn.text = "Close Shop"
-	_close_btn.anchor_left = 0.5
-	_close_btn.anchor_right = 0.5
-	_close_btn.anchor_top = 0.885
-	_close_btn.anchor_bottom = 0.885
-	_close_btn.offset_left = -84.0
-	_close_btn.offset_right = 84.0
-	_close_btn.offset_top = -24.0
-	_close_btn.offset_bottom = 24.0
+	if ResourceLoader.exists("res://Assets/ui/icons/moon.png"):
+		_close_btn.icon = load("res://Assets/ui/icons/moon.png")
+		_close_btn.add_theme_constant_override("icon_max_width", 20)
+		_close_btn.add_theme_constant_override("h_separation", 10)
+	_close_btn.anchor_left = 1.0
+	_close_btn.anchor_right = 1.0
+	_close_btn.anchor_top = 1.0
+	_close_btn.anchor_bottom = 1.0
+	_close_btn.offset_left = -224.0
+	_close_btn.offset_right = -32.0
+	_close_btn.offset_top = -78.0
+	_close_btn.offset_bottom = -28.0
 	_close_btn.z_index = 14
 	_close_btn.visible = false
 	_close_btn.modulate.a = 0.0
