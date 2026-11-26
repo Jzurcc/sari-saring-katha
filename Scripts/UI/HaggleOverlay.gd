@@ -193,7 +193,7 @@ func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node
 	_customer_data = customer_data
 	_customer_node = customer_node
 	_original_step = item_data.current_step
-	_offered_step = maxi(ItemData.MIN_STEP, _original_step - 1)
+	_offered_step = clampi(mini(0, _original_step - 1), ItemData.MIN_STEP, _original_step - 1)
 	_tolerance = 0
 	if is_instance_valid(StoreEventManager):
 		_tolerance += StoreEventManager.get_item_tolerance_offset(item_data)
@@ -307,7 +307,8 @@ func _dismiss_intro() -> void:
 func _nudge_step(delta: int) -> void:
 	if _resolved:
 		return
-	var next_st := clampi(_offered_step + delta, ItemData.MIN_STEP, _original_step)
+	var max_offer := maxi(ItemData.MIN_STEP, _original_step - 1)
+	var next_st := clampi(_offered_step + delta, ItemData.MIN_STEP, max_offer)
 	if next_st != _offered_step:
 		_offered_step = next_st
 		Juice.play_sfx("ui_hover", 1.05 + float(_offered_step) * 0.03, -4.0)
@@ -342,16 +343,9 @@ func _refresh_ui() -> void:
 	_gauge.queue_redraw()
 
 	_price_lbl.text = "₱%.2f" % offered_price
-	var savings := orig_price - offered_price
-	if savings > 0.01:
-		if _offered_step == 0:
-			_diff_lbl.text = "-₱%.2f off  (Base price • this sale only)" % savings
-		else:
-			_diff_lbl.text = "-₱%.2f off  (this sale only)" % savings
-		_diff_lbl.add_theme_color_override("font_color", COL_GOOD)
-	else:
-		_diff_lbl.text = "No discount offered"
-		_diff_lbl.add_theme_color_override("font_color", COL_BAD)
+	var savings := maxf(0.0, orig_price - offered_price)
+	_diff_lbl.text = "-₱%.2f off" % savings
+	_diff_lbl.add_theme_color_override("font_color", COL_GOOD)
 
 	_chance_lbl.text = "%d%%" % pct
 	_chance_lbl.add_theme_color_override("font_color", col)
