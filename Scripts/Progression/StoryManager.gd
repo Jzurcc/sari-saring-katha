@@ -63,6 +63,7 @@ var active_mayari_cards: Array[String] = []
 var pending_mayari_cards: Array[String] = []
 var last_tally_tier: String = "balanced"
 var daily_stats: Dictionary = {}
+var pending_favorite_discovered_cat: String = ""
 
 func _make_empty_daily_stats() -> Dictionary:
 	return {

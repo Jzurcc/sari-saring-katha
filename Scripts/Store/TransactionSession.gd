@@ -345,7 +345,6 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		_sync_customer_dialogic_vars(customer)
 
 	var context: TransactionContext = customer.transaction_context
-	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
 
 	# Check overpriced refusal BEFORE fulfilling the item (regular cash purchases only; never blocks Story/Tutorial/Utang)
 	if _should_refuse_for_high_price(customer, context, item.item_data):
@@ -572,9 +571,9 @@ func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 	update_item_names(customer)
 
 	# First-time favorite category discovery plays an in-character dialogue line instead of a star toast
-	var discovered_cat := str(Dialogic.VAR.get_variable("Global_FavoriteDiscoveredCat", ""))
+	var discovered_cat := StoryManager.pending_favorite_discovered_cat if is_instance_valid(StoryManager) else ""
 	if discovered_cat != "":
-		Dialogic.VAR.set_variable("Global_FavoriteDiscoveredCat", "")
+		StoryManager.pending_favorite_discovered_cat = ""
 		var ctx := customer.transaction_context
 		if ctx != null and not ctx.wants_debt and ResourceLoader.exists(FAVORITE_DISCOVERED_TIMELINE_PATH):
 			var cname := customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"

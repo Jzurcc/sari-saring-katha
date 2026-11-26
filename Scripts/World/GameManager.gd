@@ -187,7 +187,7 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 				if CharacterProgressionManager.discover_favorite_category(customer_path, item.category):
 					rep_delta += 10
 					var cat_label := StoryManager.get_category_display_name(item.category)
-					Dialogic.VAR.set_variable("Global_FavoriteDiscoveredCat", cat_label)
+					StoryManager.pending_favorite_discovered_cat = cat_label
 			if rep_delta != 0:
 				CharacterProgressionManager.add_reputation(customer_path, rep_delta, "sale")
 

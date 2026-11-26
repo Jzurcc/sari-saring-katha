@@ -23,8 +23,6 @@ var stream_notification = preload("res://Audio/SFX/ui_sfx_7.mp3")
 var _bold_font: FontVariation
 var _banner: PanelContainer
 var _title_lbl: Label
-var _prize_pill: PanelContainer
-var _prize_lbl: Label
 var _items_row: HBoxContainer
 var _anim_tween: Tween = null
 var _bob_tweens: Array[Tween] = []
