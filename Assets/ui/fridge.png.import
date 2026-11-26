@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://mubae3fvpkix"
-path="res://.godot/imported/reyna_mayari_ui.png-ea861f35706ab043d455ba5606e6706d.ctex"
+uid="uid://dogkuiwxlqej3"
+path="res://.godot/imported/fridge.png-c7ea91374dee4dc94dc0edd1fe196703.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ui/reyna_mayari_ui.png"
-dest_files=["res://.godot/imported/reyna_mayari_ui.png-ea861f35706ab043d455ba5606e6706d.ctex"]
+source_file="res://Assets/ui/fridge.png"
+dest_files=["res://.godot/imported/fridge.png-c7ea91374dee4dc94dc0edd1fe196703.ctex"]
 
 [params]
 
