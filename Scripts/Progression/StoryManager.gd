@@ -1045,8 +1045,6 @@ func get_storefront_price_relief() -> float:
 	return float(STOREFRONT_UPGRADE_SPECS[lvl]["price_relief"])
 
 func get_signage_featured_category() -> String:
-	if storefront_upgrade_level >= 1 and has_custom_signage:
-		return signage_featured_category
 	return ""
 
 func get_poster_featured_category() -> String:
@@ -1142,7 +1140,7 @@ func save_storefront_artwork(slot_name: String, stickers: Array[Dictionary], fea
 	if slot_name == "signage":
 		custom_signage_stickers = cloned_stickers
 		has_custom_signage = true
-		signage_featured_category = featured_cat
+		signage_featured_category = ""
 		signage_last_edited_day = day
 	elif slot_name == "poster":
 		custom_poster_stickers = cloned_stickers
@@ -1785,18 +1783,11 @@ func load_save_data(data: Dictionary) -> void:
 				if res and res.tier <= current_tier:
 					placed_containers.append(res.resource_path)
 
-	# Refresh all 3D dispenser containers immediately and deferred so save loads on fresh startup
-	# always update container visibility after _ready() has already run with default tier=1 state.
+	# Refresh all 3D upgrade props immediately and deferred so save loads on fresh startup
+	# always update prop visibility after _ready() has already run with default level=0 state.
+	_refresh_all_store_props()
 	if get_tree():
-		get_tree().call_group("dispenser_containers", "refresh_stock")
-		get_tree().call_group("store_cats", "refresh_visibility", false)
-		get_tree().call_group("trash", "refresh_visibility", false)
-		get_tree().process_frame.connect(func():
-			if get_tree():
-				get_tree().call_group("dispenser_containers", "refresh_stock")
-				get_tree().call_group("store_cats", "refresh_visibility", false)
-				get_tree().call_group("trash", "refresh_visibility", false)
-		, CONNECT_ONE_SHOT)
+		get_tree().process_frame.connect(_refresh_all_store_props, CONNECT_ONE_SHOT)
 
 	CharacterProgressionManager.migrate_from_story_manager_save(data)
 	DialogicBridge.sync_global(day, current_tier, max_unlocked_tier, 1)
@@ -1812,6 +1803,21 @@ func load_save_data(data: Dictionary) -> void:
 				_apply_display_time(_current_display_time)
 				clock._time_of_day_node.game_time_enabled = is_clock_running
 		, CONNECT_ONE_SHOT)
+
+func _refresh_all_store_props() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	tree.call_group("dispenser_containers", "refresh_stock")
+	tree.call_group("store_cats", "refresh_visibility", false)
+	tree.call_group("trash", "refresh_visibility", false)
+	tree.call_group("store_radio", "_refresh_visual_state", false)
+	tree.call_group("permit_frame", "refresh_visibility", false)
+	tree.call_group("store_bench", "refresh_visibility", false)
+	tree.call_group("sto_nino_altar", "_refresh_visual_state")
+	tree.call_group("store_door", "refresh_lock_state")
+	tree.call_group("storefront_custom_display", "refresh_display")
+
 
 func reset_state() -> void:
 	day = 1
