@@ -413,16 +413,16 @@ func _build_ui() -> void:
 	_close_btn.pressed.connect(_on_close_pressed)
 	_root.add_child(_close_btn)
 
-	# Reyna Mayari Portrait eased further left so she frames the summary without blocking the ledger
+	# Reyna Mayari Portrait (same framing as MayariTallyOverlay)
 	if _show_mayari:
 		_mayari_portrait = TextureRect.new()
 		if ResourceLoader.exists(MAYARI_SPRITE_PATH):
 			_mayari_portrait.texture = load(MAYARI_SPRITE_PATH)
 		_mayari_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_mayari_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		_mayari_portrait.anchor_left = -0.145
-		_mayari_portrait.anchor_right = 0.255
-		_mayari_portrait.anchor_top = 0.18
+		_mayari_portrait.anchor_left = -0.085
+		_mayari_portrait.anchor_right = 0.355
+		_mayari_portrait.anchor_top = 0.16
 		_mayari_portrait.anchor_bottom = 1.24
 		_mayari_portrait.z_index = 10
 		_mayari_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
