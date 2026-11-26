@@ -61,6 +61,8 @@ const NEIGHBOR_RECORDS: Array[Dictionary] = [
 
 var is_open: bool = false
 var _locked: bool = false
+var _total_pairs: int = TOTAL_PAIRS
+var _max_tries: int = MAX_TRIES
 var _pairs_found: int = 0
 var _tries_left: int = MAX_TRIES
 var _streak: int = 0
@@ -145,8 +147,21 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _start_round() -> void:
 	_locked = false
+	var day_idx := maxi(0, StoryManager.day - 1) if is_instance_valid(StoryManager) else 0
+	if day_idx >= 6:
+		_total_pairs = 10
+		_max_tries = 22
+		_grid.columns = 5
+	elif day_idx >= 3:
+		_total_pairs = 8
+		_max_tries = 18
+		_grid.columns = 4
+	else:
+		_total_pairs = TOTAL_PAIRS
+		_max_tries = MAX_TRIES
+		_grid.columns = 4
 	_pairs_found = 0
-	_tries_left = MAX_TRIES
+	_tries_left = _max_tries
 	_streak = 0
 	_flipped.clear()
 	_cards.clear()
@@ -160,7 +175,7 @@ func _start_round() -> void:
 	pastels.shuffle()
 
 	var deck: Array[Dictionary] = []
-	for i in range(TOTAL_PAIRS):
+	for i in range(_total_pairs):
 		var path: String = pool[i % pool.size()]
 		var bg: Color = pastels[i % pastels.size()]
 		var power: int = randi_range(2, 5)
@@ -184,7 +199,7 @@ func _start_round() -> void:
 
 
 func _create_teks_card(entry: Dictionary) -> Dictionary:
-	var card_size := Vector2(126, 166)
+	var card_size := Vector2(126, 166) if _total_pairs <= 6 else (Vector2(110, 140) if _total_pairs <= 8 else Vector2(102, 130))
 	var holder := Control.new()
 	holder.custom_minimum_size = card_size
 	holder.pivot_offset = card_size * 0.5
@@ -342,8 +357,8 @@ func _on_card_clicked(card: Dictionary) -> void:
 				Color(0.68, 0.96, 0.58) if _streak <= 1 else Color(1.0, 0.90, 0.38)
 			)
 			_locked = false
-			if _pairs_found >= TOTAL_PAIRS:
-				_finish_round(true, "Teks Master!", "Matched all %d pairs with %d tries to spare!" % [TOTAL_PAIRS, _tries_left])
+			if _pairs_found >= _total_pairs:
+				_finish_round(true, "Teks Master!", "Matched all %d pairs with %d tries to spare!" % [_total_pairs, _tries_left])
 		else:
 			_streak = 0
 			_tries_left = maxi(0, _tries_left - 1)
@@ -401,7 +416,7 @@ func _flip_card(card: Dictionary, show_front: bool) -> void:
 
 
 func _refresh_hud() -> void:
-	_stats_lbl.text = "Pairs: %d / %d   •   Tries Left: %d" % [_pairs_found, TOTAL_PAIRS, _tries_left]
+	_stats_lbl.text = "Pairs: %d / %d   •   Tries Left: %d" % [_pairs_found, _total_pairs, _tries_left]
 	var col := Color(0.98, 0.48, 0.44) if _tries_left <= 3 else Color(0.96, 0.91, 0.78)
 	_stats_lbl.add_theme_color_override("font_color", col)
 	_refresh_leaderboard()

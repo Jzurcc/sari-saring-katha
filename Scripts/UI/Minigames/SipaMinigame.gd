@@ -15,11 +15,11 @@ const EARLY_COOLDOWN := 0.45
 const XP_CAP_KICKS := 32
 
 const NEIGHBOR_SCORES: Array[Dictionary] = [
-	{"name": "Lolo Pilo", "score": 32, "portrait": "res://Assets/characters/portraits/LoloPilo Face.png"},
-	{"name": "Buboy", "score": 21, "portrait": "res://Assets/characters/portraits/Buboy Face.png"},
-	{"name": "T.K.", "score": 15, "portrait": "res://Assets/characters/portraits/TK Face.png"},
-	{"name": "Kuya Kap", "score": 10, "portrait": "res://Assets/characters/portraits/Kuya_Kap Face.png"},
-	{"name": "Danilo", "score": 6, "portrait": "res://Assets/characters/portraits/Danilo Face.png"},
+	{"name": "Lolo Pilo", "score": 480, "portrait": "res://Assets/characters/portraits/LoloPilo Face.png"},
+	{"name": "Buboy", "score": 300, "portrait": "res://Assets/characters/portraits/Buboy Face.png"},
+	{"name": "T.K.", "score": 210, "portrait": "res://Assets/characters/portraits/TK Face.png"},
+	{"name": "Kuya Kap", "score": 140, "portrait": "res://Assets/characters/portraits/Kuya_Kap Face.png"},
+	{"name": "Danilo", "score": 80, "portrait": "res://Assets/characters/portraits/Danilo Face.png"},
 	{"name": "Manang Ana", "score": 0, "portrait": "res://Assets/characters/portraits/ManangAna Face.png"},
 	{"name": "Rosalyn", "score": 0, "portrait": "res://Assets/characters/portraits/Rosalyn Face.png"},
 ]
@@ -39,6 +39,8 @@ var is_open: bool = false
 var _phase: String = "idle" # countdown, playing, finished
 var _countdown_t: float = 3.0
 var _kicks: int = 0
+var _score: int = 0
+var _start_diff: float = 0.0
 var _cooldown: float = 0.0
 var _elapsed: float = 0.0
 var _hit_flash: float = 0.0
@@ -87,6 +89,11 @@ func _get_vp_size() -> Vector2:
 	return Vector2(1280.0, 720.0)
 
 
+func _get_diff_t() -> float:
+	var kick_t := clampf(float(_score) / 480.0, 0.0, 1.0)
+	return clampf(_start_diff + kick_t * (1.0 - _start_diff * 0.5), 0.0, 1.0)
+
+
 func _get_bounds() -> Dictionary:
 	var vp := _get_vp_size()
 	var left := vp.x * 0.16
@@ -94,8 +101,8 @@ func _get_bounds() -> Dictionary:
 	var top := 118.0
 	var floor_y := vp.y - 46.0
 	var zone_bottom := floor_y - 14.0
-	# Starts generous/tall so early kicks are forgiving, then gradually narrows up to kick 32+
-	var diff_t := clampf(float(_kicks) / float(XP_CAP_KICKS), 0.0, 1.0)
+	# Starts generous/tall on Day 1, gradually narrows with score and later days
+	var diff_t := _get_diff_t()
 	var base_zone_h := lerpf(168.0, 96.0, diff_t) * (vp.y / 720.0)
 	var zone_top := zone_bottom - clampf(base_zone_h, 88.0, 210.0)
 	return {
@@ -130,6 +137,9 @@ func _show_intro() -> void:
 	_phase = "intro"
 	_prev_space_down = Input.is_key_pressed(KEY_SPACE) or Input.is_key_pressed(KEY_ENTER)
 	_kicks = 0
+	_score = 0
+	var day_idx := maxi(0, StoryManager.day - 1) if is_instance_valid(StoryManager) else 0
+	_start_diff = clampf(float(day_idx) * 0.055, 0.0, 0.40)
 	_cooldown = 0.0
 	_elapsed = 0.0
 	_sipa_pos = Vector2(vp.x * 0.5, vp.y * 0.28)
@@ -139,7 +149,7 @@ func _show_intro() -> void:
 	_countdown_lbl.visible = false
 	_result_panel.visible = false
 	Juice.pop_panel_in(_intro_panel)
-	_kick_lbl.text = "Kicks: 0"
+	_kick_lbl.text = "Score: 0  •  Kicks: 0"
 	_status_lbl.text = ""
 	_refresh_leaderboard()
 
@@ -163,6 +173,7 @@ func close_minigame(won: bool = false, emit_result: bool = true) -> void:
 		minigame_finished.emit(won, {
 			"id": "sipa",
 			"kicks": _kicks,
+			"score": _score,
 			"xp_cap": XP_CAP_KICKS,
 			"elapsed": _elapsed,
 		})
@@ -173,6 +184,7 @@ func _start_countdown() -> void:
 	_phase = "countdown"
 	_countdown_t = 3.0
 	_kicks = 0
+	_score = 0
 	_cooldown = 0.0
 	_elapsed = 0.0
 	_hit_flash = 0.0
@@ -188,7 +200,7 @@ func _start_countdown() -> void:
 	Juice.pop_control(_countdown_lbl, 1.35, 0.28)
 	Juice.play_sfx("ui_hover", 0.85, 1.0)
 	_status_lbl.text = "Get ready..."
-	_kick_lbl.text = "Kicks: 0"
+	_kick_lbl.text = "Score: 0  •  Kicks: 0"
 	_refresh_leaderboard()
 
 
@@ -223,8 +235,12 @@ func _attempt_kick() -> void:
 		var zone_half := (float(b["zone_bottom"]) - float(b["zone_top"])) * 0.5
 		var is_perfect := absf(_sipa_pos.y - zone_center) <= zone_half * 0.45
 
+		var prev_score := _score
+		var pts := 20 if is_perfect else 10
+		_score += pts
+
 		var vp_scale := _get_vp_size().y / 720.0
-		var diff_t := clampf(float(_kicks) / float(XP_CAP_KICKS), 0.0, 1.0)
+		var diff_t := _get_diff_t()
 		var bounce_vy := -randf_range(580.0, 650.0) * vp_scale * lerpf(0.92, 1.36, diff_t)
 		var drift_range := lerpf(85.0, 290.0, diff_t) * vp_scale
 		var bounce_vx := randf_range(-drift_range, drift_range)
@@ -249,16 +265,16 @@ func _attempt_kick() -> void:
 		Juice.spawn_burst(_root, _sipa_pos, Color(1.0, 0.88, 0.36) if is_perfect else Color(0.62, 0.96, 0.56), 14 if is_perfect else 9, 130.0)
 		Juice.pop_control(_kick_lbl, 1.24, 0.20)
 
-		_kick_lbl.text = "Kicks: %d" % _kicks
-		_status_lbl.text = "Perfect kick!" if is_perfect else "Swak! Keep it up!"
-		_spawn_feedback("PERFECT!" if is_perfect else "Swak!", Color(1.0, 0.90, 0.38) if is_perfect else Color(0.62, 0.96, 0.56))
+		_kick_lbl.text = "Score: %d  •  Kicks: %d" % [_score, _kicks]
+		_status_lbl.text = "Perfect! +%d" % pts if is_perfect else "Swak! +%d" % pts
+		_spawn_feedback("PERFECT! +%d" % pts if is_perfect else "Swak! +%d" % pts, Color(1.0, 0.90, 0.38) if is_perfect else Color(0.62, 0.96, 0.56), 0.0)
 		_refresh_leaderboard()
 
 		for entry in NEIGHBOR_SCORES:
 			var target_score: int = int(entry["score"])
-			if target_score > 0 and _kicks == target_score + 1:
+			if target_score > 0 and prev_score <= target_score and _score > target_score:
 				_status_lbl.text = "You beat %s's record (%d)!" % [str(entry["name"]), target_score]
-				_spawn_feedback("Beat %s!" % str(entry["name"]), Color(1.0, 0.90, 0.42))
+				_spawn_feedback("Beat %s!" % str(entry["name"]), Color(1.0, 0.90, 0.42), -62.0)
 				Juice.play_sfx("interact", 1.42, 1.0)
 				break
 	else:
@@ -317,7 +333,7 @@ func _process(delta: float) -> void:
 
 		var b := _get_bounds()
 		var vp_scale := _get_vp_size().y / 720.0
-		var diff_t := clampf(float(_kicks) / float(XP_CAP_KICKS), 0.0, 1.0)
+		var diff_t := _get_diff_t()
 		var endless_extra := minf(0.35, maxf(0.0, float(_kicks - XP_CAP_KICKS)) * 0.015)
 		var gravity := lerpf(580.0, 1120.0, diff_t) * (1.0 + endless_extra) * vp_scale
 		_sipa_vel.y += gravity * delta
@@ -364,11 +380,11 @@ func _sync_sipa_visual() -> void:
 		_sipa_sprite.rotation = _sipa_rot
 
 
-func _spawn_feedback(txt: String, col: Color) -> void:
+func _spawn_feedback(txt: String, col: Color, y_extra_offset: float = 0.0) -> void:
 	var b := _get_bounds()
 	var lbl := Label.new()
 	lbl.text = txt
-	lbl.position = Vector2(_sipa_pos.x - 48.0, float(b["zone_top"]) - 34.0)
+	lbl.position = Vector2(_sipa_pos.x - 56.0, float(b["zone_top"]) - 34.0 + y_extra_offset)
 	lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
 	lbl.add_theme_font_size_override("font_size", 22)
 	lbl.add_theme_color_override("font_color", col)
@@ -669,7 +685,7 @@ func _build_ui() -> void:
 func _refresh_leaderboard() -> void:
 	for item in _board_rows:
 		var target_score: int = int(item["score"])
-		var beaten := (_kicks > target_score) if target_score > 0 else (_kicks >= 1)
+		var beaten := (_score > target_score) if target_score > 0 else (_score >= 1)
 		var nlbl: Label = item["name_lbl"]
 		var slbl: Label = item["score_lbl"]
 		if beaten:

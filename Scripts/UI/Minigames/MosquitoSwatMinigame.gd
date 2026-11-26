@@ -42,6 +42,8 @@ var _spawn_timer: float = 0.0
 var _streak: int = 0
 var _streak_timer: float = 0.0
 var _last_tick_sec: int = -1
+var _start_diff: float = 0.0
+var _target_score: int = TARGET_SCORE
 var _bugs: Array[Dictionary] = []
 var _ripples: Array[Dictionary] = []
 
@@ -179,19 +181,25 @@ func _start_round() -> void:
 	_spawn_timer = 0.25
 	_streak = 0
 	_streak_timer = 0.0
-	_last_tick_sec = -1
+	var day_idx := maxi(0, StoryManager.day - 1) if is_instance_valid(StoryManager) else 0
+	_start_diff = clampf(float(day_idx) * 0.07, 0.0, 0.48)
+	_target_score = TARGET_SCORE + (2 if day_idx >= 3 else 0) + (2 if day_idx >= 6 else 0)
 	_active = true
 	_result_panel.visible = false
 	Juice.play_sfx("pickup", 1.18, 0.5)
 	_refresh_hud()
-	# Spawn gentle initial wave flying in from screen edges
-	for _i in range(3):
+	# Spawn gentle initial wave (slightly more fireflies & bugs on later days)
+	var init_mosq := 3 + (1 if day_idx >= 4 else 0)
+	var init_ff := 1 + (1 if day_idx >= 2 else 0) + (1 if day_idx >= 5 else 0)
+	for _i in range(init_mosq):
 		_spawn_bug(false)
-	_spawn_bug(true)
+	for _j in range(init_ff):
+		_spawn_bug(true)
 
 
 func _get_diff_t() -> float:
-	return clampf(float(_score) / float(TARGET_SCORE), 0.0, 1.0)
+	var prog := clampf(float(_score) / float(maxi(1, _target_score)), 0.0, 1.0)
+	return clampf(_start_diff + prog * (1.0 - _start_diff * 0.45), 0.0, 1.0)
 
 
 func _clear_bugs() -> void:
@@ -453,7 +461,7 @@ func _on_bug_swatted(bug: Dictionary) -> void:
 	_refresh_hud()
 	if _lives <= 0:
 		_finish_round(false, "Fireflies Lost!", "Oh no — too many fireflies got swatted!")
-	elif _score >= TARGET_SCORE:
+	elif _score >= _target_score:
 		_finish_round(true, "Counter Clear!", "Swatted %d mosquitoes with %d fireflies safe!" % [_score, _lives])
 
 
@@ -491,9 +499,9 @@ func _finish_round(won: bool, title: String, subtitle: String) -> void:
 
 
 func _refresh_hud() -> void:
-	_score_bar.max_value = TARGET_SCORE
+	_score_bar.max_value = _target_score
 	_score_bar.value = _score
-	_score_lbl.text = "%d / %d" % [_score, TARGET_SCORE]
+	_score_lbl.text = "%d / %d" % [_score, _target_score]
 	_refresh_timer_label()
 
 	for ch in _lives_box.get_children():
