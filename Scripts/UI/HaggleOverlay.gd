@@ -193,7 +193,7 @@ func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node
 	_customer_data = customer_data
 	_customer_node = customer_node
 	_original_step = item_data.current_step
-	_offered_step = clampi(mini(0, _original_step - 1), ItemData.MIN_STEP, _original_step - 1)
+	_offered_step = maxi(ItemData.MIN_STEP, _original_step - 1)
 	_tolerance = 0
 	if is_instance_valid(StoreEventManager):
 		_tolerance += StoreEventManager.get_item_tolerance_offset(item_data)
