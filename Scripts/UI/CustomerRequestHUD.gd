@@ -645,13 +645,17 @@ func _apply_portrait_bob(portrait: Control) -> void:
 	tilt_tw.tween_property(portrait, "rotation_degrees", -tilt_deg * tilt_dir, swing_dur).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN_OUT)
 	tilt_tw.tween_interval(hold_dur)
 
-func _apply_sway(icon: Control) -> void:
-	# Calm bottom-pivoted gentle rock so the base feels planted on the shelf bar
+func _apply_sway(icon: Control, excited: bool = false) -> void:
+	var old_tw = icon.get_meta("sway_tween", null)
+	if old_tw and old_tw.is_valid():
+		old_tw.kill()
+	# Bottom-pivoted rock so the base feels planted on the shelf bar; livelier when holding a matching item
 	icon.pivot_offset = Vector2(icon.size.x * 0.5, icon.size.y * 0.92)
 	var sway_dir := 1.0 if randf() < 0.5 else -1.0
-	var sway_dur := randf_range(2.6, 4.6)
-	var angle := randf_range(1.6, 3.0)
-	icon.rotation_degrees = randf_range(-angle, angle)
+	var sway_dur := randf_range(1.1, 1.5) if excited else randf_range(2.6, 4.6)
+	var angle := randf_range(5.0, 6.8) if excited else randf_range(1.6, 3.0)
+	if not excited:
+		icon.rotation_degrees = randf_range(-angle, angle)
 
 	var tw := icon.create_tween().set_loops()
 	icon.set_meta("sway_tween", tw)
@@ -703,6 +707,7 @@ func _apply_held_match_visual(rect_container: Control) -> void:
 	else:
 		tw.tween_property(icon, "position:y", target_y, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tw.tween_property(icon, "scale", target_sc, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_apply_sway(icon, is_match)
 
 func _on_customer_hover_changed(customer: Customer, is_dragging: bool) -> void:
 	var next_key := customer.get_order_hud_key().strip_edges() if is_instance_valid(customer) else ""
