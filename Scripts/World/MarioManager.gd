@@ -386,7 +386,8 @@ func append_or_start_delivery(extra_items: Dictionary) -> void:
 			LogManager.info("MarioManager", "Merged %d upgrade/item entries into Uncle Mario's in-transit tricycle." % extra_items.size())
 		else:
 			LogManager.info("MarioManager", "Mario already unloaded; applying %d upgrade/item entries immediately." % extra_items.size())
-			_apply_delivery_items(extra_items, true)
+			_pending_delivery_items = extra_items.duplicate()
+			_commit_pending_delivery(true)
 		return
 	start_delivery(extra_items)
 
