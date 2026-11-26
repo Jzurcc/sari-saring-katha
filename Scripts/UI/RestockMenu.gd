@@ -289,10 +289,10 @@ func _build_toolbar(parent: VBoxContainer) -> void:
 	_category_btn.pressed.connect(func(): _set_category_open(not _category_popover.visible))
 	bar.add_child(_category_btn)
 
-	# Toggleable Today's Visitors & Quick-Fill Popover Button (closed by default)
+	# Toggleable Active Effects & Quick-Fill Popover Button (closed by default)
 	_regulars_btn = Button.new()
-	_regulars_btn.text = "Today's Visitors ▾"
-	_regulars_btn.icon = preload("res://Assets/ui/icons/user-round-exclamation-point.png") if ResourceLoader.exists("res://Assets/ui/icons/user-round-exclamation-point.png") else IC_USERS
+	_regulars_btn.text = "Active Effects ▾"
+	_regulars_btn.icon = IC_SPARKLES
 	_regulars_btn.custom_minimum_size = Vector2(0, 48)
 	_regulars_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_regulars_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
@@ -845,11 +845,10 @@ func _set_regulars_open(open_state: bool) -> void:
 		_set_category_open(false)
 	_regulars_backdrop.visible = open_state
 	_regulars_popover.visible = open_state
-	var rev_count := StoryManager.get_revealed_expected_regulars().size()
-	var suffix := " ▴" if open_state else " ▾"
-	_regulars_btn.text = ("Today's Regulars (%d)%s" % [rev_count, suffix]) if rev_count > 0 else ("Today's Regulars%s" % suffix)
+	_refresh_regulars_popover_content()
 	if open_state:
-		_refresh_regulars_popover_content()
+		_regulars_popover.size = Vector2.ZERO
+		_regulars_popover.reset_size()
 		var btn_rect := _regulars_btn.get_global_rect()
 		_regulars_popover.position = Vector2(btn_rect.position.x, btn_rect.end.y + 8.0)
 		_regulars_popover.modulate.a = 0.0
