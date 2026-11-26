@@ -668,16 +668,32 @@ func _build_ui() -> void:
 	dock_sep.color = Color(0.835, 0.624, 0.278, 0.22)
 	_gauge_dock.add_child(dock_sep)
 
+	var gauge_row := HBoxContainer.new()
+	gauge_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gauge_row.add_theme_constant_override("separation", 0)
+	_gauge_dock.add_child(gauge_row)
+
+	var gauge_pad_l := Control.new()
+	gauge_pad_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gauge_pad_l.size_flags_stretch_ratio = 0.10
+	gauge_row.add_child(gauge_pad_l)
+
 	_unified_gauge = UnifiedLedgerGauge.new()
 	_unified_gauge.peso_tex = PESO_ICON
 	_unified_gauge.bold_font = _bold_font
 	_unified_gauge.custom_minimum_size = Vector2(0, 74)
 	_unified_gauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_unified_gauge.size_flags_stretch_ratio = 0.80
 	_unified_gauge.milestones = StoryManager.LEDGER_MILESTONES
 	_unified_gauge.value_changed.connect(_on_slider_changed)
 	_unified_gauge.nudge_requested.connect(_nudge_offer)
 	_unified_gauge.milestone_hovered.connect(_on_milestone_hovered)
-	_gauge_dock.add_child(_unified_gauge)
+	gauge_row.add_child(_unified_gauge)
+
+	var gauge_pad_r := Control.new()
+	gauge_pad_r.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gauge_pad_r.size_flags_stretch_ratio = 0.10
+	gauge_row.add_child(gauge_pad_r)
 
 	# Scroll keybind indicator (rounded square with ↕) tucked cleanly below the gauge bar
 	_scroll_hint_box = HBoxContainer.new()
@@ -758,15 +774,16 @@ func _build_ui() -> void:
 	_reroll_btn.anchor_top = 0.855
 	_reroll_btn.anchor_bottom = 0.855
 	_reroll_btn.offset_left = 18.0
-	_reroll_btn.offset_right = 180.0
-	_reroll_btn.offset_top = -28.0
-	_reroll_btn.offset_bottom = 28.0
+	_reroll_btn.offset_right = 104.0
+	_reroll_btn.offset_top = -26.0
+	_reroll_btn.offset_bottom = 26.0
 	_reroll_btn.z_index = 12
 	_reroll_btn.visible = false
+	_reroll_btn.tooltip_text = "Reroll Cards"
 	_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_reroll_btn.focus_mode = Control.FOCUS_NONE
 	_reroll_btn.add_theme_font_override("font", _bold_font)
-	_reroll_btn.add_theme_font_size_override("font_size", 18)
+	_reroll_btn.add_theme_font_size_override("font_size", 22)
 	var rr_style := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.10, 0.97), 8, 16, 8)
 	rr_style.border_color = COL_GOLD
 	rr_style.set_border_width_all(2)
@@ -1448,7 +1465,7 @@ func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
 		var st: StyleBoxFlat = _shadow_rows[i]["style"]
 		var acc: Color = p.get_meta("shadow_accent", COL_GOLD)
 		var brt: Color = p.get_meta("shadow_bright", COL_GOLD_BRIGHT)
-		p.pivot_offset = p.size * 0.5
+		p.scale = Vector2.ONE
 		var tw := create_tween()
 		if i == active_idx:
 			st.border_color = brt
@@ -1456,8 +1473,7 @@ func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
 			st.border_width_top = 2
 			st.border_width_right = 2
 			st.border_width_bottom = 2
-			tw.tween_property(p, "scale", Vector2(1.020, 1.020), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			tw.parallel().tween_property(p, "modulate", Color(1.07, 1.05, 1.02, 1.0), 0.12)
+			tw.tween_property(p, "modulate", Color(1.05, 1.04, 1.02, 1.0), 0.12)
 		else:
 			st.border_color = Color(acc.r, acc.g, acc.b, 0.56)
 			st.border_width_left = 4
@@ -1465,8 +1481,7 @@ func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
 			st.border_width_right = 1
 			st.border_width_bottom = 1
 			var dim := Color(0.84, 0.80, 0.76, 0.92) if active_idx != -1 else Color.WHITE
-			tw.tween_property(p, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_SINE)
-			tw.parallel().tween_property(p, "modulate", dim, 0.14)
+			tw.tween_property(p, "modulate", dim, 0.14)
 
 func _on_row_hovered(index: int, is_hovered: bool) -> void:
 	if _card_picked or not _cards_ready or index < 0 or index >= _card_rows.size():
@@ -1491,7 +1506,7 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 		var accent: Color = row.get_meta("accent")
 		var accent_bright: Color = row.get_meta("accent_bright")
 		var is_sel := i in _selected_indices
-		row.pivot_offset = row.size * 0.5
+		row.scale = Vector2.ONE
 		var tw := create_tween()
 		if _hovered_idx == i or is_sel:
 			style.border_color = COL_CREAM if is_sel else accent_bright
@@ -1499,9 +1514,7 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			style.border_width_right = 3 if is_sel else 2
 			style.border_width_bottom = 3 if is_sel else 2
 			style.border_width_left = 6
-			var sc := Vector2(1.026, 1.026) if _hovered_idx == i else Vector2(1.014, 1.014)
-			tw.tween_property(row, "scale", sc, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			tw.parallel().tween_property(row, "modulate", Color.WHITE, 0.12)
+			tw.tween_property(row, "modulate", Color.WHITE, 0.12)
 		else:
 			style.border_color = Color(accent.r, accent.g, accent.b, 0.55)
 			style.border_width_top = 1
@@ -1509,8 +1522,7 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			style.border_width_bottom = 1
 			style.border_width_left = 4
 			var dim := Color(0.76, 0.72, 0.68, 0.88) if (_hovered_idx != -1 or not _selected_indices.is_empty()) else Color.WHITE
-			tw.tween_property(row, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE)
-			tw.parallel().tween_property(row, "modulate", dim, 0.14)
+			tw.tween_property(row, "modulate", dim, 0.14)
 
 func _on_row_gui_input(event: InputEvent, index: int) -> void:
 	if _card_picked or not _cards_ready:
@@ -1697,9 +1709,13 @@ func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
 
 func _refresh_draft_controls() -> void:
 	if is_instance_valid(_reroll_btn):
-		_reroll_btn.visible = _cards_ready and not _card_picked and _rerolls_left > 0
-		_reroll_btn.disabled = not _cards_ready or _card_picked or _rerolls_left <= 0
-		_reroll_btn.text = ("↻ Reroll (%d)" % _rerolls_left) if _max_rerolls >= 2 else "↻ Reroll"
+		var show_rr := _cards_ready and not _card_picked
+		var has_rr := _rerolls_left > 0
+		_reroll_btn.visible = show_rr
+		_reroll_btn.disabled = not show_rr or not has_rr
+		_reroll_btn.text = "↻ %d" % _rerolls_left
+		_reroll_btn.modulate.a = 1.0 if has_rr else 0.38
+		_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if has_rr else Control.CURSOR_ARROW
 	if is_instance_valid(_accept_cards_btn):
 		_accept_cards_btn.visible = _cards_ready and not _card_picked and _max_card_picks >= 2
 		var cnt := _selected_indices.size()
