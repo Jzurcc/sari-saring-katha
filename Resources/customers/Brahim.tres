@@ -87,6 +87,7 @@ sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("6_e6vk5")
 dialogue_blip_volume = -3.0
 favorite_categories = Array[String](["can", "sachet"])
+spawn_weight = 1.35
 story_timeline = ExtResource("10_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
 character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])

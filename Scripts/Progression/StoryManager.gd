@@ -1375,9 +1375,9 @@ func get_unplaced_containers_for_tier(tier: int) -> Array[ItemData]:
 	preload("res://Resources/customers/LoloPilo.tres")
 ]
 
-# --- 4PM+ Daily Mosquito Swarm Encounter (Once per day: 40% daily roll, random time 4PM+) ---
+# --- 4PM+ Daily Mosquito Swarm Encounter (Once per day: 65% daily roll, random time 4PM+) ---
 const MOSQUITO_START_HOUR := 16.0
-const MOSQUITO_DAILY_CHANCE := 0.40
+const MOSQUITO_DAILY_CHANCE := 0.65
 var mosquito_swarm_pending: bool = false
 var mosquito_swarm_triggered_today: bool = false
 var _mosquito_trigger_hour: float = -1.0 # < 0 means no mosquito swarm today
@@ -1424,7 +1424,7 @@ func _roll_daily_mosquito_swarm() -> void:
 	if randf() < MOSQUITO_DAILY_CHANCE:
 		var max_hour := maxf(MOSQUITO_START_HOUR + 0.25, minf(get_effective_closing_hour() - 0.75, 19.0))
 		_mosquito_trigger_hour = randf_range(MOSQUITO_START_HOUR, max_hour)
-		LogManager.info("StoryManager", "Mosquito Swarm scheduled for today at %.2fh (40%% daily roll)." % _mosquito_trigger_hour)
+		LogManager.info("StoryManager", "Mosquito Swarm scheduled for today at %.2fh (65%% daily roll)." % _mosquito_trigger_hour)
 
 func _check_mosquito_swarm_trigger() -> void:
 	if day <= 1 or mosquito_swarm_triggered_today or mosquito_swarm_pending or _mosquito_trigger_hour < 0.0:

@@ -58,6 +58,7 @@ sprite_scale = 0.285
 dialogue_blip_sound = ExtResource("1_blip")
 dialogue_blip_volume = -3.0
 favorite_categories = Array[String](["candy", "snack", "sachet"])
+spawn_weight = 1.35
 story_timeline = ExtResource("pilo_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0")])
