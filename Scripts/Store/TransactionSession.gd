@@ -86,14 +86,13 @@ static func compute_overpriced_refusal_chance(item_data: ItemData, customer_data
 	if customer_data != null and is_instance_valid(CharacterProgressionManager):
 		tolerance += CharacterProgressionManager.get_reputation_tolerance_bonus(customer_data, item_data)
 	var effective_step: int = item_data.current_step - tolerance
-	if effective_step < 2:
+	if effective_step < 3:
 		return 0.0
 	var base_chance: float = 0.0
 	match effective_step:
-		2: base_chance = 0.20
-		3: base_chance = 0.45
-		4: base_chance = 0.72
-		_: base_chance = 0.92
+		3: base_chance = 0.15
+		4: base_chance = 0.40
+		_: base_chance = 0.70
 	var relief: float = StoryManager.get_storefront_price_relief()
 	var card_mod: float = 0.0
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
@@ -101,7 +100,7 @@ static func compute_overpriced_refusal_chance(item_data: ItemData, customer_data
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
 		card_mod -= 0.20
 	var final_chance: float = base_chance - relief + card_mod
-	return maxf(0.05, final_chance) if effective_step >= 3 else maxf(0.0, final_chance)
+	return maxf(0.05, final_chance) if effective_step >= 4 else maxf(0.0, final_chance)
 
 
 func _matches_desired_preview(context: TransactionContext, offered: ItemData) -> bool:

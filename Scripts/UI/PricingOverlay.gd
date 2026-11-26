@@ -541,13 +541,13 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		accent = COL_DISCOUNT
 		comparison_label.text = "-₱%.2f" % absf(diff)
 	elif step == 0:
-		accent = COL_GOLD_SOFT if effective_step <= 1 else (COL_RISKY if effective_step == 2 else COL_DANGER)
+		accent = COL_GOLD_SOFT if effective_step <= 2 else (COL_RISKY if effective_step == 3 else COL_DANGER)
 		comparison_label.text = "+₱0"
 	else:
 		comparison_label.text = "+₱%.2f" % diff
-		if effective_step <= 1:
+		if effective_step <= 2:
 			accent = COL_GOLD_SOFT
-		elif effective_step == 2:
+		elif effective_step == 3:
 			accent = COL_RISKY
 		else:
 			accent = COL_DANGER
