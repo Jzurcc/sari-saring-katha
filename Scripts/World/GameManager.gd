@@ -329,7 +329,7 @@ func _on_day_ended(ended_day_number: int) -> void:
 			return
 
 	# Even after the Silver Ledger is sealed, still offer the nightly Favor card draft (with Omens Only toggle)
-	if StoryManager.is_ledger_settled():
+	if StoryManager.is_tally_cleared():
 		_is_tally_overlay_open = true
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		var draft_ov := MayariTallyOverlayScript.new()
