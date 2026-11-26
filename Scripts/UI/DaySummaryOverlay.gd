@@ -93,6 +93,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if not _closing and Input.get_mouse_mode() != Input.MOUSE_MODE_VISIBLE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if is_instance_valid(_hover_card_holder) and _hover_card_holder.visible and is_instance_valid(_active_hover_card):
 		_position_hover_card()
 
