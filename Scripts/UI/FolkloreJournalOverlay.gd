@@ -63,6 +63,9 @@ var _progress_bar: ProgressBar
 var _roster_scroll: ScrollContainer
 var _roster_vbox: VBoxContainer
 var _roster_cards: Dictionary = {} # path -> Button
+var _unread_badges: Array[Control] = []
+var _unread_pulse_time: float = 0.0
+var _open_close_tween: Tween = null
 
 # Right workspace nodes
 var _hero_panel: PanelContainer
@@ -162,13 +165,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		open_journal()
 
 
+func _process(delta: float) -> void:
+	if not is_open or _unread_badges.is_empty():
+		return
+	_unread_pulse_time += delta * 3.4
+	var wave := 0.5 + 0.5 * sin(_unread_pulse_time)
+	var sc := lerpf(0.95, 1.10, wave)
+	var alpha := lerpf(0.70, 1.0, wave)
+	for b in _unread_badges:
+		if is_instance_valid(b):
+			b.pivot_offset = b.size * 0.5
+			b.scale = Vector2(sc, sc)
+			b.modulate = Color(1.0, lerpf(0.92, 1.05, wave), lerpf(0.82, 1.0, wave), alpha)
+
+
 func open_journal(focus_character_path: String = "") -> void:
 	if is_open:
 		return
+	if _open_close_tween and _open_close_tween.is_valid():
+		_open_close_tween.kill()
 	_prev_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	is_open = true
 	visible = true
+	_unread_pulse_time = 0.0
 	_close_lightbox()
 	_close_link_confirm()
 	_sync_safe_margins()
@@ -186,20 +206,42 @@ func open_journal(focus_character_path: String = "") -> void:
 	_refresh_all()
 
 	_root.modulate.a = 0.0
-	var tw := create_tween()
-	tw.tween_property(_root, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_safe_margin.pivot_offset = get_viewport().get_visible_rect().size * 0.5
+	_safe_margin.scale = Vector2(0.965, 0.965)
+	_open_close_tween = create_tween().set_parallel(true)
+	_open_close_tween.tween_property(_root, "modulate:a", 1.0, 0.20).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_open_close_tween.tween_property(_safe_margin, "scale", Vector2.ONE, 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	var parts: Array[Control] = [_rail_panel, _hero_panel, _reader_panel, _rank_track_box]
+	for i in range(parts.size()):
+		var p := parts[i]
+		if is_instance_valid(p):
+			p.modulate.a = 0.0
+			_open_close_tween.tween_property(p, "modulate:a", 1.0, 0.20).set_delay(0.03 * float(i)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func close_journal() -> void:
 	if not is_open:
 		return
+	if _open_close_tween and _open_close_tween.is_valid():
+		_open_close_tween.kill()
 	_close_lightbox()
 	_close_link_confirm()
 	is_open = false
-	visible = false
 	Input.mouse_mode = _prev_mouse_mode
 	EventBus.request_sfx.emit("drop")
 	EventBus.journal_toggled.emit(false)
+
+	_safe_margin.pivot_offset = get_viewport().get_visible_rect().size * 0.5
+	_open_close_tween = create_tween().set_parallel(true)
+	_open_close_tween.tween_property(_root, "modulate:a", 0.0, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_open_close_tween.tween_property(_safe_margin, "scale", Vector2(0.975, 0.975), 0.13).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_open_close_tween.set_parallel(false)
+	_open_close_tween.tween_callback(func():
+		if not is_open:
+			visible = false
+			_safe_margin.scale = Vector2.ONE
+	)
 
 
 # =============================================================================
@@ -250,7 +292,7 @@ func _select_neighbor(path: String) -> void:
 	_sync_default_rank_for_selected()
 	EventBus.request_sfx.emit("tab_switch")
 	_refresh_all()
-	_animate_reader_fade()
+	_animate_neighbor_switch()
 
 
 func _select_rank_tab(rank_idx: int) -> void:
@@ -262,6 +304,14 @@ func _select_rank_tab(rank_idx: int) -> void:
 	_rebuild_rank_track()
 	_rebuild_reader()
 	_animate_reader_fade()
+
+
+func _animate_neighbor_switch() -> void:
+	_animate_reader_fade()
+	if is_instance_valid(_hero_box):
+		_hero_box.modulate.a = 0.0
+		var tw := create_tween()
+		tw.tween_property(_hero_box, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 func _animate_reader_fade() -> void:
@@ -716,6 +766,7 @@ func _rebuild_roster() -> void:
 	for ch in _roster_vbox.get_children():
 		ch.queue_free()
 	_roster_cards.clear()
+	_unread_badges.clear()
 
 	for c in _all_neighbors:
 		var path := c.resource_path
@@ -770,7 +821,12 @@ func _rebuild_roster() -> void:
 		top_line.add_child(nl)
 
 		if unread:
-			top_line.add_child(_make_label("★ NEW", 14, COL_GOLD_BRIGHT, true))
+			var new_pill := PanelContainer.new()
+			new_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			new_pill.add_theme_stylebox_override("panel", _make_box_style(Color(0.24, 0.18, 0.07, 0.95), COL_GOLD_BRIGHT, 6, 7, 2))
+			new_pill.add_child(_make_label("★ NEW", 13, COL_GOLD_BRIGHT, true))
+			top_line.add_child(new_pill)
+			_unread_badges.append(new_pill)
 
 		var sub_row := HBoxContainer.new()
 		sub_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
