@@ -152,6 +152,39 @@ static func get_node_item(node_id: String, target_level: int = -1) -> ItemData:
 	return null
 
 
+static func get_short_description(node_id: String) -> String:
+	var def := get_node_def(node_id)
+	if def.is_empty():
+		return ""
+	match str(def["kind"]):
+		"permit":
+			return "Official barangay permit that boosts XP earned from every sale."
+		"fridge":
+			return "Keeps cold drinks and frozen goods frosty longer."
+		"mario_deals":
+			return "Daily discounted wholesale stock and faster Mario deliveries."
+		"bench":
+			return "Cozy seating outside so neighbors linger and chat."
+		"radio":
+			return "Reveals more daily regulars and neighborhood events."
+		"trash":
+			return "Dispose of unwanted or expired stock cleanly."
+		"cat":
+			return "Welcomes more customers to your counter at once."
+		"sto_nino":
+			return "Tap the altar each day for a protective lunar blessing."
+		"maneki":
+			return "A lucky waving cat that attracts bigger neighbor tips."
+		"storefront_step":
+			var sf_lvl := int(def.get("storefront_level", 1))
+			if sf_lvl == 1:
+				return "Paint your own custom signboard above the store."
+			elif sf_lvl == 2:
+				return "Design a promo poster to highlight featured categories."
+			return "Open your sari-sari store to the full barangay street."
+	return ""
+
+
 ## Returns Event-Card style stat dictionaries: {"label": String, "value": String, "tone": "pos"|"neg"|"neu"}
 static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dictionary]:
 	var def := get_node_def(node_id)

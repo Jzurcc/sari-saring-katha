@@ -26,8 +26,8 @@ const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_GOLD_BRIGHT := Color(1.0, 0.875, 0.56, 1.0)
 
-const ICON_SIZE := Vector2(68, 68)
-const CAPSTONE_SIZE := Vector2(82, 82)
+const ICON_SIZE := Vector2(86, 86)
+const CAPSTONE_SIZE := Vector2(102, 102)
 
 var is_open: bool = false
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
@@ -302,8 +302,8 @@ func _show_tooltip_for(node_id: String) -> void:
 		s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		s_row.add_child(s_val)
 
-	# Restored description (from item metadata or Tier catalog items)
-	var desc := str(item.get_meta("upgrade_desc", "")) if item != null else ""
+	# Crisp 1-sentence description (stats below carry the exact numbers)
+	var desc := Registry.get_short_description(node_id)
 	if str(def["kind"]) == "tier_hub" and is_instance_valid(InventoryManager):
 		var target_t := clampi(target_lvl + 1, 2, 10)
 		var names: Array[String] = []
@@ -483,13 +483,14 @@ func _build_ui() -> void:
 	)
 	_root.add_child(backdrop)
 
-	# Full-screen framed wooden board
+	# True edge-to-edge full-screen framed wooden board
 	_board_panel = PanelContainer.new()
-	_board_panel.anchor_left = 0.025
-	_board_panel.anchor_right = 0.975
-	_board_panel.anchor_top = 0.035
-	_board_panel.anchor_bottom = 0.965
-	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 12, 18, 14)
+	_board_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_board_panel.offset_left = 0.0
+	_board_panel.offset_right = 0.0
+	_board_panel.offset_top = 0.0
+	_board_panel.offset_bottom = 0.0
+	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 0, 18, 14)
 	wood_st.border_color = COL_BRASS
 	wood_st.set_border_width_all(3)
 	wood_st.shadow_color = Color(0, 0, 0, 0.60)

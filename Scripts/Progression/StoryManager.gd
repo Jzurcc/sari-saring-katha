@@ -421,7 +421,9 @@ func get_fridge_upgrade_item(level: int) -> ItemData:
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "fridge_upgrade"
-	if ResourceLoader.exists("res://Assets/items/icons/2_bottle_water.png"):
+	if ResourceLoader.exists("res://Assets/ui/fridge.png"):
+		item.texture = load("res://Assets/ui/fridge.png")
+	elif ResourceLoader.exists("res://Assets/items/icons/2_bottle_water.png"):
 		item.texture = load("res://Assets/items/icons/2_bottle_water.png")
 	item.set_meta("is_fridge_upgrade", true)
 	item.set_meta("fridge_level", lvl)
@@ -921,7 +923,9 @@ func get_bench_upgrade_item(level: int) -> ItemData:
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "bench_upgrade"
-	if ResourceLoader.exists("res://Assets/ui/trophy.png"):
+	if ResourceLoader.exists("res://Assets/ui/bench.png"):
+		item.texture = load("res://Assets/ui/bench.png")
+	elif ResourceLoader.exists("res://Assets/ui/trophy.png"):
 		item.texture = load("res://Assets/ui/trophy.png")
 	item.set_meta("is_bench_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
@@ -1047,7 +1051,7 @@ func get_storefront_upgrade_item(level: int) -> ItemData:
 	if lvl == 2:
 		icon_path = "res://Assets/3D/final store/textures/load_poster.png"
 	elif lvl == 3:
-		icon_path = "res://Assets/ui/picture_frame_stand.png"
+		icon_path = "res://Assets/ui/door.png" if ResourceLoader.exists("res://Assets/ui/door.png") else "res://Assets/ui/picture_frame_stand.png"
 	if ResourceLoader.exists(icon_path):
 		item.texture = load(icon_path)
 	item.set_meta("is_storefront_upgrade", true)
