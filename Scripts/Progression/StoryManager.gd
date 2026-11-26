@@ -318,19 +318,17 @@ func add_player_xp(base_amount: int, reason: String = "") -> int:
 			_last_tier_unlocked_notification = max_unlocked_tier
 
 		var level_bonus := get_level_up_money_reward(player_level)
-		if not is_instance_valid(_game_manager):
-			_cache_node_refs()
-		if is_instance_valid(_game_manager) and level_bonus > 0.0:
-			_game_manager.money += level_bonus
-			EventBus.money_changed.emit(_game_manager.money)
-			EventBus.request_sfx.emit("money_gain")
-			record_daily_stat_add("tips_earned", level_bonus)
+		var will_show_tier_banner := (tier_cap > _last_notified_tier and _pending_tier_advance_source == "LevelUp")
+		if will_show_tier_banner:
+			_pending_level_up_bonus += level_bonus
+		elif level_bonus > 0.0:
+			_grant_level_up_money(level_bonus)
 
 		LogManager.info("StoryManager", "PLAYER LEVEL UP -> Lv. %d! (+₱%.0f bonus, Max Tier %d)" % [player_level, level_bonus, max_unlocked_tier])
 		EventBus.player_leveled_up.emit(player_level)
 		# Tier-unlocking levels (Lv. 2..MAX_UNLOCKABLE_TIER) already show TierAdvanceOverlay with item previews;
 		# only show the toast for post-max-tier bonus levels where no overlay pops up.
-		if player_level > MAX_UNLOCKABLE_TIER:
+		if not will_show_tier_banner:
 			EventBus.show_notification.emit("Player Level %d!" % player_level, "+₱%.0f Level-Up Bonus!" % level_bonus, "purchase")
 
 	LogManager.info("StoryManager", "Player XP +%d (%s) -> Lv. %d (%d/%d)" % [gained, reason, player_level, player_xp, get_xp_for_next_level()])
@@ -1398,14 +1396,37 @@ func get_representative_item_for_tier(target_tier: int) -> ItemData:
 			return item
 	return null
 
+var _pending_level_up_bonus: float = 0.0
+var last_level_up_bonus: float = 0.0
+
+func _grant_level_up_money(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	last_level_up_bonus = amount
+	if not is_instance_valid(_game_manager):
+		_cache_node_refs()
+	if is_instance_valid(_game_manager):
+		_game_manager.money += amount
+		EventBus.money_changed.emit(_game_manager.money)
+		EventBus.request_sfx.emit("money_gain")
+		record_daily_stat_add("tips_earned", amount)
+
 func process_pending_unlock() -> void:
 	if _pending_tier_advance_source == "":
+		if _pending_level_up_bonus > 0.0:
+			var leftover := _pending_level_up_bonus
+			_pending_level_up_bonus = 0.0
+			_grant_level_up_money(leftover)
 		return
 
 	# Safety Guard: Never notify for the same tier twice
 	if max_unlocked_tier <= _last_notified_tier:
 		LogManager.info("StoryManager", "Skip redundant notification for Tier %d" % max_unlocked_tier)
 		_pending_tier_advance_source = ""
+		if _pending_level_up_bonus > 0.0:
+			var leftover := _pending_level_up_bonus
+			_pending_level_up_bonus = 0.0
+			_grant_level_up_money(leftover)
 		return
 		
 	# Always offer the NEXT sequential upgrade for purchase
@@ -1427,6 +1448,12 @@ func process_pending_unlock() -> void:
 	_pending_tier_advance_source = ""
 	_last_tier_unlocked_notification = 0 # Reset after notification
 	_last_notified_tier = notify_tier
+
+	# Award deferred level-up prize money right as the notification appears!
+	if _pending_level_up_bonus > 0.0:
+		var bonus := _pending_level_up_bonus
+		_pending_level_up_bonus = 0.0
+		_grant_level_up_money(bonus)
 	
 	# Notify the player. We show the items for notify_tier, 
 	# but the cost is for the NEXT purchaseable upgrade (pending_upgrade_tier).
