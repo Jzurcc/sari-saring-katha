@@ -292,11 +292,11 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 	holder.add_child(lbl)
 
 	var tw := holder.create_tween()
-	tw.tween_property(holder, "scale", Vector3.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(holder, "global_position:y", start_pos.y + 0.42, 1.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(icon, "modulate:a", 0.0, 0.70).set_delay(0.35)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.70).set_delay(0.35)
-	tw.parallel().tween_property(lbl, "outline_modulate:a", 0.0, 0.70).set_delay(0.35)
+	tw.tween_property(holder, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(holder, "global_position:y", start_pos.y + 0.36, 2.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(icon, "modulate:a", 0.0, 0.95).set_delay(1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.95).set_delay(1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lbl, "outline_modulate:a", 0.0, 0.95).set_delay(1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(holder.queue_free)
 
 	# Tactile sprite bounce on positive Rep, subtle red pulse on negative Rep
