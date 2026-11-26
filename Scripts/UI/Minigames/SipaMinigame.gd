@@ -617,38 +617,34 @@ func _build_ui() -> void:
 	ititle.text = "How to Play: Sipa"
 	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ititle.add_theme_font_override("font", UIStyle.FONT_INDER)
-	ititle.add_theme_font_size_override("font_size", 30)
+	ititle.add_theme_font_size_override("font_size", 34)
 	ititle.add_theme_color_override("font_color", Color(1.0, 0.91, 0.64))
 	iv.add_child(ititle)
 
 	var idesc := Label.new()
-	idesc.text = "Press Space or Click when the sipa enters the golden zone at the bottom to keep it airborne as long as you can. The zone narrows and gravity builds as your kicks climb — try to beat Lolo Pilo's record of 32!"
+	idesc.text = "Press Space or Click when the sipa enters the golden zone at the bottom to keep it airborne as long as you can. The zone narrows and gravity builds as your kicks climb — try to beat Lolo Pilo's record!"
 	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	idesc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	idesc.add_theme_font_size_override("font_size", 20)
+	idesc.add_theme_font_size_override("font_size", 22)
 	idesc.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
 	iv.add_child(idesc)
 
 	var start_btn := Button.new()
 	start_btn.text = "Start"
-	start_btn.focus_mode = Control.FOCUS_NONE
-	start_btn.custom_minimum_size = Vector2(170, 46)
-	start_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
-	start_btn.add_theme_font_size_override("font_size", 20)
+	Juice.style_primary_button(start_btn)
 	start_btn.pressed.connect(_on_intro_start)
 	iv.add_child(start_btn)
 
 	# Result panel
 	_result_panel = PanelContainer.new()
 	_result_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_result_panel.custom_minimum_size = Vector2(390, 185)
-	_result_panel.offset_left = -195
-	_result_panel.offset_right = 195
-	_result_panel.offset_top = -92
-	_result_panel.offset_bottom = 92
-	var rs := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 14, 24, 20)
+	_result_panel.custom_minimum_size = Vector2(460, 230)
+	_result_panel.offset_left = -230
+	_result_panel.offset_right = 230
+	_result_panel.offset_top = -115
+	_result_panel.offset_bottom = 115
+	var rs := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
 	rs.border_color = Color(0.92, 0.72, 0.32, 0.92)
 	rs.set_border_width_all(2)
 	_result_panel.add_theme_stylebox_override("panel", rs)
@@ -657,27 +653,26 @@ func _build_ui() -> void:
 
 	var rv := VBoxContainer.new()
 	rv.alignment = BoxContainer.ALIGNMENT_CENTER
-	rv.add_theme_constant_override("separation", 12)
+	rv.add_theme_constant_override("separation", 14)
 	_result_panel.add_child(rv)
 
 	_result_title = Label.new()
 	_result_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_title.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_title.add_theme_font_size_override("font_size", 28)
+	_result_title.add_theme_font_size_override("font_size", 34)
 	rv.add_child(_result_title)
 
 	_result_sub = Label.new()
 	_result_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_result_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_result_sub.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_sub.add_theme_font_size_override("font_size", 16)
+	_result_sub.add_theme_font_size_override("font_size", 20)
 	_result_sub.add_theme_color_override("font_color", Color(0.94, 0.89, 0.78))
 	rv.add_child(_result_sub)
 
 	var cont_btn := Button.new()
 	cont_btn.text = "Continue"
-	cont_btn.custom_minimum_size = Vector2(160, 40)
-	cont_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	Juice.style_primary_button(cont_btn)
 	cont_btn.pressed.connect(func(): close_minigame(bool(_result_panel.get_meta("won", false)), true))
 	rv.add_child(cont_btn)
 

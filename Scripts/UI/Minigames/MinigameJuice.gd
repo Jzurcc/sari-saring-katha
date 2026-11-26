@@ -68,6 +68,30 @@ static func pop_control(ctrl: Control, peak_scale: float = 1.18, duration: float
 	tw.tween_property(ctrl, "scale", Vector2.ONE, duration * 0.62).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+static func style_primary_button(btn: Button, min_size: Vector2 = Vector2(195, 50)) -> void:
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.custom_minimum_size = min_size
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	btn.add_theme_font_override("font", UIStyle.FONT_INDER)
+	btn.add_theme_font_size_override("font_size", 22)
+	var st := UIStyle.create_flat_stylebox(Color(0.38, 0.28, 0.12, 0.98), 10, 24, 10)
+	st.border_color = Color(0.96, 0.82, 0.44, 0.96)
+	st.set_border_width_all(2)
+	st.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	st.shadow_size = 10
+	var hov := st.duplicate() as StyleBoxFlat
+	hov.bg_color = Color(0.48, 0.36, 0.16, 0.98)
+	hov.border_color = Color(1.0, 0.94, 0.72, 1.0)
+	var prs := st.duplicate() as StyleBoxFlat
+	prs.bg_color = Color(0.28, 0.20, 0.09, 0.98)
+	btn.add_theme_stylebox_override("normal", st)
+	btn.add_theme_stylebox_override("hover", hov)
+	btn.add_theme_stylebox_override("pressed", prs)
+	btn.add_theme_color_override("font_color", Color(1.0, 0.95, 0.84, 1.0))
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+
+
 static func pop_panel_in(panel: Control) -> void:
 	if not is_instance_valid(panel) or not panel.is_inside_tree():
 		return
