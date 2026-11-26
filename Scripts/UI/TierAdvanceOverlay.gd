@@ -159,13 +159,13 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 
 		var holder := VBoxContainer.new()
 		holder.alignment = BoxContainer.ALIGNMENT_CENTER
-		holder.custom_minimum_size = Vector2(78, 86)
+		holder.custom_minimum_size = Vector2(92, 102)
 		holder.add_theme_constant_override("separation", 4)
 		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-		# Fixed-height slot so the TextureRect can bob smoothly inside it
+		# Fixed-size slot so the TextureRect can sway smoothly around its center
 		var icon_slot := Control.new()
-		icon_slot.custom_minimum_size = Vector2(58, 58)
+		icon_slot.custom_minimum_size = Vector2(74, 74)
 		icon_slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		icon_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		holder.add_child(icon_slot)
@@ -175,7 +175,8 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex.position = Vector2(4, 4)
-		tex.size = Vector2(50, 50)
+		tex.size = Vector2(66, 66)
+		tex.pivot_offset = Vector2(33, 33)
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon_slot.add_child(tex)
 
@@ -183,9 +184,9 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 		nm.text = item.item_name
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		nm.clip_text = true
-		nm.custom_minimum_size = Vector2(74, 0)
+		nm.custom_minimum_size = Vector2(88, 0)
 		nm.add_theme_font_override("font", UIStyle.FONT_INDER)
-		nm.add_theme_font_size_override("font_size", 12)
+		nm.add_theme_font_size_override("font_size", 13)
 		nm.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		holder.add_child(nm)
@@ -224,10 +225,11 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 	_anim_tween.tween_property(_banner, "scale", Vector2.ONE, 0.36).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_anim_tween.tween_property(_banner, "position:y", 26.0, 0.40).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-	# Staggered entrance + continuous smooth bobbing on each item icon
+	# Staggered entrance + continuous gentle sway on each item icon
 	for i in range(item_holders.size()):
 		var h := item_holders[i]
 		var icon := item_icons[i]
+		var sway_dir := 1.0 if (i % 2 == 0) else -1.0
 		h.pivot_offset = h.size * 0.5
 		var enter_tw := create_tween()
 		enter_tw.tween_interval(0.14 + i * 0.07)
@@ -236,10 +238,11 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 		enter_tw.tween_callback(func():
 			if not is_instance_valid(icon) or my_session != _session_id:
 				return
-			var bob_tw := create_tween().set_loops()
-			bob_tw.tween_property(icon, "position:y", 0.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			bob_tw.tween_property(icon, "position:y", 8.0, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-			_bob_tweens.append(bob_tw)
+			icon.rotation = -0.11 * sway_dir
+			var sway_tw := create_tween().set_loops()
+			sway_tw.tween_property(icon, "rotation", 0.11 * sway_dir, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			sway_tw.tween_property(icon, "rotation", -0.11 * sway_dir, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			_bob_tweens.append(sway_tw)
 		)
 
 	# Longer hold so the player can admire the newly unlocked items
