@@ -63,6 +63,7 @@ var _wave_id: int = 0
 var _is_exclusive_wave: bool = false
 var _is_transitioning_wave: bool = false
 var _next_arrival_order: int = 0
+var _day_ended_emitted_for_day: int = -1
 var _leaving_customers_count: int = 0
 var _lingering_counter_departures: Dictionary = {}
 var _linger_xp_timer: float = 0.0
@@ -165,6 +166,7 @@ func _find_open_slot_for_lingering() -> int:
 
 func _on_day_started(_day: int) -> void:
 	LogManager.debug("CustomerSpawner", "_on_day_started() Day starts — customers will spawn until 8 PM.")
+	_day_ended_emitted_for_day = -1
 	_dismiss_all_lingering_visitors()
 	_clear_ambient_cameos()
 	_schedule_next_ambient_cameo()
@@ -878,6 +880,9 @@ func spawn_mayari_for_collection() -> void:
 
 ## Emit day_ended when no more customers will come today.
 func _end_day() -> void:
+	if _day_ended_emitted_for_day == StoryManager.day:
+		return
+	_day_ended_emitted_for_day = StoryManager.day
 	EventBus.day_ended.emit(StoryManager.day)
 
 func _on_nokia_opened() -> void:
