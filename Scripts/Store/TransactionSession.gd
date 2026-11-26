@@ -932,6 +932,13 @@ func _resolve_phase_transition_for(target: Customer, ending_phase: Phase) -> voi
 				_run_mayari_day_summary_and_quip(target)
 				return
 			if is_instance_valid(target):
+				# Award Full 2+ Multi-Item Basket REP right as they start leaving the counter
+				if target.transaction_context and not target.get_meta("full_basket_rep_awarded", false):
+					var ctx_done: TransactionContext = target.transaction_context
+					if ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
+						target.set_meta("full_basket_rep_awarded", true)
+						if target.customer_data and is_instance_valid(CharacterProgressionManager):
+							CharacterProgressionManager.add_reputation(target.customer_data.resource_path, 4, "full_basket")
 				target.dialogue_phase = Phase.NONE
 				target.satisfy()
 

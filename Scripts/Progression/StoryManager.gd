@@ -2183,9 +2183,10 @@ func _on_customer_satisfied(customer) -> void:
 					record_daily_stat_int("visits_served", 1)
 			else:
 				record_daily_stat_int("buyers_served", 1)
-				# Full 2+ Multi-Item Basket Reputation Bonus (+4 Rep)
+				# Full 2+ Multi-Item Basket Reputation Bonus (+4 Rep) — fallback only if not already awarded at counter departure
 				var ctx_done: TransactionContext = customer.transaction_context
-				if ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
+				if not customer.get_meta("full_basket_rep_awarded", false) and ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
+					customer.set_meta("full_basket_rep_awarded", true)
 					if customer.customer_data and is_instance_valid(CharacterProgressionManager):
 						CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, 4, "full_basket")
 				# Picky Cravings Omen upside: +18% Bundle Bonus when completing a full 2+ multi-item cash order!
