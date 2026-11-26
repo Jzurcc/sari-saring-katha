@@ -614,24 +614,7 @@ func _draw_paths() -> void:
 	var money := _get_money()
 	var pulse := 0.5 + 0.5 * sin(_anim_time * 3.2)
 
-	# 1. Breathing ambient aura behind available and owned nodes
-	for n in Registry.get_all_nodes():
-		var nid := str(n["id"])
-		var npt := _node_center(n["pos"])
-		var ev := Registry.evaluate_node(nid, money, _pending_levels)
-		var st := str(ev["state"])
-		var sz := CAPSTONE_SIZE if (nid == "open_door" or nid == "store_tier") else ICON_SIZE
-		var half := sz * 0.5
-		if st == "available":
-			var grow := 4.0 + pulse * 5.0
-			var aura_rect := Rect2(npt - half - Vector2(grow, grow), sz + Vector2(grow * 2.0, grow * 2.0))
-			_path_drawer.draw_rect(aura_rect, Color(0.46, 0.90, 0.52, 0.12 + pulse * 0.14), false, 3.0)
-		elif st == "maxed" or nid == "store_tier":
-			var grow_m := 3.0 + pulse * 2.5
-			var gold_rect := Rect2(npt - half - Vector2(grow_m, grow_m), sz + Vector2(grow_m * 2.0, grow_m * 2.0))
-			_path_drawer.draw_rect(gold_rect, Color(0.96, 0.78, 0.34, 0.10 + pulse * 0.08), false, 2.5)
-
-	# 2. Connector lines + soft glow + flowing energy beads tracing along active paths
+	# Connector lines + soft glow + flowing energy beads tracing along active paths
 	var path_idx := 0
 	for n in Registry.get_all_nodes():
 		var child_id := str(n["id"])
