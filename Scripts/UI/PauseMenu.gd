@@ -272,7 +272,7 @@ func _build_modern_chrome() -> void:
 		["Alt", "Price Lens"],
 		["L", "Price Ledger"],
 		["U", "Store Upgrades"],
-		["K", "Today's Events"],
+		["C", "Calendar & Events"],
 		["J", "Folklore Journal"],
 		["N", "Utang Notebook"],
 		["Tab", "Nokia Phone"],

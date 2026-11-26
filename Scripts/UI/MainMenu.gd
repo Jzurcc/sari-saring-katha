@@ -3,8 +3,8 @@ extends Control
 @onready var buttons = $Buttons
 
 # Standalone UI components
-@onready var options_overlay : Control = $OptionsOverlay
-@onready var confirm_overlay : Control = $ConfirmationOverlay
+@onready var options_overlay: Control = $OptionsOverlay
+@onready var confirm_overlay: Control = $ConfirmationOverlay
 
 const MENU_FONT_PATH := "res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf"
 const BODY_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
@@ -51,9 +51,9 @@ var _glow_tween: Tween = null
 var _active_btn: Button = null
 
 # ── UI Sound ─────────────────────────────────────────────────────────────────
-var _sfx_click : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
-var _sfx_hover : AudioStream = preload("res://Audio/SFX/ui_sfx_12.mp3")
-var _ui_player : AudioStreamPlayer
+var _sfx_click: AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
+var _sfx_hover: AudioStream = preload("res://Audio/SFX/ui_sfx_12.mp3")
+var _ui_player: AudioStreamPlayer
 
 
 # ─── Ready ────────────────────────────────────────────────────────────────────
@@ -279,10 +279,10 @@ func _register_button(btn: Button) -> void:
 	btn.add_theme_font_override("font", _menu_font)
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	original_styles[btn] = {
-		"font_color":    Color(0.98, 0.90, 0.76, 0.94),
-		"shadow_color":  Color(0.12, 0.07, 0.03, 0.72),
+		"font_color": Color(0.98, 0.90, 0.76, 0.94),
+		"shadow_color": Color(0.12, 0.07, 0.03, 0.72),
 		"outline_color": Color(0.24, 0.14, 0.06, 0.90),
-		"outline_size":  4,
+		"outline_size": 4,
 	}
 	btn.add_theme_color_override("font_color", original_styles[btn]["font_color"])
 	btn.add_theme_color_override("font_outline_color", original_styles[btn]["outline_color"])
@@ -357,7 +357,7 @@ func _process(delta: float) -> void:
 	if is_starting_game or cam == null:
 		return
 
-	var mouse_pos   = get_viewport().get_mouse_position()
+	var mouse_pos = get_viewport().get_mouse_position()
 	var window_size = get_viewport().get_visible_rect().size
 
 	current_offset_x = (mouse_pos.x / window_size.x) * 2.0 - 1.0

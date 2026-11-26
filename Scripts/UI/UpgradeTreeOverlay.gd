@@ -347,16 +347,20 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 	if lock_lbl:
 		lock_lbl.visible = (state == "locked")
 
-	# Compact under-node pill: "Paint" for owned Signage/Poster, or price tag for actionable nodes
+	# Compact under-node pill: "Paint" for owned Signage/Poster, or price tag with Peso icon for actionable nodes
 	var pill := btn.get_node_or_null("SubPill") as PanelContainer
 	if pill:
-		var plbl := pill.get_node_or_null("Lbl") as Label
+		var prow := pill.get_node_or_null("Row") as HBoxContainer
+		var pico := prow.get_node_or_null("PesoIcon") as TextureRect if prow else null
+		var plbl := prow.get_node_or_null("Lbl") as Label if prow else null
 		var kind := str(_def.get("kind", ""))
 		var sf_lvl := int(_def.get("storefront_level", 0))
 		var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl
 		var cost := float(ev.get("cost", 0.0))
 		if can_paint:
 			pill.visible = true
+			if pico:
+				pico.visible = false
 			if plbl:
 				plbl.text = "Paint"
 				plbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
@@ -365,9 +369,12 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 				pst.border_color = COL_BRASS
 		elif (state == "available" or state == "available_poor") and cost > 0.0:
 			pill.visible = true
+			var price_col := COL_STAT_POS if state == "available" else COL_STAT_NEG
+			if pico:
+				pico.visible = true
 			if plbl:
-				plbl.text = "₱%d" % int(roundf(cost))
-				plbl.add_theme_color_override("font_color", COL_STAT_POS if state == "available" else COL_STAT_NEG)
+				plbl.text = "%d" % int(roundf(cost))
+				plbl.add_theme_color_override("font_color", price_col)
 			var pst: StyleBoxFlat = pill.get_theme_stylebox("panel") as StyleBoxFlat
 			if pst:
 				pst.border_color = Color(0.46, 0.86, 0.50, 0.78) if state == "available" else Color(0.88, 0.44, 0.40, 0.65)
@@ -982,13 +989,30 @@ func _create_node_button(node_id: String) -> Button:
 	pill.add_theme_stylebox_override("panel", pst)
 	btn.add_child(pill)
 
+	var prow := HBoxContainer.new()
+	prow.name = "Row"
+	prow.alignment = BoxContainer.ALIGNMENT_CENTER
+	prow.add_theme_constant_override("separation", 3)
+	prow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.add_child(prow)
+
+	var pico := TextureRect.new()
+	pico.name = "PesoIcon"
+	pico.texture = PESO_ICON_TEX
+	pico.custom_minimum_size = Vector2(13, 13)
+	pico.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pico.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	prow.add_child(pico)
+
 	var plbl := Label.new()
 	plbl.name = "Lbl"
 	plbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	plbl.add_theme_font_override("font", _bold_font)
+	plbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	plbl.add_theme_font_size_override("font_size", 12)
 	plbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pill.add_child(plbl)
+	prow.add_child(plbl)
 
 	btn.mouse_entered.connect(func():
 		_hovered_id = node_id

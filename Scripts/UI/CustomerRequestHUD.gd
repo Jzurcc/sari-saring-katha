@@ -445,9 +445,10 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 			riddle_badge.hide()
 		icon.show()
 		icon.texture = _get_trimmed_item_texture(item)
+		var is_held_match := _held_item_data != null and (_held_item_data == item or _held_item_data.get_clean_id() == item.get_clean_id())
 		if item.tier > StoryManager.current_tier:
 			icon.modulate = Color(0.18, 0.18, 0.18, 0.92) # Locked tier silhouette
-		elif is_instance_valid(InventoryManager) and InventoryManager.get_total_item_stock(item) <= 0:
+		elif not is_held_match and is_instance_valid(InventoryManager) and InventoryManager.get_total_item_stock(item) <= 0:
 			icon.modulate = Color(0.55, 0.44, 0.44, 0.60) # Out of stock faded shade
 		else:
 			icon.modulate = Color.WHITE
@@ -480,6 +481,7 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool, s
 	if not is_instance_valid(anim_target):
 		anim_target = icon
 	var base_y := anim_target.position.y
+	var target_alpha := anim_target.modulate.a
 	anim_target.pivot_offset = Vector2(anim_target.size.x * 0.5, anim_target.size.y * 0.92)
 	anim_target.scale = Vector2(0.35, 1.35)
 	anim_target.position.y = base_y - 20.0
@@ -489,7 +491,7 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool, s
 	if stagger_delay > 0.0:
 		tw.tween_interval(stagger_delay)
 	# Drop in with squash-and-stretch landing
-	tw.tween_property(anim_target, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(anim_target, "modulate:a", target_alpha, 0.14).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(anim_target, "position:y", base_y, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(anim_target, "scale", Vector2(1.14, 0.88), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(anim_target, "scale", Vector2(0.96, 1.05), 0.10).set_trans(Tween.TRANS_SINE)
@@ -676,10 +678,14 @@ func _on_drag_ended(_item: DraggableItem, _dropped_successfully: bool) -> void:
 func _refresh_held_match_visuals() -> void:
 	for entry in _rows.values():
 		var items_box: HBoxContainer = entry.get("items_box") as HBoxContainer
+		var is_riddle: bool = bool(entry.get("is_riddle", false))
 		if not is_instance_valid(items_box):
 			continue
 		for child in items_box.get_children():
 			if child is Control and not child.get_meta("is_popping", false):
+				var bound_item := child.get_meta("item_data", null) as ItemData
+				if bound_item != null:
+					_update_icon_visuals(child, bound_item, is_riddle)
 				_apply_held_match_visual(child)
 
 

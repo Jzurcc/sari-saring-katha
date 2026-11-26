@@ -238,18 +238,20 @@ func open_ledger() -> void:
 func _animate_rows_domino_in() -> void:
 	if not is_instance_valid(_items_list):
 		return
-	var rows := _items_list.get_children()
+	var rows: Array[Control] = []
+	for ch in _items_list.get_children():
+		if ch is Control and not ch.is_queued_for_deletion():
+			rows.append(ch as Control)
 	var max_anim := mini(rows.size(), 14)
-	var tw := create_tween().set_parallel(true)
+	var tw := _open_close_tween if (_open_close_tween and _open_close_tween.is_valid()) else create_tween().set_parallel(true)
 	for i in range(max_anim):
 		var r := rows[i]
-		if r is Control:
-			r.modulate.a = 0.0
-			r.pivot_offset = r.size * 0.5
-			r.scale = Vector2(0.96, 0.96)
-			var d := 0.025 * float(i)
-			tw.tween_property(r, "modulate:a", 1.0, 0.18).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-			tw.tween_property(r, "scale", Vector2.ONE, 0.22).set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		r.modulate.a = 0.0
+		r.pivot_offset = r.size * 0.5
+		r.scale = Vector2(0.96, 0.96)
+		var d := 0.025 * float(i)
+		tw.tween_property(r, "modulate:a", 1.0, 0.18).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(r, "scale", Vector2.ONE, 0.22).set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func close_ledger() -> void:
@@ -814,6 +816,7 @@ func _matches_tab_id(item: ItemData, tab_id: String) -> bool:
 
 func refresh_catalog() -> void:
 	for child in _items_list.get_children():
+		_items_list.remove_child(child)
 		child.queue_free()
 	_item_rows.clear()
 	_visible_items.clear()

@@ -1807,7 +1807,7 @@ func _refresh_draft_controls() -> void:
 		_reroll_btn.modulate.a = 1.0 if has_rr else 0.38
 		_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if has_rr else Control.CURSOR_ARROW
 	if is_instance_valid(_omens_only_btn):
-		var is_sealed: bool = (is_instance_valid(StoryManager) and StoryManager.is_tally_cleared()) or _committed_tier == "cleared"
+		var is_sealed: bool = (is_instance_valid(StoryManager) and StoryManager.is_tally_cleared()) or _confirmed_tier == "cleared"
 		var show_om := _cards_ready and not _card_picked and is_sealed
 		_omens_only_btn.visible = show_om
 		_omens_only_btn.disabled = not show_om

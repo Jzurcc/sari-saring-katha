@@ -810,6 +810,7 @@ func _refresh_header_stats() -> void:
 
 func _rebuild_roster() -> void:
 	for ch in _roster_vbox.get_children():
+		_roster_vbox.remove_child(ch)
 		ch.queue_free()
 	_roster_cards.clear()
 	_unread_badges.clear()
@@ -898,6 +899,7 @@ func _rebuild_roster() -> void:
 
 func _rebuild_hero_banner() -> void:
 	for ch in _hero_box.get_children():
+		_hero_box.remove_child(ch)
 		ch.queue_free()
 
 	var c := _get_selected_customer()
@@ -1094,6 +1096,7 @@ func _rebuild_hero_banner() -> void:
 
 func _rebuild_rank_track() -> void:
 	for ch in _rank_track_box.get_children():
+		_rank_track_box.remove_child(ch)
 		ch.queue_free()
 	_rank_buttons.clear()
 
@@ -1145,6 +1148,7 @@ func _rebuild_rank_track() -> void:
 
 func _rebuild_reader() -> void:
 	for ch in _reader_holder.get_children():
+		_reader_holder.remove_child(ch)
 		ch.queue_free()
 
 	var c := _get_selected_customer()
