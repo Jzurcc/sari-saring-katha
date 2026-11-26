@@ -205,16 +205,15 @@ func _spawn_delta_popup(diff: float) -> void:
 	popup.pivot_offset = Vector2(18.0, float(popup_size) * 0.6)
 	popup.scale = Vector2(0.45, 1.32) if is_gain else Vector2(1.25, 0.65)
 	popup.rotation_degrees = -7.0 if is_gain else 5.0
-	popup.modulate = Color(1.45, 1.45, 1.25, 0.0) if is_gain else Color(1.3, 1.0, 1.0, 0.0)
+	popup.modulate = Color(1.0, 1.0, 1.0, 0.0)
 
 	var tw := popup.create_tween()
-	# Lively squash-and-stretch pop-in + luminous flash + playful tilt settle
+	# Lively squash-and-stretch pop-in + playful tilt settle
 	tw.tween_property(popup, "modulate:a", 1.0, 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "position:y", 0.0, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "scale", Vector2(1.18, 0.90), 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "rotation_degrees", 0.0, 0.26).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(popup, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(popup, "modulate", Color.WHITE, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	# Hold, then float and fade out
 	tw.tween_interval(POPUP_HOLD_SEC)
 	tw.tween_property(popup, "modulate:a", 0.0, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)

@@ -23,6 +23,7 @@ var stream_notification = preload("res://Audio/SFX/ui_sfx_7.mp3")
 var _bold_font: FontVariation
 var _banner: PanelContainer
 var _title_lbl: Label
+var _subtitle_lbl: Label
 var _items_row: HBoxContainer
 var _anim_tween: Tween = null
 var _bob_tweens: Array[Tween] = []
@@ -74,6 +75,17 @@ func _build_banner() -> void:
 	_title_lbl.add_theme_constant_override("outline_size", 5)
 	_title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_title_lbl)
+
+	_subtitle_lbl = Label.new()
+	_subtitle_lbl.text = "You unlocked the following product upgrades:"
+	_subtitle_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_subtitle_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_subtitle_lbl.add_theme_font_size_override("font_size", 18)
+	_subtitle_lbl.add_theme_color_override("font_color", COL_CREAM)
+	_subtitle_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	_subtitle_lbl.add_theme_constant_override("outline_size", 3)
+	_subtitle_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(_subtitle_lbl)
 
 	# Centered row of gently swaying unlocked item previews
 	_items_row = HBoxContainer.new()
