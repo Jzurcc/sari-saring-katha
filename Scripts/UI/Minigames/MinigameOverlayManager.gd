@@ -171,6 +171,8 @@ func _transition_into_minigame(resolved_id: String, target: CanvasLayer, config:
 		return
 
 	# Open minigame under cover of black, brief beat, then fade back in
+	if is_instance_valid(AudioManager):
+		AudioManager.play_minigame_bgm(resolved_id)
 	target.open_minigame(config)
 	await get_tree().create_timer(0.06).timeout
 	if not is_inside_tree():
@@ -242,6 +244,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
+	if is_instance_valid(AudioManager):
+		AudioManager.stop_bgm_override()
 	_play_exit_fade()
 	_restore_dialogic_after_minigame()
 	# Award Reputation to the active counter customer (e.g. Lolo Pilo or Mosquito complainant)

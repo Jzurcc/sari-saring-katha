@@ -12,7 +12,7 @@ var settings: AudioSettings = AudioSettings.new()
 var sfx_pool: SFXPool
 
 var bgm_player: AudioStreamPlayer
-var theme_player: AudioStreamPlayer
+var override_player: AudioStreamPlayer
 var ambience_base: AudioStreamPlayer
 var ambience_night: AudioStreamPlayer
 var fridge_hum_player: AudioStreamPlayer
@@ -20,7 +20,7 @@ var fridge_hum_player: AudioStreamPlayer
 var base_volume_db: float = -6.0
 var current_bgm_phase: BGMPhase = BGMPhase.NONE
 
-# --- Soundtracks ---
+# --- Soundtracks (all by BGM President) ---
 var audio_boring_day = preload("res://Audio/Soundtracks/A Boring Day.mp3")
 var audio_fantastic_idea = preload("res://Audio/Soundtracks/Fantastic Idea.mp3")
 var audio_not_me = preload("res://Audio/Soundtracks/Not ME.mp3")
@@ -33,11 +33,25 @@ var audio_kids_room = preload("res://Audio/Soundtracks/Kid's Room.wav")
 var audio_hermit_crab = preload("res://Audio/Soundtracks/Adventure of a Hermit Crab.wav")
 var audio_naptime = preload("res://Audio/Soundtracks/Naptime.wav")
 
+# New pool additions
+var audio_weekend_plans = preload("res://Audio/Soundtracks/Weekend Plans.mp3")
+var audio_nope = preload("res://Audio/Soundtracks/NOPE.mp3")
+var audio_its_spring = preload("res://Audio/Soundtracks/It's Spring!!.mp3")
+var audio_silly_day = preload("res://Audio/Soundtracks/A Silly Day.mp3")
+var audio_ready_to_eat = preload("res://Audio/Soundtracks/Ready to Eat.mp3")
+var audio_happy_hop = preload("res://Audio/Soundtracks/Happy Hop.mp3")
+var audio_little_steps = preload("res://Audio/Soundtracks/Little Steps.mp3")
+var audio_dark_humor = preload("res://Audio/Soundtracks/Dark Humor.mp3")
+var audio_halo_price_sole = preload("res://Audio/Soundtracks/What is Halo-price Sole.mp3")
+
+# Special context override tracks
+var audio_modern_times = preload("res://Audio/Soundtracks/Moddern Times.mp3")
+var audio_so_what = preload("res://Audio/Soundtracks/So What.mp3")
+var audio_eat_or_not: AudioStream = null
+
 var audio_calming_morning = preload("res://Audio/SFX/Calming Morning Sounds.mp3")
 var audio_night_crickets = preload("res://Audio/SFX/Sounds of Night Crickets.mp3")
 var sfx_fridge_hum = preload("res://Audio/SFX/refrigerator.mp3")
-
-var character_themes: Dictionary = {}
 
 @onready var _song_titles: Dictionary = {
 	audio_boring_day: "A Boring Day",
@@ -50,7 +64,18 @@ var character_themes: Dictionary = {}
 	audio_brunch_ii: "Brunch II",
 	audio_kids_room: "Kid's Room",
 	audio_hermit_crab: "Adventure of a Hermit Crab",
-	audio_naptime: "Naptime"
+	audio_naptime: "Naptime",
+	audio_weekend_plans: "Weekend Plans",
+	audio_nope: "NOPE",
+	audio_its_spring: "It's Spring!!",
+	audio_silly_day: "A Silly Day",
+	audio_ready_to_eat: "Ready to Eat",
+	audio_happy_hop: "Happy Hop",
+	audio_little_steps: "Little Steps",
+	audio_dark_humor: "Dark Humor",
+	audio_halo_price_sole: "What is \"Halo-price Sole\"?",
+	audio_modern_times: "Modern Times",
+	audio_so_what: "So What",
 }
 
 var _time_of_day_node: Node = null
@@ -71,10 +96,19 @@ func _ready() -> void:
 	bgm_player.volume_db = base_volume_db
 	add_child(bgm_player)
 
-	theme_player = AudioStreamPlayer.new()
-	theme_player.bus = "Music"
-	theme_player.volume_db = -80.0
-	add_child(theme_player)
+	override_player = AudioStreamPlayer.new()
+	override_player.bus = "Music"
+	override_player.volume_db = -80.0
+	add_child(override_player)
+
+	# Load optional Eat or Not track if present in Audio/Soundtracks
+	for ext in ["mp3", "ogg", "wav"]:
+		var candidate := "res://Audio/Soundtracks/Eat or Not.%s" % ext
+		if ResourceLoader.exists(candidate):
+			audio_eat_or_not = load(candidate)
+			if audio_eat_or_not:
+				_song_titles[audio_eat_or_not] = "Eat or Not"
+			break
 
 	ambience_base = AudioStreamPlayer.new()
 	ambience_base.bus = "Master"
@@ -94,7 +128,7 @@ func _ready() -> void:
 
 	fridge_hum_player.finished.connect(func(): if fridge_hum_player.stream: fridge_hum_player.play())
 	bgm_player.finished.connect(_on_bgm_finished)
-	theme_player.finished.connect(_on_theme_finished)
+	override_player.finished.connect(_on_override_finished)
 	ambience_base.finished.connect(func(): ambience_base.play())
 	ambience_night.finished.connect(_on_ambience_night_finished)
 
@@ -104,9 +138,6 @@ func _ready() -> void:
 	add_child(sfx_pool)
 
 	# 3. Connect event bus signals
-	EventBus.customer_spawned.connect(_on_customer_spawned)
-	EventBus.customer_satisfied.connect(_on_customer_left)
-	EventBus.customer_dismissed.connect(_on_customer_left)
 	EventBus.day_started.connect(func(_d): _update_audio_for_time(5.0))
 
 	# 4. Start base morning ambience
@@ -177,7 +208,7 @@ func _update_audio_for_time(time: float) -> void:
 	elif not bgm_player.playing and (not bgm_transition_tween or not bgm_transition_tween.is_valid()):
 		# Recover if BGM stopped (e.g. after fade_out_everything or interrupted transition)
 		_change_bgm_phase(new_phase)
-	elif bgm_player.playing and not theme_player.playing \
+	elif bgm_player.playing and not override_player.playing \
 		and (not bgm_transition_tween or not bgm_transition_tween.is_valid()) \
 		and (not crossfade_tween or not crossfade_tween.is_valid()) \
 		and bgm_player.volume_db < base_volume_db - 1.0:
@@ -202,11 +233,11 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 			else:
 				pool = [audio_autumn_wind]
 		BGMPhase.MORNING:
-			pool = [audio_boring_day, audio_brunch_ii, audio_kids_room]
+			pool = [audio_boring_day, audio_brunch_ii, audio_kids_room, audio_weekend_plans, audio_nope, audio_its_spring]
 		BGMPhase.AFTERNOON:
-			pool = [audio_fantastic_idea, audio_not_me, audio_hermit_crab]
+			pool = [audio_fantastic_idea, audio_not_me, audio_hermit_crab, audio_silly_day, audio_ready_to_eat, audio_happy_hop]
 		BGMPhase.DUSK:
-			pool = [audio_sleepy, audio_naptime]
+			pool = [audio_sleepy, audio_naptime, audio_little_steps, audio_dark_humor, audio_halo_price_sole]
 
 	if pool.is_empty():
 		return
@@ -240,9 +271,10 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		bgm_player.stream = _active_playlist[_playlist_index]
 		bgm_player.volume_db = -80.0
 		bgm_player.play()
-		_emit_music_change(bgm_player.stream)
+		if not override_player.playing:
+			_emit_music_change(bgm_player.stream)
 	)
-	var target_vol = -80.0 if theme_player.playing else base_volume_db
+	var target_vol = -80.0 if override_player.playing else base_volume_db
 	bgm_transition_tween.tween_property(bgm_player, "volume_db", target_vol, FADE_DURATION).set_ease(Tween.EASE_IN)
 
 func _update_fridge_hum(phase: BGMPhase) -> void:
@@ -273,35 +305,46 @@ func _on_bgm_finished() -> void:
 			_playlist_index = 0
 
 	bgm_player.stream = _active_playlist[_playlist_index]
-	bgm_player.volume_db = -80.0 if theme_player.playing else base_volume_db
+	bgm_player.volume_db = -80.0 if override_player.playing else base_volume_db
 	bgm_player.play()
-	_emit_music_change(bgm_player.stream)
+	if not override_player.playing:
+		_emit_music_change(bgm_player.stream)
 
-func _on_theme_finished() -> void:
-	theme_player.play()
+func _on_override_finished() -> void:
+	if override_player.stream:
+		override_player.play()
 
-func _on_customer_spawned(customer: Customer) -> void:
-	if customer.customer_data and character_themes.has(customer.customer_data.resource_path):
-		play_character_theme(character_themes[customer.customer_data.resource_path])
-
-func _on_customer_left(_customer: Customer) -> void:
-	stop_character_theme()
-
-func play_character_theme(theme_stream: AudioStream) -> void:
+## Crossfades the current BGM silently into the background (continuing to play at -80 dB)
+## while an override track takes over.
+func play_bgm_override(stream: AudioStream) -> void:
+	if not stream:
+		return
 	if crossfade_tween and crossfade_tween.is_valid():
 		crossfade_tween.kill()
 
-	theme_player.stream = theme_stream
-	theme_player.play()
+	if override_player.stream != stream or not override_player.playing:
+		override_player.stream = stream
+		override_player.volume_db = -80.0
+		override_player.play()
 
 	crossfade_tween = create_tween()
 	crossfade_tween.tween_property(bgm_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
-	crossfade_tween.parallel().tween_property(theme_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
+	crossfade_tween.parallel().tween_property(override_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
 
-	_emit_music_change(theme_player.stream)
+	_emit_music_change(override_player.stream)
 
-func stop_character_theme() -> void:
-	if not theme_player.playing:
+func play_restock_bgm() -> void:
+	play_bgm_override(audio_modern_times)
+
+func play_minigame_bgm(minigame_id: String) -> void:
+	if minigame_id == "talisman":
+		play_bgm_override(audio_eat_or_not if audio_eat_or_not != null else audio_so_what)
+	else:
+		play_bgm_override(audio_so_what)
+
+## Fades out the override track and brings the silently-playing background BGM back up.
+func stop_bgm_override() -> void:
+	if not override_player.playing:
 		return
 
 	if crossfade_tween and crossfade_tween.is_valid():
@@ -309,8 +352,8 @@ func stop_character_theme() -> void:
 
 	crossfade_tween = create_tween()
 	crossfade_tween.tween_property(bgm_player, "volume_db", base_volume_db, FADE_DURATION).set_ease(Tween.EASE_IN)
-	crossfade_tween.parallel().tween_property(theme_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
-	crossfade_tween.tween_callback(func(): theme_player.stop())
+	crossfade_tween.parallel().tween_property(override_player, "volume_db", -80.0, FADE_DURATION).set_ease(Tween.EASE_OUT)
+	crossfade_tween.tween_callback(func(): override_player.stop())
 
 	_emit_music_change(bgm_player.stream)
 
@@ -344,19 +387,19 @@ func fade_out_everything(duration: float = FADE_DURATION) -> void:
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(bgm_player, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
-	tween.tween_property(theme_player, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
+	tween.tween_property(override_player, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
 	tween.tween_property(ambience_base, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
 	tween.tween_property(ambience_night, "volume_db", -80.0, duration).set_ease(Tween.EASE_OUT)
 
 	await tween.finished
 	bgm_player.stop()
-	theme_player.stop()
+	override_player.stop()
 	ambience_base.stop()
 	ambience_night.stop()
 	current_bgm_phase = BGMPhase.NONE
 
 	bgm_player.volume_db = base_volume_db
-	theme_player.volume_db = -80.0
+	override_player.volume_db = -80.0
 	ambience_base.volume_db = 2.0
 	ambience_night.volume_db = -13.1
 

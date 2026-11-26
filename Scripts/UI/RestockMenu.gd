@@ -793,6 +793,8 @@ func open_menu() -> void:
 	_overlay_layer.visible = true
 	_elevate_hud_money()
 	_animate_entrance()
+	if is_instance_valid(AudioManager):
+		AudioManager.play_restock_bgm()
 
 
 func _animate_entrance() -> void:
@@ -1686,6 +1688,8 @@ func _close_restock_screen() -> void:
 	_hide_tooltip()
 	_set_category_open(false)
 	_set_regulars_open(false)
+	if is_instance_valid(AudioManager):
+		AudioManager.stop_bgm_override()
 	var tween := create_tween()
 	tween.tween_property(_overlay_root, "modulate:a", 0.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func():
