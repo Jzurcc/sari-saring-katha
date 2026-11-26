@@ -151,6 +151,8 @@ var is_open: bool = false
 
 var _bold_font: FontVariation
 var _root: Control
+var _safe_root: VBoxContainer
+var _open_close_tween: Tween = null
 var _category_btn: Button
 var _category_backdrop: Control
 var _category_popover: PanelContainer
@@ -200,6 +202,8 @@ func _on_ledger_toggled(opened: bool) -> void:
 func open_ledger() -> void:
 	if is_open:
 		return
+	if _open_close_tween and _open_close_tween.is_valid():
+		_open_close_tween.kill()
 	is_open = true
 	_previous_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -215,19 +219,48 @@ func open_ledger() -> void:
 	_refresh_effects_popover()
 	refresh_catalog()
 
+	_root.modulate.a = 0.0
+	if is_instance_valid(_safe_root):
+		_safe_root.pivot_offset = _safe_root.size * 0.5
+		_safe_root.scale = Vector2(0.965, 0.965)
+	_open_close_tween = create_tween().set_parallel(true)
+	_open_close_tween.tween_property(_root, "modulate:a", 1.0, 0.20).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if is_instance_valid(_safe_root):
+		_open_close_tween.tween_property(_safe_root, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		for i in range(_safe_root.get_child_count()):
+			var ch := _safe_root.get_child(i)
+			if ch is Control:
+				ch.modulate.a = 0.0
+				_open_close_tween.tween_property(ch, "modulate:a", 1.0, 0.18).set_delay(0.035 * float(i)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
 
 func close_ledger() -> void:
 	if not is_open:
 		return
+	if _open_close_tween and _open_close_tween.is_valid():
+		_open_close_tween.kill()
 	is_open = false
 	_set_category_open(false)
 	_set_effects_open(false)
 	_hide_hover_tooltip()
-	hide()
 	Input.mouse_mode = _previous_mouse_mode
 
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("drop")
+
+	if is_instance_valid(_safe_root):
+		_safe_root.pivot_offset = _safe_root.size * 0.5
+	_open_close_tween = create_tween().set_parallel(true)
+	_open_close_tween.tween_property(_root, "modulate:a", 0.0, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	if is_instance_valid(_safe_root):
+		_open_close_tween.tween_property(_safe_root, "scale", Vector2(0.975, 0.975), 0.13).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_open_close_tween.set_parallel(false)
+	_open_close_tween.tween_callback(func():
+		if not is_open:
+			hide()
+			if is_instance_valid(_safe_root):
+				_safe_root.scale = Vector2.ONE
+	)
 
 
 func _input(event: InputEvent) -> void:
@@ -262,17 +295,17 @@ func _build_ui() -> void:
 	_root.add_child(backdrop)
 
 	# 5% Title-Safe Container (90% safe area, matching RestockMenu)
-	var safe_root := VBoxContainer.new()
-	safe_root.anchor_left = 0.05
-	safe_root.anchor_right = 0.95
-	safe_root.anchor_top = 0.045
-	safe_root.anchor_bottom = 0.955
-	safe_root.add_theme_constant_override("separation", 16)
-	_root.add_child(safe_root)
+	_safe_root = VBoxContainer.new()
+	_safe_root.anchor_left = 0.05
+	_safe_root.anchor_right = 0.95
+	_safe_root.anchor_top = 0.045
+	_safe_root.anchor_bottom = 0.955
+	_safe_root.add_theme_constant_override("separation", 16)
+	_root.add_child(_safe_root)
 
-	_build_top_bar(safe_root)
-	_build_toolbar(safe_root)
-	_build_body(safe_root)
+	_build_top_bar(_safe_root)
+	_build_toolbar(_safe_root)
+	_build_body(_safe_root)
 	_build_category_popover()
 	_build_effects_popover()
 	_build_hover_tooltip()
@@ -529,6 +562,10 @@ func _populate_category_popover() -> void:
 			if is_instance_valid(AudioManager):
 				AudioManager.play_sfx("tab_switch")
 			refresh_catalog()
+			if is_instance_valid(_items_list):
+				_items_list.modulate.a = 0.0
+				var tw := create_tween()
+				tw.tween_property(_items_list, "modulate:a", 1.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		)
 		_category_list_box.add_child(btn)
 
