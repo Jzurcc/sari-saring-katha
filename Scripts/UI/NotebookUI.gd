@@ -131,7 +131,7 @@ func _build_ui() -> void:
 	_page_rect.add_child(header_row)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "LISTA NG UTANG"
+	title_lbl.text = "LISTAHAN NG UTANG"
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	title_lbl.add_theme_font_override("font", _bold_font)

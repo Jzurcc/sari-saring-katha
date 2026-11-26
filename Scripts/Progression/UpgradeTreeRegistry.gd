@@ -274,7 +274,7 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 			var d_rev := int(spec["reveals"]) - int(prev["reveals"])
 			var d_ev := int(spec["max_events"]) - int(prev["max_events"])
 			if d_rev > 0:
-				stats.append({"label": "Regulars Revealed:", "value": "+%d" % d_rev, "tone": "pos"})
+				stats.append({"label": "Daily Visitors:", "value": "+%d" % d_rev, "tone": "pos"})
 			if d_ev > 0:
 				stats.append({"label": "Daily Events:", "value": "+%d" % d_ev, "tone": "pos"})
 		"trash":

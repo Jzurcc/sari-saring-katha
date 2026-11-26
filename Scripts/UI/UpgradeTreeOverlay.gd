@@ -36,7 +36,7 @@ var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 var _hovered_id: String = ""
 var _anim_time: float = 0.0
 
-var _pending_levels: Dictionary = {}         # node_id -> int
+var _pending_levels: Dictionary = {} # node_id -> int
 var _pending_delivery_items: Dictionary = {} # ItemData -> 1
 
 # Active unlock celebration FX:

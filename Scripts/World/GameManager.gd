@@ -329,28 +329,6 @@ func _on_day_ended(ended_day_number: int) -> void:
 		if not is_inside_tree():
 			_is_ending_day = false
 			return
-
-	# Even after the Silver Ledger is sealed, still offer the nightly Favor card draft (with Omens Only toggle)
-	if StoryManager.is_tally_cleared():
-		_is_tally_overlay_open = true
-		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		var draft_ov := MayariTallyOverlayScript.new()
-		draft_ov.setup_sealed_card_draft()
-		add_child(draft_ov)
-		var draft_res: Array = await draft_ov.completed
-		_is_tally_overlay_open = false
-		if not is_inside_tree():
-			_is_ending_day = false
-			return
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-		var picked_cards: Array[String] = []
-		var raw_cards = draft_res[2] if draft_res.size() > 2 else []
-		if raw_cards is Array:
-			for cid in raw_cards:
-				if str(cid) != "" and not (str(cid) in picked_cards):
-					picked_cards.append(str(cid))
-		StoryManager.pending_mayari_cards = picked_cards
-		StoryManager.pending_mayari_card = picked_cards[0] if not picked_cards.is_empty() else ""
 	
 	# 1. Start cinematic transition and fade music
 	AudioManager.fade_out_everything(2.0)
@@ -438,7 +416,7 @@ func _handle_open_tally_offer() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	var overlay := MayariTallyOverlayScript.new()
-	if StoryManager.is_ledger_settled():
+	if StoryManager.is_tally_cleared():
 		overlay.setup_sealed_card_draft()
 	else:
 		overlay.setup(

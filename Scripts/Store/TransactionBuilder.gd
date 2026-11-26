@@ -494,8 +494,8 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	var path: String = data.resource_path
 	var chapter: int = CharacterProgressionManager.get_chapter(path)
 
-	# Once the ledger is permanently sealed, stop nightly collections
-	# (except one final visit for Chapter 9 epilogue if not yet seen).
+	# Once the ledger is permanently sealed, still let Mayari visit at closing time
+	# (Chapter 9 epilogue first if not yet seen, otherwise her nightly Favor card visit).
 	if sm.is_tally_cleared():
 		if chapter == 8 and chapter < data.max_story_chapters:
 			transaction.transaction_type = TransactionContext.Type.STORY
@@ -504,7 +504,11 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 			DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
 			LogManager.info("StoryManager", "Mayari EPILOGUE visit (Chapter 9: Patron of the Moon).")
 			return transaction
-		return null
+		transaction.transaction_type = TransactionContext.Type.VISIT
+		transaction.timeline = MAYARI_COLLECT_TIMELINE
+		DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
+		LogManager.info("StoryManager", "Mayari SEALED-LEDGER nightly visit (Favor draft).")
+		return transaction
 
 	var should_play_story: bool = false
 	if not sm.is_mayari_met:
