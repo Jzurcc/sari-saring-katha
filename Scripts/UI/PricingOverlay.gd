@@ -431,9 +431,11 @@ func _add_effect_tooltip(source_name: String, stats: Array, source_kind: String 
 	title_lbl.text = source_name
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	title_lbl.add_theme_font_size_override("font_size", 30)
 	title_lbl.add_theme_color_override("font_color", title_col)
+	title_lbl.add_theme_color_override("font_outline_color", Color(0.03, 0.025, 0.02, 0.85))
+	title_lbl.add_theme_constant_override("outline_size", 2)
 	title_row.add_child(title_lbl)
 
 	for st in stats:
@@ -444,18 +446,22 @@ func _add_effect_tooltip(source_name: String, stats: Array, source_kind: String 
 		var lbl := Label.new()
 		lbl.text = "▸ " + str(st.get("label", ""))
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+		lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
 		lbl.add_theme_font_size_override("font_size", 25)
-		lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		lbl.add_theme_color_override("font_color", COL_CREAM)
+		lbl.add_theme_color_override("font_outline_color", Color(0.03, 0.025, 0.02, 0.80))
+		lbl.add_theme_constant_override("outline_size", 2)
 		row.add_child(lbl)
 
 		var val := Label.new()
 		val.text = str(st.get("value", ""))
-		val.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		val.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 		val.add_theme_font_size_override("font_size", 26)
 		var tone := str(st.get("tone", "pos"))
 		var val_col := COL_DISCOUNT if tone == "pos" else (COL_DANGER if tone == "neg" else COL_GOLD_SOFT)
 		val.add_theme_color_override("font_color", val_col)
+		val.add_theme_color_override("font_outline_color", Color(0.03, 0.025, 0.02, 0.85))
+		val.add_theme_constant_override("outline_size", 2)
 		row.add_child(val)
 
 	_tolerance_col.add_child(card)
@@ -813,7 +819,7 @@ func show_held_item(item_data: ItemData, screen_center: Vector2) -> void:
 		var sc := clampf(vp_sz.y / 1080.0, 0.5, 1.5) * 0.72
 		var rect_sz := Vector2(pricing_viewport.size) * sc
 		_held_rect.size = rect_sz
-		_held_rect.position = screen_center - rect_sz * 0.5
+		_held_rect.position = screen_center - rect_sz * 0.5 - Vector2(0.0, 95.0 * sc)
 		_held_layer.visible = true
 
 
