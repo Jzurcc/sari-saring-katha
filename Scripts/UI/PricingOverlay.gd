@@ -127,7 +127,7 @@ func _ready() -> void:
 
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
-	pricing_viewport.size = Vector2(1180, 460)
+	pricing_viewport.size = Vector2(1600, 820)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
@@ -261,12 +261,12 @@ func _ready() -> void:
 	_tolerance_col.anchor_right = 0.5
 	_tolerance_col.anchor_top = 0.0
 	_tolerance_col.anchor_bottom = 1.0
-	_tolerance_col.offset_left = 220.0
-	_tolerance_col.offset_right = 510.0
-	_tolerance_col.offset_top = 10.0
-	_tolerance_col.offset_bottom = -10.0
+	_tolerance_col.offset_left = 226.0
+	_tolerance_col.offset_right = 766.0
+	_tolerance_col.offset_top = 12.0
+	_tolerance_col.offset_bottom = -12.0
 	_tolerance_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	_tolerance_col.add_theme_constant_override("separation", 10)
+	_tolerance_col.add_theme_constant_override("separation", 16)
 	_tolerance_col.hide()
 	root_ctrl.add_child(_tolerance_col)
 
@@ -306,42 +306,42 @@ func _add_effect_tooltip(source_name: String, stats: Array) -> void:
 		return
 
 	var card := PanelContainer.new()
-	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO, 12, 18, 14)
+	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO, 16, 30, 22)
 	st_box.border_color = COL_GOLD
-	st_box.set_border_width_all(2)
-	st_box.shadow_size = 6
-	st_box.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	st_box.set_border_width_all(3)
+	st_box.shadow_size = 10
+	st_box.shadow_color = Color(0.0, 0.0, 0.0, 0.50)
 	card.add_theme_stylebox_override("panel", st_box)
 
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 7)
+	vb.add_theme_constant_override("separation", 12)
 	card.add_child(vb)
 
 	var title_lbl := Label.new()
 	title_lbl.text = source_name
 	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title_lbl.add_theme_font_override("font", _bold_font)
-	title_lbl.add_theme_font_size_override("font_size", 24)
+	title_lbl.add_theme_font_size_override("font_size", 44)
 	title_lbl.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	vb.add_child(title_lbl)
 
 	for st in stats:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
+		row.add_theme_constant_override("separation", 16)
 		vb.add_child(row)
 
 		var lbl := Label.new()
 		lbl.text = "▸ " + str(st.get("label", ""))
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl.add_theme_font_override("font", INDER_FONT)
-		lbl.add_theme_font_size_override("font_size", 22)
+		lbl.add_theme_font_size_override("font_size", 38)
 		lbl.add_theme_color_override("font_color", COL_CREAM)
 		row.add_child(lbl)
 
 		var val := Label.new()
 		val.text = str(st.get("value", ""))
 		val.add_theme_font_override("font", _bold_font)
-		val.add_theme_font_size_override("font_size", 23)
+		val.add_theme_font_size_override("font_size", 40)
 		var tone := str(st.get("tone", "pos"))
 		var val_col := COL_DISCOUNT if tone == "pos" else (COL_DANGER if tone == "neg" else COL_GOLD_SOFT)
 		val.add_theme_color_override("font_color", val_col)
