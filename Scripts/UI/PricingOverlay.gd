@@ -188,30 +188,30 @@ func _ready() -> void:
 	_tag_stack.anchor_bottom = 0.5
 	_tag_stack.offset_left = -225.0
 	_tag_stack.offset_right = 225.0
-	_tag_stack.offset_top = -TAG_LIFT_Y - 140.0
-	_tag_stack.offset_bottom = -TAG_LIFT_Y + 135.0
+	_tag_stack.offset_top = -TAG_LIFT_Y - 170.0
+	_tag_stack.offset_bottom = -TAG_LIFT_Y + 150.0
 	_tag_stack.alignment = BoxContainer.ALIGNMENT_END
 	_tag_stack.add_theme_constant_override("separation", 0)
 	root_ctrl.add_child(_tag_stack)
 
 	pricing_panel = PanelContainer.new()
-	pricing_panel.custom_minimum_size = Vector2(450, 236)
+	pricing_panel.custom_minimum_size = Vector2(450, 272)
 	var style := StyleBoxFlat.new()
 	style.bg_color = COL_ESPRESSO
 	style.set_corner_radius_all(12)
 	style.border_color = COL_GOLD
 	style.set_border_width_all(2)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 14
-	style.content_margin_bottom = 14
+	style.content_margin_left = 22
+	style.content_margin_right = 22
+	style.content_margin_top = 18
+	style.content_margin_bottom = 18
 	style.shadow_size = 12
 	style.shadow_color = Color(0.0, 0.0, 0.0, 0.60)
 	pricing_panel.add_theme_stylebox_override("panel", style)
 	_tag_stack.add_child(pricing_panel)
 
 	var pointer := TagPointer.new()
-	pointer.custom_minimum_size = Vector2(36, 16)
+	pointer.custom_minimum_size = Vector2(52, 24)
 	pointer.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_tag_stack.add_child(pointer)
 
@@ -319,12 +319,12 @@ func _ready() -> void:
 	_tolerance_col.anchor_right = 0.5
 	_tolerance_col.anchor_top = 0.5
 	_tolerance_col.anchor_bottom = 0.5
-	_tolerance_col.offset_left = 242.0
-	_tolerance_col.offset_right = 640.0
-	_tolerance_col.offset_top = -TAG_LIFT_Y - 210.0
-	_tolerance_col.offset_bottom = -TAG_LIFT_Y + 190.0
+	_tolerance_col.offset_left = 244.0
+	_tolerance_col.offset_right = 730.0
+	_tolerance_col.offset_top = -TAG_LIFT_Y - 240.0
+	_tolerance_col.offset_bottom = -TAG_LIFT_Y + 230.0
 	_tolerance_col.alignment = BoxContainer.ALIGNMENT_CENTER
-	_tolerance_col.add_theme_constant_override("separation", 10)
+	_tolerance_col.add_theme_constant_override("separation", 12)
 	_tolerance_col.hide()
 	root_ctrl.add_child(_tolerance_col)
 
@@ -389,7 +389,7 @@ func _add_effect_tooltip(source_name: String, stats: Array, source_kind: String 
 			title_col = pal["bright"]
 
 	var card := PanelContainer.new()
-	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO_CARD, 10, 18, 12)
+	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO_CARD, 12, 22, 16)
 	st_box.border_color = Color(accent_col.r, accent_col.g, accent_col.b, 0.85)
 	st_box.border_width_left = 4
 	st_box.border_width_top = 1
@@ -400,15 +400,15 @@ func _add_effect_tooltip(source_name: String, stats: Array, source_kind: String 
 	card.add_theme_stylebox_override("panel", st_box)
 
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 5)
+	vb.add_theme_constant_override("separation", 6)
 	card.add_child(vb)
 
 	var title_row := HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 9)
+	title_row.add_theme_constant_override("separation", 10)
 	vb.add_child(title_row)
 
 	if icon_path != "":
-		var ico := _make_status_icon(icon_path, title_col, 24.0)
+		var ico := _make_status_icon(icon_path, title_col, 28.0)
 		if ico.texture != null:
 			title_row.add_child(ico)
 
@@ -417,27 +417,27 @@ func _add_effect_tooltip(source_name: String, stats: Array, source_kind: String 
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	title_lbl.add_theme_font_size_override("font_size", 25)
+	title_lbl.add_theme_font_size_override("font_size", 30)
 	title_lbl.add_theme_color_override("font_color", title_col)
 	title_row.add_child(title_lbl)
 
 	for st in stats:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
+		row.add_theme_constant_override("separation", 14)
 		vb.add_child(row)
 
 		var lbl := Label.new()
 		lbl.text = "▸ " + str(st.get("label", ""))
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
-		lbl.add_theme_font_size_override("font_size", 21)
+		lbl.add_theme_font_size_override("font_size", 25)
 		lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		row.add_child(lbl)
 
 		var val := Label.new()
 		val.text = str(st.get("value", ""))
 		val.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-		val.add_theme_font_size_override("font_size", 22)
+		val.add_theme_font_size_override("font_size", 26)
 		var tone := str(st.get("tone", "pos"))
 		var val_col := COL_DISCOUNT if tone == "pos" else (COL_DANGER if tone == "neg" else COL_GOLD_SOFT)
 		val.add_theme_color_override("font_color", val_col)
