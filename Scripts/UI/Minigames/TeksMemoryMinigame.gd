@@ -182,7 +182,7 @@ func _start_round() -> void:
 	for i in range(_total_pairs):
 		var path: String = pool[i % pool.size()]
 		var bg: Color = pastels[i % pastels.size()]
-		var power: int = randi_range(2, 5)
+		var power: int = randi_range(12000, 999999)
 		var tex := _load_tex(path)
 		for _copy in range(2):
 			deck.append({
@@ -278,25 +278,31 @@ func _create_teks_card(entry: Dictionary) -> Dictionary:
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner_v.add_child(portrait)
 
-	var power_bar := Control.new()
-	power_bar.custom_minimum_size = Vector2(0, 14)
-	power_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var power_val: int = int(entry["power"])
-	power_bar.draw.connect(func():
-		var bw := power_bar.size.x
-		var bh := power_bar.size.y
-		var pips := 5
-		var gap := 4.0
-		var pip_w := (bw - gap * float(pips - 1)) / float(pips)
-		for p in range(pips):
-			var px := float(p) * (pip_w + gap)
-			var prect := Rect2(px, 2.0, pip_w, bh - 4.0)
-			var filled := p < power_val
-			var fill_col := Color(0.92, 0.62, 0.14, 1.0) if filled else Color(0.20, 0.16, 0.14, 0.18)
-			power_bar.draw_rect(prect, fill_col, true)
-			power_bar.draw_rect(prect, Color(0.22, 0.16, 0.12, 0.75), false, 1.2)
-	)
-	inner_v.add_child(power_bar)
+	var power_box := VBoxContainer.new()
+	power_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	power_box.add_theme_constant_override("separation", -2)
+	power_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner_v.add_child(power_box)
+
+	var power_hdr := Label.new()
+	power_hdr.text = "Power"
+	power_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	power_hdr.add_theme_font_override("font", UIStyle.FONT_INDER)
+	power_hdr.add_theme_font_size_override("font_size", 10)
+	power_hdr.add_theme_color_override("font_color", Color(0.38, 0.24, 0.14, 0.88))
+	power_hdr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	power_box.add_child(power_hdr)
+
+	var power_lbl := Label.new()
+	@warning_ignore("integer_division")
+	power_lbl.text = "%d,%03d" % [power_val / 1000, power_val % 1000]
+	power_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	power_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	power_lbl.add_theme_font_size_override("font_size", 14)
+	power_lbl.add_theme_color_override("font_color", Color(0.20, 0.11, 0.06, 0.98))
+	power_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	power_box.add_child(power_lbl)
 
 	var card_dict := {
 		"root": holder,
