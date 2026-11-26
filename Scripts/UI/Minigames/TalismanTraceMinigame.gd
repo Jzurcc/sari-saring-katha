@@ -505,7 +505,7 @@ func _build_intro_modal() -> void:
 	v.add_child(h)
 
 	var body := Label.new()
-	body.text = "Help Brahim inscribe sacred charms onto the talisman.\n\n• Trace carefully along every dashed stroke.\n• Stay neat — stray scribbles lower your precision.\n• Click Inscribe Talisman when your seal is ready."
+	body.text = "Trace the dashed lines to inscribe the talisman.\nMatch your brush size to the line thickness and avoid stray marks."
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_theme_font_override("font", UIStyle.FONT_INDER)
