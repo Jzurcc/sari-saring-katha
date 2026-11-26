@@ -49,16 +49,30 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if not visible or StoryManager.radio_upgrade_level < 1 or not is_instance_valid(_sprite):
 		return
-	# Gentle warm golden pulse when Papa Ulap has an unrevealed Event or Visitor broadcast ready
-	if is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast() and not StoryManager.is_past_closing_time():
-		_pulse_time += delta * 2.8
-		var glow := 0.5 + 0.5 * sin(_pulse_time)
+	# Lively speaking squash-and-stretch + warm golden pulse when Papa Ulap has a broadcast ready
+	var ready_to_tune := is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast() and not StoryManager.is_past_closing_time() and Dialogic.current_timeline == null
+	if ready_to_tune:
+		_pulse_time += delta
+		# Rhythmic 2-beat speaking cadence (squish-stretch bursts with brief breath pause)
+		var cycle := fmod(_pulse_time, 1.45)
+		var beat := 0.0
+		if cycle < 0.24:
+			beat = sin((cycle / 0.24) * PI)
+		elif cycle >= 0.30 and cycle < 0.54:
+			beat = sin(((cycle - 0.30) / 0.24) * PI) * 0.80
+		var sx := 1.0 + beat * 0.075
+		var sy := 1.0 - beat * 0.060 + sin(_pulse_time * 3.2) * 0.015
+		_sprite.scale = Vector3(_visual_base_scale.x * sx, _visual_base_scale.y * sy, _visual_base_scale.z * sx)
+		var glow := 0.5 + 0.5 * sin(_pulse_time * 3.2)
 		_sprite.modulate = Color(1.0, 0.94 + glow * 0.06, 0.82 + glow * 0.18, 1.0)
 	else:
+		_pulse_time = 0.0
+		_sprite.scale = _sprite.scale.lerp(_visual_base_scale, clampf(delta * 10.0, 0.0, 1.0))
 		_sprite.modulate = Color.WHITE
 
 func _refresh_pulse_state() -> void:
 	if is_instance_valid(_sprite) and (not is_instance_valid(StoreEventManager) or not StoreEventManager.can_reveal_next_broadcast()):
+		_sprite.scale = _visual_base_scale
 		_sprite.modulate = Color.WHITE
 
 func _refresh_visual_state(play_pop_in: bool = false) -> void:
@@ -189,11 +203,10 @@ func _commit_pending_event_reveal() -> void:
 			StoreEventManager.start_reveal_cooldown()
 		if vis:
 			EventBus.request_sfx.emit("interact")
-			EventBus.show_notification.emit(
-				"Radyo Karimlan: %s Visiting!" % vis.character_name,
-				"Daily Visitor spotted! Check Today's Visitors in Events [K] or Restock Menu.",
-				"interact"
-			)
+			EventBus.radio_card_announced.emit({
+				"type": "visitor",
+				"visitor": vis,
+			})
 		_refresh_pulse_state()
 		return
 	if not is_instance_valid(StoreEventManager):
@@ -201,11 +214,10 @@ func _commit_pending_event_reveal() -> void:
 	var revealed := StoreEventManager.reveal_next_event()
 	if revealed:
 		EventBus.request_sfx.emit("interact")
-		EventBus.show_notification.emit(
-			"Radyo Karimlan: %s" % revealed.event_name,
-			"Event revealed! Check Today's Conditions [K] or the Restock Menu.",
-			"interact"
-		)
+		EventBus.radio_card_announced.emit({
+			"type": "event",
+			"event": revealed,
+		})
 
 func _play_radio_bounce() -> void:
 	var visuals := get_visual_nodes()
