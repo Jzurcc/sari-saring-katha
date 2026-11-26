@@ -230,9 +230,19 @@ func set_mode(new_mode: Mode) -> void:
 
 	position.y = _base_y + _mode_y_offset
 
+	var is_thought := (new_mode == Mode.THOUGHT)
+	no_depth_test = not is_thought
+	render_priority = -1 if is_thought else 12
+	outline_render_priority = -2 if is_thought else 11
+
 	if _bg_sprite:
 		_bg_sprite.texture = _get_bubble_texture(new_mode)
 		_bg_sprite.position.y = bg_y
+		_bg_sprite.no_depth_test = not is_thought
+		_bg_sprite.render_priority = -3 if is_thought else 10
+	if _icon_sprite:
+		_icon_sprite.no_depth_test = not is_thought
+		_icon_sprite.render_priority = -1 if is_thought else 12
 
 	visible = true
 	scale = Vector3.ZERO
