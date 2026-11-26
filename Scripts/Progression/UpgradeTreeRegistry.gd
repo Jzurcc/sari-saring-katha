@@ -26,40 +26,42 @@ const NODES: Array[Dictionary] = [
 	{"id": "permit_2", "title": "Business Permit II", "pos": Vector2(0.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["permit_1"], "kind": "permit"},
 	{"id": "permit_3", "title": "Business Permit III", "pos": Vector2(0.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_2"], "kind": "permit"},
 
-	# ── BRANCH 2 (Tier 2): Refrigerator I → II → III → Wholesale Pass (x = 1.15) ──
-	{"id": "fridge_1", "title": "Fridge Gasket", "pos": Vector2(1.15, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "fridge"},
-	{"id": "fridge_2", "title": "Fridge Insulation", "pos": Vector2(1.15, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["fridge_1"], "kind": "fridge"},
-	{"id": "fridge_3", "title": "Inverter Compressor", "pos": Vector2(1.15, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["fridge_2"], "kind": "fridge"},
-	{"id": "wholesale_pass", "title": "Wholesale Pass", "pos": Vector2(1.15, 4.0), "max_level": 1, "target_level": 1, "prereqs": ["fridge_3"], "kind": "mario_deals"},
+	# ── BRANCH 2 (Tier 2): Refrigerator I → II → III, and Wholesale Pass from Fridge I ──
+	{"id": "fridge_1", "title": "Fridge Gasket", "pos": Vector2(1.0, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "fridge"},
+	{"id": "fridge_2", "title": "Fridge Insulation", "pos": Vector2(1.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["fridge_1"], "kind": "fridge"},
+	{"id": "fridge_3", "title": "Inverter Compressor", "pos": Vector2(1.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["fridge_2"], "kind": "fridge"},
+	{"id": "wholesale_pass", "title": "Wholesale Pass", "pos": Vector2(1.7, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["fridge_1"], "kind": "mario_deals"},
 
-	# ── BRANCH 3 (Tier 3): Tambayan Bench I → II → III (x = 2.3) ──
-	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(2.3, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_3"], "kind": "bench"},
-	{"id": "bench_2", "title": "Tambayan Bench II", "pos": Vector2(2.3, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["bench_1"], "kind": "bench"},
-	{"id": "bench_3", "title": "Tambayan Bench III", "pos": Vector2(2.3, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["bench_2"], "kind": "bench"},
+	# ── BRANCH 3 (Tier 3): Tambayan Bench I → II → III (x = 2.45) ──
+	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(2.45, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_3"], "kind": "bench"},
+	{"id": "bench_2", "title": "Tambayan Bench II", "pos": Vector2(2.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["bench_1"], "kind": "bench"},
+	{"id": "bench_3", "title": "Tambayan Bench III", "pos": Vector2(2.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["bench_2"], "kind": "bench"},
 
-	# ── BRANCH 4 (Tier 3): Barangay Radio I → II → III → Trash Can (x = 3.45) ──
+	# ── BRANCH 4 (Tier 3): Barangay Radio I → II → III, and Trash Can from Radio I ──
 	{"id": "radio_1", "title": "Barangay Radio I", "pos": Vector2(3.45, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_3"], "kind": "radio"},
 	{"id": "radio_2", "title": "Barangay Radio II", "pos": Vector2(3.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["radio_1"], "kind": "radio"},
 	{"id": "radio_3", "title": "Barangay Radio III", "pos": Vector2(3.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["radio_2"], "kind": "radio"},
-	{"id": "trash_can", "title": "Store Trash Can", "pos": Vector2(3.45, 4.0), "max_level": 1, "target_level": 1, "prereqs": ["radio_3"], "kind": "trash"},
+	{"id": "trash_can", "title": "Store Trash Can", "pos": Vector2(4.15, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["radio_1"], "kind": "trash"},
 
-	# ── BRANCH 5 (Tier 4): Barangay Cat I → II (x = 4.6) ──
-	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(4.6, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_4"], "kind": "cat"},
-	{"id": "cat_2", "title": "Barangay Cat II", "pos": Vector2(4.6, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["cat_1"], "kind": "cat"},
+	# ── BRANCH 5 (Tier 4): Barangay Cat I → II (x = 4.9) ──
+	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(4.9, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_4"], "kind": "cat"},
+	{"id": "cat_2", "title": "Barangay Cat II", "pos": Vector2(4.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["cat_1"], "kind": "cat"},
 
-	# ── BRANCH 6 (Tier 5): Sto. Niño Altar I → II → III (x = 5.75) ──
-	{"id": "sto_nino_1", "title": "Sto. Niño Altar I", "pos": Vector2(5.75, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_5"], "kind": "sto_nino"},
-	{"id": "sto_nino_2", "title": "Sto. Niño Altar II", "pos": Vector2(5.75, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["sto_nino_1"], "kind": "sto_nino"},
-	{"id": "sto_nino_3", "title": "Sto. Niño Altar III", "pos": Vector2(5.75, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["sto_nino_2"], "kind": "sto_nino"},
+	# ── BRANCH 6 (Tier 5): Sto. Niño Altar I → II → III (x = 5.9) ──
+	{"id": "sto_nino_1", "title": "Sto. Niño Altar I", "pos": Vector2(5.9, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_5"], "kind": "sto_nino"},
+	{"id": "sto_nino_2", "title": "Sto. Niño Altar II", "pos": Vector2(5.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["sto_nino_1"], "kind": "sto_nino"},
+	{"id": "sto_nino_3", "title": "Sto. Niño Altar III", "pos": Vector2(5.9, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["sto_nino_2"], "kind": "sto_nino"},
 
-	# ── BRANCH 7 (Tier 6): Maneki-Neko I → II (x = 6.9) ──
-	{"id": "maneki_1", "title": "Maneki-Neko I", "pos": Vector2(6.9, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_6"], "kind": "maneki"},
-	{"id": "maneki_2", "title": "Golden Maneki-Neko", "pos": Vector2(6.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
+	# ── BRANCH 7 (Tier 6): Maneki-Neko I → II (x = 6.95) ──
+	{"id": "maneki_1", "title": "Maneki-Neko I", "pos": Vector2(6.95, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_6"], "kind": "maneki"},
+	{"id": "maneki_2", "title": "Golden Maneki-Neko", "pos": Vector2(6.95, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
 
-	# ── BRANCH 8 (Tier 2 → Storefront Capstone): Signage → Poster → Open the Door (x = 8.0) ──
+	# ── BRANCH 8 (Tier 2): Storefront Signage → Poster (x = 8.0) ──
 	{"id": "signage", "title": "Roof Signage", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "storefront_step", "storefront_level": 1},
-	{"id": "poster", "title": "Promo Poster", "pos": Vector2(8.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
-	{"id": "open_door", "title": "Open the Door", "pos": Vector2(8.0, 3.2), "max_level": 1, "target_level": 3, "prereqs": ["poster"], "kind": "storefront_step", "storefront_level": 3},
+	{"id": "poster", "title": "Promo Poster", "pos": Vector2(8.0, 2.2), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
+
+	# ── CAPSTONE: Open the Door (Top-Center, requires only Lv. 1 of each branch lead) ──
+	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.0, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["wholesale_pass", "trash_can", "maneki_1", "poster"], "kind": "storefront_step", "storefront_level": 3},
 ]
 
 

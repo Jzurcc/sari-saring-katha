@@ -56,7 +56,7 @@ var _tip_status: Label
 
 
 func _ready() -> void:
-	layer = 36
+	layer = 55
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("upgrade_tree_overlay")
 
@@ -287,7 +287,7 @@ func _show_tooltip_for(node_id: String) -> void:
 		s_name.text = "▸ " + str(st.get("label", ""))
 		s_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
-		s_name.add_theme_font_size_override("font_size", 13)
+		s_name.add_theme_font_size_override("font_size", 16)
 		s_name.add_theme_color_override("font_color", COL_CREAM)
 		s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		s_row.add_child(s_name)
@@ -295,7 +295,7 @@ func _show_tooltip_for(node_id: String) -> void:
 		var s_val := Label.new()
 		s_val.text = str(st.get("value", ""))
 		s_val.add_theme_font_override("font", _bold_font)
-		s_val.add_theme_font_size_override("font_size", 14)
+		s_val.add_theme_font_size_override("font_size", 17)
 		var tone := str(st.get("tone", "pos"))
 		var val_col := COL_STAT_POS if tone == "pos" else (COL_STAT_NEG if tone == "neg" else COL_GOLD_BRIGHT)
 		s_val.add_theme_color_override("font_color", val_col)
@@ -569,9 +569,9 @@ func _build_ui() -> void:
 	_tooltip = PanelContainer.new()
 	_tooltip.visible = false
 	_tooltip.z_index = 40
-	_tooltip.custom_minimum_size = Vector2(285, 0)
+	_tooltip.custom_minimum_size = Vector2(380, 0)
 	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var tst := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.042, 0.96), 10, 16, 12)
+	var tst := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.042, 0.96), 10, 20, 14)
 	tst.border_color = COL_BRASS
 	tst.set_border_width_all(2)
 	tst.shadow_color = Color(0, 0, 0, 0.55)
@@ -580,7 +580,7 @@ func _build_ui() -> void:
 	_root.add_child(_tooltip)
 
 	var tv := VBoxContainer.new()
-	tv.add_theme_constant_override("separation", 7)
+	tv.add_theme_constant_override("separation", 8)
 	tv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tooltip.add_child(tv)
 
@@ -592,29 +592,29 @@ func _build_ui() -> void:
 	_tip_title = Label.new()
 	_tip_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tip_title.add_theme_font_override("font", _bold_font)
-	_tip_title.add_theme_font_size_override("font_size", 19)
+	_tip_title.add_theme_font_size_override("font_size", 22)
 	_tip_title.add_theme_color_override("font_color", COL_CREAM)
 	_tip_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thead.add_child(_tip_title)
 
 	_tip_level = Label.new()
 	_tip_level.add_theme_font_override("font", _bold_font)
-	_tip_level.add_theme_font_size_override("font_size", 14)
+	_tip_level.add_theme_font_size_override("font_size", 15)
 	_tip_level.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_tip_level.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thead.add_child(_tip_level)
 
 	_tip_desc = Label.new()
-	_tip_desc.custom_minimum_size = Vector2(255, 0)
+	_tip_desc.custom_minimum_size = Vector2(340, 0)
 	_tip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip_desc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_tip_desc.add_theme_font_size_override("font_size", 14)
+	_tip_desc.add_theme_font_size_override("font_size", 17)
 	_tip_desc.add_theme_color_override("font_color", Color(0.86, 0.80, 0.70))
 	_tip_desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_desc)
 
 	_tip_stats_box = VBoxContainer.new()
-	_tip_stats_box.add_theme_constant_override("separation", 3)
+	_tip_stats_box.add_theme_constant_override("separation", 4)
 	_tip_stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_stats_box)
 
@@ -625,7 +625,7 @@ func _build_ui() -> void:
 
 	var peso_tip := TextureRect.new()
 	peso_tip.texture = PESO_ICON_TEX
-	peso_tip.custom_minimum_size = Vector2(22, 22)
+	peso_tip.custom_minimum_size = Vector2(24, 24)
 	peso_tip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	peso_tip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	peso_tip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -634,13 +634,13 @@ func _build_ui() -> void:
 
 	_tip_price_lbl = Label.new()
 	_tip_price_lbl.add_theme_font_override("font", _bold_font)
-	_tip_price_lbl.add_theme_font_size_override("font_size", 21)
+	_tip_price_lbl.add_theme_font_size_override("font_size", 22)
 	_tip_price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tip_price_row.add_child(_tip_price_lbl)
 
 	_tip_status = Label.new()
 	_tip_status.add_theme_font_override("font", _bold_font)
-	_tip_status.add_theme_font_size_override("font_size", 14)
+	_tip_status.add_theme_font_size_override("font_size", 15)
 	_tip_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_status)
 
