@@ -526,15 +526,23 @@ func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 	if discovered_cat != "":
 		Dialogic.VAR.set_variable("Global_FavoriteDiscoveredCat", "")
 		var ctx := customer.transaction_context
-		if ctx != null and not ctx.is_story and not ctx.wants_debt and ResourceLoader.exists(FAVORITE_DISCOVERED_TIMELINE_PATH):
+		if ctx != null and not ctx.wants_debt and ResourceLoader.exists(FAVORITE_DISCOVERED_TIMELINE_PATH):
 			var cname := customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"
 			if generic_char_res:
 				generic_char_res.display_name = cname
 			Dialogic.VAR.set_variable("Global_FavoriteDiscoveredLine", _build_favorite_discovery_line(customer.customer_data, discovered_cat))
-			var fav_phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
-			var fav_label = "Satisfy" if is_whole_order_done else "Partial"
 			if is_instance_valid(customer) and ctx:
 				EventBus.customer_order_updated.emit(customer.get_order_hud_key(), ctx.desired_items, ctx.is_riddle)
+			if ctx.is_story:
+				# Play favorite discovery remark first, then seamlessly continue into the story chapter's closing dialogue
+				start_dialogue(FAVORITE_DISCOVERED_TIMELINE_PATH, customer, Phase.TALK, "Partial")
+				Dialogic.timeline_ended.connect(func():
+					if is_instance_valid(customer) and is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
+						on_item_delivered(customer, is_whole_order_done)
+				, CONNECT_ONE_SHOT)
+				return
+			var fav_phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
+			var fav_label = "Satisfy" if is_whole_order_done else "Partial"
 			start_dialogue(FAVORITE_DISCOVERED_TIMELINE_PATH, customer, fav_phase, fav_label)
 			return
 
