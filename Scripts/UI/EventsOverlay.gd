@@ -363,6 +363,12 @@ func _populate_cards() -> void:
 			_cards_vbox.add_child(_build_neighborhood_event_card(ev))
 			total_active += 1
 
+	# 1B. Radio-Revealed Daily Visitor Sightings
+	if is_instance_valid(StoryManager):
+		for vis in StoryManager.get_revealed_expected_regulars():
+			_cards_vbox.add_child(_build_visitor_event_card(vis))
+			total_active += 1
+
 	# 2. Active Reyna Mayari Moon Card(s) (treated as active events too!)
 	var mayari_ids: Array[String] = StoryManager.active_mayari_cards
 	if mayari_ids.is_empty() and StoryManager.active_mayari_card != "":
@@ -447,6 +453,21 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 	var stats: Array = ev.build_stat_rows()
 	var kws: Array = ev.get_keywords()
 	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws, ev.get_icon_path())
+
+func _build_visitor_event_card(vis: CustomerData) -> PanelContainer:
+	var desc_rich := "Papa Ulap spotted [b]%s[/b] heading toward your store today." % vis.character_name
+	var stats: Array = [
+		{"label": "Spawn Chance:", "value": "+120% (2.2×)", "tone": "pos"},
+	]
+	return _build_hades_card(
+		"Visitor: %s" % vis.character_name,
+		"!",
+		desc_rich,
+		stats,
+		"event",
+		[],
+		"res://Assets/ui/icons/user-round-exclamation-point.png"
+	)
 
 func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false) -> PanelContainer:
 	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
