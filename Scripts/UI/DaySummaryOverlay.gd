@@ -251,8 +251,8 @@ func _build_ui() -> void:
 	_banner = PanelContainer.new()
 	_banner.anchor_left = 0.22
 	_banner.anchor_right = 0.86
-	_banner.anchor_top = 0.022
-	_banner.anchor_bottom = 0.130
+	_banner.anchor_top = 0.026
+	_banner.anchor_bottom = 0.114
 	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 8, 32, 10)
 	b_style.border_color = COL_GOLD
 	b_style.set_border_width_all(2)
@@ -284,14 +284,6 @@ func _build_ui() -> void:
 			lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
 			lbl.add_theme_constant_override("outline_size", 4)
 		title_row.add_child(lbl)
-
-	var sub_lbl := Label.new()
-	sub_lbl.text = "End of Day Performance Summary  ·  Click or press Space to skip"
-	sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	sub_lbl.add_theme_font_size_override("font_size", 15)
-	sub_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
-	bv.add_child(sub_lbl)
 
 	# Main Center Frame (grows taller per animated line like an unrolling ledger!)
 	_frame = PanelContainer.new()
@@ -375,18 +367,20 @@ func _build_ui() -> void:
 	gt_lbl.add_theme_color_override("font_color", COL_WHITE_HDR)
 	sv.add_child(gt_lbl)
 
-	# Bottom-Right Edge Continue Button (positioned cleanly at the bottom-right screen edge)
+	# Compact "Close Shop" button aligned to the ledger's right edge (hidden until tally finishes)
 	_close_btn = Button.new()
-	_close_btn.text = "Close Ledger" if _show_mayari else "Close Shop & Sleep"
-	_close_btn.anchor_left = 0.965
-	_close_btn.anchor_right = 0.965
+	_close_btn.text = "Close Shop"
+	_close_btn.anchor_left = 0.86
+	_close_btn.anchor_right = 0.86
 	_close_btn.anchor_top = 0.945
 	_close_btn.anchor_bottom = 0.945
-	_close_btn.offset_left = -246.0
+	_close_btn.offset_left = -168.0
 	_close_btn.offset_right = 0.0
-	_close_btn.offset_top = -26.0
-	_close_btn.offset_bottom = 26.0
+	_close_btn.offset_top = -24.0
+	_close_btn.offset_bottom = 24.0
 	_close_btn.z_index = 14
+	_close_btn.visible = false
+	_close_btn.modulate.a = 0.0
 	_close_btn.disabled = true
 	_close_btn.focus_mode = Control.FOCUS_NONE
 	_close_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -1265,7 +1259,11 @@ func _run_sequence() -> void:
 
 	_tally_finished = true
 	if is_instance_valid(_close_btn):
+		_close_btn.visible = true
 		_close_btn.disabled = false
+		_close_btn.modulate.a = 0.0
+		var ctw := create_tween()
+		ctw.tween_property(_close_btn, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
 
 
 func _input(event: InputEvent) -> void:
