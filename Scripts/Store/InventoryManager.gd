@@ -218,7 +218,7 @@ func adjust_item_price(items: Array[ItemData], delta: float) -> void:
 
 func get_capacity_limit(type: ItemData.ItemType) -> int:
 	match type:
-		ItemData.ItemType.SHELF: return 36
+		ItemData.ItemType.SHELF: return 42
 		ItemData.ItemType.FRIDGE: return 12
 		_: return 999 # Containers don't have a shared physical surface limit
 
