@@ -242,7 +242,7 @@ func _update_audio_for_time(time: float) -> void:
 
 	if is_night and not ambience_night.playing:
 		ambience_night.stream = audio_night_crickets
-		ambience_night.play(randf_range(0.0, ambience_night.stream.get_length()))
+		ambience_night.play()
 	elif not is_night and ambience_night.playing:
 		ambience_night.stop()
 
