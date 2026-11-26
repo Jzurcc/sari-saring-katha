@@ -53,19 +53,19 @@ categories = PackedStringArray("pack")
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("1_h0x5s")
-arc_name = "Arc 1: Low-Resolution Reality"
+arc_name = "Arc 1: Leaving the Desk Behind"
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
 visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("1_h0x5s")
-arc_name = "Arc 2: Debugging the Forest"
+arc_name = "Arc 2: Learning Tatay's Hand"
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
 visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
 
 [sub_resource type="Resource" id="arc_2"]
 script = ExtResource("1_h0x5s")
-arc_name = "Arc 3: System Stable"
+arc_name = "Arc 3: A Quiet Healer of Karimlan"
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
 visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
 

@@ -128,9 +128,27 @@ func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:
 		"talisman", "anting", "anting_anting", "brahim":
 			resolved_id = "talisman"
 			target = talisman_minigame
+		"talisman_random", "talisman_visit":
+			resolved_id = "talisman"
+			target = talisman_minigame
+			config = config.duplicate()
+			config["random"] = true
+			config["lock_level"] = true
 		_:
-			LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
-			return
+			if id.begins_with("talisman:"):
+				var lvl_str := id.substr("talisman:".length()).strip_edges()
+				if lvl_str.is_valid_int():
+					resolved_id = "talisman"
+					target = talisman_minigame
+					config = config.duplicate()
+					config["level"] = int(lvl_str)
+					config["lock_level"] = true
+				else:
+					LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
+					return
+			else:
+				LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
+				return
 
 	_transition_into_minigame(resolved_id, target, config)
 

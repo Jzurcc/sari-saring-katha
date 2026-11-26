@@ -88,9 +88,7 @@ var _result_panel: PanelContainer
 var _result_title: Label
 var _result_score: Label
 var _result_breakdown: Label
-var _result_quote: Label
 var _result_retry_btn: Button
-var _result_next_btn: Button
 var _result_done_btn: Button
 
 
@@ -126,10 +124,13 @@ func open_minigame(config: Dictionary = {}) -> void:
 	_best_accuracy_this_session = 0
 	_last_result = {}
 
-	# Determine starting level (1..10): explicit config > StoryManager progress > 1
+	# Determine starting level (1..10): random (visits) > explicit level (story) > saved progress
 	var start_lvl := 1
 	_locked_level = bool(config.get("lock_level", false))
-	if config.has("level"):
+	if bool(config.get("random", false)):
+		start_lvl = randi_range(1, _patterns.size())
+		_locked_level = true
+	elif config.has("level"):
 		start_lvl = clampi(int(config.get("level", 1)), 1, _patterns.size())
 	elif is_instance_valid(StoryManager) and StoryManager.has_method("get_world_flag"):
 		var saved_lvl = StoryManager.get_world_flag("brahim_talisman_level", 1)
@@ -560,20 +561,12 @@ func _build_result_modal() -> void:
 	_result_breakdown.add_theme_color_override("font_color", COL_MUTED)
 	v.add_child(_result_breakdown)
 
-	_result_quote = Label.new()
-	_result_quote.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_result_quote.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_result_quote.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_result_quote.add_theme_font_size_override("font_size", 17)
-	_result_quote.add_theme_color_override("font_color", Color(0.95, 0.87, 0.72, 1.0))
-	v.add_child(_result_quote)
-
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	btn_row.add_theme_constant_override("separation", 12)
 	v.add_child(btn_row)
 
-	_result_retry_btn = _make_secondary_button("Trace Again", Vector2(150, 46))
+	_result_retry_btn = _make_secondary_button("Trace Again", Vector2(160, 46))
 	_result_retry_btn.pressed.connect(func():
 		_result_overlay.visible = false
 		_canvas.clear_canvas()
@@ -581,17 +574,9 @@ func _build_result_modal() -> void:
 	)
 	btn_row.add_child(_result_retry_btn)
 
-	_result_next_btn = Button.new()
-	_result_next_btn.text = "Next Sigil"
-	Juice.style_primary_button(_result_next_btn, Vector2(165, 46))
-	_result_next_btn.pressed.connect(func():
-		_result_overlay.visible = false
-		_load_level(mini(_current_level + 1, _patterns.size()))
-		_canvas.input_enabled = true
-	)
-	btn_row.add_child(_result_next_btn)
-
-	_result_done_btn = _make_secondary_button("Finish", Vector2(140, 46))
+	_result_done_btn = Button.new()
+	_result_done_btn.text = "Continue"
+	Juice.style_primary_button(_result_done_btn, Vector2(175, 46))
 	_result_done_btn.pressed.connect(func():
 		_close_minigame(bool(_last_result.get("won", false)), _last_result)
 	)
@@ -918,23 +903,19 @@ func _evaluate_tracing(tolerance_px: float) -> Dictionary:
 	}
 
 
-func _show_result_modal(won: bool, pat: Dictionary, acc: int, cov: int, prec: int, stray: int, target: int) -> void:
+func _show_result_modal(won: bool, _pat: Dictionary, acc: int, cov: int, prec: int, stray: int, target: int) -> void:
 	if won:
 		_result_title.text = "Anting-Anting Empowered!"
 		_result_title.add_theme_color_override("font_color", COL_SUCCESS)
-		_result_quote.text = "\"%s\" — Brahim nods in awe as the bronze warms in his palm." % str(pat["win_quote"])
+		_result_retry_btn.visible = false
 	else:
 		_result_title.text = "Unsteady Inscription"
 		_result_title.add_theme_color_override("font_color", COL_FAIL)
-		if stray >= 25:
-			_result_quote.text = "\"Too many stray strokes outside the seal! Erase the extra marks and keep your lines clean.\""
-		else:
-			_result_quote.text = "\"Almost there! Keep your brush steady along the dashed lines and try once more.\""
+		_result_retry_btn.visible = true
 
 	_result_score.text = "Accuracy: %d%%  (Target: %d%%)" % [acc, target]
 	_result_breakdown.text = "Coverage: %d%%   •   Precision: %d%%   •   Stray Ink: %d%%" % [cov, prec, stray]
 
-	_result_next_btn.visible = won and (not _locked_level) and (_current_level < _patterns.size())
 	_result_overlay.visible = true
 	call_deferred("_pop_result_deferred")
 

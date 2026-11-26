@@ -1,129 +1,149 @@
 label Greeting
 # [signal arg="refresh_desires"]
 if {Transaction_Chapter} == 0:
-	Brahim: Good day. [pause=0.3] I'm trying to remember a specific brand of product...
-	Brahim: I could use some right about now.
-	- Maybe a nice relaxing snack?
-	- Maybe a cold refreshing drink?
-	Brahim: That sounds right. 
-	Brahim: I come from the University of Cordilleras, Baguio, you see.
-	Brahim: The humidity here seems to cause intermittent packet loss. A total cache miss for childhood memories.
-	Brahim: In Karimlan, the system is quiet. Almost too quiet. 
-	Brahim: Anyway, I'll take {Transaction_ItemWants}. I'm helping my Lolo with a ritual near the creek tonight.
-	Brahim:  Apparently, even spirits appreciate a good snack during the breaks.
+	Brahim: Magandang araw. [pause=0.3] You must be the new face behind the counter. I'm Brahim.
+	Brahim: I just moved back home to Karimlan a few weeks ago. Left my corporate job in the city—couldn't stare at another spreadsheet under fluorescent lights.
+	- That's a big change of pace.
+		Brahim: The best kind. Out here I'm apprenticing under my father—he's been Karimlan's albularyo for forty years.
+	- How's the quiet life treating you?
+		Brahim: Honestly? I slept eight straight hours for the first time in years. My father's been teaching me the old albularyo craft since I got back.
+	Brahim: Speaking of which, my hand still shakes a little from too much office coffee. Mind helping me trace two beginner talismans before I head back to Tatay's?
+	Brahim: First one is the Krus ng Simula—a simple ward to calm a fresh bronze piece.
+	[signal arg="minigame:talisman:1"]
+	Brahim: Clean, balanced lines! Even a simple ward hums when it's drawn with care.
+	Brahim: Let's try one more—Buwan ni Mayari. Travelers keep this crescent close on dark barangay roads.
+	[signal arg="minigame:talisman:2"]
+	Brahim: Mayari's crescent! You've got a steadier hand than I do.
+	Brahim: Salamat for the help. I'll also grab {Transaction_ItemWants} for Tatay and me—we're preparing herbs by the creek tonight.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1:
-	Brahim: Your shelf placement... it's interesting. [pause=0.4] It has a very organic efficiency.
-	Brahim: But that refrigerator? 
-	- It's a bit slow.
-		Brahim: "A bit" is an understatement. It's pretty old and obnoxious. 
-		Brahim: It's pure legacy code. But I've noticed the whole street waits for it to chime before closing up.
-	- It belonged to my grandmother.
-		Brahim:  Then it's the master server. Everything else just has to sync to it.
-	Brahim: I miss the Baguio fog, occasionally. It felt like living inside a low-resolution cloud.
-	Brahim: Here, everything is sharp. Too much detail in the heat.
-	Brahim: I'm looking for some {Transaction_ItemWants}. Lolo says there's a "glitch" in the southern irrigation line.
+	Brahim: Your little store has a good rhythm to it. [pause=0.3] Everything right where it belongs.
+	Brahim: That old fridge humming in the corner reminds me of my parents' kitchen when I was a kid.
+	- It's a little slow, honestly.
+		Brahim: Slow isn't a bad thing. In the city, everyone's rushing to beat a deadline nobody remembers the next week.
+	- It belonged to my lola.
+		Brahim: You can tell. Things that get looked after keep a quiet kind of warmth.
+	Brahim: Tatay had me sorting dried sambong and lagundi leaves all morning. My fingers smell like rain and ginger.
+	Brahim: I'll take {Transaction_ItemWants}, please. Need something to share with him before our afternoon rounds.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2:
-	Brahim:  Lolo had me chanting until three in the morning.
-	Brahim: I kept waiting for an error message. A syntax error, or a compiler warning.
-	- Did the ritual work?
-		Brahim:  Eventually. There's a significant latency between the words and the response.
-		Brahim: You don't get a logs file. You just get a sudden rustle in the leaves that means "accepted."
-	- You seem more at peace with it today.
-		Brahim: I'm learning to value the silence between queries.
-	Brahim: Just a {Transaction_ItemWants}, please. I have 40 pages of oral tradition to transcribe.
-	Brahim: Lolo calls it his "spirit-song." I'm calling it 'KarimlanDB v1.0'.
+	Brahim: Tatay had me up past midnight practicing prayers for the household wards.
+	Brahim: Back at my old office, staying up late meant fixing someone else's slide deck. Doing it for our neighbors feels completely different.
+	- Are you getting the hang of it?
+		Brahim: Little by little. Tatay says the words only work if your heart isn't in a hurry.
+	- You look much more at ease today.
+		Brahim: Karimlan does that to you. The air actually lets you breathe.
+	Brahim: I brought two protective charms that need fresh ink before sundown. Mind lending your steady hand again?
+	Brahim: First is Mata ng Bantay—the watcher's eye, to keep mischief off a doorstep.
+	[signal arg="minigame:talisman:3"]
+	Brahim: You can almost feel it watching back. That'll keep bad luck well away.
+	Brahim: And the second—Tala ng Gabay, a guiding star for a fisherman heading out early tomorrow.
+	[signal arg="minigame:talisman:4"]
+	Brahim: Sharp points and a steady circle—this charm will never lose its north.
+	Brahim: Thanks again. I'll pick up {Transaction_ItemWants} on my way back to Tatay's.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3:
-	Brahim: I saw some kids by the canal today. They were poking at a mound of earth and calling it 'Skibidi'.
-	Brahim:  A Duwende mound, mind you.
-	- That's a dangerous game.
-		Brahim: Actually, it was fascinating. It's a protocol update for the local lore. 
-		Brahim: They're mapping ancient variables onto modern memes. Packaging the unexplainable into something they can share.
-	- Did the Duwende mind?
-		Brahim:  I think it was confused by the terminology. It's probably still trying to look up the definition.
-	Brahim: I'll take a few candies. The colorful ones. I told them I'd bring 'admin-level offerings' to keep them safe.
+	Brahim: I passed by the canal earlier and saw some neighborhood kids poking at an anthill, daring each other to say "tabi-tabi po" backwards.
+	Brahim: Tatay would've had a fit if he saw them.
+	- Did you stop them?
+		Brahim: Gently. Told them the old stories instead of scolding them. Kids listen better when you treat them like they're part of the secret.
+	- Were they actually scared?
+		Brahim: Only until I reminded them how dark that path gets after six. They ran home pretty fast after that.
+	Brahim: I promised I'd bring a small peace offering back by the mound later. I'll take {Transaction_ItemWants} for the walk.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4:
-	Brahim: There was an anomaly by the river today. [pause=0.4] A water buffalo that wasn't quite... right.
-	Brahim: Its movement was janky. Stuttering. Like it was running on a low frame-rate.
-	- A Tikbalang?
-		Brahim: I suspect so. A total 'Amogus' situation among the local fauna. 
-		Brahim: It was trying to blend into the background processes, but its clipping was all wrong.
-	- Did you shoo it away?
-		Brahim: I just told it that its "cosplay" was a bit low-effort. It looked genuinely offended.
-	Brahim: I need some {Transaction_ItemWants} to debug the riverbank before someone gets spooked.
+	Brahim: A neighbor down by the river came to Tatay's house with a stubborn fever this morning.
+	Brahim: Nothing serious, just exhaustion and a fright from walking home late in the rain. Tatay asked me to prepare two warming charms for her family.
+	- That's a lot of trust from your father.
+		Brahim: It is. He barely even hovered over my shoulder this time.
+	- Need a hand with the brushwork?
+		Brahim: I was hoping you'd offer. You have a real knack for this.
+	Brahim: Let's start with Tatsulok ng Lunas—the healing triad. The old albularyos always swore by the triangle.
+	[signal arg="minigame:talisman:5"]
+	Brahim: Steady and centered. Tatay would be proud of that one.
+	Brahim: Now Sinag ng Araw—eight solar rays to bring warmth back to a damp house.
+	[signal arg="minigame:talisman:6"]
+	Brahim: Bright as high noon! This one carries real warmth.
+	Brahim: Salamat. I'll grab {Transaction_ItemWants} as well—always good to bring something to eat when visiting a recovering neighbor.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5:
-	Brahim:  You see this? This quiet?
-	Brahim: No department meetings. No students asking for grade-bumps in my inbox.
-	- Is this why you left the faculty?
-		Brahim:  I realized I was just a process in someone else's server. 
-		Brahim: Here, I'm the admin. Or at least, the system observer. 
-	Brahim: It's a stable build. No external traffic. Just me, the forest, and your store.
-	Brahim: Something light today. A soft drink. Cold.
+	Brahim: Funny thing happened today. An old coworker from Manila messaged me, asking if I regretted walking away from the promotion.
+	Brahim: I looked out the window at the bamboo swaying in the breeze and didn't even know how to explain it to him.
+	- What did you tell him?
+		Brahim: That I traded a corner desk for a quiet porch, and I'd make the same trade twice.
+	- You belong here in Karimlan.
+		Brahim: It's starting to feel that way. Even the stray dogs know my footsteps now.
+	Brahim: Tatay's resting his knees today, so I'm doing the errands. Just {Transaction_ItemWants} for me, please.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 6:
-	Brahim: Lolo found me using my tablet to record his cleansing chants.
-	Brahim: I thought he'd call it "unholy tech." Instead, he asked if I could 're-upload' his toothache prayer.
-	- He's using the lingo?
-		Brahim:  He's a fast learner. He thinks it's a way to trap the spirits in a "glowing slate" for safekeeping.
-		Brahim: I told him it's just a redundant cloud-backup for the oral tradition. 
-	Brahim: In case the legacy chain suffers a total system failure.
-	Brahim: A treat for him. The {Transaction_ItemWants}. He likes the texture.
+	Brahim: The wind's been picking up since dawn. Tatay says the mountain air gets restless before a heavy storm.
+	Brahim: He asked me to prepare two stronger wards for the barangay chapel and the bridge.
+	- Those sound trickier than the early ones.
+		Brahim: They are—more intersecting lines, less room for error. Good thing I've got you as my co-inscriber.
+	- Ready when you are.
+		Brahim: Appreciate it. First up is Kalasag ng Hangin—the wind shield.
+	[signal arg="minigame:talisman:7"]
+	Brahim: Solid as narra wood, light as the breeze. No storm's getting past that.
+	Brahim: Next is Selyo ng Bituin—twin opposing triangles bound by a sacred ring. Take your time with the intersections.
+	[signal arg="minigame:talisman:8"]
+	Brahim: Not a single tremor in those intersections—you really have an albularyo's hand!
+	Brahim: I'll take {Transaction_ItemWants} for Tatay too. He's been craving a snack all afternoon.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 7:
-	Brahim: I handled a case at the south end. A "haunted" tricycle.
-	Brahim: Turned out to be a minor spirit stuck in an infinite loop of rattling the engine.
-	- How did you break the loop?
-		Brahim: I didn't perform a binding. I just... gave it a feedback loop of its own. 
-		Brahim: I showed it how annoying the sound was. It felt a bit "mid" and moved on to a wind-chime.
-	- You're a pragmatic healer, Brahim.
-		Brahim: It's just debugging, really. Most spirits just need a clear path for their routine.
-	Brahim: I'll take some {Transaction_ItemWants}. Lolo's celebrating a "successful deployment."
+	Brahim: I handled my first house call completely on my own today. [pause=0.3] Down at the south end of the barangay.
+	Brahim: A family couldn't sleep because of rattling eaves and cold drafts. Turned out to be half loose tin roof, half an old restless spirit looking for quiet.
+	- How did you handle it?
+		Brahim: Nailed down the loose sheet first, then lit a little kamangyan and spoke the calming prayer Tatay taught me. Both worked together.
+	- Tatay must be thrilled.
+		Brahim: He didn't say much—just poured me a cup of barako and smiled. That's high praise from him.
+	Brahim: I'll grab {Transaction_ItemWants} to celebrate a quiet evening.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 8:
-	Brahim: Lolo gave me his old brass bell today. [pause=0.3] Officially recognized.
-	Brahim: I'm not going back to Baguio. I've deleted that directory.
-	- We're glad to have you here, Teacher.
-		Brahim:  I'm still teaching. Just a different curriculum. 
-		Brahim: Teaching the living not to fear the glitches in the world.
-	Brahim: And thank you. Your store was the 'safe-mode' I needed to reboot my life.
-	- You're welcome anytime.
-		Brahim:  Stay cozy, boss. Max rizz attained? [pause=0.4] No... let's stick with "System Stable."
-	Brahim: Here. Some {Transaction_ItemWants} to keep the background processes in your store running smoothly.
+	Brahim: Tatay handed me his old brass bell this morning. [pause=0.4] Said his hands are ready to rest, and mine are ready to carry the work.
+	Brahim: Leaving the corporate world felt terrifying a year ago. Now I can't imagine being anywhere else than right here in Karimlan.
+	- Congratulations, Brahim. You earned it.
+		Brahim: I couldn't have gotten here without Tatay's patience—and honestly, without stopping by your store whenever I needed a breather.
+	- Your father must be so proud.
+		Brahim: He pretended he had dust in his eyes. I let him have that one.
+	Brahim: For my first official set as Karimlan's new albularyo, I'd be honored if you helped me inscribe two master charms.
+	Brahim: First is Orasyon ng Balete—the seal of the rooted tree.
+	[signal arg="minigame:talisman:9"]
+	Brahim: Whoa... the air around the counter actually went quiet. That's the real deal.
+	Brahim: And the last one—Dakilang Anting-Anting. The grand agimat.
+	[signal arg="minigame:talisman:10"]
+	Brahim: A masterwork agimat! I couldn't have inscribed this half as well on my own.
+	Brahim: Thank you for everything, friend. I'll take {Transaction_ItemWants}—Tatay and I are having a proper dinner tonight.
 	[end_timeline]
 
 label Talk
-Brahim: I'm just waiting for that {Transaction_ItemWants}. No pressure on the server.
+Brahim: No rush at all—I'm just waiting on {Transaction_ItemWants}.
 - On it.
 	Brahim: Salamat. Take your time.
 	[end_timeline]
 - Sorry, we're out.
-	Brahim: Ah. [pause=0.3] A 404 error, then. I'll re-route my itinerary.
+	Brahim: No worries at all. I'll drop by again once you've restocked.
 	[signal arg="refuse_service"]
 	[signal arg="story_success"]
 	[end_timeline]
 
 label Partial
-Brahim: Partial sync confirmed. [pause=0.3] Still awaiting the remaining packet — the [color=#0f6e2f]{Transaction_ItemWants}[/color]. No timeout yet.
+Brahim: Got that one, salamat. [pause=0.3] I'm still looking for [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you're ready.
 [end_timeline]
 
 label Satisfy
-Brahim: Correct. [pause=0.3] Metadata matches. Data validated. Salamat.
+Brahim: Perfect, just what I needed. Salamat!
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Brahim:  That's a bit of a "mismatch." 
-Brahim: I needed the {Transaction_ItemWants}. Let's try to sync again.
+Brahim: Ah, I think that's not quite what I asked for.
+Brahim: I was looking for {Transaction_ItemWants}, if you still have it.
 [end_timeline]
