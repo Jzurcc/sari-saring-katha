@@ -44,8 +44,8 @@ var last_mayari_collection_successful: bool = true
 
 # --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
 const TALLY_GOAL := 2000.0
-const TALLY_MIN_SCHEDULE: Array[float] = [35.0, 45.0, 55.0, 65.0, 80.0, 90.0, 105.0]
-const TALLY_GEN_SCHEDULE: Array[float] = [55.0, 70.0, 85.0, 100.0, 120.0, 135.0, 155.0]
+const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 55.0, 70.0, 85.0, 100.0, 115.0, 130.0]
+const TALLY_GEN_SCHEDULE: Array[float] = [80.0, 105.0, 130.0, 160.0, 190.0, 220.0, 250.0]
 
 const LEDGER_MILESTONES: Array[Dictionary] = [
 	{"id": "reroll_1", "ratio": 0.15, "amount": 300.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
