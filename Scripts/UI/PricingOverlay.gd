@@ -93,6 +93,7 @@ class PriceStepGauge extends Control:
 
 var pricing_ui: Sprite3D
 var pricing_viewport: SubViewport
+var tier_label: Label
 var name_label: Label
 var price_label: Label
 var comparison_label: Label
@@ -126,7 +127,7 @@ func _ready() -> void:
 
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
-	pricing_viewport.size = Vector2(720, 320)
+	pricing_viewport.size = Vector2(720, 340)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
@@ -137,7 +138,7 @@ func _ready() -> void:
 	pricing_viewport.add_child(root_hbox)
 
 	pricing_panel = PanelContainer.new()
-	pricing_panel.custom_minimum_size = Vector2(410, 274)
+	pricing_panel.custom_minimum_size = Vector2(410, 310)
 	pricing_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	root_hbox.add_child(pricing_panel)
 
@@ -177,12 +178,20 @@ func _ready() -> void:
 	badge_row.add_child(chill_pill)
 	chill_pill.hide()
 
+	# Tier Tag right above Item Name (colored with soft pastel tier palette)
+	tier_label = Label.new()
+	tier_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tier_label.add_theme_font_override("font", _bold_font)
+	tier_label.add_theme_font_size_override("font_size", 17)
+	tier_label.add_theme_color_override("font_color", UIStyle.get_tier_color(1))
+	vbox.add_child(tier_label)
+
 	# Item Name
 	name_label = Label.new()
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.add_theme_font_override("font", _bold_font)
-	name_label.add_theme_font_size_override("font_size", 28)
+	name_label.add_theme_font_size_override("font_size", 32)
 	name_label.add_theme_color_override("font_color", COL_CREAM)
 	vbox.add_child(name_label)
 
@@ -418,6 +427,9 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	var is_warm_now: bool = is_fridge_item and StoryManager.is_fridge_warm
 	var display_price: float = maxf(1.0, snapped(final_price * StoryManager.FRIDGE_WARM_VALUE_MULTIPLIER, 0.5)) if is_warm_now else final_price
 
+	var tier_num: int = maxi(1, item_data.tier)
+	tier_label.text = "Tier %d" % tier_num
+	tier_label.add_theme_color_override("font_color", UIStyle.get_tier_color(tier_num))
 	name_label.text = custom_name if custom_name != "" else item_data.item_name
 	price_label.text = "₱%.2f" % display_price
 
@@ -454,7 +466,7 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		comparison_label.text = "-₱%.2f" % absf(diff)
 	elif step == 0:
 		accent = COL_GOLD_SOFT if effective_step <= 1 else (COL_RISKY if effective_step == 2 else COL_DANGER)
-		comparison_label.text = "BASE COST"
+		comparison_label.text = "+₱0"
 	else:
 		comparison_label.text = "+₱%.2f" % diff
 		if effective_step <= 1:

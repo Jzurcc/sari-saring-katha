@@ -23,6 +23,24 @@ const COLOR_BEIGE := Color("F5F5DC")              # Light beige for upgrade
 const COLOR_DARK_BG := Color("151412")            # Dark background black
 const COLOR_GOLD_TEXT := Color(1.0, 0.922, 0.792, 1.0) # Golden label text
 
+## Soft pastel Tier 1–10 colors (starting from soft white), readable on dark surfaces.
+const TIER_COLORS: Array[Color] = [
+	Color(0.96, 0.95, 0.92, 1.0), # Tier 1: Soft White
+	Color(0.72, 0.93, 0.78, 1.0), # Tier 2: Pastel Mint
+	Color(0.68, 0.87, 0.98, 1.0), # Tier 3: Pastel Sky Blue
+	Color(0.98, 0.90, 0.64, 1.0), # Tier 4: Pastel Buttercream
+	Color(0.98, 0.78, 0.64, 1.0), # Tier 5: Pastel Peach
+	Color(0.82, 0.75, 0.98, 1.0), # Tier 6: Pastel Lavender
+	Color(0.98, 0.74, 0.82, 1.0), # Tier 7: Pastel Rose
+	Color(0.64, 0.93, 0.90, 1.0), # Tier 8: Pastel Aqua
+	Color(0.98, 0.68, 0.66, 1.0), # Tier 9: Pastel Coral
+	Color(1.00, 0.89, 0.58, 1.0), # Tier 10: Pastel Champagne Gold
+]
+
+static func get_tier_color(tier: int) -> Color:
+	var idx := clampi(tier - 1, 0, TIER_COLORS.size() - 1)
+	return TIER_COLORS[idx]
+
 const FONT_INDER: Font = preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
 ## Creates a flat styled box with uniform corners and internal padding.
