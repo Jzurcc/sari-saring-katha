@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "school_dismissal"
 event_name = "School Dismissal Rush"
-description = "Classes let out early for a school program. Students flock down the road hunting for candies, chips, and frozen treats."
+description = "Early dismissal sends students flocking for snacks and sweets."
 rumor_text = "Heads up, boss! Karimlan Elementary let the kids out early today. A wave of students is heading down your street looking for candy, snacks, and cold treats."
 icon_path = "res://Assets/ui/icons/backpack.png"
 affected_categories = Array[String](["candy", "snack", "frozen"])

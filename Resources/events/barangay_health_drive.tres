@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "barangay_health_drive"
 event_name = "Barangay Clean-Up Drive"
-description = "Volunteers are tidying Karimlan! Community goodwill grants bonus Player XP on every customer and a small barangay wholesale discount."
+description = "Volunteers tidy Karimlan, lifting community spirit and goodwill."
 rumor_text = "Volunteers are out with walis tingting across Karimlan today, boss! Supporting the barangay clean-up earns you extra goodwill XP, plus a small discount from local suppliers."
 icon_path = "res://Assets/ui/icons/heart-pulse.png"
 affected_categories = Array[String](["bottle", "sachet"])

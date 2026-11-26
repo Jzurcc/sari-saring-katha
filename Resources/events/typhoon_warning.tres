@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "typhoon_warning"
 event_name = "Typhoon Warning"
-description = "A storm is heading this way. Neighbors buy bigger multi-item rations of canned goods, noodles, and coffee, while slick roads slow Uncle Mario."
+description = "A storm is coming—neighbors stock up on rations as roads slow."
 rumor_text = "Psst. Boss. Heavy clouds rolling in over the hills. Word from the terminal is Signal No. 1 tonight. Folks are grabbing multi-item bundles of canned goods, noodles, and coffee before the rain hits."
 icon_path = "res://Assets/ui/icons/cloud-rain.png"
 affected_categories = Array[String](["can", "sachet", "pack"])

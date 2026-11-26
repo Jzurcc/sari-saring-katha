@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "barangay_roadworks"
 event_name = "Highway Roadworks"
-description = "Detours slow Uncle Mario's deliveries and nudge wholesale prices up, but stranded commuters rely on your shop and grant bonus Player XP."
+description = "Highway detours slow deliveries, but stranded commuters stop by."
 rumor_text = "Traffic advisory, boss: DPWH tore up the main junction again. Uncle Mario's routes are slower and pricier today, but commuters stuck in town are relying on local shops—great for your reputation!"
 icon_path = "res://Assets/ui/icons/construction.png"
 affected_categories = Array[String](["can", "sachet", "bottle"])

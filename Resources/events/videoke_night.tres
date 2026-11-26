@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "videoke_night"
 event_name = "Street Videoke & Tambay"
-description = "Someone rolled out a videoke machine down the block. Neighbors linger longer by your bench, tip generously, and buy drinks, snacks, and smokes."
+description = "Street videoke keeps neighbors lingering, snacking, and tipping late."
 rumor_text = "Can you hear 'My Way' echoing down the alley, boss? Someone rented a videoke machine! Neighbors are gonna hang out longer, tip extra, and keep coming back for drinks, pulutan snacks, and smokes."
 icon_path = "res://Assets/ui/icons/mic-vocal.png"
 affected_categories = Array[String](["bottle", "cigarette", "snack"])

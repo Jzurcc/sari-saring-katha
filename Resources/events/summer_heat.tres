@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "summer_heat"
 event_name = "Intense Heatwave"
-description = "Blistering afternoon heat strains your Fridge, but trike drivers and kids are desperate for cold drinks, frozen treats, and candy."
+description = "Blistering heat drains your fridge as everyone craves cold treats."
 rumor_text = "Whew. Boss, it's brutal out there today. Even the stray dogs are hiding under the jeepneys. Anyone passing by is gonna want cold drinks, ice candy, and sweets to cool down."
 icon_path = "res://Assets/ui/icons/sun.png"
 affected_categories = Array[String](["bottle", "frozen", "candy"])

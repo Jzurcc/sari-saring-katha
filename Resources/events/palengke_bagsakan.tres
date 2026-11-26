@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "palengke_bagsakan"
 event_name = "Palengke Bagsakan"
-description = "Fresh delivery trucks just unloaded at the town market. Uncle Mario runs faster routes with steep wholesale discounts all day!"
+description = "Fresh market trucks roll in with steep wholesale deals."
 rumor_text = "Good news from the public market, boss! Wholesale trucks just dropped off a huge shipment at the bagsakan. Uncle Mario's cutting restock prices and running faster trips all day!"
 icon_path = "res://Assets/ui/icons/truck.png"
 affected_categories = Array[String]([])

@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "merienda_hour"
 event_name = "Merienda Craze"
-description = "Everyone's craving an afternoon merienda combo. Customers frequently bundle coffee sachets, snacks, and instant noodles together."
+description = "Everyone is craving afternoon merienda bundles today."
 rumor_text = "Smells like hot water and noodles all over the block, boss. Folks are in a merienda mood today—expect plenty of combo orders for coffee sachets, snacks, and pancit packs."
 icon_path = "res://Assets/ui/icons/coffee.png"
 affected_categories = Array[String](["sachet", "snack", "pack"])

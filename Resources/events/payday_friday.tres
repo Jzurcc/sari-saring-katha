@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "payday_friday"
 event_name = "Payday Rush"
-description = "Workers in town just received their payroll. Customers have fuller pockets, buy snacks and canned goods freely, and leave generous tips."
+description = "Payroll just hit—neighbors are spending freely and tipping well."
 rumor_text = "Uy, boss. Folks from town just got their payroll packets today. Pockets are full for once, so don't be shy about stocking up snacks and canned meat—they're tipping extra too!"
 icon_path = "res://Assets/ui/icons/banknote.png"
 affected_categories = Array[String](["snack", "can", "pack"])

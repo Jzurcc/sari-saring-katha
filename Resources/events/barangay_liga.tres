@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "barangay_liga"
 event_name = "Barangay Basketball Finals"
-description = "The championship game at the covered court is today. Thirsty players and loud spectators are pouring past your tindahan."
+description = "Championship day at the covered court brings thirsty fans."
 rumor_text = "Uy, boss. Covered court is packed today. Championship match of the barangay league. Whole neighborhood's gonna be parched and looking for cold drinks and snacks after the buzzer."
 icon_path = "res://Assets/ui/icons/trophy.png"
 affected_categories = Array[String](["snack", "bottle"])

@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "barangay_fiesta"
 event_name = "Barangay Fiesta"
-description = "Banderitas line the street! Extra neighbors crowd your counter at once, linger by your tambayan, and grab festive snacks and drinks."
+description = "Banderitas line the street as festive crowds pack your counter."
 rumor_text = "Mabuhay, Karimlan! Banderitas are up across the street—it's Barangay Fiesta today! Expect a lively crowd packing your counter and hanging out by your stoop all day."
 icon_path = "res://Assets/ui/icons/party-popper.png"
 affected_categories = Array[String](["snack", "bottle", "candy"])

@@ -6,7 +6,7 @@
 script = ExtResource("1_script")
 event_id = "mosquito_swarm"
 event_name = "Mosquito Swarm"
-description = "Thick dusk mosquitoes are buzzing all around the tindahan! Customers are irritable and less forgiving of markups for the rest of the day."
+description = "Buzzing dusk mosquitoes leave shoppers irritable at the counter."
 rumor_text = "Whew, boss—the lamok are biting hard out here! Folks are losing patience fast around the counter."
 icon_path = "res://Assets/ui/minigames/mosquito/mosquito.png"
 affected_categories = Array[String]([])
