@@ -553,30 +553,21 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	else:
 		chill_pill.hide()
 
-	# Rebuild right-side tolerance tooltips & compute effective step for color feedback
+	# Rebuild right-side tolerance tooltips & compute unified step color feedback
 	var total_tol := _rebuild_tolerance_tooltips(item_data)
-	var effective_step := step - total_tol
 
 	var diff: float = display_price - base_price
-	var accent: Color = COL_GOLD_SOFT
+	var accent: Color = UIStyle.get_price_step_color(step, total_tol)
 	if is_warm_now:
 		accent = COL_WARM
 		var sign_prefix := "+" if diff >= 0.0 else "-"
 		comparison_label.text = "%s₱%.2f (was ₱%.2f)" % [sign_prefix, absf(diff), final_price]
 	elif step < 0:
-		accent = COL_DISCOUNT
 		comparison_label.text = "-₱%.2f" % absf(diff)
 	elif step == 0:
-		accent = COL_GOLD_SOFT if effective_step <= 2 else (COL_RISKY if effective_step == 3 else COL_DANGER)
 		comparison_label.text = "+₱0"
 	else:
 		comparison_label.text = "+₱%.2f" % diff
-		if effective_step <= 2:
-			accent = COL_GOLD_SOFT
-		elif effective_step == 3:
-			accent = COL_RISKY
-		else:
-			accent = COL_DANGER
 
 	price_label.add_theme_color_override("font_color", COL_WARM if is_warm_now else COL_GOLD_SOFT)
 	var sale_bonus := StoryManager.get_item_sale_bonus(item_data, display_price, true) if is_instance_valid(StoryManager) else 0.0

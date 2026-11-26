@@ -562,21 +562,7 @@ func _style_warm_scrollbar(scroll: ScrollContainer) -> void:
 
 
 func _get_category_icon(cat_key: String) -> Texture2D:
-	match cat_key:
-		"recommended":
-			return IC_SPARKLES
-		"all":
-			return IC_LAYERS
-		"bottle", "sachets":
-			return IC_COFFEE
-		"candy":
-			return IC_GIFT
-		"frozen":
-			return IC_SNOWFLAKE
-		"cigarette":
-			return IC_FLAME
-		_:
-			return IC_PACKAGE
+	return UIStyle.get_category_icon(cat_key)
 
 
 func _build_category_popover() -> void:
@@ -1069,12 +1055,15 @@ func _refresh_regulars_popover_content() -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 
-		if c.sprite_texture:
+		var portrait_tex: Texture2D = UIStyle.get_customer_portrait(c.character_name)
+		if portrait_tex == null:
+			portrait_tex = c.sprite_texture
+		if portrait_tex:
 			var thumb := TextureRect.new()
-			thumb.custom_minimum_size = Vector2(34, 34)
+			thumb.custom_minimum_size = Vector2(36, 36)
 			thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			thumb.texture = c.sprite_texture
+			thumb.texture = portrait_tex
 			row.add_child(thumb)
 
 		var fav_names: PackedStringArray = []

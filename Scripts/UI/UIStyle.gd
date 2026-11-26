@@ -41,6 +41,69 @@ static func get_tier_color(tier: int) -> Color:
 	var idx := clampi(tier - 1, 0, TIER_COLORS.size() - 1)
 	return TIER_COLORS[idx]
 
+## Unified per-step color ramp for Price Lens & Price Ledger (-5 to +5, tolerance-aware).
+## Every discount step (-1..-5) has a distinct green progression, and +4 vs +5 are clearly distinct reds.
+static func get_price_step_color(step: int, eff_tol: int = 0) -> Color:
+	if step < 0:
+		match step:
+			-1: return Color(0.68, 0.90, 0.68, 1.0) # Soft Sage
+			-2: return Color(0.52, 0.88, 0.58, 1.0) # Fresh Mint
+			-3: return Color(0.36, 0.85, 0.52, 1.0) # Vivid Leaf
+			-4: return Color(0.22, 0.82, 0.56, 1.0) # Bright Emerald
+			_:  return Color(0.14, 0.88, 0.70, 1.0) # Radiant Jade (-5)
+	var eff_step: int = step - eff_tol
+	if step == 0 and eff_step <= 2:
+		return Color(1.0, 0.95, 0.86, 1.0) # Soft Cream (Base)
+	if eff_step <= 1:
+		return Color(0.98, 0.90, 0.62, 1.0) # Warm Cream-Gold (Very Safe)
+	if eff_step == 2:
+		return Color(0.96, 0.79, 0.38, 1.0) # Rich Antique Gold (Safe Max)
+	if eff_step == 3:
+		return Color(0.98, 0.60, 0.22, 1.0) # Warm Amber-Orange (Risky)
+	if eff_step == 4:
+		return Color(0.96, 0.38, 0.28, 1.0) # Coral Red-Orange (High Danger)
+	return Color(0.82, 0.14, 0.18, 1.0)     # Deep Crimson Red (Extreme Danger, +5+)
+
+const _CAT_ICONS: Dictionary = {
+	"recommended": preload("res://Assets/ui/icons/sparkles.png"),
+	"hot": preload("res://Assets/ui/icons/flame.png"),
+	"all": preload("res://Assets/ui/icons/layers-2.png"),
+	"bottle": preload("res://Assets/ui/icons/coffee.png"),
+	"sachet": preload("res://Assets/ui/icons/coffee.png"),
+	"sachets": preload("res://Assets/ui/icons/coffee.png"),
+	"can": preload("res://Assets/ui/icons/can.png"),
+	"candy": preload("res://Assets/ui/icons/gift.png"),
+	"frozen": preload("res://Assets/ui/icons/snowflake.png"),
+	"cigarette": preload("res://Assets/ui/icons/flame.png"),
+	"snack": preload("res://Assets/ui/icons/package.png"),
+	"pack": preload("res://Assets/ui/icons/package.png"),
+}
+const _CAT_ICON_DEFAULT: Texture2D = preload("res://Assets/ui/icons/package.png")
+
+## Unified category icon lookup shared across Restock Menu, Price Ledger, and other overlays.
+static func get_category_icon(cat_key: String) -> Texture2D:
+	return _CAT_ICONS.get(cat_key.to_lower(), _CAT_ICON_DEFAULT)
+
+const _CUSTOMER_PORTRAITS: Dictionary = {
+	"brahim": preload("res://Assets/characters/portraits/Brahim Face.png"),
+	"buboy": preload("res://Assets/characters/portraits/Buboy Face.png"),
+	"danilo": preload("res://Assets/characters/portraits/Danilo Face.png"),
+	"kuyakap": preload("res://Assets/characters/portraits/Kuya_Kap Face.png"),
+	"lolopilo": preload("res://Assets/characters/portraits/LoloPilo Face.png"),
+	"manangana": preload("res://Assets/characters/portraits/ManangAna Face.png"),
+	"reynamayari": preload("res://Assets/characters/portraits/ReynaMayari Face.png"),
+	"rodel": preload("res://Assets/characters/portraits/Rodel Face.png"),
+	"rosalyn": preload("res://Assets/characters/portraits/Rosalyn Face.png"),
+	"sarimanok": preload("res://Assets/characters/portraits/Sarimanok Face.png"),
+	"tk": preload("res://Assets/characters/portraits/TK Face.png"),
+	"unclemario": preload("res://Assets/characters/portraits/UncleMario Face.png"),
+}
+
+## Returns the cropped face portrait for a customer name, or null if not found.
+static func get_customer_portrait(customer_name: String) -> Texture2D:
+	var norm := customer_name.to_lower().replace(" ", "").replace(".", "").replace("_", "")
+	return _CUSTOMER_PORTRAITS.get(norm, null)
+
 const FONT_INDER: Font = preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
 ## Creates a flat styled box with uniform corners and internal padding.
