@@ -124,80 +124,52 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
-		# Regular neighbor tip on every cash sale, with lower price steps giving a chance for extra generosity!
+		# 1. Guaranteed Item Sale Bonuses (added directly to sale value, zero step/refusal impact)
 		var base_sale := _last_earning
+		var sale_bonus := StoryManager.get_item_sale_bonus(item, base_sale, false)
+		if not wants_debt and sale_bonus > 0.0:
+			_last_earning += sale_bonus
+			LogManager.info("GameManager", "Item Sale Bonus applied: +₱%.2f!" % sale_bonus)
+
+		# 2. Customer Tips (chance based on perceived effective step; boosted by Tip cards & Maneki-Neko; triggers tip dialogue!)
 		var tip: float = 0.0
 		if not wants_debt:
-			var base_tip := StoryManager.calc_scaled_tip(base_sale, 0.05, 1.0, 6.0)
-			tip += base_tip
-			_last_earning += base_tip
-			# Lower steps (<= 0) have a chance to spark a generous bonus tip
-			if item.current_step <= 0:
-				var bonus_chance := clampf(0.25 + float(abs(item.current_step)) * 0.14, 0.25, 0.90)
-				if randf() < bonus_chance:
-					var extra_tip: float = snappedf(float(abs(item.current_step)) * 1.25 + randf_range(1.0, 2.0), 1.0)
-					tip += extra_tip
-					_last_earning += extra_tip
-					LogManager.info("GameManager", "Low-step generosity sparked an extra tip of +₱%.2f!" % extra_tip)
-			var maneki_pct := StoryManager.get_maneki_tip_bonus_pct()
-			if maneki_pct > 0.0:
-				var maneki_tip := StoryManager.calc_scaled_tip(base_sale, maneki_pct, 2.0, 22.0)
-				tip += maneki_tip
-				_last_earning += maneki_tip
-		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
-			var ml_tip := StoryManager.calc_scaled_tip(base_sale, 0.12, 3.0, 18.0)
-			tip += ml_tip
-			_last_earning += ml_tip
-		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
-			var fm_tip := StoryManager.calc_scaled_tip(base_sale, 0.10, 2.0, 14.0)
-			tip += fm_tip
-			_last_earning += fm_tip
-		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
-			if (item.category == "bottle" or item.category == "frozen") and not StoryManager.is_fridge_warm:
-				var cold_tip := StoryManager.calc_scaled_tip(base_sale, 0.12, 2.0, 15.0)
-				tip += cold_tip
-				_last_earning += cold_tip
-		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD) and item.current_step <= 1:
-			var fair_tip := StoryManager.calc_scaled_tip(base_sale, 0.15, 3.0, 16.0)
-			tip += fair_tip
-			_last_earning += fair_tip
-		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
-			var ev_cnt := StoreEventManager.get_all_active_events().size()
-			if ev_cnt > 0:
-				var ev_tip := StoryManager.calc_scaled_tip(base_sale, 0.10 * float(ev_cnt), 2.0 * float(ev_cnt), 18.0 * float(ev_cnt))
-				tip += ev_tip
-				_last_earning += ev_tip
-		if not wants_debt and is_instance_valid(StoreEventManager):
-			var ev_tip_pct := StoreEventManager.get_cash_tip_bonus_pct()
-			if ev_tip_pct > 0.0:
-				var event_bonus_tip := StoryManager.calc_scaled_tip(base_sale, ev_tip_pct, 2.0, 20.0)
-				tip += event_bonus_tip
-				_last_earning += event_bonus_tip
+			var tip_tol := 0
+			if is_instance_valid(StoreEventManager):
+				tip_tol += StoreEventManager.get_item_tolerance_offset(item)
+			tip_tol += StoryManager.get_mayari_tolerance_offset()
+			var tip_cdata: CustomerData = StoryManager._get_character_data(customer_path) if customer_path != "" else null
+			if tip_cdata and is_instance_valid(CharacterProgressionManager):
+				tip_tol += CharacterProgressionManager.get_reputation_tolerance_bonus(tip_cdata, item)
+			var tip_eff_step: int = item.current_step - tip_tol
+			var base_tip_chance: float = 0.0
+			if tip_eff_step <= -3:
+				base_tip_chance = 0.85
+			elif tip_eff_step == -2:
+				base_tip_chance = 0.70
+			elif tip_eff_step == -1:
+				base_tip_chance = 0.55
+			elif tip_eff_step == 0:
+				base_tip_chance = 0.35
+			elif tip_eff_step == 1:
+				base_tip_chance = 0.20
+			elif tip_eff_step == 2:
+				base_tip_chance = 0.10
+			base_tip_chance = clampf(base_tip_chance + StoryManager.get_storefront_tip_chance(), 0.0, 0.95)
 
-		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
-		if not wants_debt and feat_boosts > 0:
-			var promo_bonus := 3.0 * float(feat_boosts)
-			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW):
-				promo_bonus += StoryManager.calc_scaled_tip(base_sale, 0.15, 3.0, 20.0)
-			tip += promo_bonus
-			_last_earning += promo_bonus
-			LogManager.info("GameManager", "Storefront Featured Category (%s x%d) granted +₱%.2f promo bonus!" % [item.category, feat_boosts, promo_bonus])
-
-		var sf_tip_chance := StoryManager.get_storefront_tip_chance()
-		if not wants_debt and sf_tip_chance > 0.0 and randf() < sf_tip_chance:
-			var app_tip := float(randi_range(3, 6))
-			tip += app_tip
-			_last_earning += app_tip
-			Dialogic.VAR.set_variable("Global_TipActive", true)
-			LogManager.info("GameManager", "Storefront Curb Appeal Appreciation Tip: +₱%.2f!" % app_tip)
-
-		# Reputation Rank 5+ Perk: +10% Scaling Cash Tip Bonus
-		if not wants_debt and customer_path != "" and is_instance_valid(CharacterProgressionManager):
-			var rep_tip_pct := CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
-			if rep_tip_pct > 0.0:
-				var rep_tip := StoryManager.calc_scaled_tip(base_sale, rep_tip_pct, 2.0, 18.0)
-				tip += rep_tip
-				_last_earning += rep_tip
+			if randf() < base_tip_chance:
+				var tip_pct := 0.08 + maxf(0.0, float(-tip_eff_step)) * 0.03
+				tip_pct += StoryManager.get_maneki_tip_bonus_pct()
+				if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
+					tip_pct += 0.12
+				if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
+					tip_pct += 0.10
+				if customer_path != "" and is_instance_valid(CharacterProgressionManager):
+					tip_pct += CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
+				tip = StoryManager.calc_scaled_tip(base_sale, tip_pct, 2.0, 28.0)
+				_last_earning += tip
+				Dialogic.VAR.set_variable("Global_TipActive", true)
+				LogManager.info("GameManager", "Customer tipped +₱%.2f (eff_step=%d, chance=%.0f%%)!" % [tip, tip_eff_step, base_tip_chance * 100.0])
 
 		# Reputation Gain/Loss from Sale (based on effective pricing step, coldness, and favorite category)
 		if customer_path != "" and is_instance_valid(CharacterProgressionManager):
@@ -593,4 +565,3 @@ func reset_state() -> void:
 	_is_ending_day = false
 	StoryManager.reset_to_morning()
 	LogManager.info("GameManager", "State reset to defaults for New Game.")
-

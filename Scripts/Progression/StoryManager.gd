@@ -187,6 +187,33 @@ func calc_scaled_tip(sale_price: float, pct: float, min_tip: float, max_tip: flo
 		return 0.0
 	return clampf(snapped(sale_price * pct, 0.5), min_tip, max_tip)
 
+
+## Guaranteed extra cash value added to an item's sale without raising its price step or refusal risk.
+## Shared by GameManager (payout) and PricingOverlay (live "+₱X Bonus" preview).
+func get_item_sale_bonus(item: ItemData, base_sale: float, revealed_events_only: bool = false) -> float:
+	if item == null or base_sale <= 0.0:
+		return 0.0
+	var bonus := 0.0
+	if has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
+		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
+			bonus += calc_scaled_tip(base_sale, 0.12, 2.0, 15.0)
+	if has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD) and item.current_step <= 1:
+		bonus += calc_scaled_tip(base_sale, 0.15, 3.0, 16.0)
+	if has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
+		var ev_cnt := StoreEventManager.get_active_events().size() if revealed_events_only else StoreEventManager.get_all_active_events().size()
+		if ev_cnt > 0:
+			bonus += calc_scaled_tip(base_sale, 0.10 * float(ev_cnt), 2.0 * float(ev_cnt), 18.0 * float(ev_cnt))
+	if is_instance_valid(StoreEventManager):
+		var ev_pct := StoreEventManager.get_cash_tip_bonus_pct()
+		if ev_pct > 0.0:
+			bonus += calc_scaled_tip(base_sale, ev_pct, 2.0, 20.0)
+	var feat_boosts := get_featured_category_boost_count(item.category)
+	if feat_boosts > 0:
+		bonus += 3.0 * float(feat_boosts)
+		if has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW):
+			bonus += calc_scaled_tip(base_sale, 0.15, 3.0, 20.0)
+	return bonus
+
 func get_mayari_card_stack_count(card_id: String) -> int:
 	if card_id.is_empty():
 		return 0

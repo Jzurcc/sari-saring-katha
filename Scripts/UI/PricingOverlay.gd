@@ -446,30 +446,30 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
 			_add_effect_tooltip("Restless Crowd", [
 				{"label": "Price Tolerance:", "value": "-1", "tone": "neg"},
-				{"label": "Tip (Step ≤ +1):", "value": "+15%", "tone": "pos"},
+				{"label": "Sale Bonus (≤ +1):", "value": "+15%", "tone": "pos"},
 			])
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND) and (item_data.category == "bottle" or item_data.category == "frozen"):
 			var dw_stats: Array[Dictionary] = []
 			if not StoryManager.is_fridge_warm:
-				dw_stats.append({"label": "Cold Sale Tip:", "value": "+12%", "tone": "pos"})
+				dw_stats.append({"label": "Cold Sale Bonus:", "value": "+12%", "tone": "pos"})
 			dw_stats.append({"label": "Fridge Drain:", "value": "+40%", "tone": "neg"})
 			_add_effect_tooltip("Disembodied Wind", dw_stats)
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
-			_add_effect_tooltip("Moonlight Tips", [{"label": "Cash Sale Tip:", "value": "+12%", "tone": "pos"}])
+			_add_effect_tooltip("Moonlight Tips", [{"label": "Tip Bonus:", "value": "+12%", "tone": "pos"}])
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
-			_add_effect_tooltip("Fading Memory", [{"label": "Cash Sale Tip:", "value": "+10%", "tone": "pos"}])
+			_add_effect_tooltip("Fading Memory", [{"label": "Tip Bonus:", "value": "+10%", "tone": "pos"}])
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
 			var ev_cnt := StoreEventManager.get_active_events().size()
 			if ev_cnt > 0:
-				_add_effect_tooltip("Static Airwaves", [{"label": "Event Sale Tip:", "value": "+%d%%" % (ev_cnt * 10), "tone": "pos"}])
+				_add_effect_tooltip("Static Airwaves", [{"label": "Sale Bonus:", "value": "+%d%%" % (ev_cnt * 10), "tone": "pos"}])
 				count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW) and StoryManager.get_featured_category_boost_count(item_data.category) > 0:
-			_add_effect_tooltip("Curbside Glow", [{"label": "Featured Tip:", "value": "+15%", "tone": "pos"}])
+			_add_effect_tooltip("Curbside Glow", [{"label": "Sale Bonus:", "value": "+15%", "tone": "pos"}])
 			count += 1
 
 	# 3. Active waiting counter customers who are currently requesting items (have an active item preview)
@@ -579,6 +579,9 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 			accent = COL_DANGER
 
 	price_label.add_theme_color_override("font_color", COL_WARM if is_warm_now else COL_GOLD_SOFT)
+	var sale_bonus := StoryManager.get_item_sale_bonus(item_data, display_price, true) if is_instance_valid(StoryManager) else 0.0
+	if sale_bonus > 0.0:
+		comparison_label.text += "  (+₱%.0f Bonus)" % sale_bonus
 	comparison_label.add_theme_color_override("font_color", accent)
 
 	_gauge.step = step
