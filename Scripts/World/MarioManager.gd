@@ -454,6 +454,13 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 		flush_pending_delivery()
 		return
 	
+	# Wait for any active customer dialogue (e.g. Satisfy/Greeting) to finish so Mario never cuts it off mid-sentence
+	while Dialogic.current_timeline != null:
+		await get_tree().process_frame
+		if session_id != _delivery_session_id or not _is_in_main_game() or not is_instance_valid(_delivery_sprite):
+			flush_pending_delivery()
+			return
+
 	# 3. Delivery Dialogue (supports queued multi-upgrade dialogues bridged with "Also...")
 	_current_anchor = _delivery_sprite
 	
