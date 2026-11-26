@@ -280,7 +280,7 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	LogManager.debug("MarioManager", "Playing dial sound...")
 	_play_sfx(sfx_dial)
 	
-	var delay := randf_range(2.0, 4.0)
+	var delay := randf_range(0.15, 1.5)
 	await get_tree().create_timer(delay).timeout
 	_sfx_player.stop()
 	
