@@ -185,8 +185,8 @@ func close_tree() -> void:
 		var items_copy := _pending_delivery_items.duplicate()
 		_pending_delivery_items.clear()
 		_pending_levels.clear()
-		if is_instance_valid(MarioManager) and not MarioManager.is_restocking_active:
-			MarioManager.start_delivery(items_copy)
+		if is_instance_valid(MarioManager):
+			MarioManager.append_or_start_delivery(items_copy)
 	else:
 		_pending_levels.clear()
 
@@ -403,7 +403,6 @@ func _show_tooltip_for(node_id: String) -> void:
 	_tip_desc.text = desc
 	_tip_desc.visible = desc != ""
 
-	var mario_busy := is_instance_valid(MarioManager) and MarioManager.is_restocking_active
 	var kind := str(def["kind"])
 	var sf_lvl := int(def.get("storefront_level", 0))
 	var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl
@@ -420,9 +419,6 @@ func _show_tooltip_for(node_id: String) -> void:
 	elif state == "maxed":
 		_tip_status.text = "Owned"
 		_tip_status.add_theme_color_override("font_color", COL_STAT_POS)
-	elif mario_busy:
-		_tip_status.text = "Mario is delivering..."
-		_tip_status.add_theme_color_override("font_color", Color(0.84, 0.78, 0.68))
 	elif bool(ev["can_buy"]):
 		_tip_status.text = "Click to Unlock"
 		_tip_status.add_theme_color_override("font_color", COL_STAT_POS)
@@ -488,11 +484,6 @@ func _on_node_pressed(node_id: String) -> void:
 		var ov := StorefrontCanvasOverlay.new()
 		get_tree().root.add_child(ov)
 		ov.open_editor(slot)
-		return
-
-	if is_instance_valid(MarioManager) and MarioManager.is_restocking_active:
-		AudioManager.play_sfx("error")
-		_shake_node(node_id)
 		return
 
 	var money := _get_money()

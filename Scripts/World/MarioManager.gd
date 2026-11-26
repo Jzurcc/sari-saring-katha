@@ -374,6 +374,23 @@ func trigger_sample_delivery(tier: int) -> void:
 
 # ── DELIVERY LOGIC ───────────────────────────────────────────────────
 
+## Merges extra items/upgrades into an in-transit tricycle delivery if Mario hasn't unloaded yet;
+## otherwise applies them immediately (if Mario is already departing) or starts a new delivery.
+func append_or_start_delivery(extra_items: Dictionary) -> void:
+	if extra_items.is_empty():
+		return
+	if is_restocking_active:
+		if not _pending_delivery_items.is_empty():
+			for item in extra_items.keys():
+				_pending_delivery_items[item] = int(_pending_delivery_items.get(item, 0)) + int(extra_items[item])
+			LogManager.info("MarioManager", "Merged %d upgrade/item entries into Uncle Mario's in-transit tricycle." % extra_items.size())
+		else:
+			LogManager.info("MarioManager", "Mario already unloaded; applying %d upgrade/item entries immediately." % extra_items.size())
+			_apply_delivery_items(extra_items, true)
+		return
+	start_delivery(extra_items)
+
+
 func start_delivery(items_to_restock: Dictionary) -> void:
 	LogManager.info("MarioManager", "Starting delivery sequence...")
 	is_restocking_active = true
@@ -442,7 +459,7 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 	
 	EventBus.customer_arrived.emit(null)
 
-	var dialogue_queue := _build_delivery_dialogue_queue(items_to_restock)
+	var dialogue_queue := _build_delivery_dialogue_queue(_pending_delivery_items)
 	var first_label: String = dialogue_queue.pop_front()
 	_delivery_dialogue_queue = dialogue_queue
 	_delivery_said_also = false
@@ -711,7 +728,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 		StoryManager.purchase_storefront_upgrade(highest_storefront_lvl)
 		if spawn_in_tree:
 			if highest_storefront_lvl == 1:
-				EventBus.show_notification.emit("Roof Signage Unlocked!", "Paint it via Upgrade or Pause Menu!", "purchase")
+				EventBus.show_notification.emit("Roof Signage Unlocked!", "Paint it anytime from the Store Upgrades menu!", "purchase")
 			elif highest_storefront_lvl == 2:
 				EventBus.show_notification.emit("Promo Poster Mounted!", "Add 3+ matching stickers to boost demand!", "purchase")
 			else:
