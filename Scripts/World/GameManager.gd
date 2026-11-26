@@ -135,7 +135,7 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			if item.current_step <= 0:
 				var bonus_chance := clampf(0.25 + float(abs(item.current_step)) * 0.14, 0.25, 0.90)
 				if randf() < bonus_chance:
-					var extra_tip := snapped(float(abs(item.current_step)) * 1.25 + randf_range(1.0, 2.0), 1.0)
+					var extra_tip: float = snappedf(float(abs(item.current_step)) * 1.25 + randf_range(1.0, 2.0), 1.0)
 					tip += extra_tip
 					_last_earning += extra_tip
 					LogManager.info("GameManager", "Low-step generosity sparked an extra tip of +₱%.2f!" % extra_tip)
