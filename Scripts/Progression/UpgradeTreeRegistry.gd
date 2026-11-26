@@ -45,15 +45,15 @@ const NODES: Array[Dictionary] = [
 	{"id": "sto_nino_3", "title": "Sto. Niño Altar III", "pos": Vector2(5.9, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["sto_nino_2"], "kind": "sto_nino"},
 
 	# ── BRANCH 7 (Tier 6): Maneki-Neko I → II (x = 6.95) ──
-	{"id": "maneki_1", "title": "Maneki-Neko I", "pos": Vector2(6.95, 1.0), "max_level": 1, "target_level": 1, "req_tier": 6, "prereqs": ["store_tier"], "kind": "maneki"},
-	{"id": "maneki_2", "title": "Golden Maneki-Neko", "pos": Vector2(6.95, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
+	{"id": "maneki_1", "title": "Maneki-Neko", "pos": Vector2(6.95, 1.0), "max_level": 1, "target_level": 1, "req_tier": 6, "prereqs": ["store_tier"], "kind": "maneki"},
+	{"id": "maneki_2", "title": "Fresh Batteries", "pos": Vector2(6.95, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
 
 	# ── BRANCH 8 (Tier 2): Storefront Signage → Poster (x = 8.0) ──
 	{"id": "signage", "title": "Roof Signage", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "storefront_step", "storefront_level": 1},
 	{"id": "poster", "title": "Promo Poster", "pos": Vector2(8.0, 2.2), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
 
-	# ── CAPSTONE: Open the Door (Top-Center, requires final upgrades of Permit, Fridge, Bench, Radio, Sto. Niño) ──
-	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.0, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_3", "fridge_3", "bench_3", "radio_3", "sto_nino_3"], "kind": "storefront_step", "storefront_level": 3},
+	# ── CAPSTONE: Open the Door (Top-Center, requires final upgrades of Permit, Fridge, Wholesale Pass, Bench, Radio, Trash Can, Sto. Niño, Maneki-Neko, Promo Poster) ──
+	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.0, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_3", "fridge_3", "wholesale_pass", "bench_3", "radio_3", "trash_can", "sto_nino_3", "maneki_2", "poster"], "kind": "storefront_step", "storefront_level": 3},
 ]
 
 

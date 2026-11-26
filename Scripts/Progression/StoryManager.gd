@@ -447,7 +447,7 @@ func purchase_fridge_upgrade(level: int) -> void:
 # --- Store Cats (Counter Slots 1 -> 2 -> 3) ---
 const CAT_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Store Cat", "cost": 0.0, "slots": 1, "desc": "One neighbor at the counter at a time."},
-	{"level": 1, "req_level": 2, "name": "Lucky Cat: Mingming", "cost": 75.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once."},
+	{"level": 1, "req_level": 2, "name": "Mingming", "cost": 75.0, "slots": 2, "desc": "Adopt Mingming the sleepy orange tabby! Unlocks a 2nd counter slot so 2 neighbors can visit at once."},
 	{"level": 2, "req_level": 6, "name": "Cat Food", "cost": 150.0, "slots": 3, "desc": "Keep Mingming happy and well-fed! Neighbors flock to see your pampered store cat — unlocks all 3 counter slots."},
 ]
 var cat_upgrade_level: int = 0
@@ -531,7 +531,7 @@ func purchase_trash_can_upgrade() -> void:
 const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.0, "desc": "Standard neighbor tips on cash sales."},
 	{"level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 80.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.10, "desc": "A beckoning porcelain cat on your counter! Brings good fortune with +10% bonus tips on every cash sale."},
-	{"level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 165.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.22, "desc": "A gleaming golden beckoning cat! Attracts abundant wealth with +22% bonus tips on every cash sale."},
+	{"level": 2, "req_level": 8, "name": "Fresh Batteries (Maneki-Neko)", "cost": 165.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.22, "desc": "Fresh batteries keep the paw waving briskly all day! Attracts abundant wealth with +22% bonus tips on every cash sale."},
 ]
 var maneki_upgrade_level: int = 0
 var _maneki_upgrade_item_cache: Dictionary = {}
