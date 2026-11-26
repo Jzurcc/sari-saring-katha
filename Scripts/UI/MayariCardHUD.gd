@@ -80,21 +80,21 @@ class MiniDiamondIcon extends Control:
 
 var _root: Control
 var _row: HBoxContainer
+var _toast_layer: CanvasLayer = null
+var _toast_root: Control = null
 var _all_diamonds: Array[MiniDiamondIcon] = []
 var _blessing_diamonds: Array[MiniDiamondIcon] = []
 var _last_blessing_progress: float = -1.0
 var _anim_time: float = 0.0
-var _bold_font: FontVariation
 var _morning_banner: VBoxContainer = null
 var _morning_tween: Tween = null
 
 func _ready() -> void:
 	layer = 40
-	_bold_font = FontVariation.new()
-	_bold_font.base_font = UIStyle.FONT_FREDOKA_SEMIBOLD
 	_build_ui()
 	EventBus.mayari_card_changed.connect(func(_id): _refresh_icons())
-	EventBus.morning_mayari_cards_announced.connect(_show_morning_card_banner)
+	EventBus.morning_mayari_cards_announced.connect(_on_morning_cards_announced)
+	EventBus.radio_card_announced.connect(_on_radio_card_announced)
 	EventBus.sto_nino_blessing_changed.connect(_refresh_icons)
 	EventBus.restock_catalog_refresh.connect(_refresh_icons)
 	EventBus.day_started.connect(func(_d): _refresh_icons())
@@ -138,6 +138,15 @@ func _build_ui() -> void:
 	_row.add_theme_constant_override("separation", 10)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_row)
+
+	# Dedicated layer-100 host for 1:1 top-center card toasts routed through TopBannerQueue
+	_toast_layer = CanvasLayer.new()
+	_toast_layer.layer = 100
+	add_child(_toast_layer)
+	_toast_root = Control.new()
+	_toast_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_toast_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_toast_layer.add_child(_toast_root)
 
 func _event_sigil(event_id: String) -> String:
 	match event_id:
@@ -248,13 +257,113 @@ func _refresh_icons() -> void:
 	tw.tween_property(_row, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE)
 
 
-func _show_morning_card_banner(card_ids: Array) -> void:
-	if not is_instance_valid(_root) or card_ids.is_empty():
+func _on_morning_cards_announced(card_ids: Array) -> void:
+	if card_ids.is_empty():
+		return
+	var copy := card_ids.duplicate()
+	TopBannerQueue.enqueue(_play_morning_cards_toast.bind(copy))
+
+
+func _on_radio_card_announced(payload: Dictionary) -> void:
+	if payload.is_empty():
+		return
+	TopBannerQueue.enqueue(_play_radio_card_toast.bind(payload))
+
+
+func _play_morning_cards_toast(card_ids: Array) -> void:
+	var cards: Array[PanelContainer] = []
+	var last_accent := Color(1.0, 0.78, 0.16, 1.0)
+	var vp_size := get_viewport().get_visible_rect().size
+	var unified := TopBannerQueue.get_unified_card_size(vp_size)
+	for cid in card_ids:
+		var c_data := MayariCardRegistry.get_card(str(cid))
+		if c_data.is_empty():
+			continue
+		var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
+		var kind_str := "favor" if is_fav else "omen"
+		last_accent = HadesEmblem.palette(kind_str)["accent"]
+		cards.append(_build_unified_card_toast(
+			str(c_data.get("title", "Moon Card")),
+			str(c_data.get("sigil", "☽")),
+			str(c_data.get("description_rich", c_data.get("description", ""))),
+			c_data.get("stats", []),
+			kind_str,
+			str(c_data.get("icon", "")),
+			str(cid),
+			unified
+		))
+	if cards.is_empty():
+		TopBannerQueue.complete()
+		return
+	_present_card_toast_stack(cards, last_accent, 3.6)
+
+
+func _play_radio_card_toast(payload: Dictionary) -> void:
+	var vp_size := get_viewport().get_visible_rect().size
+	var unified := TopBannerQueue.get_unified_card_size(vp_size)
+	var ptype := str(payload.get("type", ""))
+	var cards: Array[PanelContainer] = []
+	var accent: Color = HadesEmblem.palette("event")["accent"]
+
+	if ptype == "event":
+		var ev: StoreEventData = payload.get("event", null)
+		if ev != null:
+			var desc_rich := ev.description
+			if ev.has_target_items():
+				var target_names := PackedStringArray()
+				for cat in ev.affected_categories:
+					target_names.append(_category_display(cat))
+				if target_names.is_empty():
+					for it in ev.affected_items:
+						if it:
+							target_names.append(it.item_name)
+				desc_rich = "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, _format_natural_list(target_names)]
+			cards.append(_build_unified_card_toast(
+				ev.event_name,
+				_event_sigil(ev.event_id),
+				desc_rich,
+				ev.build_stat_rows(),
+				"event",
+				ev.get_icon_path(),
+				ev.event_id,
+				unified
+			))
+	elif ptype == "visitor":
+		var vis: CustomerData = payload.get("visitor", null)
+		if vis != null:
+			var desc_rich := "Papa Ulap spotted [b]%s[/b] heading toward your store today." % vis.character_name
+			var stats: Array = [{"label": "Spawn Chance:", "value": "+120%", "tone": "pos"}]
+			cards.append(_build_unified_card_toast(
+				"Visitor: %s" % vis.character_name,
+				"!",
+				desc_rich,
+				stats,
+				"event",
+				"res://Assets/ui/icons/user-round-exclamation-point.png",
+				"visitor_" + vis.character_name,
+				unified
+			))
+
+	if cards.is_empty():
+		TopBannerQueue.complete()
+		return
+	_present_card_toast_stack(cards, accent, 3.6)
+
+
+func _present_card_toast_stack(cards: Array[PanelContainer], bar_accent: Color, hold_sec: float) -> void:
+	if not is_inside_tree() or not is_instance_valid(_toast_root):
+		for c in cards:
+			c.queue_free()
+		TopBannerQueue.complete()
 		return
 	if _morning_tween and _morning_tween.is_valid():
 		_morning_tween.kill()
 	if is_instance_valid(_morning_banner):
 		_morning_banner.queue_free()
+
+	var vp_size := get_viewport().get_visible_rect().size
+	var unified := TopBannerQueue.get_unified_card_size(vp_size)
+	var half_w := unified.x * 0.5
 
 	_morning_banner = VBoxContainer.new()
 	_morning_banner.add_theme_constant_override("separation", 10)
@@ -263,67 +372,89 @@ func _show_morning_card_banner(card_ids: Array) -> void:
 	_morning_banner.anchor_right = 0.5
 	_morning_banner.anchor_top = 0.0
 	_morning_banner.anchor_bottom = 0.0
-	_morning_banner.offset_left = -350.0
-	_morning_banner.offset_right = 350.0
-	_morning_banner.offset_top = -180.0
+	_morning_banner.offset_left = -half_w
+	_morning_banner.offset_right = half_w
+	_morning_banner.offset_top = -220.0
 	_morning_banner.modulate.a = 0.0
-	_root.add_child(_morning_banner)
+	_toast_root.add_child(_morning_banner)
 
-	var built_count := 0
-	for cid in card_ids:
-		var c_data := MayariCardRegistry.get_card(str(cid))
-		if c_data.is_empty():
-			continue
-		_morning_banner.add_child(_build_moon_card_toast(c_data, str(cid)))
-		built_count += 1
+	for c in cards:
+		_morning_banner.add_child(c)
 
-	if built_count == 0:
-		_morning_banner.queue_free()
-		_morning_banner = null
-		return
+	var timer_bar := TopBannerQueue.attach_timer_bar(cards[cards.size() - 1], bar_accent)
 
 	EventBus.request_sfx.emit("interact")
 	await get_tree().process_frame
 	if not is_instance_valid(_morning_banner):
+		TopBannerQueue.complete()
 		return
 
-	var banner_h := maxf(_morning_banner.get_combined_minimum_size().y, 130.0)
+	var banner_h := maxf(_morning_banner.get_combined_minimum_size().y, unified.y)
+	var target_y := TopBannerQueue.get_safe_top_y(vp_size.y)
 	_morning_banner.offset_top = -banner_h - 24.0
 	_morning_banner.offset_bottom = -24.0
 
+	var pending := TopBannerQueue.get_pending_count()
+	var eff_hold := 2.7 if pending >= 1 else hold_sec
+	TopBannerQueue.start_timer_bar(self, timer_bar, eff_hold)
+
 	_morning_tween = create_tween()
-	# Slide down cleanly into view at top-center
-	_morning_tween.tween_property(_morning_banner, "offset_top", 26.0, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_morning_tween.parallel().tween_property(_morning_banner, "offset_bottom", 26.0 + banner_h, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_morning_tween.parallel().tween_property(_morning_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
-	# Hold so the player reads the Favor/Omen card
-	_morning_tween.tween_interval(3.6)
-	# Animate smoothly back UP off the top edge
-	_morning_tween.tween_property(_morning_banner, "offset_top", -banner_h - 36.0, 0.44).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	_morning_tween.parallel().tween_property(_morning_banner, "offset_bottom", -36.0, 0.44).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	_morning_tween.parallel().tween_property(_morning_banner, "modulate:a", 0.0, 0.34).set_trans(Tween.TRANS_SINE)
+	_morning_tween.tween_property(_morning_banner, "offset_top", target_y, 0.40).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_morning_tween.parallel().tween_property(_morning_banner, "offset_bottom", target_y + banner_h, 0.40).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_morning_tween.parallel().tween_property(_morning_banner, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
+	_morning_tween.tween_interval(eff_hold)
+	_morning_tween.tween_property(_morning_banner, "offset_top", -banner_h - 36.0, 0.40).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_morning_tween.parallel().tween_property(_morning_banner, "offset_bottom", -36.0, 0.40).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_morning_tween.parallel().tween_property(_morning_banner, "modulate:a", 0.0, 0.30).set_trans(Tween.TRANS_SINE)
 	_morning_tween.tween_callback(func():
 		if is_instance_valid(_morning_banner):
 			_morning_banner.queue_free()
 			_morning_banner = null
+		TopBannerQueue.complete()
 	)
 
 
-func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelContainer:
-	var is_fav := str(c_data.get("kind", "")) == MayariCardRegistry.KIND_FAVOR
-	var pal: Dictionary = HadesEmblem.palette("favor" if is_fav else "omen")
+func _category_display(cat: String) -> String:
+	match cat.to_lower():
+		"bottle": return "Beverages"
+		"snack": return "Snacks"
+		"can": return "Canned Goods"
+		"cigarette": return "Cigarettes"
+		"candy": return "Candies"
+		"pack": return "Noodles"
+		"sachet": return "Sachets"
+		"frozen": return "Frozen"
+		_: return cat.capitalize()
+
+
+func _format_natural_list(names: PackedStringArray) -> String:
+	var count := names.size()
+	if count == 0:
+		return "Featured Stock"
+	if count == 1:
+		return names[0]
+	if count == 2:
+		return "%s and %s" % [names[0], names[1]]
+	var leading := PackedStringArray()
+	for i in range(count - 1):
+		leading.append(names[i])
+	return "%s, and %s" % [", ".join(leading), names[count - 1]]
+
+
+func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, icon_path: String, fx_id: String, unified_size: Vector2) -> PanelContainer:
+	var pal: Dictionary = HadesEmblem.palette(kind)
 	var accent: Color = pal["accent"]
 	var accent_bright: Color = pal["bright"]
 	var row_bg: Color = pal["bg"]
-	var tag: String = str(pal["tag"])
+	var tag: String = str(pal["tag"]).capitalize()
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(700, 128)
+	card.custom_minimum_size = unified_size
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := UIStyle.create_flat_stylebox(row_bg, 8, 16, 10)
 	style.content_margin_right = 20
-	style.border_color = Color(accent.r, accent.g, accent.b, 0.85)
+	style.border_color = Color(accent.r, accent.g, accent.b, 0.86)
 	style.border_width_left = 4
 	style.border_width_top = 1
 	style.border_width_right = 1
@@ -339,22 +470,15 @@ func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelCo
 	card.add_child(hbox)
 
 	var emblem := HadesEmblem.new()
-	emblem.custom_minimum_size = Vector2(84, 84)
+	emblem.custom_minimum_size = Vector2(88, 88)
 	emblem.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
-	emblem.set_fx_from_id(card_id if card_id != "" else str(c_data.get("id", c_data.get("title", ""))))
+	emblem.set_fx_from_id(fx_id if fx_id != "" else title)
 	emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hbox.add_child(emblem)
 
-	HadesEmblem.populate_emblem_glyph(
-		emblem,
-		str(c_data.get("icon", "")),
-		str(c_data.get("sigil", "☽")),
-		accent_bright,
-		34.0,
-		34
-	)
+	HadesEmblem.populate_emblem_glyph(emblem, icon_path, sigil, accent_bright, 36.0, 36)
 
 	var text_col := VBoxContainer.new()
 	text_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -368,10 +492,10 @@ func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelCo
 	text_col.add_child(top_line)
 
 	var title_lbl := Label.new()
-	title_lbl.text = str(c_data.get("title", "Moon Card"))
+	title_lbl.text = title
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_lbl.add_theme_font_override("font", _bold_font)
-	title_lbl.add_theme_font_size_override("font_size", 23)
+	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
@@ -379,7 +503,7 @@ func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelCo
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	tag_lbl.add_theme_font_override("font", _bold_font)
+	tag_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	tag_lbl.add_theme_font_size_override("font_size", 18)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -391,16 +515,14 @@ func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelCo
 	desc_rt.scroll_active = false
 	desc_rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_rt.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_INDER)
-	desc_rt.add_theme_font_override("bold_font", _bold_font)
-	desc_rt.add_theme_font_size_override("normal_font_size", 16)
-	desc_rt.add_theme_font_size_override("bold_font_size", 16)
+	desc_rt.add_theme_font_override("normal_font", UIStyle.FONT_FREDOKA_REG)
+	desc_rt.add_theme_font_override("bold_font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	desc_rt.add_theme_font_size_override("normal_font_size", 17)
+	desc_rt.add_theme_font_size_override("bold_font_size", 17)
 	desc_rt.add_theme_color_override("default_color", Color(0.92, 0.86, 0.74, 0.90))
-	var raw_desc := str(c_data.get("description_rich", c_data.get("description", "")))
-	desc_rt.text = raw_desc.replace("[b]", "[b][color=#FFF6E5]").replace("[/b]", "[/color][/b]")
+	desc_rt.text = desc_rich.replace("[b]", "[b][color=#FFF6E5]").replace("[/b]", "[/color][/b]")
 	text_col.add_child(desc_rt)
 
-	var stats: Array = c_data.get("stats", [])
 	if not stats.is_empty():
 		var stats_box := VBoxContainer.new()
 		stats_box.add_theme_constant_override("separation", 2)
@@ -415,17 +537,17 @@ func _build_moon_card_toast(c_data: Dictionary, card_id: String = "") -> PanelCo
 
 			var s_name := Label.new()
 			s_name.text = "▸ " + str(stat_dict.get("label", ""))
-			s_name.custom_minimum_size = Vector2(280, 0)
-			s_name.add_theme_font_override("font", UIStyle.FONT_INDER)
-			s_name.add_theme_font_size_override("font_size", 15)
+			s_name.custom_minimum_size = Vector2(345, 0)
+			s_name.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+			s_name.add_theme_font_size_override("font_size", 16)
 			s_name.add_theme_color_override("font_color", Color(1.0, 0.92, 0.79, 1.0))
 			s_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			s_row.add_child(s_name)
 
 			var s_val := Label.new()
 			s_val.text = str(stat_dict.get("value", ""))
-			s_val.add_theme_font_override("font", _bold_font)
-			s_val.add_theme_font_size_override("font_size", 16)
+			s_val.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+			s_val.add_theme_font_size_override("font_size", 17)
 			var tone := str(stat_dict.get("tone", "pos"))
 			var val_col := Color(0.56, 0.92, 0.52, 1.0) if tone == "pos" else (Color(0.96, 0.48, 0.45, 1.0) if tone == "neg" else Color(1.0, 0.875, 0.56, 1.0))
 			s_val.add_theme_color_override("font_color", val_col)

@@ -11,6 +11,18 @@ var accent_bright: Color = Color(1.0, 0.90, 0.48, 1.0)
 var fill_color: Color = Color(0.0, 0.0, 0.0, 0.0)
 ## Set false to render a clean standalone diamond without the left corner ribbon triangle.
 var show_triangle: bool = true
+## Optional signature ambient effect from DiamondFXLibrary (empty = disabled).
+var fx_kind: String = ""
+var fx_phase: float = 0.0
+var _anim_time: float = 0.0
+
+static func fx_kind_for_id(id_str: String) -> String:
+	return DiamondFXLibrary.fx_kind_for_id(id_str)
+
+func set_fx_from_id(canonical_id: String) -> void:
+	fx_kind = DiamondFXLibrary.fx_kind_for_id(canonical_id)
+	fx_phase = DiamondFXLibrary.fx_phase_for_id(canonical_id)
+	set_process(fx_kind != "")
 
 static var _tri_shader: Shader = null
 static var _icon_cache: Dictionary = {}
@@ -111,6 +123,7 @@ void fragment() {
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_process(fx_kind != "")
 	if show_triangle:
 		_tri_rect = ColorRect.new()
 		_tri_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -123,6 +136,12 @@ func _ready() -> void:
 		move_child(_tri_rect, 0)
 		_sync_triangle_rect()
 		resized.connect(_sync_triangle_rect)
+
+func _process(delta: float) -> void:
+	if fx_kind == "" or not is_visible_in_tree():
+		return
+	_anim_time += delta
+	queue_redraw()
 
 func _sync_triangle_rect() -> void:
 	if not is_instance_valid(_tri_rect):
@@ -138,6 +157,10 @@ func _draw() -> void:
 	var h := size.y
 	var c := Vector2(minf(size.x, h) * 0.5, h * 0.5)
 	var r := minf(size.x, h) * 0.49
+	var t := _anim_time + fx_phase
+
+	if fx_kind != "":
+		DiamondFXLibrary.draw_pre_fx(self, fx_kind, c, r, accent, accent_bright, t)
 
 	var outer := _diamond_pts(c, r)
 	draw_colored_polygon(outer, Color(0.04, 0.035, 0.03, 0.98))
@@ -148,10 +171,17 @@ func _draw() -> void:
 		inner_fill = Color(accent.r * 0.26, accent.g * 0.26, accent.b * 0.26, 0.98)
 	var inner := _diamond_pts(c, r * 0.84)
 	draw_colored_polygon(inner, inner_fill)
+
+	if fx_kind != "":
+		DiamondFXLibrary.draw_inner_fx(self, fx_kind, c, r, accent, accent_bright, t)
+
 	draw_polyline(_closed_pts(inner), Color(accent.r, accent.g, accent.b, 0.88), 1.6, true)
 
 	for pt in outer:
 		draw_colored_polygon(_diamond_pts(pt, 3.6), accent_bright)
+
+	if fx_kind != "":
+		DiamondFXLibrary.draw_post_fx(self, fx_kind, c, r, outer, accent, accent_bright, t)
 
 func _diamond_pts(center: Vector2, radius: float) -> PackedVector2Array:
 	return PackedVector2Array([

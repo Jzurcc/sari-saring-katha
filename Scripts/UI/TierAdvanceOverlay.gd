@@ -20,22 +20,19 @@ const COL_OUTLINE := Color(0.06, 0.045, 0.03, 0.95)
 var sfx_player: AudioStreamPlayer
 var stream_notification = preload("res://Audio/SFX/ui_sfx_7.mp3")
 
-var _bold_font: FontVariation
 var _banner: PanelContainer
 var _title_lbl: Label
 var _subtitle_lbl: Label
 var _items_row: HBoxContainer
+var _timer_bar: TopBannerQueue.BannerTimerBar
 var _anim_tween: Tween = null
+var _timer_tween: Tween = null
 var _bob_tweens: Array[Tween] = []
 var _session_id: int = 0
 
 
 func _ready() -> void:
 	layer = 100
-	_bold_font = FontVariation.new()
-	_bold_font.base_font = UIStyle.FONT_INDER
-	_bold_font.variation_embolden = 0.65
-
 	for child in control.get_children():
 		if child is CanvasItem:
 			(child as CanvasItem).visible = false
@@ -46,6 +43,7 @@ func _ready() -> void:
 
 	EventBus.upgrade_available.connect(_on_upgrade_available)
 	sfx_player = AudioStreamPlayer.new()
+	sfx_player.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
 	add_child(sfx_player)
 	sfx_player.stream = stream_notification
 
@@ -53,8 +51,8 @@ func _ready() -> void:
 func _build_banner() -> void:
 	_banner = PanelContainer.new()
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_banner.custom_minimum_size = Vector2(420, 0)
-	var style := TopBannerQueue.create_banner_style(COL_GOLD, 26, 18)
+	_banner.custom_minimum_size = Vector2(460, 0)
+	var style := TopBannerQueue.create_banner_style(COL_GOLD, 28, 18)
 	_banner.add_theme_stylebox_override("panel", style)
 	control.add_child(_banner)
 
@@ -64,35 +62,34 @@ func _build_banner() -> void:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_banner.add_child(col)
 
-	# Clean centered "You Leveled Up!" header (level-up cash bonus is shown passively in the money delta)
 	_title_lbl = Label.new()
-	_title_lbl.text = "You Leveled Up!"
+	_title_lbl.text = "✦ You Leveled Up! ✦"
 	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_lbl.add_theme_font_override("font", _bold_font)
+	_title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	_title_lbl.add_theme_font_size_override("font_size", 32)
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_title_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
-	_title_lbl.add_theme_constant_override("outline_size", 5)
+	_title_lbl.add_theme_constant_override("outline_size", 4)
 	_title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_title_lbl)
 
 	_subtitle_lbl = Label.new()
 	_subtitle_lbl.text = "You unlocked the following product upgrades:"
 	_subtitle_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_subtitle_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_subtitle_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
 	_subtitle_lbl.add_theme_font_size_override("font_size", 18)
 	_subtitle_lbl.add_theme_color_override("font_color", COL_CREAM)
-	_subtitle_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
-	_subtitle_lbl.add_theme_constant_override("outline_size", 3)
 	_subtitle_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_subtitle_lbl)
 
 	# Centered row of gently swaying unlocked item previews
 	_items_row = HBoxContainer.new()
 	_items_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_items_row.add_theme_constant_override("separation", 14)
+	_items_row.add_theme_constant_override("separation", 16)
 	_items_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_items_row)
+
+	_timer_bar = TopBannerQueue.attach_timer_bar(_banner, COL_GOLD_BRIGHT)
 
 
 func _kill_bob_tweens() -> void:
@@ -115,7 +112,7 @@ func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData])
 	var my_session := _session_id
 	_kill_bob_tweens()
 
-	_title_lbl.text = "You Leveled Up!"
+	_title_lbl.text = "✦ You Leveled Up! ✦"
 
 	for child in _items_row.get_children():
 		_items_row.remove_child(child)
@@ -158,8 +155,8 @@ func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData])
 		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		nm.max_lines_visible = 2
 		nm.custom_minimum_size = Vector2(104, 0)
-		nm.add_theme_font_override("font", UIStyle.FONT_INDER)
-		nm.add_theme_font_size_override("font_size", 13)
+		nm.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+		nm.add_theme_font_size_override("font_size", 15)
 		nm.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		holder.add_child(nm)
@@ -188,24 +185,29 @@ func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData])
 		return
 	_banner.reset_size()
 
-	var vp_width := get_viewport().get_visible_rect().size.x
+	var vp_size := get_viewport().get_visible_rect().size
+	var vp_width := vp_size.x
+	var target_y := TopBannerQueue.get_safe_top_y(vp_size.y)
 	_banner.position = Vector2((vp_width - _banner.size.x) * 0.5, -_banner.size.y - 16.0)
 	_banner.pivot_offset = _banner.size * 0.5
-	_banner.scale = Vector2(0.80, 0.80)
+	_banner.scale = Vector2(0.84, 0.84)
 
 	if _anim_tween and _anim_tween.is_valid():
 		_anim_tween.kill()
+	if _timer_tween and _timer_tween.is_valid():
+		_timer_tween.kill()
 	_anim_tween = create_tween().set_parallel(true)
 	_anim_tween.tween_property(_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
-	_anim_tween.tween_property(_banner, "scale", Vector2(1.06, 1.06), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_anim_tween.tween_property(_banner, "position:y", 26.0, 0.36).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_anim_tween.tween_property(_banner, "scale", Vector2(1.05, 1.05), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_anim_tween.tween_property(_banner, "position:y", target_y, 0.36).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_anim_tween.chain().tween_property(_banner, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 	# Celebratory gold sparkle bursts on both sides of the banner + gentle title pulse
 	var bx := (vp_width - _banner.size.x) * 0.5
-	var by := 26.0 + _banner.size.y * 0.5
+	var by := target_y + _banner.size.y * 0.5
 	Juice.spawn_burst(control, Vector2(bx + 18.0, by), COL_GOLD_BRIGHT, 12, 120.0)
 	Juice.spawn_burst(control, Vector2(bx + _banner.size.x - 18.0, by), COL_GOLD_BRIGHT, 12, 120.0)
+	_timer_tween = TopBannerQueue.start_timer_bar(self, _timer_bar, 5.5)
 	_title_lbl.pivot_offset = _title_lbl.size * 0.5
 	var pulse_tw := create_tween().set_loops()
 	pulse_tw.tween_property(_title_lbl, "scale", Vector2(1.045, 1.045), 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
