@@ -1853,7 +1853,8 @@ func reset_state() -> void:
 	radio_upgrade_level = 0
 	has_mario_deals = false
 	mario_deals_level = 0
-	has_recycling = false	sto_nino_upgrade_level = 0
+	has_recycling = false
+	sto_nino_upgrade_level = 0
 	_clear_sto_nino_blessing()
 	permit_upgrade_level = 0
 	bench_upgrade_level = 0
