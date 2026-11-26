@@ -13,7 +13,7 @@ var current_item_name: String = ""
 var current_character_name: String = ""
 
 ## Base in-game hour cooldown before Uncle Mario can restock again.
-const BASE_DELIVERY_COOLDOWN_HOURS := 3.0
+const BASE_DELIVERY_COOLDOWN_HOURS := 5.0
 ## In-game hour when Uncle Mario's delivery cooldown expires (-1.0 = ready now).
 var delivery_cooldown_end_hour: float = -1.0
 ## Legacy field kept for compatibility (now driven by in-game hours).
@@ -368,6 +368,8 @@ func decrement_cooldown() -> void:
 func start_delivery_cooldown() -> void:
 	var hours := BASE_DELIVERY_COOLDOWN_HOURS
 	if is_instance_valid(StoryManager):
+		if StoryManager.has_mario_deals:
+			hours *= 0.70 # -30% Delivery Cooldown from Wholesale Pass (5.0h -> 3.5h)
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
 			hours *= 0.65 # -35% Delivery Cooldown
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY):

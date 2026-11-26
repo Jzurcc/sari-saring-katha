@@ -672,7 +672,7 @@ func get_mario_deals_upgrade_item() -> ItemData:
 	item.set_meta("is_mario_deals_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
 	item.set_meta("req_level", 3)
-	item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals: 2–3 random unlocked items are 20% off wholesale every morning.")
+	item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals (2–3 items 20% off wholesale) and cuts his restock cooldown by 30% (5h → 3.5h).")
 	_mario_deals_upgrade_item = item
 	return item
 

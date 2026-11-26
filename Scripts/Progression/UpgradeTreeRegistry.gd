@@ -178,6 +178,7 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 		"mario_deals":
 			stats.append({"label": "Daily Deals:", "value": "2–3 Items", "tone": "neu"})
 			stats.append({"label": "Wholesale Discount:", "value": "-20%", "tone": "pos"})
+			stats.append({"label": "Mario Cooldown:", "value": "-30%", "tone": "pos"})
 		"bench":
 			var spec: Dictionary = StoryManager.BENCH_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.BENCH_UPGRADE_SPECS.size() - 1)]
 			var ch := int(roundf(float(spec["linger_chance"]) * 100.0))
