@@ -188,6 +188,7 @@ func _ready() -> void:
 	_tag_stack.anchor_right = 0.5
 	_tag_stack.anchor_top = 0.5
 	_tag_stack.anchor_bottom = 0.5
+	_tag_stack.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_tag_stack.offset_left = -225.0
 	_tag_stack.offset_right = 225.0
 	_tag_stack.offset_top = - TAG_LIFT_Y - 170.0
@@ -799,6 +800,11 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 
 	if is_instance_valid(_held_layer):
 		_held_layer.visible = false
+	# Keep right-side tooltips aligned cleanly outside the right edge of pricing_panel even for wide item names
+	if is_instance_valid(_tolerance_col) and is_instance_valid(pricing_panel):
+		var half_w := maxf(225.0, pricing_panel.get_combined_minimum_size().x * 0.5)
+		_tolerance_col.offset_left = half_w + 20.0
+		_tolerance_col.offset_right = half_w + 510.0
 	pricing_ui.show()
 	if same_item and prev_step != -999 and step != prev_step:
 		_play_step_juice(signi(step - prev_step))
