@@ -31,6 +31,7 @@ var _last_dialogue_frame: int = -1
 var _watchdog_elapsed: float = 0.0
 const WATCHDOG_TIMEOUT_SEC: float = 0.5
 const PRICE_REFUSED_TIMELINE_PATH := "res://Dialogue/Timelines/price_refused.dtl"
+const HaggleOverlayScript := preload("res://Scripts/UI/HaggleOverlay.gd")
 const FAVORITE_DISCOVERED_TIMELINE_PATH := "res://Dialogue/Timelines/favorite_discovered.dtl"
 
 const PRICE_REFUSAL_LINES: Array[String] = [
@@ -341,9 +342,53 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 
 	# Check overpriced refusal BEFORE fulfilling the item (regular cash purchases only; never blocks Story/Tutorial/Utang)
 	if _should_refuse_for_high_price(customer, context, item.item_data):
-		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-		return false
+		_start_haggle_or_refusal(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+		return true
 
+	return _complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+
+
+func _start_haggle_or_refusal(
+	customer: Customer,
+	item: DraggableItem,
+	fallback_pos: Vector3,
+	needs_switch: bool,
+	prev_customer: Customer,
+	prev_phase: Phase,
+	prev_pending_dismiss: bool,
+	prev_partial_success: bool
+) -> void:
+	if not is_instance_valid(_tree_owner) or not _tree_owner.is_inside_tree():
+		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+		return
+	var overlay := HaggleOverlayScript.new()
+	overlay.setup(item.item_data, customer.customer_data)
+	_tree_owner.get_tree().root.add_child(overlay)
+	overlay.haggle_finished.connect(func(accepted: bool, offered_step: int):
+		if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
+			return
+		if accepted:
+			var saved_step := item.item_data.current_step
+			item.item_data.current_step = offered_step
+			_complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+			item.item_data.current_step = saved_step
+		else:
+			_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+	)
+
+
+func _complete_item_delivery(
+	customer: Customer,
+	item: DraggableItem,
+	fallback_pos: Vector3,
+	needs_switch: bool,
+	prev_customer: Customer,
+	prev_phase: Phase,
+	prev_pending_dismiss: bool,
+	prev_partial_success: bool
+) -> bool:
+	var context: TransactionContext = customer.transaction_context
+	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
 	var is_correct: bool = customer.check_item(item.item_data)
 
 	if is_correct:
