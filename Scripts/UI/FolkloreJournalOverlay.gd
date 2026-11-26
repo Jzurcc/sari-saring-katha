@@ -78,6 +78,11 @@ var _lightbox_tex_rect: TextureRect
 var _lightbox_title_lbl: Label
 var _lightbox_caption_lbl: Label
 
+# External link confirmation modal
+var _link_confirm_bg: ColorRect
+var _link_confirm_url_lbl: Label
+var _pending_external_url: String = ""
+
 
 func _ready() -> void:
 	layer = 55
@@ -104,6 +109,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var ke := event as InputEventKey
 	if is_open:
+		if is_instance_valid(_link_confirm_bg) and _link_confirm_bg.visible:
+			if ke.keycode == KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_close_link_confirm()
+			elif ke.keycode == KEY_ENTER or ke.keycode == KEY_KP_ENTER:
+				get_viewport().set_input_as_handled()
+				_confirm_open_external_link()
+			return
 		if is_instance_valid(_lightbox_bg) and _lightbox_bg.visible:
 			if ke.keycode == KEY_ESCAPE or ke.keycode == KEY_SPACE or ke.keycode == KEY_ENTER:
 				get_viewport().set_input_as_handled()
@@ -154,6 +167,7 @@ func open_journal(focus_character_path: String = "") -> void:
 	is_open = true
 	visible = true
 	_close_lightbox()
+	_close_link_confirm()
 	_sync_safe_margins()
 	_collect_neighbors()
 
@@ -177,6 +191,7 @@ func close_journal() -> void:
 	if not is_open:
 		return
 	_close_lightbox()
+	_close_link_confirm()
 	is_open = false
 	visible = false
 	Input.mouse_mode = _prev_mouse_mode
@@ -367,6 +382,9 @@ func _build_ui() -> void:
 	# ─── 4. FULL-SCREEN ART LIGHTBOX (Portrait & Landscape Safe) ───
 	_build_lightbox()
 
+	# ─── 5. EXTERNAL LINK CONFIRMATION MODAL ───
+	_build_link_confirm_modal()
+
 
 func _build_top_bar() -> Control:
 	var bar := HBoxContainer.new()
@@ -530,6 +548,105 @@ func _close_lightbox() -> void:
 	if is_instance_valid(_lightbox_bg) and _lightbox_bg.visible:
 		_lightbox_bg.visible = false
 		EventBus.request_sfx.emit("drop")
+
+
+func _build_link_confirm_modal() -> void:
+	_link_confirm_bg = ColorRect.new()
+	_link_confirm_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_link_confirm_bg.color = Color(0.02, 0.015, 0.012, 0.78)
+	_link_confirm_bg.visible = false
+	_link_confirm_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_link_confirm_bg.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			_close_link_confirm()
+	)
+	_root.add_child(_link_confirm_bg)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_link_confirm_bg.add_child(center)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(520, 0)
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	var st := _make_box_style(COL_PANEL, COL_GOLD, 16, 28, 24)
+	st.set_border_width_all(2)
+	card.add_theme_stylebox_override("panel", st)
+	center.add_child(card)
+
+	var v := VBoxContainer.new()
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 14)
+	card.add_child(v)
+
+	var hdr := _make_label("Open External Link?", 22, COL_GOLD_BRIGHT, true)
+	hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(hdr)
+
+	var msg := _make_label("This link will open an external website in your browser. Do you want to continue?", 17, COL_CREAM, false)
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	msg.add_theme_constant_override("line_spacing", 4)
+	v.add_child(msg)
+
+	_link_confirm_url_lbl = _make_label("", 14, COL_MUTED, false)
+	_link_confirm_url_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_link_confirm_url_lbl.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
+	v.add_child(_link_confirm_url_lbl)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 12)
+	v.add_child(btn_row)
+
+	var cancel_btn := Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.custom_minimum_size = Vector2(140, 48)
+	cancel_btn.focus_mode = Control.FOCUS_NONE
+	cancel_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	cancel_btn.add_theme_font_override("font", _bold_font)
+	cancel_btn.add_theme_font_size_override("font_size", 16)
+	_apply_button_theme(cancel_btn, false, false)
+	cancel_btn.pressed.connect(_close_link_confirm)
+	btn_row.add_child(cancel_btn)
+
+	var open_btn := Button.new()
+	open_btn.text = "Open Link ↗"
+	open_btn.custom_minimum_size = Vector2(160, 48)
+	open_btn.focus_mode = Control.FOCUS_NONE
+	open_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	open_btn.add_theme_font_override("font", _bold_font)
+	open_btn.add_theme_font_size_override("font_size", 16)
+	_apply_button_theme(open_btn, true, false)
+	open_btn.pressed.connect(_confirm_open_external_link)
+	btn_row.add_child(open_btn)
+
+
+func _open_link_confirm(url: String) -> void:
+	if url.is_empty() or not is_instance_valid(_link_confirm_bg):
+		return
+	_pending_external_url = url
+	_link_confirm_url_lbl.text = url
+	_link_confirm_bg.visible = true
+	_link_confirm_bg.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(_link_confirm_bg, "modulate:a", 1.0, 0.14).set_trans(Tween.TRANS_SINE)
+	EventBus.request_sfx.emit("interact")
+
+
+func _close_link_confirm() -> void:
+	_pending_external_url = ""
+	if is_instance_valid(_link_confirm_bg) and _link_confirm_bg.visible:
+		_link_confirm_bg.visible = false
+		EventBus.request_sfx.emit("drop")
+
+
+func _confirm_open_external_link() -> void:
+	var target := _pending_external_url
+	_close_link_confirm()
+	if not target.is_empty():
+		OS.shell_open(target)
 
 
 # =============================================================================
@@ -1082,7 +1199,7 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 			if url_txt != "":
 				var link := LinkButton.new()
 				link.text = src_txt + " ↗"
-				link.uri = url_txt
+				link.uri = ""
 				link.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
 				link.tooltip_text = url_txt
 				link.focus_mode = Control.FOCUS_NONE
@@ -1092,6 +1209,8 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 				link.add_theme_color_override("font_color", COL_GOLD)
 				link.add_theme_color_override("font_hover_color", COL_GOLD_BRIGHT)
 				link.add_theme_color_override("font_pressed_color", COL_CREAM)
+				var captured_url := url_txt
+				link.pressed.connect(func(): _open_link_confirm(captured_url))
 				cv.add_child(link)
 			else:
 				var sl := _make_label(src_txt, 14, COL_MUTED, false)
