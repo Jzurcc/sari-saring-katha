@@ -88,6 +88,7 @@ var _last_emitted_title: String = ""
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _bgm_gain: float = 1.0
 var _override_gain: float = 0.0
+var _phase_poll_timer: float = 0.0
 var bgm_transition_tween: Tween
 var crossfade_tween: Tween
 
@@ -195,6 +196,22 @@ func _unbind_time_of_day() -> void:
 		if _time_of_day_node.has_signal("time_changed") and _time_of_day_node.time_changed.is_connected(_on_tod_time_changed):
 			_time_of_day_node.time_changed.disconnect(_on_tod_time_changed)
 	_time_of_day_node = null
+
+func _process(delta: float) -> void:
+	_phase_poll_timer += delta
+	if _phase_poll_timer < 0.5:
+		return
+	_phase_poll_timer = 0.0
+	var cur_scene := get_tree().current_scene
+	if cur_scene == null:
+		return
+	if cur_scene.name in ["MainMenu", "IntroCutscene"]:
+		if current_bgm_phase != BGMPhase.NONE:
+			_change_bgm_phase(BGMPhase.NONE)
+		return
+	# In gameplay: drive BGM phase directly from StoryManager's clock so it never gets stuck in BGMPhase.NONE
+	if is_instance_valid(StoryManager) and StoryManager.clock:
+		_update_audio_for_time(StoryManager.clock.get_effective_display_time())
 
 func _on_tod_time_changed(time: Variant) -> void:
 	_update_audio_for_time(float(time))
