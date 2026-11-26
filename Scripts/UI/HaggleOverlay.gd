@@ -1,46 +1,43 @@
 class_name HaggleOverlay
 extends CanvasLayer
 
-## Modern, minimalistic Tawad / Haggle Overlay triggered when a customer balks at a high price.
-## Lets the player slide a long interactive price-step gauge downward to offer a temporary
-## one-time discount (does not permanently alter the shelf price), showing live acceptance
-## odds based on the customer's perceived effective step.
+## Frameless, vignette-style Tawad / Haggle HUD triggered when a customer balks at a high price.
+## Does NOT hijack the mouse — keeps FPS look intact while blocking other counter interactions.
+## Scroll wheel (or A/D / Left/Right) adjusts the long price-step gauge; [F] confirms the offer
+## and [Esc] lets the customer go. Acceptance/rejection plays directly on the customer's dialogue.
 
 signal haggle_finished(accepted: bool, offered_step: int)
 
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
-const COL_BG := Color(0.062, 0.054, 0.046, 0.96)
 const COL_GOLD := Color(0.835, 0.624, 0.278, 0.92)
 const COL_GOLD_SOFT := Color(0.96, 0.85, 0.52, 1.0)
 const COL_CREAM := Color(1.0, 0.935, 0.815, 1.0)
-const COL_CREAM_MUTED := Color(0.82, 0.76, 0.65, 0.86)
+const COL_CREAM_MUTED := Color(0.88, 0.82, 0.72, 0.90)
+const COL_OUTLINE := Color(0.04, 0.03, 0.025, 0.94)
 const COL_GOOD := Color(0.50, 0.88, 0.58, 1.0)
 const COL_WARN := Color(0.98, 0.68, 0.28, 1.0)
 const COL_BAD := Color(0.96, 0.42, 0.34, 1.0)
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.02, 0.018, 0.016, 0.88);
+uniform vec4 tint : source_color = vec4(0.02, 0.018, 0.016, 0.82);
 void fragment() {
 	vec2 d = UV - vec2(0.5);
 	float dist = length(d * vec2(1.12, 1.0));
-	float vig = smoothstep(0.14, 0.76, dist);
-	COLOR = vec4(tint.rgb, mix(0.42, tint.a, vig));
+	float vig = smoothstep(0.18, 0.78, dist);
+	COLOR = vec4(tint.rgb, mix(0.22, tint.a, vig));
 }
 """
 
 
 class HaggleGauge extends Control:
-	signal step_changed(new_step: int)
-
 	var min_step: int = ItemData.MIN_STEP
 	var max_step: int = ItemData.MAX_STEP
 	var original_step: int = 3
 	var current_step: int = 2
 	var accent_color: Color = Color(0.96, 0.85, 0.52, 1.0)
-	var _dragging: bool = false
 
 	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
 		var pts := PackedVector2Array([
@@ -60,40 +57,17 @@ class HaggleGauge extends Control:
 		var t := clampf(float(st - min_step) / span, 0.0, 1.0)
 		return pad_x + t * bar_w
 
-	func _x_to_step(px: float) -> int:
-		var pad_x := 22.0
-		var bar_w := maxf(40.0, size.x - pad_x * 2.0)
-		var t := clampf((px - pad_x) / bar_w, 0.0, 1.0)
-		var raw := int(roundf(lerpf(float(min_step), float(max_step), t)))
-		return clampi(raw, min_step, original_step)
-
-	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-			_dragging = event.pressed
-			if event.pressed:
-				var next_st := _x_to_step((event as InputEventMouseButton).position.x)
-				if next_st != current_step:
-					current_step = next_st
-					queue_redraw()
-					step_changed.emit(current_step)
-		elif event is InputEventMouseMotion and _dragging:
-			var next_st := _x_to_step((event as InputEventMouseMotion).position.x)
-			if next_st != current_step:
-				current_step = next_st
-				queue_redraw()
-				step_changed.emit(current_step)
-
 	func _draw() -> void:
 		var pad_x := 22.0
-		var bar_h := 30.0
+		var bar_h := 28.0
 		var bar_y := (size.y - bar_h) * 0.5
 		var bar_w := maxf(40.0, size.x - pad_x * 2.0)
 		var bar_rect := Rect2(pad_x, bar_y, bar_w, bar_h)
 
-		# Recessed dark track
-		draw_rect(bar_rect, Color(0.032, 0.028, 0.024, 0.98), true)
+		# Recessed obsidian track
+		draw_rect(bar_rect, Color(0.032, 0.028, 0.024, 0.92), true)
 
-		# Locked zone above original_step (cannot haggle upward)
+		# Locked region above original_step (cannot haggle upward)
 		var orig_x := _step_to_x(original_step)
 		if orig_x < pad_x + bar_w - 1.0:
 			draw_rect(Rect2(orig_x, bar_y + 2.0, (pad_x + bar_w) - orig_x, bar_h - 4.0), Color(0.18, 0.14, 0.12, 0.45), true)
@@ -113,26 +87,25 @@ class HaggleGauge extends Control:
 			var x0 := minf(zero_x, cur_x)
 			var x1 := maxf(zero_x, cur_x)
 			draw_rect(Rect2(x0, bar_y + 2.0, x1 - x0, bar_h - 4.0), accent_color, true)
-			draw_rect(Rect2(x0, bar_y + 2.0, x1 - x0, 6.0), Color(1.0, 0.96, 0.86, 0.25), true)
+			draw_rect(Rect2(x0, bar_y + 2.0, x1 - x0, 5.0), Color(1.0, 0.96, 0.86, 0.25), true)
 
-		# Outer gold frame
-		var frame_col := Color(0.835, 0.624, 0.278, 0.90)
+		# Antique gold outer border
+		var frame_col := Color(0.835, 0.624, 0.278, 0.92)
 		draw_rect(bar_rect, frame_col, false, 2.0)
-		draw_rect(bar_rect.grow(-2.0), Color(0.0, 0.0, 0.0, 0.45), false, 1.0)
 
 		# End caps & wholesale 0 marker
-		_draw_diamond(Vector2(pad_x, bar_y + bar_h * 0.5), 6.0, frame_col)
-		_draw_diamond(Vector2(pad_x + bar_w, bar_y + bar_h * 0.5), 6.0, frame_col)
-		_draw_diamond(Vector2(zero_x, bar_y + bar_h + 9.0), 4.0, Color(0.86, 0.72, 0.42, 0.82))
+		_draw_diamond(Vector2(pad_x, bar_y + bar_h * 0.5), 5.5, frame_col)
+		_draw_diamond(Vector2(pad_x + bar_w, bar_y + bar_h * 0.5), 5.5, frame_col)
+		_draw_diamond(Vector2(zero_x, bar_y + bar_h + 8.0), 3.8, Color(0.86, 0.72, 0.42, 0.85))
 
-		# Original price marker (subtle vertical pin)
-		draw_line(Vector2(orig_x, bar_y - 6.0), Vector2(orig_x, bar_y + bar_h + 6.0), Color(0.96, 0.48, 0.40, 0.72), 2.0, true)
+		# Original price pin
+		draw_line(Vector2(orig_x, bar_y - 6.0), Vector2(orig_x, bar_y + bar_h + 6.0), Color(0.96, 0.48, 0.40, 0.75), 2.0, true)
 
 		# Active glowing diamond thumb
 		var thumb_c := Vector2(cur_x, bar_y + bar_h * 0.5)
-		_draw_diamond(thumb_c, 15.0, Color(accent_color.r, accent_color.g, accent_color.b, 0.30))
-		_draw_diamond(thumb_c, 11.0, Color(0.06, 0.05, 0.04, 0.96))
-		_draw_diamond(thumb_c, 8.0, accent_color.lightened(0.25))
+		_draw_diamond(thumb_c, 14.0, Color(accent_color.r, accent_color.g, accent_color.b, 0.30))
+		_draw_diamond(thumb_c, 10.0, Color(0.06, 0.05, 0.04, 0.96))
+		_draw_diamond(thumb_c, 7.2, accent_color.lightened(0.25))
 
 
 var _item_data: ItemData
@@ -141,19 +114,14 @@ var _original_step: int = 3
 var _offered_step: int = 2
 var _tolerance: int = 0
 var _resolved: bool = false
-var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
 var _bold_font: FontVariation
 var _root: Control
-var _panel: PanelContainer
+var _content: VBoxContainer
 var _gauge: HaggleGauge
 var _price_lbl: Label
 var _diff_lbl: Label
 var _chance_lbl: Label
-var _chance_bar: ProgressBar
-var _status_lbl: Label
-var _offer_btn: Button
-var _walk_btn: Button
 
 
 static func compute_haggle_accept_chance(offered_step: int, tolerance: int) -> float:
@@ -199,9 +167,8 @@ func setup(item_data: ItemData, customer_data: CustomerData) -> void:
 func _ready() -> void:
 	layer = 44
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_prev_mouse_mode = Input.mouse_mode
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	add_to_group("minigame_overlay_active")
+	add_to_group("haggle_overlay_active")
 
 	_bold_font = FontVariation.new()
 	_bold_font.base_font = INDER_FONT
@@ -209,25 +176,42 @@ func _ready() -> void:
 
 	_build_ui()
 	_refresh_ui()
-	Juice.pop_panel_in(_panel)
+	_root.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(_root, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if _resolved:
 		return
-	if event is InputEventKey and event.pressed and not event.is_echo():
-		if event.keycode == KEY_LEFT or event.keycode == KEY_A:
-			get_viewport().set_input_as_handled()
-			_nudge_step(-1)
-		elif event.keycode == KEY_RIGHT or event.keycode == KEY_D:
+	if event is InputEventMouseButton and event.pressed:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
 			get_viewport().set_input_as_handled()
 			_nudge_step(1)
-		elif event.keycode == KEY_ENTER or event.keycode == KEY_SPACE:
+			return
+		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			get_viewport().set_input_as_handled()
-			_on_offer_pressed()
-		elif event.keycode == KEY_ESCAPE:
+			_nudge_step(-1)
+			return
+		elif mb.button_index == MOUSE_BUTTON_LEFT or mb.button_index == MOUSE_BUTTON_RIGHT:
+			# Block tending to other customers while haggling
 			get_viewport().set_input_as_handled()
-			_on_walk_pressed()
+			return
+	elif event is InputEventKey and event.pressed and not event.is_echo():
+		match event.keycode:
+			KEY_LEFT, KEY_A:
+				get_viewport().set_input_as_handled()
+				_nudge_step(-1)
+			KEY_RIGHT, KEY_D:
+				get_viewport().set_input_as_handled()
+				_nudge_step(1)
+			KEY_F, KEY_ENTER:
+				get_viewport().set_input_as_handled()
+				_confirm_offer()
+			KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_decline_haggle()
 
 
 func _nudge_step(delta: int) -> void:
@@ -273,44 +257,24 @@ func _refresh_ui() -> void:
 		_diff_lbl.text = "-₱%.2f off  (this sale only)" % savings
 		_diff_lbl.add_theme_color_override("font_color", COL_GOOD)
 	else:
-		_diff_lbl.text = "Current shelf price  (no discount)"
+		_diff_lbl.text = "Original price"
 		_diff_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 
-	_chance_lbl.text = "%d%% Accept Chance" % pct
+	_chance_lbl.text = "%d%%" % pct
 	_chance_lbl.add_theme_color_override("font_color", col)
-	_chance_bar.value = pct
-	var fill_st := _chance_bar.get_theme_stylebox("fill") as StyleBoxFlat
-	if fill_st:
-		fill_st.bg_color = col
-
-	_offer_btn.text = "Offer ₱%.2f" % offered_price
 
 
-func _on_offer_pressed() -> void:
+func _confirm_offer() -> void:
 	if _resolved:
 		return
 	_resolved = true
-	_offer_btn.disabled = true
-	_walk_btn.disabled = true
-
 	var chance := compute_haggle_accept_chance(_offered_step, _tolerance)
 	var accepted := randf() < chance
-	if accepted:
-		Juice.play_sfx("pickup", 1.22, 1.0)
-		_status_lbl.text = "Deal! They accepted ₱%.2f." % _price_for_step(_offered_step)
-		_status_lbl.add_theme_color_override("font_color", COL_GOOD)
-		Juice.pop_control(_panel, 1.04, 0.22)
-	else:
-		Juice.play_sfx("error", 0.88, 0.5)
-		_status_lbl.text = "Too steep — they turned it down!"
-		_status_lbl.add_theme_color_override("font_color", COL_BAD)
-		Juice.shake_control(_root, 9.0, 0.22)
-
-	await get_tree().create_timer(0.55).timeout
+	Juice.play_sfx("pickup" if accepted else "error", 1.18 if accepted else 0.90, 0.5)
 	_finish(accepted, _offered_step)
 
 
-func _on_walk_pressed() -> void:
+func _decline_haggle() -> void:
 	if _resolved:
 		return
 	_resolved = true
@@ -321,171 +285,96 @@ func _on_walk_pressed() -> void:
 func _finish(accepted: bool, offered_step: int) -> void:
 	if is_in_group("minigame_overlay_active"):
 		remove_from_group("minigame_overlay_active")
-	Input.mouse_mode = _prev_mouse_mode
+	if is_in_group("haggle_overlay_active"):
+		remove_from_group("haggle_overlay_active")
 	haggle_finished.emit(accepted, offered_step)
 	queue_free()
 
 
+func _make_outlined_label(txt: String, font_res: Font, sz: int, col: Color, outline_sz: int = 5) -> Label:
+	var lbl := Label.new()
+	lbl.text = txt
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_override("font", font_res)
+	lbl.add_theme_font_size_override("font_size", sz)
+	lbl.add_theme_color_override("font_color", col)
+	lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	lbl.add_theme_constant_override("outline_size", outline_sz)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return lbl
+
+
 func _build_ui() -> void:
+	_root = Control.new()
+	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_root)
+
+	# Soft fullscreen vignette (overscanned, no heavy box)
 	var vig := ColorRect.new()
 	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vig.offset_left = -36
-	vig.offset_top = -36
-	vig.offset_right = 36
-	vig.offset_bottom = 36
+	vig.offset_left = -24
+	vig.offset_top = -24
+	vig.offset_right = 24
+	vig.offset_bottom = 24
 	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sh := Shader.new()
 	sh.code = VIGNETTE_SHADER_CODE
 	var mat := ShaderMaterial.new()
 	mat.shader = sh
 	vig.material = mat
-	add_child(vig)
+	_root.add_child(vig)
 
-	_root = Control.new()
-	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_root)
+	# Frameless floating haggle HUD anchored cleanly at lower-center
+	_content = VBoxContainer.new()
+	_content.anchor_left = 0.5
+	_content.anchor_right = 0.5
+	_content.anchor_top = 1.0
+	_content.anchor_bottom = 1.0
+	_content.offset_left = -330
+	_content.offset_right = 330
+	_content.offset_top = -235
+	_content.offset_bottom = -28
+	_content.alignment = BoxContainer.ALIGNMENT_CENTER
+	_content.add_theme_constant_override("separation", 8)
+	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_content)
 
-	_panel = PanelContainer.new()
-	_panel.set_anchors_preset(Control.PRESET_CENTER)
-	_panel.custom_minimum_size = Vector2(760, 390)
-	_panel.offset_left = -380
-	_panel.offset_right = 380
-	_panel.offset_top = -195
-	_panel.offset_bottom = 195
-	var st := UIStyle.create_flat_stylebox(COL_BG, 14, 34, 26)
-	st.border_color = COL_GOLD
-	st.set_border_width_all(2)
-	st.shadow_size = 18
-	st.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
-	_panel.add_theme_stylebox_override("panel", st)
-	_root.add_child(_panel)
-
-	var vb := VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
-	vb.add_theme_constant_override("separation", 14)
-	_panel.add_child(vb)
-
-	var cname := _customer_data.character_name if (_customer_data and _customer_data.character_name != "") else "Neighbor"
 	var iname := _item_data.item_name if _item_data else "Item"
+	var title := _make_outlined_label("Haggle  •  %s" % iname, _bold_font, 24, COL_GOLD_SOFT, 5)
+	_content.add_child(title)
 
-	var title := Label.new()
-	title.text = "Haggle — %s" % iname
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_override("font", _bold_font)
-	title.add_theme_font_size_override("font_size", 30)
-	title.add_theme_color_override("font_color", COL_GOLD_SOFT)
-	vb.add_child(title)
+	# Compact horizontal readout: Offered Price + Acceptance %
+	var readout := HBoxContainer.new()
+	readout.alignment = BoxContainer.ALIGNMENT_CENTER
+	readout.add_theme_constant_override("separation", 24)
+	readout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(readout)
 
-	_status_lbl = Label.new()
-	_status_lbl.text = "%s hesitated at ₱%.2f. Lower your offer for this sale?" % [cname, _price_for_step(_original_step)]
-	_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status_lbl.add_theme_font_override("font", INDER_FONT)
-	_status_lbl.add_theme_font_size_override("font_size", 17)
-	_status_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
-	vb.add_child(_status_lbl)
+	_price_lbl = _make_outlined_label("₱0.00", _bold_font, 40, COL_CREAM, 6)
+	readout.add_child(_price_lbl)
 
-	# Price & Savings readout
-	var price_box := VBoxContainer.new()
-	price_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	price_box.add_theme_constant_override("separation", 2)
-	vb.add_child(price_box)
+	var chance_wrap := HBoxContainer.new()
+	chance_wrap.alignment = BoxContainer.ALIGNMENT_CENTER
+	chance_wrap.add_theme_constant_override("separation", 6)
+	chance_wrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	readout.add_child(chance_wrap)
 
-	_price_lbl = Label.new()
-	_price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_price_lbl.add_theme_font_override("font", _bold_font)
-	_price_lbl.add_theme_font_size_override("font_size", 44)
-	_price_lbl.add_theme_color_override("font_color", COL_CREAM)
-	price_box.add_child(_price_lbl)
+	_chance_lbl = _make_outlined_label("80%", _bold_font, 32, COL_GOOD, 5)
+	chance_wrap.add_child(_chance_lbl)
 
-	_diff_lbl = Label.new()
-	_diff_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_diff_lbl.add_theme_font_override("font", INDER_FONT)
-	_diff_lbl.add_theme_font_size_override("font_size", 15)
-	price_box.add_child(_diff_lbl)
+	var chance_sub := _make_outlined_label("chance", INDER_FONT, 17, COL_CREAM_MUTED, 4)
+	chance_wrap.add_child(chance_sub)
 
-	# Long interactive Haggle Gauge with left/right step buttons
-	var gauge_row := HBoxContainer.new()
-	gauge_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	gauge_row.add_theme_constant_override("separation", 12)
-	vb.add_child(gauge_row)
-
-	var minus_btn := Button.new()
-	minus_btn.text = "‹"
-	minus_btn.focus_mode = Control.FOCUS_NONE
-	minus_btn.custom_minimum_size = Vector2(44, 44)
-	minus_btn.add_theme_font_override("font", _bold_font)
-	minus_btn.add_theme_font_size_override("font_size", 28)
-	minus_btn.pressed.connect(_nudge_step.bind(-1))
-	gauge_row.add_child(minus_btn)
-
+	# Long frameless Haggle Gauge
 	_gauge = HaggleGauge.new()
-	_gauge.custom_minimum_size = Vector2(580, 56)
-	_gauge.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_gauge.step_changed.connect(func(st_val: int):
-		_offered_step = st_val
-		Juice.play_sfx("ui_hover", 1.05 + float(st_val) * 0.03, -5.0)
-		_refresh_ui()
-	)
-	gauge_row.add_child(_gauge)
+	_gauge.custom_minimum_size = Vector2(620, 52)
+	_gauge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_gauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_content.add_child(_gauge)
 
-	var plus_btn := Button.new()
-	plus_btn.text = "›"
-	plus_btn.focus_mode = Control.FOCUS_NONE
-	plus_btn.custom_minimum_size = Vector2(44, 44)
-	plus_btn.add_theme_font_override("font", _bold_font)
-	plus_btn.add_theme_font_size_override("font_size", 28)
-	plus_btn.pressed.connect(_nudge_step.bind(1))
-	gauge_row.add_child(plus_btn)
+	_diff_lbl = _make_outlined_label("", INDER_FONT, 16, COL_GOOD, 4)
+	_content.add_child(_diff_lbl)
 
-	# Acceptance Chance bar + label
-	var chance_box := VBoxContainer.new()
-	chance_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	chance_box.add_theme_constant_override("separation", 6)
-	vb.add_child(chance_box)
-
-	_chance_lbl = Label.new()
-	_chance_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_chance_lbl.add_theme_font_override("font", _bold_font)
-	_chance_lbl.add_theme_font_size_override("font_size", 20)
-	chance_box.add_child(_chance_lbl)
-
-	_chance_bar = ProgressBar.new()
-	_chance_bar.custom_minimum_size = Vector2(360, 10)
-	_chance_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_chance_bar.max_value = 100.0
-	_chance_bar.show_percentage = false
-	_chance_bar.add_theme_stylebox_override("background", UIStyle.create_flat_stylebox(Color(0.12, 0.10, 0.09, 0.90), 5, 0, 0))
-	_chance_bar.add_theme_stylebox_override("fill", UIStyle.create_flat_stylebox(COL_GOOD, 5, 0, 0))
-	chance_box.add_child(_chance_bar)
-
-	# Action buttons
-	var btn_row := HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_row.add_theme_constant_override("separation", 18)
-	vb.add_child(btn_row)
-
-	_walk_btn = Button.new()
-	_walk_btn.text = "Let Them Go"
-	_walk_btn.focus_mode = Control.FOCUS_NONE
-	_walk_btn.custom_minimum_size = Vector2(180, 46)
-	_walk_btn.add_theme_font_override("font", INDER_FONT)
-	_walk_btn.add_theme_font_size_override("font_size", 18)
-	_walk_btn.pressed.connect(_on_walk_pressed)
-	btn_row.add_child(_walk_btn)
-
-	_offer_btn = Button.new()
-	_offer_btn.text = "Offer"
-	_offer_btn.focus_mode = Control.FOCUS_NONE
-	_offer_btn.custom_minimum_size = Vector2(210, 46)
-	_offer_btn.add_theme_font_override("font", _bold_font)
-	_offer_btn.add_theme_font_size_override("font_size", 19)
-	var ost := UIStyle.create_flat_stylebox(Color(0.36, 0.27, 0.12, 0.98), 8, 18, 8)
-	ost.border_color = COL_GOLD_SOFT
-	ost.set_border_width_all(2)
-	_offer_btn.add_theme_stylebox_override("normal", ost)
-	var ohov := ost.duplicate() as StyleBoxFlat
-	ohov.bg_color = Color(0.46, 0.35, 0.16, 0.98)
-	_offer_btn.add_theme_stylebox_override("hover", ohov)
-	_offer_btn.add_theme_color_override("font_color", COL_CREAM)
-	_offer_btn.pressed.connect(_on_offer_pressed)
-	btn_row.add_child(_offer_btn)
+	var hint := _make_outlined_label("Scroll to adjust   •   [F] Offer   •   [Esc] Let Them Go", INDER_FONT, 16, COL_CREAM_MUTED, 4)
+	_content.add_child(hint)
