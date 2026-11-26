@@ -1,66 +1,78 @@
 label EventBroadcast
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: [i]*kzzzt—*[/i] Magandang araw, mga suki sa hangin! This is Papa Ulap on 88.7 Radyo Karimlan!
+	PapaUlap: Magandang araw, mga suki sa hangin! This is Papa Ulap on 88.7 Radyo Karimlan!
 elif {Variation} == 2.0:
-	PapaUlap: [i]*bzzzt—*[/i] Coming to you live from somewhere above the mango trees — Papa Ulap with a fresh barangay bulletin!
+	PapaUlap: Coming to you live from somewhere above the mango trees — Papa Ulap with a fresh barangay bulletin!
 else:
-	PapaUlap: [i]*kshhh—*[/i] Turn that dial up, boss! The wind just whispered something big into my mic.
-PapaUlap: [b]{Global_RadioEventName}[/b] — {Global_EventRumorText}
+	PapaUlap: Turn that dial up, boss! The wind just whispered something big into my mic.
+PapaUlap: {Global_RadioEventName} — {Global_EventRumorText}
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: [color=#6C8FA6]Stock up smart and mind your prices, 'no? Keep it breezy out there![/color] [i]*kzzzt—*[/i]
+	PapaUlap: [color=#6C8FA6]Stock up smart and mind your prices, 'no? Keep it breezy out there![/color]
 elif {Variation} == 2.0:
-	PapaUlap: [color=#6C8FA6]You heard it first on the breeze! Stay cool behind that counter, suki.[/color] [i]*kzzzt—*[/i]
+	PapaUlap: [color=#6C8FA6]You heard it first on the breeze! Stay cool behind that counter, suki.[/color]
 else:
-	PapaUlap: [color=#6C8FA6]That's the word riding the wind today. Tune back in anytime![/color] [i]*kzzzt—*[/i]
+	PapaUlap: [color=#6C8FA6]That's the word riding the wind today. Tune back in anytime![/color]
 [signal arg="radio_event_revealed"]
+[end_timeline]
+
+label VisitorBroadcast
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	PapaUlap: Quick street report from above the rooftops! Just spotted {Global_RadioVisitorName} heading toward your store today.
+elif {Variation} == 2.0:
+	PapaUlap: Heads up, suki! The breeze says {Global_RadioVisitorName} is planning a stop by your counter today.
+else:
+	PapaUlap: Street watch on 88.7 Radyo Karimlan — {Global_RadioVisitorName} was just seen walking down your lane!
+PapaUlap: [color=#6C8FA6]{Global_RadioVisitorHint}[/color]
+[signal arg="radio_visitor_revealed"]
 [end_timeline]
 
 label Chatter
 if {Global_RadioEclipse}:
 	set {Variation} = range(1,4).pick_random()
 	if {Variation} == 1.0:
-		PapaUlap: [i]*kshhhhhh...*[/i] Strange hush over Karimlan today, suki. Even the wind is holding its breath under the eclipse.
-		PapaUlap: [color=#6C8FA6]No big market rushes on the airwaves today — just quiet skies and soft static.[/color] [i]*kzzzt—*[/i]
+		PapaUlap: Strange hush over Karimlan today, suki. Even the wind is holding its breath under the eclipse.
+		PapaUlap: [color=#6C8FA6]No big market rushes on the airwaves today — just quiet skies and soft wind.[/color]
 	elif {Variation} == 2.0:
-		PapaUlap: [i]*bzzzt...*[/i] Papa Ulap here, drifting through a weirdly calm sky. Not a single neighborhood rumor blowing past my tower today.
-		PapaUlap: [color=#6C8FA6]Take it easy behind the counter while the moon keeps things hush-hush, ha?[/color] [i]*kzzzt—*[/i]
+		PapaUlap: Papa Ulap here, drifting through a weirdly calm sky. Not a single neighborhood rumor blowing past my tower today.
+		PapaUlap: [color=#6C8FA6]Take it easy behind the counter while the moon keeps things hush-hush, ha?[/color]
 	else:
-		PapaUlap: [i]*kzzzt...*[/i] Testing, testing... anybody down there? The eclipse has the whole barangay moving like a whisper today.
-		PapaUlap: [color=#6C8FA6]No special events on the radar — just you, me, and the breeze.[/color] [i]*kzzzt—*[/i]
+		PapaUlap: Testing, testing... anybody down there? The eclipse has the whole barangay moving like a whisper today.
+		PapaUlap: [color=#6C8FA6]No special events on the radar — just you, me, and the breeze.[/color]
 	[end_timeline]
 set {Variation} = range(1,9).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: [i]*kzzzt—*[/i] Papa Ulap checking in! Light breeze from the east, smell of garlic rice from three streets over, and zero traffic at the tricycle stand.
-	PapaUlap: [color=#6C8FA6]Perfect day to keep the shelves tidy, boss.[/color] [i]*kzzzt—*[/i]
+	PapaUlap: Papa Ulap checking in! Light breeze from the east, smell of garlic rice from three streets over, and zero traffic at the tricycle stand.
+	PapaUlap: [color=#6C8FA6]Perfect day to keep the shelves tidy, boss.[/color]
 elif {Variation} == 2.0:
-	PapaUlap: [i]*bzzzt—*[/i] Listeners always ask where my studio is. Easy! Just look up at the tallest balete cloud and wave — if I wave back, you didn't see anything.
-	PapaUlap: [color=#6C8FA6]Stay breezy, mga ka-tindahan![/color] [i]*kzzzt—*[/i]
+	PapaUlap: Listeners always ask where my studio is. Easy! Just look up at the tallest balete cloud and wave — if I wave back, you didn't see anything.
+	PapaUlap: [color=#6C8FA6]Stay breezy, mga ka-tindahan![/color]
 elif {Variation} == 3.0:
-	PapaUlap: [i]*kshhh—*[/i] Friendly reminder from Papa Ulap: close the refrigerator door, anak! Even up here in the clouds I can feel your electricity bill sweating.
+	PapaUlap: Friendly reminder from Papa Ulap: close the refrigerator door, anak! Even up here in the clouds I can feel your electricity bill sweating.
 elif {Variation} == 4.0:
-	PapaUlap: [i]*kzzzt—*[/i] Shoutout to whoever's burning dried leaves near the creek — the smoke just drifted straight through my booth. [i]*ahem!*[/i] Still sounding smooth, though!
+	PapaUlap: Shoutout to whoever's burning dried leaves near the creek — the smoke just drifted straight through my booth. Still sounding smooth, though!
 elif {Variation} == 5.0:
-	PapaUlap: [i]*bzzzt—*[/i] Ever feel a sudden cool gust when nobody's around? Don't panic — that's just Papa Ulap doing a quick neighborhood flyby to check on my favorite suki.
+	PapaUlap: Ever feel a sudden cool gust when nobody's around? Don't panic — that's just Papa Ulap doing a quick neighborhood flyby to check on my favorite suki.
 elif {Variation} == 6.0:
-	PapaUlap: [i]*kshhh—*[/i] Saw Uncle Mario's tricycle zipping down the highway earlier. Man drives like the wind — and trust me, I know a thing or two about the wind.
+	PapaUlap: Saw Uncle Mario's tricycle zipping down the highway earlier. Man drives like the wind — and trust me, I know a thing or two about the wind.
 elif {Variation} == 7.0:
-	PapaUlap: [i]*kzzzt—*[/i] No new bulletins riding the airwaves right now, boss. Just clear skies, clinking coins, and warm afternoon sun over Karimlan.
+	PapaUlap: No new bulletins riding the airwaves right now, boss. Just clear skies, clinking coins, and warm afternoon sun over Karimlan.
 elif {Variation} == 8.0:
-	PapaUlap: [i]*bzzzt—*[/i] Someone just texted the station asking if Biringan gets FM reception. Haha! Let's just say... our signal reaches places that aren't on any map.
+	PapaUlap: Someone just texted the station asking if Biringan gets FM reception. Haha! Let's just say... our signal reaches places that aren't on any map.
 else:
-	PapaUlap: [i]*kshhh—*[/i] Papa Ulap on 88.7 Radyo Karimlan! Keep your change ready, your snacks crisp, and your ears open — the wind always brings news sooner or later.
+	PapaUlap: Papa Ulap on 88.7 Radyo Karimlan! Keep your change ready, your snacks crisp, and your ears open — the wind always brings news sooner or later.
 [end_timeline]
 
 label CommercialBreak
 set {Variation} = range(1,5).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: [i]*jingle plays—*[/i] 88.7 Radyo Karimlan is on a quick commercial break! Papa Ulap will be right back after these messages!
+	PapaUlap: 88.7 Radyo Karimlan is on a quick commercial break! Papa Ulap will be right back after these messages!
 elif {Variation} == 2.0:
-	PapaUlap: [i]*kzzzt—*[/i] Commercial break! Need a crisp, cold merienda? Visit your friendly neighborhood sari-sari store today! Papa Ulap returns shortly!
+	PapaUlap: Commercial break! Need a crisp, cold merienda? Visit your friendly neighborhood sari-sari store today! Papa Ulap returns shortly!
 elif {Variation} == 3.0:
-	PapaUlap: [i]*bzzzt—*[/i] Still on commercial break, suki — Papa Ulap's grabbing a quick sip of coffee up in the clouds. Stay tuned!
+	PapaUlap: Still on commercial break, suki — Papa Ulap's grabbing a quick sip of coffee up in the clouds. Stay tuned!
 else:
-	PapaUlap: [i]*jingle plays—*[/i] "Kopimo! Para sa umagang mas presko pa sa hangin!" ...We'll be right back with Papa Ulap in a bit!
+	PapaUlap: "Kopimo! Para sa umagang mas presko pa sa hangin!" ...We'll be right back with Papa Ulap in a bit!
 [end_timeline]

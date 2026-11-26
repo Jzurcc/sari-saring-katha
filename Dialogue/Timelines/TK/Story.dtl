@@ -21,13 +21,13 @@ elif {Transaction_Chapter} == 1.0:
 	TK: Yo! I’m back. The last drink really saved my life.
 	TK: I’m planning my first big 'Karimlan Hidden Gems' feature. My followers are going to eat this up.
 	TK: But I’m torn, you know? My hooves are telling me one thing, but the algorithm is telling me another.
-	TK: Should I hit the [b]Whispering Falls[/b] for that ASMR content, or the [b]Ancestral Pine Forest[/b] for those moody, cinematic shots?
+	TK: Should I hit the Whispering Falls for that ASMR content, or the Ancestral Pine Forest for those moody, cinematic shots?
 	- Go for the Whispering Falls.
 		set {Transaction_Branch} = 0.0
 		TK: The Falls? [pause=0.4] Fresh. I can already see the 'Pure Nature' title card. [pause=0.3] Hope my camera is as waterproof as they say!
 	- Try the Ancestral Pine Forest.
 		set {Transaction_Branch} = 1.0
-		TK: The Pine Forest? Oh, like [b]Baguio, the City of Pines[/b]! [pause=0.5] I’ve heard the vibes there are immaculate. [pause=0.3] Solid choice.
+		TK: The Pine Forest? Oh, like Baguio, the City of Pines! [pause=0.5] I’ve heard the vibes there are immaculate. [pause=0.3] Solid choice.
 	TK: I’ll need some {Transaction_ItemWants} for the trek. Hiking makes me way more snacky than a Tikbalang should be.
 	[end_timeline]
 
@@ -60,8 +60,8 @@ elif {Transaction_Chapter} == 4.0:
 	# Chapter 5: Arc 2 Scouting
 	TK: Alright, I’m over the slump. [pause=0.4] New strategy: Deeper lore.
 	TK: People want the spooky stuff. The real 'Unsolved Karimlan' vibes.
-	TK: I found two leads. There’s the [b]Moonlight Cove[/b], where the sand supposedly glows at midnight...
-	TK: Or the [b]Forgotten Church Ruins[/b], which are totally overgrown and definitely haunted.
+	TK: I found two leads. There’s the Moonlight Cove, where the sand supposedly glows at midnight...
+	TK: Or the Forgotten Church Ruins, which are totally overgrown and definitely haunted.
 	- Moonlight Cove sounds beautiful.
 		set {Transaction_Branch} = 0.0
 		TK: Right? [pause=0.4] Glow-in-the-dark sand is total thumbnail bait. [pause=0.3] I’ll see if I can catch a few spirits on camera while I’m at it.

@@ -176,6 +176,8 @@ variables={
 "Global_QuotaDay": 1.0,
 "Global_RadioEclipse": false,
 "Global_RadioEventName": "",
+"Global_RadioVisitorHint": "",
+"Global_RadioVisitorName": "",
 "Global_RumorActive": false,
 "Global_RumorType": 0.0,
 "Global_StockStatus": "",

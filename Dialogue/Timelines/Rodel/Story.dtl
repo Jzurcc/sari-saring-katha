@@ -12,7 +12,7 @@ elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: The Choice of Salt
 	Rodel: I find myself longing for the brine of the Abyssal Courts. [pause=0.5] My skin is becoming brittle in this vapor-less realm.
 	Rodel: Tell me, Ambassador. Which of these land-crunches mimics the sea's depth? 
-	Rodel: The [b]Sea-Salt Chips[/b], thin like a shell, or the [b]Salted Nuts[/b], with the density of a trench-stone?
+	Rodel: The Sea-Salt Chips, thin like a shell, or the Salted Nuts, with the density of a trench-stone?
 	- The Sea-Salt Chips are a classic.
 		Rodel: A fine choice. A tribute to the waking tide. [pause=0.4] I shall attempt to consume this... thin, crispy hull.
 	- The Salted Nuts are much more satisfying.
