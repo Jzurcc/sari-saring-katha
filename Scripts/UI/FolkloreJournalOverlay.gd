@@ -893,14 +893,14 @@ func _rebuild_hero_banner() -> void:
 	story_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	story_col.add_child(story_hdr)
 
-	var sh_lbl := _make_label("STORY PROGRESSION", 14, COL_GOLD, true)
+	var sh_lbl := _make_label("STORY PROGRESSION", 17, COL_GOLD, true)
 	sh_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	story_hdr.add_child(sh_lbl)
-	story_hdr.add_child(_make_label("%d / %d" % [mini(cur_ch, total_ch), total_ch], 14, COL_MUTED, false))
+	story_hdr.add_child(_make_label("%d / %d" % [mini(cur_ch, total_ch), total_ch], 16, COL_MUTED, false))
 
 	var story_scroll := ScrollContainer.new()
 	story_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	story_scroll.custom_minimum_size = Vector2(0, 138)
+	story_scroll.custom_minimum_size = Vector2(0, 146)
 	story_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_style_scrollbar(story_scroll)
 	story_col.add_child(story_scroll)
@@ -915,7 +915,7 @@ func _rebuild_hero_banner() -> void:
 		var arc_title := c.get_arc_name(arc_i)
 		if arc_title == "":
 			arc_title = "Arc %d" % (arc_i + 1)
-		var arc_lbl := _make_label(arc_title, 14, COL_GOLD_BRIGHT, true)
+		var arc_lbl := _make_label(arc_title, 17, COL_GOLD_BRIGHT, true)
 		arc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		arcs_vbox.add_child(arc_lbl)
 
@@ -926,24 +926,11 @@ func _rebuild_hero_banner() -> void:
 			var ch_name := c.get_chapter_name(ch_idx)
 			if ch_name == "":
 				ch_name = "Chapter %d" % (ch_idx + 1)
-			var ch_row := HBoxContainer.new()
-			ch_row.add_theme_constant_override("separation", 7)
-			arcs_vbox.add_child(ch_row)
-
-			var cb := TextureRect.new()
-			cb.texture = IC_CHECKBOX_ON if done else IC_CHECKBOX_OFF
-			cb.custom_minimum_size = Vector2(16, 16)
-			cb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			cb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			cb.modulate = COL_POSITIVE if done else COL_LOCKED
-			cb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			ch_row.add_child(cb)
-
-			var ch_txt := "%d. %s" % [ch_idx + 1, ch_name if (done or ch_idx == cur_ch) else "???"]
-			var ch_lbl := _make_label(ch_txt, 14, COL_CREAM if done else (COL_MUTED if ch_idx == cur_ch else COL_LOCKED), done)
+			var ch_txt := "Chapter %d: %s" % [ch_idx + 1, ch_name if (done or ch_idx == cur_ch) else "???"]
+			var ch_lbl := _make_label(ch_txt, 16, COL_CREAM if done else (COL_MUTED if ch_idx == cur_ch else COL_LOCKED), done)
 			ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-			ch_row.add_child(ch_lbl)
+			arcs_vbox.add_child(ch_lbl)
 
 	# Divider between Story & Perks
 	var vsep2 := VSeparator.new()
@@ -1191,9 +1178,9 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 
 	var body_txt := str(rank_data["body"]).strip_edges()
 	if body_txt != "":
-		var body_lbl := _make_label(body_txt, 18, COL_BODY, false)
+		var body_lbl := _make_label(body_txt, 23, COL_BODY, false)
 		body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		body_lbl.add_theme_constant_override("line_spacing", 6)
+		body_lbl.add_theme_constant_override("line_spacing", 8)
 		v.add_child(body_lbl)
 
 	var src_txt := str(rank_data["media_source"]).strip_edges()
