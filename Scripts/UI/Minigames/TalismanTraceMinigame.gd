@@ -769,6 +769,7 @@ func _on_inscribe_pressed() -> void:
 	var accuracy_pct: int = int(eval["accuracy"])
 	var coverage_pct: int = int(eval["coverage"])
 	var precision_pct: int = int(eval["precision"])
+	var stray_pct: int = int(eval["stray"])
 	var target_pct: int = int(pat["required_accuracy"])
 	var won: bool = accuracy_pct >= target_pct
 
@@ -786,6 +787,7 @@ func _on_inscribe_pressed() -> void:
 		"accuracy": accuracy_pct,
 		"coverage": coverage_pct,
 		"precision": precision_pct,
+		"stray": stray_pct,
 		"target": target_pct,
 		"won": won,
 	}
@@ -799,21 +801,25 @@ func _on_inscribe_pressed() -> void:
 		Juice.play_lose_sting(self)
 		Juice.shake_control(_stage_container, 9.0, 0.25)
 
-	_show_result_modal(won, pat, accuracy_pct, coverage_pct, precision_pct, target_pct)
+	_show_result_modal(won, pat, accuracy_pct, coverage_pct, precision_pct, stray_pct, target_pct)
 	_is_evaluating = false
 
 
 func _evaluate_tracing(tolerance_px: float) -> Dictionary:
 	var img := _canvas.get_raw_paint_image()
 	if img == null or _guide_points_canvas.is_empty():
-		return {"accuracy": 0, "coverage": 0, "precision": 0}
+		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
 
 	var w := img.get_width()
 	var h := img.get_height()
 	var bytes := img.get_data()
 
-	# 1) Build spatial hash of guide points (cell size = 12px) for O(1) precision queries
-	var cell_sz := 12
+	# Tight, true-to-guide corridors (canvas is 560x750)
+	var cov_tol := clampf(tolerance_px * 0.55, 8.0, 15.0)
+	var prec_tol := clampf(tolerance_px * 0.65, 10.0, 17.0)
+
+	# 1) Build spatial hash of guide points (cell size = 10px) for fast nearest-guide queries
+	var cell_sz := 10
 	var guide_grid: Dictionary = {}
 	for pt in _guide_points_canvas:
 		var cx := int(floorf(pt.x / float(cell_sz)))
@@ -823,11 +829,11 @@ func _evaluate_tracing(tolerance_px: float) -> Dictionary:
 			guide_grid[key] = []
 		guide_grid[key].append(pt)
 
-	# 2) Coverage: % of guide samples that have at least one inked pixel within tolerance_px
-	var tol_i := int(ceilf(tolerance_px))
-	var tol_sq := tolerance_px * tolerance_px
-	var sample_stride := 3
-	var covered_count := 0
+	# 2) Coverage: distance-weighted score for each guide sample (center hit = 1.0, edge = 0.55)
+	var tol_i := int(ceilf(cov_tol))
+	var cov_tol_sq := cov_tol * cov_tol
+	var sample_stride := 2
+	var coverage_sum := 0.0
 
 	for pt in _guide_points_canvas:
 		var gx := int(roundf(pt.x))
@@ -836,33 +842,32 @@ func _evaluate_tracing(tolerance_px: float) -> Dictionary:
 		var x1 := mini(w - 1, gx + tol_i)
 		var y0 := maxi(0, gy - tol_i)
 		var y1 := mini(h - 1, gy + tol_i)
-		var hit := false
+		var best_dist_sq := cov_tol_sq + 1.0
 		var py := y0
-		while py <= y1 and not hit:
+		while py <= y1:
 			var dy := float(py) - pt.y
 			var dy_sq := dy * dy
 			var row_off := py * w
 			var px := x0
 			while px <= x1:
 				var dx := float(px) - pt.x
-				if dx * dx + dy_sq <= tol_sq:
-					if bytes[(row_off + px) * 4 + 3] > 35:
-						hit = true
-						break
+				var d_sq := dx * dx + dy_sq
+				if d_sq < best_dist_sq and bytes[(row_off + px) * 4 + 3] > 35:
+					best_dist_sq = d_sq
 				px += sample_stride
 			py += sample_stride
-		if hit:
-			covered_count += 1
+		if best_dist_sq <= cov_tol_sq:
+			var norm_d := sqrt(best_dist_sq) / maxf(1.0, cov_tol)
+			coverage_sum += lerpf(1.0, 0.55, norm_d)
 
-	var coverage := float(covered_count) / float(_guide_points_canvas.size())
+	var coverage := coverage_sum / float(_guide_points_canvas.size())
 
-	# 3) Precision: % of player-inked pixels that fall within (tolerance_px * 1.45) of any guide point
-	var prec_tol := tolerance_px * 1.45
+	# 3) Precision & Stray Ink: every inked pixel outside prec_tol reduces precision & adds stray penalty
 	var prec_tol_sq := prec_tol * prec_tol
 	var search_cells := int(ceilf(prec_tol / float(cell_sz)))
 	var total_ink := 0
 	var on_path_ink := 0
-	var ink_stride := 3
+	var ink_stride := 2
 
 	var y := 0
 	while y < h:
@@ -894,19 +899,26 @@ func _evaluate_tracing(tolerance_px: float) -> Dictionary:
 			x += ink_stride
 		y += ink_stride
 
-	if total_ink < 18:
-		return {"accuracy": 0, "coverage": 0, "precision": 0}
+	if total_ink < 24:
+		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
 
 	var precision := float(on_path_ink) / float(total_ink)
-	var combined := clampf(coverage * 0.68 + precision * 0.32, 0.0, 1.0)
+	var stray_ratio := clampf(1.0 - precision, 0.0, 1.0)
+	# Harmonic mean (F1) ensures BOTH coverage and precision must be high,
+	# plus an explicit penalty for stray strokes drawn outside the guide lines.
+	var f1 := (2.0 * coverage * precision) / maxf(0.0001, coverage + precision)
+	var stray_penalty := maxf(0.0, stray_ratio - 0.06) * 0.40
+	var combined := clampf(f1 - stray_penalty, 0.0, 1.0)
+
 	return {
 		"accuracy": int(roundf(combined * 100.0)),
 		"coverage": int(roundf(coverage * 100.0)),
 		"precision": int(roundf(precision * 100.0)),
+		"stray": int(roundf(stray_ratio * 100.0)),
 	}
 
 
-func _show_result_modal(won: bool, pat: Dictionary, acc: int, cov: int, prec: int, target: int) -> void:
+func _show_result_modal(won: bool, pat: Dictionary, acc: int, cov: int, prec: int, stray: int, target: int) -> void:
 	if won:
 		_result_title.text = "Anting-Anting Empowered!"
 		_result_title.add_theme_color_override("font_color", COL_SUCCESS)
@@ -914,10 +926,13 @@ func _show_result_modal(won: bool, pat: Dictionary, acc: int, cov: int, prec: in
 	else:
 		_result_title.text = "Unsteady Inscription"
 		_result_title.add_theme_color_override("font_color", COL_FAIL)
-		_result_quote.text = "\"Almost there! Keep your brush steady along the dashed lines and try once more.\""
+		if stray >= 25:
+			_result_quote.text = "\"Too many stray strokes outside the seal! Erase the extra marks and keep your lines clean.\""
+		else:
+			_result_quote.text = "\"Almost there! Keep your brush steady along the dashed lines and try once more.\""
 
 	_result_score.text = "Accuracy: %d%%  (Target: %d%%)" % [acc, target]
-	_result_breakdown.text = "Stroke Coverage: %d%%   •   Line Precision: %d%%" % [cov, prec]
+	_result_breakdown.text = "Coverage: %d%%   •   Precision: %d%%   •   Stray Ink: %d%%" % [cov, prec, stray]
 
 	_result_next_btn.visible = won and (not _locked_level) and (_current_level < _patterns.size())
 	_result_overlay.visible = true
