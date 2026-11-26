@@ -84,17 +84,13 @@ func _physics_process(_delta: float) -> void:
 		return
 
 	# When holding an item with Pricing Lens enabled, anchor the Pricing Lens on the middle of the held item
+	# while still allowing normal raycast hover outlines (e.g. customer hover border) underneath.
 	var held_item: DraggableItem = DragManager.get_held_item()
-	if pricing_mode_active and held_item != null and held_item.item_data != null and held_item.can_adjust_price():
-		if is_instance_valid(_last_hovered):
-			_last_hovered.on_hover(false)
-			_last_hovered.set_pricing_ui_active(false)
-			_last_hovered = null
+	var showing_held_lens: bool = pricing_mode_active and held_item != null and held_item.item_data != null and held_item.can_adjust_price()
+	if showing_held_lens:
 		var held_screen := DragManager.get_held_item_screen_center()
 		if held_screen != Vector2.ZERO:
 			PricingOverlay.show_held_item(held_item.item_data, held_screen)
-		_was_dragging = true
-		return
 
 	var center := get_viewport().get_visible_rect().size / 2.0
 	var ray_origin := project_ray_origin(center)
@@ -141,11 +137,13 @@ func _physics_process(_delta: float) -> void:
 	if current_hovered != _last_hovered:
 		if is_instance_valid(_last_hovered):
 			_last_hovered.on_hover(false)
-			_last_hovered.set_pricing_ui_active(false)
+			if not showing_held_lens:
+				_last_hovered.set_pricing_ui_active(false)
 		if is_instance_valid(current_hovered):
 			if current_hovered is Customer:
 				(current_hovered as Customer).set_drag_hover(DragManager.is_dragging)
-			current_hovered.set_pricing_ui_active(pricing_mode_active)
+			if not showing_held_lens:
+				current_hovered.set_pricing_ui_active(pricing_mode_active)
 			current_hovered.on_hover(true)
 		_last_hovered = current_hovered
 	elif current_hovered is Customer and DragManager.is_dragging != _was_dragging:
