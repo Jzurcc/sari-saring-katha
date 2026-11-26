@@ -352,11 +352,11 @@ func _spawn_bug(is_firefly: bool) -> void:
 		var roll := randf()
 		var base_speed: float
 		if roll < 0.30:
-			base_speed = randf_range(95.0, 145.0) # Slow drifter
+			base_speed = randf_range(190.0, 290.0) # Slow drifter
 		elif roll < 0.75:
-			base_speed = randf_range(175.0, 245.0) # Normal buzz
+			base_speed = randf_range(350.0, 490.0) # Normal buzz
 		else:
-			base_speed = randf_range(265.0, 345.0) # Fast dart!
+			base_speed = randf_range(530.0, 690.0) # Fast dart!
 		speed = base_speed * lerpf(0.56, 1.12, diff_t)
 	var vel := (target - pos).normalized() * speed
 
