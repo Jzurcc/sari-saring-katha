@@ -10,8 +10,8 @@ extends RefCounted
 ## the player decides what to prioritize with Pesos.
 
 const NODES: Array[Dictionary] = [
-	# ── CENTRAL ROOT NODE: Store Tiers 2 → 10 (x = 4.5, y = 0.0) ──
-	{"id": "store_tier", "title": "Store Tier", "pos": Vector2(4.5, 0.0), "max_level": 9, "prereqs": [], "kind": "tier_hub"},
+	# ── CENTRAL ROOT NODE: Store Tiers 1 → 10 (Tier 1 unlocked by default; x = 4.5, y = 0.0) ──
+	{"id": "store_tier", "title": "Store Tier", "pos": Vector2(4.5, 0.0), "max_level": 10, "prereqs": [], "kind": "tier_hub"},
 
 	# ── COL 0 (Tier 2): Business Permit I → II → III ──
 	{"id": "permit_1", "title": "Business Permit I", "pos": Vector2(0.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "permit"},
@@ -80,7 +80,7 @@ static func get_node_level(node_id: String, pending_levels: Dictionary = {}) -> 
 	if def.is_empty() or not is_instance_valid(StoryManager):
 		return pending
 	if str(def["kind"]) == "tier_hub":
-		var base_t := maxi(0, StoryManager.current_tier - 1)
+		var base_t := maxi(1, StoryManager.current_tier)
 		return mini(int(def["max_level"]), base_t + pending)
 	var req_lvl := int(def.get("target_level", 1))
 	var owned := false
@@ -120,7 +120,7 @@ static func are_prerequisites_met(node_id: String, pending_levels: Dictionary = 
 		return false
 	var req_tier := int(def.get("req_tier", 0))
 	if req_tier > 1:
-		var eff_tier := 1 + get_node_level("store_tier", pending_levels)
+		var eff_tier := get_node_level("store_tier", pending_levels)
 		if eff_tier < req_tier:
 			return false
 	for pre_id in def.get("prereqs", []):
@@ -136,7 +136,7 @@ static func get_node_item(node_id: String, target_level: int = -1) -> ItemData:
 	var lvl := int(def.get("target_level", 1)) if target_level <= 0 else target_level
 	match str(def["kind"]):
 		"tier_hub":
-			return StoryManager.get_tier_upgrade_item(clampi(lvl + 1, 2, 10))
+			return StoryManager.get_tier_upgrade_item(clampi(lvl, 2, 10))
 		"permit":
 			return StoryManager.get_permit_upgrade_item(lvl)
 		"fridge":
@@ -229,7 +229,7 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 
 	match str(def["kind"]):
 		"tier_hub":
-			var t := clampi(lvl + 1, 2, 10)
+			var t := clampi(lvl, 2, 10)
 			stats.append({"label": "Catalog Tier:", "value": "Tier %d" % t, "tone": "neu"})
 			stats.append({"label": "Starter Samples:", "value": "+2x Each", "tone": "pos"})
 		"permit":

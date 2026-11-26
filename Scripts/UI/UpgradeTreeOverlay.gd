@@ -351,7 +351,7 @@ func _show_tooltip_for(node_id: String) -> void:
 
 	_tip_title.text = item.item_name if (item != null and item.item_name != "") else str(def["title"])
 	if str(def["kind"]) == "tier_hub":
-		_tip_level.text = "Tier %d" % (cur_lvl + 1)
+		_tip_level.text = "Tier %d/%d" % [cur_lvl, max_lvl]
 	elif max_lvl > 1:
 		_tip_level.text = "Lv.%d" % cur_lvl
 	else:
@@ -391,7 +391,7 @@ func _show_tooltip_for(node_id: String) -> void:
 	# Crisp 1-sentence description (stats below carry the exact numbers)
 	var desc := Registry.get_short_description(node_id)
 	if str(def["kind"]) == "tier_hub" and is_instance_valid(InventoryManager):
-		var target_t := clampi(target_lvl + 1, 2, 10)
+		var target_t := clampi(target_lvl, 2, 10)
 		var names: Array[String] = []
 		for ti in InventoryManager.get_all_items():
 			if ti != null and ti.can_be_sold and ti.tier == target_t:
