@@ -308,15 +308,15 @@ const CARDS: Dictionary = {
 		"title": "Unrushed Hour",
 		"sigil": "◷",
 		"icon": "res://Assets/ui/icons/clock.png",
-		"tagline": "+50% Patience · -20% Refusal",
-		"description": "Time slows gently at your counter. Customer patience windows last 50% longer and neighbors are 20% less likely to refuse markups.",
-		"description_rich": "Time slows gently at your counter, stretching patience and softening [b]Price Tolerance[/b] pushback.",
+		"tagline": "+20% Haggle · -20% Refusal",
+		"description": "Easy conversation flows at your counter. Neighbors are 20% less likely to refuse markups and 20% more likely to accept a Haggle.",
+		"description_rich": "Easy conversation flows at your counter, softening [b]Price Tolerance[/b] pushback and boosting Haggle odds.",
 		"keywords": ["price_tolerance"],
 		"stats": [
-			{"label": "Customer Wait Window:", "value": "+50%", "tone": "pos"},
+			{"label": "Haggle Accept Chance:", "value": "+20%", "tone": "pos"},
 			{"label": "Markup Refusal Chance:", "value": "-20%", "tone": "pos"},
 		],
-		"hud_short": "+50% Patience · -20% Refusal",
+		"hud_short": "+20% Haggle · -20% Refusal",
 	},
 
 	# ── Omen (12 Double-Edged Debuffs / Quirks) ──────────────────────────

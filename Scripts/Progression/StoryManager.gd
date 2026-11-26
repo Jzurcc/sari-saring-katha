@@ -497,21 +497,22 @@ func purchase_trash_can_upgrade() -> void:
 		get_tree().call_group("trash", "refresh_visibility", true)
 	_save_progression()
 
-# --- Lucky Waving Cat: Maneki-Neko (Shorter Time Windows -> More Customers/Day) ---
+# --- Lucky Waving Cat: Maneki-Neko (Brings Wealth -> Cash Sale Tip Bonus) ---
 const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
-	{"level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "desc": "Standard 4h customer / 2h visit time windows."},
-	{"level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 80.0, "customer_hours": 3.0, "visit_hours": 1.0, "desc": "A beckoning porcelain cat on your counter! Compresses customer & visit time windows so more neighbors stop by each day."},
-	{"level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 165.0, "customer_hours": 2.0, "visit_hours": 0.5, "desc": "A gleaming golden beckoning cat! Tightens time windows even further for brisk, bustling foot traffic all day."},
+	{"level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.0, "desc": "Standard neighbor tips on cash sales."},
+	{"level": 1, "req_level": 3, "name": "Lucky Waving Cat (Maneki-Neko)", "cost": 80.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.10, "desc": "A beckoning porcelain cat on your counter! Brings good fortune with +10% bonus tips on every cash sale."},
+	{"level": 2, "req_level": 8, "name": "Golden Maneki-Neko", "cost": 165.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.22, "desc": "A gleaming golden beckoning cat! Attracts abundant wealth with +22% bonus tips on every cash sale."},
 ]
 var maneki_upgrade_level: int = 0
 var _maneki_upgrade_item_cache: Dictionary = {}
 
 func get_customer_time_window_hours() -> float:
 	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)
-	var hrs := float(MANEKI_UPGRADE_SPECS[lvl]["customer_hours"])
-	if has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
-		hrs *= 1.50
-	return hrs
+	return float(MANEKI_UPGRADE_SPECS[lvl]["customer_hours"])
+
+func get_maneki_tip_bonus_pct() -> float:
+	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)
+	return float(MANEKI_UPGRADE_SPECS[lvl].get("tip_bonus_pct", 0.0))
 
 func get_visit_time_window_hours() -> float:
 	var lvl := clampi(maneki_upgrade_level, 0, MANEKI_UPGRADE_SPECS.size() - 1)

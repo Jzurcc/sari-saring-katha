@@ -176,7 +176,7 @@ static func compute_haggle_accept_chance(offered_step: int, tolerance: int) -> f
 	var card_mod: float = 0.0
 	if is_instance_valid(StoryManager):
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
-			card_mod += 0.15
+			card_mod += 0.20
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
 			card_mod -= 0.15
 	return clampf(base + relief + card_mod, 0.05, 1.0)

@@ -178,7 +178,8 @@ static func get_node_stats(node_id: String, target_level: int) -> Array[Dictiona
 			stats.append({"label": "Favor Choices:", "value": "%d" % int(spec["favor_count"]), "tone": "pos"})
 		"maneki":
 			var spec: Dictionary = StoryManager.MANEKI_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.MANEKI_UPGRADE_SPECS.size() - 1)]
-			stats.append({"label": "Customer Interval:", "value": "%.1fh" % float(spec["customer_hours"]), "tone": "pos"})
+			var tip_pct := int(roundf(float(spec.get("tip_bonus_pct", 0.0)) * 100.0))
+			stats.append({"label": "Cash Sale Tip Bonus:", "value": "+%d%%" % tip_pct, "tone": "pos"})
 		"storefront_step":
 			var sf_lvl := int(def["storefront_level"])
 			var spec: Dictionary = StoryManager.STOREFRONT_UPGRADE_SPECS[clampi(sf_lvl, 0, StoryManager.STOREFRONT_UPGRADE_SPECS.size() - 1)]

@@ -124,13 +124,26 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			LogManager.info("GameManager", "Item accepted via Utang. Debt recorded.")
 			return
 
-		# Tip Windfall on Loss Leaders (step <= -1) + Moonlight Tips Moon Card (+₱3)
+		# Regular neighbor tip on every cash sale, with lower price steps giving a chance for extra generosity!
 		var base_sale := _last_earning
 		var tip: float = 0.0
-		if item.current_step < 0 and not wants_debt:
-			tip = snapped(float(abs(item.current_step)) * 1.5 + 1.0, 1.0)
-			_last_earning += tip
-			LogManager.info("GameManager", "Loss leader discount rewarded with a tip of +₱%.2f!" % tip)
+		if not wants_debt:
+			var base_tip := StoryManager.calc_scaled_tip(base_sale, 0.05, 1.0, 6.0)
+			tip += base_tip
+			_last_earning += base_tip
+			# Lower steps (<= 0) have a chance to spark a generous bonus tip
+			if item.current_step <= 0:
+				var bonus_chance := clampf(0.25 + float(abs(item.current_step)) * 0.14, 0.25, 0.90)
+				if randf() < bonus_chance:
+					var extra_tip := snapped(float(abs(item.current_step)) * 1.25 + randf_range(1.0, 2.0), 1.0)
+					tip += extra_tip
+					_last_earning += extra_tip
+					LogManager.info("GameManager", "Low-step generosity sparked an extra tip of +₱%.2f!" % extra_tip)
+			var maneki_pct := StoryManager.get_maneki_tip_bonus_pct()
+			if maneki_pct > 0.0:
+				var maneki_tip := StoryManager.calc_scaled_tip(base_sale, maneki_pct, 2.0, 22.0)
+				tip += maneki_tip
+				_last_earning += maneki_tip
 		if not wants_debt and StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
 			var ml_tip := StoryManager.calc_scaled_tip(base_sale, 0.12, 3.0, 18.0)
 			tip += ml_tip
