@@ -106,6 +106,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.is_echo()):
 		return
 	var ke := event as InputEventKey
+	var is_journal_toggle := event.is_action_pressed("toggle_journal") if InputMap.has_action("toggle_journal") else (ke.keycode == KEY_J)
 	if is_open:
 		if is_instance_valid(_link_confirm_bg) and _link_confirm_bg.visible:
 			if ke.keycode == KEY_ESCAPE:
@@ -121,10 +122,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				_close_lightbox()
 			return
 
+		if ke.keycode == KEY_ESCAPE or is_journal_toggle:
+			get_viewport().set_input_as_handled()
+			close_journal()
+			return
+
 		match ke.keycode:
-			KEY_ESCAPE, KEY_J:
-				get_viewport().set_input_as_handled()
-				close_journal()
 			KEY_UP, KEY_W:
 				get_viewport().set_input_as_handled()
 				_step_neighbor(-1)
@@ -142,8 +145,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_select_rank_tab(ke.keycode - KEY_0)
 		return
 
-	# Open journal with J when no blocking overlay/dialogue is active
-	if ke.keycode == KEY_J:
+	# Open journal with bound key (default J) when no blocking overlay/dialogue is active
+	if is_journal_toggle:
 		if Dialogic.current_timeline != null:
 			return
 		if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():

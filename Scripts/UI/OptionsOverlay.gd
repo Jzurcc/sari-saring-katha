@@ -34,6 +34,8 @@ const REMAPPABLE_ACTIONS := {
 	"sprint": "Sprint",
 	"pricing_lens": "Pricing Lens",
 	"toggle_ledger": "Price Ledger",
+	"toggle_journal": "Folklore Journal",
+	"toggle_upgrades": "Store Upgrades",
 	"price_up": "Increase Price",
 	"price_down": "Decrease Price",
 	"dialogic_default_action": "Advance Dialogue",
@@ -42,7 +44,7 @@ const REMAPPABLE_ACTIONS := {
 
 const CONTROL_GROUPS: Array[Dictionary] = [
 	{"title": "Movement", "actions": ["look_front", "look_back", "look_left", "look_right", "crouch", "sprint"]},
-	{"title": "Store & Pricing", "actions": ["pricing_lens", "toggle_ledger", "price_up", "price_down"]},
+	{"title": "Store & Menus", "actions": ["pricing_lens", "toggle_ledger", "toggle_journal", "toggle_upgrades", "price_up", "price_down"]},
 	{"title": "Dialogue", "actions": ["dialogic_default_action", "dialogue_confirm_choice"]},
 ]
 
@@ -718,6 +720,10 @@ func _set_default_for_action(action: String) -> void:
 			var e = InputEventKey.new(); e.physical_keycode = KEY_ALT; events.append(e)
 		"toggle_ledger":
 			var e = InputEventKey.new(); e.physical_keycode = KEY_L; events.append(e)
+		"toggle_journal":
+			var e = InputEventKey.new(); e.physical_keycode = KEY_J; events.append(e)
+		"toggle_upgrades":
+			var e = InputEventKey.new(); e.physical_keycode = KEY_U; events.append(e)
 		"price_up":
 			var e1 = InputEventKey.new(); e1.physical_keycode = KEY_PERIOD; events.append(e1)
 			var e2 = InputEventMouseButton.new(); e2.button_index = MOUSE_BUTTON_WHEEL_UP; events.append(e2)

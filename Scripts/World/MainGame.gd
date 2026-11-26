@@ -93,6 +93,12 @@ func _ready() -> void:
 	tree_ov.name = "UpgradeTreeOverlay"
 	add_child(tree_ov)
 
+	# Instantiate Mid-Left Vertical Shortcut Dock HUD ([J], [L], [U])
+	const ShortcutDockScript := preload("res://Scripts/UI/ShortcutDockHUD.gd")
+	var shortcut_hud: Node = ShortcutDockScript.new()
+	shortcut_hud.name = "ShortcutDockHUD"
+	add_child(shortcut_hud)
+
 	LogManager.debug("MainGame", "_ready() END")
 
 func _unhandled_input(event: InputEvent) -> void:

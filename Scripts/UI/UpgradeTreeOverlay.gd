@@ -106,12 +106,13 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.is_echo():
+		var is_upgrade_toggle: bool = event.is_action_pressed("toggle_upgrades") if InputMap.has_action("toggle_upgrades") else (event.keycode == KEY_U)
 		if is_open:
-			if event.keycode == KEY_ESCAPE or event.keycode == KEY_U:
+			if event.keycode == KEY_ESCAPE or is_upgrade_toggle:
 				get_viewport().set_input_as_handled()
 				close_tree()
 			return
-		if event.keycode == KEY_U:
+		if is_upgrade_toggle:
 			if Dialogic.current_timeline != null:
 				return
 			if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
