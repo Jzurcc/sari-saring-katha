@@ -119,7 +119,7 @@ func _spawn_delta_popup(diff: float) -> void:
 	if not is_instance_valid(host):
 		return
 
-	# Nudge existing popups downward so rapid changes stack cleanly
+	# Nudge existing popups downward so rapid changes stack cleanly (even on same-frame sale + tip)
 	var still_valid: Array[WeakRef] = []
 	for ref in _active_popups:
 		if not ref:
@@ -128,7 +128,7 @@ func _spawn_delta_popup(diff: float) -> void:
 		if old_popup != null and is_instance_valid(old_popup) and old_popup.is_inside_tree():
 			still_valid.append(ref)
 			var nudge: Tween = old_popup.create_tween()
-			nudge.tween_property(old_popup, "position:y", old_popup.position.y + POPUP_STACK_STEP, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			nudge.tween_property(old_popup, "position:y", POPUP_STACK_STEP, 0.16).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_active_popups = still_valid
 
 	var is_gain := diff > 0.0
@@ -140,23 +140,14 @@ func _spawn_delta_popup(diff: float) -> void:
 
 	var base_size := get_theme_font_size("font_size")
 	var mag_boost := clampf(absf(diff) / 120.0, 0.0, 1.0) * 8.0
-	var popup_size := clampi(int(roundf(base_size * 0.95 + mag_boost)), 26, 42) if base_size > 0 else 30
+	var popup_size := clampi(int(roundf(base_size * 0.95 + mag_boost)), 26, 40) if base_size > 0 else 30
 
-	# Dark rounded pill with a colored rim so the delta stays readable on any background
-	var popup := PanelContainer.new()
+	# Clean frameless outlined delta (no box/pill)
+	var popup := HBoxContainer.new()
+	popup.add_theme_constant_override("separation", -1)
+	popup.alignment = BoxContainer.ALIGNMENT_BEGIN
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	popup.z_index = 20
-	var pill := UIStyle.create_flat_stylebox(Color(0.07, 0.058, 0.05, 0.92), 18, 14, 4)
-	pill.border_color = Color(fg_color.r, fg_color.g, fg_color.b, 0.85)
-	pill.set_border_width_all(2)
-	pill.shadow_color = Color(fg_color.r, fg_color.g, fg_color.b, 0.28)
-	pill.shadow_size = 10
-	popup.add_theme_stylebox_override("panel", pill)
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	popup.add_child(row)
 
 	var sign_lbl := Label.new()
 	sign_lbl.text = "+" if is_gain else "-"
@@ -165,18 +156,18 @@ func _spawn_delta_popup(diff: float) -> void:
 	sign_lbl.add_theme_font_size_override("font_size", popup_size)
 	sign_lbl.add_theme_color_override("font_color", fg_color)
 	sign_lbl.add_theme_color_override("font_outline_color", outline_color)
-	sign_lbl.add_theme_constant_override("outline_size", 5)
-	row.add_child(sign_lbl)
+	sign_lbl.add_theme_constant_override("outline_size", 6)
+	popup.add_child(sign_lbl)
 
 	var icon_rect := TextureRect.new()
 	icon_rect.texture = PESO_ICON
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var icon_px := float(popup_size) * 1.1
+	var icon_px := float(popup_size) * 1.22
 	icon_rect.custom_minimum_size = Vector2(icon_px, icon_px)
 	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(icon_rect)
+	popup.add_child(icon_rect)
 
 	var num_lbl := Label.new()
 	num_lbl.text = _format_amount_number(diff)
@@ -185,35 +176,33 @@ func _spawn_delta_popup(diff: float) -> void:
 	num_lbl.add_theme_font_size_override("font_size", popup_size)
 	num_lbl.add_theme_color_override("font_color", fg_color)
 	num_lbl.add_theme_color_override("font_outline_color", outline_color)
-	num_lbl.add_theme_constant_override("outline_size", 5)
-	row.add_child(num_lbl)
+	num_lbl.add_theme_constant_override("outline_size", 6)
+	popup.add_child(num_lbl)
 
 	host.add_child(popup)
 	var popup_ref: WeakRef = weakref(popup)
 	_active_popups.append(popup_ref)
 
 	var target_pos := Vector2(
-		container.position.x + 6.0,
-		container.position.y + container.size.y + 6.0
+		container.position.x + 8.0,
+		container.position.y + container.size.y + 4.0
 	)
-	var enter_offset := Vector2(0.0, -14.0) if is_gain else Vector2(0.0, 14.0)
-	popup.position = target_pos + enter_offset
-	popup.modulate.a = 0.0
-	popup.scale = Vector2(0.4, 0.4)
-
-	# Wait one frame so the pill has its real size before scaling around its left-center
-	await get_tree().process_frame
-	if not is_instance_valid(popup):
-		return
-	popup.pivot_offset = Vector2(14.0, popup.size.y * 0.5)
+	var enter_dy := -12.0 if is_gain else 12.0
+	popup.position = target_pos + Vector2(0.0, enter_dy)
+	popup.pivot_offset = Vector2(18.0, float(popup_size) * 0.6)
+	popup.scale = Vector2(0.45, 1.32) if is_gain else Vector2(1.25, 0.65)
+	popup.rotation_degrees = -7.0 if is_gain else 5.0
+	popup.modulate = Color(1.45, 1.45, 1.25, 0.0) if is_gain else Color(1.3, 1.0, 1.0, 0.0)
 
 	var tw := popup.create_tween()
-	# Overshoot pop-in
-	tw.tween_property(popup, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(popup, "position:y", target_pos.y, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(popup, "scale", Vector2(1.18, 1.18), 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(popup, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	# Hold, then drift away in the direction of the change
+	# Lively squash-and-stretch pop-in + luminous flash + playful tilt settle
+	tw.tween_property(popup, "modulate:a", 1.0, 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(popup, "position:y", -enter_dy, 0.24).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(popup, "scale", Vector2(1.18, 0.90), 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(popup, "rotation_degrees", 0.0, 0.26).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(popup, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(popup, "modulate", Color.WHITE, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# Hold, then float and fade out
 	tw.tween_interval(POPUP_HOLD_SEC)
 	tw.tween_property(popup, "modulate:a", 0.0, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.parallel().tween_property(popup, "position:y", -16.0 if is_gain else 16.0, 0.55).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
