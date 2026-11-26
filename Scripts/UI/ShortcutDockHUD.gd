@@ -27,11 +27,11 @@ class CircleMedallion extends Control:
 	func _draw() -> void:
 		var c := size * 0.5
 		var r_outer := minf(size.x, size.y) * 0.5 - 1.5
-		var r_inner := r_outer - 4.0
+		var r_inner := r_outer - 4.5
 		draw_circle(c, r_outer, fill_col)
 		# Thin outer ring + thick inner ring (matching Hades diamond event emblems)
-		draw_arc(c, r_outer, 0.0, TAU, 48, outer_ring_col, 1.4, true)
-		draw_arc(c, r_inner, 0.0, TAU, 48, inner_ring_col, 2.8, true)
+		draw_arc(c, r_outer, 0.0, TAU, 56, outer_ring_col, 1.6, true)
+		draw_arc(c, r_inner, 0.0, TAU, 56, inner_ring_col, 3.2, true)
 
 
 var _root: Control
@@ -80,27 +80,21 @@ func _build_ui() -> void:
 	_dock.anchor_right = 0.0
 	_dock.anchor_top = 1.0
 	_dock.anchor_bottom = 1.0
-	_dock.offset_left = 24.0
-	_dock.offset_right = 230.0
-	_dock.offset_top = -106.0
-	_dock.offset_bottom = -18.0
-	_dock.add_theme_constant_override("separation", 14)
+	_dock.offset_left = 26.0
+	_dock.offset_right = 290.0
+	_dock.offset_top = -92.0
+	_dock.offset_bottom = -22.0
+	_dock.add_theme_constant_override("separation", 18)
 	_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_dock)
 
 	for s in SHORTCUTS:
-		var item_v := VBoxContainer.new()
-		item_v.alignment = BoxContainer.ALIGNMENT_CENTER
-		item_v.add_theme_constant_override("separation", 5)
-		item_v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_dock.add_child(item_v)
-
 		# Double-ring circular medallion encasing the Lucide icon
 		var circle := CircleMedallion.new()
-		circle.custom_minimum_size = Vector2(50, 50)
-		circle.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		circle.custom_minimum_size = Vector2(66, 66)
+		circle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		circle.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		item_v.add_child(circle)
+		_dock.add_child(circle)
 
 		var icon_center := CenterContainer.new()
 		icon_center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -108,7 +102,7 @@ func _build_ui() -> void:
 		circle.add_child(icon_center)
 
 		var ic := TextureRect.new()
-		ic.custom_minimum_size = Vector2(24, 24)
+		ic.custom_minimum_size = Vector2(30, 30)
 		ic.texture = s["icon"]
 		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -118,26 +112,35 @@ func _build_ui() -> void:
 
 		if str(s["id"]) == "journal":
 			_journal_dot = Panel.new()
-			_journal_dot.custom_minimum_size = Vector2(11, 11)
-			_journal_dot.size = Vector2(11, 11)
-			_journal_dot.position = Vector2(37, 2)
+			_journal_dot.custom_minimum_size = Vector2(13, 13)
+			_journal_dot.size = Vector2(13, 13)
+			_journal_dot.position = Vector2(51, 2)
 			_journal_dot.visible = false
 			_journal_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			var dot_st := StyleBoxFlat.new()
 			dot_st.bg_color = Color(1.0, 0.86, 0.34, 1.0)
 			dot_st.border_color = Color(0.08, 0.06, 0.04, 0.95)
 			dot_st.set_border_width_all(1)
-			dot_st.set_corner_radius_all(6)
+			dot_st.set_corner_radius_all(7)
 			_journal_dot.add_theme_stylebox_override("panel", dot_st)
 			circle.add_child(_journal_dot)
 
-		# Square keycap pill (same size & style as Calendar [C] keycap)
+		# Square keycap badge tucked into the bottom-right rim of the circle
 		var key_panel := PanelContainer.new()
-		key_panel.custom_minimum_size = Vector2(30, 30)
-		key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		key_panel.custom_minimum_size = Vector2(28, 28)
+		key_panel.anchor_left = 1.0
+		key_panel.anchor_right = 1.0
+		key_panel.anchor_top = 1.0
+		key_panel.anchor_bottom = 1.0
+		key_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		key_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		key_panel.offset_left = -23.0
+		key_panel.offset_right = 5.0
+		key_panel.offset_top = -25.0
+		key_panel.offset_bottom = 3.0
 		key_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var ks := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.86), 6, 8, 4)
-		ks.border_color = Color(0.86, 0.66, 0.30, 0.78)
+		var ks := UIStyle.create_flat_stylebox(Color(0.06, 0.052, 0.046, 0.94), 6, 7, 3)
+		ks.border_color = Color(0.86, 0.66, 0.30, 0.88)
 		ks.set_border_width_all(1)
 		key_panel.add_theme_stylebox_override("panel", ks)
 
@@ -150,7 +153,7 @@ func _build_ui() -> void:
 		key_lbl.add_theme_color_override("font_color", Color(1.0, 0.93, 0.78, 1.0))
 		key_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		key_panel.add_child(key_lbl)
-		item_v.add_child(key_panel)
+		circle.add_child(key_panel)
 
 		_key_labels[str(s["action"])] = key_lbl
 
