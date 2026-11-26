@@ -10,52 +10,56 @@ extends RefCounted
 ## the player decides what to prioritize with Pesos.
 
 const NODES: Array[Dictionary] = [
-	# ── CENTRAL ROOT NODE: Store Tiers 2 → 10 (x = 4.0, y = 0.0) ──
-	{"id": "store_tier", "title": "Store Tier", "pos": Vector2(4.0, 0.0), "max_level": 9, "prereqs": [], "kind": "tier_hub"},
+	# ── CENTRAL ROOT NODE: Store Tiers 2 → 10 (x = 4.5, y = 0.0) ──
+	{"id": "store_tier", "title": "Store Tier", "pos": Vector2(4.5, 0.0), "max_level": 9, "prereqs": [], "kind": "tier_hub"},
 
-	# ── BRANCH 1 (Tier 2): Business Permit I → II → III (x = 0.0) ──
+	# ── COL 0 (Tier 2): Business Permit I → II → III ──
 	{"id": "permit_1", "title": "Business Permit I", "pos": Vector2(0.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "permit"},
 	{"id": "permit_2", "title": "Business Permit II", "pos": Vector2(0.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["permit_1"], "kind": "permit"},
 	{"id": "permit_3", "title": "Business Permit III", "pos": Vector2(0.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_2"], "kind": "permit"},
 
-	# ── BRANCH 2 (Tier 2): Refrigerator I → II → III, and Wholesale Pass from Fridge I ──
+	# ── COL 1 (Tier 2): Refrigerator I → II → III ──
 	{"id": "fridge_1", "title": "Fridge Gasket", "pos": Vector2(1.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "fridge"},
 	{"id": "fridge_2", "title": "Fridge Insulation", "pos": Vector2(1.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["fridge_1"], "kind": "fridge"},
 	{"id": "fridge_3", "title": "Inverter Compressor", "pos": Vector2(1.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["fridge_2"], "kind": "fridge"},
-	{"id": "wholesale_pass", "title": "Wholesale Pass", "pos": Vector2(1.7, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["fridge_1"], "kind": "mario_deals"},
-	{"id": "wholesale_pass_2", "title": "Wholesale Pass II", "pos": Vector2(1.7, 3.5), "max_level": 1, "target_level": 2, "prereqs": ["wholesale_pass"], "kind": "mario_deals"},
 
-	# ── BRANCH 3 (Tier 3): Tambayan Bench I → II → III (x = 2.45) ──
-	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(2.45, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "bench"},
-	{"id": "bench_2", "title": "Tambayan Bench II", "pos": Vector2(2.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["bench_1"], "kind": "bench"},
-	{"id": "bench_3", "title": "Tambayan Bench III", "pos": Vector2(2.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["bench_2"], "kind": "bench"},
+	# ── COL 2: Wholesale Pass I → II (branches cleanly from Fridge I onto strict Rows 2 & 3) ──
+	{"id": "wholesale_pass", "title": "Wholesale Pass", "pos": Vector2(2.0, 2.0), "max_level": 1, "target_level": 1, "prereqs": ["fridge_1"], "kind": "mario_deals"},
+	{"id": "wholesale_pass_2", "title": "Wholesale Pass II", "pos": Vector2(2.0, 3.0), "max_level": 1, "target_level": 2, "prereqs": ["wholesale_pass"], "kind": "mario_deals"},
 
-	# ── BRANCH 4 (Tier 3): Barangay Radio I → II → III, and Trash Can from Radio I ──
-	{"id": "radio_1", "title": "Barangay Radio I", "pos": Vector2(3.45, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "radio"},
-	{"id": "radio_2", "title": "Barangay Radio II", "pos": Vector2(3.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["radio_1"], "kind": "radio"},
-	{"id": "radio_3", "title": "Barangay Radio III", "pos": Vector2(3.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["radio_2"], "kind": "radio"},
-	{"id": "trash_can", "title": "Store Trash Can", "pos": Vector2(4.15, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["radio_1"], "kind": "trash"},
-	{"id": "recycling", "title": "Recycling Program", "pos": Vector2(4.15, 3.5), "max_level": 1, "target_level": 1, "prereqs": ["trash_can"], "kind": "recycling"},
+	# ── COL 3 (Tier 3): Tambayan Bench I → II → III ──
+	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(3.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "bench"},
+	{"id": "bench_2", "title": "Tambayan Bench II", "pos": Vector2(3.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["bench_1"], "kind": "bench"},
+	{"id": "bench_3", "title": "Tambayan Bench III", "pos": Vector2(3.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["bench_2"], "kind": "bench"},
 
-	# ── BRANCH 5 (Tier 4): Barangay Cat I → II (x = 4.9) ──
-	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(4.9, 1.0), "max_level": 1, "target_level": 1, "req_tier": 4, "prereqs": ["store_tier"], "kind": "cat"},
-	{"id": "cat_2", "title": "Barangay Cat II", "pos": Vector2(4.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["cat_1"], "kind": "cat"},
+	# ── COL 4 (Tier 3): Barangay Radio I → II → III ──
+	{"id": "radio_1", "title": "Barangay Radio I", "pos": Vector2(4.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "radio"},
+	{"id": "radio_2", "title": "Barangay Radio II", "pos": Vector2(4.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["radio_1"], "kind": "radio"},
+	{"id": "radio_3", "title": "Barangay Radio III", "pos": Vector2(4.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["radio_2"], "kind": "radio"},
 
-	# ── BRANCH 6 (Tier 5): Sto. Niño Altar I → II → III (x = 5.9) ──
-	{"id": "sto_nino_1", "title": "Sto. Niño Altar I", "pos": Vector2(5.9, 1.0), "max_level": 1, "target_level": 1, "req_tier": 5, "prereqs": ["store_tier"], "kind": "sto_nino"},
-	{"id": "sto_nino_2", "title": "Sto. Niño Altar II", "pos": Vector2(5.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["sto_nino_1"], "kind": "sto_nino"},
-	{"id": "sto_nino_3", "title": "Sto. Niño Altar III", "pos": Vector2(5.9, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["sto_nino_2"], "kind": "sto_nino"},
+	# ── COL 5: Store Trash Can → Recycling Program (branches cleanly from Radio I onto strict Rows 2 & 3) ──
+	{"id": "trash_can", "title": "Store Trash Can", "pos": Vector2(5.0, 2.0), "max_level": 1, "target_level": 1, "prereqs": ["radio_1"], "kind": "trash"},
+	{"id": "recycling", "title": "Recycling Program", "pos": Vector2(5.0, 3.0), "max_level": 1, "target_level": 1, "prereqs": ["trash_can"], "kind": "recycling"},
 
-	# ── BRANCH 7 (Tier 6): Maneki-Neko I → II (x = 6.95) ──
-	{"id": "maneki_1", "title": "Maneki-Neko", "pos": Vector2(6.95, 1.0), "max_level": 1, "target_level": 1, "req_tier": 6, "prereqs": ["store_tier"], "kind": "maneki"},
-	{"id": "maneki_2", "title": "Fresh Batteries", "pos": Vector2(6.95, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
+	# ── COL 6 (Tier 4): Barangay Cat I → II ──
+	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(6.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 4, "prereqs": ["store_tier"], "kind": "cat"},
+	{"id": "cat_2", "title": "Barangay Cat II", "pos": Vector2(6.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["cat_1"], "kind": "cat"},
 
-	# ── BRANCH 8 (Tier 2): Storefront Signage → Poster (x = 8.0) ──
-	{"id": "signage", "title": "Roof Signage", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "storefront_step", "storefront_level": 1},
-	{"id": "poster", "title": "Promo Poster", "pos": Vector2(8.0, 2.2), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
+	# ── COL 7 (Tier 5): Sto. Niño Altar I → II → III ──
+	{"id": "sto_nino_1", "title": "Sto. Niño Altar I", "pos": Vector2(7.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 5, "prereqs": ["store_tier"], "kind": "sto_nino"},
+	{"id": "sto_nino_2", "title": "Sto. Niño Altar II", "pos": Vector2(7.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["sto_nino_1"], "kind": "sto_nino"},
+	{"id": "sto_nino_3", "title": "Sto. Niño Altar III", "pos": Vector2(7.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["sto_nino_2"], "kind": "sto_nino"},
 
-	# ── CAPSTONE: Open the Door (Top-Center, requires final upgrades of Permit, Fridge, Wholesale Pass, Bench, Radio, Trash Can, Sto. Niño, Maneki-Neko, Promo Poster) ──
-	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.0, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_3", "fridge_3", "wholesale_pass", "bench_3", "radio_3", "trash_can", "sto_nino_3", "maneki_2", "poster"], "kind": "storefront_step", "storefront_level": 3},
+	# ── COL 8 (Tier 6): Maneki-Neko I → II ──
+	{"id": "maneki_1", "title": "Maneki-Neko", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 6, "prereqs": ["store_tier"], "kind": "maneki"},
+	{"id": "maneki_2", "title": "Fresh Batteries", "pos": Vector2(8.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
+
+	# ── COL 9 (Tier 2): Storefront Signage → Poster ──
+	{"id": "signage", "title": "Roof Signage", "pos": Vector2(9.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "storefront_step", "storefront_level": 1},
+	{"id": "poster", "title": "Promo Poster", "pos": Vector2(9.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
+
+	# ── CAPSTONE: Open the Door (Top-Center at x = 4.5, y = 4.0) ──
+	{"id": "open_door", "title": "Open the Door", "pos": Vector2(4.5, 4.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_3", "fridge_3", "wholesale_pass", "bench_3", "radio_3", "trash_can", "sto_nino_3", "maneki_2", "poster"], "kind": "storefront_step", "storefront_level": 3},
 ]
 
 

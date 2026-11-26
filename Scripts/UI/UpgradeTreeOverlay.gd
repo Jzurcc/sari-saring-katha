@@ -16,10 +16,11 @@ const COL_PARCHMENT := Color(0.90, 0.81, 0.64, 1.0)
 const COL_PARCHMENT_EDGE := Color(0.44, 0.28, 0.16, 0.95)
 const COL_CREAM := Color(1.0, 0.95, 0.85, 1.0)
 const COL_INK := Color(0.20, 0.12, 0.07, 0.96)
-const COL_PATH_OUTLINE := Color(0.24, 0.14, 0.08, 0.92)
-const COL_PATH_LIT := Color(0.86, 0.62, 0.24, 1.0)
-const COL_PATH_AVAIL := Color(0.72, 0.54, 0.30, 0.88)
-const COL_PATH_LOCKED := Color(0.56, 0.46, 0.35, 0.45)
+const COL_PATH_OUTLINE := Color(0.02, 0.015, 0.01, 0.85)
+const COL_PATH_LIT := Color(0.94, 0.76, 0.36, 1.0)
+const COL_PATH_AVAIL := Color(0.54, 0.84, 0.52, 0.88)
+const COL_PATH_LOCKED := Color(0.32, 0.26, 0.20, 0.55)
+const COL_OUTLINE := Color(0.05, 0.038, 0.028, 0.95)
 
 # Matches EventsOverlay stat-row palette
 const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
@@ -175,8 +176,8 @@ func _node_center(lpos: Vector2) -> Vector2:
 	var pad_bot := 56.0
 	var usable_w := maxf(240.0, sz.x - pad_x * 2.0)
 	var usable_h := maxf(200.0, sz.y - pad_top - pad_bot)
-	# Logical x in [0 .. 8], logical y in [0 .. 4] (bottom-up)
-	var nx := lpos.x / 8.0
+	# Logical x in [0 .. 9], logical y in [0 .. 4] (bottom-up)
+	var nx := lpos.x / 9.0
 	var ny := 1.0 - (lpos.y / 4.0)
 	return Vector2(pad_x + nx * usable_w, pad_top + ny * usable_h)
 
@@ -221,46 +222,46 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 	var max_lvl := int(ev["max_level"])
 	var item: ItemData = ev.get("item")
 
-	var bg := Color(0.95, 0.88, 0.72, 1.0)
-	var border_col := Color(0.36, 0.22, 0.13, 1.0)
+	var bg := Color(0.14, 0.12, 0.10, 0.95)
+	var border_col := Color(0.42, 0.32, 0.20, 0.75)
 	var border_w := 2
 	var icon_mod := Color.WHITE
 	var badge_text := ""
-	var badge_col := COL_INK
+	var badge_col := COL_CREAM
 
 	match state:
 		"maxed":
-			bg = Color(0.98, 0.90, 0.62, 1.0)
-			border_col = Color(0.72, 0.48, 0.12, 1.0)
+			bg = Color(0.24, 0.19, 0.11, 0.98)
+			border_col = Color(0.92, 0.74, 0.34, 1.0)
 			border_w = 3
 			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
-			badge_col = Color(0.24, 0.16, 0.08, 1.0)
+			badge_col = COL_GOLD_BRIGHT
 		"available":
-			bg = Color(0.99, 0.95, 0.84, 1.0)
-			border_col = Color(0.22, 0.58, 0.28, 1.0)
+			bg = Color(0.16, 0.14, 0.115, 0.96)
+			border_col = Color(0.46, 0.86, 0.50, 1.0)
 			border_w = 3
 			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
-			badge_col = Color(0.18, 0.46, 0.22, 1.0)
+			badge_col = COL_STAT_POS
 		"available_poor":
-			bg = Color(0.92, 0.84, 0.68, 1.0)
-			border_col = Color(0.68, 0.34, 0.20, 0.95)
+			bg = Color(0.14, 0.12, 0.10, 0.92)
+			border_col = Color(0.88, 0.44, 0.40, 0.90)
 			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
-			badge_col = Color(0.65, 0.18, 0.14, 1.0)
+			badge_col = COL_STAT_NEG
 		_:
-			bg = Color(0.68, 0.58, 0.44, 0.88)
-			border_col = Color(0.34, 0.23, 0.14, 0.85)
-			icon_mod = Color(0.38, 0.32, 0.26, 0.65)
+			bg = Color(0.09, 0.08, 0.07, 0.84)
+			border_col = Color(0.32, 0.25, 0.18, 0.65)
+			icon_mod = Color(0.48, 0.42, 0.36, 0.46)
 			badge_text = ""
 
 	if hovered:
-		border_col = Color(1.0, 0.86, 0.44, 1.0)
+		border_col = Color(1.0, 0.88, 0.52, 1.0)
 		border_w = 3
 
-	var st := UIStyle.create_flat_stylebox(bg, 10, 4, 4)
+	var st := UIStyle.create_flat_stylebox(bg, 12, 4, 4)
 	st.border_color = border_col
 	st.set_border_width_all(border_w)
-	st.shadow_color = Color(0.18, 0.10, 0.04, 0.30)
-	st.shadow_size = 5
+	st.shadow_color = Color(0.0, 0.0, 0.0, 0.48)
+	st.shadow_size = 8
 
 	var hov := st.duplicate()
 	hov.bg_color = bg.lightened(0.06)
@@ -527,14 +528,14 @@ func _build_ui() -> void:
 	)
 	_root.add_child(backdrop)
 
-	# Borderless modern full-screen warm parchment canvas (minigame UI philosophy)
+	# Borderless dark semi-transparent warm espresso canvas (matches RestockMenu philosophy)
 	_board_panel = PanelContainer.new()
 	_board_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_board_panel.offset_left = 0.0
 	_board_panel.offset_right = 0.0
 	_board_panel.offset_top = 0.0
 	_board_panel.offset_bottom = 0.0
-	var canvas_st := UIStyle.create_flat_stylebox(COL_PARCHMENT, 0, 26, 20)
+	var canvas_st := UIStyle.create_flat_stylebox(Color(0.052, 0.044, 0.038, 0.90), 0, 36, 26)
 	canvas_st.set_border_width_all(0)
 	_board_panel.add_theme_stylebox_override("panel", canvas_st)
 	_root.add_child(_board_panel)
@@ -543,14 +544,11 @@ func _build_ui() -> void:
 	vbox.add_theme_constant_override("separation", 8)
 	_board_panel.add_child(vbox)
 
-	# Clean floating top bar: Money on LEFT (white, like main HUD), Store Upgrades + Close on RIGHT
+	# Clean floating top bar: Elevated HUD Money on LEFT, Store Upgrades + 48x48 Close on RIGHT
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 14)
 	vbox.add_child(top)
-
-	# The main HUD money counter is elevated into this overlay while open (see _elevate_hud_money);
-	# reserve its height so the tree area starts below it.
-	top.custom_minimum_size = Vector2(0, 58)
+	top.custom_minimum_size = Vector2(0, 56)
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -558,25 +556,43 @@ func _build_ui() -> void:
 	top.add_child(spacer)
 
 	_pending_lbl = Label.new()
+	_pending_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_pending_lbl.add_theme_font_override("font", _bold_font)
 	_pending_lbl.add_theme_font_size_override("font_size", 16)
-	_pending_lbl.add_theme_color_override("font_color", Color(0.36, 0.22, 0.08, 0.95))
+	_pending_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	_pending_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	_pending_lbl.add_theme_constant_override("outline_size", 3)
 	top.add_child(_pending_lbl)
 
 	var title := Label.new()
 	title.text = "Store Upgrades"
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	title.add_theme_font_override("font", _bold_font)
 	title.add_theme_font_size_override("font_size", 26)
-	title.add_theme_color_override("font_color", COL_INK)
+	title.add_theme_color_override("font_color", COL_CREAM)
+	title.add_theme_color_override("font_outline_color", COL_OUTLINE)
+	title.add_theme_constant_override("outline_size", 4)
 	top.add_child(title)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.tooltip_text = "Close [U / Esc]"
-	close_btn.custom_minimum_size = Vector2(36, 36)
+	close_btn.custom_minimum_size = Vector2(48, 48)
 	close_btn.focus_mode = Control.FOCUS_NONE
 	close_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	UIStyle.style_button(close_btn, Color(0.24, 0.16, 0.10, 0.88), COL_CREAM, 16.0, 8)
+	close_btn.add_theme_font_override("font", _bold_font)
+	close_btn.add_theme_font_size_override("font_size", 20)
+	var cb_n := UIStyle.create_flat_stylebox(Color(0.22, 0.14, 0.13, 0.95), 10, 8, 8)
+	cb_n.border_color = COL_STAT_NEG
+	cb_n.set_border_width_all(1)
+	var cb_h: StyleBoxFlat = cb_n.duplicate()
+	cb_h.bg_color = Color(0.32, 0.18, 0.16, 1.0)
+	cb_h.border_color = COL_STAT_NEG.lightened(0.18)
+	close_btn.add_theme_stylebox_override("normal", cb_n)
+	close_btn.add_theme_stylebox_override("hover", cb_h)
+	close_btn.add_theme_stylebox_override("pressed", cb_n)
+	close_btn.add_theme_color_override("font_color", COL_CREAM)
+	close_btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	close_btn.pressed.connect(close_tree)
 	top.add_child(close_btn)
 
