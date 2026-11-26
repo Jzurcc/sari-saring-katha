@@ -985,6 +985,8 @@ func _get_unlocked_items_for_category(cat_key: String) -> Array[ItemData]:
 			var pb := _get_item_priority(b)
 			if pa != pb:
 				return pa < pb
+			if a.tier != b.tier:
+				return a.tier > b.tier
 			return a.item_name.naturalnocasecmp_to(b.item_name) < 0
 		)
 		return result
@@ -996,12 +998,22 @@ func _get_unlocked_items_for_category(cat_key: String) -> Array[ItemData]:
 			if "/sachetcontainers/" in item.resource_path:
 				continue
 			result.append(item)
+		result.sort_custom(func(a: ItemData, b: ItemData) -> bool:
+			if a.tier != b.tier:
+				return a.tier > b.tier
+			return a.item_name.naturalnocasecmp_to(b.item_name) < 0
+		)
 		return result
 
 	if _category_cache.has(cat_key):
 		for item in _category_cache[cat_key]:
 			if item.tier <= StoryManager.current_tier:
 				result.append(item)
+	result.sort_custom(func(a: ItemData, b: ItemData) -> bool:
+		if a.tier != b.tier:
+			return a.tier > b.tier
+		return a.item_name.naturalnocasecmp_to(b.item_name) < 0
+	)
 	return result
 
 
