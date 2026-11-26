@@ -529,7 +529,9 @@ func get_maneki_upgrade_item(level: int) -> ItemData:
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "maneki_upgrade"
-	if ResourceLoader.exists("res://Assets/ui/cat.png"):
+	if ResourceLoader.exists("res://Assets/ui/manekineko.png"):
+		item.texture = load("res://Assets/ui/manekineko.png")
+	elif ResourceLoader.exists("res://Assets/ui/cat.png"):
 		item.texture = load("res://Assets/ui/cat.png")
 	item.set_meta("is_maneki_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
@@ -636,7 +638,9 @@ func get_mario_deals_upgrade_item() -> ItemData:
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "mario_deals_upgrade"
-	if ResourceLoader.exists("res://Assets/ui/mario_tricycle.png"):
+	if ResourceLoader.exists("res://Assets/ui/wholesale_pass.png"):
+		item.texture = load("res://Assets/ui/wholesale_pass.png")
+	elif ResourceLoader.exists("res://Assets/ui/mario_tricycle.png"):
 		item.texture = load("res://Assets/ui/mario_tricycle.png")
 	item.set_meta("is_mario_deals_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)

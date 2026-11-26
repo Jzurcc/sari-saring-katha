@@ -506,45 +506,39 @@ func _build_ui() -> void:
 	close_btn.pressed.connect(func(): close_minigame(false, true))
 	_root.add_child(close_btn)
 
-	# Top-Right Neighbor Leaderboard (Barangay Records)
-	var board_panel := PanelContainer.new()
-	board_panel.anchor_left = 1.0
-	board_panel.anchor_right = 1.0
-	board_panel.anchor_top = 0.0
-	board_panel.offset_left = -246
-	board_panel.offset_right = -18
-	board_panel.offset_top = 68
-	board_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var bstyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.84), 10, 12, 10)
-	bstyle.border_color = Color(0.86, 0.70, 0.36, 0.55)
-	bstyle.set_border_width_all(1)
-	board_panel.add_theme_stylebox_override("panel", bstyle)
-	_root.add_child(board_panel)
-
+	# Top-Right Neighbor Leaderboard (Barangay Records — frameless floating over vignette)
 	var bv := VBoxContainer.new()
-	bv.add_theme_constant_override("separation", 5)
+	bv.anchor_left = 1.0
+	bv.anchor_right = 1.0
+	bv.anchor_top = 0.0
+	bv.offset_left = -310
+	bv.offset_right = -24
+	bv.offset_top = 74
+	bv.add_theme_constant_override("separation", 8)
 	bv.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	board_panel.add_child(bv)
+	_root.add_child(bv)
 
 	var btitle := Label.new()
 	btitle.text = "Barangay Records"
-	btitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	btitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	btitle.add_theme_font_override("font", UIStyle.FONT_INDER)
-	btitle.add_theme_font_size_override("font_size", 14)
+	btitle.add_theme_font_size_override("font_size", 20)
 	btitle.add_theme_color_override("font_color", Color(1.0, 0.90, 0.62))
+	btitle.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.92))
+	btitle.add_theme_constant_override("outline_size", 5)
 	btitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bv.add_child(btitle)
 
 	_board_rows.clear()
 	for entry in NEIGHBOR_RECORDS:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		row.add_theme_constant_override("separation", 10)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bv.add_child(row)
 
 		var portrait := TextureRect.new()
 		portrait.texture = _load_tex(str(entry["portrait"]))
-		portrait.custom_minimum_size = Vector2(26, 26)
+		portrait.custom_minimum_size = Vector2(38, 38)
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -553,19 +547,25 @@ func _build_ui() -> void:
 		var nlbl := Label.new()
 		nlbl.text = str(entry["name"])
 		nlbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nlbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		nlbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		nlbl.add_theme_font_size_override("font_size", 13)
+		nlbl.add_theme_font_size_override("font_size", 18)
 		nlbl.add_theme_color_override("font_color", Color(0.94, 0.90, 0.82))
+		nlbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.90))
+		nlbl.add_theme_constant_override("outline_size", 4)
 		nlbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(nlbl)
 
 		var slbl := Label.new()
 		slbl.text = str(entry["label"])
 		slbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		slbl.custom_minimum_size = Vector2(64, 0)
+		slbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		slbl.custom_minimum_size = Vector2(82, 0)
 		slbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-		slbl.add_theme_font_size_override("font_size", 12)
+		slbl.add_theme_font_size_override("font_size", 17)
 		slbl.add_theme_color_override("font_color", Color(0.98, 0.84, 0.46))
+		slbl.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.03, 0.90))
+		slbl.add_theme_constant_override("outline_size", 4)
 		slbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(slbl)
 
