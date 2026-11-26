@@ -81,6 +81,20 @@ func _physics_process(_delta: float) -> void:
 		_was_dragging = DragManager.is_dragging
 		return
 
+	# When holding an item with Pricing Lens enabled, anchor the Pricing Lens on the middle of the held item
+	var held_item: DraggableItem = DragManager.get_held_item()
+	if pricing_mode_active and held_item != null and held_item.item_data != null and held_item.can_adjust_price():
+		if is_instance_valid(_last_hovered):
+			_last_hovered.on_hover(false)
+			_last_hovered.set_pricing_ui_active(false)
+			_last_hovered = null
+		var held_screen := DragManager.get_held_item_screen_center()
+		if held_screen != Vector2.ZERO:
+			var held_world := project_ray_origin(held_screen) + project_ray_normal(held_screen) * 1.35
+			PricingOverlay.show_item(held_item.item_data, held_world, true)
+		_was_dragging = true
+		return
+
 	var center := get_viewport().get_visible_rect().size / 2.0
 	var ray_origin := project_ray_origin(center)
 	var ray_dir := project_ray_normal(center)
@@ -180,6 +194,8 @@ func _input(event: InputEvent) -> void:
 		pricing_mode_active = !pricing_mode_active
 		EventBus.pricing_mode_changed.emit(pricing_mode_active)
 
+		if not pricing_mode_active:
+			PricingOverlay.hide_ui()
 		if is_instance_valid(_last_hovered):
 			_last_hovered.set_pricing_ui_active(pricing_mode_active)
 		return
@@ -203,8 +219,9 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-	# Pricing Adjustments (Direct Price Mode)
-	if pricing_mode_active and is_instance_valid(_last_hovered):
+	# Pricing Adjustments (Direct Price Mode — works on hovered item OR held item in hand)
+	var price_target: WorldInteractor = DragManager.get_held_item() if DragManager.is_dragging else _last_hovered
+	if pricing_mode_active and is_instance_valid(price_target):
 		var delta := 0.0
 		if event.is_action_pressed("price_up"):
 			delta = 1.0
@@ -222,9 +239,9 @@ func _input(event: InputEvent) -> void:
 				trigger_adj = true
 				_scroll_event_count = 0
 
-			if trigger_adj and _last_hovered.can_adjust_price():
+			if trigger_adj and price_target.can_adjust_price():
 				EventBus.request_sfx.emit("price_change")
-				_last_hovered.adjust_price(delta)
+				price_target.adjust_price(delta)
 				get_viewport().set_input_as_handled()
 				return
 

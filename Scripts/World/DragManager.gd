@@ -5,6 +5,14 @@ var _is_dragging: bool = false
 var is_dragging: bool:
 	get: return _is_dragging
 var _dragged_item: DraggableItem = null
+
+func get_held_item() -> DraggableItem:
+	return _dragged_item if (_is_dragging and is_instance_valid(_dragged_item)) else null
+
+func get_held_item_screen_center() -> Vector2:
+	if _is_dragging and is_instance_valid(_dragged_texture_rect) and _dragged_texture_rect.visible:
+		return _dragged_texture_rect.global_position + _dragged_texture_rect.size * 0.5
+	return Vector2.ZERO
 var _dragged_texture_rect: TextureRect = null
 var _canvas_layer: CanvasLayer = null
 var _drag_start_frame: int = -1
