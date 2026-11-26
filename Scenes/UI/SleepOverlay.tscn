@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cnqmn0rvrnwnq"]
 
 [ext_resource type="Script" path="res://Scripts/UI/SleepOverlay.gd" id="1_sleep"]
-[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-Medium.ttf" id="2_font"]
 
 [node name="SleepOverlay" type="CanvasLayer"]
 layer = 150

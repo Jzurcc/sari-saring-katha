@@ -6,7 +6,7 @@ extends CanvasLayer
 ## Lucide-icon Category & Active Effects popovers, and PricingOverlay's
 ## interactive bidirectional diamond-capped PriceStepGauge + Effect Tooltip cards.
 
-const FONT_INDER := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
+const FONT_INDER := preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
 const IC_SPARKLES: Texture2D = preload("res://Assets/ui/icons/sparkles.png")
 const IC_LAYERS: Texture2D = preload("res://Assets/ui/icons/layers-2.png")
 const IC_PACKAGE: Texture2D = preload("res://Assets/ui/icons/package.png")

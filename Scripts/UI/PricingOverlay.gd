@@ -6,7 +6,7 @@ extends Node3D
 ## colored dynamically by effective tolerance, and compact right-side tooltips for
 ## active Price Tolerance sources (Events, Mayari Cards, Sto. Niño, & active customers).
 
-const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
+const INDER_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
 
 const COL_ESPRESSO := Color(0.062, 0.054, 0.046, 0.96)
 const COL_GOLD := Color(0.835, 0.624, 0.278, 0.92)

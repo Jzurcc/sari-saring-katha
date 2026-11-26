@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://u16kpt01oub8"]
 
 [ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/World/MainGame.gd" id="1_script"]
-[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="5_eeqno"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf" id="5_eeqno"]
 [ext_resource type="PackedScene" uid="uid://c4vq703xgyume" path="res://Scenes/TransactionTray.tscn" id="6_d4f28"]
 [ext_resource type="Texture2D" uid="uid://dlcdiuky20ro2" path="res://Assets/ui/peso_icon.png" id="6_eeqno"]
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/World/Entities/ShelfSurface.gd" id="11_ktwve"]
@@ -30,8 +30,6 @@
 [ext_resource type="Shader" uid="uid://qh1tqumxvlq5" path="res://Shaders/outline.gdshader" id="38_cqekc"]
 [ext_resource type="Script" uid="uid://dxmnefrwak8nn" path="res://Scripts/World/Entities/SachetContainerItem.gd" id="45_glkqw"]
 [ext_resource type="Material" uid="uid://db4iw7gjdpieb" path="res://Assets/3D/final store/textures/materials/outer_wall.001.tres" id="45_gnwe2"]
-[ext_resource type="Script" path="res://Scripts/World/Interactors/ManekiInteractable.gd" id="maneki_script"]
-[ext_resource type="Script" uid="uid://blrfufejsu1cj" path="res://Scripts/Components/WorldInteractor.gd" id="45_iyiaj"]
 [ext_resource type="Texture2D" uid="uid://ry07r2avbtnk" path="res://Assets/ui/manekineko.png" id="46_eisn2"]
 [ext_resource type="Material" uid="uid://7p3u1xj7ym3f" path="res://Assets/3D/final store/textures/materials/outer_wall.tres" id="46_glkqw"]
 [ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="46_hfiw1"]
@@ -66,6 +64,7 @@
 [ext_resource type="Script" uid="uid://dmr2hly48pbkb" path="res://Scripts/UI/DayTimeUI.gd" id="dt_scr"]
 [ext_resource type="Script" uid="uid://dnowjpw0mq2o4" path="res://Scripts/Components/FPSController.gd" id="fps_scr"]
 [ext_resource type="Script" uid="uid://dchrvgkvawu1a" path="res://Scripts/World/GameManager.gd" id="gm_scr"]
+[ext_resource type="Script" uid="uid://df1we1h12n88t" path="res://Scripts/World/Interactors/ManekiInteractable.gd" id="maneki_script"]
 [ext_resource type="AudioStream" uid="uid://co4ijn45uea7r" path="res://Audio/SFX/meow1.wav" id="meow1"]
 [ext_resource type="AudioStream" uid="uid://cita80tdosv0o" path="res://Audio/SFX/meow2.wav" id="meow2"]
 [ext_resource type="AudioStream" uid="uid://bolh1qcr1fith" path="res://Audio/SFX/meow3.wav" id="meow3"]
@@ -412,7 +411,6 @@ spot_angle = 30.256962
 
 [node name="GameManager" type="Node" parent="." unique_id=1750367744]
 script = ExtResource("gm_scr")
-starting_money = null
 
 [node name="CustomerSpawner" type="Node" parent="." unique_id=1262248555 groups=["customer_spawner"]]
 script = ExtResource("cs_scr")
@@ -444,7 +442,7 @@ transform = Transform3D(0.06685283, -1.6890506, -1.8113688e-07, -2.8310587e-09, 
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.07418847, 4.0375986, 4.019844)
 script = ExtResource("11_ktwve")
 items = Array[ExtResource("12_yc6xl")]([ExtResource("24_d7jqg"), null, ExtResource("25_yh2yp"), ExtResource("24_d7jqg"), ExtResource("24_d7jqg"), ExtResource("25_yh2yp")])
-shelf_width = 2.535
+shelf_width = 4.005
 allowed_categories = PackedStringArray()
 rejected_categories = PackedStringArray()
 layout_strategy = SubResource("Resource_r5sjn")
@@ -859,7 +857,7 @@ shape = SubResource("BoxShape3D_keblb")
 script = ExtResource("storefront_display_script")
 
 [node name="RadioInteractable" type="Area3D" parent="." unique_id=581061986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2232318, 4.2474003, 4.0308433)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5378213, 2.4142866, 0.6262583)
 script = ExtResource("radio_interactable_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RadioInteractable" unique_id=682800508]

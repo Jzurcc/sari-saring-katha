@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c7v6p5u6o2x18"]
 
 [ext_resource type="Script" path="res://Scripts/UI/OptionsOverlay.gd" id="1_options"]
-[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf" id="2_font"]
 [ext_resource type="Texture2D" uid="uid://pwx1mc3jejjo" path="res://Assets/ui/grabber.png" id="3_grabber"]
 [ext_resource type="Texture2D" uid="uid://bhc76jwyeq11p" path="res://Assets/ui/carbon_checkbox.png" id="4_unchecked"]
 [ext_resource type="Texture2D" uid="uid://bmlw645gf4ajw" path="res://Assets/ui/mingcute_checkbox-fill.png" id="5_checked"]

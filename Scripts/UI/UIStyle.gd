@@ -104,7 +104,13 @@ static func get_customer_portrait(customer_name: String) -> Texture2D:
 	var norm := customer_name.to_lower().replace(" ", "").replace(".", "").replace("_", "")
 	return _CUSTOMER_PORTRAITS.get(norm, null)
 
-const FONT_INDER: Font = preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
+const FONT_FREDOKA_LIGHT: Font = preload("res://Assets/Fonts/Fredoka/Fredoka-Light.ttf")
+const FONT_FREDOKA_REG: Font = preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
+const FONT_FREDOKA_MED: Font = preload("res://Assets/Fonts/Fredoka/Fredoka-Medium.ttf")
+const FONT_FREDOKA_SEMIBOLD: Font = preload("res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf")
+const FONT_FREDOKA_BOLD: Font = preload("res://Assets/Fonts/Fredoka/Fredoka-Bold.ttf")
+const FONT_FREDOKA: Font = FONT_FREDOKA_SEMIBOLD
+const FONT_INDER: Font = FONT_FREDOKA_REG # Alias so all existing UI scripts automatically use Fredoka Regular
 
 ## Creates a flat styled box with uniform corners and internal padding.
 static func create_flat_stylebox(

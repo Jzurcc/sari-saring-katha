@@ -8,7 +8,7 @@ extends Control
 signal notebook_closed
 
 const LEDGER_TEX_PATH := "res://Assets/ui/ledger_ui.png"
-const INK_FONT_PATH := "res://Assets/Fonts/Inder/Inder-Regular.ttf"
+const INK_FONT_PATH := "res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf"
 const BOLD_FONT_PATH := "res://Assets/Fonts/Balete Trial/BaleteTrial-Bold.ttf"
 
 const LEDGER_ASPECT := 1504.0 / 1776.0

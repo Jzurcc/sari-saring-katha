@@ -9,7 +9,7 @@ extends CanvasLayer
 signal haggle_finished(accepted: bool, offered_step: int)
 
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
-const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
+const INDER_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
 
 const COL_GOLD := Color(0.835, 0.624, 0.278, 0.92)
 const COL_GOLD_SOFT := Color(0.96, 0.85, 0.52, 1.0)

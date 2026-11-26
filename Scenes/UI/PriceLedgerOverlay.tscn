@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/PriceLedgerOverlay.gd" id="1_script"]
-[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dim"]
 bg_color = Color(0, 0, 0, 0.55)

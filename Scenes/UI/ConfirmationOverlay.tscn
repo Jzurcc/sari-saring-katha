@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://confirmation_overlay_uid"]
 
 [ext_resource type="Script" path="res://Scripts/UI/ConfirmationOverlay.gd" id="1_confirm"]
-[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
 bg_color = Color(0.082, 0.078, 0.071, 0.95)
