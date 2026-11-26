@@ -12,10 +12,10 @@ var _bg_sprite: Sprite3D = null
 static func _get_pill_texture() -> ImageTexture:
 	if _pill_tex != null:
 		return _pill_tex
-	const W := 160
+	const W := 152
 	const H := 96
 	const PAD := 6.0
-	const RADIUS := 22.0
+	const RADIUS := 18.0
 	const BORDER_W := 4.0
 	const AA := 1.8
 
@@ -25,8 +25,8 @@ static func _get_pill_texture() -> ImageTexture:
 	var cx := W * 0.5
 	var cy := H * 0.5
 
-	var fill_col := Color(0.08, 0.08, 0.11, 0.86)
-	var border_col := Color(1.0, 0.91, 0.58, 0.78)
+	var fill_col := Color(0.06, 0.052, 0.046, 0.94)
+	var border_col := Color(0.86, 0.66, 0.30, 0.88)
 
 	for y in H:
 		for x in W:
@@ -54,12 +54,12 @@ func _ready() -> void:
 	var eb := get_node_or_null("/root/EventBus")
 	if eb and eb.has_signal("keybinds_changed") and not eb.keybinds_changed.is_connected(_refresh_key_text):
 		eb.keybinds_changed.connect(_refresh_key_text)
-	font = UIStyle.FONT_INDER
+	font = UIStyle.FONT_FREDOKA_MED
 	font_size = 28
 	pixel_size = 0.0020
-	modulate = Color(1.0, 0.92, 0.56, 1.0)
-	outline_modulate = Color(0.06, 0.05, 0.04, 0.92)
-	outline_size = 6
+	modulate = Color(1.0, 0.93, 0.78, 1.0)
+	outline_modulate = Color(0.06, 0.052, 0.046, 0.92)
+	outline_size = 4
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	shaded = false
 	no_depth_test = true
@@ -68,7 +68,7 @@ func _ready() -> void:
 
 	_bg_sprite = Sprite3D.new()
 	_bg_sprite.texture = _get_pill_texture()
-	_bg_sprite.pixel_size = 0.00115
+	_bg_sprite.pixel_size = 0.00112
 	_bg_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bg_sprite.shaded = false
 	_bg_sprite.no_depth_test = true
@@ -76,7 +76,7 @@ func _ready() -> void:
 	_bg_sprite.render_priority = 10
 	add_child(_bg_sprite)
 
-	_start_pulse()
+	call_deferred("_start_bob")
 
 func _refresh_key_text() -> void:
 	var nav := get_node_or_null("/root/DialogueChoiceNavigator")
@@ -85,13 +85,16 @@ func _refresh_key_text() -> void:
 	else:
 		text = "V"
 
-func _start_pulse() -> void:
+func _start_bob() -> void:
 	if _pulse_tween and _pulse_tween.is_valid():
 		_pulse_tween.kill()
-	scale = Vector3.ONE * 0.90
+	var base_y := position.y
+	scale = Vector3.ONE
 	_pulse_tween = create_tween().set_loops()
-	_pulse_tween.tween_property(self, "scale", Vector3.ONE * 1.08, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_pulse_tween.tween_property(self, "scale", Vector3.ONE * 0.90, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_pulse_tween.tween_property(self, "position:y", base_y + 0.018, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_pulse_tween.parallel().tween_property(_bg_sprite, "modulate", Color(1.12, 1.08, 0.98, 1.0), 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_pulse_tween.tween_property(self, "position:y", base_y - 0.006, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_pulse_tween.parallel().tween_property(_bg_sprite, "modulate", Color(0.94, 0.92, 0.88, 0.92), 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func dismiss_and_free() -> void:
 	if _pulse_tween and _pulse_tween.is_valid():
