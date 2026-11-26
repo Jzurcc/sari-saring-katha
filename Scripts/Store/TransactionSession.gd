@@ -25,6 +25,7 @@ var _is_partial_success: bool = false
 var _greeting_interrupted: bool = false
 var _mosquito_choice: String = ""
 var _switching_customer_dialogue: bool = false
+var _haggle_reaction_pending: bool = false
 var _switch_session_id: int = 0
 var _current_timeline_path: String = ""
 var _last_dialogue_frame: int = -1
@@ -57,6 +58,7 @@ func bind_encounter(primary: Customer, guest: Customer = null) -> void:
 	_is_partial_success = false
 	_greeting_interrupted = false
 	_switching_customer_dialogue = false
+	_haggle_reaction_pending = false
 	_switch_session_id += 1
 	_current_timeline_path = ""
 	_watchdog_elapsed = 0.0
@@ -69,6 +71,7 @@ func unbind_encounter() -> void:
 	_is_partial_success = false
 	_greeting_interrupted = false
 	_switching_customer_dialogue = false
+	_haggle_reaction_pending = false
 	_switch_session_id += 1
 	_current_timeline_path = ""
 
@@ -312,7 +315,7 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 		return false
 
 	# Never interrupt Uncle Mario dialogue or an in-progress cross-customer dialogue switch
-	if (Dialogic.current_timeline != null and "UncleMario.dtl" in Dialogic.current_timeline.resource_path) or _switching_customer_dialogue:
+	if (Dialogic.current_timeline != null and "UncleMario.dtl" in Dialogic.current_timeline.resource_path) or _switching_customer_dialogue or _haggle_reaction_pending:
 		item.show_visuals()
 		item.return_to_start()
 		return false
@@ -382,63 +385,204 @@ func _start_haggle_or_refusal(
 
 	# Haggle triggers by chance (60% base, modified by Mayari Favor/Omen cards)
 	var haggle_chance: float = 0.60
+	var modifier_label: String = ""
 	if is_instance_valid(StoryManager):
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
+		var has_unrushed := StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR)
+		var has_restless := StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD)
+		if has_unrushed:
 			haggle_chance += 0.25
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+		if has_restless:
 			haggle_chance -= 0.25
+		if has_unrushed and not has_restless:
+			modifier_label = "Unrushed Hour"
+		elif has_restless and not has_unrushed:
+			modifier_label = "Restless Crowd"
 	haggle_chance = clampf(haggle_chance, 0.15, 0.95)
-	if randf() >= haggle_chance:
-		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-		return
+	var can_haggle: bool = randf() < haggle_chance
 
-	var launch_haggle := func():
+	_haggle_reaction_pending = true
+	_show_haggle_reaction_badge(customer, can_haggle, haggle_chance, modifier_label)
+
+	var proceed := func():
+		_haggle_reaction_pending = false
 		if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
 			return
-		var overlay := HaggleOverlayScript.new()
-		overlay.setup(item.item_data, customer.customer_data, customer)
-		_tree_owner.get_tree().root.add_child(overlay)
-		overlay.haggle_finished.connect(func(accepted: bool, offered_step: int):
+		if not can_haggle:
+			_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+			return
+
+		var launch_haggle := func():
 			if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
 				return
-			if accepted:
-				var saved_step := item.item_data.current_step
-				var saved_selling_price := item.item_data.selling_price
-				item.item_data.current_step = offered_step
-				item.item_data.selling_price = item.item_data.get_price_for_step(offered_step)
-				_complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-				item.item_data.current_step = saved_step
-				item.item_data.selling_price = saved_selling_price
+			var overlay := HaggleOverlayScript.new()
+			overlay.setup(item.item_data, customer.customer_data, customer)
+			_tree_owner.get_tree().root.add_child(overlay)
+			overlay.haggle_finished.connect(func(accepted: bool, offered_step: int):
+				if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
+					return
+				if accepted:
+					var saved_step := item.item_data.current_step
+					var saved_selling_price := item.item_data.selling_price
+					item.item_data.current_step = offered_step
+					item.item_data.selling_price = item.item_data.get_price_for_step(offered_step)
+					_complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+					item.item_data.current_step = saved_step
+					item.item_data.selling_price = saved_selling_price
+				else:
+					_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+			)
+
+		if not ResourceLoader.exists(PRICE_HAGGLE_PROMPT_TIMELINE_PATH):
+			launch_haggle.call()
+			return
+
+		var char_name: String = customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"
+		if generic_char_res:
+			generic_char_res.display_name = char_name
+		Dialogic.VAR.set_variable("Global_PriceRefusalLine", _format_price_refusal_line(item.item_data))
+
+		var choice_holder := {"choice": "decline"}
+		var sig_cb := func(arg: String):
+			if arg == "haggle_accept":
+				choice_holder["choice"] = "haggle"
+			elif arg == "haggle_decline":
+				choice_holder["choice"] = "decline"
+		Dialogic.signal_event.connect(sig_cb)
+
+		start_dialogue(PRICE_HAGGLE_PROMPT_TIMELINE_PATH, customer, Phase.TALK, "")
+		Dialogic.timeline_ended.connect(func():
+			if Dialogic.signal_event.is_connected(sig_cb):
+				Dialogic.signal_event.disconnect(sig_cb)
+			if choice_holder["choice"] == "haggle":
+				launch_haggle.call()
 			else:
 				_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-		)
+		, CONNECT_ONE_SHOT)
 
-	if not ResourceLoader.exists(PRICE_HAGGLE_PROMPT_TIMELINE_PATH):
-		launch_haggle.call()
+	var beat_timer := _tree_owner.get_tree().create_timer(0.55)
+	beat_timer.timeout.connect(proceed, CONNECT_ONE_SHOT)
+
+
+func _show_haggle_reaction_badge(customer: Customer, can_haggle: bool, haggle_chance: float, modifier_label: String) -> void:
+	if not is_instance_valid(_tree_owner) or not _tree_owner.is_inside_tree():
 		return
+	var tree := _tree_owner.get_tree()
+	var vp := tree.root.get_viewport()
+	var vp_size := vp.get_visible_rect().size if vp else Vector2(1280.0, 720.0)
 
-	var char_name: String = customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"
-	if generic_char_res:
-		generic_char_res.display_name = char_name
-	Dialogic.VAR.set_variable("Global_PriceRefusalLine", _format_price_refusal_line(item.item_data))
+	# Project customer's head/speech marker to 2D screen coordinates
+	var screen_pos := Vector2(vp_size.x * 0.5, vp_size.y * 0.34)
+	if is_instance_valid(customer) and vp:
+		var cam := vp.get_camera_3d()
+		if cam:
+			var marker := customer.get_node_or_null("SpeechMarker") as Node3D
+			var world_pos := (marker.global_position + Vector3(0.0, 0.34, 0.0)) if marker else (customer.global_position + Vector3(0.0, 1.78, 0.0))
+			if not cam.is_position_behind(world_pos):
+				screen_pos = cam.unproject_position(world_pos)
 
-	var choice_holder := {"choice": "decline"}
-	var sig_cb := func(arg: String):
-		if arg == "haggle_accept":
-			choice_holder["choice"] = "haggle"
-		elif arg == "haggle_decline":
-			choice_holder["choice"] = "decline"
-	Dialogic.signal_event.connect(sig_cb)
+	var accent := Color(0.96, 0.80, 0.38, 1.0) if can_haggle else Color(0.94, 0.44, 0.38, 1.0)
+	var icon_path := "res://Assets/ui/icons/heart-handshake.png" if can_haggle else "res://Assets/ui/icons/clock.png"
+	var headline := "Open to Haggle!" if can_haggle else "Too Rushed to Haggle!"
+	var pct := int(roundf(haggle_chance * 100.0))
+	var subline := "%d%% Tawaran chance" % pct
+	if modifier_label != "":
+		subline += " • %s" % modifier_label
 
-	start_dialogue(PRICE_HAGGLE_PROMPT_TIMELINE_PATH, customer, Phase.TALK, "")
-	Dialogic.timeline_ended.connect(func():
-		if Dialogic.signal_event.is_connected(sig_cb):
-			Dialogic.signal_event.disconnect(sig_cb)
-		if choice_holder["choice"] == "haggle":
-			launch_haggle.call()
+	var cl := CanvasLayer.new()
+	cl.layer = 45
+	tree.root.add_child(cl)
+
+	var pill := PanelContainer.new()
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.modulate.a = 0.0
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.10, 0.08, 0.06, 0.95)
+	st.border_color = accent
+	st.set_border_width_all(2)
+	st.set_corner_radius_all(14)
+	st.content_margin_left = 18
+	st.content_margin_right = 20
+	st.content_margin_top = 10
+	st.content_margin_bottom = 10
+	st.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
+	st.shadow_size = 14
+	st.shadow_offset = Vector2(0, 4)
+	pill.add_theme_stylebox_override("panel", st)
+	cl.add_child(pill)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.add_child(row)
+
+	if ResourceLoader.exists(icon_path):
+		var ic := TextureRect.new()
+		ic.texture = load(icon_path)
+		ic.custom_minimum_size = Vector2(28, 28)
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		ic.modulate = accent
+		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(ic)
+
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 1)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(col)
+
+	var title_lbl := Label.new()
+	title_lbl.text = headline
+	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
+	title_lbl.add_theme_font_size_override("font_size", 20)
+	title_lbl.add_theme_color_override("font_color", accent)
+	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(title_lbl)
+
+	var sub_lbl := Label.new()
+	sub_lbl.text = subline
+	sub_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+	sub_lbl.add_theme_font_size_override("font_size", 14)
+	sub_lbl.add_theme_color_override("font_color", Color(0.92, 0.87, 0.78, 0.90))
+	sub_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(sub_lbl)
+
+	# Audio cue matching outcome
+	if is_instance_valid(AudioManager) and is_instance_valid(AudioManager.sfx_pool):
+		if can_haggle:
+			AudioManager.sfx_pool.play_sfx_pitched("pickup", 1.12, -2.0)
 		else:
-			_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-	, CONNECT_ONE_SHOT)
+			AudioManager.sfx_pool.play_sfx_pitched("drop", 0.86, -2.0)
+
+	# Defer placement one frame so pill.size is measured, then clamp cleanly into safe zone
+	var animate := func():
+		if not is_instance_valid(pill):
+			return
+		var sz := pill.size
+		var clamped_x := clampf(screen_pos.x - sz.x * 0.5, 48.0, vp_size.x - sz.x - 48.0)
+		var clamped_y := clampf(screen_pos.y - sz.y - 12.0, 56.0, vp_size.y * 0.52)
+		pill.position = Vector2(clamped_x, clamped_y + 14.0)
+		pill.pivot_offset = sz * 0.5
+		pill.scale = Vector2(0.80, 0.80)
+		pill.modulate.a = 0.0
+
+		var tw := pill.create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(pill, "position:y", clamped_y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(pill, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(pill, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+		tw.chain().tween_interval(1.35)
+		tw.chain().set_parallel(true)
+		tw.tween_property(pill, "position:y", clamped_y - 16.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		tw.tween_property(pill, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE)
+		tw.chain().tween_callback(func():
+			if is_instance_valid(cl):
+				cl.queue_free()
+		)
+	pill.call_deferred("set_visible", true)
+	tree.process_frame.connect(animate, CONNECT_ONE_SHOT)
 
 
 func _complete_item_delivery(

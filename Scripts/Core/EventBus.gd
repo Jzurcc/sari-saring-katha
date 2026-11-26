@@ -86,6 +86,7 @@ signal tally_contribution_made(amount: float, tier: String, total_paid: float, g
 @warning_ignore("unused_signal")
 signal mayari_card_changed(card_id: String)
 signal morning_mayari_cards_announced(card_ids: Array)
+signal radio_card_announced(payload: Dictionary)
 @warning_ignore("unused_signal")
 signal sto_nino_blessing_changed()
 @warning_ignore("unused_signal")
