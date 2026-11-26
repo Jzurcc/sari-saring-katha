@@ -376,6 +376,7 @@ func trigger_sample_delivery(tier: int) -> void:
 
 func start_delivery(items_to_restock: Dictionary) -> void:
 	LogManager.info("MarioManager", "Starting delivery sequence...")
+	is_restocking_active = true
 	is_mario_physically_present = true
 	_delivery_session_id += 1
 	var session_id := _delivery_session_id
