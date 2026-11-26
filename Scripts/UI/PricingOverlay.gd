@@ -185,7 +185,7 @@ func _ready() -> void:
 	tier_label = Label.new()
 	tier_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tier_label.add_theme_font_override("font", _bold_font)
-	tier_label.add_theme_font_size_override("font_size", 17)
+	tier_label.add_theme_font_size_override("font_size", 24)
 	tier_label.add_theme_color_override("font_color", UIStyle.get_tier_color(1))
 	vbox.add_child(tier_label)
 
