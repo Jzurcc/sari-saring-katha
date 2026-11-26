@@ -171,7 +171,7 @@ func _layout_nodes() -> void:
 		var btn: Button = _node_buttons.get(nid)
 		if not is_instance_valid(btn):
 			continue
-		var sz := CAPSTONE_SIZE if nid == "open_door" else ICON_SIZE
+		var sz := CAPSTONE_SIZE if (nid == "open_door" or nid == "store_tier") else ICON_SIZE
 		var center := _node_center(n["pos"])
 		btn.position = center - sz * 0.5
 		btn.size = sz
@@ -304,8 +304,8 @@ func _show_tooltip_for(node_id: String) -> void:
 
 	# Restored description (from item metadata or Tier catalog items)
 	var desc := str(item.get_meta("upgrade_desc", "")) if item != null else ""
-	if str(def["kind"]) == "tier" and is_instance_valid(InventoryManager):
-		var target_t := int(def["tier"])
+	if str(def["kind"]) == "tier_hub" and is_instance_valid(InventoryManager):
+		var target_t := clampi(target_lvl + 1, 2, 10)
 		var names: Array[String] = []
 		for ti in InventoryManager.get_all_items():
 			if ti != null and ti.can_be_sold and ti.tier == target_t:

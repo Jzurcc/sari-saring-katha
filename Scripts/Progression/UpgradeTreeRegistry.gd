@@ -10,54 +10,46 @@ extends RefCounted
 ## the player decides what to prioritize with Pesos.
 
 const NODES: Array[Dictionary] = [
-	# ── BOTTOM HORIZONTAL ROW: Store Tiers 2 → 10 (x = 0..8, y = 0) ──
-	{"id": "tier_2", "title": "Store Tier 2", "pos": Vector2(0.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": [], "kind": "tier", "tier": 2},
-	{"id": "tier_3", "title": "Store Tier 3", "pos": Vector2(1.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "tier", "tier": 3},
-	{"id": "tier_4", "title": "Store Tier 4", "pos": Vector2(2.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_3"], "kind": "tier", "tier": 4},
-	{"id": "tier_5", "title": "Store Tier 5", "pos": Vector2(3.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_4"], "kind": "tier", "tier": 5},
-	{"id": "tier_6", "title": "Store Tier 6", "pos": Vector2(4.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_5"], "kind": "tier", "tier": 6},
-	{"id": "tier_7", "title": "Store Tier 7", "pos": Vector2(5.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_6"], "kind": "tier", "tier": 7},
-	{"id": "tier_8", "title": "Store Tier 8", "pos": Vector2(6.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_7"], "kind": "tier", "tier": 8},
-	{"id": "tier_9", "title": "Store Tier 9", "pos": Vector2(7.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_8"], "kind": "tier", "tier": 9},
-	{"id": "tier_10", "title": "Store Tier 10", "pos": Vector2(8.0, 0.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_9"], "kind": "tier", "tier": 10},
+	# ── CENTRAL ROOT NODE: Store Tiers 2 → 10 (x = 4.0, y = 0.0) ──
+	{"id": "store_tier", "title": "Store Tier", "pos": Vector2(4.0, 0.0), "max_level": 9, "prereqs": [], "kind": "tier_hub"},
 
 	# ── BRANCH 1 (Tier 2): Business Permit I → II → III (x = 0.0) ──
-	{"id": "permit_1", "title": "Business Permit I", "pos": Vector2(0.0, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "permit"},
+	{"id": "permit_1", "title": "Business Permit I", "pos": Vector2(0.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "permit"},
 	{"id": "permit_2", "title": "Business Permit II", "pos": Vector2(0.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["permit_1"], "kind": "permit"},
 	{"id": "permit_3", "title": "Business Permit III", "pos": Vector2(0.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["permit_2"], "kind": "permit"},
 
 	# ── BRANCH 2 (Tier 2): Refrigerator I → II → III, and Wholesale Pass from Fridge I ──
-	{"id": "fridge_1", "title": "Fridge Gasket", "pos": Vector2(1.0, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "fridge"},
+	{"id": "fridge_1", "title": "Fridge Gasket", "pos": Vector2(1.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "fridge"},
 	{"id": "fridge_2", "title": "Fridge Insulation", "pos": Vector2(1.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["fridge_1"], "kind": "fridge"},
 	{"id": "fridge_3", "title": "Inverter Compressor", "pos": Vector2(1.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["fridge_2"], "kind": "fridge"},
 	{"id": "wholesale_pass", "title": "Wholesale Pass", "pos": Vector2(1.7, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["fridge_1"], "kind": "mario_deals"},
 
 	# ── BRANCH 3 (Tier 3): Tambayan Bench I → II → III (x = 2.45) ──
-	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(2.45, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_3"], "kind": "bench"},
+	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(2.45, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "bench"},
 	{"id": "bench_2", "title": "Tambayan Bench II", "pos": Vector2(2.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["bench_1"], "kind": "bench"},
 	{"id": "bench_3", "title": "Tambayan Bench III", "pos": Vector2(2.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["bench_2"], "kind": "bench"},
 
 	# ── BRANCH 4 (Tier 3): Barangay Radio I → II → III, and Trash Can from Radio I ──
-	{"id": "radio_1", "title": "Barangay Radio I", "pos": Vector2(3.45, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_3"], "kind": "radio"},
+	{"id": "radio_1", "title": "Barangay Radio I", "pos": Vector2(3.45, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "radio"},
 	{"id": "radio_2", "title": "Barangay Radio II", "pos": Vector2(3.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["radio_1"], "kind": "radio"},
 	{"id": "radio_3", "title": "Barangay Radio III", "pos": Vector2(3.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["radio_2"], "kind": "radio"},
 	{"id": "trash_can", "title": "Store Trash Can", "pos": Vector2(4.15, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["radio_1"], "kind": "trash"},
 
 	# ── BRANCH 5 (Tier 4): Barangay Cat I → II (x = 4.9) ──
-	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(4.9, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_4"], "kind": "cat"},
+	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(4.9, 1.0), "max_level": 1, "target_level": 1, "req_tier": 4, "prereqs": ["store_tier"], "kind": "cat"},
 	{"id": "cat_2", "title": "Barangay Cat II", "pos": Vector2(4.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["cat_1"], "kind": "cat"},
 
 	# ── BRANCH 6 (Tier 5): Sto. Niño Altar I → II → III (x = 5.9) ──
-	{"id": "sto_nino_1", "title": "Sto. Niño Altar I", "pos": Vector2(5.9, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_5"], "kind": "sto_nino"},
+	{"id": "sto_nino_1", "title": "Sto. Niño Altar I", "pos": Vector2(5.9, 1.0), "max_level": 1, "target_level": 1, "req_tier": 5, "prereqs": ["store_tier"], "kind": "sto_nino"},
 	{"id": "sto_nino_2", "title": "Sto. Niño Altar II", "pos": Vector2(5.9, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["sto_nino_1"], "kind": "sto_nino"},
 	{"id": "sto_nino_3", "title": "Sto. Niño Altar III", "pos": Vector2(5.9, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["sto_nino_2"], "kind": "sto_nino"},
 
 	# ── BRANCH 7 (Tier 6): Maneki-Neko I → II (x = 6.95) ──
-	{"id": "maneki_1", "title": "Maneki-Neko I", "pos": Vector2(6.95, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_6"], "kind": "maneki"},
+	{"id": "maneki_1", "title": "Maneki-Neko I", "pos": Vector2(6.95, 1.0), "max_level": 1, "target_level": 1, "req_tier": 6, "prereqs": ["store_tier"], "kind": "maneki"},
 	{"id": "maneki_2", "title": "Golden Maneki-Neko", "pos": Vector2(6.95, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["maneki_1"], "kind": "maneki"},
 
 	# ── BRANCH 8 (Tier 2): Storefront Signage → Poster (x = 8.0) ──
-	{"id": "signage", "title": "Roof Signage", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "prereqs": ["tier_2"], "kind": "storefront_step", "storefront_level": 1},
+	{"id": "signage", "title": "Roof Signage", "pos": Vector2(8.0, 1.0), "max_level": 1, "target_level": 1, "req_tier": 2, "prereqs": ["store_tier"], "kind": "storefront_step", "storefront_level": 1},
 	{"id": "poster", "title": "Promo Poster", "pos": Vector2(8.0, 2.2), "max_level": 1, "target_level": 2, "prereqs": ["signage"], "kind": "storefront_step", "storefront_level": 2},
 
 	# ── CAPSTONE: Open the Door (Top-Center, requires only Lv. 1 of each branch lead) ──
@@ -80,12 +72,13 @@ static func get_node_level(node_id: String, pending_levels: Dictionary = {}) -> 
 	var pending := int(pending_levels.get(node_id, 0))
 	var def := get_node_def(node_id)
 	if def.is_empty() or not is_instance_valid(StoryManager):
-		return mini(1, pending)
+		return pending
+	if str(def["kind"]) == "tier_hub":
+		var base_t := maxi(0, StoryManager.current_tier - 1)
+		return mini(int(def["max_level"]), base_t + pending)
 	var req_lvl := int(def.get("target_level", 1))
 	var owned := false
 	match str(def["kind"]):
-		"tier":
-			owned = StoryManager.current_tier >= int(def["tier"])
 		"permit":
 			owned = StoryManager.permit_upgrade_level >= req_lvl
 		"fridge":
@@ -117,6 +110,11 @@ static func are_prerequisites_met(node_id: String, pending_levels: Dictionary = 
 	var def := get_node_def(node_id)
 	if def.is_empty():
 		return false
+	var req_tier := int(def.get("req_tier", 0))
+	if req_tier > 1:
+		var eff_tier := 1 + get_node_level("store_tier", pending_levels)
+		if eff_tier < req_tier:
+			return false
 	for pre_id in def.get("prereqs", []):
 		if not is_node_unlocked_in_tree(str(pre_id), pending_levels):
 			return false
@@ -129,8 +127,8 @@ static func get_node_item(node_id: String, target_level: int = -1) -> ItemData:
 		return null
 	var lvl := int(def.get("target_level", 1)) if target_level <= 0 else target_level
 	match str(def["kind"]):
-		"tier":
-			return StoryManager.get_tier_upgrade_item(int(def["tier"]))
+		"tier_hub":
+			return StoryManager.get_tier_upgrade_item(clampi(lvl + 1, 2, 10))
 		"permit":
 			return StoryManager.get_permit_upgrade_item(lvl)
 		"fridge":
@@ -163,8 +161,8 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 	var lvl := maxi(1, int(def.get("target_level", 1)) if target_level <= 0 else target_level)
 
 	match str(def["kind"]):
-		"tier":
-			var t := int(def["tier"])
+		"tier_hub":
+			var t := clampi(lvl + 1, 2, 10)
 			stats.append({"label": "Catalog Tier:", "value": "Tier %d" % t, "tone": "neu"})
 			stats.append({"label": "Starter Samples:", "value": "+2x Each", "tone": "pos"})
 		"permit":
@@ -221,29 +219,33 @@ static func evaluate_node(node_id: String, available_money: float, pending_level
 	if def.is_empty():
 		return {"state": "locked", "can_buy": false, "reason": "Unknown node", "cur_level": 0, "max_level": 1, "target_level": 1, "cost": 0.0, "item": null}
 
-	var target_lvl := int(def.get("target_level", 1))
-	var owned := get_node_level(node_id, pending_levels) >= 1
-	var item := get_node_item(node_id, target_lvl)
-	var cost := item.price if item else 0.0
-	if owned:
+	var max_lvl := int(def["max_level"])
+	var cur_lvl := get_node_level(node_id, pending_levels)
+	var target_lvl := (cur_lvl + 1) if max_lvl > 1 else int(def.get("target_level", 1))
+	if cur_lvl >= max_lvl:
+		var owned_item := get_node_item(node_id, max_lvl if max_lvl > 1 else target_lvl)
 		return {
 			"state": "maxed",
 			"can_buy": false,
-			"reason": "Owned",
-			"cur_level": 1,
-			"max_level": 1,
-			"target_level": target_lvl,
+			"reason": "Maxed Out" if max_lvl > 1 else "Owned",
+			"cur_level": cur_lvl,
+			"max_level": max_lvl,
+			"target_level": max_lvl if max_lvl > 1 else target_lvl,
 			"cost": 0.0,
-			"item": item,
+			"item": owned_item,
 		}
 
+	var item := get_node_item(node_id, target_lvl)
+	var cost := item.price if item else 0.0
 	if not are_prerequisites_met(node_id, pending_levels):
+		var req_t := int(def.get("req_tier", 0))
+		var reason := ("Requires Store Tier %d" % req_t) if req_t > 1 else "Unlock prerequisite first"
 		return {
 			"state": "locked",
 			"can_buy": false,
-			"reason": "Unlock prerequisite first",
-			"cur_level": 0,
-			"max_level": 1,
+			"reason": reason,
+			"cur_level": cur_lvl,
+			"max_level": max_lvl,
 			"target_level": target_lvl,
 			"cost": cost,
 			"item": item,
@@ -254,8 +256,8 @@ static func evaluate_node(node_id: String, available_money: float, pending_level
 			"state": "available_poor",
 			"can_buy": false,
 			"reason": "Need ₱%.0f" % cost,
-			"cur_level": 0,
-			"max_level": 1,
+			"cur_level": cur_lvl,
+			"max_level": max_lvl,
 			"target_level": target_lvl,
 			"cost": cost,
 			"item": item,
@@ -265,8 +267,8 @@ static func evaluate_node(node_id: String, available_money: float, pending_level
 		"state": "available",
 		"can_buy": true,
 		"reason": "",
-		"cur_level": 0,
-		"max_level": 1,
+		"cur_level": cur_lvl,
+		"max_level": max_lvl,
 		"target_level": target_lvl,
 		"cost": cost,
 		"item": item,
