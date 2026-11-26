@@ -875,6 +875,13 @@ func spawn_mayari_for_collection() -> void:
 	counter_slots[0] = mayari
 	session.current_customer = mayari
 
+	if is_instance_valid(AudioManager):
+		AudioManager.set_mayari_present(true)
+		mayari.tree_exiting.connect(func():
+			if is_instance_valid(AudioManager):
+				AudioManager.set_mayari_present(false)
+		, CONNECT_ONE_SHOT)
+
 	EventBus.customer_spawned.emit(mayari)
 	_is_spawning = false
 

@@ -546,7 +546,8 @@ static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -
 	var tx := TransactionContext.new()
 	tx.customer_data = data
 	tx.transaction_type = TransactionContext.Type.PURCHASE
-	tx.timeline = data.purchase_timeline if data.purchase_timeline != null else "res://Dialogue/Timelines/Generic/Purchase.dtl"
+	var purchase_pool := data.get_purchase_timelines(chapter)
+	tx.timeline = purchase_pool.pick_random() if not purchase_pool.is_empty() else GENERIC_PURCHASE_TIMELINE
 
 	var favorite_cats: Array[String] = data.get_favorite_categories()
 	var excluded_cats: Array[String] = data.get_chapter_excluded_categories(chapter)

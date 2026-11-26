@@ -2146,10 +2146,13 @@ func award_customer_completion_xp(customer: Customer) -> void:
 		if ctx.is_riddle and delivered >= orig:
 			full_xp += 10
 		var xp := full_xp
-		if delivered < orig:
+		var is_partial := delivered < orig
+		if is_partial:
 			var ratio := float(delivered) / float(orig)
 			xp = maxi(3, int(roundf(float(full_xp) * ratio * 0.55)))
-		add_player_xp(xp, "Purchase" if delivered >= orig else "Partial Purchase")
+		var gained: int = add_player_xp(xp, "Purchase" if not is_partial else "Partial Purchase")
+		if is_partial and gained > 0 and is_instance_valid(VisualEffectManager):
+			VisualEffectManager.spawn_floating_xp(customer, gained, true)
 		purchase_counter += 1
 
 func _on_customer_satisfied(customer) -> void:

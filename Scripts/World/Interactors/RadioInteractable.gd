@@ -9,6 +9,7 @@ extends WorldInteractor
 
 const TIMELINE_PATH := "res://Dialogue/Timelines/PapaUlap.dtl"
 const CHARACTER_PATH := "res://Dialogue/Timelines/PapaUlap.dch"
+const RADIO_BLIP_SFX: AudioStream = preload("res://Audio/DialogueBlips/Radio.wav")
 
 var _visual_base_scale: Vector3 = Vector3.ONE
 var _sprite_base_y: float = 0.0
@@ -17,6 +18,7 @@ var _sprite: Sprite3D = null
 var _speech_anchor: Marker3D = null
 var _pending_reveal_active: bool = false
 var _pending_visitor_path: String = ""
+var _was_on_cooldown: bool = false
 
 func _ready() -> void:
 	super._ready()
@@ -46,7 +48,10 @@ func _ready() -> void:
 		add_child(_speech_anchor)
 
 	EventBus.radio_upgraded.connect(_on_radio_upgraded)
-	EventBus.day_started.connect(func(_d): _refresh_visual_state(false))
+	EventBus.day_started.connect(func(_d):
+		_was_on_cooldown = false
+		_refresh_visual_state(false)
+	)
 	if is_instance_valid(StoreEventManager):
 		StoreEventManager.events_changed.connect(func(_evs): _refresh_pulse_state())
 	_refresh_visual_state(false)
@@ -55,6 +60,13 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if not visible or StoryManager.radio_upgrade_level < 1 or not is_instance_valid(_sprite):
 		return
+	# Play Papa Ulap's Radio.wav blip once when the broadcast comes off cooldown
+	var on_cooldown: bool = is_instance_valid(StoreEventManager) and StoreEventManager.get_reveal_cooldown_remaining_hours() > 0.0
+	if _was_on_cooldown and not on_cooldown and not StoryManager.is_past_closing_time():
+		if is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast():
+			_play_radio_blip()
+	_was_on_cooldown = on_cooldown
+
 	# Lively speaking squash-and-stretch + warm golden pulse when Papa Ulap has a broadcast ready
 	var ready_to_tune := is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast() and not StoryManager.is_past_closing_time() and Dialogic.current_timeline == null
 	if ready_to_tune:
@@ -77,6 +89,17 @@ func _process(delta: float) -> void:
 		_sprite.scale = _sprite.scale.lerp(_visual_base_scale, clampf(delta * 10.0, 0.0, 1.0))
 		_sprite.position.y = lerpf(_sprite.position.y, _sprite_base_y, clampf(delta * 10.0, 0.0, 1.0))
 		_sprite.modulate = Color.WHITE
+
+func _play_radio_blip() -> void:
+	if RADIO_BLIP_SFX == null:
+		return
+	var p := AudioStreamPlayer.new()
+	p.stream = RADIO_BLIP_SFX
+	p.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
+	p.volume_db = -2.0
+	add_child(p)
+	p.finished.connect(p.queue_free)
+	p.play()
 
 func _refresh_pulse_state() -> void:
 	if is_instance_valid(_sprite) and (not is_instance_valid(StoreEventManager) or not StoreEventManager.can_reveal_next_broadcast()):

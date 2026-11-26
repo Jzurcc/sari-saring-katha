@@ -325,7 +325,7 @@ func setup_ambient_dust(parent: Node3D) -> void:
 	parent.add_child(p)
 
 
-func spawn_floating_xp(source_node_or_pos: Variant, amount: int) -> void:
+func spawn_floating_xp(source_node_or_pos: Variant, amount: int, is_partial: bool = false) -> void:
 	if amount <= 0:
 		return
 	var spawn_pos := Vector3.ZERO
@@ -345,17 +345,17 @@ func spawn_floating_xp(source_node_or_pos: Variant, amount: int) -> void:
 
 	var lbl := Label3D.new()
 	lbl.name = "FloatingXP"
-	lbl.text = "+%d XP" % amount
-	if UIStyle.FONT_INDER:
-		lbl.font = UIStyle.FONT_INDER
-	lbl.font_size = 42
+	lbl.text = "+%d XP (Partial)" % amount if is_partial else "+%d XP" % amount
+	if UIStyle.FONT_FREDOKA_SEMIBOLD:
+		lbl.font = UIStyle.FONT_FREDOKA_SEMIBOLD
+	lbl.font_size = 40 if is_partial else 42
 	lbl.pixel_size = 0.0055
 	lbl.outline_size = 10
 	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	lbl.no_depth_test = true
 	lbl.shaded = false
 	lbl.render_priority = 12
-	lbl.modulate = Color(0.66, 0.96, 0.56, 0.0)
+	lbl.modulate = Color(0.98, 0.64, 0.28, 0.0) if is_partial else Color(0.66, 0.96, 0.56, 0.0)
 	lbl.outline_modulate = Color(0.08, 0.06, 0.04, 0.0)
 	lbl.scale = Vector3.ONE * 0.55
 

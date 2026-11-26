@@ -459,7 +459,7 @@ func _start_haggle_or_refusal(
 				_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 		, CONNECT_ONE_SHOT)
 
-	var beat_timer := _tree_owner.get_tree().create_timer(0.55)
+	var beat_timer := _tree_owner.get_tree().create_timer(0.75)
 	beat_timer.timeout.connect(proceed, CONNECT_ONE_SHOT)
 
 
@@ -573,10 +573,10 @@ func _show_haggle_reaction_badge(customer: Customer, can_haggle: bool, haggle_ch
 		tw.tween_property(pill, "position:y", clamped_y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(pill, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(pill, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
-		tw.chain().tween_interval(1.35)
+		tw.chain().tween_interval(3.2)
 		tw.chain().set_parallel(true)
-		tw.tween_property(pill, "position:y", clamped_y - 16.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		tw.tween_property(pill, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(pill, "position:y", clamped_y - 16.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		tw.tween_property(pill, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE)
 		tw.chain().tween_callback(func():
 			if is_instance_valid(cl):
 				cl.queue_free()
