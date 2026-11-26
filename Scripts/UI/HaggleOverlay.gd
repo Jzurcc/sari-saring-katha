@@ -181,7 +181,7 @@ func _ready() -> void:
 
 	_build_ui()
 	_refresh_ui()
-	var already_seen := is_instance_valid(CharacterProgressionManager) and CharacterProgressionManager.has_flag("haggle_tutorial_seen")
+	var already_seen: bool = is_instance_valid(CharacterProgressionManager) and bool(CharacterProgressionManager.has_flag("haggle_tutorial_seen"))
 	_showing_intro = Juice.are_minigame_tutorials_enabled() and not already_seen
 	_intro_panel.visible = _showing_intro
 	_content.visible = not _showing_intro
