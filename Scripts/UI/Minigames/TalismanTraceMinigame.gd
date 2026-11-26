@@ -111,6 +111,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_open:
 		return
+	if Input.get_mouse_mode() != Input.MOUSE_MODE_VISIBLE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_dash_phase = fmod(_dash_phase + delta * 18.0, 1000.0)
 	if is_instance_valid(_canvas):
 		_canvas.queue_redraw()
@@ -119,6 +121,7 @@ func _process(delta: float) -> void:
 func open_minigame(config: Dictionary = {}) -> void:
 	is_open = true
 	visible = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_is_evaluating = false
 	_best_accuracy_this_session = 0
 	_last_result = {}
@@ -163,6 +166,7 @@ func _close_minigame(won: bool, result: Dictionary) -> void:
 	is_open = false
 	_canvas.input_enabled = false
 	visible = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	minigame_finished.emit(won, result)
 
 
@@ -729,7 +733,9 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 				continue
 			var dir := (b - a) / seg_len
 			var pos := 0.0
-			while pos < seg_len:
+			var safety := 0
+			while pos < seg_len and safety < 512:
+				safety += 1
 				var in_cycle := fposmod(dist_acc + pos, cycle)
 				if in_cycle < dash_len:
 					var draw_len := minf(dash_len - in_cycle, seg_len - pos)
@@ -737,7 +743,7 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 					var p1 := a + dir * (pos + draw_len)
 					surface.draw_line(p0, p1, glow_col, 7.2, true)
 					surface.draw_line(p0, p1, core_col, 3.0, true)
-					pos += draw_len
+					pos += maxf(0.5, draw_len)
 				else:
 					var skip_len := minf(cycle - in_cycle, seg_len - pos)
 					pos += maxf(0.5, skip_len)
