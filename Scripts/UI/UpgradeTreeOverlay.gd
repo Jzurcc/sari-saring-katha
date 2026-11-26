@@ -200,14 +200,14 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 			bg = Color(0.98, 0.90, 0.62, 1.0)
 			border_col = Color(0.72, 0.48, 0.12, 1.0)
 			border_w = 3
-			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else "✓"
-			badge_col = Color(0.12, 0.44, 0.18, 1.0)
+			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
+			badge_col = Color(0.24, 0.16, 0.08, 1.0)
 		"available":
 			bg = Color(0.99, 0.95, 0.84, 1.0)
 			border_col = Color(0.22, 0.58, 0.28, 1.0)
 			border_w = 3
-			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else "+"
-			badge_col = Color(0.12, 0.44, 0.18, 1.0)
+			badge_text = "%d/%d" % [cur_lvl, max_lvl] if max_lvl > 1 else ""
+			badge_col = Color(0.18, 0.46, 0.22, 1.0)
 		"available_poor":
 			bg = Color(0.92, 0.84, 0.68, 1.0)
 			border_col = Color(0.68, 0.34, 0.20, 0.95)
@@ -216,19 +216,18 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 		_:
 			bg = Color(0.68, 0.58, 0.44, 0.88)
 			border_col = Color(0.34, 0.23, 0.14, 0.85)
-			icon_mod = Color(0.38, 0.32, 0.26, 0.72)
-			badge_text = "🔒"
-			badge_col = Color(0.24, 0.16, 0.10, 0.90)
+			icon_mod = Color(0.38, 0.32, 0.26, 0.65)
+			badge_text = ""
 
 	if hovered:
 		border_col = Color(1.0, 0.86, 0.44, 1.0)
 		border_w = 3
 
-	var st := UIStyle.create_flat_stylebox(bg, 6, 4, 4)
+	var st := UIStyle.create_flat_stylebox(bg, 10, 4, 4)
 	st.border_color = border_col
 	st.set_border_width_all(border_w)
-	st.shadow_color = Color(0.18, 0.10, 0.04, 0.32)
-	st.shadow_size = 3
+	st.shadow_color = Color(0.18, 0.10, 0.04, 0.30)
+	st.shadow_size = 5
 
 	var hov := st.duplicate()
 	hov.bg_color = bg.lightened(0.06)
@@ -249,6 +248,10 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 		badge.text = badge_text
 		badge.visible = badge_text != ""
 		badge.add_theme_color_override("font_color", badge_col)
+
+	var lock_lbl := btn.get_node_or_null("CenterLock") as Label
+	if lock_lbl:
+		lock_lbl.visible = (state == "locked")
 
 
 func _show_tooltip_for(node_id: String) -> void:
@@ -483,52 +486,35 @@ func _build_ui() -> void:
 	)
 	_root.add_child(backdrop)
 
-	# True edge-to-edge full-screen framed wooden board
+	# Borderless modern full-screen warm parchment canvas (minigame UI philosophy)
 	_board_panel = PanelContainer.new()
 	_board_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_board_panel.offset_left = 0.0
 	_board_panel.offset_right = 0.0
 	_board_panel.offset_top = 0.0
 	_board_panel.offset_bottom = 0.0
-	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 0, 18, 14)
-	wood_st.border_color = COL_BRASS
-	wood_st.set_border_width_all(3)
-	wood_st.shadow_color = Color(0, 0, 0, 0.60)
-	wood_st.shadow_size = 18
-	_board_panel.add_theme_stylebox_override("panel", wood_st)
+	var canvas_st := UIStyle.create_flat_stylebox(COL_PARCHMENT, 0, 26, 20)
+	canvas_st.set_border_width_all(0)
+	_board_panel.add_theme_stylebox_override("panel", canvas_st)
 	_root.add_child(_board_panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
+	vbox.add_theme_constant_override("separation", 8)
 	_board_panel.add_child(vbox)
 
-	# Top bar with Peso logo
+	# Clean floating top bar: Money on LEFT (white, like main HUD), Store Upgrades + Close on RIGHT
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 14)
 	vbox.add_child(top)
 
-	var title := Label.new()
-	title.text = "Store Upgrades"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_override("font", _bold_font)
-	title.add_theme_font_size_override("font_size", 26)
-	title.add_theme_color_override("font_color", COL_CREAM)
-	top.add_child(title)
-
-	_pending_lbl = Label.new()
-	_pending_lbl.add_theme_font_override("font", _bold_font)
-	_pending_lbl.add_theme_font_size_override("font_size", 16)
-	_pending_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	top.add_child(_pending_lbl)
-
 	var money_row := HBoxContainer.new()
-	money_row.add_theme_constant_override("separation", 6)
+	money_row.add_theme_constant_override("separation", 8)
 	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	top.add_child(money_row)
 
 	var peso_hdr := TextureRect.new()
 	peso_hdr.texture = PESO_ICON_TEX
-	peso_hdr.custom_minimum_size = Vector2(26, 26)
+	peso_hdr.custom_minimum_size = Vector2(28, 28)
 	peso_hdr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	peso_hdr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	peso_hdr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -536,34 +522,46 @@ func _build_ui() -> void:
 
 	_money_lbl = Label.new()
 	_money_lbl.add_theme_font_override("font", _bold_font)
-	_money_lbl.add_theme_font_size_override("font_size", 24)
-	_money_lbl.add_theme_color_override("font_color", COL_STAT_POS)
+	_money_lbl.add_theme_font_size_override("font_size", 26)
+	_money_lbl.add_theme_color_override("font_color", Color.WHITE)
+	_money_lbl.add_theme_color_override("font_outline_color", Color(0.14, 0.09, 0.05, 0.85))
+	_money_lbl.add_theme_constant_override("outline_size", 4)
 	money_row.add_child(_money_lbl)
+
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(spacer)
+
+	_pending_lbl = Label.new()
+	_pending_lbl.add_theme_font_override("font", _bold_font)
+	_pending_lbl.add_theme_font_size_override("font_size", 16)
+	_pending_lbl.add_theme_color_override("font_color", Color(0.36, 0.22, 0.08, 0.95))
+	top.add_child(_pending_lbl)
+
+	var title := Label.new()
+	title.text = "Store Upgrades"
+	title.add_theme_font_override("font", _bold_font)
+	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_color_override("font_color", COL_INK)
+	top.add_child(title)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.tooltip_text = "Close [U / Esc]"
-	close_btn.custom_minimum_size = Vector2(34, 34)
+	close_btn.custom_minimum_size = Vector2(36, 36)
 	close_btn.focus_mode = Control.FOCUS_NONE
 	close_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	UIStyle.style_button(close_btn, COL_WOOD_MID, COL_CREAM, 16.0, 8)
+	UIStyle.style_button(close_btn, Color(0.24, 0.16, 0.10, 0.88), COL_CREAM, 16.0, 8)
 	close_btn.pressed.connect(close_tree)
 	top.add_child(close_btn)
 
-	# Inner kraft-parchment board
-	var parchment := PanelContainer.new()
-	parchment.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var pst := UIStyle.create_flat_stylebox(COL_PARCHMENT, 8, 6, 6)
-	pst.border_color = COL_PARCHMENT_EDGE
-	pst.set_border_width_all(2)
-	parchment.add_theme_stylebox_override("panel", pst)
-	vbox.add_child(parchment)
-
+	# Seamless tree area directly on the warm parchment canvas
 	_tree_area = Control.new()
 	_tree_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tree_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_tree_area.resized.connect(_layout_nodes)
-	parchment.add_child(_tree_area)
+	vbox.add_child(_tree_area)
 
 	_path_drawer = Control.new()
 	_path_drawer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -692,6 +690,20 @@ func _create_node_button(node_id: String) -> Button:
 	badge.add_theme_color_override("font_outline_color", Color(0.98, 0.95, 0.86, 0.95))
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(badge)
+
+	var lock_lbl := Label.new()
+	lock_lbl.name = "CenterLock"
+	lock_lbl.text = "🔒"
+	lock_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lock_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lock_lbl.add_theme_font_size_override("font_size", 34)
+	lock_lbl.add_theme_color_override("font_color", Color(0.98, 0.94, 0.84, 0.96))
+	lock_lbl.add_theme_color_override("font_outline_color", Color(0.14, 0.09, 0.05, 0.92))
+	lock_lbl.add_theme_constant_override("outline_size", 6)
+	lock_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lock_lbl.visible = false
+	btn.add_child(lock_lbl)
 
 	btn.mouse_entered.connect(func():
 		_hovered_id = node_id
