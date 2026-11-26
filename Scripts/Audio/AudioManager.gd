@@ -218,12 +218,20 @@ func _process(delta: float) -> void:
 func _on_tod_time_changed(time: Variant) -> void:
 	_update_audio_for_time(float(time))
 
+var _is_mayari_present: bool = false
+
+func set_mayari_present(present: bool) -> void:
+	if _is_mayari_present == present:
+		return
+	_is_mayari_present = present
+	if is_instance_valid(StoryManager) and StoryManager.clock:
+		_update_audio_for_time(StoryManager.clock.get_effective_display_time())
+
 func _update_audio_for_time(time: float) -> void:
 	var new_phase = BGMPhase.NONE
 	var is_night = false
 
-	var is_closing := is_instance_valid(StoryManager) and StoryManager.is_past_closing_time()
-	if is_closing:
+	if _is_mayari_present:
 		new_phase = BGMPhase.CLOSING
 		is_night = true
 	elif time >= 4.0 and time < 11.0:
@@ -452,6 +460,7 @@ func fade_out_everything(duration: float = FADE_DURATION) -> void:
 	override_player.stop()
 	ambience_base.stop()
 	ambience_night.stop()
+	_is_mayari_present = false
 	current_bgm_phase = BGMPhase.NONE
 
 	bgm_player.volume_db = base_volume_db

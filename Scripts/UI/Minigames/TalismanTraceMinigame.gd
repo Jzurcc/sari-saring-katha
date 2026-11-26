@@ -477,10 +477,11 @@ func _build_ui() -> void:
 
 	# 5) Primary Action: Inscribe Talisman
 	_inscribe_btn = Button.new()
-	_inscribe_btn.text = "  Inscribe Talisman"
+	_inscribe_btn.text = " Inscribe Talisman"
 	if ResourceLoader.exists(ICON_SPARKLES):
 		_inscribe_btn.icon = load(ICON_SPARKLES)
-		_inscribe_btn.expand_icon = false
+		_inscribe_btn.expand_icon = true
+		_inscribe_btn.add_theme_constant_override("icon_max_width", 20)
 	Juice.style_primary_button(_inscribe_btn, Vector2(228, 46))
 	_inscribe_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_inscribe_btn.disabled = true

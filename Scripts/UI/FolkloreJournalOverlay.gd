@@ -1125,9 +1125,8 @@ func _rebuild_rank_track() -> void:
 		vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(vb)
 
-		var status_glyph := "✓" if unlocked else "🔒"
 		var perk_tag := " ★" if has_perk else ""
-		var top_txt := "%s  Rank %s%s" % [status_glyph, ROMAN_NUMERALS[r], perk_tag]
+		var top_txt := ("Rank %s%s" % [ROMAN_NUMERALS[r], perk_tag]) if unlocked else ("🔒  Rank %s%s" % [ROMAN_NUMERALS[r], perk_tag])
 		var top_col := COL_GOLD_BRIGHT if active else (COL_CREAM if unlocked else COL_LOCKED)
 		var l1 := _make_label(top_txt, 15, top_col, true)
 		l1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
