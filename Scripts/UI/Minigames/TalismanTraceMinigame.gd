@@ -57,7 +57,7 @@ var _last_result: Dictionary = {}
 var _dash_phase: float = 0.0
 var _is_evaluating: bool = false
 var _guide_points_canvas: Array[Vector2] = []
-var _guide_polylines_norm: Array[Array] = []
+var _guide_polylines_norm: Array = []
 
 var _talisman_tex: Texture2D = null
 var _brahim_tex: Texture2D = null
