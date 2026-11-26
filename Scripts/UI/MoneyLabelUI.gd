@@ -119,16 +119,22 @@ func _spawn_delta_popup(diff: float) -> void:
 	if not is_instance_valid(host):
 		return
 
-	# Nudge existing popups downward so rapid changes stack cleanly (even on same-frame sale + tip)
+	# Nudge existing popup slots downward cleanly (slot.position:y is separate from popup's pop-in tween)
 	var still_valid: Array[WeakRef] = []
 	for ref in _active_popups:
 		if not ref:
 			continue
-		var old_popup: Control = ref.get_ref() as Control
-		if old_popup != null and is_instance_valid(old_popup) and old_popup.is_inside_tree():
+		var old_slot: Control = ref.get_ref() as Control
+		if old_slot != null and is_instance_valid(old_slot) and old_slot.is_inside_tree():
 			still_valid.append(ref)
-			var nudge: Tween = old_popup.create_tween()
-			nudge.tween_property(old_popup, "position:y", POPUP_STACK_STEP, 0.16).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			var prev_tw = old_slot.get_meta("_nudge_tw", null)
+			if prev_tw is Tween and (prev_tw as Tween).is_valid():
+				(prev_tw as Tween).kill()
+			var next_y: float = float(old_slot.get_meta("_target_y", old_slot.position.y)) + POPUP_STACK_STEP
+			old_slot.set_meta("_target_y", next_y)
+			var nudge: Tween = old_slot.create_tween()
+			nudge.tween_property(old_slot, "position:y", next_y, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			old_slot.set_meta("_nudge_tw", nudge)
 	_active_popups = still_valid
 
 	var is_gain := diff > 0.0
@@ -142,12 +148,27 @@ func _spawn_delta_popup(diff: float) -> void:
 	var mag_boost := clampf(absf(diff) / 120.0, 0.0, 1.0) * 8.0
 	var popup_size := clampi(int(roundf(base_size * 0.95 + mag_boost)), 26, 40) if base_size > 0 else 30
 
+	var target_pos := Vector2(
+		container.position.x + 8.0,
+		container.position.y + container.size.y + 4.0
+	)
+
+	# Outer slot owns vertical stacking position so it never conflicts with the inner pop-in/fade-out tween
+	var slot := Control.new()
+	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.z_index = 20
+	slot.position = target_pos
+	slot.set_meta("_target_y", target_pos.y)
+	host.add_child(slot)
+	var slot_ref: WeakRef = weakref(slot)
+	_active_popups.append(slot_ref)
+
 	# Clean frameless outlined delta (no box/pill)
 	var popup := HBoxContainer.new()
 	popup.add_theme_constant_override("separation", -1)
 	popup.alignment = BoxContainer.ALIGNMENT_BEGIN
 	popup.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	popup.z_index = 20
+	slot.add_child(popup)
 
 	var sign_lbl := Label.new()
 	sign_lbl.text = "+" if is_gain else "-"
@@ -179,16 +200,8 @@ func _spawn_delta_popup(diff: float) -> void:
 	num_lbl.add_theme_constant_override("outline_size", 6)
 	popup.add_child(num_lbl)
 
-	host.add_child(popup)
-	var popup_ref: WeakRef = weakref(popup)
-	_active_popups.append(popup_ref)
-
-	var target_pos := Vector2(
-		container.position.x + 8.0,
-		container.position.y + container.size.y + 4.0
-	)
 	var enter_dy := -12.0 if is_gain else 12.0
-	popup.position = target_pos + Vector2(0.0, enter_dy)
+	popup.position = Vector2(0.0, enter_dy)
 	popup.pivot_offset = Vector2(18.0, float(popup_size) * 0.6)
 	popup.scale = Vector2(0.45, 1.32) if is_gain else Vector2(1.25, 0.65)
 	popup.rotation_degrees = -7.0 if is_gain else 5.0
@@ -197,7 +210,7 @@ func _spawn_delta_popup(diff: float) -> void:
 	var tw := popup.create_tween()
 	# Lively squash-and-stretch pop-in + luminous flash + playful tilt settle
 	tw.tween_property(popup, "modulate:a", 1.0, 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(popup, "position:y", -enter_dy, 0.24).as_relative().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(popup, "position:y", 0.0, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "scale", Vector2(1.18, 0.90), 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "rotation_degrees", 0.0, 0.26).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(popup, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
@@ -205,10 +218,10 @@ func _spawn_delta_popup(diff: float) -> void:
 	# Hold, then float and fade out
 	tw.tween_interval(POPUP_HOLD_SEC)
 	tw.tween_property(popup, "modulate:a", 0.0, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(popup, "position:y", -16.0 if is_gain else 16.0, 0.55).as_relative().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(popup, "position:y", -16.0 if is_gain else 16.0, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func():
-		_active_popups.erase(popup_ref)
-		var node: Control = popup_ref.get_ref() as Control
+		_active_popups.erase(slot_ref)
+		var node: Control = slot_ref.get_ref() as Control
 		if node != null and is_instance_valid(node):
 			node.queue_free()
 	)
