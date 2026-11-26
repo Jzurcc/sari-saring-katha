@@ -267,10 +267,10 @@ func _build_ui() -> void:
 	_backdrop.color = Color(0.030, 0.024, 0.020, 0.82)
 	_root.add_child(_backdrop)
 
-	# Top Header Banner
+	# Top Header Banner (centered, 64% width)
 	_banner = PanelContainer.new()
-	_banner.anchor_left = 0.22
-	_banner.anchor_right = 0.86
+	_banner.anchor_left = 0.18
+	_banner.anchor_right = 0.82
 	_banner.anchor_top = 0.026
 	_banner.anchor_bottom = 0.114
 	var b_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 8, 32, 10)
@@ -307,8 +307,8 @@ func _build_ui() -> void:
 
 	# Main Center Frame (grows taller per animated line like an unrolling ledger!)
 	_frame = PanelContainer.new()
-	_frame.anchor_left = 0.22
-	_frame.anchor_right = 0.86
+	_frame.anchor_left = 0.18
+	_frame.anchor_right = 0.82
 	_frame.anchor_top = 0.148
 	_frame.anchor_bottom = 0.148
 	_frame.offset_top = 0.0
@@ -346,8 +346,8 @@ func _build_ui() -> void:
 
 	# Slam-Down Daily Rank Stamp — placed cleanly TO THE LEFT of the Cashflow numbers!
 	_stamp_panel = PanelContainer.new()
-	_stamp_panel.anchor_left = 0.86
-	_stamp_panel.anchor_right = 0.86
+	_stamp_panel.anchor_left = 0.82
+	_stamp_panel.anchor_right = 0.82
 	_stamp_panel.anchor_top = 0.148
 	_stamp_panel.anchor_bottom = 0.148
 	_stamp_panel.offset_left = -385.0
