@@ -339,7 +339,7 @@ func _build_ui() -> void:
 	_roster_vbox = VBoxContainer.new()
 	_roster_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_roster_vbox.add_theme_constant_override("separation", 8)
-	_roster_scroll.add_child(_roster_vbox)
+	_roster_scroll.add_child(_wrap_scroll_content(_roster_vbox, 14))
 
 	# Right Workspace: Prominent Progression Panel + 6-Rank Track + Compact Folklore Reader
 	var right_col := VBoxContainer.new()
@@ -418,7 +418,7 @@ func _build_top_bar() -> Control:
 	title_col.add_theme_constant_override("separation", 3)
 	bar.add_child(title_col)
 
-	var title_lbl := _make_label("KARIMLAN NEIGHBOR & FOLKLORE ARCHIVE", 25, COL_CREAM, true)
+	var title_lbl := _make_label("Folklore Journal", 25, COL_CREAM, true)
 	title_col.add_child(title_lbl)
 
 	var prog_row := HBoxContainer.new()
@@ -938,7 +938,7 @@ func _rebuild_hero_banner() -> void:
 	var arcs_vbox := VBoxContainer.new()
 	arcs_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	arcs_vbox.add_theme_constant_override("separation", 6)
-	story_scroll.add_child(arcs_vbox)
+	story_scroll.add_child(_wrap_scroll_content(arcs_vbox, 14))
 
 	var num_arcs := maxi(1, ceili(float(total_ch) / 3.0))
 	for arc_i in range(num_arcs):
@@ -1087,7 +1087,7 @@ func _rebuild_reader() -> void:
 		split.add_child(text_scroll)
 
 		var essay_col := _build_essay_column(r, rank_data, true)
-		text_scroll.add_child(essay_col)
+		text_scroll.add_child(_wrap_scroll_content(essay_col, 16))
 		return
 
 	# LANDSCAPE ILLUSTRATION OR TEXT-ONLY -> Smooth Single-Column Editorial Scroll
@@ -1101,7 +1101,7 @@ func _rebuild_reader() -> void:
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 16)
-	scroll.add_child(col)
+	scroll.add_child(_wrap_scroll_content(col, 16))
 
 	col.add_child(_build_rank_heading_block(r, rank_data))
 
@@ -1481,6 +1481,14 @@ func _apply_rank_tab_theme(btn: Button, active: bool, unlocked: bool) -> void:
 	btn.add_theme_stylebox_override("normal", st)
 	btn.add_theme_stylebox_override("hover", hov)
 	btn.add_theme_stylebox_override("pressed", st)
+
+
+func _wrap_scroll_content(child: Control, pad_right: int = 14) -> MarginContainer:
+	var mc := MarginContainer.new()
+	mc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mc.add_theme_constant_override("margin_right", pad_right)
+	mc.add_child(child)
+	return mc
 
 
 func _style_scrollbar(sc: ScrollContainer) -> void:
