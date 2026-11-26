@@ -102,9 +102,22 @@ func _ready() -> void:
 	visible = false
 
 
-func _process(_delta: float) -> void:
-	if is_open and Input.get_mouse_mode() != Input.MOUSE_MODE_VISIBLE:
+func _process(delta: float) -> void:
+	if not is_open:
+		return
+	if Input.get_mouse_mode() != Input.MOUSE_MODE_VISIBLE:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	if _unread_badges.is_empty():
+		return
+	_unread_pulse_time += delta * 3.4
+	var wave := 0.5 + 0.5 * sin(_unread_pulse_time)
+	var sc := lerpf(0.95, 1.10, wave)
+	var alpha := lerpf(0.70, 1.0, wave)
+	for b in _unread_badges:
+		if is_instance_valid(b):
+			b.pivot_offset = b.size * 0.5
+			b.scale = Vector2(sc, sc)
+			b.modulate = Color(1.0, lerpf(0.92, 1.05, wave), lerpf(0.82, 1.0, wave), alpha)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -163,20 +176,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 		get_viewport().set_input_as_handled()
 		open_journal()
-
-
-func _process(delta: float) -> void:
-	if not is_open or _unread_badges.is_empty():
-		return
-	_unread_pulse_time += delta * 3.4
-	var wave := 0.5 + 0.5 * sin(_unread_pulse_time)
-	var sc := lerpf(0.95, 1.10, wave)
-	var alpha := lerpf(0.70, 1.0, wave)
-	for b in _unread_badges:
-		if is_instance_valid(b):
-			b.pivot_offset = b.size * 0.5
-			b.scale = Vector2(sc, sc)
-			b.modulate = Color(1.0, lerpf(0.92, 1.05, wave), lerpf(0.82, 1.0, wave), alpha)
 
 
 func open_journal(focus_character_path: String = "") -> void:
