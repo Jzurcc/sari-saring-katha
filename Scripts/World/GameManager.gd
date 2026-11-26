@@ -263,7 +263,7 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 	var tip: float = snappedf(pct_tip + flat_tip, 0.5)
 	money += tip
 	EventBus.money_changed.emit(money)
-	StoryManager.record_daily_stat_float("tips_earned", tip)
+	StoryManager.record_daily_stat_add("tips_earned", tip)
 	Dialogic.VAR.set_variable("Global_TipActive", true)
 	LogManager.info("GameManager", "Bulk order tip +₱%.2f (%d items, avg_eff_step=%d, chance=%.0f%%)!" % [tip, cnt, tip_eff_step, base_tip_chance * 100.0])
 	return tip
