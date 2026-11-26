@@ -14,10 +14,10 @@ const TEX_FIREFLY := "res://Assets/ui/minigames/mosquito/firefly.png"
 const TEX_FIREFLY_DEAD := "res://Assets/ui/minigames/mosquito/firefly_dead.png"
 const SFX_SWAT_PATH := "res://Audio/SFX/swat.wav"
 
-const MOSQUITO_SIZE := Vector2(128.0, 128.0)
-const FIREFLY_SIZE := Vector2(122.0, 122.0)
-const MOSQUITO_HIT_RADIUS := 94.0
-const FIREFLY_HIT_RADIUS := 50.0
+const MOSQUITO_SIZE := Vector2(256.0, 256.0)
+const FIREFLY_SIZE := Vector2(244.0, 244.0)
+const MOSQUITO_HIT_RADIUS := 145.0
+const FIREFLY_HIT_RADIUS := 82.0
 const TARGET_SCORE := 12
 const MAX_LIVES := 3
 const ROUND_TIME := 25.0
@@ -303,13 +303,13 @@ func _process(delta: float) -> void:
 				vel.x = absf(vel.x)
 			elif pos.x > bounds.x - pad:
 				pos.x = bounds.x - pad
-				vel.x = -absf(vel.x)
+				vel.x = - absf(vel.x)
 			if pos.y < top_pad:
 				pos.y = top_pad
 				vel.y = absf(vel.y)
 			elif pos.y > bounds.y - pad:
 				pos.y = bounds.y - pad
-				vel.y = -absf(vel.y)
+				vel.y = - absf(vel.y)
 
 		b["pos"] = pos
 		b["vel"] = vel
