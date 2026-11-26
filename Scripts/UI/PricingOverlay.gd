@@ -444,8 +444,32 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-			_add_effect_tooltip("Restless Crowd", [ {"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
+			_add_effect_tooltip("Restless Crowd", [
+				{"label": "Price Tolerance:", "value": "-1", "tone": "neg"},
+				{"label": "Tip (Step ≤ +1):", "value": "+15%", "tone": "pos"},
+			])
 			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND) and (item_data.category == "bottle" or item_data.category == "frozen"):
+			var dw_stats: Array[Dictionary] = []
+			if not StoryManager.is_fridge_warm:
+				dw_stats.append({"label": "Cold Sale Tip:", "value": "+12%", "tone": "pos"})
+			dw_stats.append({"label": "Fridge Drain:", "value": "+40%", "tone": "neg"})
+			_add_effect_tooltip("Disembodied Wind", dw_stats)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
+			_add_effect_tooltip("Moonlight Tips", [{"label": "Cash Sale Tip:", "value": "+12%", "tone": "pos"}])
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
+			_add_effect_tooltip("Fading Memory", [{"label": "Cash Sale Tip:", "value": "+10%", "tone": "pos"}])
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
+			var ev_cnt := StoreEventManager.get_active_events().size()
+			if ev_cnt > 0:
+				_add_effect_tooltip("Static Airwaves", [{"label": "Event Sale Tip:", "value": "+%d%%" % (ev_cnt * 10), "tone": "pos"}])
+				count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW) and StoryManager.get_featured_category_boost_count(item_data.category) > 0:
+			_add_effect_tooltip("Curbside Glow", [{"label": "Featured Tip:", "value": "+15%", "tone": "pos"}])
 			count += 1
 
 	# 3. Active waiting counter customers who are currently requesting items (have an active item preview)
