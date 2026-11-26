@@ -75,7 +75,7 @@ static func pick_weighted(pool: Array[ItemData], current_tier: int, max_tiers_by
 			weight *= StoreEventManager.get_item_demand_multiplier(item)
 		if (item.category == "bottle" or item.category == "frozen") and StoryManager.has_mayari_card(MayariCardRegistry.CARD_WARM_TRADE_WINDS):
 			weight *= 1.40
-		var feat_boosts := StoryManager.get_featured_category_boost_count(item.category)
+		var feat_boosts: int = StoryManager.get_featured_category_boost_count(item.category)
 		if feat_boosts == 1:
 			weight *= 1.85
 		elif feat_boosts >= 2:
@@ -281,5 +281,3 @@ static func find_by_name(item_name: String) -> ItemData:
 		elif contains_match == null and n.contains(search):
 			contains_match = item
 	return starts_match if starts_match else contains_match
-
-
