@@ -127,20 +127,23 @@ func _ready() -> void:
 
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
-	pricing_viewport.size = Vector2(820, 460)
+	pricing_viewport.size = Vector2(1180, 460)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
-	var root_hbox := HBoxContainer.new()
-	root_hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	root_hbox.add_theme_constant_override("separation", 14)
-	pricing_viewport.add_child(root_hbox)
+	# Plain full-rect root so pricing_panel stays locked dead-center even when tooltips appear on the right
+	var root_ctrl := Control.new()
+	root_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pricing_viewport.add_child(root_ctrl)
 
 	pricing_panel = PanelContainer.new()
+	pricing_panel.set_anchors_preset(Control.PRESET_CENTER)
 	pricing_panel.custom_minimum_size = Vector2(410, 310)
-	pricing_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	root_hbox.add_child(pricing_panel)
+	pricing_panel.offset_left = -205.0
+	pricing_panel.offset_right = 205.0
+	pricing_panel.offset_top = -155.0
+	pricing_panel.offset_bottom = 155.0
+	root_ctrl.add_child(pricing_panel)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = COL_ESPRESSO
@@ -252,13 +255,20 @@ func _ready() -> void:
 	stock_label.add_theme_color_override("font_color", COL_DISCOUNT)
 	foot.add_child(stock_label)
 
-	# Right-side column of Hades/Mayari-style stat tooltips (source title + stat rows)
+	# Right-side column of Hades/Mayari-style stat tooltips (anchored to the right of center so main panel never shifts)
 	_tolerance_col = VBoxContainer.new()
-	_tolerance_col.custom_minimum_size = Vector2(360, 0)
-	_tolerance_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_tolerance_col.anchor_left = 0.5
+	_tolerance_col.anchor_right = 0.5
+	_tolerance_col.anchor_top = 0.0
+	_tolerance_col.anchor_bottom = 1.0
+	_tolerance_col.offset_left = 220.0
+	_tolerance_col.offset_right = 576.0
+	_tolerance_col.offset_top = 12.0
+	_tolerance_col.offset_bottom = -12.0
+	_tolerance_col.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tolerance_col.add_theme_constant_override("separation", 10)
 	_tolerance_col.hide()
-	root_hbox.add_child(_tolerance_col)
+	root_ctrl.add_child(_tolerance_col)
 
 	pricing_ui = Sprite3D.new()
 	pricing_ui.texture = pricing_viewport.get_texture()
@@ -360,10 +370,10 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 	var total_tol := 0
 	var count := 0
 
-	# 1. Active Neighborhood Events (show all item-relevant stats per event card)
+	# 1. Active Neighborhood Events (ONLY radio-revealed events — never spoil unrevealed broadcasts!)
 	if is_instance_valid(StoreEventManager):
 		var best_targeted_val := 0
-		for ev in StoreEventManager.get_all_active_events():
+		for ev in StoreEventManager.get_active_events():
 			if ev == null:
 				continue
 			var ev_stats: Array[Dictionary] = []
@@ -576,10 +586,10 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 		stock_label.hide()
 
 	if is_container:
-		pricing_ui.global_position = basis_position + Vector3(0, 0.5, 0.1)
+		pricing_ui.global_position = basis_position
 	else:
 		var h: float = item_data.display_height_meters
-		pricing_ui.global_position = basis_position + Vector3(0, h * 0.5, 0.12)
+		pricing_ui.global_position = basis_position + Vector3(0, h * 0.5, 0.0)
 
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	pricing_ui.show()

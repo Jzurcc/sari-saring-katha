@@ -38,7 +38,7 @@ func update_pricing_ui() -> void:
 	var ref_item = possible_candies[0]
 	if is_instance_valid(PricingOverlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
-		PricingOverlay.show_item(ref_item, global_position, true, "Candies", stock_info)
+		PricingOverlay.show_item(ref_item, get_visual_center(), true, "Candies", stock_info)
 
 func _check_unlock_status() -> void:
 	var tier = StoryManager.current_tier

@@ -62,6 +62,15 @@ func _on_day_started(_day: int) -> void:
 func _on_tier_advanced(_new_tier: int, _source: String) -> void:
 	_check_unlock_status()
 
+func get_visual_center() -> Vector3:
+	if is_instance_valid(sprite):
+		var aabb := sprite.get_aabb()
+		if aabb.size.length_squared() > 0.00001:
+			return sprite.global_transform * aabb.get_center()
+		return sprite.global_position
+	return global_position
+
+
 func refresh_stock() -> void:
 	_check_unlock_status()
 	_update_local_stock()

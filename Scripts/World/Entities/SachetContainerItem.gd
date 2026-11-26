@@ -28,7 +28,7 @@ func update_pricing_ui() -> void:
 	InventoryManager.mark_item_inspected(sachet_item)
 	if is_instance_valid(PricingOverlay):
 		var stock_info = "Stock: %d / %d" % [current_stock, max_stock]
-		PricingOverlay.show_item(sachet_item, global_position, true, "", stock_info)
+		PricingOverlay.show_item(sachet_item, get_visual_center(), true, "", stock_info)
 
 func _check_unlock_status() -> void:
 	var tier = StoryManager.current_tier
