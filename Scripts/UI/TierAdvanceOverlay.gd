@@ -4,6 +4,7 @@ extends CanvasLayer
 ## Displays the level-up prize money pill beside the title and gently bobbing
 ## previews of newly unlocked items below, with a longer hold and slow graceful exit.
 
+const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
 
 const COL_BG := Color(0.068, 0.058, 0.050, 0.94)
@@ -69,56 +70,19 @@ func _build_banner() -> void:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_banner.add_child(col)
 
-	# Clean single-line header: "You Leveled Up!" + Prize Money pill on the side
-	var top_row := HBoxContainer.new()
-	top_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	top_row.add_theme_constant_override("separation", 14)
-	top_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_child(top_row)
-
+	# Clean centered "You Leveled Up!" header (level-up cash bonus is shown passively in the money delta)
 	_title_lbl = Label.new()
 	_title_lbl.text = "You Leveled Up!"
+	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_lbl.add_theme_font_override("font", _bold_font)
-	_title_lbl.add_theme_font_size_override("font_size", 28)
+	_title_lbl.add_theme_font_size_override("font_size", 32)
 	_title_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_title_lbl.add_theme_color_override("font_outline_color", COL_OUTLINE)
-	_title_lbl.add_theme_constant_override("outline_size", 4)
+	_title_lbl.add_theme_constant_override("outline_size", 5)
 	_title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top_row.add_child(_title_lbl)
+	col.add_child(_title_lbl)
 
-	_prize_pill = PanelContainer.new()
-	_prize_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_prize_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var ps := UIStyle.create_flat_stylebox(Color(0.12, 0.22, 0.14, 0.94), 10, 12, 4)
-	ps.border_color = Color(COL_PRIZE_GREEN.r, COL_PRIZE_GREEN.g, COL_PRIZE_GREEN.b, 0.78)
-	ps.set_border_width_all(1)
-	_prize_pill.add_theme_stylebox_override("panel", ps)
-	top_row.add_child(_prize_pill)
-
-	var p_row := HBoxContainer.new()
-	p_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	p_row.add_theme_constant_override("separation", 5)
-	p_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_prize_pill.add_child(p_row)
-
-	var coin := TextureRect.new()
-	coin.texture = PESO_ICON
-	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	coin.custom_minimum_size = Vector2(18, 18)
-	coin.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p_row.add_child(coin)
-
-	_prize_lbl = Label.new()
-	_prize_lbl.text = "+₱50"
-	_prize_lbl.add_theme_font_override("font", _bold_font)
-	_prize_lbl.add_theme_font_size_override("font_size", 18)
-	_prize_lbl.add_theme_color_override("font_color", COL_PRIZE_GREEN)
-	_prize_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	p_row.add_child(_prize_lbl)
-
-	# Centered row of gently bobbing unlocked item previews
+	# Centered row of gently swaying unlocked item previews
 	_items_row = HBoxContainer.new()
 	_items_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_items_row.add_theme_constant_override("separation", 14)
@@ -139,11 +103,6 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 	_kill_bob_tweens()
 
 	_title_lbl.text = "You Leveled Up!"
-	var bonus := StoryManager.last_level_up_bonus
-	if bonus <= 0.0:
-		bonus = StoryManager.get_level_up_money_reward(StoryManager.player_level)
-	_prize_lbl.text = "+₱%d" % int(roundf(bonus))
-	_prize_pill.visible = bonus > 0.0
 
 	for child in _items_row.get_children():
 		_items_row.remove_child(child)
@@ -214,16 +173,28 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 		return
 
 	var vp_width := get_viewport().get_visible_rect().size.x
-	_banner.position = Vector2((vp_width - _banner.size.x) * 0.5, -_banner.size.y - 12.0)
+	_banner.position = Vector2((vp_width - _banner.size.x) * 0.5, -_banner.size.y - 16.0)
 	_banner.pivot_offset = _banner.size * 0.5
-	_banner.scale = Vector2(0.92, 0.92)
+	_banner.scale = Vector2(0.80, 0.80)
 
 	if _anim_tween and _anim_tween.is_valid():
 		_anim_tween.kill()
 	_anim_tween = create_tween().set_parallel(true)
-	_anim_tween.tween_property(_banner, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
-	_anim_tween.tween_property(_banner, "scale", Vector2.ONE, 0.36).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_anim_tween.tween_property(_banner, "position:y", 26.0, 0.40).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_anim_tween.tween_property(_banner, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
+	_anim_tween.tween_property(_banner, "scale", Vector2(1.06, 1.06), 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_anim_tween.tween_property(_banner, "position:y", 26.0, 0.36).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_anim_tween.chain().tween_property(_banner, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	# Celebratory gold sparkle bursts on both sides of the banner + gentle title pulse
+	var bx := (vp_width - _banner.size.x) * 0.5
+	var by := 26.0 + _banner.size.y * 0.5
+	Juice.spawn_burst(control, Vector2(bx + 18.0, by), COL_GOLD_BRIGHT, 12, 120.0)
+	Juice.spawn_burst(control, Vector2(bx + _banner.size.x - 18.0, by), COL_GOLD_BRIGHT, 12, 120.0)
+	_title_lbl.pivot_offset = _title_lbl.size * 0.5
+	var pulse_tw := create_tween().set_loops()
+	pulse_tw.tween_property(_title_lbl, "scale", Vector2(1.045, 1.045), 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	pulse_tw.tween_property(_title_lbl, "scale", Vector2.ONE, 0.75).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_bob_tweens.append(pulse_tw)
 
 	# Staggered entrance + continuous gentle sway on each item icon
 	for i in range(item_holders.size()):
