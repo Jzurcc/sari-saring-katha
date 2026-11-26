@@ -187,10 +187,19 @@ func calc_scaled_tip(sale_price: float, pct: float, min_tip: float, max_tip: flo
 		return 0.0
 	return clampf(snapped(sale_price * pct, 0.5), min_tip, max_tip)
 
+func get_mayari_card_stack_count(card_id: String) -> int:
+	if card_id.is_empty():
+		return 0
+	var count := 0
+	if active_mayari_card == card_id or (card_id in active_mayari_cards):
+		count += 1
+	if card_id in active_blessing_cards:
+		count += 1
+	return count
+
 func get_mayari_tolerance_offset() -> int:
 	var offset := 0
-	if has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
-		offset += 1
+	offset += get_mayari_card_stack_count(MayariCardRegistry.CARD_SILVER_TOLERANCE)
 	if has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
 		offset -= 1
 	if has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
@@ -735,8 +744,6 @@ func activate_sto_nino_blessing() -> Array[String]:
 	var pool: Array[String] = []
 	for card_id in MayariCardRegistry.CARDS.keys():
 		if not MayariCardRegistry.is_favor(card_id):
-			continue
-		if card_id == active_mayari_card or (card_id in active_mayari_cards):
 			continue
 		if not is_all_day and card_id == MayariCardRegistry.CARD_MOON_HOLDS_SKY:
 			continue

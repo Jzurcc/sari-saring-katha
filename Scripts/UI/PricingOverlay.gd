@@ -2,8 +2,9 @@ extends Node3D
 
 ## Alt Lens 3D World Pricing Overlay.
 ## Styled in Sari-Saring Katha's Reyna Mayari visual language: deep espresso panel,
-## soft antique-gold borders & diamond ornaments, emboldened Inder typography,
-## pill status badges, and a bidirectional center-zero price gauge (-5 to +5).
+## soft antique-gold borders, taller/compact bidirectional price gauge (-5 to +5)
+## colored dynamically by effective tolerance, and compact right-side tooltips for
+## active Price Tolerance sources (Events, Mayari Cards, Sto. Niño, & active customers).
 
 const INDER_FONT := preload("res://Assets/Fonts/Inder/Inder-Regular.ttf")
 
@@ -13,8 +14,8 @@ const COL_GOLD_SOFT := Color(0.96, 0.85, 0.52, 1.0)
 const COL_CREAM := Color(1.0, 0.935, 0.815, 1.0)
 const COL_CREAM_MUTED := Color(0.82, 0.76, 0.65, 0.86)
 const COL_DISCOUNT := Color(0.50, 0.88, 0.58, 1.0)
-const COL_MARKUP_LO := Color(0.98, 0.84, 0.42, 1.0)
-const COL_MARKUP_HI := Color(0.96, 0.42, 0.34, 1.0)
+const COL_RISKY := Color(0.98, 0.68, 0.28, 1.0)
+const COL_DANGER := Color(0.96, 0.42, 0.34, 1.0)
 const COL_WARM := Color(1.0, 0.56, 0.34, 1.0)
 const COL_CHILLED := Color(0.48, 0.88, 1.0, 1.0)
 
@@ -25,18 +26,9 @@ class PriceStepGauge extends Control:
 	var max_step: int = ItemData.MAX_STEP
 	var accent_color: Color = Color(0.96, 0.85, 0.52, 1.0)
 
-	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
-		var pts := PackedVector2Array([
-			center + Vector2(0.0, -r),
-			center + Vector2(r, 0.0),
-			center + Vector2(0.0, r),
-			center + Vector2(-r, 0.0),
-		])
-		draw_colored_polygon(pts, col)
-
 	func _draw() -> void:
-		var pad_x := 10.0
-		var bar_h := 16.0
+		var pad_x := 8.0
+		var bar_h := 24.0
 		var bar_y := (size.y - bar_h) * 0.5
 		var bar_w := maxf(20.0, size.x - pad_x * 2.0)
 		var bar_rect := Rect2(pad_x, bar_y, bar_w, bar_h)
@@ -57,9 +49,9 @@ class PriceStepGauge extends Control:
 			var nt := float(i - min_step) / span
 			var nx := pad_x + nt * bar_w
 			var is_zero := (i == 0)
-			var tick_col := Color(0.96, 0.86, 0.58, 0.55) if is_zero else Color(1.0, 0.92, 0.78, 0.14)
-			var y_inset := 1.0 if is_zero else 4.0
-			draw_line(Vector2(nx, bar_y + y_inset), Vector2(nx, bar_y + bar_h - y_inset), tick_col, 1.6 if is_zero else 1.0, true)
+			var tick_col := Color(0.96, 0.86, 0.58, 0.60) if is_zero else Color(1.0, 0.92, 0.78, 0.14)
+			var y_inset := 1.0 if is_zero else 5.0
+			draw_line(Vector2(nx, bar_y + y_inset), Vector2(nx, bar_y + bar_h - y_inset), tick_col, 1.8 if is_zero else 1.0, true)
 
 		# Bidirectional fill from center (0) to current step
 		var inset := 2.0
@@ -69,25 +61,16 @@ class PriceStepGauge extends Control:
 			var fill_rect := Rect2(x0, bar_y + inset, x1 - x0, bar_h - inset * 2.0)
 			draw_rect(fill_rect, accent_color, true)
 			# Subtle upper sheen like Mayari's Silver Ledger gauge
-			draw_rect(Rect2(x0, bar_y + inset, x1 - x0, 4.0), Color(1.0, 0.96, 0.84, 0.26), true)
+			draw_rect(Rect2(x0, bar_y + inset, x1 - x0, 5.0), Color(1.0, 0.96, 0.84, 0.25), true)
 
 		# Antique-gold outer frame + crisp dark inner bevel
 		var frame_col := Color(0.835, 0.624, 0.278, 0.88)
 		draw_rect(bar_rect, frame_col, false, 2.0)
 		draw_rect(bar_rect.grow(-2.0), Color(0.0, 0.0, 0.0, 0.45), false, 1.0)
 
-		# End-cap diamond ornaments (left & right)
-		_draw_diamond(Vector2(pad_x, bar_y + bar_h * 0.5), 4.5, frame_col)
-		_draw_diamond(Vector2(pad_x + bar_w, bar_y + bar_h * 0.5), 4.5, frame_col)
-
-		# Center wholesale marker below track
-		_draw_diamond(Vector2(zero_x, bar_y + bar_h + 6.5), 3.0, Color(0.86, 0.72, 0.42, 0.75))
-
-		# Glowing diamond thumb at active step
-		var thumb_c := Vector2(cur_x, bar_y + bar_h * 0.5)
-		_draw_diamond(thumb_c, 9.5, Color(accent_color.r, accent_color.g, accent_color.b, 0.28))
-		_draw_diamond(thumb_c, 7.0, Color(0.06, 0.05, 0.04, 0.96))
-		_draw_diamond(thumb_c, 5.2, accent_color.lightened(0.25))
+		# Sleek vertical marker needle at active step (no big circle/diamond)
+		draw_line(Vector2(cur_x, bar_y - 3.0), Vector2(cur_x, bar_y + bar_h + 3.0), Color(0.04, 0.03, 0.02, 0.95), 5.0, true)
+		draw_line(Vector2(cur_x, bar_y - 2.0), Vector2(cur_x, bar_y + bar_h + 2.0), accent_color.lightened(0.32), 2.5, true)
 
 
 var pricing_ui: Sprite3D
@@ -104,6 +87,7 @@ var pricing_panel: PanelContainer
 var left_arrow: Label
 var right_arrow: Label
 var _gauge: PriceStepGauge
+var _tolerance_col: VBoxContainer
 var _bold_font: FontVariation
 
 var _current_item: ItemData
@@ -124,22 +108,28 @@ func _ready() -> void:
 
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
-	pricing_viewport.size = Vector2(480, 310)
+	pricing_viewport.size = Vector2(720, 320)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
+	var root_hbox := HBoxContainer.new()
+	root_hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	root_hbox.add_theme_constant_override("separation", 10)
+	pricing_viewport.add_child(root_hbox)
+
 	pricing_panel = PanelContainer.new()
-	pricing_viewport.add_child(pricing_panel)
-	pricing_panel.size = Vector2(480, 310)
-	pricing_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pricing_panel.custom_minimum_size = Vector2(410, 300)
+	pricing_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	root_hbox.add_child(pricing_panel)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = COL_ESPRESSO
 	style.set_corner_radius_all(12)
 	style.border_color = COL_GOLD
 	style.set_border_width_all(2)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
+	style.content_margin_left = 18
+	style.content_margin_right = 18
 	style.content_margin_top = 14
 	style.content_margin_bottom = 14
 	style.shadow_size = 8
@@ -151,7 +141,7 @@ func _ready() -> void:
 	vbox.add_theme_constant_override("separation", 6)
 	pricing_panel.add_child(vbox)
 
-	# Branded eyebrow header ("✦ PRICE LENS ✦")
+	# Branded eyebrow header
 	var eyebrow := Label.new()
 	eyebrow.text = "✦  PRICE LENS  ✦"
 	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -183,20 +173,20 @@ func _ready() -> void:
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.add_theme_font_override("font", _bold_font)
-	name_label.add_theme_font_size_override("font_size", 29)
+	name_label.add_theme_font_size_override("font_size", 28)
 	name_label.add_theme_color_override("font_color", COL_CREAM)
 	vbox.add_child(name_label)
 
 	# Price Row with refined gold chevrons
 	var hbox := HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 18)
+	hbox.add_theme_constant_override("separation", 16)
 	vbox.add_child(hbox)
 
 	left_arrow = Label.new()
 	left_arrow.text = "‹"
 	left_arrow.add_theme_font_override("font", _bold_font)
-	left_arrow.add_theme_font_size_override("font_size", 42)
+	left_arrow.add_theme_font_size_override("font_size", 40)
 	left_arrow.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	left_arrow.pivot_offset = Vector2(10, 22)
 	hbox.add_child(left_arrow)
@@ -204,7 +194,7 @@ func _ready() -> void:
 	price_label = Label.new()
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	price_label.add_theme_font_override("font", _bold_font)
-	price_label.add_theme_font_size_override("font_size", 48)
+	price_label.add_theme_font_size_override("font_size", 46)
 	price_label.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	price_label.add_theme_constant_override("outline_size", 3)
 	price_label.add_theme_color_override("font_outline_color", Color(0.03, 0.02, 0.015, 0.95))
@@ -213,21 +203,21 @@ func _ready() -> void:
 	right_arrow = Label.new()
 	right_arrow.text = "›"
 	right_arrow.add_theme_font_override("font", _bold_font)
-	right_arrow.add_theme_font_size_override("font_size", 42)
+	right_arrow.add_theme_font_size_override("font_size", 40)
 	right_arrow.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	right_arrow.pivot_offset = Vector2(10, 22)
 	hbox.add_child(right_arrow)
 
-	# Reyna Mayari-style bidirectional Price Gauge (-5 .. 0 .. +5)
+	# Taller, shorter-width Mayari-style bidirectional Price Gauge (-5 .. 0 .. +5)
 	_gauge = PriceStepGauge.new()
-	_gauge.custom_minimum_size = Vector2(390, 32)
+	_gauge.custom_minimum_size = Vector2(310, 36)
 	_gauge.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(_gauge)
 
 	# Footer row: Markup/Discount delta + Stock readout
 	var foot := HBoxContainer.new()
 	foot.alignment = BoxContainer.ALIGNMENT_CENTER
-	foot.add_theme_constant_override("separation", 18)
+	foot.add_theme_constant_override("separation", 16)
 	vbox.add_child(foot)
 
 	comparison_label = Label.new()
@@ -243,6 +233,14 @@ func _ready() -> void:
 	stock_label.add_theme_font_size_override("font_size", 21)
 	stock_label.add_theme_color_override("font_color", COL_DISCOUNT)
 	foot.add_child(stock_label)
+
+	# Right-side column of compact Price Tolerance tooltips (name + effect only)
+	_tolerance_col = VBoxContainer.new()
+	_tolerance_col.custom_minimum_size = Vector2(260, 0)
+	_tolerance_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_tolerance_col.add_theme_constant_override("separation", 6)
+	_tolerance_col.hide()
+	root_hbox.add_child(_tolerance_col)
 
 	pricing_ui = Sprite3D.new()
 	pricing_ui.texture = pricing_viewport.get_texture()
@@ -273,6 +271,115 @@ func _make_badge_pill(bg_col: Color, border_col: Color) -> PanelContainer:
 	lbl.add_theme_font_size_override("font_size", 15)
 	pill.add_child(lbl)
 	return pill
+
+
+func _add_tolerance_tooltip(source_name: String, delta: int) -> void:
+	var pill := PanelContainer.new()
+	var border_col := COL_DISCOUNT if delta > 0 else COL_DANGER
+	var st := UIStyle.create_flat_stylebox(COL_ESPRESSO, 8, 12, 7)
+	st.border_color = Color(border_col.r, border_col.g, border_col.b, 0.78)
+	st.set_border_width_all(2)
+	pill.add_theme_stylebox_override("panel", st)
+
+	var hb := HBoxContainer.new()
+	hb.add_theme_constant_override("separation", 10)
+	pill.add_child(hb)
+
+	var name_lbl := Label.new()
+	name_lbl.text = source_name
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_lbl.add_theme_font_override("font", INDER_FONT)
+	name_lbl.add_theme_font_size_override("font_size", 17)
+	name_lbl.add_theme_color_override("font_color", COL_CREAM)
+	hb.add_child(name_lbl)
+
+	var val_lbl := Label.new()
+	val_lbl.text = "%+d" % delta
+	val_lbl.add_theme_font_override("font", _bold_font)
+	val_lbl.add_theme_font_size_override("font_size", 18)
+	val_lbl.add_theme_color_override("font_color", border_col)
+	hb.add_child(val_lbl)
+
+	_tolerance_col.add_child(pill)
+
+
+func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
+	for ch in _tolerance_col.get_children():
+		ch.queue_free()
+
+	var total_tol := 0
+	var count := 0
+
+	# 1. Active Neighborhood Events (revealed or global)
+	if is_instance_valid(StoreEventManager):
+		var best_targeted_ev: StoreEventData = null
+		var best_targeted_val := 0
+		for ev in StoreEventManager.get_all_active_events():
+			if ev == null:
+				continue
+			if ev.affects_item(item_data) and ev.tolerance_offset > best_targeted_val:
+				best_targeted_val = ev.tolerance_offset
+				best_targeted_ev = ev
+			if ev.global_tolerance_offset != 0:
+				_add_tolerance_tooltip(ev.event_name, ev.global_tolerance_offset)
+				total_tol += ev.global_tolerance_offset
+				count += 1
+		if best_targeted_ev != null and best_targeted_val != 0:
+			_add_tolerance_tooltip(best_targeted_ev.event_name, best_targeted_val)
+			total_tol += best_targeted_val
+			count += 1
+
+	# 2. Active Mayari Moon Cards & Sto. Niño Blessings (stack separately)
+	if is_instance_valid(StoryManager):
+		var has_mayari_silver := (
+			StoryManager.active_mayari_card == MayariCardRegistry.CARD_SILVER_TOLERANCE
+			or (MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_mayari_cards)
+		)
+		if has_mayari_silver:
+			_add_tolerance_tooltip("Silver Tolerance", 1)
+			total_tol += 1
+			count += 1
+		if MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_blessing_cards:
+			_add_tolerance_tooltip("Sto. Niño Blessing", 1)
+			total_tol += 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
+			_add_tolerance_tooltip("Eerie Mist Rush", -1)
+			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
+			_add_tolerance_tooltip("Reluctant Care", -1)
+			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+			_add_tolerance_tooltip("Restless Crowd", -1)
+			total_tol -= 1
+			count += 1
+
+	# 3. Active waiting counter customers with Reputation tolerance bonus for this item
+	var best_cust_bonus := 0
+	if is_instance_valid(CharacterProgressionManager):
+		var seen_paths: Dictionary = {}
+		for spawner in get_tree().get_nodes_in_group("customer_spawner"):
+			if not ("counter_slots" in spawner):
+				continue
+			for cust in spawner.counter_slots:
+				if not is_instance_valid(cust) or cust.customer_data == null or cust._is_resolving:
+					continue
+				var cpath: String = cust.customer_data.resource_path
+				if seen_paths.has(cpath):
+					continue
+				seen_paths[cpath] = true
+				var bonus := CharacterProgressionManager.get_reputation_tolerance_bonus(cust.customer_data, item_data)
+				if bonus > 0:
+					var cname: String = cust.customer_data.character_name if cust.customer_data.character_name != "" else cust.customer_data.get_clean_id().capitalize()
+					_add_tolerance_tooltip(cname, bonus)
+					best_cust_bonus = maxi(best_cust_bonus, bonus)
+					count += 1
+
+	_tolerance_col.visible = count > 0
+	return total_tol + best_cust_bonus
 
 
 func _on_fridge_coldness_changed(_coldness: float, _is_open: bool, is_warm: bool) -> void:
@@ -323,23 +430,30 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	else:
 		chill_pill.hide()
 
-	# Gauge & delta readout styling
+	# Rebuild right-side tolerance tooltips & compute effective step for color feedback
+	var total_tol := _rebuild_tolerance_tooltips(item_data)
+	var effective_step := step - total_tol
+
 	var diff: float = display_price - base_price
 	var accent: Color = COL_GOLD_SOFT
 	if is_warm_now:
 		accent = COL_WARM
 		var sign_prefix := "+" if diff >= 0.0 else "-"
 		comparison_label.text = "%s₱%.2f (was ₱%.2f)" % [sign_prefix, absf(diff), final_price]
-	elif step > 0:
-		var factor := float(step) / float(ItemData.MAX_STEP)
-		accent = COL_MARKUP_LO.lerp(COL_MARKUP_HI, factor)
-		comparison_label.text = "+₱%.2f" % diff
 	elif step < 0:
 		accent = COL_DISCOUNT
 		comparison_label.text = "-₱%.2f" % absf(diff)
-	else:
-		accent = COL_GOLD_SOFT
+	elif step == 0:
+		accent = COL_GOLD_SOFT if effective_step <= 1 else (COL_RISKY if effective_step == 2 else COL_DANGER)
 		comparison_label.text = "BASE COST"
+	else:
+		comparison_label.text = "+₱%.2f" % diff
+		if effective_step <= 1:
+			accent = COL_GOLD_SOFT
+		elif effective_step == 2:
+			accent = COL_RISKY
+		else:
+			accent = COL_DANGER
 
 	price_label.add_theme_color_override("font_color", COL_WARM if is_warm_now else COL_GOLD_SOFT)
 	comparison_label.add_theme_color_override("font_color", accent)
@@ -350,11 +464,9 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	_gauge.accent_color = accent
 	_gauge.queue_redraw()
 
-	# Arrow dimming at step bounds
 	left_arrow.modulate = Color(1, 1, 1, 0.28) if step <= ItemData.MIN_STEP else Color(1, 1, 1, 1.0)
 	right_arrow.modulate = Color(1, 1, 1, 0.28) if step >= ItemData.MAX_STEP else Color(1, 1, 1, 1.0)
 
-	# In Demand Badge
 	var in_demand: bool = false
 	if is_instance_valid(StoreEventManager) and StoreEventManager.has_method("is_item_in_demand"):
 		in_demand = StoreEventManager.is_item_in_demand(item_data)
