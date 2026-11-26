@@ -106,8 +106,12 @@ func open_minigame(_config: Dictionary = {}) -> void:
 	visible = true
 	add_to_group("minigame_overlay_active")
 	_start_round()
-	_locked = true
-	Juice.pop_panel_in(_intro_panel)
+	if Juice.are_minigame_tutorials_enabled():
+		_locked = true
+		Juice.pop_panel_in(_intro_panel)
+	else:
+		_intro_panel.visible = false
+		_locked = false
 
 
 func _on_intro_start() -> void:

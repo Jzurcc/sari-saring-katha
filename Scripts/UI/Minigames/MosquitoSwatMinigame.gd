@@ -132,6 +132,8 @@ func open_minigame(_config: Dictionary = {}) -> void:
 	visible = true
 	add_to_group("minigame_overlay_active")
 	_show_intro()
+	if not Juice.are_minigame_tutorials_enabled():
+		_on_intro_start()
 
 
 func _show_intro() -> void:

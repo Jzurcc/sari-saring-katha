@@ -5,6 +5,13 @@ extends RefCounted
 ## (Sipa, Dusk Lamp Mosquito Swat, and Teks Memory).
 
 
+static func are_minigame_tutorials_enabled() -> bool:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") == OK:
+		return bool(cfg.get_value("gameplay", "minigame_tutorials", true))
+	return true
+
+
 static func play_sfx(sfx_name: String, pitch: float = 1.0, vol_delta_db: float = 0.0) -> void:
 	if is_instance_valid(AudioManager) and is_instance_valid(AudioManager.sfx_pool):
 		AudioManager.sfx_pool.play_sfx_pitched(sfx_name, pitch, vol_delta_db)

@@ -110,14 +110,18 @@ class HaggleGauge extends Control:
 
 var _item_data: ItemData
 var _customer_data: CustomerData
+var _customer_node: Node3D
 var _original_step: int = 3
 var _offered_step: int = 2
 var _tolerance: int = 0
 var _resolved: bool = false
+var _showing_intro: bool = false
 
 var _bold_font: FontVariation
 var _root: Control
+var _fade_rect: ColorRect
 var _content: VBoxContainer
+var _intro_panel: PanelContainer
 var _gauge: HaggleGauge
 var _price_lbl: Label
 var _diff_lbl: Label
@@ -150,9 +154,10 @@ static func compute_haggle_accept_chance(offered_step: int, tolerance: int) -> f
 	return clampf(base + relief + card_mod, 0.05, 1.0)
 
 
-func setup(item_data: ItemData, customer_data: CustomerData) -> void:
+func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node3D = null) -> void:
 	_item_data = item_data
 	_customer_data = customer_data
+	_customer_node = customer_node
 	_original_step = item_data.current_step
 	_offered_step = maxi(ItemData.MIN_STEP, _original_step - 1)
 	_tolerance = 0
@@ -176,13 +181,52 @@ func _ready() -> void:
 
 	_build_ui()
 	_refresh_ui()
-	_root.modulate.a = 0.0
-	var tw := create_tween()
-	tw.tween_property(_root, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
+	_showing_intro = Juice.are_minigame_tutorials_enabled()
+	_intro_panel.visible = _showing_intro
+	_content.visible = not _showing_intro
+	if _showing_intro:
+		Juice.pop_panel_in(_intro_panel)
+
+	# Quick black fade transition into haggle
+	_fade_rect.color.a = 0.85
+	var ftw := create_tween()
+	ftw.tween_property(_fade_rect, "color:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+func _process(delta: float) -> void:
+	if _resolved or not is_instance_valid(_customer_node):
+		return
+	var cam := get_viewport().get_camera_3d()
+	if not is_instance_valid(cam):
+		return
+	var target_pos := _customer_node.global_position + Vector3(0.0, 1.35, 0.0)
+	var marker := _customer_node.get_node_or_null("SpeechMarker") as Node3D
+	if is_instance_valid(marker):
+		target_pos = marker.global_position - Vector3(0.0, 0.22, 0.0)
+	if cam.global_position.distance_squared_to(target_pos) > 0.01:
+		var target_basis := cam.global_transform.looking_at(target_pos, Vector3.UP).basis
+		cam.global_transform.basis = cam.global_transform.basis.slerp(target_basis, clampf(delta * 7.5, 0.0, 1.0))
 
 
 func _input(event: InputEvent) -> void:
 	if _resolved:
+		return
+	if event is InputEventMouseMotion:
+		# Keep camera smoothly locked onto the customer while haggling
+		get_viewport().set_input_as_handled()
+		return
+	if _showing_intro:
+		if event is InputEventKey and event.pressed and not event.is_echo():
+			if event.keycode in [KEY_F, KEY_SPACE, KEY_ENTER]:
+				get_viewport().set_input_as_handled()
+				_dismiss_intro()
+			elif event.keycode == KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_decline_haggle()
+		elif event is InputEventMouseButton and event.pressed:
+			get_viewport().set_input_as_handled()
+			if (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+				_dismiss_intro()
 		return
 	if event is InputEventMouseButton and event.pressed:
 		var mb := event as InputEventMouseButton
@@ -212,6 +256,15 @@ func _input(event: InputEvent) -> void:
 			KEY_ESCAPE:
 				get_viewport().set_input_as_handled()
 				_decline_haggle()
+
+
+func _dismiss_intro() -> void:
+	if not _showing_intro:
+		return
+	_showing_intro = false
+	_intro_panel.visible = false
+	_content.visible = true
+	Juice.play_sfx("tab_switch", 1.15)
 
 
 func _nudge_step(delta: int) -> void:
@@ -378,3 +431,55 @@ func _build_ui() -> void:
 
 	var hint := _make_outlined_label("Scroll to adjust   •   [F] Offer   •   [Esc] Let Them Go", INDER_FONT, 16, COL_CREAM_MUTED, 4)
 	_content.add_child(hint)
+
+	# How-to-Play intro panel (respects Minigame Tutorials setting)
+	_intro_panel = PanelContainer.new()
+	_intro_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_intro_panel.custom_minimum_size = Vector2(540, 250)
+	_intro_panel.offset_left = -270
+	_intro_panel.offset_right = 270
+	_intro_panel.offset_top = -125
+	_intro_panel.offset_bottom = 125
+	var istyle := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.95), 14, 28, 22)
+	istyle.border_color = Color(0.92, 0.72, 0.32, 0.92)
+	istyle.set_border_width_all(2)
+	_intro_panel.add_theme_stylebox_override("panel", istyle)
+	_intro_panel.visible = false
+	_root.add_child(_intro_panel)
+
+	var iv := VBoxContainer.new()
+	iv.alignment = BoxContainer.ALIGNMENT_CENTER
+	iv.add_theme_constant_override("separation", 14)
+	_intro_panel.add_child(iv)
+
+	var ititle := Label.new()
+	ititle.text = "How to Play: Haggle (Tawad)"
+	ititle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ititle.add_theme_font_override("font", _bold_font)
+	ititle.add_theme_font_size_override("font_size", 30)
+	ititle.add_theme_color_override("font_color", COL_GOLD_SOFT)
+	iv.add_child(ititle)
+
+	var idesc := Label.new()
+	idesc.text = "This customer hesitated at the price! Use the Scroll Wheel to lower your offer for this sale only — lower prices raise their acceptance chance. Press [F] to Offer or [Esc] to let them go."
+	idesc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	idesc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	idesc.add_theme_font_override("font", INDER_FONT)
+	idesc.add_theme_font_size_override("font_size", 20)
+	idesc.add_theme_color_override("font_color", COL_CREAM)
+	iv.add_child(idesc)
+
+	var ihint := Label.new()
+	ihint.text = "Press [F], [Space], or Click to begin"
+	ihint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ihint.add_theme_font_override("font", _bold_font)
+	ihint.add_theme_font_size_override("font_size", 17)
+	ihint.add_theme_color_override("font_color", COL_GOLD_SOFT)
+	iv.add_child(ihint)
+
+	# Quick black fade curtain on top
+	_fade_rect = ColorRect.new()
+	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_fade_rect.color = Color(0.015, 0.012, 0.010, 0.0)
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fade_rect)

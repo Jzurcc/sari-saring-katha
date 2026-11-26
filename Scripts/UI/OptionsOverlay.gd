@@ -65,11 +65,13 @@ var _mute_bg_btn: Button
 var _fs_btn: Button
 var _win_btn: Button
 var _vsync_btn: Button
+var _minigame_tut_btn: Button
 var _binding_buttons: Dictionary = {} # action -> Button
 
 var _is_fullscreen: bool = true
 var _mute_in_bg: bool = false
 var _vsync_enabled: bool = true
+var _minigame_tutorials_enabled: bool = true
 
 var _is_remapping: bool = false
 var _remapping_action: String = ""
@@ -506,8 +508,32 @@ func _build_display_page() -> VBoxContainer:
 		_vsync_enabled = not _vsync_enabled
 		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if _vsync_enabled else DisplayServer.VSYNC_DISABLED)
 		_sync_toggle_pill(_vsync_btn, _vsync_enabled, "On", "Off")
+		_save_settings()
 	)
 	vs_row.add_child(_vsync_btn)
+
+	var mt_row := HBoxContainer.new()
+	mt_row.custom_minimum_size = Vector2(0, 48)
+	mt_row.add_theme_constant_override("separation", 12)
+	vb.add_child(mt_row)
+
+	var mt_lbl := Label.new()
+	mt_lbl.text = "Minigame Tutorials"
+	mt_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mt_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mt_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	mt_lbl.add_theme_font_size_override("font_size", 18)
+	mt_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
+	mt_row.add_child(mt_lbl)
+
+	_minigame_tut_btn = _make_toggle_pill_btn("On")
+	_minigame_tut_btn.pressed.connect(func():
+		_play_click()
+		_minigame_tutorials_enabled = not _minigame_tutorials_enabled
+		_sync_toggle_pill(_minigame_tut_btn, _minigame_tutorials_enabled, "On", "Off")
+		_save_settings()
+	)
+	mt_row.add_child(_minigame_tut_btn)
 	return vb
 
 
@@ -882,6 +908,7 @@ func _save_settings() -> void:
 	cfg.set_value("accessibility", "mute_in_background", _mute_in_bg)
 	cfg.set_value("display", "fullscreen", _is_fullscreen)
 	cfg.set_value("display", "vsync", _vsync_enabled)
+	cfg.set_value("gameplay", "minigame_tutorials", _minigame_tutorials_enabled)
 
 	for action in _custom_bindings:
 		var event = _custom_bindings[action]
@@ -923,6 +950,9 @@ func _load_settings() -> void:
 	var bgm_val: float    = cfg.get_value("audio", "bgm", default_bgm_volume)
 	var sfx_val: float    = cfg.get_value("audio", "sfx", default_sfx_volume)
 	var voices_val: float = cfg.get_value("audio", "voices", default_voices_volume)
+	_minigame_tutorials_enabled = bool(cfg.get_value("gameplay", "minigame_tutorials", true))
+	if is_instance_valid(_minigame_tut_btn):
+		_sync_toggle_pill(_minigame_tut_btn, _minigame_tutorials_enabled, "On", "Off")
 	_slider_master.set_value_no_signal(master_val)
 	_slider_bgm.set_value_no_signal(bgm_val)
 	_slider_sfx.set_value_no_signal(sfx_val)

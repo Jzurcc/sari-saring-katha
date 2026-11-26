@@ -362,7 +362,7 @@ func _start_haggle_or_refusal(
 		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 		return
 	var overlay := HaggleOverlayScript.new()
-	overlay.setup(item.item_data, customer.customer_data)
+	overlay.setup(item.item_data, customer.customer_data, customer)
 	_tree_owner.get_tree().root.add_child(overlay)
 	overlay.haggle_finished.connect(func(accepted: bool, offered_step: int):
 		if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
