@@ -38,6 +38,7 @@ var _root: Control
 var _dock: HBoxContainer
 var _key_labels: Dictionary = {} # action -> Label
 var _journal_dot: Panel
+var _upgrades_dot: Panel
 var _sync_timer: float = 0.0
 
 
@@ -111,19 +112,11 @@ func _build_ui() -> void:
 		icon_center.add_child(ic)
 
 		if str(s["id"]) == "journal":
-			_journal_dot = Panel.new()
-			_journal_dot.custom_minimum_size = Vector2(13, 13)
-			_journal_dot.size = Vector2(13, 13)
-			_journal_dot.position = Vector2(51, 2)
-			_journal_dot.visible = false
-			_journal_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			var dot_st := StyleBoxFlat.new()
-			dot_st.bg_color = Color(1.0, 0.86, 0.34, 1.0)
-			dot_st.border_color = Color(0.08, 0.06, 0.04, 0.95)
-			dot_st.set_border_width_all(1)
-			dot_st.set_corner_radius_all(7)
-			_journal_dot.add_theme_stylebox_override("panel", dot_st)
+			_journal_dot = _make_red_dot()
 			circle.add_child(_journal_dot)
+		elif str(s["id"]) == "upgrades":
+			_upgrades_dot = _make_red_dot()
+			circle.add_child(_upgrades_dot)
 
 		# Square keycap badge tucked into the bottom-right rim of the circle
 		var key_panel := PanelContainer.new()
@@ -190,6 +183,34 @@ func _short_key_name(raw: String) -> String:
 		_: return s
 
 
+func _make_red_dot() -> Panel:
+	var dot := Panel.new()
+	dot.custom_minimum_size = Vector2(16, 16)
+	dot.size = Vector2(16, 16)
+	dot.position = Vector2(49, 1)
+	dot.visible = false
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var dot_st := StyleBoxFlat.new()
+	dot_st.bg_color = Color(0.94, 0.28, 0.24, 1.0)
+	dot_st.border_color = Color(0.08, 0.06, 0.04, 0.96)
+	dot_st.set_border_width_all(1)
+	dot_st.set_corner_radius_all(8)
+	dot.add_theme_stylebox_override("panel", dot_st)
+	return dot
+
+
+func _has_any_buyable_upgrade() -> bool:
+	var gm := get_tree().get_first_node_in_group("game_manager")
+	var avail_money: float = float(gm.money) if (gm != null and "money" in gm) else 0.0
+	for n in UpgradeTreeRegistry.get_all_nodes():
+		var ev := UpgradeTreeRegistry.evaluate_node(str(n["id"]), avail_money)
+		if bool(ev.get("can_buy", false)):
+			return true
+	return false
+
+
 func _refresh_visibility_and_badges() -> void:
 	if is_instance_valid(_journal_dot) and is_instance_valid(CharacterProgressionManager):
 		_journal_dot.visible = CharacterProgressionManager.has_any_unread_journal()
+	if is_instance_valid(_upgrades_dot):
+		_upgrades_dot.visible = _has_any_buyable_upgrade()
