@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/UI/MainMenu.gd" id="1_menu"]
 [ext_resource type="Texture2D" uid="uid://c2hb2c0ugd6ki" path="res://Assets/ui/backgrounds/Background.png" id="2_bg"]
-[ext_resource type="FontFile" uid="uid://0acemm6qfaoy" path="res://Assets/Fonts/Inder/Inder-Regular.ttf" id="4_ghw46"]
+[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf" id="4_ghw46"]
 [ext_resource type="PackedScene" uid="uid://31a5l8kvteys" path="res://Scenes/refrigerator_door.tscn" id="5_df05h"]
 [ext_resource type="PackedScene" path="res://Scenes/UI/ConfirmationOverlay.tscn" id="confirm_overlay"]
 [ext_resource type="Script" path="res://Scripts/UI/NowPlayingIndicator.gd" id="nowplaying_scr"]
@@ -43,6 +43,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="LeftVignette" type="ColorRect" parent="." unique_id=1701980279]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -55,11 +56,11 @@ color = Color(0, 0, 0, 0.28)
 layout_mode = 1
 anchor_top = 0.54
 anchor_bottom = 0.54
-offset_left = 80.0
+offset_left = 76.0
 offset_top = -10.0
-offset_right = 420.0
-offset_bottom = 240.0
-theme_override_constants/separation = 6
+offset_right = 440.0
+offset_bottom = 260.0
+theme_override_constants/separation = 10
 
 [node name="Continue" type="Button" parent="Buttons" unique_id=-968813171]
 visible = false
@@ -68,16 +69,16 @@ theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
 theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
-theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
-theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0.24, 0.14, 0.06, 0.92)
+theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 54
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_normal")
 theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/disabled = SubResource("btn_disabled")
 theme_override_styles/focus = SubResource("btn_hover")
-text = "CONTINUE"
+text = "Continue"
 alignment = 0
 
 [node name="NewGame" type="Button" parent="Buttons" unique_id=415128291]
@@ -86,16 +87,16 @@ theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
 theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
-theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
-theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0.24, 0.14, 0.06, 0.92)
+theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 54
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_normal")
 theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/disabled = SubResource("btn_disabled")
 theme_override_styles/focus = SubResource("btn_hover")
-text = "NEW GAME"
+text = "New Game"
 alignment = 0
 
 [node name="Options" type="Button" parent="Buttons" unique_id=1002501278]
@@ -104,15 +105,15 @@ theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
 theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
-theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
-theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0.24, 0.14, 0.06, 0.92)
+theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 54
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_normal")
 theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/focus = SubResource("btn_hover")
-text = "SETTINGS"
+text = "Settings"
 alignment = 0
 
 [node name="Exit" type="Button" parent="Buttons" unique_id=1080384476]
@@ -121,15 +122,15 @@ theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
 theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
-theme_override_colors/font_outline_color = Color(0.482, 0.306, 0.102, 1)
-theme_override_constants/outline_size = 5
+theme_override_colors/font_outline_color = Color(0.24, 0.14, 0.06, 0.92)
+theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("4_ghw46")
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 54
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_normal")
 theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/focus = SubResource("btn_hover")
-text = "EXIT"
+text = "Exit"
 alignment = 0
 
 [node name="OptionsOverlay" parent="." unique_id=413020143 instance=ExtResource("options_overlay")]
