@@ -45,12 +45,12 @@ var last_mayari_collection_successful: bool = true
 # --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
 const TALLY_GOAL := 2000.0
 const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 55.0, 70.0, 85.0, 100.0, 115.0, 130.0]
-const TALLY_GEN_SCHEDULE: Array[float] = [80.0, 105.0, 130.0, 160.0, 190.0, 220.0, 250.0]
+const TALLY_GEN_SCHEDULE: Array[float] = [95.0, 125.0, 155.0, 190.0, 225.0, 260.0, 295.0]
 
 const LEDGER_MILESTONES: Array[Dictionary] = [
 	{"id": "reroll_1", "ratio": 0.15, "amount": 300.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
 	{"id": "daytime_mayari", "ratio": 0.30, "amount": 600.0, "title": "Daylight Audience", "desc": "Reyna Mayari can now visit and shop during the day like a regular neighbor."},
-	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 1000.0, "title": "Silver Favor", "desc": "Fair odds shift to 65% Favor / 35% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
+	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 1000.0, "title": "Silver Favor", "desc": "Fair odds shift to 50% Favor / 50% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
 	{"id": "twin_moons", "ratio": 0.75, "amount": 1500.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards per night (choose 1 or 2)."},
 	{"id": "sealed_ledger", "ratio": 1.00, "amount": 2000.0, "title": "Patron of the Moon", "desc": "Permanently seals the Silver Ledger."},
 ]

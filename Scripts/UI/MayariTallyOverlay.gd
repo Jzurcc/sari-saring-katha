@@ -1130,8 +1130,8 @@ func _refresh_offering_ui(animate_pop: bool) -> void:
 			shadow_title = "UNREVEALED FATE"
 			shadow_desc = "The moon's gaze is unreadable tonight. Fortune or trial waits beneath the veil."
 			var shifted_fair := StoryManager.has_shifted_mayari_odds(_total_paid + _current_offer)
-			shadow_tag = "65% FAVOR" if shifted_fair else "55% OMEN"
-			shadow_tag_sub = "35% OMEN" if shifted_fair else "45% FAVOR"
+			shadow_tag = "50% FAVOR" if shifted_fair else "80% OMEN"
+			shadow_tag_sub = "50% OMEN" if shifted_fair else "20% FAVOR"
 			shadow_tag_col = COL_TIER_LAVISH_BRIGHT if shifted_fair else COL_TIER_MEAGER_BRIGHT
 			shadow_tag_sub_col = COL_TIER_MEAGER_BRIGHT if shifted_fair else COL_TIER_LAVISH_BRIGHT
 			shadow_bg = Color(0.062, 0.060, 0.066, 0.94)

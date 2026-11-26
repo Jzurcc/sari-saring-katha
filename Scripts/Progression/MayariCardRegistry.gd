@@ -536,7 +536,7 @@ static func get_cards_by_kind(kind: String) -> Array[Dictionary]:
 ## Draws 3 unique cards for the post-tally roguelike draft:
 ## - "generous" / "cleared": 3 guaranteed Favor cards
 ## - "shortfall": 100% Omen normally; 75% Omen / 25% Favor with 50% Silver Favor milestone
-## - "balanced": 55% Omen / 45% Favor normally; 35% Omen / 65% Favor with 50% Silver Favor milestone
+## - "balanced": 80% Omen / 20% Favor normally; 50% Omen / 50% Favor with 50% Silver Favor milestone
 static func draw_three_cards(tally_tier: String, shifted_odds: bool = false) -> Array[Dictionary]:
 	var favor_pool := get_cards_by_kind(KIND_FAVOR)
 	var chill_pool := get_cards_by_kind(KIND_CHILL)
@@ -570,8 +570,8 @@ static func draw_three_cards(tally_tier: String, shifted_odds: bool = false) -> 
 				for i in range(mini(3, chill_pool.size())):
 					picked.append(chill_pool[i])
 		_:
-			# "balanced" (sufficient): 55% Omen / 45% Favor normally, or 65% Favor / 35% Omen when shifted
-			var favor_prob := 0.65 if shifted_odds else 0.45
+			# "balanced" (sufficient): 80% Omen / 20% Favor normally, or 50% Favor / 50% Omen when shifted
+			var favor_prob := 0.50 if shifted_odds else 0.20
 			for _i in range(3):
 				if randf() < favor_prob and not favor_pool.is_empty():
 					picked.append(favor_pool.pop_back())
