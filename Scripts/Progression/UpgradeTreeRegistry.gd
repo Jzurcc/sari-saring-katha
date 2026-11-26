@@ -185,7 +185,7 @@ static func get_short_description(node_id: String) -> String:
 	return ""
 
 
-## Returns Event-Card style stat dictionaries: {"label": String, "value": String, "tone": "pos"|"neg"|"neu"}
+## Returns Event-Card style incremental stat dictionaries for this specific node: {"label", "value", "tone"}
 static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dictionary]:
 	var def := get_node_def(node_id)
 	if def.is_empty():
@@ -199,47 +199,78 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 			stats.append({"label": "Catalog Tier:", "value": "Tier %d" % t, "tone": "neu"})
 			stats.append({"label": "Starter Samples:", "value": "+2x Each", "tone": "pos"})
 		"permit":
+			var prev: Dictionary = StoryManager.PERMIT_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.PERMIT_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.PERMIT_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.PERMIT_UPGRADE_SPECS.size() - 1)]
-			var pct := int(roundf((float(spec["xp_mult"]) - 1.0) * 100.0))
-			stats.append({"label": "XP Multiplier:", "value": "+%d%%" % pct, "tone": "pos"})
+			var d_pct := int(roundf((float(spec["xp_mult"]) - float(prev["xp_mult"])) * 100.0))
+			if d_pct != 0:
+				stats.append({"label": "XP Multiplier:", "value": "+%d%%" % d_pct, "tone": "pos"})
 		"fridge":
+			var prev: Dictionary = StoryManager.FRIDGE_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.FRIDGE_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.FRIDGE_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.FRIDGE_UPGRADE_SPECS.size() - 1)]
-			stats.append({"label": "Cold Duration:", "value": "%.0fs" % float(spec["drain_sec"]), "tone": "pos"})
-			stats.append({"label": "Re-Chill Time:", "value": "%.0fs" % float(spec["regen_sec"]), "tone": "pos"})
+			var d_drain := float(spec["drain_sec"]) - float(prev["drain_sec"])
+			var d_regen := float(spec["regen_sec"]) - float(prev["regen_sec"])
+			if d_drain > 0.01:
+				stats.append({"label": "Cold Duration:", "value": "+%.1fs" % d_drain, "tone": "pos"})
+			if d_regen < -0.01:
+				stats.append({"label": "Re-Chill Time:", "value": "%.1fs" % d_regen, "tone": "pos"})
 		"mario_deals":
 			stats.append({"label": "Daily Deals:", "value": "2–3 Items", "tone": "neu"})
 			stats.append({"label": "Wholesale Discount:", "value": "-20%", "tone": "pos"})
 			stats.append({"label": "Mario Cooldown:", "value": "-30%", "tone": "pos"})
 		"bench":
+			var prev: Dictionary = StoryManager.BENCH_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.BENCH_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.BENCH_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.BENCH_UPGRADE_SPECS.size() - 1)]
-			var ch := int(roundf(float(spec["linger_chance"]) * 100.0))
-			stats.append({"label": "Linger Chance:", "value": "%d%%" % ch, "tone": "pos"})
-			stats.append({"label": "Max Lingering:", "value": "%d" % int(spec["max_lingering"]), "tone": "pos"})
+			var d_ch := int(roundf((float(spec["linger_chance"]) - float(prev["linger_chance"])) * 100.0))
+			var d_max := int(spec["max_lingering"]) - int(prev["max_lingering"])
+			if d_ch > 0:
+				stats.append({"label": "Linger Chance:", "value": "+%d%%" % d_ch, "tone": "pos"})
+			if d_max > 0:
+				stats.append({"label": "Max Lingering:", "value": "+%d" % d_max, "tone": "pos"})
 		"radio":
+			var prev: Dictionary = StoryManager.RADIO_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.RADIO_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.RADIO_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.RADIO_UPGRADE_SPECS.size() - 1)]
-			stats.append({"label": "Regulars Revealed:", "value": "%d" % int(spec["reveals"]), "tone": "pos"})
-			stats.append({"label": "Max Events:", "value": "%d" % int(spec["max_events"]), "tone": "pos"})
+			var d_rev := int(spec["reveals"]) - int(prev["reveals"])
+			var d_ev := int(spec["max_events"]) - int(prev["max_events"])
+			if d_rev > 0:
+				stats.append({"label": "Regulars Revealed:", "value": "+%d" % d_rev, "tone": "pos"})
+			if d_ev > 0:
+				stats.append({"label": "Daily Events:", "value": "+%d" % d_ev, "tone": "pos"})
 		"trash":
 			stats.append({"label": "Stock Disposal:", "value": "Unlocked", "tone": "pos"})
 		"cat":
+			var prev: Dictionary = StoryManager.CAT_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.CAT_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.CAT_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.CAT_UPGRADE_SPECS.size() - 1)]
-			stats.append({"label": "Counter Slots:", "value": "%d" % int(spec["slots"]), "tone": "pos"})
+			var d_slots := int(spec["slots"]) - int(prev["slots"])
+			if d_slots > 0:
+				stats.append({"label": "Counter Slots:", "value": "+%d" % d_slots, "tone": "pos"})
 		"sto_nino":
+			var prev: Dictionary = StoryManager.STO_NINO_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.STO_NINO_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.STO_NINO_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.STO_NINO_UPGRADE_SPECS.size() - 1)]
 			var dur := float(spec["duration_hours"])
-			stats.append({"label": "Blessing Duration:", "value": "All Day" if dur <= 0.0 else ("%.0fh" % dur), "tone": "pos"})
-			stats.append({"label": "Favor Choices:", "value": "%d" % int(spec["favor_count"]), "tone": "pos"})
+			var prev_dur := float(prev["duration_hours"])
+			if dur <= 0.0:
+				stats.append({"label": "Blessing Duration:", "value": "All Day", "tone": "pos"})
+			elif dur - prev_dur > 0.01:
+				stats.append({"label": "Blessing Duration:", "value": "+%.0fh" % (dur - prev_dur), "tone": "pos"})
+			var d_fav := int(spec["favor_count"]) - int(prev["favor_count"])
+			if d_fav > 0:
+				stats.append({"label": "Favor Choices:", "value": "+%d" % d_fav, "tone": "pos"})
 		"maneki":
+			var prev: Dictionary = StoryManager.MANEKI_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.MANEKI_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.MANEKI_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.MANEKI_UPGRADE_SPECS.size() - 1)]
-			var tip_pct := int(roundf(float(spec.get("tip_bonus_pct", 0.0)) * 100.0))
-			stats.append({"label": "Cash Sale Tip Bonus:", "value": "+%d%%" % tip_pct, "tone": "pos"})
+			var d_tip := int(roundf((float(spec.get("tip_bonus_pct", 0.0)) - float(prev.get("tip_bonus_pct", 0.0))) * 100.0))
+			if d_tip > 0:
+				stats.append({"label": "Tip Bonus:", "value": "+%d%%" % d_tip, "tone": "pos"})
 		"storefront_step":
 			var sf_lvl := int(def["storefront_level"])
+			var prev: Dictionary = StoryManager.STOREFRONT_UPGRADE_SPECS[clampi(sf_lvl - 1, 0, StoryManager.STOREFRONT_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.STOREFRONT_UPGRADE_SPECS[clampi(sf_lvl, 0, StoryManager.STOREFRONT_UPGRADE_SPECS.size() - 1)]
-			var tip_pct := int(roundf(float(spec["tip_chance"]) * 100.0))
-			var rel_pct := int(roundf(float(spec["price_relief"]) * 100.0))
-			stats.append({"label": "Tip Chance:", "value": "+%d%%" % tip_pct, "tone": "pos"})
-			stats.append({"label": "Price Relief:", "value": "+%d%%" % rel_pct, "tone": "pos"})
+			var d_tip := int(roundf((float(spec["tip_chance"]) - float(prev["tip_chance"])) * 100.0))
+			var d_rel := int(roundf((float(spec["price_relief"]) - float(prev["price_relief"])) * 100.0))
+			if d_tip > 0:
+				stats.append({"label": "Tip Chance:", "value": "+%d%%" % d_tip, "tone": "pos"})
+			if d_rel > 0:
+				stats.append({"label": "Price Relief:", "value": "+%d%%" % d_rel, "tone": "pos"})
 			if sf_lvl == 2:
 				stats.append({"label": "Promo Bonus:", "value": "+₱3", "tone": "pos"})
 			elif sf_lvl == 3:
