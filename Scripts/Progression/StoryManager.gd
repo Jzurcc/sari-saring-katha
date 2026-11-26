@@ -621,6 +621,8 @@ func purchase_maneki_upgrade(level: int) -> void:
 		get_customer_time_window_hours(),
 		get_visit_time_window_hours()
 	])
+	if get_tree():
+		get_tree().call_group("store_maneki", "refresh_visibility", true)
 	_save_progression()
 
 # --- Barangay Transistor Radio (Papa Ulap Broadcasts, +1 Daily Events, Expected Regulars) ---
@@ -1810,6 +1812,7 @@ func _refresh_all_store_props() -> void:
 		return
 	tree.call_group("dispenser_containers", "refresh_stock")
 	tree.call_group("store_cats", "refresh_visibility", false)
+	tree.call_group("store_maneki", "refresh_visibility", false)
 	tree.call_group("trash", "refresh_visibility", false)
 	tree.call_group("store_radio", "_refresh_visual_state", false)
 	tree.call_group("permit_frame", "refresh_visibility", false)

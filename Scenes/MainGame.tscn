@@ -21,7 +21,6 @@
 [ext_resource type="Resource" uid="uid://csh54la517gfr" path="res://Resources/items/can/Argentita.tres" id="29_lcmar"]
 [ext_resource type="Texture2D" uid="uid://6r48mooprrjc" path="res://Assets/items/icons/19_candycontainer_pocha.png" id="29_upseh"]
 [ext_resource type="Resource" uid="uid://dlbc3765pw4e4" path="res://Resources/items/can/Cenchuree.tres" id="30_cqekc"]
-[ext_resource type="Texture2D" uid="uid://m2xmxd7f13vb" path="res://Assets/ui/trophy.png" id="30_si6xw"]
 [ext_resource type="Texture2D" uid="uid://cfwigrvhopi8y" path="res://Assets/ui/cat.png" id="31_1r7st"]
 [ext_resource type="Texture2D" uid="uid://b8p2kj68loknq" path="res://Assets/ui/sto_nino2.png" id="32_o6tew"]
 [ext_resource type="Texture2D" uid="uid://ctmovoe2o0jbq" path="res://Assets/ui/picture_frame_stand.png" id="33_3ijh3"]
@@ -31,6 +30,9 @@
 [ext_resource type="Shader" uid="uid://qh1tqumxvlq5" path="res://Shaders/outline.gdshader" id="38_cqekc"]
 [ext_resource type="Script" uid="uid://dxmnefrwak8nn" path="res://Scripts/World/Entities/SachetContainerItem.gd" id="45_glkqw"]
 [ext_resource type="Material" uid="uid://db4iw7gjdpieb" path="res://Assets/3D/final store/textures/materials/outer_wall.001.tres" id="45_gnwe2"]
+[ext_resource type="Script" path="res://Scripts/World/Interactors/ManekiInteractable.gd" id="maneki_script"]
+[ext_resource type="Script" uid="uid://blrfufejsu1cj" path="res://Scripts/Components/WorldInteractor.gd" id="45_iyiaj"]
+[ext_resource type="Texture2D" uid="uid://ry07r2avbtnk" path="res://Assets/ui/manekineko.png" id="46_eisn2"]
 [ext_resource type="Material" uid="uid://7p3u1xj7ym3f" path="res://Assets/3D/final store/textures/materials/outer_wall.tres" id="46_glkqw"]
 [ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="46_hfiw1"]
 [ext_resource type="VoxelGIData" uid="uid://lqnf363acqsg" path="res://Scenes/MainGame.VoxelGI_data.res" id="46_uvjf7"]
@@ -108,6 +110,9 @@ size = Vector3(2.6975098, 4.6657715, 2.9511719)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_3ijh3"]
 size = Vector3(200.6779, 114.64903, 426.17346)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f74da"]
+size = Vector3(1, 0.75743103, 0.71899414)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_cqekc"]
 size = Vector3(5.7751617, 2.8569412, 4.043152)
@@ -407,6 +412,7 @@ spot_angle = 30.256962
 
 [node name="GameManager" type="Node" parent="." unique_id=1750367744]
 script = ExtResource("gm_scr")
+starting_money = null
 
 [node name="CustomerSpawner" type="Node" parent="." unique_id=1262248555 groups=["customer_spawner"]]
 script = ExtResource("cs_scr")
@@ -601,13 +607,22 @@ outline_shader = ExtResource("38_cqekc")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="NokiaInteractable" unique_id=459392347]
 shape = SubResource("BoxShape3D_3ijh3")
 
-[node name="Trophy" type="Sprite3D" parent="." unique_id=719813067]
-transform = Transform3D(-8.742278e-09, 0, 0.2, 0, 0.2, 0, -0.2, 0, -8.742278e-09, 4.3776584, 5.060807, -0.8048922)
+[node name="ManekiInteractable" type="Area3D" parent="." unique_id=1499188715]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.15746474)
+script = ExtResource("maneki_script")
+
+[node name="ManekiNeko" type="Sprite3D" parent="ManekiInteractable" unique_id=719813067]
+transform = Transform3D(-6.5567085e-09, 0, 0.15, 0, 0.15, 0, -0.15, 0, -6.5567085e-09, 4.3776584, 4.9776754, -0.8048922)
 cast_shadow = 0
 billboard = 2
 shaded = true
 alpha_cut = 1
-texture = ExtResource("30_si6xw")
+texture = ExtResource("46_eisn2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ManekiInteractable" unique_id=869915845]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2030697, 5.072211, -0.7677616)
+visible = false
+shape = SubResource("BoxShape3D_f74da")
 
 [node name="Cat" type="Area3D" parent="." unique_id=1262654076]
 script = ExtResource("cat_script")
