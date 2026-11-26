@@ -75,7 +75,6 @@ var _reader_holder: MarginContainer
 # Lightbox overlay for inspecting Portrait or Landscape journal art at full size
 var _lightbox_bg: ColorRect
 var _lightbox_tex_rect: TextureRect
-var _lightbox_title_lbl: Label
 
 # External link confirmation modal
 var _link_confirm_bg: ColorRect
@@ -495,11 +494,8 @@ func _build_lightbox() -> void:
 
 	var hdr := HBoxContainer.new()
 	hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr.alignment = BoxContainer.ALIGNMENT_END
 	vbox.add_child(hdr)
-
-	_lightbox_title_lbl = _make_label("", 22, COL_GOLD_BRIGHT, true)
-	_lightbox_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hdr.add_child(_lightbox_title_lbl)
 
 	var close_lb := Button.new()
 	close_lb.text = "✕"
@@ -522,11 +518,10 @@ func _build_lightbox() -> void:
 	vbox.add_child(_lightbox_tex_rect)
 
 
-func _open_lightbox(tex: Texture2D, title: String, _caption: String = "") -> void:
+func _open_lightbox(tex: Texture2D, _title: String = "", _caption: String = "") -> void:
 	if tex == null or not is_instance_valid(_lightbox_bg):
 		return
 	_lightbox_tex_rect.texture = tex
-	_lightbox_title_lbl.text = title
 	_lightbox_bg.visible = true
 	_lightbox_bg.modulate.a = 0.0
 	_lightbox_tex_rect.scale = Vector2(0.94, 0.94)
@@ -1173,42 +1168,35 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 		body_lbl.add_theme_constant_override("line_spacing", 6)
 		v.add_child(body_lbl)
 
-	var cap_txt := str(rank_data["media_caption"]).strip_edges()
 	var src_txt := str(rank_data["media_source"]).strip_edges()
 	var url_txt := str(rank_data.get("media_url", "")).strip_edges()
-	if show_caption_callout and (cap_txt != "" or src_txt != ""):
+	if show_caption_callout and src_txt != "":
 		var callout := PanelContainer.new()
 		callout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		callout.add_theme_stylebox_override("panel", _make_box_style(COL_PANEL, COL_BORDER, 10, 14, 12))
+		callout.add_theme_stylebox_override("panel", _make_box_style(COL_PANEL, COL_BORDER, 10, 14, 10))
 		var cv := VBoxContainer.new()
-		cv.add_theme_constant_override("separation", 6)
+		cv.add_theme_constant_override("separation", 4)
 		callout.add_child(cv)
-		if cap_txt != "":
-			var cl := _make_label(cap_txt, 16, COL_CREAM, false)
-			cl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			cl.add_theme_constant_override("line_spacing", 4)
-			cv.add_child(cl)
-		if src_txt != "":
-			if url_txt != "":
-				var link := LinkButton.new()
-				link.text = src_txt + " ↗"
-				link.uri = ""
-				link.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
-				link.tooltip_text = url_txt
-				link.focus_mode = Control.FOCUS_NONE
-				link.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-				link.add_theme_font_override("font", _reg_font)
-				link.add_theme_font_size_override("font_size", 15)
-				link.add_theme_color_override("font_color", COL_GOLD)
-				link.add_theme_color_override("font_hover_color", COL_GOLD_BRIGHT)
-				link.add_theme_color_override("font_pressed_color", COL_CREAM)
-				var captured_url := url_txt
-				link.pressed.connect(func(): _open_link_confirm(captured_url))
-				cv.add_child(link)
-			else:
-				var sl := _make_label(src_txt, 14, COL_MUTED, false)
-				sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				cv.add_child(sl)
+		if url_txt != "":
+			var link := LinkButton.new()
+			link.text = src_txt + " ↗"
+			link.uri = ""
+			link.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
+			link.tooltip_text = url_txt
+			link.focus_mode = Control.FOCUS_NONE
+			link.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			link.add_theme_font_override("font", _reg_font)
+			link.add_theme_font_size_override("font_size", 15)
+			link.add_theme_color_override("font_color", COL_GOLD)
+			link.add_theme_color_override("font_hover_color", COL_GOLD_BRIGHT)
+			link.add_theme_color_override("font_pressed_color", COL_CREAM)
+			var captured_url := url_txt
+			link.pressed.connect(func(): _open_link_confirm(captured_url))
+			cv.add_child(link)
+		else:
+			var sl := _make_label(src_txt, 14, COL_MUTED, false)
+			sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			cv.add_child(sl)
 		v.add_child(callout)
 
 	return v
