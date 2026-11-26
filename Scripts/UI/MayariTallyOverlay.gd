@@ -479,11 +479,13 @@ var _phase: int = 0 # 0 = offering, 1 = flipping, 2 = card_draft
 
 var _root: Control
 var _backdrop: ColorRect
-var _header_banner: PanelContainer
+var _header_banner: Control
 var _center_frame: PanelContainer
 var _mayari_portrait: TextureRect
 var _header_title_lbl: Label
 var _header_sub_lbl: Label
+var _step_pill_lbl: Label
+var _draft_bar: HBoxContainer
 
 # Shared 3 Card Slots (EXACT same size & position in Beat 1 and Beat 2!)
 var _card_slots: Array[Control] = []
@@ -549,8 +551,7 @@ func _ready() -> void:
 	layer = 95
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	_bold_font = FontVariation.new()
-	_bold_font.base_font = UIStyle.FONT_INDER
-	_bold_font.variation_embolden = 0.65
+	_bold_font.base_font = UIStyle.FONT_FREDOKA_SEMIBOLD
 	_build_ui()
 	if _sealed_direct_draft:
 		_gauge_dock.visible = false
@@ -594,59 +595,54 @@ func _build_ui() -> void:
 	_backdrop.modulate.a = 0.0
 	_root.add_child(_backdrop)
 
-	# ── 1. TOP WIDE TITLE BANNER ──
-	_header_banner = PanelContainer.new()
+	# ── 1. BORDERLESS 5%-SAFE TOP HEADER (Title Case + 2-Beat Step Indicator) ──
+	_header_banner = HBoxContainer.new()
 	_header_banner.anchor_left = 0.220
 	_header_banner.anchor_right = 0.800
-	_header_banner.anchor_top = 0.030
+	_header_banner.anchor_top = 0.042
 	_header_banner.anchor_bottom = 0.148
-	var header_style := UIStyle.create_flat_stylebox(COL_ESPRESSO_DEEP, 6, 32, 10)
-	header_style.border_color = COL_GOLD
-	header_style.set_border_width_all(2)
-	header_style.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
-	header_style.shadow_size = 16
-	_header_banner.add_theme_stylebox_override("panel", header_style)
+	_header_banner.alignment = BoxContainer.ALIGNMENT_CENTER
+	_header_banner.add_theme_constant_override("separation", 16)
 	_root.add_child(_header_banner)
 
 	var header_v := VBoxContainer.new()
-	header_v.alignment = BoxContainer.ALIGNMENT_CENTER
-	header_v.add_theme_constant_override("separation", 3)
+	header_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_v.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header_v.add_theme_constant_override("separation", 2)
 	_header_banner.add_child(header_v)
 
-	var title_row := HBoxContainer.new()
-	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	title_row.add_theme_constant_override("separation", 18)
-	header_v.add_child(title_row)
-
-	var left_orn := Label.new()
-	left_orn.text = "◈"
-	left_orn.add_theme_font_size_override("font_size", 22)
-	left_orn.add_theme_color_override("font_color", COL_GOLD)
-	title_row.add_child(left_orn)
-
 	_header_title_lbl = Label.new()
-	_header_title_lbl.text = "T H E   S I L V E R   L E D G E R"
-	_header_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_header_title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_header_title_lbl.text = "The Silver Ledger"
+	_header_title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_BOLD)
 	_header_title_lbl.add_theme_font_size_override("font_size", 32)
 	_header_title_lbl.add_theme_color_override("font_color", COL_CREAM)
 	_header_title_lbl.add_theme_color_override("font_outline_color", COL_BROWN_BORDER)
-	_header_title_lbl.add_theme_constant_override("outline_size", 4)
-	title_row.add_child(_header_title_lbl)
-
-	var right_orn := Label.new()
-	right_orn.text = "◈"
-	right_orn.add_theme_font_size_override("font_size", 22)
-	right_orn.add_theme_color_override("font_color", COL_GOLD)
-	title_row.add_child(right_orn)
+	_header_title_lbl.add_theme_constant_override("outline_size", 3)
+	header_v.add_child(_header_title_lbl)
 
 	_header_sub_lbl = Label.new()
 	_header_sub_lbl.text = "Set tonight's tribute to Reyna Mayari."
-	_header_sub_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_header_sub_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	_header_sub_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
 	_header_sub_lbl.add_theme_font_size_override("font_size", 16)
 	_header_sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	header_v.add_child(_header_sub_lbl)
+
+	var step_pill := PanelContainer.new()
+	step_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	step_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sp_st := UIStyle.create_flat_stylebox(Color(0.088, 0.076, 0.064, 0.94), 10, 16, 8)
+	sp_st.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.62)
+	sp_st.set_border_width_all(1)
+	step_pill.add_theme_stylebox_override("panel", sp_st)
+	_header_banner.add_child(step_pill)
+
+	_step_pill_lbl = Label.new()
+	_step_pill_lbl.text = "✦ Sealed Ledger · Moon Cards" if _sealed_direct_draft else "◆ 1. Tribute  ─  ◇ 2. Moon Cards"
+	_step_pill_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
+	_step_pill_lbl.add_theme_font_size_override("font_size", 15)
+	_step_pill_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	_step_pill_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	step_pill.add_child(_step_pill_lbl)
 
 	# ── 2. SHARED HADES CENTER FRAME (Exact same 3 card slots across Beat 1 -> Beat 2!) ──
 	_center_frame = PanelContainer.new()
@@ -765,8 +761,8 @@ func _build_ui() -> void:
 	var scroll_lbl := Label.new()
 	scroll_lbl.text = "Scroll to adjust"
 	scroll_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	scroll_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	scroll_lbl.add_theme_font_size_override("font_size", 13)
+	scroll_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
+	scroll_lbl.add_theme_font_size_override("font_size", 15)
 	scroll_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
 	scroll_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scroll_hint_box.add_child(scroll_lbl)
@@ -796,64 +792,36 @@ func _build_ui() -> void:
 	_confirm_btn.pressed.connect(_on_confirm_pressed)
 	_root.add_child(_confirm_btn)
 
-	# ── 3B. BEAT 2 REROLL & ACCEPT CARDS BUTTONS (Straddling frame's bottom border) ──
-	_reroll_btn = Button.new()
-	_reroll_btn.anchor_left = 0.5
-	_reroll_btn.anchor_right = 0.5
-	_reroll_btn.anchor_top = 0.855
-	_reroll_btn.anchor_bottom = 0.855
-	_reroll_btn.offset_left = -46.0
-	_reroll_btn.offset_right = 46.0
-	_reroll_btn.offset_top = -26.0
-	_reroll_btn.offset_bottom = 26.0
-	_reroll_btn.z_index = 12
-	_reroll_btn.visible = false
-	_reroll_btn.tooltip_text = "Reroll Cards"
-	_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_reroll_btn.focus_mode = Control.FOCUS_NONE
-	_reroll_btn.add_theme_font_override("font", _bold_font)
-	_reroll_btn.add_theme_font_size_override("font_size", 22)
-	var rr_style := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.10, 0.97), 8, 16, 8)
-	rr_style.border_color = COL_GOLD
-	rr_style.set_border_width_all(2)
-	rr_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
-	rr_style.shadow_size = 12
-	var rr_hov: StyleBoxFlat = rr_style.duplicate()
-	rr_hov.bg_color = Color(0.24, 0.19, 0.13, 0.98)
-	rr_hov.border_color = COL_GOLD_BRIGHT
-	_reroll_btn.add_theme_stylebox_override("normal", rr_style)
-	_reroll_btn.add_theme_stylebox_override("hover", rr_hov)
-	_reroll_btn.add_theme_stylebox_override("pressed", rr_style)
-	_reroll_btn.add_theme_stylebox_override("disabled", rr_style)
-	_reroll_btn.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	_reroll_btn.add_theme_color_override("font_hover_color", Color.WHITE)
-	_reroll_btn.pressed.connect(_on_reroll_pressed)
-	_root.add_child(_reroll_btn)
+	# ── 3B. BEAT 2 UNIFIED ACTION BAR (Centered responsive HBoxContainer straddling frame bottom) ──
+	_draft_bar = HBoxContainer.new()
+	_draft_bar.anchor_left = 0.220
+	_draft_bar.anchor_right = 0.800
+	_draft_bar.anchor_top = 0.855
+	_draft_bar.anchor_bottom = 0.855
+	_draft_bar.offset_top = -26.0
+	_draft_bar.offset_bottom = 26.0
+	_draft_bar.z_index = 12
+	_draft_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+	_draft_bar.add_theme_constant_override("separation", 14)
+	_draft_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_draft_bar)
 
-	# "Include Omens" toggle button with icon right beside the Reroll button (takes effect on next Reroll)
+	# "Include Omens" toggle button with icon (takes effect on next Reroll)
 	_omens_only_btn = Button.new()
 	_omens_only_btn.toggle_mode = true
-	_omens_only_btn.anchor_left = 0.5
-	_omens_only_btn.anchor_right = 0.5
-	_omens_only_btn.anchor_top = 0.855
-	_omens_only_btn.anchor_bottom = 0.855
-	_omens_only_btn.offset_left = -242.0
-	_omens_only_btn.offset_right = -62.0
-	_omens_only_btn.offset_top = -24.0
-	_omens_only_btn.offset_bottom = 24.0
-	_omens_only_btn.z_index = 12
+	_omens_only_btn.custom_minimum_size = Vector2(174, 48)
 	_omens_only_btn.visible = false
 	_omens_only_btn.text = "Include Omens"
 	_omens_only_btn.tooltip_text = "Light up to mix 50/50 Favors & Omens on your next Reroll"
 	_omens_only_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_omens_only_btn.focus_mode = Control.FOCUS_NONE
-	_omens_only_btn.add_theme_font_override("font", _bold_font)
-	_omens_only_btn.add_theme_font_size_override("font_size", 15)
+	_omens_only_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	_omens_only_btn.add_theme_font_size_override("font_size", 16)
 	if ResourceLoader.exists("res://Assets/ui/icons/moon-star.png"):
 		_omens_only_btn.icon = load("res://Assets/ui/icons/moon-star.png")
 		_omens_only_btn.expand_icon = true
 		_omens_only_btn.add_theme_constant_override("icon_max_width", 18)
-	var om_style := UIStyle.create_flat_stylebox(Color(0.14, 0.11, 0.11, 0.97), 8, 12, 8)
+	var om_style := UIStyle.create_flat_stylebox(Color(0.14, 0.11, 0.11, 0.97), 10, 14, 8)
 	om_style.border_color = Color(0.55, 0.38, 0.34, 0.85)
 	om_style.set_border_width_all(2)
 	om_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
@@ -873,24 +841,41 @@ func _build_ui() -> void:
 	_omens_only_btn.add_theme_color_override("font_pressed_color", COL_TIER_MEAGER_BRIGHT)
 	_omens_only_btn.add_theme_color_override("font_hover_pressed_color", Color.WHITE)
 	_omens_only_btn.toggled.connect(_on_omens_only_toggled)
-	_root.add_child(_omens_only_btn)
+	_draft_bar.add_child(_omens_only_btn)
+
+	_reroll_btn = Button.new()
+	_reroll_btn.custom_minimum_size = Vector2(118, 48)
+	_reroll_btn.visible = false
+	_reroll_btn.tooltip_text = "Reroll Cards"
+	_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_reroll_btn.focus_mode = Control.FOCUS_NONE
+	_reroll_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	_reroll_btn.add_theme_font_size_override("font_size", 20)
+	var rr_style := UIStyle.create_flat_stylebox(Color(0.14, 0.12, 0.10, 0.97), 10, 16, 8)
+	rr_style.border_color = COL_GOLD
+	rr_style.set_border_width_all(2)
+	rr_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
+	rr_style.shadow_size = 12
+	var rr_hov: StyleBoxFlat = rr_style.duplicate()
+	rr_hov.bg_color = Color(0.24, 0.19, 0.13, 0.98)
+	rr_hov.border_color = COL_GOLD_BRIGHT
+	_reroll_btn.add_theme_stylebox_override("normal", rr_style)
+	_reroll_btn.add_theme_stylebox_override("hover", rr_hov)
+	_reroll_btn.add_theme_stylebox_override("pressed", rr_style)
+	_reroll_btn.add_theme_stylebox_override("disabled", rr_style)
+	_reroll_btn.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+	_reroll_btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	_reroll_btn.pressed.connect(_on_reroll_pressed)
+	_draft_bar.add_child(_reroll_btn)
 
 	_accept_cards_btn = Button.new()
-	_accept_cards_btn.anchor_left = 0.800
-	_accept_cards_btn.anchor_right = 0.800
-	_accept_cards_btn.anchor_top = 0.855
-	_accept_cards_btn.anchor_bottom = 0.855
-	_accept_cards_btn.offset_left = -246.0
-	_accept_cards_btn.offset_right = -18.0
-	_accept_cards_btn.offset_top = -24.0
-	_accept_cards_btn.offset_bottom = 24.0
-	_accept_cards_btn.z_index = 12
+	_accept_cards_btn.custom_minimum_size = Vector2(210, 48)
 	_accept_cards_btn.visible = false
 	_accept_cards_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_accept_cards_btn.focus_mode = Control.FOCUS_NONE
-	_accept_cards_btn.add_theme_font_override("font", _bold_font)
+	_accept_cards_btn.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	_accept_cards_btn.add_theme_font_size_override("font_size", 18)
-	_accept_style = UIStyle.create_flat_stylebox(Color(0.36, 0.28, 0.14, 0.98), 8, 20, 8)
+	_accept_style = UIStyle.create_flat_stylebox(Color(0.36, 0.28, 0.14, 0.98), 10, 20, 8)
 	_accept_style.border_color = COL_GOLD_BRIGHT
 	_accept_style.set_border_width_all(2)
 	_accept_style.shadow_color = Color(0.0, 0.0, 0.0, 0.72)
@@ -909,7 +894,7 @@ func _build_ui() -> void:
 	_accept_cards_btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	_accept_cards_btn.add_theme_color_override("font_disabled_color", Color(0.65, 0.60, 0.52, 0.65))
 	_accept_cards_btn.pressed.connect(_on_accept_cards_pressed)
-	_root.add_child(_accept_cards_btn)
+	_draft_bar.add_child(_accept_cards_btn)
 
 	# ── 4. BOTTOM-LEFT REYNA MAYARI PORTRAIT (Uncropped, slightly smaller & tucked left/down) ──
 	_mayari_portrait = TextureRect.new()
@@ -1294,19 +1279,22 @@ func _launch_hades_card_flip() -> void:
 	_hovered_idx = -1
 	_cards_ready = false
 
+	if is_instance_valid(_step_pill_lbl):
+		_step_pill_lbl.text = "✦ Sealed Ledger · Moon Cards" if _sealed_direct_draft else "✓ 1. Tribute  ─  ◆ 2. Moon Cards"
+
 	var pick_phrase := "Choose 1 or 2" if _max_card_picks >= 2 else "Choose one"
 	match _confirmed_tier:
 		"cleared":
-			_header_title_lbl.text = "T H E   P A C T   I S   S E A L E D"
+			_header_title_lbl.text = "The Pact Is Sealed"
 			_header_sub_lbl.text = "Choose 1 or 2 Favors for tomorrow." if _max_card_picks >= 2 else "Choose one Favor for tomorrow."
 		"generous":
-			_header_title_lbl.text = "F A V O R   O F   B I R I N G A N"
+			_header_title_lbl.text = "Favor of Biringan"
 			_header_sub_lbl.text = "%s Favor%s for tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
 		"shortfall":
-			_header_title_lbl.text = "O M E N   O F   B I R I N G A N"
+			_header_title_lbl.text = "Omen of Biringan"
 			_header_sub_lbl.text = "%s card%s to endure tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
 		_:
-			_header_title_lbl.text = "M O O N   O F   B I R I N G A N"
+			_header_title_lbl.text = "Moon of Biringan"
 			_header_sub_lbl.text = "The moon deals a mixed hand — %s for tomorrow." % ("choose 1 or 2" if _max_card_picks >= 2 else "choose one")
 
 	# Pre-create the 3 revealed cards inside the EXACT same slots with visible=true & alpha=0
@@ -1394,6 +1382,7 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	emblem.accent = accent
 	emblem.accent_bright = accent_bright
 	emblem.fill_color = Color(0.0, 0.0, 0.0, 0.0)
+	emblem.set_fx_from_id(str(c_data.get("id", c_data.get("title", ""))))
 	hbox.add_child(emblem)
 
 	HadesEmblem.populate_emblem_glyph(
@@ -1413,23 +1402,42 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	hbox.add_child(text_col)
 
 	var top_line := HBoxContainer.new()
+	top_line.add_theme_constant_override("separation", 10)
 	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(top_line)
 
 	var title_lbl := Label.new()
-	title_lbl.text = str(c_data.get("title", "Moon Card")).to_upper()
+	title_lbl.text = str(c_data.get("title", "Moon Card"))
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
-	title_lbl.add_theme_font_size_override("font_size", 25)
+	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
 
+	var sel_pill := PanelContainer.new()
+	sel_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	sel_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sp_box := UIStyle.create_flat_stylebox(Color(0.14, 0.24, 0.14, 0.94), 6, 10, 3)
+	sp_box.border_color = COL_STAT_POS
+	sp_box.set_border_width_all(1)
+	sel_pill.add_theme_stylebox_override("panel", sp_box)
+	sel_pill.visible = false
+	var sel_lbl := Label.new()
+	sel_lbl.text = "✓ Selected"
+	sel_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	sel_lbl.add_theme_font_size_override("font_size", 14)
+	sel_lbl.add_theme_color_override("font_color", COL_STAT_POS)
+	sel_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sel_pill.add_child(sel_lbl)
+	top_line.add_child(sel_pill)
+	card.set_meta("sel_pill", sel_pill)
+
 	var rarity_lbl := Label.new()
-	rarity_lbl.text = "FAVOR" if is_fav else "OMEN"
+	rarity_lbl.text = "Favor" if is_fav else "Omen"
 	rarity_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	rarity_lbl.add_theme_font_override("font", _bold_font)
-	rarity_lbl.add_theme_font_size_override("font_size", 22)
+	rarity_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	rarity_lbl.add_theme_font_size_override("font_size", 18)
 	rarity_lbl.add_theme_color_override("font_color", accent_bright)
 	rarity_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(rarity_lbl)
@@ -1583,6 +1591,10 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 		var accent: Color = row.get_meta("accent")
 		var accent_bright: Color = row.get_meta("accent_bright")
 		var is_sel := i in _selected_indices
+		if row.has_meta("sel_pill"):
+			var sp: Control = row.get_meta("sel_pill")
+			if is_instance_valid(sp):
+				sp.visible = is_sel
 		row.scale = Vector2.ONE
 		var tw := create_tween()
 		if _hovered_idx == i or is_sel:
@@ -1598,7 +1610,8 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			style.border_width_right = 1
 			style.border_width_bottom = 1
 			style.border_width_left = 4
-			var dim := Color(0.76, 0.72, 0.68, 0.88) if (_hovered_idx != -1 or not _selected_indices.is_empty()) else Color.WHITE
+			var cap_reached := _selected_indices.size() >= _max_card_picks
+			var dim := Color(0.66, 0.62, 0.58, 0.80) if cap_reached else (Color(0.80, 0.76, 0.72, 0.90) if _hovered_idx != -1 else Color.WHITE)
 			tw.tween_property(row, "modulate", dim, 0.14)
 
 func _on_row_gui_input(event: InputEvent, index: int) -> void:
@@ -1760,8 +1773,8 @@ func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
 
 		var ks := Label.new()
 		ks.text = status_str
-		ks.add_theme_font_override("font", _bold_font)
-		ks.add_theme_font_size_override("font_size", 12)
+		ks.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		ks.add_theme_font_size_override("font_size", 14)
 		ks.add_theme_color_override("font_color", status_col)
 		bv.add_child(ks)
 
@@ -1769,8 +1782,8 @@ func _show_milestone_callouts(milestone_list: Array[Dictionary]) -> void:
 		kd.text = str(m.get("desc", ""))
 		kd.custom_minimum_size = Vector2(204, 0)
 		kd.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		kd.add_theme_font_override("font", UIStyle.FONT_INDER)
-		kd.add_theme_font_size_override("font_size", 13)
+		kd.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
+		kd.add_theme_font_size_override("font_size", 14)
 		kd.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		bv.add_child(kd)
 
@@ -1794,7 +1807,8 @@ func _refresh_draft_controls() -> void:
 		_reroll_btn.modulate.a = 1.0 if has_rr else 0.38
 		_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if has_rr else Control.CURSOR_ARROW
 	if is_instance_valid(_omens_only_btn):
-		var show_om := _cards_ready and not _card_picked
+		var is_sealed: bool = (is_instance_valid(StoryManager) and StoryManager.is_tally_cleared()) or _committed_tier == "cleared"
+		var show_om := _cards_ready and not _card_picked and is_sealed
 		_omens_only_btn.visible = show_om
 		_omens_only_btn.disabled = not show_om
 	if is_instance_valid(_accept_cards_btn):
