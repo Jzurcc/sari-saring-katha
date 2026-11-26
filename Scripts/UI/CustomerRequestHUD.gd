@@ -444,7 +444,7 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 		icon.texture = _get_trimmed_item_texture(item)
 		if item.tier > StoryManager.current_tier:
 			icon.modulate = Color(0.18, 0.18, 0.18, 0.92) # Locked tier silhouette
-		elif is_instance_valid(InventoryManager) and not InventoryManager.is_in_stock(item):
+		elif is_instance_valid(InventoryManager) and InventoryManager.get_total_item_stock(item) <= 0:
 			icon.modulate = Color(0.55, 0.44, 0.44, 0.60) # Out of stock faded shade
 		else:
 			icon.modulate = Color.WHITE
