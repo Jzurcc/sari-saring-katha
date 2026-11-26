@@ -187,7 +187,7 @@ variables={
 "Global_TallyTier": "",
 "Global_TallyTotalPaid": 0,
 "Global_TimeOfDayPhase": "",
-"Global_TipActive": false,
+"Global_TipActive": 0.0,
 "Global_TodayQuota": 0.0,
 "Global_UpgradeItemsList": "",
 "PriceVar": 0.0,

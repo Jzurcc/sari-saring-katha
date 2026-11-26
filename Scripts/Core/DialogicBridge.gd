@@ -65,7 +65,7 @@ static func sync_transaction(
 	Dialogic.VAR.set_variable("Global_RumorType", transaction.rumor_type)
 	Dialogic.VAR.set_variable("Global_EventRumorActive", 1.0 if transaction.event_rumor_active else 0.0)
 	Dialogic.VAR.set_variable("Global_EventRumorText", transaction.event_rumor_text)
-	Dialogic.VAR.set_variable("Global_TipActive", transaction.tip_active)
+	Dialogic.VAR.set_variable("Global_TipActive", 1.0 if transaction.tip_active else 0.0)
 	Dialogic.VAR.set_variable("Global_HighPriceActive", 1.0 if transaction.high_price_active else 0.0)
 	Dialogic.VAR.set_variable("Global_AwarenessActive", 1.0 if transaction.awareness_active else 0.0)
 	Dialogic.VAR.set_variable("Global_StockStatus", transaction.stock_status)

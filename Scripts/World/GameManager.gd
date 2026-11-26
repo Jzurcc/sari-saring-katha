@@ -247,9 +247,11 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 				base_tip_chance = 0.0; base_tip_pct = 0.0; flat_tip = 0.0
 
 	if base_tip_chance <= 0.0:
+		Dialogic.VAR.set_variable("Global_TipActive", 0.0)
 		return 0.0
 	base_tip_chance = clampf(base_tip_chance + StoryManager.get_storefront_tip_chance(), 0.0, 1.0)
 	if randf() >= base_tip_chance:
+		Dialogic.VAR.set_variable("Global_TipActive", 0.0)
 		return 0.0
 
 	var total_tip_pct := base_tip_pct + StoryManager.get_maneki_tip_bonus_pct()
@@ -264,7 +266,7 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 	money += tip
 	EventBus.money_changed.emit(money)
 	StoryManager.record_daily_stat_add("tips_earned", tip)
-	Dialogic.VAR.set_variable("Global_TipActive", true)
+	Dialogic.VAR.set_variable("Global_TipActive", 1.0)
 	LogManager.info("GameManager", "Bulk order tip +₱%.2f (%d items, avg_eff_step=%d, chance=%.0f%%)!" % [tip, cnt, tip_eff_step, base_tip_chance * 100.0])
 	return tip
 
@@ -436,13 +438,16 @@ func _handle_open_tally_offer() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	var overlay := MayariTallyOverlayScript.new()
-	overlay.setup(
-		money,
-		StoryManager.tally_total_paid,
-		StoryManager.TALLY_GOAL,
-		StoryManager.get_nightly_min_tally(),
-		StoryManager.get_nightly_generous_tally()
-	)
+	if StoryManager.is_ledger_settled():
+		overlay.setup_sealed_card_draft()
+	else:
+		overlay.setup(
+			money,
+			StoryManager.tally_total_paid,
+			StoryManager.TALLY_GOAL,
+			StoryManager.get_nightly_min_tally(),
+			StoryManager.get_nightly_generous_tally()
+		)
 	add_child(overlay)
 
 	var result: Array = await overlay.completed
