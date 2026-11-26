@@ -40,6 +40,7 @@ var _default_col_height: float = 0.0
 var _default_col_y: float
 var _is_crouching: bool = false
 var _crouch_tween: Tween
+var _shift_unlocking_mouse: bool = false
 
 func _ready() -> void:
 	if use_free_camera:
@@ -68,6 +69,15 @@ func _on_camera_shake(intensity: float, duration: float) -> void:
 	_shake_timer = duration
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.keycode == KEY_SHIFT and not event.is_echo():
+		if event.pressed:
+			if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+				_shift_unlocking_mouse = true
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		elif _shift_unlocking_mouse:
+			_shift_unlocking_mouse = false
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
 	if use_free_camera and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 		if event is InputEventMouseMotion:
 			_yaw -= event.relative.x * mouse_sensitivity

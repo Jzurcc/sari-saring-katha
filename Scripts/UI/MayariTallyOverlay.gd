@@ -511,6 +511,11 @@ var _max_card_picks: int = 1
 var _selected_indices: Array[int] = []
 var _confirmed_shifted_odds: bool = false
 var _reroll_btn: Button
+var _omens_only_btn: CheckBox
+var _omens_only: bool = false
+var _sealed_direct_draft: bool = false
+var _cached_normal_cards: Array[Dictionary] = []
+var _cached_omen_cards: Array[Dictionary] = []
 var _accept_cards_btn: Button
 var _accept_style: StyleBoxFlat
 
@@ -529,6 +534,19 @@ func setup(player_money: float, total_paid: float, goal: float, min_amount: floa
 	_max_offer = minf(_player_money, remaining)
 	_current_offer = 0.0
 
+func setup_sealed_card_draft() -> void:
+	_player_money = 0.0
+	_total_paid = StoryManager.TALLY_GOAL
+	_goal = maxf(1.0, StoryManager.TALLY_GOAL)
+	_min_amount = 0.0
+	_generous_amount = 0.0
+	_max_offer = 0.0
+	_current_offer = 0.0
+	_confirmed_offer = 0.0
+	_confirmed_tier = "cleared"
+	_sealed_direct_draft = true
+
+
 func _ready() -> void:
 	layer = 95
 	process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -536,8 +554,21 @@ func _ready() -> void:
 	_bold_font.base_font = UIStyle.FONT_INDER
 	_bold_font.variation_embolden = 0.65
 	_build_ui()
-	_refresh_offering_ui(false)
-	_play_entrance()
+	if _sealed_direct_draft:
+		_gauge_dock.visible = false
+		_confirm_btn.visible = false
+		if is_instance_valid(_scroll_hint_box):
+			_scroll_hint_box.visible = false
+		_play_entrance()
+		call_deferred("_launch_hades_card_flip")
+	else:
+		_refresh_offering_ui(false)
+		_play_entrance()
+
+
+func _process(_delta: float) -> void:
+	if visible and Input.get_mouse_mode() != Input.MOUSE_MODE_VISIBLE:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _input(event: InputEvent) -> void:
 	if _phase != 0 or _is_locked:
@@ -800,6 +831,50 @@ func _build_ui() -> void:
 	_reroll_btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	_reroll_btn.pressed.connect(_on_reroll_pressed)
 	_root.add_child(_reroll_btn)
+
+	# "Omens Only" toggle checkbox with icon right beside the Reroll button
+	_omens_only_btn = CheckBox.new()
+	_omens_only_btn.anchor_left = 0.5
+	_omens_only_btn.anchor_right = 0.5
+	_omens_only_btn.anchor_top = 0.855
+	_omens_only_btn.anchor_bottom = 0.855
+	_omens_only_btn.offset_left = -248.0
+	_omens_only_btn.offset_right = -62.0
+	_omens_only_btn.offset_top = -24.0
+	_omens_only_btn.offset_bottom = 24.0
+	_omens_only_btn.z_index = 12
+	_omens_only_btn.visible = false
+	_omens_only_btn.text = "Include Omens"
+	_omens_only_btn.tooltip_text = "Mix 50/50 Favors & Omens into your draft pool"
+	_omens_only_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_omens_only_btn.focus_mode = Control.FOCUS_NONE
+	_omens_only_btn.add_theme_font_override("font", _bold_font)
+	_omens_only_btn.add_theme_font_size_override("font_size", 15)
+	if ResourceLoader.exists("res://Assets/ui/icons/moon-star.png"):
+		_omens_only_btn.icon = load("res://Assets/ui/icons/moon-star.png")
+		_omens_only_btn.expand_icon = true
+		_omens_only_btn.add_theme_constant_override("icon_max_width", 18)
+	var om_style := UIStyle.create_flat_stylebox(Color(0.14, 0.11, 0.11, 0.97), 8, 12, 8)
+	om_style.border_color = Color(0.55, 0.38, 0.34, 0.85)
+	om_style.set_border_width_all(2)
+	om_style.shadow_color = Color(0.0, 0.0, 0.0, 0.65)
+	om_style.shadow_size = 10
+	var om_hov: StyleBoxFlat = om_style.duplicate()
+	om_hov.bg_color = Color(0.24, 0.14, 0.14, 0.98)
+	om_hov.border_color = COL_TIER_MEAGER_BRIGHT
+	var om_on: StyleBoxFlat = om_style.duplicate()
+	om_on.bg_color = Color(0.32, 0.12, 0.12, 0.98)
+	om_on.border_color = COL_TIER_MEAGER_BRIGHT
+	_omens_only_btn.add_theme_stylebox_override("normal", om_style)
+	_omens_only_btn.add_theme_stylebox_override("hover", om_hov)
+	_omens_only_btn.add_theme_stylebox_override("pressed", om_on)
+	_omens_only_btn.add_theme_stylebox_override("hover_pressed", om_on)
+	_omens_only_btn.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	_omens_only_btn.add_theme_color_override("font_hover_color", COL_CREAM)
+	_omens_only_btn.add_theme_color_override("font_pressed_color", COL_TIER_MEAGER_BRIGHT)
+	_omens_only_btn.add_theme_color_override("font_hover_pressed_color", Color.WHITE)
+	_omens_only_btn.toggled.connect(_on_omens_only_toggled)
+	_root.add_child(_omens_only_btn)
 
 	_accept_cards_btn = Button.new()
 	_accept_cards_btn.anchor_left = 0.800
@@ -1211,7 +1286,12 @@ func _launch_hades_card_flip() -> void:
 	_selected_indices.clear()
 	_show_keyword_callouts([])
 
-	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+	_cached_normal_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+	_cached_omen_cards.clear()
+	_omens_only = false
+	if is_instance_valid(_omens_only_btn):
+		_omens_only_btn.set_pressed_no_signal(false)
+	_card_data_list = _cached_normal_cards.duplicate(true)
 	_card_rows.clear()
 	_card_picked = false
 	_hovered_idx = -1
@@ -1716,6 +1796,10 @@ func _refresh_draft_controls() -> void:
 		_reroll_btn.text = "↻ %d" % _rerolls_left
 		_reroll_btn.modulate.a = 1.0 if has_rr else 0.38
 		_reroll_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if has_rr else Control.CURSOR_ARROW
+	if is_instance_valid(_omens_only_btn):
+		var show_om := _cards_ready and not _card_picked
+		_omens_only_btn.visible = show_om
+		_omens_only_btn.disabled = not show_om
 	if is_instance_valid(_accept_cards_btn):
 		_accept_cards_btn.visible = _cards_ready and not _card_picked and _max_card_picks >= 2
 		var cnt := _selected_indices.size()
@@ -1727,10 +1811,37 @@ func _refresh_draft_controls() -> void:
 		else:
 			_accept_cards_btn.text = "Accept 2 Cards"
 
+func _on_omens_only_toggled(toggled_on: bool) -> void:
+	if not _cards_ready or _card_picked:
+		return
+	_omens_only = toggled_on
+	if _omens_only:
+		if _cached_omen_cards.is_empty():
+			_cached_omen_cards = MayariCardRegistry.draw_three_cards("include_omens", false)
+		_swap_draft_cards(_cached_omen_cards.duplicate(true))
+	else:
+		if _cached_normal_cards.is_empty():
+			_cached_normal_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+		_swap_draft_cards(_cached_normal_cards.duplicate(true))
+
+
 func _on_reroll_pressed() -> void:
 	if not _cards_ready or _card_picked or _rerolls_left <= 0:
 		return
 	_rerolls_left -= 1
+	_cached_normal_cards.clear()
+	_cached_omen_cards.clear()
+	var fresh_cards: Array[Dictionary]
+	if _omens_only:
+		_cached_omen_cards = MayariCardRegistry.draw_three_cards("include_omens", false)
+		fresh_cards = _cached_omen_cards.duplicate(true)
+	else:
+		_cached_normal_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+		fresh_cards = _cached_normal_cards.duplicate(true)
+	_swap_draft_cards(fresh_cards)
+
+
+func _swap_draft_cards(new_cards: Array[Dictionary]) -> void:
 	_cards_ready = false
 	_selected_indices.clear()
 	_hovered_idx = -1
@@ -1739,7 +1850,7 @@ func _on_reroll_pressed() -> void:
 	EventBus.request_sfx.emit("interact")
 
 	var old_rows := _card_rows.duplicate()
-	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+	_card_data_list = new_cards
 	_card_rows.clear()
 	for i in range(mini(_card_data_list.size(), _card_slots.size())):
 		var row := _create_hades_boon_row(_card_data_list[i], i)
@@ -1861,6 +1972,8 @@ func _fade_out_and_finish(selected_card_ids: Array[String]) -> void:
 	fade.parallel().tween_property(_center_frame, "modulate:a", 0.0, 0.22)
 	if is_instance_valid(_reroll_btn):
 		fade.parallel().tween_property(_reroll_btn, "modulate:a", 0.0, 0.18)
+	if is_instance_valid(_omens_only_btn):
+		fade.parallel().tween_property(_omens_only_btn, "modulate:a", 0.0, 0.18)
 	if is_instance_valid(_accept_cards_btn):
 		fade.parallel().tween_property(_accept_cards_btn, "modulate:a", 0.0, 0.18)
 	await fade.finished
