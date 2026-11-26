@@ -148,28 +148,28 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			if tip_eff_step <= -5:
 				var extra_below := float(-5 - tip_eff_step)
 				base_tip_chance = minf(1.0, 0.95 + extra_below * 0.025)
-				base_tip_pct = 0.30 + extra_below * 0.03
-				flat_tip = 9.0 + extra_below * 2.0
+				base_tip_pct = 0.45 + extra_below * 0.10
+				flat_tip = 9.0 + extra_below * 3.0
 			else:
 				match tip_eff_step:
 					-4:
-						base_tip_chance = 0.88; base_tip_pct = 0.26; flat_tip = 7.0
+						base_tip_chance = 0.88; base_tip_pct = 0.38; flat_tip = 8.0
 					-3:
-						base_tip_chance = 0.80; base_tip_pct = 0.22; flat_tip = 6.0
+						base_tip_chance = 0.80; base_tip_pct = 0.32; flat_tip = 7.0
 					-2:
-						base_tip_chance = 0.70; base_tip_pct = 0.18; flat_tip = 5.0
+						base_tip_chance = 0.70; base_tip_pct = 0.27; flat_tip = 6.0
 					-1:
-						base_tip_chance = 0.58; base_tip_pct = 0.15; flat_tip = 4.0
+						base_tip_chance = 0.58; base_tip_pct = 0.23; flat_tip = 5.0
 					0:
-						base_tip_chance = 0.45; base_tip_pct = 0.12; flat_tip = 3.0
+						base_tip_chance = 0.45; base_tip_pct = 0.20; flat_tip = 4.0
 					1:
-						base_tip_chance = 0.32; base_tip_pct = 0.10; flat_tip = 2.5
+						base_tip_chance = 0.32; base_tip_pct = 0.17; flat_tip = 3.5
 					2:
-						base_tip_chance = 0.22; base_tip_pct = 0.08; flat_tip = 2.0
+						base_tip_chance = 0.22; base_tip_pct = 0.15; flat_tip = 3.0
 					3:
-						base_tip_chance = 0.15; base_tip_pct = 0.07; flat_tip = 1.5
+						base_tip_chance = 0.15; base_tip_pct = 0.13; flat_tip = 2.5
 					4:
-						base_tip_chance = 0.10; base_tip_pct = 0.06; flat_tip = 1.0
+						base_tip_chance = 0.10; base_tip_pct = 0.12; flat_tip = 2.0
 					_:
 						base_tip_chance = 0.0; base_tip_pct = 0.0; flat_tip = 0.0
 
@@ -184,7 +184,7 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 					if customer_path != "" and is_instance_valid(CharacterProgressionManager):
 						total_tip_pct += CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
 					# Scale percentage off item.price (base wholesale value) so discounts never shrink % tips
-					var pct_tip := StoryManager.calc_scaled_tip(item.price, total_tip_pct, 1.0, 36.0)
+					var pct_tip := StoryManager.calc_scaled_tip(item.price, total_tip_pct, 3.0, 60.0)
 					tip = snappedf(pct_tip + flat_tip, 0.5)
 					_last_earning += tip
 					Dialogic.VAR.set_variable("Global_TipActive", true)
