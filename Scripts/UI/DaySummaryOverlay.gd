@@ -137,40 +137,40 @@ func _compute_grade_and_highlights() -> void:
 	var day_idx := maxi(0, _day_number - 1)
 	var gross_income := cash_sales + utang_repaid + tips
 	var net_profit := gross_income - spent_restock - mayari_tribute
-	var gross_target := (160.0 + float(day_idx) * 18.0) * (1.0 + float(day_idx) * 0.06)
+	var gross_target := (140.0 + float(day_idx) * 14.0) * (1.0 + float(day_idx) * 0.04)
 	score += mini(45, int(roundf((gross_income / maxf(1.0, gross_target)) * 45.0)))
 	if net_profit >= 0.0:
-		score += mini(15, int(roundf((net_profit / maxf(1.0, gross_target * 0.5)) * 15.0)))
+		score += mini(15, int(roundf((net_profit / maxf(1.0, gross_target * 0.45)) * 15.0)))
 	else:
-		score -= mini(35, int(roundf(absf(net_profit) / 10.0)))
+		score -= mini(20, int(roundf(absf(net_profit) / 20.0)))
 	score += mini(30, total_served * 4)
 	score += mini(18, chapters.size() * 6 + arcs.size() * 10)
 	if total_served >= 3 and missed_total == 0:
 		score += 12
 	elif missed_total > 0:
-		score -= mini(15, missed_total * 4)
+		score -= mini(10, missed_total * 2)
 	if StoryManager.last_tally_tier == "generous" or StoryManager.last_tally_tier == "cleared":
 		score += 12
 	elif StoryManager.last_tally_tier == "balanced":
 		score += 6
 	elif StoryManager.last_tally_tier == "shortfall":
-		score -= 10
+		score -= 6
 
 	# Deep negative net profit caps the maximum achievable grade
-	if net_profit <= -250.0:
-		score = mini(score, 37) # Max C
-	elif net_profit <= -100.0:
-		score = mini(score, 61) # Max B
+	if net_profit <= -400.0:
+		score = mini(score, 35) # Max C
+	elif net_profit <= -200.0:
+		score = mini(score, 57) # Max B
 
-	if score >= 88:
+	if score >= 82:
 		_grade = "S"
 		_grade_title = "Paldo"
 		_grade_col = Color(1.0, 0.88, 0.42, 1.0)
-	elif score >= 64:
+	elif score >= 58:
 		_grade = "A"
 		_grade_title = "Mabenta"
 		_grade_col = Color(0.58, 0.94, 0.56, 1.0)
-	elif score >= 40:
+	elif score >= 36:
 		_grade = "B"
 		_grade_title = "Mahinahon"
 		_grade_col = Color(0.96, 0.88, 0.72, 1.0)
