@@ -396,6 +396,8 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		if is_instance_valid(StoreEventManager):
 			tolerance = StoreEventManager.get_item_tolerance_offset(item)
 		tolerance += sm.get_mayari_tolerance_offset()
+		if transaction.customer_data != null and is_instance_valid(CharacterProgressionManager):
+			tolerance += CharacterProgressionManager.get_reputation_tolerance_bonus(transaction.customer_data, item)
 		var effective_step: int = item.current_step - tolerance
 		if effective_step > max_desired_effective_step:
 			max_desired_effective_step = effective_step
@@ -409,6 +411,8 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		if is_instance_valid(StoreEventManager):
 			tol = StoreEventManager.get_item_tolerance_offset(item)
 		tol += sm.get_mayari_tolerance_offset()
+		if transaction.customer_data != null and is_instance_valid(CharacterProgressionManager):
+			tol += CharacterProgressionManager.get_reputation_tolerance_bonus(transaction.customer_data, item)
 		if (item.current_step - tol) >= 3:
 			has_store_extreme = true
 			break
