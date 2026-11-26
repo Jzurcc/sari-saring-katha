@@ -1,18 +1,20 @@
 class_name MinigameOverlayManager
 extends Node
 
-## Manages interactive non-purchase minigame overlays (Mosquito Swat, Sipa, Teks Memory).
-## Can be triggered via EventBus.start_minigame, Dialogic signal_event ("minigame:sipa", etc.),
-## or quick playtest hotkeys (F6 = Mosquito, F7 = Sipa, F8 = Teks).
+## Manages interactive non-purchase minigame overlays (Mosquito Swat, Sipa, Teks Memory, Talisman Tracing).
+## Can be triggered via EventBus.start_minigame, Dialogic signal_event ("minigame:sipa", "minigame:talisman", etc.),
+## or quick playtest hotkeys (F6 = Mosquito, F7 = Sipa, F8 = Teks, F9 / 4 = Talisman).
 
 const MosquitoSwatScript := preload("res://Scripts/UI/Minigames/MosquitoSwatMinigame.gd")
 const SipaScript := preload("res://Scripts/UI/Minigames/SipaMinigame.gd")
 const TeksMemoryScript := preload("res://Scripts/UI/Minigames/TeksMemoryMinigame.gd")
+const TalismanTraceScript := preload("res://Scripts/UI/Minigames/TalismanTraceMinigame.gd")
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 
 var mosquito_minigame: CanvasLayer
 var sipa_minigame: CanvasLayer
 var teks_minigame: CanvasLayer
+var talisman_minigame: CanvasLayer
 var _fade_layer: CanvasLayer
 var _fade_rect: ColorRect
 var _is_transitioning: bool = false
@@ -34,6 +36,11 @@ func _ready() -> void:
 	teks_minigame.name = "TeksMemoryMinigame"
 	teks_minigame.minigame_finished.connect(_on_minigame_finished.bind("teks"))
 	add_child(teks_minigame)
+
+	talisman_minigame = TalismanTraceScript.new()
+	talisman_minigame.name = "TalismanTraceMinigame"
+	talisman_minigame.minigame_finished.connect(_on_minigame_finished.bind("talisman"))
+	add_child(talisman_minigame)
 
 	# Fullscreen black fade curtain for entering/exiting minigames
 	_fade_layer = CanvasLayer.new()
@@ -58,7 +65,8 @@ func is_any_open() -> bool:
 	return _is_transitioning \
 		or (is_instance_valid(mosquito_minigame) and mosquito_minigame.is_open) \
 		or (is_instance_valid(sipa_minigame) and sipa_minigame.is_open) \
-		or (is_instance_valid(teks_minigame) and teks_minigame.is_open)
+		or (is_instance_valid(teks_minigame) and teks_minigame.is_open) \
+		or (is_instance_valid(talisman_minigame) and talisman_minigame.is_open)
 
 
 const LOLO_PILO_MINIGAMES: Array[String] = ["sipa", "teks"]
@@ -117,6 +125,9 @@ func launch_minigame(minigame_id: String, config: Dictionary = {}) -> void:
 		"teks", "teks_memory":
 			resolved_id = "teks"
 			target = teks_minigame
+		"talisman", "anting", "anting_anting", "brahim":
+			resolved_id = "talisman"
+			target = talisman_minigame
 		_:
 			LogManager.warning("MinigameOverlayManager", "Unknown minigame id: %s" % minigame_id)
 			return
@@ -194,6 +205,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_3:
 				get_viewport().set_input_as_handled()
 				launch_minigame("sipa")
+			KEY_4:
+				get_viewport().set_input_as_handled()
+				launch_minigame("talisman")
 			KEY_F6:
 				get_viewport().set_input_as_handled()
 				launch_minigame("mosquito")
@@ -203,6 +217,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F8:
 				get_viewport().set_input_as_handled()
 				launch_minigame("teks")
+			KEY_F9:
+				get_viewport().set_input_as_handled()
+				launch_minigame("talisman")
 
 
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
@@ -235,6 +252,18 @@ func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -
 			var title := "New Sipa Record!" if kicks > xp_cap else "Sipa Complete!"
 			var cap_note := " (max cap)" if kicks >= xp_cap else ""
 			EventBus.show_notification.emit(title, "+₱%d  •  +%d XP%s" % [int(cash_gain), xp_gain, cap_note], "purchase")
+	elif minigame_id == "talisman" and won:
+		var lvl := clampi(int(result.get("level", 1)), 1, 10)
+		var acc := int(result.get("accuracy", 0))
+		var xp_gain := 15 + lvl * 2
+		var cash_gain := float(15 + lvl * 2)
+		if is_instance_valid(StoryManager):
+			StoryManager.add_player_xp(xp_gain, "minigame_talisman")
+		var gm := get_tree().get_first_node_in_group("game_manager")
+		if gm and "money" in gm:
+			gm.money += cash_gain
+			EventBus.money_changed.emit(gm.money)
+		EventBus.show_notification.emit("Anting-Anting Empowered!", "%d%% Accuracy  •  +₱%d  •  +%d XP" % [acc, int(cash_gain), xp_gain], "purchase")
 	elif won:
 		if is_instance_valid(StoryManager):
 			StoryManager.add_player_xp(15, "minigame_" + minigame_id)
