@@ -783,8 +783,10 @@ func refresh_catalog() -> void:
 		var b_hot := _is_item_hot(b)
 		if a_hot != b_hot:
 			return a_hot
-		if a.tier != b.tier:
-			return a.tier < b.tier
+		var at := a.get_effective_tier()
+		var bt := b.get_effective_tier()
+		if at != bt:
+			return at < bt
 		return a.item_name.naturalnocasecmp_to(b.item_name) < 0
 	)
 
@@ -843,11 +845,12 @@ func _create_product_row(item: ItemData) -> PanelContainer:
 	top_line.add_child(name_lbl)
 
 	var tier_lbl := Label.new()
-	tier_lbl.text = "Tier %d" % maxi(1, item.tier)
+	var eff_tier := item.get_effective_tier()
+	tier_lbl.text = "Tier %d" % eff_tier
 	tier_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	tier_lbl.add_theme_font_override("font", _bold_font)
 	tier_lbl.add_theme_font_size_override("font_size", 13)
-	tier_lbl.add_theme_color_override("font_color", UIStyle.get_tier_color(maxi(1, item.tier)))
+	tier_lbl.add_theme_color_override("font_color", UIStyle.get_tier_color(eff_tier))
 	tier_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tier_lbl)
 

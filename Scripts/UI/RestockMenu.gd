@@ -992,8 +992,10 @@ func _get_unlocked_items_for_category(cat_key: String) -> Array[ItemData]:
 			var pb := _get_item_priority(b)
 			if pa != pb:
 				return pa < pb
-			if a.tier != b.tier:
-				return a.tier > b.tier
+			var at := a.get_effective_tier()
+			var bt := b.get_effective_tier()
+			if at != bt:
+				return at > bt
 			return a.item_name.naturalnocasecmp_to(b.item_name) < 0
 		)
 		return result
@@ -1006,8 +1008,10 @@ func _get_unlocked_items_for_category(cat_key: String) -> Array[ItemData]:
 				continue
 			result.append(item)
 		result.sort_custom(func(a: ItemData, b: ItemData) -> bool:
-			if a.tier != b.tier:
-				return a.tier > b.tier
+			var at := a.get_effective_tier()
+			var bt := b.get_effective_tier()
+			if at != bt:
+				return at > bt
 			return a.item_name.naturalnocasecmp_to(b.item_name) < 0
 		)
 		return result

@@ -529,7 +529,7 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	var is_warm_now: bool = is_fridge_item and StoryManager.is_fridge_warm
 	var display_price: float = maxf(1.0, snapped(final_price * StoryManager.FRIDGE_WARM_VALUE_MULTIPLIER, 0.5)) if is_warm_now else final_price
 
-	var tier_num: int = maxi(1, item_data.tier)
+	var tier_num: int = item_data.get_effective_tier()
 	tier_label.text = "Tier %d" % tier_num
 	tier_label.add_theme_color_override("font_color", UIStyle.get_tier_color(tier_num))
 	name_label.text = custom_name if custom_name != "" else item_data.item_name

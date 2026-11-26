@@ -45,8 +45,9 @@ static func max_tier_per_category(current_tier: int) -> Dictionary:
 	for item in InventoryManager.get_all_items():
 		if item.tier <= current_tier and item.can_be_sold:
 			var cat := item.category
-			if not max_tiers.has(cat) or item.tier > max_tiers[cat]:
-				max_tiers[cat] = item.tier
+			var eff_t := item.get_effective_tier(current_tier)
+			if not max_tiers.has(cat) or eff_t > max_tiers[cat]:
+				max_tiers[cat] = eff_t
 	return max_tiers
 
 
@@ -66,9 +67,10 @@ static func pick_weighted(pool: Array[ItemData], current_tier: int, max_tiers_by
 		if item.tier > current_tier:
 			weight = NEXT_TIER_WEIGHT
 		else:
-			var gap: int = max_tiers_by_cat.get(item.category, item.tier) - item.tier
+			var eff_t := item.get_effective_tier(current_tier)
+			var gap: int = max_tiers_by_cat.get(item.category, eff_t) - eff_t
 			if gap <= 0:
-				weight = BEST_IN_CATEGORY_BASE_WEIGHT + float(item.tier) * BEST_IN_CATEGORY_TIER_BONUS
+				weight = BEST_IN_CATEGORY_BASE_WEIGHT + float(eff_t) * BEST_IN_CATEGORY_TIER_BONUS
 			else:
 				weight = max(OLDER_TIER_FLOOR_WEIGHT, 1.0 - float(gap) * OLDER_TIER_DECAY)
 		if is_instance_valid(StoreEventManager):

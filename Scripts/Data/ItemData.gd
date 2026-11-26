@@ -65,11 +65,22 @@ func get_visual_aspect() -> float:
 		return float(rect.size.x) / float(rect.size.y)
 	return 1.0
 
+## Returns the effective display/gameplay tier of this item.
+## Separate candy containers (Mentor & Pocha) upgrade to Tier 10 once Store Tier 10 is unlocked.
+func get_effective_tier(current_store_tier: int = -1) -> int:
+	var st := current_store_tier
+	if st < 0 and is_instance_valid(StoryManager):
+		st = StoryManager.current_tier
+	if st >= 10 and type == ItemType.CANDY_CONTAINER and get_clean_id() in ["mentor", "pocha"]:
+		return 10
+	return maxi(1, tier)
+
 ## Calculates the peso increment per step for this product based on wholesale cost.
-## Candies (<= 3.0): 1.50 per step. Regular items: 3.5 + 18% of wholesale cost (snapped to 0.50, capped at 16.00).
+## Candies (<= 3.0): 1.50 per step (4.00 once upgraded to Tier 10 separate containers).
+## Regular items: 3.5 + 18% of wholesale cost (snapped to 0.50, capped at 16.00).
 func get_step_increment() -> float:
 	if price <= 3.0:
-		return 1.5
+		return 4.0 if get_effective_tier() >= 10 else 1.5
 	return minf(16.0, snapped(3.5 + price * 0.18, 0.5))
 
 ## Calculates the selling price for a given discrete step (-5 to +5).
