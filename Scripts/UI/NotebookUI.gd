@@ -294,20 +294,7 @@ func _make_ruled_row(highlight_bg: Color = Color(0, 0, 0, 0)) -> PanelContainer:
 func _rebuild_and_render() -> void:
 	_all_row_specs.clear()
 
-	# 1. Pending new utang (diegetic faint pencil lines — click anywhere on the line to write in ink)
-	if StoryManager.has_pending_debts():
-		_all_row_specs.append({"type": "section", "text": "To record — click line to write in ink", "color": INK_MUTED, "bg": Color(0, 0, 0, 0)})
-		for i in range(StoryManager.pending_debts.size()):
-			var entry: Dictionary = StoryManager.pending_debts[i]
-			_all_row_specs.append({
-				"type": "pending_debt",
-				"index": i,
-				"path": str(entry.get("customer_path", "")),
-				"amount": float(entry.get("amount", 0.0)),
-			})
-		_all_row_specs.append({"type": "spacer"})
-
-	# 2. Pending repaid utang (click anywhere on the line to cross off in red ink)
+	# 1. Pending repaid utang (click anywhere on the line to cross off in red ink)
 	if StoryManager.has_pending_repayments():
 		_all_row_specs.append({"type": "section", "text": "Repaid — click line to cross off", "color": Color(INK_RED.r, INK_RED.g, INK_RED.b, 0.80), "bg": Color(0, 0, 0, 0)})
 		for i in range(StoryManager.pending_repayments.size()):
@@ -320,7 +307,7 @@ func _rebuild_and_render() -> void:
 			})
 		_all_row_specs.append({"type": "spacer"})
 
-	# 3. Active unpaid utang entries
+	# 2. Active unpaid utang entries
 	var active_count := 0
 	for path in StoryManager.customer_debts.keys():
 		var amount := float(StoryManager.customer_debts[path])
@@ -331,6 +318,21 @@ func _rebuild_and_render() -> void:
 				"path": str(path),
 				"amount": amount,
 			})
+
+	# 3. Pending new utang (diegetic faint pencil lines right BELOW the last active utang)
+	if StoryManager.has_pending_debts():
+		if active_count > 0:
+			_all_row_specs.append({"type": "spacer"})
+		_all_row_specs.append({"type": "section", "text": "To record — click line to write in ink", "color": INK_MUTED, "bg": Color(0, 0, 0, 0)})
+		for i in range(StoryManager.pending_debts.size()):
+			var entry: Dictionary = StoryManager.pending_debts[i]
+			_all_row_specs.append({
+				"type": "pending_debt",
+				"index": i,
+				"path": str(entry.get("customer_path", "")),
+				"amount": float(entry.get("amount", 0.0)),
+			})
+		active_count += StoryManager.pending_debts.size()
 
 	# 4. Crossed-off (settled) utang history
 	if not StoryManager.settled_debts_log.is_empty():
