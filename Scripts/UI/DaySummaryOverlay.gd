@@ -74,10 +74,10 @@ var _condition_nodes: Array[Control] = []
 var _highlight_nodes: Array[Control] = []
 
 
-func setup(day_num: int, daily_stats: Dictionary, show_mayari: bool = true) -> void:
+func setup(day_num: int, daily_stats: Dictionary, _show_mayari_arg: bool = false) -> void:
 	_day_number = day_num
 	_stats = daily_stats.duplicate(true)
-	_show_mayari = show_mayari
+	_show_mayari = false
 	_compute_grade_and_highlights()
 
 
