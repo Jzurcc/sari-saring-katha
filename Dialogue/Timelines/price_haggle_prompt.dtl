@@ -1,0 +1,6 @@
+Customer: {Global_PriceRefusalLine}
+- Haggle (Offer a lower price)
+	[signal arg="haggle_accept"]
+- The prices are set.
+	[signal arg="haggle_decline"]
+[end_timeline]

@@ -31,6 +31,7 @@ var _last_dialogue_frame: int = -1
 var _watchdog_elapsed: float = 0.0
 const WATCHDOG_TIMEOUT_SEC: float = 0.5
 const PRICE_REFUSED_TIMELINE_PATH := "res://Dialogue/Timelines/price_refused.dtl"
+const PRICE_HAGGLE_PROMPT_TIMELINE_PATH := "res://Dialogue/Timelines/price_haggle_prompt.dtl"
 const HaggleOverlayScript := preload("res://Scripts/UI/HaggleOverlay.gd")
 const FAVORITE_DISCOVERED_TIMELINE_PATH := "res://Dialogue/Timelines/favorite_discovered.dtl"
 
@@ -348,6 +349,18 @@ func process_item_placed(item: DraggableItem, fallback_pos: Vector3 = Vector3.ZE
 	return _complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 
 
+func _format_price_refusal_line(item_data: ItemData) -> String:
+	var price_int: int = int(roundf(item_data.get_final_price()))
+	var tmpl: String = PRICE_REFUSAL_LINES[randi() % PRICE_REFUSAL_LINES.size()]
+	if tmpl.find("₱%d") != -1 and tmpl.find("%s") != -1:
+		if tmpl.find("₱%d") < tmpl.find("%s"):
+			return tmpl % [price_int, item_data.item_name]
+		return tmpl % [item_data.item_name, price_int]
+	elif tmpl.find("%s") != -1:
+		return tmpl % item_data.item_name
+	return tmpl % price_int
+
+
 func _start_haggle_or_refusal(
 	customer: Customer,
 	item: DraggableItem,
@@ -361,20 +374,51 @@ func _start_haggle_or_refusal(
 	if not is_instance_valid(_tree_owner) or not _tree_owner.is_inside_tree():
 		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 		return
-	var overlay := HaggleOverlayScript.new()
-	overlay.setup(item.item_data, customer.customer_data, customer)
-	_tree_owner.get_tree().root.add_child(overlay)
-	overlay.haggle_finished.connect(func(accepted: bool, offered_step: int):
+
+	var launch_haggle := func():
 		if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
 			return
-		if accepted:
-			var saved_step := item.item_data.current_step
-			item.item_data.current_step = offered_step
-			_complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-			item.item_data.current_step = saved_step
+		var overlay := HaggleOverlayScript.new()
+		overlay.setup(item.item_data, customer.customer_data, customer)
+		_tree_owner.get_tree().root.add_child(overlay)
+		overlay.haggle_finished.connect(func(accepted: bool, offered_step: int):
+			if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
+				return
+			if accepted:
+				var saved_step := item.item_data.current_step
+				item.item_data.current_step = offered_step
+				_complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+				item.item_data.current_step = saved_step
+			else:
+				_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+		)
+
+	if not ResourceLoader.exists(PRICE_HAGGLE_PROMPT_TIMELINE_PATH):
+		launch_haggle.call()
+		return
+
+	var char_name: String = customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"
+	if generic_char_res:
+		generic_char_res.display_name = char_name
+	Dialogic.VAR.set_variable("Global_PriceRefusalLine", _format_price_refusal_line(item.item_data))
+
+	var choice_holder := {"choice": "decline"}
+	var sig_cb := func(arg: String):
+		if arg == "haggle_accept":
+			choice_holder["choice"] = "haggle"
+		elif arg == "haggle_decline":
+			choice_holder["choice"] = "decline"
+	Dialogic.signal_event.connect(sig_cb)
+
+	start_dialogue(PRICE_HAGGLE_PROMPT_TIMELINE_PATH, customer, Phase.TALK, "")
+	Dialogic.timeline_ended.connect(func():
+		if Dialogic.signal_event.is_connected(sig_cb):
+			Dialogic.signal_event.disconnect(sig_cb)
+		if choice_holder["choice"] == "haggle":
+			launch_haggle.call()
 		else:
 			_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
-	)
+	, CONNECT_ONE_SHOT)
 
 
 func _complete_item_delivery(

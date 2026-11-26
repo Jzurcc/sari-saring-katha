@@ -181,7 +181,8 @@ func _ready() -> void:
 
 	_build_ui()
 	_refresh_ui()
-	_showing_intro = Juice.are_minigame_tutorials_enabled()
+	var already_seen := is_instance_valid(CharacterProgressionManager) and CharacterProgressionManager.has_flag("haggle_tutorial_seen")
+	_showing_intro = Juice.are_minigame_tutorials_enabled() and not already_seen
 	_intro_panel.visible = _showing_intro
 	_content.visible = not _showing_intro
 	if _showing_intro:
@@ -264,6 +265,8 @@ func _dismiss_intro() -> void:
 	_showing_intro = false
 	_intro_panel.visible = false
 	_content.visible = true
+	if is_instance_valid(CharacterProgressionManager):
+		CharacterProgressionManager.set_flag("haggle_tutorial_seen")
 	Juice.play_sfx("tab_switch", 1.15)
 
 
