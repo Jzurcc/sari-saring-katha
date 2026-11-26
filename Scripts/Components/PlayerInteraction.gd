@@ -47,6 +47,7 @@ func _ready() -> void:
 
 func _on_drag_ended(_item: DraggableItem, _dropped_successfully: bool) -> void:
 	# Force fresh hover + pricing lens evaluation on the next frame after dropping an item
+	PricingOverlay.hide_ui()
 	if is_instance_valid(_last_hovered):
 		_last_hovered.on_hover(false)
 		_last_hovered.set_pricing_ui_active(false)
@@ -74,6 +75,7 @@ func _physics_process(_delta: float) -> void:
 		_game_manager = get_tree().get_first_node_in_group("game_manager") as GameManager
 
 	if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
+		PricingOverlay.hide_ui()
 		if is_instance_valid(_last_hovered):
 			_last_hovered.on_hover(false)
 			_last_hovered = null
