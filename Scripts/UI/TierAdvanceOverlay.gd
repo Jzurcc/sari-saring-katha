@@ -53,12 +53,7 @@ func _build_banner() -> void:
 	_banner = PanelContainer.new()
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_banner.custom_minimum_size = Vector2(420, 0)
-	var style := UIStyle.create_flat_stylebox(COL_BG, 14, 26, 18)
-	style.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.82)
-	style.set_border_width_all(2)
-	style.shadow_color = Color(0.0, 0.0, 0.0, 0.60)
-	style.shadow_size = 20
-	style.shadow_offset = Vector2(0, 8)
+	var style := TopBannerQueue.create_banner_style(COL_GOLD, 26, 18)
 	_banner.add_theme_stylebox_override("panel", style)
 	control.add_child(_banner)
 
@@ -95,7 +90,15 @@ func _kill_bob_tweens() -> void:
 	_bob_tweens.clear()
 
 
-func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData]) -> void:
+func _on_upgrade_available(new_tier: int, cost: float, items: Array[ItemData]) -> void:
+	var items_copy: Array[ItemData] = items.duplicate()
+	TopBannerQueue.enqueue(_play_level_up_banner.bind(new_tier, cost, items_copy))
+
+
+func _play_level_up_banner(_new_tier: int, _cost: float, items: Array[ItemData]) -> void:
+	if not is_inside_tree():
+		TopBannerQueue.complete()
+		return
 	_session_id += 1
 	var my_session := _session_id
 	_kill_bob_tweens()
@@ -168,6 +171,7 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if not is_inside_tree() or my_session != _session_id:
+		TopBannerQueue.complete()
 		return
 
 	var vp_width := get_viewport().get_visible_rect().size.x
@@ -222,6 +226,7 @@ func _on_upgrade_available(_new_tier: int, _cost: float, items: Array[ItemData])
 
 func _on_close_pressed() -> void:
 	if not control.visible:
+		TopBannerQueue.complete()
 		return
 	if _anim_tween and _anim_tween.is_valid():
 		_anim_tween.kill()
@@ -233,3 +238,4 @@ func _on_close_pressed() -> void:
 	_kill_bob_tweens()
 	if is_inside_tree():
 		control.visible = false
+	TopBannerQueue.complete()
