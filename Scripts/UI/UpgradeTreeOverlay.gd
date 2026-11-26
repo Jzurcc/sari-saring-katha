@@ -45,6 +45,7 @@ var _pending_delivery_items: Dictionary = {} # ItemData -> 1
 var _path_surges: Array[Dictionary] = []
 var _unlock_rings: Array[Dictionary] = []
 var _hover_tweens: Dictionary = {} # node_id -> Tween
+var _available_border_styles: Array[StyleBoxFlat] = []
 
 var _bold_font: FontVariation
 var _root: Control
@@ -97,6 +98,14 @@ func _process(delta: float) -> void:
 		_unlock_rings[i]["t"] = float(_unlock_rings[i]["t"]) + delta
 		if float(_unlock_rings[i]["t"]) >= float(_unlock_rings[i]["dur"]):
 			_unlock_rings.remove_at(i)
+
+	# Calm breathing color pulse (emerald <-> warm gold) on "Can Buy Now" nodes
+	if not _available_border_styles.is_empty():
+		var breath := 0.5 + 0.5 * sin(_anim_time * 3.0)
+		var pulse_col := Color(0.38, 0.82, 0.46, 1.0).lerp(Color(1.0, 0.88, 0.46, 1.0), breath)
+		for st in _available_border_styles:
+			if is_instance_valid(st):
+				st.border_color = pulse_col
 
 	if is_instance_valid(_path_drawer):
 		_path_drawer.queue_redraw()
@@ -246,7 +255,7 @@ func _refresh_all() -> void:
 	if is_instance_valid(_pending_lbl):
 		var cnt := _pending_delivery_items.size()
 		_pending_lbl.visible = cnt > 0
-		_pending_lbl.text = "Queued: %d" % cnt
+		_pending_lbl.text = "%d Queued · Mario delivers on close" % cnt
 
 	_layout_nodes()
 	if _hovered_id != "":
@@ -256,6 +265,7 @@ func _refresh_all() -> void:
 func _layout_nodes() -> void:
 	if not is_instance_valid(_tree_area) or _tree_area.size.x < 10.0:
 		return
+	_available_border_styles.clear()
 	var money := _get_money()
 	for n in Registry.get_all_nodes():
 		var nid := str(n["id"])
@@ -319,6 +329,8 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 	btn.add_theme_stylebox_override("normal", st)
 	btn.add_theme_stylebox_override("hover", hov)
 	btn.add_theme_stylebox_override("pressed", hov)
+	if state == "available" and not hovered:
+		_available_border_styles.append(st)
 
 	var icon_tr := btn.get_node_or_null("Icon") as TextureRect
 	if icon_tr:
@@ -334,6 +346,33 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 	var lock_lbl := btn.get_node_or_null("CenterLock") as Label
 	if lock_lbl:
 		lock_lbl.visible = (state == "locked")
+
+	# Compact under-node pill: "Paint" for owned Signage/Poster, or price tag for actionable nodes
+	var pill := btn.get_node_or_null("SubPill") as PanelContainer
+	if pill:
+		var plbl := pill.get_node_or_null("Lbl") as Label
+		var kind := str(_def.get("kind", ""))
+		var sf_lvl := int(_def.get("storefront_level", 0))
+		var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl
+		var cost := float(ev.get("cost", 0.0))
+		if can_paint:
+			pill.visible = true
+			if plbl:
+				plbl.text = "Paint"
+				plbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
+			var pst: StyleBoxFlat = pill.get_theme_stylebox("panel") as StyleBoxFlat
+			if pst:
+				pst.border_color = COL_BRASS
+		elif (state == "available" or state == "available_poor") and cost > 0.0:
+			pill.visible = true
+			if plbl:
+				plbl.text = "₱%d" % int(roundf(cost))
+				plbl.add_theme_color_override("font_color", COL_STAT_POS if state == "available" else COL_STAT_NEG)
+			var pst: StyleBoxFlat = pill.get_theme_stylebox("panel") as StyleBoxFlat
+			if pst:
+				pst.border_color = Color(0.46, 0.86, 0.50, 0.78) if state == "available" else Color(0.88, 0.44, 0.40, 0.65)
+		else:
+			pill.visible = false
 
 
 func _show_tooltip_for(node_id: String) -> void:
@@ -630,21 +669,24 @@ func _draw_paths() -> void:
 			var is_lit := parent_unlocked and child_unlocked
 			var is_avail_edge := parent_unlocked and child_avail
 			var is_hovered_edge := (_hovered_id != "" and (_hovered_id == child_id or _hovered_id == pre_str))
+			var dim_mult := 0.24 if (_hovered_id != "" and not is_hovered_edge) else 1.0
 
 			var fill_col := COL_PATH_LOCKED
 			if is_lit:
-				fill_col = COL_PATH_LIT.lightened(0.12 if is_hovered_edge else 0.0)
+				fill_col = COL_PATH_LIT.lightened(0.16 if is_hovered_edge else 0.0)
 			elif is_avail_edge:
-				fill_col = COL_PATH_AVAIL.lightened(0.14 if is_hovered_edge else 0.0)
+				fill_col = COL_PATH_AVAIL.lightened(0.18 if is_hovered_edge else 0.0)
 			elif is_hovered_edge:
-				fill_col = Color(0.62, 0.50, 0.34, 0.80)
+				fill_col = Color(0.76, 0.62, 0.40, 0.92)
+			fill_col.a *= dim_mult
 
-			if is_lit or is_avail_edge:
-				var glow_alpha := (0.24 if is_lit else 0.18) + pulse * 0.08 + (0.14 if is_hovered_edge else 0.0)
-				_path_drawer.draw_polyline(pts, Color(fill_col.r, fill_col.g, fill_col.b, glow_alpha), 12.0, true)
+			if is_lit or is_avail_edge or is_hovered_edge:
+				var glow_alpha := ((0.24 if is_lit else (0.18 if is_avail_edge else 0.14)) + pulse * 0.08 + (0.18 if is_hovered_edge else 0.0)) * dim_mult
+				_path_drawer.draw_polyline(pts, Color(fill_col.r, fill_col.g, fill_col.b, glow_alpha), 13.0 if is_hovered_edge else 12.0, true)
 
-			_path_drawer.draw_polyline(pts, COL_PATH_OUTLINE, 7.5, true)
-			_path_drawer.draw_polyline(pts, fill_col, 3.8 if (is_lit or is_avail_edge) else 3.0, true)
+			var out_col := Color(COL_PATH_OUTLINE.r, COL_PATH_OUTLINE.g, COL_PATH_OUTLINE.b, COL_PATH_OUTLINE.a * dim_mult)
+			_path_drawer.draw_polyline(pts, out_col, 7.5, true)
+			_path_drawer.draw_polyline(pts, fill_col, 4.4 if is_hovered_edge else (3.8 if (is_lit or is_avail_edge) else 3.0), true)
 
 			# Travelling light bead tracing upward along unlocked & available branches
 			if is_lit or is_avail_edge:
@@ -652,7 +694,7 @@ func _draw_paths() -> void:
 				var phase := fmod(_anim_time * speed + float(path_idx) * 0.19, 1.0)
 				var bead_pt := _point_along_polyline(pts, phase)
 				var bead_col := Color(1.0, 0.94, 0.68, 0.92) if is_lit else Color(0.72, 1.0, 0.76, 0.88)
-				var fade_ends := sin(phase * PI)
+				var fade_ends := sin(phase * PI) * dim_mult
 				_path_drawer.draw_circle(bead_pt, 6.5, Color(bead_col.r, bead_col.g, bead_col.b, 0.28 * fade_ends))
 				_path_drawer.draw_circle(bead_pt, 3.2, Color(bead_col.r, bead_col.g, bead_col.b, 0.95 * fade_ends))
 
@@ -922,6 +964,31 @@ func _create_node_button(node_id: String) -> Button:
 	lock_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lock_lbl.visible = false
 	btn.add_child(lock_lbl)
+
+	# Compact under-node pill (Price tag for actionable nodes, or "Paint" for owned Signage/Poster)
+	var pill := PanelContainer.new()
+	pill.name = "SubPill"
+	pill.visible = false
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.anchor_left = 0.5
+	pill.anchor_right = 0.5
+	pill.anchor_top = 1.0
+	pill.anchor_bottom = 1.0
+	pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	pill.offset_top = 4.0
+	var pst := UIStyle.create_flat_stylebox(Color(0.068, 0.058, 0.050, 0.94), 6, 7, 1)
+	pst.border_color = COL_BRASS
+	pst.set_border_width_all(1)
+	pill.add_theme_stylebox_override("panel", pst)
+	btn.add_child(pill)
+
+	var plbl := Label.new()
+	plbl.name = "Lbl"
+	plbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plbl.add_theme_font_override("font", _bold_font)
+	plbl.add_theme_font_size_override("font_size", 12)
+	plbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pill.add_child(plbl)
 
 	btn.mouse_entered.connect(func():
 		_hovered_id = node_id

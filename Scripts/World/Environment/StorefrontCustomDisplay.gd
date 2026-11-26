@@ -6,8 +6,9 @@ extends Node3D
 ## and TitleScreen3D (read-only SaveManager.peek_save() diorama).
 
 const SIGNAGE_OFFSET := 0.018
-const POSTER_WORLD_POS := Vector3(-4.81, 3.68, -3.58)
+const POSTER_WORLD_POS := Vector3(-4.81, 3.68, -3.76) # Nudged toward the poster's right (-Z)
 const POSTER_BOARD_SIZE := Vector2(0.92, 1.33) # Matches 540x780 portrait aspect
+const POSTER_TILT_DEG := 6.0
 
 @export var read_from_save_peek: bool = false
 
@@ -177,6 +178,7 @@ func _ensure_poster_board() -> void:
 	_poster_root.name = "CustomPosterBoard"
 	add_child(_poster_root)
 	_poster_root.global_position = POSTER_WORLD_POS
+	_poster_root.rotation_degrees = Vector3(POSTER_TILT_DEG, 0.0, 0.0)
 
 	var frame_mesh := MeshInstance3D.new()
 	frame_mesh.name = "PosterFrame"
@@ -201,7 +203,8 @@ func _ensure_poster_board() -> void:
 	_poster_root.visible = false
 
 	if not read_from_save_peek:
-		var poster_xform := Transform3D(Basis(Vector3.BACK, Vector3.UP, Vector3.LEFT), POSTER_WORLD_POS)
+		var tilt_basis := Basis(Vector3.RIGHT, deg_to_rad(POSTER_TILT_DEG)) * Basis(Vector3.BACK, Vector3.UP, Vector3.LEFT)
+		var poster_xform := Transform3D(tilt_basis, POSTER_WORLD_POS)
 		_poster_interactor = _create_paint_interactor("PosterInteractor", Vector3(POSTER_BOARD_SIZE.x, POSTER_BOARD_SIZE.y, 0.2), poster_xform, "poster")
 
 
