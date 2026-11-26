@@ -441,28 +441,29 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 			or (MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_mayari_cards)
 		)
 		if has_mayari_silver:
-			_add_effect_tooltip("Silver Tolerance", [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
+			_add_effect_tooltip("Silver Tolerance", [ {"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
 			total_tol += 1
 			count += 1
 		if MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_blessing_cards:
-			_add_effect_tooltip("Sto. Niño Blessing", [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
+			_add_effect_tooltip("Sto. Niño Blessing", [ {"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
 			total_tol += 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
-			_add_effect_tooltip("Eerie Mist Rush", [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
+			_add_effect_tooltip("Eerie Mist Rush", [ {"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
-			_add_effect_tooltip("Reluctant Care", [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
+			_add_effect_tooltip("Reluctant Care", [ {"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-			_add_effect_tooltip("Restless Crowd", [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
+			_add_effect_tooltip("Restless Crowd", [ {"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
 			total_tol -= 1
 			count += 1
 
 	# 3. Active waiting counter customers with Reputation tolerance bonus for this item
 	var best_cust_bonus := 0
+	var shown_fav_paths: Dictionary = {}
 	if is_instance_valid(CharacterProgressionManager):
 		var seen_paths: Dictionary = {}
 		for spawner in get_tree().get_nodes_in_group("customer_spawner"):
@@ -478,9 +479,29 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 				var bonus := CharacterProgressionManager.get_reputation_tolerance_bonus(cust.customer_data, item_data)
 				if bonus > 0:
 					var cname: String = cust.customer_data.character_name if cust.customer_data.character_name != "" else cust.customer_data.get_clean_id().capitalize()
-					_add_effect_tooltip(cname, [{"label": "Price Tolerance:", "value": "%+d" % bonus, "tone": "pos"}])
+					var is_fav := item_data.category != "" and CharacterProgressionManager.is_favorite_discovered(cpath, item_data.category)
+					var card_title := ("%s's Favorite" % cname) if is_fav else cname
+					_add_effect_tooltip(card_title, [{"label": "Price Tolerance:", "value": "%+d" % bonus, "tone": "pos"}])
+					shown_fav_paths[cpath] = true
 					best_cust_bonus = maxi(best_cust_bonus, bonus)
 					count += 1
+
+		# 4. Discovered customer favorite categories for this item
+		if item_data.category != "":
+			for cpath in CharacterProgressionManager.discovered_favorites.keys():
+				if shown_fav_paths.has(cpath):
+					continue
+				if not CharacterProgressionManager.is_favorite_discovered(str(cpath), item_data.category):
+					continue
+				var cdata: CustomerData = null
+				if is_instance_valid(StoryManager) and StoryManager.has_method("_get_character_data"):
+					cdata = StoryManager._get_character_data(str(cpath))
+				if cdata == null and ResourceLoader.exists(str(cpath)):
+					cdata = load(str(cpath)) as CustomerData
+				var cname := cdata.character_name if (cdata and cdata.character_name != "") else str(cpath).get_file().get_basename()
+				_add_effect_tooltip("%s's Favorite" % cname, [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
+				shown_fav_paths[cpath] = true
+				count += 1
 
 	_tolerance_col.visible = count > 0
 	return total_tol + best_cust_bonus
