@@ -56,8 +56,10 @@ var _best_accuracy_this_session: int = 0
 var _last_result: Dictionary = {}
 var _dash_phase: float = 0.0
 var _is_evaluating: bool = false
-var _guide_points_canvas: Array[Vector2] = []
 var _guide_polylines_norm: Array = []
+var _guide_mask: PackedByteArray = PackedByteArray()
+var _guide_core_pixels: int = 0
+var _current_brush_size_index: int = 1
 
 var _talisman_tex: Texture2D = null
 var _brahim_tex: Texture2D = null
@@ -138,7 +140,6 @@ func open_minigame(config: Dictionary = {}) -> void:
 
 	_load_level(start_lvl)
 	_select_ink_color(0)
-	_select_size(1)
 	_select_tool(CanvasDrawSurface.Tool.BRUSH)
 
 	_result_overlay.visible = false
@@ -606,7 +607,9 @@ func _load_level(lvl: int) -> void:
 	_current_level = clampi(lvl, 1, _patterns.size())
 	var pat: Dictionary = _patterns[_current_level - 1]
 	_guide_polylines_norm = pat["strokes"]
-	_rebuild_guide_samples()
+	_current_brush_size_index = clampi(int(pat.get("brush_size_index", 1)), 0, 3)
+	_select_size(_current_brush_size_index)
+	_rebuild_guide_mask(float(pat.get("grace_px", 6.0)))
 
 	_title_label.text = "%s — %s" % [str(pat["roman"]), str(pat["name"])]
 	_subtitle_label.text = str(pat["subtitle"])
@@ -623,20 +626,55 @@ func _load_level(lvl: int) -> void:
 	_canvas.queue_redraw()
 
 
-func _rebuild_guide_samples() -> void:
-	_guide_points_canvas.clear()
-	var step_px := 5.0
+func _rebuild_guide_mask(grace_px: float) -> void:
+	# Exact raster mask matching CANVAS_SIZE (560x750):
+	# 0 = outside line (stray ink), 1 = grace margin, 2 = core guide band
+	var w := CANVAS_SIZE.x
+	var h := CANVAS_SIZE.y
+	_guide_mask = PackedByteArray()
+	_guide_mask.resize(w * h)
+	_guide_mask.fill(0)
+
+	var brush_r := CanvasDrawSurface.BRUSH_SIZES[_current_brush_size_index]
+	var core_r := maxf(3.0, brush_r * 0.78)
+	var allow_r := brush_r + grace_px
+	var core_r_sq := core_r * core_r
+	var allow_r_sq := allow_r * allow_r
+	var r_ceil := int(ceilf(allow_r))
+	var step_px := maxf(1.5, core_r * 0.35)
+
 	for stroke in _guide_polylines_norm:
 		if stroke.size() < 2:
 			continue
 		for i in range(stroke.size() - 1):
-			var a := Vector2(stroke[i].x * float(CANVAS_SIZE.x), stroke[i].y * float(CANVAS_SIZE.y))
-			var b := Vector2(stroke[i + 1].x * float(CANVAS_SIZE.x), stroke[i + 1].y * float(CANVAS_SIZE.y))
+			var a := Vector2(stroke[i].x * float(w), stroke[i].y * float(h))
+			var b := Vector2(stroke[i + 1].x * float(w), stroke[i + 1].y * float(h))
 			var seg_len := a.distance_to(b)
 			var steps := maxi(1, int(ceilf(seg_len / step_px)))
 			for s in range(steps + 1):
-				var t := float(s) / float(steps)
-				_guide_points_canvas.append(a.lerp(b, t))
+				var pt := a.lerp(b, float(s) / float(steps))
+				var cx := int(roundf(pt.x))
+				var cy := int(roundf(pt.y))
+				var x0 := maxi(0, cx - r_ceil)
+				var x1 := mini(w - 1, cx + r_ceil)
+				var y0 := maxi(0, cy - r_ceil)
+				var y1 := mini(h - 1, cy + r_ceil)
+				for py in range(y0, y1 + 1):
+					var dy := float(py) - pt.y
+					var dy_sq := dy * dy
+					var row_off := py * w
+					for px in range(x0, x1 + 1):
+						var dx := float(px) - pt.x
+						var d_sq := dx * dx + dy_sq
+						if d_sq <= core_r_sq:
+							_guide_mask[row_off + px] = 2
+						elif d_sq <= allow_r_sq and _guide_mask[row_off + px] == 0:
+							_guide_mask[row_off + px] = 1
+
+	_guide_core_pixels = 0
+	for i in range(_guide_mask.size()):
+		if _guide_mask[i] == 2:
+			_guide_core_pixels += 1
 
 
 func _select_ink_color(idx: int) -> void:
@@ -695,8 +733,12 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 	var dash_len := 11.0
 	var gap_len := 9.0
 	var cycle := dash_len + gap_len
-	var glow_col := Color(1.0, 0.94, 0.72, 0.34)
-	var core_col := Color(0.20, 0.11, 0.04, 0.76)
+	var screen_scale := canvas_rect.size.x / maxf(1.0, float(CANVAS_SIZE.x))
+	var brush_r := CanvasDrawSurface.BRUSH_SIZES[_current_brush_size_index]
+	var glow_w := clampf(brush_r * 1.45 * screen_scale, 5.5, 22.0)
+	var core_w := clampf(brush_r * 0.42 * screen_scale, 2.2, 7.5)
+	var glow_col := Color(1.0, 0.94, 0.72, 0.30)
+	var core_col := Color(0.20, 0.11, 0.04, 0.78)
 
 	for stroke in _guide_polylines_norm:
 		if stroke.size() < 2:
@@ -726,8 +768,8 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 					var draw_len := minf(dash_len - in_cycle, seg_len - pos)
 					var p0 := a + dir * pos
 					var p1 := a + dir * (pos + draw_len)
-					surface.draw_line(p0, p1, glow_col, 7.2, true)
-					surface.draw_line(p0, p1, core_col, 3.0, true)
+					surface.draw_line(p0, p1, glow_col, glow_w, true)
+					surface.draw_line(p0, p1, core_col, core_w, true)
 					pos += maxf(0.5, draw_len)
 				else:
 					var skip_len := minf(cycle - in_cycle, seg_len - pos)
@@ -750,7 +792,7 @@ func _on_inscribe_pressed() -> void:
 	_canvas.input_enabled = false
 
 	var pat: Dictionary = _patterns[_current_level - 1]
-	var eval := _evaluate_tracing(float(pat["tolerance_px"]))
+	var eval := _evaluate_tracing()
 	var accuracy_pct: int = int(eval["accuracy"])
 	var coverage_pct: int = int(eval["coverage"])
 	var precision_pct: int = int(eval["precision"])
@@ -790,109 +832,41 @@ func _on_inscribe_pressed() -> void:
 	_is_evaluating = false
 
 
-func _evaluate_tracing(tolerance_px: float) -> Dictionary:
+func _evaluate_tracing() -> Dictionary:
 	var img := _canvas.get_raw_paint_image()
-	if img == null or _guide_points_canvas.is_empty():
+	if img == null or _guide_mask.is_empty() or _guide_core_pixels <= 0:
 		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
 
-	var w := img.get_width()
-	var h := img.get_height()
 	var bytes := img.get_data()
+	var pixel_count := _guide_mask.size()
+	if bytes.size() < pixel_count * 4:
+		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
 
-	# Tight, true-to-guide corridors (canvas is 560x750)
-	var cov_tol := clampf(tolerance_px * 0.55, 8.0, 15.0)
-	var prec_tol := clampf(tolerance_px * 0.65, 10.0, 17.0)
-
-	# 1) Build spatial hash of guide points (cell size = 10px) for fast nearest-guide queries
-	var cell_sz := 10
-	var guide_grid: Dictionary = {}
-	for pt in _guide_points_canvas:
-		var cx := int(floorf(pt.x / float(cell_sz)))
-		var cy := int(floorf(pt.y / float(cell_sz)))
-		var key := (cx << 16) ^ cy
-		if not guide_grid.has(key):
-			guide_grid[key] = []
-		guide_grid[key].append(pt)
-
-	# 2) Coverage: distance-weighted score for each guide sample (center hit = 1.0, edge = 0.55)
-	var tol_i := int(ceilf(cov_tol))
-	var cov_tol_sq := cov_tol * cov_tol
-	var sample_stride := 2
-	var coverage_sum := 0.0
-
-	for pt in _guide_points_canvas:
-		var gx := int(roundf(pt.x))
-		var gy := int(roundf(pt.y))
-		var x0 := maxi(0, gx - tol_i)
-		var x1 := mini(w - 1, gx + tol_i)
-		var y0 := maxi(0, gy - tol_i)
-		var y1 := mini(h - 1, gy + tol_i)
-		var best_dist_sq := cov_tol_sq + 1.0
-		var py := y0
-		while py <= y1:
-			var dy := float(py) - pt.y
-			var dy_sq := dy * dy
-			var row_off := py * w
-			var px := x0
-			while px <= x1:
-				var dx := float(px) - pt.x
-				var d_sq := dx * dx + dy_sq
-				if d_sq < best_dist_sq and bytes[(row_off + px) * 4 + 3] > 35:
-					best_dist_sq = d_sq
-				px += sample_stride
-			py += sample_stride
-		if best_dist_sq <= cov_tol_sq:
-			var norm_d := sqrt(best_dist_sq) / maxf(1.0, cov_tol)
-			coverage_sum += lerpf(1.0, 0.55, norm_d)
-
-	var coverage := coverage_sum / float(_guide_points_canvas.size())
-
-	# 3) Precision & Stray Ink: every inked pixel outside prec_tol reduces precision & adds stray penalty
-	var prec_tol_sq := prec_tol * prec_tol
-	var search_cells := int(ceilf(prec_tol / float(cell_sz)))
+	var covered_core := 0
 	var total_ink := 0
 	var on_path_ink := 0
-	var ink_stride := 2
 
-	var y := 0
-	while y < h:
-		var row_off := y * w
-		var x := 0
-		while x < w:
-			if bytes[(row_off + x) * 4 + 3] > 35:
-				total_ink += 1
-				var cx := int(floorf(float(x) / float(cell_sz)))
-				var cy := int(floorf(float(y) / float(cell_sz)))
-				var near_guide := false
-				for dy_c in range(-search_cells, search_cells + 1):
-					if near_guide:
-						break
-					for dx_c in range(-search_cells, search_cells + 1):
-						var key := ((cx + dx_c) << 16) ^ (cy + dy_c)
-						if not guide_grid.has(key):
-							continue
-						for gpt: Vector2 in guide_grid[key]:
-							var ddx := float(x) - gpt.x
-							var ddy := float(y) - gpt.y
-							if ddx * ddx + ddy * ddy <= prec_tol_sq:
-								near_guide = true
-								break
-						if near_guide:
-							break
-				if near_guide:
-					on_path_ink += 1
-			x += ink_stride
-		y += ink_stride
+	# Exact pixel-by-pixel comparison against the pre-rasterized guide mask
+	for i in range(pixel_count):
+		var inked := bytes[i * 4 + 3] > 35
+		var m := _guide_mask[i]
+		if inked:
+			total_ink += 1
+			if m >= 1:
+				on_path_ink += 1
+			if m == 2:
+				covered_core += 1
 
 	if total_ink < 24:
 		return {"accuracy": 0, "coverage": 0, "precision": 0, "stray": 0}
 
-	var precision := float(on_path_ink) / float(total_ink)
+	var coverage := clampf(float(covered_core) / float(_guide_core_pixels), 0.0, 1.0)
+	var precision := clampf(float(on_path_ink) / float(total_ink), 0.0, 1.0)
 	var stray_ratio := clampf(1.0 - precision, 0.0, 1.0)
-	# Harmonic mean (F1) ensures BOTH coverage and precision must be high,
-	# plus an explicit penalty for stray strokes drawn outside the guide lines.
+
+	# Harmonic mean (F1) of exact coverage & precision, minus explicit penalty for stray ink outside the band
 	var f1 := (2.0 * coverage * precision) / maxf(0.0001, coverage + precision)
-	var stray_penalty := maxf(0.0, stray_ratio - 0.06) * 0.40
+	var stray_penalty := maxf(0.0, stray_ratio - 0.04) * 0.45
 	var combined := clampf(f1 - stray_penalty, 0.0, 1.0)
 
 	return {
@@ -959,14 +933,14 @@ func _poly_pts(verts: Array[Vector2], closed: bool = true) -> Array:
 func _build_talisman_patterns() -> Array[Dictionary]:
 	var sets: Array[Dictionary] = []
 
-	# 1. Krus ng Simula — Novice Ward (62% target, generous tolerance)
+	# 1. Krus ng Simula — Novice Ward (Bold brush, 62% target)
 	sets.append({
 		"roman": "I",
 		"name": "Krus ng Simula",
-		"subtitle": "Novice Ward • Steady cross & center diamond to calm a new charm.",
+		"subtitle": "Novice Ward • Bold brush • Steady cross & center diamond.",
 		"required_accuracy": 62,
-		"tolerance_px": 26.0,
-		"win_quote": "Clean, balanced lines! Even a simple ward hums when drawn with care.",
+		"brush_size_index": 2,
+		"grace_px": 8.0,
 		"strokes": [
 			[_pt(0.0, -0.78), _pt(0.0, 0.78)],
 			[_pt(-0.62, -0.10), _pt(0.62, -0.10)],
@@ -974,14 +948,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 2. Buwan ni Mayari — Lunar Charm (65% target)
+	# 2. Buwan ni Mayari — Lunar Charm (Bold brush, 65% target)
 	sets.append({
 		"roman": "II",
 		"name": "Buwan ni Mayari",
-		"subtitle": "Lunar Charm • Crescent curve with twin guiding stars.",
+		"subtitle": "Lunar Charm • Bold brush • Crescent curve with guiding star.",
 		"required_accuracy": 65,
-		"tolerance_px": 24.0,
-		"win_quote": "Mayari's crescent! Travelers keep this close on dark barangay roads.",
+		"brush_size_index": 2,
+		"grace_px": 7.5,
 		"strokes": [
 			_arc_pts(0.08, 0.0, 0.62, 0.68, deg_to_rad(52.0), deg_to_rad(308.0), 28),
 			_arc_pts(0.24, 0.0, 0.44, 0.54, deg_to_rad(68.0), deg_to_rad(292.0), 24),
@@ -990,14 +964,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 3. Mata ng Bantay — Watcher's Eye (68% target)
+	# 3. Mata ng Bantay — Watcher's Eye (Medium brush, 68% target)
 	sets.append({
 		"roman": "III",
 		"name": "Mata ng Bantay",
-		"subtitle": "Watcher's Eye • Protective almond eye that wards off mischief.",
+		"subtitle": "Watcher's Eye • Medium brush • Protective almond eye.",
 		"required_accuracy": 68,
-		"tolerance_px": 23.0,
-		"win_quote": "You can almost feel it watching back. That'll keep bad luck off the doorstep.",
+		"brush_size_index": 1,
+		"grace_px": 7.0,
 		"strokes": [
 			_arc_pts(0.0, 0.28, 0.78, 0.62, deg_to_rad(212.0), deg_to_rad(328.0), 24),
 			_arc_pts(0.0, -0.28, 0.78, 0.62, deg_to_rad(32.0), deg_to_rad(148.0), 24),
@@ -1007,14 +981,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 4. Tala ng Gabay — Guiding Star (70% target)
+	# 4. Tala ng Gabay — Guiding Star (Medium brush, 70% target)
 	sets.append({
 		"roman": "IV",
 		"name": "Tala ng Gabay",
-		"subtitle": "Guiding Star • Four-pointed star anchored inside a ward circle.",
+		"subtitle": "Guiding Star • Medium brush • Four-pointed star inside a ward circle.",
 		"required_accuracy": 70,
-		"tolerance_px": 22.0,
-		"win_quote": "Sharp points and a steady circle—this charm will never lose its north.",
+		"brush_size_index": 1,
+		"grace_px": 6.5,
 		"strokes": [
 			_poly_pts([
 				Vector2(0.0, -0.82), Vector2(0.18, -0.18),
@@ -1026,14 +1000,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 5. Tatsulok ng Lunas — Healing Triad (72% target)
+	# 5. Tatsulok ng Lunas — Healing Triad (Bold brush, 72% target)
 	sets.append({
 		"roman": "V",
 		"name": "Tatsulok ng Lunas",
-		"subtitle": "Healing Triad • Classic sacred triangle with inner ring & grounding bar.",
+		"subtitle": "Healing Triad • Bold brush • Sacred triangle with inner ring & grounding bar.",
 		"required_accuracy": 72,
-		"tolerance_px": 21.0,
-		"win_quote": "The old albularyos always swore by the triangle. My lolo would be proud!",
+		"brush_size_index": 2,
+		"grace_px": 6.5,
 		"strokes": [
 			_poly_pts([Vector2(0.0, -0.78), Vector2(0.74, 0.52), Vector2(-0.74, 0.52)], true),
 			_circle_pts(0.0, 0.08, 0.24, 0.23, 24),
@@ -1042,7 +1016,7 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 6. Sinag ng Araw — Sunburst Sigil (75% target)
+	# 6. Sinag ng Araw — Sunburst Sigil (Medium brush, 75% target)
 	var sun_strokes: Array = [_circle_pts(0.0, 0.0, 0.34, 0.32, 28)]
 	for i in range(8):
 		var ang := float(i) * (TAU / 8.0)
@@ -1055,21 +1029,21 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 	sets.append({
 		"roman": "VI",
 		"name": "Sinag ng Araw",
-		"subtitle": "Sunburst Sigil • Eight balanced solar rays radiating from a warm core.",
+		"subtitle": "Sunburst Sigil • Medium brush • Eight balanced solar rays.",
 		"required_accuracy": 75,
-		"tolerance_px": 20.0,
-		"win_quote": "Bright as high noon! This one carries real warmth.",
+		"brush_size_index": 1,
+		"grace_px": 6.0,
 		"strokes": sun_strokes,
 	})
 
-	# 7. Kalasag ng Hangin — Wind Shield (77% target)
+	# 7. Kalasag ng Hangin — Wind Shield (Medium brush, 77% target)
 	sets.append({
 		"roman": "VII",
 		"name": "Kalasag ng Hangin",
-		"subtitle": "Wind Shield • Protective crest with inner chevron and twin spirals.",
+		"subtitle": "Wind Shield • Medium brush • Protective crest with inner chevron & spirals.",
 		"required_accuracy": 77,
-		"tolerance_px": 19.0,
-		"win_quote": "Solid as narra wood, light as the breeze. No storm's getting past this.",
+		"brush_size_index": 1,
+		"grace_px": 5.5,
 		"strokes": [
 			_poly_pts([
 				Vector2(-0.68, -0.68), Vector2(0.68, -0.68),
@@ -1083,14 +1057,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 8. Bituin ng Pitong Sinag — Hexagram Ward (80% target)
+	# 8. Selyo ng Bituin — Hexagram Ward (Fine brush, 80% target)
 	sets.append({
 		"roman": "VIII",
 		"name": "Selyo ng Bituin",
-		"subtitle": "Interlaced Star Seal • Twin opposing triangles bound by a sacred ring.",
+		"subtitle": "Interlaced Star Seal • Fine brush • Twin opposing triangles in a sacred ring.",
 		"required_accuracy": 80,
-		"tolerance_px": 18.0,
-		"win_quote": "Not a single tremor in those intersections—you have an albularyo's hand!",
+		"brush_size_index": 0,
+		"grace_px": 5.5,
 		"strokes": [
 			_circle_pts(0.0, 0.0, 0.74, 0.70, 36),
 			_poly_pts([Vector2(0.0, -0.64), Vector2(0.58, 0.34), Vector2(-0.58, 0.34)], true),
@@ -1098,14 +1072,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 9. Orasyon ng Balete — Balete Seal (82% target)
+	# 9. Orasyon ng Balete — Balete Seal (Fine brush, 82% target)
 	sets.append({
 		"roman": "IX",
 		"name": "Orasyon ng Balete",
-		"subtitle": "Balete Seal • Twin rings, rooted pillar, upper crescent & lower triad.",
+		"subtitle": "Balete Seal • Fine brush • Twin rings, rooted pillar, crescent & triad.",
 		"required_accuracy": 82,
-		"tolerance_px": 17.0,
-		"win_quote": "Whoa... the air around the counter actually went quiet. That's the real deal.",
+		"brush_size_index": 0,
+		"grace_px": 5.0,
 		"strokes": [
 			_circle_pts(0.0, 0.0, 0.76, 0.72, 36),
 			_circle_pts(0.0, 0.0, 0.48, 0.46, 30),
@@ -1116,14 +1090,14 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 10. Dakilang Anting-Anting — Grand Agimat (85% target, tightest tolerance)
+	# 10. Dakilang Anting-Anting — Grand Agimat (Fine brush, 85% target)
 	sets.append({
 		"roman": "X",
 		"name": "Dakilang Anting-Anting",
-		"subtitle": "Master Agimat • Outer diamond frame, sacred ring, all-seeing triad & corner wards.",
+		"subtitle": "Master Agimat • Fine brush • Outer diamond, sacred ring, triad & corner wards.",
 		"required_accuracy": 85,
-		"tolerance_px": 16.0,
-		"win_quote": "A masterwork agimat! I couldn't have inscribed this half as well on my own.",
+		"brush_size_index": 0,
+		"grace_px": 4.5,
 		"strokes": [
 			_poly_pts([Vector2(0.0, -0.84), Vector2(0.76, 0.0), Vector2(0.0, 0.84), Vector2(-0.76, 0.0)], true),
 			_circle_pts(0.0, 0.0, 0.50, 0.48, 34),
