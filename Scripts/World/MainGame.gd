@@ -115,6 +115,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		for pl_ov in get_tree().get_nodes_in_group("price_ledger_overlay"):
 			if pl_ov.get("is_open"):
 				return
+		if not get_tree().get_nodes_in_group("day_summary_overlay_active").is_empty():
+			return
 		if pause_menu and not pause_menu.visible:
 			get_viewport().set_input_as_handled()
 			pause_menu.pause()

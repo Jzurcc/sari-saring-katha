@@ -83,6 +83,7 @@ func setup(day_num: int, daily_stats: Dictionary, show_mayari: bool = true) -> v
 func _ready() -> void:
 	layer = 62
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group("day_summary_overlay_active")
 	_bold_font = FontVariation.new()
 	_bold_font.base_font = UIStyle.FONT_INDER
 	_bold_font.variation_embolden = 0.65
@@ -1287,13 +1288,21 @@ func _run_sequence() -> void:
 func _input(event: InputEvent) -> void:
 	if _closing:
 		return
+	# Block Pause Menu (Esc) during End-of-Day Summary so saving mid-summary cannot corrupt day rollover or mouse state
+	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
+		get_viewport().set_input_as_handled()
+		return
 	var is_skip := false
 	if event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		is_skip = true
 	elif event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_SPACE or event.keycode == KEY_SPACE or event.is_action_pressed("ui_accept")):
 		is_skip = true
 	if is_skip and not _tally_finished:
-		_skip_requested = true
+		var now_msec := Time.get_ticks_msec()
+		if now_msec - _last_skip_tap_msec <= 650:
+			_skip_requested = true
+		else:
+			_last_skip_tap_msec = now_msec
 		get_viewport().set_input_as_handled()
 
 
