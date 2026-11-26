@@ -171,7 +171,7 @@ func _ready() -> void:
 
 	in_demand_pill = _make_badge_pill(Color(0.28, 0.20, 0.06, 0.92), COL_GOLD_SOFT)
 	in_demand_label = in_demand_pill.get_node("Lbl") as Label
-	in_demand_label.text = "IN DEMAND"
+	in_demand_label.text = "In Demand"
 	in_demand_label.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	badge_row.add_child(in_demand_pill)
 	in_demand_pill.hide()
@@ -288,7 +288,7 @@ func _ready() -> void:
 
 func _make_badge_pill(bg_col: Color, border_col: Color) -> PanelContainer:
 	var pill := PanelContainer.new()
-	var st := UIStyle.create_flat_stylebox(bg_col, 6, 10, 2)
+	var st := UIStyle.create_flat_stylebox(bg_col, 8, 14, 4)
 	st.border_color = border_col
 	st.set_border_width_all(1)
 	pill.add_theme_stylebox_override("panel", st)
@@ -296,7 +296,7 @@ func _make_badge_pill(bg_col: Color, border_col: Color) -> PanelContainer:
 	var lbl := Label.new()
 	lbl.name = "Lbl"
 	lbl.add_theme_font_override("font", _bold_font)
-	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_font_size_override("font_size", 22)
 	pill.add_child(lbl)
 	return pill
 
@@ -538,13 +538,13 @@ func show_item(item_data: ItemData, basis_position: Vector3, is_container: bool 
 	if is_fridge_item:
 		var pst := chill_pill.get_theme_stylebox("panel") as StyleBoxFlat
 		if is_warm_now:
-			chill_status_label.text = "WARM -25%"
+			chill_status_label.text = "Warm -25%"
 			chill_status_label.add_theme_color_override("font_color", COL_WARM)
 			if pst:
 				pst.bg_color = Color(0.28, 0.12, 0.06, 0.92)
 				pst.border_color = COL_WARM
 		else:
-			chill_status_label.text = "FROZEN" if item_data.category == "frozen" else "CHILLED"
+			chill_status_label.text = "Frozen" if item_data.category == "frozen" else "Chilled"
 			chill_status_label.add_theme_color_override("font_color", COL_CHILLED)
 			if pst:
 				pst.bg_color = Color(0.08, 0.20, 0.26, 0.92)
