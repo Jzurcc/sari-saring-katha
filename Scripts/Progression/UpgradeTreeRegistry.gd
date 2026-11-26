@@ -163,37 +163,59 @@ static func get_node_item(node_id: String, target_level: int = -1) -> ItemData:
 
 
 static func get_short_description(node_id: String) -> String:
-	var def := get_node_def(node_id)
-	if def.is_empty():
-		return ""
-	match str(def["kind"]):
-		"permit":
-			return "Official barangay permit that boosts XP earned from every sale."
-		"fridge":
-			return "Keeps cold drinks and frozen goods frosty longer."
-		"mario_deals":
-			return "Daily discounted wholesale stock and faster Mario deliveries." if int(def.get("target_level", 1)) == 1 else "Mario brings bulk contracts: more daily deals at a deeper discount."
-		"bench":
-			return "Cozy seating outside so neighbors linger and chat."
-		"radio":
-			return "Reveals more daily regulars and neighborhood events."
-		"trash":
-			return "Dispose of unwanted or expired stock cleanly."
+	match node_id:
+		"permit_1":
+			return "A fresh barangay clearance stamped in blue ink and taped beside the counter. Word gets around fast that your tindahan is officially open for business."
+		"permit_2":
+			return "Your municipal registration hangs neatly in a proper frame. Even the stricter elders in Karimlan nod with newfound respect when they stop by."
+		"permit_3":
+			return "The barangay's prized gold-sealed license—proof that this little corner store has grown into a true neighborhood institution."
+		"fridge_1":
+			return "A fresh rubber seal snaps the fridge door shut with a satisfying thump. No more cold air leaking out into the humid afternoon."
+		"fridge_2":
+			return "Thick thermal lining wraps the old cabinet's walls. Even when the sun beats down on the tin roof, the drinks inside stay frosty."
+		"fridge_3":
+			return "A whisper-quiet commercial compressor hums behind the bottles. It chills warm stock back to ice-cold before the next rush even starts."
+		"wholesale_pass":
+			return "Uncle Mario slips you a laminated market pass with his signature on the back. Now you get first pick of the morning's discounted crates."
+		"wholesale_pass_2":
+			return "Direct bodega contracts under your store's name. Mario's suppliers set aside their best bulk deals before anyone else in town can claim them."
+		"bench_1":
+			return "A sturdy wooden bench set out beneath the eaves. Neighbors finally have a shady spot to sit, sip, and trade stories."
+		"bench_2":
+			return "Smooth varnished planks and a wider backrest turn your stoop into the block's favorite hangout. One quick errand easily turns into an afternoon chat."
+		"bench_3":
+			return "Cushioned, well-worn, and always lively—the unofficial barangay plaza right outside your window. Everyone in Karimlan knows where to find good company."
+		"radio_1":
+			return "A trusty battery-powered transistor tuned straight to Papa Ulap's station. Between classic ballads, you catch wind of who's heading down the street."
+		"radio_2":
+			return "A hand-wound copper coil sharpens the static into crystal-clear reception. Even the quieter barangay bulletins now reach your counter."
+		"radio_3":
+			return "A high-gain signal amplifier picks up every whisper on the airwaves. Nothing happens in Karimlan without your radio calling it first."
+		"trash_can":
+			return "A battered galvanized bin tucked neatly in the corner. Keeps the counter tidy and gives expired or unwanted stock a clean place to go."
 		"recycling":
-			return "Sort your junk: trashing an item refunds 50% of its original value."
-		"cat":
-			return "Welcomes more customers to your counter at once."
-		"sto_nino":
-			return "Tap the altar each day for a protective lunar blessing."
-		"maneki":
-			return "A lucky waving cat that attracts bigger neighbor tips."
-		"storefront_step":
-			var sf_lvl := int(def.get("storefront_level", 1))
-			if sf_lvl == 1:
-				return "Paint your own custom signboard above the store."
-			elif sf_lvl == 2:
-				return "Design a promo poster to highlight featured categories."
-			return "Open your sari-sari store to the full barangay street."
+			return "Separate bottles, tins, and cartons for the local junk shop cart. Even tossed stock finds a second life—and puts a few pesos back in your drawer."
+		"cat_1":
+			return "A sleepy orange tabby has officially claimed the warm spot beside your counter. Neighbors can't resist stopping just to scratch behind Mingming's ears."
+		"cat_2":
+			return "Well-fed and glossy-coated, Mingming now greets every passerby like royalty. Half the street lines up just to see the neighborhood's favorite storekeeper."
+		"sto_nino_1":
+			return "A small wooden shelf dressed with lace and a flickering candle. Tap the altar each morning to ask for a quiet blessing over the day's work."
+		"sto_nino_2":
+			return "Fresh sampaguita garlands and a polished red velvet cape adorn the little shrine. Its warm candlelight steadies the shop through busier hours."
+		"sto_nino_3":
+			return "Carved narra wood and an ever-burning vigil lamp watch over the entire tindahan. The altar's grace lingers gently from sunrise until the shutters close."
+		"maneki_1":
+			return "A glossy porcelain waving cat perched right by the coin tray. Its steady paw seems to beckon both good fortune and generous change."
+		"maneki_2":
+			return "Brand-new AA batteries put a brisk, cheerful rhythm back into that waving paw. Shoppers smile at the tireless little cat—and leave a little extra behind."
+		"signage":
+			return "A freshly primed signboard mounted above the awning, waiting for your own hand-painted lettering. Make your tindahan unmistakable from down the road."
+		"poster":
+			return "A bright display board hung right beside the window for your custom specials. Catch passing eyes and spotlight whatever you want to move today."
+		"open_door":
+			return "Unbolt the heavy wooden door and welcome Karimlan inside. After all these nights of hard work, your family's sari-sari store is finally whole again."
 	return ""
 
 
