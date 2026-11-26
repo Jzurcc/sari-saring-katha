@@ -7,6 +7,7 @@ extends CanvasLayer
 ## EventsOverlay stat-row format, and Uncle Mario delivery queued on close.
 
 const Registry := preload("res://Scripts/Progression/UpgradeTreeRegistry.gd")
+const PESO_ICON_TEX := preload("res://Assets/ui/peso_icon.png")
 
 const COL_WOOD_DARK := Color(0.24, 0.14, 0.09, 0.99)
 const COL_WOOD_MID := Color(0.36, 0.22, 0.14, 0.98)
@@ -25,8 +26,8 @@ const COL_STAT_POS := Color(0.56, 0.92, 0.52, 1.0)
 const COL_STAT_NEG := Color(0.96, 0.48, 0.45, 1.0)
 const COL_GOLD_BRIGHT := Color(1.0, 0.875, 0.56, 1.0)
 
-const ICON_SIZE := Vector2(48, 48)
-const CAPSTONE_SIZE := Vector2(58, 58)
+const ICON_SIZE := Vector2(68, 68)
+const CAPSTONE_SIZE := Vector2(82, 82)
 
 var is_open: bool = false
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
@@ -49,6 +50,8 @@ var _tip_title: Label
 var _tip_level: Label
 var _tip_stats_box: VBoxContainer
 var _tip_desc: Label
+var _tip_price_row: HBoxContainer
+var _tip_price_lbl: Label
 var _tip_status: Label
 
 
@@ -134,11 +137,11 @@ func _node_center(lpos: Vector2) -> Vector2:
 	if not is_instance_valid(_tree_area):
 		return Vector2.ZERO
 	var sz := _tree_area.size
-	var pad_x := 46.0
-	var pad_top := 42.0
-	var pad_bot := 40.0
-	var usable_w := maxf(200.0, sz.x - pad_x * 2.0)
-	var usable_h := maxf(180.0, sz.y - pad_top - pad_bot)
+	var pad_x := 72.0
+	var pad_top := 62.0
+	var pad_bot := 56.0
+	var usable_w := maxf(240.0, sz.x - pad_x * 2.0)
+	var usable_h := maxf(200.0, sz.y - pad_top - pad_bot)
 	# Logical x in [0 .. 8], logical y in [0 .. 4] (bottom-up)
 	var nx := lpos.x / 8.0
 	var ny := 1.0 - (lpos.y / 4.0)
@@ -148,7 +151,7 @@ func _node_center(lpos: Vector2) -> Vector2:
 func _refresh_all() -> void:
 	var money := _get_money()
 	if is_instance_valid(_money_lbl):
-		_money_lbl.text = "₱%.2f" % money
+		_money_lbl.text = "%.2f" % money
 	if is_instance_valid(_pending_lbl):
 		var cnt := _pending_delivery_items.size()
 		_pending_lbl.visible = cnt > 0
@@ -299,18 +302,18 @@ func _show_tooltip_for(node_id: String) -> void:
 		s_val.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		s_row.add_child(s_val)
 
-	# Succinct note for Tier items or special perks
-	var desc := ""
+	# Restored description (from item metadata or Tier catalog items)
+	var desc := str(item.get_meta("upgrade_desc", "")) if item != null else ""
 	if str(def["kind"]) == "tier" and is_instance_valid(InventoryManager):
 		var target_t := int(def["tier"])
 		var names: Array[String] = []
 		for ti in InventoryManager.get_all_items():
 			if ti != null and ti.can_be_sold and ti.tier == target_t:
 				names.append(ti.item_name)
-				if names.size() >= 4:
+				if names.size() >= 5:
 					break
 		if not names.is_empty():
-			desc = "Adds: " + ", ".join(names)
+			desc = "Unlocks: " + ", ".join(names)
 	_tip_desc.text = desc
 	_tip_desc.visible = desc != ""
 
@@ -319,21 +322,26 @@ func _show_tooltip_for(node_id: String) -> void:
 	var sf_lvl := int(def.get("storefront_level", 0))
 	var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl
 
+	var show_price := (state == "available" or state == "available_poor" or state == "locked") and cost > 0.0
+	_tip_price_row.visible = show_price
+	if show_price:
+		_tip_price_lbl.text = "%.0f" % cost
+		_tip_price_lbl.add_theme_color_override("font_color", COL_STAT_POS if money >= cost else COL_STAT_NEG)
+
 	if can_paint:
 		_tip_status.text = "Owned  •  Click to Paint"
 		_tip_status.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	elif state == "maxed":
-		_tip_status.text = "Maxed Out" if max_lvl > 1 else "Owned"
+		_tip_status.text = "Owned"
 		_tip_status.add_theme_color_override("font_color", COL_STAT_POS)
 	elif mario_busy:
 		_tip_status.text = "Mario is delivering..."
 		_tip_status.add_theme_color_override("font_color", Color(0.84, 0.78, 0.68))
 	elif bool(ev["can_buy"]):
-		var verb := "Upgrade" if cur_lvl >= 1 else "Unlock"
-		_tip_status.text = "Click to %s  ·  ₱%.0f" % [verb, cost]
+		_tip_status.text = "Click to Unlock"
 		_tip_status.add_theme_color_override("font_color", COL_STAT_POS)
 	elif state == "available_poor":
-		_tip_status.text = "Need ₱%.0f" % cost
+		_tip_status.text = "Not enough pesos"
 		_tip_status.add_theme_color_override("font_color", COL_STAT_NEG)
 	else:
 		var missing: Array[String] = []
@@ -464,13 +472,13 @@ func _build_ui() -> void:
 	)
 	_root.add_child(backdrop)
 
-	# Tighter, compact centered wooden board (~780 x 560 on 1600x900)
+	# Full-screen framed wooden board
 	_board_panel = PanelContainer.new()
-	_board_panel.anchor_left = 0.255
-	_board_panel.anchor_right = 0.745
-	_board_panel.anchor_top = 0.165
-	_board_panel.anchor_bottom = 0.835
-	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 12, 14, 12)
+	_board_panel.anchor_left = 0.025
+	_board_panel.anchor_right = 0.975
+	_board_panel.anchor_top = 0.035
+	_board_panel.anchor_bottom = 0.965
+	var wood_st := UIStyle.create_flat_stylebox(COL_WOOD_DARK, 12, 18, 14)
 	wood_st.border_color = COL_BRASS
 	wood_st.set_border_width_all(3)
 	wood_st.shadow_color = Color(0, 0, 0, 0.60)
@@ -479,33 +487,46 @@ func _build_ui() -> void:
 	_root.add_child(_board_panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 10)
 	_board_panel.add_child(vbox)
 
-	# Compact top bar
+	# Top bar with Peso logo
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 12)
+	top.add_theme_constant_override("separation", 14)
 	vbox.add_child(top)
 
 	var title := Label.new()
 	title.text = "Store Upgrades"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_override("font", _bold_font)
-	title.add_theme_font_size_override("font_size", 21)
+	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", COL_CREAM)
 	top.add_child(title)
 
 	_pending_lbl = Label.new()
 	_pending_lbl.add_theme_font_override("font", _bold_font)
-	_pending_lbl.add_theme_font_size_override("font_size", 14)
+	_pending_lbl.add_theme_font_size_override("font_size", 16)
 	_pending_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	top.add_child(_pending_lbl)
 
+	var money_row := HBoxContainer.new()
+	money_row.add_theme_constant_override("separation", 6)
+	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	top.add_child(money_row)
+
+	var peso_hdr := TextureRect.new()
+	peso_hdr.texture = PESO_ICON_TEX
+	peso_hdr.custom_minimum_size = Vector2(26, 26)
+	peso_hdr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	peso_hdr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	peso_hdr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	money_row.add_child(peso_hdr)
+
 	_money_lbl = Label.new()
 	_money_lbl.add_theme_font_override("font", _bold_font)
-	_money_lbl.add_theme_font_size_override("font_size", 20)
+	_money_lbl.add_theme_font_size_override("font_size", 24)
 	_money_lbl.add_theme_color_override("font_color", COL_STAT_POS)
-	top.add_child(_money_lbl)
+	money_row.add_child(_money_lbl)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
@@ -544,22 +565,22 @@ func _build_ui() -> void:
 		_tree_area.add_child(btn)
 		_node_buttons[nid] = btn
 
-	# Succinct floating tooltip (warm espresso + brass border, Event-Card stats)
+	# Floating tooltip (warm espresso + brass border, restored description + Event-Card stats + Peso price)
 	_tooltip = PanelContainer.new()
 	_tooltip.visible = false
 	_tooltip.z_index = 40
-	_tooltip.custom_minimum_size = Vector2(235, 0)
+	_tooltip.custom_minimum_size = Vector2(285, 0)
 	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var tst := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.042, 0.96), 8, 12, 10)
+	var tst := UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.042, 0.96), 10, 16, 12)
 	tst.border_color = COL_BRASS
 	tst.set_border_width_all(2)
-	tst.shadow_color = Color(0, 0, 0, 0.50)
-	tst.shadow_size = 10
+	tst.shadow_color = Color(0, 0, 0, 0.55)
+	tst.shadow_size = 12
 	_tooltip.add_theme_stylebox_override("panel", tst)
 	_root.add_child(_tooltip)
 
 	var tv := VBoxContainer.new()
-	tv.add_theme_constant_override("separation", 5)
+	tv.add_theme_constant_override("separation", 7)
 	tv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_tooltip.add_child(tv)
 
@@ -571,35 +592,55 @@ func _build_ui() -> void:
 	_tip_title = Label.new()
 	_tip_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tip_title.add_theme_font_override("font", _bold_font)
-	_tip_title.add_theme_font_size_override("font_size", 16)
+	_tip_title.add_theme_font_size_override("font_size", 19)
 	_tip_title.add_theme_color_override("font_color", COL_CREAM)
 	_tip_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thead.add_child(_tip_title)
 
 	_tip_level = Label.new()
 	_tip_level.add_theme_font_override("font", _bold_font)
-	_tip_level.add_theme_font_size_override("font_size", 13)
+	_tip_level.add_theme_font_size_override("font_size", 14)
 	_tip_level.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
 	_tip_level.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	thead.add_child(_tip_level)
 
-	_tip_stats_box = VBoxContainer.new()
-	_tip_stats_box.add_theme_constant_override("separation", 2)
-	_tip_stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tv.add_child(_tip_stats_box)
-
 	_tip_desc = Label.new()
-	_tip_desc.custom_minimum_size = Vector2(220, 0)
+	_tip_desc.custom_minimum_size = Vector2(255, 0)
 	_tip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tip_desc.add_theme_font_override("font", UIStyle.FONT_INDER)
-	_tip_desc.add_theme_font_size_override("font_size", 12)
-	_tip_desc.add_theme_color_override("font_color", Color(0.82, 0.76, 0.66))
+	_tip_desc.add_theme_font_size_override("font_size", 14)
+	_tip_desc.add_theme_color_override("font_color", Color(0.86, 0.80, 0.70))
 	_tip_desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_desc)
 
+	_tip_stats_box = VBoxContainer.new()
+	_tip_stats_box.add_theme_constant_override("separation", 3)
+	_tip_stats_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tv.add_child(_tip_stats_box)
+
+	_tip_price_row = HBoxContainer.new()
+	_tip_price_row.add_theme_constant_override("separation", 6)
+	_tip_price_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tv.add_child(_tip_price_row)
+
+	var peso_tip := TextureRect.new()
+	peso_tip.texture = PESO_ICON_TEX
+	peso_tip.custom_minimum_size = Vector2(22, 22)
+	peso_tip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	peso_tip.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	peso_tip.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	peso_tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tip_price_row.add_child(peso_tip)
+
+	_tip_price_lbl = Label.new()
+	_tip_price_lbl.add_theme_font_override("font", _bold_font)
+	_tip_price_lbl.add_theme_font_size_override("font_size", 21)
+	_tip_price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tip_price_row.add_child(_tip_price_lbl)
+
 	_tip_status = Label.new()
 	_tip_status.add_theme_font_override("font", _bold_font)
-	_tip_status.add_theme_font_size_override("font_size", 13)
+	_tip_status.add_theme_font_size_override("font_size", 14)
 	_tip_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tv.add_child(_tip_status)
 
