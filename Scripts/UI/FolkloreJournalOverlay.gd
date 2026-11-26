@@ -76,7 +76,6 @@ var _reader_holder: MarginContainer
 var _lightbox_bg: ColorRect
 var _lightbox_tex_rect: TextureRect
 var _lightbox_title_lbl: Label
-var _lightbox_caption_lbl: Label
 
 # External link confirmation modal
 var _link_confirm_bg: ColorRect
@@ -522,18 +521,12 @@ func _build_lightbox() -> void:
 	_lightbox_tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(_lightbox_tex_rect)
 
-	_lightbox_caption_lbl = _make_label("", 16, COL_CREAM, false)
-	_lightbox_caption_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_lightbox_caption_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(_lightbox_caption_lbl)
 
-
-func _open_lightbox(tex: Texture2D, title: String, caption: String) -> void:
+func _open_lightbox(tex: Texture2D, title: String, _caption: String = "") -> void:
 	if tex == null or not is_instance_valid(_lightbox_bg):
 		return
 	_lightbox_tex_rect.texture = tex
 	_lightbox_title_lbl.text = title
-	_lightbox_caption_lbl.text = caption
 	_lightbox_bg.visible = true
 	_lightbox_bg.modulate.a = 0.0
 	_lightbox_tex_rect.scale = Vector2(0.94, 0.94)
