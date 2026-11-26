@@ -289,10 +289,10 @@ func _build_toolbar(parent: VBoxContainer) -> void:
 	_category_btn.pressed.connect(func(): _set_category_open(not _category_popover.visible))
 	bar.add_child(_category_btn)
 
-	# Toggleable Regulars & Quick-Fill Popover Button (closed by default)
+	# Toggleable Today's Visitors & Quick-Fill Popover Button (closed by default)
 	_regulars_btn = Button.new()
-	_regulars_btn.text = "Today's Regulars ▾"
-	_regulars_btn.icon = IC_USERS
+	_regulars_btn.text = "Today's Visitors ▾"
+	_regulars_btn.icon = preload("res://Assets/ui/icons/user-round-exclamation-point.png") if ResourceLoader.exists("res://Assets/ui/icons/user-round-exclamation-point.png") else IC_USERS
 	_regulars_btn.custom_minimum_size = Vector2(0, 48)
 	_regulars_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_regulars_btn.add_theme_font_override("font", UIStyle.FONT_INDER)
@@ -632,7 +632,7 @@ func _build_regulars_popover() -> void:
 	_regulars_popover.add_child(pv)
 
 	var phdr := Label.new()
-	phdr.text = "Expected Regulars Today"
+	phdr.text = "Today's Visitors"
 	phdr.add_theme_font_override("font", _bold_font)
 	phdr.add_theme_font_size_override("font_size", 17)
 	phdr.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
@@ -944,7 +944,26 @@ func _select_category(cat_key: String) -> void:
 	_populate_grid(cat_key)
 
 
+func _is_item_currently_requested_oos(item: ItemData) -> bool:
+	if not item:
+		return false
+	if InventoryManager.get_total_item_stock(item) > 0:
+		return false
+	var spawner := get_tree().get_first_node_in_group("customer_spawner")
+	if not is_instance_valid(spawner) or not ("counter_slots" in spawner):
+		return false
+	for cust in spawner.counter_slots:
+		if not is_instance_valid(cust) or not cust.transaction_context:
+			continue
+		for want in cust.transaction_context.desired_items:
+			if want == item or (want and want.resource_path != "" and want.resource_path == item.resource_path):
+				return true
+	return false
+
+
 func _get_item_priority(item: ItemData) -> int:
+	if _is_item_currently_requested_oos(item):
+		return 5
 	var stock := InventoryManager.get_total_item_stock(item)
 	var is_hot := is_instance_valid(StoreEventManager) and StoreEventManager.is_item_in_demand(item)
 	var is_missed := StoryManager.get_missed_count(item) > 0
@@ -1026,15 +1045,24 @@ func _refresh_regulars_popover_content() -> void:
 	var revealed := StoryManager.get_revealed_expected_regulars()
 	var max_slots := StoryManager.get_revealed_regular_count()
 	var suffix := " ▴" if (_regulars_popover and _regulars_popover.visible) else " ▾"
-	_regulars_btn.text = ("Today's Regulars (%d)%s" % [revealed.size(), suffix]) if revealed.size() > 0 else ("Today's Regulars%s" % suffix)
+	_regulars_btn.text = ("Today's Visitors (%d)%s" % [revealed.size(), suffix]) if revealed.size() > 0 else ("Today's Visitors%s" % suffix)
 
 	if max_slots <= 0:
 		var hint := Label.new()
-		hint.text = "Upgrade the Barangay Radio to reveal\nwhich regulars are visiting today."
+		hint.text = "Upgrade the Barangay Radio to reveal\nwhich visitors are dropping by today."
 		hint.add_theme_font_override("font", UIStyle.FONT_INDER)
 		hint.add_theme_font_size_override("font_size", 15)
 		hint.add_theme_color_override("font_color", COL_CREAM_MUTED)
 		_regulars_list_box.add_child(hint)
+		return
+
+	if revealed.is_empty():
+		var tune_hint := Label.new()
+		tune_hint.text = "Tune in to Papa Ulap on your Counter Radio\nto spot Today's Visitors."
+		tune_hint.add_theme_font_override("font", UIStyle.FONT_INDER)
+		tune_hint.add_theme_font_size_override("font_size", 15)
+		tune_hint.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		_regulars_list_box.add_child(tune_hint)
 		return
 
 	for c in revealed:
@@ -1304,11 +1332,18 @@ func _refresh_single_card(item: ItemData) -> void:
 	var stock := InventoryManager.get_total_item_stock(item)
 	var max_s := InventoryManager.get_max_stock(item)
 	var in_basket := order.get_item_count(item)
+	var is_requested_oos := _is_item_currently_requested_oos(item)
 	var is_deal := StoryManager.is_item_on_sulit_deal(item)
 	var is_hot := is_instance_valid(StoreEventManager) and StoreEventManager.is_item_in_demand(item)
 
-	# Top pill: redundant color + text label for Deals / Demand only (no Out badge)
-	if is_deal:
+	# Top pill: redundant color + text label for Requested (OOS) / Deals / Demand
+	if is_requested_oos:
+		status_pill.visible = true
+		status_lbl.text = "Requested"
+		status_lbl.add_theme_color_override("font_color", COL_CORAL)
+		status_style.border_color = COL_CORAL
+		status_style.bg_color = Color(COL_CORAL.r, COL_CORAL.g, COL_CORAL.b, 0.18)
+	elif is_deal:
 		status_pill.visible = true
 		status_lbl.text = "-20%"
 		status_lbl.add_theme_color_override("font_color", COL_POSITIVE)
@@ -1456,6 +1491,8 @@ func _populate_tooltip(item: ItemData) -> void:
 	var stock := InventoryManager.get_total_item_stock(item)
 	var max_s := InventoryManager.get_max_stock(item)
 	notes.append("Stock: %d/%d" % [stock, max_s] if max_s < 50 else "Stock: %d" % stock)
+	if _is_item_currently_requested_oos(item):
+		notes.append("Requested Now (Out of Stock)")
 	if is_instance_valid(StoreEventManager) and StoreEventManager.is_item_in_demand(item):
 		notes.append("In Demand Today")
 	var fans := StoryManager.get_regulars_who_like_item(item, true)
