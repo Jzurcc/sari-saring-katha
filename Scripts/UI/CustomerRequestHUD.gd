@@ -231,7 +231,6 @@ func _create_row(customer_name: String) -> Dictionary:
 		portrait_rect.position = Vector2(img_offset, img_offset - 3.0)
 		portrait_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		badge_holder.add_child(portrait_rect)
-		_apply_portrait_bob(portrait_rect)
 	else:
 		var name_lbl := Label.new()
 		name_lbl.text = customer_name.left(2).to_upper()
