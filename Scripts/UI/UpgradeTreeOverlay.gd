@@ -43,7 +43,10 @@ var _tree_area: Control
 var _path_drawer: Control
 var _node_buttons: Dictionary = {} # node_id -> Button
 
-var _money_lbl: Label
+var _money_lbl: Label # legacy; the HUD money counter is elevated instead
+var _hud_money: Control
+var _hud_money_parent: Node
+var _hud_money_index: int = 0
 var _pending_lbl: Label
 var _tooltip: PanelContainer
 var _tip_title: Label
@@ -103,6 +106,7 @@ func open_tree(_focus_node_id: String = "") -> void:
 		_tooltip.visible = false
 
 	EventBus.request_sfx.emit("tab_switch")
+	_elevate_hud_money()
 	_refresh_all()
 	call_deferred("_layout_nodes")
 
@@ -115,6 +119,7 @@ func close_tree() -> void:
 	_hovered_id = ""
 	if is_instance_valid(_tooltip):
 		_tooltip.visible = false
+	_restore_hud_money()
 	Input.mouse_mode = _prev_mouse_mode
 	EventBus.request_sfx.emit("drop")
 
@@ -126,6 +131,34 @@ func close_tree() -> void:
 			MarioManager.start_delivery(items_copy)
 	else:
 		_pending_levels.clear()
+
+
+## Moves the main HUD's MoneyContainer into this overlay so the same counter shows on top of the menu.
+func _elevate_hud_money() -> void:
+	if is_instance_valid(_hud_money):
+		return
+	var m := get_tree().current_scene.get_node_or_null("CanvasLayer/LeftHUD/MoneyContainer") as Control
+	if m == null:
+		return
+	_hud_money = m
+	_hud_money_parent = m.get_parent()
+	_hud_money_index = m.get_index()
+	m.reparent(_root, true)
+	if is_instance_valid(_tooltip):
+		_root.move_child(m, _tooltip.get_index())
+
+
+func _restore_hud_money() -> void:
+	if not is_instance_valid(_hud_money):
+		return
+	if is_instance_valid(_hud_money_parent):
+		_hud_money.reparent(_hud_money_parent, true)
+		_hud_money_parent.move_child(_hud_money, mini(_hud_money_index, _hud_money_parent.get_child_count() - 1))
+	_hud_money = null
+
+
+func _exit_tree() -> void:
+	_restore_hud_money()
 
 
 func _get_money() -> float:
@@ -356,6 +389,7 @@ func _show_tooltip_for(node_id: String) -> void:
 		_tip_status.add_theme_color_override("font_color", Color(0.90, 0.74, 0.52))
 
 	_tooltip.visible = true
+	_tooltip.modulate.a = 0.0
 	_tooltip.reset_size()
 	call_deferred("_position_tooltip_beside", node_id)
 
@@ -363,6 +397,13 @@ func _show_tooltip_for(node_id: String) -> void:
 func _position_tooltip_beside(node_id: String) -> void:
 	if not is_instance_valid(_tooltip) or not _tooltip.visible:
 		return
+	# Wrapped labels settle their height a frame later; shrink-wrap to the final height.
+	_tooltip.reset_size()
+	await get_tree().process_frame
+	if not is_instance_valid(_tooltip) or not _tooltip.visible or _hovered_id != node_id:
+		return
+	_tooltip.reset_size()
+	_tooltip.modulate.a = 1.0
 	var btn: Button = _node_buttons.get(node_id)
 	if not is_instance_valid(btn):
 		return
@@ -507,26 +548,9 @@ func _build_ui() -> void:
 	top.add_theme_constant_override("separation", 14)
 	vbox.add_child(top)
 
-	var money_row := HBoxContainer.new()
-	money_row.add_theme_constant_override("separation", 8)
-	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	top.add_child(money_row)
-
-	var peso_hdr := TextureRect.new()
-	peso_hdr.texture = PESO_ICON_TEX
-	peso_hdr.custom_minimum_size = Vector2(28, 28)
-	peso_hdr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	peso_hdr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	peso_hdr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	money_row.add_child(peso_hdr)
-
-	_money_lbl = Label.new()
-	_money_lbl.add_theme_font_override("font", _bold_font)
-	_money_lbl.add_theme_font_size_override("font_size", 26)
-	_money_lbl.add_theme_color_override("font_color", Color.WHITE)
-	_money_lbl.add_theme_color_override("font_outline_color", Color(0.14, 0.09, 0.05, 0.85))
-	_money_lbl.add_theme_constant_override("outline_size", 4)
-	money_row.add_child(_money_lbl)
+	# The main HUD money counter is elevated into this overlay while open (see _elevate_hud_money);
+	# reserve its height so the tree area starts below it.
+	top.custom_minimum_size = Vector2(0, 58)
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -652,6 +676,8 @@ func _build_ui() -> void:
 	_tip_status.add_theme_font_override("font", _bold_font)
 	_tip_status.add_theme_font_size_override("font_size", 15)
 	_tip_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tip_status.custom_minimum_size = Vector2(340, 0)
+	_tip_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tv.add_child(_tip_status)
 
 
