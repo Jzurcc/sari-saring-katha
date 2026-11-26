@@ -262,9 +262,9 @@ func _ready() -> void:
 	_tolerance_col.anchor_top = 0.0
 	_tolerance_col.anchor_bottom = 1.0
 	_tolerance_col.offset_left = 220.0
-	_tolerance_col.offset_right = 576.0
-	_tolerance_col.offset_top = 12.0
-	_tolerance_col.offset_bottom = -12.0
+	_tolerance_col.offset_right = 510.0
+	_tolerance_col.offset_top = 10.0
+	_tolerance_col.offset_bottom = -10.0
 	_tolerance_col.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tolerance_col.add_theme_constant_override("separation", 10)
 	_tolerance_col.hide()
@@ -304,37 +304,24 @@ func _make_badge_pill(bg_col: Color, border_col: Color) -> PanelContainer:
 func _add_effect_tooltip(source_name: String, stats: Array) -> void:
 	if stats.is_empty():
 		return
-	var has_pos := false
-	var has_neg := false
-	for st in stats:
-		var t := str(st.get("tone", "pos"))
-		if t == "pos":
-			has_pos = true
-		elif t == "neg":
-			has_neg = true
-	var border_col := COL_GOLD
-	if has_pos and not has_neg:
-		border_col = COL_DISCOUNT
-	elif has_neg and not has_pos:
-		border_col = COL_DANGER
 
 	var card := PanelContainer.new()
-	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO, 10, 16, 12)
-	st_box.border_color = Color(border_col.r, border_col.g, border_col.b, 0.85)
+	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO, 12, 18, 14)
+	st_box.border_color = COL_GOLD
 	st_box.set_border_width_all(2)
 	st_box.shadow_size = 6
 	st_box.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
 	card.add_theme_stylebox_override("panel", st_box)
 
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 6)
+	vb.add_theme_constant_override("separation", 7)
 	card.add_child(vb)
 
 	var title_lbl := Label.new()
 	title_lbl.text = source_name
 	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	title_lbl.add_theme_font_override("font", _bold_font)
-	title_lbl.add_theme_font_size_override("font_size", 21)
+	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", COL_GOLD_SOFT)
 	vb.add_child(title_lbl)
 
@@ -347,14 +334,14 @@ func _add_effect_tooltip(source_name: String, stats: Array) -> void:
 		lbl.text = "▸ " + str(st.get("label", ""))
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl.add_theme_font_override("font", INDER_FONT)
-		lbl.add_theme_font_size_override("font_size", 19)
+		lbl.add_theme_font_size_override("font_size", 22)
 		lbl.add_theme_color_override("font_color", COL_CREAM)
 		row.add_child(lbl)
 
 		var val := Label.new()
 		val.text = str(st.get("value", ""))
 		val.add_theme_font_override("font", _bold_font)
-		val.add_theme_font_size_override("font_size", 20)
+		val.add_theme_font_size_override("font_size", 23)
 		var tone := str(st.get("tone", "pos"))
 		var val_col := COL_DISCOUNT if tone == "pos" else (COL_DANGER if tone == "neg" else COL_GOLD_SOFT)
 		val.add_theme_color_override("font_color", val_col)
@@ -461,9 +448,8 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 			total_tol -= 1
 			count += 1
 
-	# 3. Active waiting counter customers with Reputation tolerance bonus for this item
+	# 3. Active waiting counter customers who are currently requesting items (have an active item preview)
 	var best_cust_bonus := 0
-	var shown_fav_paths: Dictionary = {}
 	if is_instance_valid(CharacterProgressionManager):
 		var seen_paths: Dictionary = {}
 		for spawner in get_tree().get_nodes_in_group("customer_spawner"):
@@ -472,36 +458,21 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 			for cust in spawner.counter_slots:
 				if not is_instance_valid(cust) or cust.customer_data == null or cust._is_resolving:
 					continue
+				if cust.transaction_context == null or cust.transaction_context.desired_items.is_empty():
+					continue
 				var cpath: String = cust.customer_data.resource_path
 				if seen_paths.has(cpath):
 					continue
 				seen_paths[cpath] = true
 				var bonus := CharacterProgressionManager.get_reputation_tolerance_bonus(cust.customer_data, item_data)
-				if bonus > 0:
+				var is_fav := item_data.category != "" and CharacterProgressionManager.is_favorite_discovered(cpath, item_data.category)
+				if bonus > 0 or is_fav:
 					var cname: String = cust.customer_data.character_name if cust.customer_data.character_name != "" else cust.customer_data.get_clean_id().capitalize()
-					var is_fav := item_data.category != "" and CharacterProgressionManager.is_favorite_discovered(cpath, item_data.category)
 					var card_title := ("%s's Favorite" % cname) if is_fav else cname
-					_add_effect_tooltip(card_title, [{"label": "Price Tolerance:", "value": "%+d" % bonus, "tone": "pos"}])
-					shown_fav_paths[cpath] = true
+					var disp_bonus := maxi(1, bonus) if is_fav else bonus
+					_add_effect_tooltip(card_title, [{"label": "Price Tolerance:", "value": "%+d" % disp_bonus, "tone": "pos"}])
 					best_cust_bonus = maxi(best_cust_bonus, bonus)
 					count += 1
-
-		# 4. Discovered customer favorite categories for this item
-		if item_data.category != "":
-			for cpath in CharacterProgressionManager.discovered_favorites.keys():
-				if shown_fav_paths.has(cpath):
-					continue
-				if not CharacterProgressionManager.is_favorite_discovered(str(cpath), item_data.category):
-					continue
-				var cdata: CustomerData = null
-				if is_instance_valid(StoryManager) and StoryManager.has_method("_get_character_data"):
-					cdata = StoryManager._get_character_data(str(cpath))
-				if cdata == null and ResourceLoader.exists(str(cpath)):
-					cdata = load(str(cpath)) as CustomerData
-				var cname := cdata.character_name if (cdata and cdata.character_name != "") else str(cpath).get_file().get_basename()
-				_add_effect_tooltip("%s's Favorite" % cname, [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
-				shown_fav_paths[cpath] = true
-				count += 1
 
 	_tolerance_col.visible = count > 0
 	return total_tol + best_cust_bonus
