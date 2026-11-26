@@ -771,8 +771,8 @@ func _build_ui() -> void:
 	_reroll_btn = Button.new()
 	_reroll_btn.anchor_left = 0.5
 	_reroll_btn.anchor_right = 0.5
-	_reroll_btn.anchor_top = 0.915
-	_reroll_btn.anchor_bottom = 0.915
+	_reroll_btn.anchor_top = 0.855
+	_reroll_btn.anchor_bottom = 0.855
 	_reroll_btn.offset_left = -46.0
 	_reroll_btn.offset_right = 46.0
 	_reroll_btn.offset_top = -26.0
