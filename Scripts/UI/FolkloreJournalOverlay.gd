@@ -485,12 +485,13 @@ func _build_lightbox() -> void:
 	hdr.add_child(_lightbox_title_lbl)
 
 	var close_lb := Button.new()
-	close_lb.text = "✕ Close"
-	close_lb.custom_minimum_size = Vector2(96, 48)
+	close_lb.text = "✕"
+	close_lb.tooltip_text = "Close (Esc)"
+	close_lb.custom_minimum_size = Vector2(48, 48)
 	close_lb.focus_mode = Control.FOCUS_NONE
 	close_lb.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	close_lb.add_theme_font_override("font", _bold_font)
-	close_lb.add_theme_font_size_override("font_size", 16)
+	close_lb.add_theme_font_size_override("font_size", 20)
 	_apply_button_theme(close_lb, false, true)
 	close_lb.pressed.connect(_close_lightbox)
 	hdr.add_child(close_lb)
@@ -516,6 +517,12 @@ func _open_lightbox(tex: Texture2D, title: String, caption: String) -> void:
 	_lightbox_title_lbl.text = title
 	_lightbox_caption_lbl.text = caption
 	_lightbox_bg.visible = true
+	_lightbox_bg.modulate.a = 0.0
+	_lightbox_tex_rect.scale = Vector2(0.94, 0.94)
+	_lightbox_tex_rect.pivot_offset = _lightbox_tex_rect.size * 0.5
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_lightbox_bg, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_lightbox_tex_rect, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	EventBus.request_sfx.emit("interact")
 
 
@@ -916,13 +923,13 @@ func _rebuild_reader() -> void:
 		var art_plate := _build_media_plate(rank_data, true)
 		art_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		art_plate.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		art_plate.size_flags_stretch_ratio = 0.36
+		art_plate.size_flags_stretch_ratio = 0.30
 		split.add_child(art_plate)
 
 		var text_scroll := ScrollContainer.new()
 		text_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		text_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		text_scroll.size_flags_stretch_ratio = 0.64
+		text_scroll.size_flags_stretch_ratio = 0.70
 		text_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		_style_scrollbar(text_scroll)
 		split.add_child(text_scroll)
@@ -1079,12 +1086,15 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 
 func _build_media_plate(rank_data: Dictionary, is_portrait: bool) -> Control:
 	var frame := PanelContainer.new()
-	frame.add_theme_stylebox_override("panel", _make_box_style(Color(0.07, 0.06, 0.05, 0.96), COL_GOLD, 12, 12, 12))
+	var normal_st := _make_box_style(Color(0.07, 0.06, 0.05, 0.96), COL_GOLD, 12, 10, 10)
+	var hover_st := _make_box_style(Color(0.10, 0.085, 0.07, 0.98), COL_GOLD_BRIGHT, 12, 10, 10)
+	hover_st.set_border_width_all(2)
+	frame.add_theme_stylebox_override("panel", normal_st)
 
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.add_theme_constant_override("separation", 6)
 	frame.add_child(vbox)
 
 	var tex: Texture2D = rank_data["tex"]
@@ -1092,41 +1102,37 @@ func _build_media_plate(rank_data: Dictionary, is_portrait: bool) -> Control:
 	var cap_str := str(rank_data["media_caption"])
 
 	if tex != null:
-		var art_holder := Control.new()
-		art_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var art_btn := Button.new()
+		art_btn.flat = true
+		art_btn.focus_mode = Control.FOCUS_NONE
+		art_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		art_btn.tooltip_text = "Click to zoom"
+		art_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if is_portrait:
-			art_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			art_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		else:
-			# Responsive landscape viewport height (~28% of screen height)
 			var vp_h := get_viewport().get_visible_rect().size.y
-			art_holder.custom_minimum_size = Vector2(0, clampf(vp_h * 0.28, 160.0, 320.0))
-		vbox.add_child(art_holder)
+			art_btn.custom_minimum_size = Vector2(0, clampf(vp_h * 0.24, 150.0, 260.0))
+		var empty_st := StyleBoxEmpty.new()
+		art_btn.add_theme_stylebox_override("normal", empty_st)
+		art_btn.add_theme_stylebox_override("hover", empty_st)
+		art_btn.add_theme_stylebox_override("pressed", empty_st)
+		art_btn.mouse_entered.connect(func(): frame.add_theme_stylebox_override("panel", hover_st))
+		art_btn.mouse_exited.connect(func(): frame.add_theme_stylebox_override("panel", normal_st))
+		art_btn.pressed.connect(func(): _open_lightbox(tex, title_str, cap_str))
+		vbox.add_child(art_btn)
 
 		var img := TextureRect.new()
 		img.set_anchors_preset(Control.PRESET_FULL_RECT)
 		img.texture = tex
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		art_holder.add_child(img)
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art_btn.add_child(img)
 
-		var zoom_btn := Button.new()
-		zoom_btn.text = "🔍 Inspect"
-		zoom_btn.custom_minimum_size = Vector2(96, 48)
-		zoom_btn.anchor_left = 1.0
-		zoom_btn.anchor_right = 1.0
-		zoom_btn.anchor_top = 1.0
-		zoom_btn.anchor_bottom = 1.0
-		zoom_btn.offset_left = -104
-		zoom_btn.offset_top = -52
-		zoom_btn.offset_right = -4
-		zoom_btn.offset_bottom = -4
-		zoom_btn.focus_mode = Control.FOCUS_NONE
-		zoom_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		zoom_btn.add_theme_font_override("font", _bold_font)
-		zoom_btn.add_theme_font_size_override("font_size", 15)
-		_apply_button_theme(zoom_btn, false, false)
-		zoom_btn.pressed.connect(func(): _open_lightbox(tex, title_str, cap_str))
-		art_holder.add_child(zoom_btn)
+		var hint := _make_label("Click to zoom", 14, COL_MUTED, false)
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(hint)
 	else:
 		# Styled Portrait or Landscape placeholder plate when artwork file isn't added yet
 		var ph := PanelContainer.new()
@@ -1135,7 +1141,7 @@ func _build_media_plate(rank_data: Dictionary, is_portrait: bool) -> Control:
 			ph.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		else:
 			var vp_h := get_viewport().get_visible_rect().size.y
-			ph.custom_minimum_size = Vector2(0, clampf(vp_h * 0.24, 140.0, 260.0))
+			ph.custom_minimum_size = Vector2(0, clampf(vp_h * 0.22, 140.0, 240.0))
 		ph.add_theme_stylebox_override("panel", _make_box_style(Color(0.11, 0.095, 0.08, 0.90), COL_BORDER, 8, 16, 16))
 		vbox.add_child(ph)
 
@@ -1153,15 +1159,6 @@ func _build_media_plate(rank_data: Dictionary, is_portrait: bool) -> Control:
 		l_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		pv.add_child(l_sub)
-
-	var orient_badge := _make_label(
-		"Portrait Format" if is_portrait else "Landscape Format",
-		14,
-		COL_MUTED,
-		false
-	)
-	orient_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	vbox.add_child(orient_badge)
 
 	return frame
 
