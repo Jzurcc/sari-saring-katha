@@ -190,20 +190,3 @@ func _short_key_name(raw: String) -> String:
 func _refresh_visibility_and_badges() -> void:
 	if is_instance_valid(_journal_dot) and is_instance_valid(CharacterProgressionManager):
 		_journal_dot.visible = CharacterProgressionManager.has_any_unread_journal()
-
-	var hide_dock := false
-	if is_instance_valid(Dialogic) and Dialogic.current_timeline != null:
-		hide_dock = true
-	elif not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
-		hide_dock = true
-	elif not get_tree().get_nodes_in_group("day_summary_overlay_active").is_empty():
-		hide_dock = true
-	else:
-		for grp in ["folklore_journal_overlay", "upgrade_tree_overlay", "events_overlay", "price_ledger_overlay"]:
-			for ov in get_tree().get_nodes_in_group(grp):
-				if ov.get("is_open"):
-					hide_dock = true
-					break
-			if hide_dock:
-				break
-	_dock.visible = not hide_dock
