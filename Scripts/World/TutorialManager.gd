@@ -44,6 +44,14 @@ func can_accept_guided_item() -> bool:
 func is_waiting_for_phone_call() -> bool:
 	return is_tutorial_task_active and current_tutorial_task_id == "wait_for_tutorial_call"
 
+func on_tutorial_phone_opened() -> void:
+	if is_waiting_for_phone_call():
+		EventBus.helper_prompt_requested.emit("Dial MARIO + press top-right button (or press *).", true)
+
+func on_tutorial_phone_closed() -> void:
+	if is_waiting_for_phone_call():
+		EventBus.helper_prompt_requested.emit("Click the Nokia phone behind you.", true)
+
 ## Returns true if wrong-item feedback should be suppressed because a non-sale guided task is active.
 func should_suppress_wrong_item_feedback(ctx: TransactionContext) -> bool:
 	if ctx == null or not ctx.is_guided_tutorial:
@@ -136,7 +144,7 @@ func handle_dialogic_signal(argument: String) -> bool:
 		var layout = Dialogic.Styles.get_layout_node()
 		if layout:
 			layout.hide()
-		EventBus.helper_prompt_requested.emit("Click the Nokia phone behind you, dial MARIO + top-right button (or press *).", true)
+		EventBus.helper_prompt_requested.emit("Click the Nokia phone behind you.", true)
 		return true
 	elif argument == "wait_look_at_fridge":
 		_start_tutorial_task_timed(3.0, "Look at the Refrigerator.")

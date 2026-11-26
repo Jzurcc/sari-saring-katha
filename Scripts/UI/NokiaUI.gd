@@ -54,6 +54,10 @@ func _ready() -> void:
 	# Recursively find the Label and buttons anywhere in the scene!
 	_scan_and_connect_nodes(self)
 	
+	var gm := get_tree().get_first_node_in_group("game_manager")
+	if gm and gm.tutorial and gm.tutorial.has_method("on_tutorial_phone_opened"):
+		gm.tutorial.on_tutorial_phone_opened()
+
 	_animate_entrance()
 
 
@@ -302,5 +306,8 @@ func _on_close_pressed() -> void:
 		MarioManager.cancel_restock()
 		
 	_reset_t9_state()
+	var gm := get_tree().get_first_node_in_group("game_manager")
+	if gm and gm.tutorial and gm.tutorial.has_method("on_tutorial_phone_closed"):
+		gm.tutorial.on_tutorial_phone_closed()
 	nokia_closed.emit()
 	_animate_exit_and_free()
