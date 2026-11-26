@@ -12,21 +12,24 @@ const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
 const TEX_MOSQUITO_DEAD := "res://Assets/ui/minigames/mosquito/mosquito_dead.png"
 const TEX_FIREFLY := "res://Assets/ui/minigames/mosquito/firefly.png"
 const TEX_FIREFLY_DEAD := "res://Assets/ui/minigames/mosquito/firefly_dead.png"
+const SFX_SWAT_PATH := "res://Audio/SFX/swat.wav"
 
 const MOSQUITO_SIZE := Vector2(128.0, 128.0)
 const FIREFLY_SIZE := Vector2(122.0, 122.0)
+const MOSQUITO_HIT_RADIUS := 94.0
+const FIREFLY_HIT_RADIUS := 50.0
 const TARGET_SCORE := 12
 const MAX_LIVES := 3
 const ROUND_TIME := 25.0
 
 const VIGNETTE_SHADER_CODE := """
 shader_type canvas_item;
-uniform vec4 tint : source_color = vec4(0.02, 0.018, 0.028, 0.90);
+uniform vec4 tint : source_color = vec4(0.02, 0.018, 0.028, 0.94);
 void fragment() {
 	vec2 d = UV - vec2(0.5);
 	float dist = length(d * vec2(1.12, 1.0));
-	float vig = smoothstep(0.14, 0.74, dist);
-	COLOR = vec4(tint.rgb, mix(0.40, tint.a, vig));
+	float vig = smoothstep(0.12, 0.72, dist);
+	COLOR = vec4(tint.rgb, mix(0.48, tint.a, vig));
 }
 """
 
@@ -46,6 +49,7 @@ var _tex_mosq: Texture2D
 var _tex_mosq_dead: Texture2D
 var _tex_firefly: Texture2D
 var _tex_firefly_dead: Texture2D
+var _sfx_swat: AudioStream
 
 var _root: Control
 var _arena: Control
@@ -89,8 +93,34 @@ func _ready() -> void:
 	_tex_mosq_dead = _load_tex(TEX_MOSQUITO_DEAD)
 	_tex_firefly = _load_tex(TEX_FIREFLY)
 	_tex_firefly_dead = _load_tex(TEX_FIREFLY_DEAD)
+	_sfx_swat = _load_swat_sfx()
 	_build_ui()
 	visible = false
+
+
+static func _load_swat_sfx() -> AudioStream:
+	if ResourceLoader.exists(SFX_SWAT_PATH):
+		var res := load(SFX_SWAT_PATH)
+		if res is AudioStream:
+			return res
+	if FileAccess.file_exists(SFX_SWAT_PATH):
+		var wav := AudioStreamWAV.load_from_file(ProjectSettings.globalize_path(SFX_SWAT_PATH))
+		if wav:
+			return wav
+	return null
+
+
+func _play_swat_sfx(pitch: float = 1.0, vol_db: float = 0.0) -> void:
+	if _sfx_swat == null:
+		return
+	var player := AudioStreamPlayer.new()
+	player.stream = _sfx_swat
+	player.pitch_scale = pitch
+	player.volume_db = vol_db
+	player.bus = "SFX" if AudioServer.get_bus_index("SFX") >= 0 else "Master"
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 func open_minigame(_config: Dictionary = {}) -> void:
@@ -294,8 +324,7 @@ func _spawn_bug(is_firefly: bool) -> void:
 	tr.custom_minimum_size = sz
 	tr.size = sz
 	tr.pivot_offset = sz * 0.5
-	tr.mouse_filter = Control.MOUSE_FILTER_STOP
-	tr.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# Fly in from left or right sides of the screen!
 	var from_left := randf() < 0.5
@@ -341,10 +370,38 @@ func _spawn_bug(is_firefly: bool) -> void:
 	}
 	_bugs.append(bug_dict)
 
-	tr.gui_input.connect(func(ev: InputEvent):
-		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-			_on_bug_swatted(bug_dict)
-	)
+
+func _handle_swat_tap(tap_pos: Vector2) -> void:
+	if not _active:
+		return
+	var best_mosq: Dictionary = {}
+	var best_mosq_dist := MOSQUITO_HIT_RADIUS
+	var best_ff: Dictionary = {}
+	var best_ff_dist := FIREFLY_HIT_RADIUS
+
+	for b in _bugs:
+		if bool(b["dead"]):
+			continue
+		var d := tap_pos.distance_to(b["pos"] as Vector2)
+		if bool(b["is_firefly"]):
+			if d <= best_ff_dist:
+				best_ff_dist = d
+				best_ff = b
+		else:
+			if d <= best_mosq_dist:
+				best_mosq_dist = d
+				best_mosq = b
+
+	# Prioritize mosquitoes over fireflies when both are near the tap
+	if not best_mosq.is_empty():
+		_play_swat_sfx(randf_range(0.95, 1.12), 0.5)
+		_on_bug_swatted(best_mosq)
+	elif not best_ff.is_empty():
+		_play_swat_sfx(randf_range(0.82, 0.92), -1.0)
+		_on_bug_swatted(best_ff)
+	else:
+		_play_swat_sfx(randf_range(1.06, 1.22), -5.0)
+		_ripples.append({"pos": tap_pos, "t": 0.0, "color": Color(0.86, 0.84, 0.78, 0.38)})
 
 
 func _on_bug_swatted(bug: Dictionary) -> void:
@@ -458,29 +515,33 @@ func _refresh_timer_label() -> void:
 
 
 func _build_ui() -> void:
-	_root = Control.new()
-	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_root)
-
-	# Fullscreen Vignette Backdrop
+	# Fullscreen Vignette Backdrop directly on CanvasLayer with overscan so screen shake never exposes unfaded edges
 	var vig := ColorRect.new()
 	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vig.offset_left = -36
+	vig.offset_top = -36
+	vig.offset_right = 36
+	vig.offset_bottom = 36
 	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sh := Shader.new()
 	sh.code = VIGNETTE_SHADER_CODE
 	var mat := ShaderMaterial.new()
 	mat.shader = sh
 	vig.material = mat
-	_root.add_child(vig)
+	add_child(vig)
 
-	# Fullscreen bug arena (empty-air clicks play a crisp whoosh + faint swat ring)
+	_root = Control.new()
+	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_root)
+
+	# Fullscreen bug arena (generous tap hitbox handles both bug swats & air misses)
 	_arena = Control.new()
 	_arena.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_arena.clip_contents = true
+	_arena.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_arena.gui_input.connect(func(ev: InputEvent):
 		if _active and ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-			_ripples.append({"pos": (ev as InputEventMouseButton).position, "t": 0.0, "color": Color(0.86, 0.84, 0.78, 0.38)})
-			Juice.play_sfx("tab_switch", 1.48, -8.0)
+			_handle_swat_tap((ev as InputEventMouseButton).position)
 	)
 	_root.add_child(_arena)
 

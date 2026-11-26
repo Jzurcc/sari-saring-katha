@@ -399,6 +399,21 @@ func _finish_round(won: bool, title: String, sub: String) -> void:
 
 
 func _build_ui() -> void:
+	# Fullscreen Vignette Backdrop directly on CanvasLayer with overscan so screen shake never exposes unfaded edges
+	var vig := ColorRect.new()
+	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vig.offset_left = -36
+	vig.offset_top = -36
+	vig.offset_right = 36
+	vig.offset_bottom = 36
+	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh := Shader.new()
+	sh.code = VIGNETTE_SHADER_CODE
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	vig.material = mat
+	add_child(vig)
+
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -407,17 +422,6 @@ func _build_ui() -> void:
 			_attempt_kick()
 	)
 	add_child(_root)
-
-	# Fullscreen Vignette Backdrop
-	var vig := ColorRect.new()
-	vig.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sh := Shader.new()
-	sh.code = VIGNETTE_SHADER_CODE
-	var mat := ShaderMaterial.new()
-	mat.shader = sh
-	vig.material = mat
-	_root.add_child(vig)
 
 	# Fullscreen custom draw layer (perimeter guides + kick zone + shadow)
 	_field_draw = Control.new()
