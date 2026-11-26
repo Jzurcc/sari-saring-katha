@@ -417,6 +417,16 @@ func _on_node_pressed(node_id: String) -> void:
 	_refresh_all()
 
 
+func _sample_cubic_bezier(p0: Vector2, c1: Vector2, c2: Vector2, p3: Vector2, steps: int = 22) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	pts.resize(steps + 1)
+	for i in range(steps + 1):
+		var t := float(i) / float(steps)
+		var u := 1.0 - t
+		pts[i] = (u * u * u) * p0 + (3.0 * u * u * t) * c1 + (3.0 * u * t * t) * c2 + (t * t * t) * p3
+	return pts
+
+
 func _draw_paths() -> void:
 	if not is_instance_valid(_path_drawer):
 		return
@@ -439,13 +449,14 @@ func _draw_paths() -> void:
 			if is_equal_approx(parent_pt.y, child_pt.y) or is_equal_approx(parent_pt.x, child_pt.x):
 				pts = PackedVector2Array([parent_pt, child_pt])
 			else:
-				var mid_y := lerpf(parent_pt.y, child_pt.y, 0.5)
-				pts = PackedVector2Array([
-					parent_pt,
-					Vector2(parent_pt.x, mid_y),
-					Vector2(child_pt.x, mid_y),
-					child_pt,
-				])
+				var dx := absf(child_pt.x - parent_pt.x)
+				var dy := child_pt.y - parent_pt.y
+				# Smooth cubic Bézier S-curve (vertical tangents at both ends; gentle arc for wide spans)
+				var lift := clampf(absf(dy) * 0.55 + dx * 0.08, 42.0, 220.0)
+				var dir_y := -1.0 if dy < 0.0 else 1.0
+				var c1 := Vector2(parent_pt.x, parent_pt.y + dir_y * lift)
+				var c2 := Vector2(child_pt.x, child_pt.y - dir_y * lift)
+				pts = _sample_cubic_bezier(parent_pt, c1, c2, child_pt, 22)
 
 			var fill_col := COL_PATH_LOCKED
 			if parent_unlocked and child_unlocked:
