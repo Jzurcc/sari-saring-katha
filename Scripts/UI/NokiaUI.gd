@@ -254,6 +254,21 @@ func _trigger_store_menu() -> void:
 	MarioManager.call_ended.connect(_on_mario_call_finished, CONNECT_ONE_SHOT)
 	MarioManager.initiate_call(phone_anchor, bypass_cooldown)
 
+func _fade_out_nokia() -> void:
+	var nokia := get_node_or_null("Nokia") as Control
+	if not nokia:
+		return
+	nokia.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in nokia.find_children("*", "Control", true, false):
+		(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var tween := create_tween()
+	tween.tween_property(nokia, "modulate:a", 0.0, 0.18).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(func():
+		if is_instance_valid(nokia):
+			nokia.visible = false
+	)
+
+
 func _on_mario_call_finished(success: bool, action: String = "restock") -> void:
 	print("[NokiaUI] Mario call finished. Success: ", success, " Action: ", action)
 	_is_calling = false
@@ -265,16 +280,11 @@ func _on_mario_call_finished(success: bool, action: String = "restock") -> void:
 			return
 		var target_menu: Control = store_menu if store_menu else get_node_or_null("RestockMenu")
 		if target_menu:
+			_fade_out_nokia()
+			target_menu.move_to_front()
 			target_menu.visible = true
 			if target_menu.has_method("open_menu"):
 				target_menu.open_menu()
-			
-			# Set focus to a button in the menu to prevent keyboard/Space leak to the Nokia background
-			var default_btn = target_menu.get_node_or_null("%AllBtn")
-			if default_btn:
-				default_btn.grab_focus()
-				
-			_move_to_side()
 	else:
 		# CallRest, Busy, or Nevermind — close the phone cleanly after Mario finishes talking
 		_on_close_pressed()
