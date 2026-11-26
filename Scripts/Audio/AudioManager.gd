@@ -81,6 +81,8 @@ var sfx_fridge_hum = preload("res://Audio/SFX/refrigerator.mp3")
 var _time_of_day_node: Node = null
 var _active_playlist: Array = []
 var _playlist_index: int = 0
+var _phase_bags: Dictionary = {} # BGMPhase -> Array of remaining unplayed AudioStreams
+var _last_bgm_stream: AudioStream = null
 var _last_emitted_title: String = ""
 var bgm_transition_tween: Tween
 var crossfade_tween: Tween
@@ -221,40 +223,57 @@ func _update_audio_for_time(time: float) -> void:
 	elif not is_night and ambience_night.playing:
 		ambience_night.stop()
 
-func _change_bgm_phase(phase: BGMPhase) -> void:
-	current_bgm_phase = phase
-
-	var pool: Array = []
+func _get_phase_pool(phase: BGMPhase) -> Array:
 	match phase:
 		BGMPhase.NONE:
 			var scene = get_tree().current_scene
 			if scene and scene.name == "MainMenu":
-				pool = [audio_brunch, audio_autumn_wind]
-			else:
-				pool = [audio_autumn_wind]
+				return [audio_brunch, audio_autumn_wind]
+			return [audio_autumn_wind]
 		BGMPhase.MORNING:
-			pool = [audio_boring_day, audio_brunch_ii, audio_kids_room, audio_weekend_plans, audio_nope, audio_its_spring]
+			return [audio_boring_day, audio_brunch_ii, audio_kids_room, audio_weekend_plans, audio_nope, audio_its_spring]
 		BGMPhase.AFTERNOON:
-			pool = [audio_fantastic_idea, audio_not_me, audio_hermit_crab, audio_silly_day, audio_ready_to_eat, audio_happy_hop]
+			return [audio_fantastic_idea, audio_not_me, audio_hermit_crab, audio_silly_day, audio_ready_to_eat, audio_happy_hop]
 		BGMPhase.DUSK:
-			pool = [audio_sleepy, audio_naptime, audio_little_steps, audio_dark_humor, audio_halo_price_sole]
+			return [audio_sleepy, audio_naptime, audio_little_steps, audio_dark_humor, audio_halo_price_sole]
+	return []
 
+## Draws the next track from a persistent per-phase shuffle bag so every track in a phase
+## is heard before any track repeats (even across consecutive days).
+func _draw_next_track_for_phase(phase: BGMPhase) -> AudioStream:
+	var pool := _get_phase_pool(phase)
 	if pool.is_empty():
+		return null
+	if phase == BGMPhase.NONE:
+		if _active_playlist != pool:
+			_active_playlist = pool
+			_playlist_index = 0
+		var s: AudioStream = _active_playlist[_playlist_index % _active_playlist.size()]
+		_playlist_index = (_playlist_index + 1) % _active_playlist.size()
+		return s
+
+	var bag: Array = _phase_bags.get(phase, [])
+	if bag.is_empty():
+		bag = pool.duplicate()
+		bag.shuffle()
+		# Avoid repeating the exact last played song right across a bag refill
+		if bag.size() > 1 and bag[bag.size() - 1] == _last_bgm_stream:
+			var swap_idx := randi() % (bag.size() - 1)
+			var tmp = bag[bag.size() - 1]
+			bag[bag.size() - 1] = bag[swap_idx]
+			bag[swap_idx] = tmp
+	var next_stream: AudioStream = bag.pop_back()
+	_phase_bags[phase] = bag
+	_last_bgm_stream = next_stream
+	return next_stream
+
+func _change_bgm_phase(phase: BGMPhase) -> void:
+	current_bgm_phase = phase
+
+	var next_stream := _draw_next_track_for_phase(phase)
+	if next_stream == null:
 		return
 
-	if phase == BGMPhase.NONE:
-		_active_playlist = pool
-	else:
-		var original_first = pool[0]
-		_active_playlist = pool.duplicate()
-		_active_playlist.shuffle()
-		if _active_playlist[0] == original_first and _active_playlist.size() > 1:
-			var swap_idx = (randi() % (_active_playlist.size() - 1)) + 1
-			var tmp = _active_playlist[0]
-			_active_playlist[0] = _active_playlist[swap_idx]
-			_active_playlist[swap_idx] = tmp
-
-	_playlist_index = 0
 	_update_fridge_hum(phase)
 
 	if bgm_transition_tween and bgm_transition_tween.is_valid():
@@ -268,7 +287,7 @@ func _change_bgm_phase(phase: BGMPhase) -> void:
 		bgm_transition_tween.tween_callback(func(): bgm_player.stop())
 
 	bgm_transition_tween.tween_callback(func():
-		bgm_player.stream = _active_playlist[_playlist_index]
+		bgm_player.stream = next_stream
 		bgm_player.volume_db = -80.0
 		bgm_player.play()
 		if not override_player.playing:
@@ -287,24 +306,11 @@ func _update_fridge_hum(phase: BGMPhase) -> void:
 		fridge_hum_player.stop()
 
 func _on_bgm_finished() -> void:
-	if _active_playlist.is_empty():
+	var next_stream := _draw_next_track_for_phase(current_bgm_phase)
+	if next_stream == null:
 		return
-	var last_song = _active_playlist[_playlist_index]
-	_playlist_index += 1
 
-	if _playlist_index >= _active_playlist.size():
-		if current_bgm_phase == BGMPhase.NONE:
-			_playlist_index = 0
-		else:
-			_active_playlist.shuffle()
-			if _active_playlist.size() > 1 and _active_playlist[0] == last_song:
-				var swap_idx = (randi() % (_active_playlist.size() - 1)) + 1
-				var tmp = _active_playlist[0]
-				_active_playlist[0] = _active_playlist[swap_idx]
-				_active_playlist[swap_idx] = tmp
-			_playlist_index = 0
-
-	bgm_player.stream = _active_playlist[_playlist_index]
+	bgm_player.stream = next_stream
 	bgm_player.volume_db = -80.0 if override_player.playing else base_volume_db
 	bgm_player.play()
 	if not override_player.playing:
