@@ -758,15 +758,11 @@ func _make_corner_flip_button(glyph: String, tip: String) -> Button:
 	btn.tooltip_text = tip
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	var norm := UIStyle.create_flat_stylebox(Color(0.95, 0.88, 0.74, 0.0), 10, 0, 0)
-	var hov := UIStyle.create_flat_stylebox(Color(0.85, 0.72, 0.50, 0.34), 10, 0, 0)
-	hov.border_color = Color(0.45, 0.28, 0.14, 0.55)
-	hov.set_border_width_all(1)
-	var dis := UIStyle.create_flat_stylebox(Color(0, 0, 0, 0), 10, 0, 0)
-	btn.add_theme_stylebox_override("normal", norm)
-	btn.add_theme_stylebox_override("hover", hov)
-	btn.add_theme_stylebox_override("pressed", hov)
-	btn.add_theme_stylebox_override("disabled", dis)
+	var empty := StyleBoxEmpty.new()
+	btn.add_theme_stylebox_override("normal", empty)
+	btn.add_theme_stylebox_override("hover", empty)
+	btn.add_theme_stylebox_override("pressed", empty)
+	btn.add_theme_stylebox_override("disabled", empty)
 	btn.add_theme_font_override("font", _bold_font)
 	btn.add_theme_font_size_override("font_size", 24)
 	btn.add_theme_color_override("font_color", Color(0.28, 0.18, 0.11, 0.88))
