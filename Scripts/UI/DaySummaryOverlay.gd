@@ -62,7 +62,6 @@ var _quip: String = ""
 var _highlights: Array[String] = []
 
 var _skip_requested: bool = false
-var _last_skip_tap_msec: int = -10000
 var _tally_finished: bool = false
 var _closing: bool = false
 
@@ -127,15 +126,21 @@ func _compute_grade_and_highlights() -> void:
 	var arcs: Array = _stats.get("arcs_completed", [])
 	var milestones: Array = _stats.get("milestones_unlocked", [])
 
-	# Weighted daily score
+	# Weighted daily score (finances carry primary weight)
 	var score := 0
-	# Gross income target scales by day: ₱160 on Day 1, growing with both flat + percent each day
+	var spent_restock := float(_stats.get("spent_restock", 0.0))
+	var mayari_tribute := float(_stats.get("mayari_tribute", 0.0))
 	var day_idx := maxi(0, _day_number - 1)
 	var gross_income := cash_sales + utang_repaid + tips
+	var net_profit := gross_income - spent_restock - mayari_tribute
 	var gross_target := (160.0 + float(day_idx) * 18.0) * (1.0 + float(day_idx) * 0.06)
-	score += mini(40, int(roundf((gross_income / maxf(1.0, gross_target)) * 40.0)))
-	score += mini(36, total_served * 4)
-	score += mini(24, chapters.size() * 6 + arcs.size() * 10)
+	score += mini(45, int(roundf((gross_income / maxf(1.0, gross_target)) * 45.0)))
+	if net_profit >= 0.0:
+		score += mini(15, int(roundf((net_profit / maxf(1.0, gross_target * 0.5)) * 15.0)))
+	else:
+		score -= mini(35, int(roundf(absf(net_profit) / 10.0)))
+	score += mini(30, total_served * 4)
+	score += mini(18, chapters.size() * 6 + arcs.size() * 10)
 	if total_served >= 3 and missed_total == 0:
 		score += 12
 	elif missed_total > 0:
@@ -147,15 +152,21 @@ func _compute_grade_and_highlights() -> void:
 	elif StoryManager.last_tally_tier == "shortfall":
 		score -= 10
 
-	if score >= 85:
+	# Deep negative net profit caps the maximum achievable grade
+	if net_profit <= -250.0:
+		score = mini(score, 37) # Max C
+	elif net_profit <= -100.0:
+		score = mini(score, 61) # Max B
+
+	if score >= 88:
 		_grade = "S"
 		_grade_title = "Paldo"
 		_grade_col = Color(1.0, 0.88, 0.42, 1.0)
-	elif score >= 62:
+	elif score >= 64:
 		_grade = "A"
 		_grade_title = "Mabenta"
 		_grade_col = Color(0.58, 0.94, 0.56, 1.0)
-	elif score >= 38:
+	elif score >= 40:
 		_grade = "B"
 		_grade_title = "Mahinahon"
 		_grade_col = Color(0.96, 0.88, 0.72, 1.0)
@@ -1282,11 +1293,7 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo and (event.physical_keycode == KEY_SPACE or event.keycode == KEY_SPACE or event.is_action_pressed("ui_accept")):
 		is_skip = true
 	if is_skip and not _tally_finished:
-		var now_msec := Time.get_ticks_msec()
-		if now_msec - _last_skip_tap_msec <= 650:
-			_skip_requested = true
-		else:
-			_last_skip_tap_msec = now_msec
+		_skip_requested = true
 		get_viewport().set_input_as_handled()
 
 
