@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b6ptkwr7w5x2c"
+path="res://.godot/imported/Little Steps.mp3-07827a7abfb7ab021c952ad5f55e8ed6.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Little Steps.mp3"
+dest_files=["res://.godot/imported/Little Steps.mp3-07827a7abfb7ab021c952ad5f55e8ed6.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

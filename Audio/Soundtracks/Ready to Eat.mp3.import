@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://6oqxwys6g5i"
+path="res://.godot/imported/Ready to Eat.mp3-b2f5361ce6ca012f15d21ece777d0d86.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Ready to Eat.mp3"
+dest_files=["res://.godot/imported/Ready to Eat.mp3-b2f5361ce6ca012f15d21ece777d0d86.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

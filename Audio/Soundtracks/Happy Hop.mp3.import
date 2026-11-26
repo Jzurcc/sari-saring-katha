@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dfqvrd5y0omu4"
+path="res://.godot/imported/Happy Hop.mp3-e7ba96b471e203ea4b68b093f339cd6f.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Happy Hop.mp3"
+dest_files=["res://.godot/imported/Happy Hop.mp3-e7ba96b471e203ea4b68b093f339cd6f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

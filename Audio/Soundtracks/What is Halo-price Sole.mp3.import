@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dvrdxcwmh0sas"
+path="res://.godot/imported/What is Halo-price Sole.mp3-238163279c2dba64cb267e35e3835d27.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/What is Halo-price Sole.mp3"
+dest_files=["res://.godot/imported/What is Halo-price Sole.mp3-238163279c2dba64cb267e35e3835d27.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

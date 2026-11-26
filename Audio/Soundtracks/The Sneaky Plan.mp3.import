@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://da4anrl0uwm4k"
+path="res://.godot/imported/The Sneaky Plan.mp3-8857fe989539e8f3787602da1a828e93.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/The Sneaky Plan.mp3"
+dest_files=["res://.godot/imported/The Sneaky Plan.mp3-8857fe989539e8f3787602da1a828e93.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

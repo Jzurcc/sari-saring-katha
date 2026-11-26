@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://ck28idyxvglel"
+path="res://.godot/imported/Moddern Times.mp3-02e580c016161ff76a164fad92fdaf03.mp3str"
+
+[deps]
+
+source_file="res://Audio/Soundtracks/Moddern Times.mp3"
+dest_files=["res://.godot/imported/Moddern Times.mp3-02e580c016161ff76a164fad92fdaf03.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
