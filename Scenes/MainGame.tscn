@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://u16kpt01oub8"]
 
 [ext_resource type="Script" uid="uid://bd5eug26jgy1o" path="res://Scripts/World/MainGame.gd" id="1_script"]
-[ext_resource type="FontFile" path="res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf" id="5_eeqno"]
+[ext_resource type="FontFile" uid="uid://cyiqtktawxl0n" path="res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf" id="5_eeqno"]
 [ext_resource type="PackedScene" uid="uid://c4vq703xgyume" path="res://Scenes/TransactionTray.tscn" id="6_d4f28"]
 [ext_resource type="Texture2D" uid="uid://dlcdiuky20ro2" path="res://Assets/ui/peso_icon.png" id="6_eeqno"]
 [ext_resource type="Script" uid="uid://cm450ps03xgib" path="res://Scripts/World/Entities/ShelfSurface.gd" id="11_ktwve"]
@@ -760,12 +760,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62619925, 0.9105438, 1.596
 transform = Transform3D(-0.012793611, 0, -0.01537282, 0, 0.02, 0, 0.01537282, 0, -0.012793611, 2.2274528, 2.193247, -1.0501778)
 
 [node name="NotebookInteractable" type="Area3D" parent="." unique_id=498848053]
-transform = Transform3D(0.92350507, 0, 0.38358623, 0, 1, 0, -0.38358623, 0, 0.92350507, 0.3835593, 0, 0.8943075)
+transform = Transform3D(0.92350507, 0, 0.38358623, 0, 1, 0, -0.38358623, 0, 0.92350507, 2.2462785, 2.1728697, -1.0305514)
 script = ExtResource("notebook_script_123")
 notebook_ui_scene = ExtResource("notebook_ui_456")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NotebookInteractable" unique_id=1890528050]
-transform = Transform3D(0.8872283, 0, 0.46133056, 0, 1, 0, -0.46133056, 0, 0.8872283, 2.4022622, 2.1195786, -1.049197)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NotebookInteractable" unique_id=590277090]
+transform = Transform3D(0.8872283, 0, 0.46133062, 0, 1, 0, -0.46133062, 0, 0.8872283, -0.05250144, 0.016623497, 0.00225991)
 shape = SubResource("BoxShape3D_m7vhu")
 
 [node name="TrashInteractable" type="Area3D" parent="." unique_id=1372230160 groups=["trash"]]

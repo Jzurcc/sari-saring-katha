@@ -341,9 +341,10 @@ func has_item(item: ItemData) -> bool:
 func get_item_count(item: ItemData) -> int:
 	if not item:
 		return 0
+	var target_id := item.get_clean_id()
 	var count: int = 0
 	for occ in _get_valid_occupants():
-		if occ.item_data == item:
+		if occ.item_data == item or (occ.item_data != null and occ.item_data.get_clean_id() == target_id):
 			count += 1
 	return count
 

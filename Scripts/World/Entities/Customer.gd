@@ -236,9 +236,9 @@ const TEX_REP_ICON: Texture2D = preload("res://Assets/ui/rep.png")
 func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> void:
 	var col: Color
 	if ranked_up:
-		col = Color(1.0, 0.88, 0.36, 1.0)
+		col = Color(1.0, 0.86, 0.32, 1.0)
 	elif delta > 0:
-		col = Color(0.72, 0.98, 0.58, 1.0)
+		col = Color(1.0, 0.94, 0.62, 1.0)
 	else:
 		col = Color(1.0, 0.44, 0.40, 1.0)
 
@@ -276,7 +276,7 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 	lbl.no_depth_test = true
 	lbl.render_priority = 15
 	lbl.outline_render_priority = 14
-	lbl.font = UIStyle.FONT_INDER
+	lbl.font = UIStyle.FONT_FREDOKA_SEMIBOLD
 	lbl.font_size = 42 if ranked_up else 36
 	lbl.outline_size = 10
 	lbl.outline_modulate = Color(0.05, 0.04, 0.03, 0.95)
