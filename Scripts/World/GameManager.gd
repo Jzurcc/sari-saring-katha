@@ -284,6 +284,14 @@ func deduct_money(amount: float, is_mayari_tribute: bool = false) -> bool:
 		LogManager.error("GameManager", "Tried to spend %.2f but only has %.2f!" % [amount, money])
 		return false
 
+## Adds pesos outside of normal sales (e.g. Recycling refunds).
+func add_money(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	money += amount
+	EventBus.money_changed.emit(money)
+
+
 func show_day_summary(show_mayari: bool = true) -> Dictionary:
 	if _is_day_summary_open:
 		return {"grade": "B", "quip": ""}

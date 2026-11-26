@@ -104,3 +104,9 @@ UncleMario: Dropped off a sturdy trash can in the corner for you, anak!
 UncleMario: Just toss any extra or unwanted stock right in whenever you need to clear shelf space.
 [signal arg="mario_delivery_next"]
 [end_timeline]
+
+label RecyclingUpgradeDelivery
+UncleMario: Sorted bins, anak! Nothing goes to waste with these.
+UncleMario: Toss in any item and I'll get you half of what it was worth.
+[signal arg="mario_delivery_next"]
+[end_timeline]

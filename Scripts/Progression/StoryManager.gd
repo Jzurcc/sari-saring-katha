@@ -251,10 +251,9 @@ func get_restock_discount_multiplier() -> float:
 func get_item_restock_discount_multiplier(item: ItemData) -> float:
 	var mult := get_restock_discount_multiplier()
 	if item and is_item_on_sulit_deal(item):
-		if has_mario_deals and has_mayari_card(MayariCardRegistry.CARD_WHOLESALE_BLESSING):
-			mult *= 0.65
-		else:
-			mult *= 0.80
+		var blessed := has_mario_deals and has_mayari_card(MayariCardRegistry.CARD_WHOLESALE_BLESSING)
+		var spec: Dictionary = MARIO_DEALS_SPECS[clampi(mario_deals_level, 1, MARIO_DEALS_SPECS.size() - 1)]
+		mult *= float(spec["blessed_mult"]) if blessed else float(spec["mult"])
 	return mult
 
 func get_foot_traffic_time_scale() -> float:
@@ -527,6 +526,44 @@ func purchase_trash_can_upgrade() -> void:
 		get_tree().call_group("trash", "refresh_visibility", true)
 	_save_progression()
 
+# --- Recycling Program (Trash Can II): trashed stock refunds a share of its original value ---
+const RECYCLING_COST := 90.0
+const RECYCLING_REFUND_PCT := 0.5
+var has_recycling: bool = false
+var _recycling_upgrade_item: ItemData = null
+
+func get_recycling_upgrade_item() -> ItemData:
+	if _recycling_upgrade_item != null:
+		return _recycling_upgrade_item
+	var item := ItemData.new()
+	item.item_name = "Recycling Program"
+	item.price = RECYCLING_COST
+	item.can_be_sold = false
+	item.tier = 1
+	item.category = "store_prop"
+	if ResourceLoader.exists("res://Assets/ui/trash.png"):
+		item.texture = load("res://Assets/ui/trash.png")
+	item.set_meta("is_recycling_upgrade", true)
+	item.set_meta("is_store_prop_upgrade", true)
+	item.set_meta("req_level", 4)
+	item.set_meta("upgrade_desc", "Sort the junk! Trashing an item refunds 50% of its original value.")
+	item.set_meta("delivery_dialogue_label", "RecyclingUpgradeDelivery")
+	_recycling_upgrade_item = item
+	return item
+
+func purchase_recycling_upgrade() -> void:
+	if has_recycling:
+		return
+	has_recycling = true
+	LogManager.info("StoryManager", "Recycling Program unlocked.")
+	_save_progression()
+
+## Pesos refunded for trashing one unit of this item (0 until Recycling is owned).
+func get_recycling_refund(item: ItemData) -> float:
+	if not has_recycling or item == null or not item.can_be_sold:
+		return 0.0
+	return snappedf(item.price * RECYCLING_REFUND_PCT, 0.01)
+
 # --- Lucky Waving Cat: Maneki-Neko (Brings Wealth -> Cash Sale Tip Bonus) ---
 const MANEKI_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 0, "req_level": 1, "name": "No Waving Cat", "cost": 0.0, "customer_hours": 4.0, "visit_hours": 2.0, "tip_bonus_pct": 0.0, "desc": "Standard neighbor tips on cash sales."},
@@ -654,17 +691,29 @@ func purchase_radio_upgrade(level: int) -> void:
 	EventBus.restock_catalog_refresh.emit()
 	_save_progression()
 
-# --- Uncle Mario's Wholesale Pass (Unlocks Daily Sulit Deals -20%) ---
+# --- Uncle Mario's Wholesale Pass I → II (Daily Sulit Deals) ---
 const MARIO_DEALS_COST := 75.0
-var has_mario_deals: bool = false
-var _mario_deals_upgrade_item: ItemData = null
+## "items" = deals rolled per day, "mult" = restock price multiplier on deal items.
+const MARIO_DEALS_SPECS: Array[Dictionary] = [
+	{"level": 0, "cost": 0.0, "req_level": 1, "items": 0, "mult": 1.0, "blessed_mult": 1.0},
+	{"level": 1, "cost": 75.0, "req_level": 3, "items": 2, "mult": 0.80, "blessed_mult": 0.65},
+	{"level": 2, "cost": 150.0, "req_level": 6, "items": 5, "mult": 0.70, "blessed_mult": 0.55},
+]
+var mario_deals_level: int = 0
+var has_mario_deals: bool = false # true once Pass I is owned
+var _mario_deals_upgrade_items: Dictionary = {}
 
-func get_mario_deals_upgrade_item() -> ItemData:
-	if _mario_deals_upgrade_item != null:
-		return _mario_deals_upgrade_item
+func get_sulit_deal_count() -> int:
+	return int(MARIO_DEALS_SPECS[clampi(mario_deals_level, 0, MARIO_DEALS_SPECS.size() - 1)]["items"])
+
+func get_mario_deals_upgrade_item(level: int = 1) -> ItemData:
+	var lvl := clampi(level, 1, MARIO_DEALS_SPECS.size() - 1)
+	if _mario_deals_upgrade_items.has(lvl):
+		return _mario_deals_upgrade_items[lvl]
+	var spec: Dictionary = MARIO_DEALS_SPECS[lvl]
 	var item := ItemData.new()
-	item.item_name = "Uncle Mario's Wholesale Pass"
-	item.price = MARIO_DEALS_COST
+	item.item_name = "Uncle Mario's Wholesale Pass" if lvl == 1 else "Wholesale Pass II: Bulk Contract"
+	item.price = float(spec["cost"])
 	item.can_be_sold = false
 	item.tier = 1
 	item.category = "mario_deals_upgrade"
@@ -674,18 +723,23 @@ func get_mario_deals_upgrade_item() -> ItemData:
 		item.texture = load("res://Assets/ui/mario_tricycle.png")
 	item.set_meta("is_mario_deals_upgrade", true)
 	item.set_meta("is_store_prop_upgrade", true)
-	item.set_meta("req_level", 3)
-	item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals (2–3 items 20% off wholesale) and cuts his restock cooldown by 30% (5h → 3.5h).")
-	_mario_deals_upgrade_item = item
+	item.set_meta("mario_deals_level", lvl)
+	item.set_meta("req_level", int(spec["req_level"]))
+	if lvl == 1:
+		item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals (+2 items at 20% off wholesale) and cuts his restock cooldown by 30% (5h → 3.5h).")
+	else:
+		item.set_meta("upgrade_desc", "Mario brings bulk contracts: +3 more Daily Sulit Deals (5 total) and a deeper wholesale discount (30% off).")
+	_mario_deals_upgrade_items[lvl] = item
 	return item
 
-func purchase_mario_deals_upgrade() -> void:
-	if has_mario_deals:
+func purchase_mario_deals_upgrade(level: int = 1) -> void:
+	var target := clampi(level, 1, MARIO_DEALS_SPECS.size() - 1)
+	if target <= mario_deals_level:
 		return
+	mario_deals_level = target
 	has_mario_deals = true
-	if todays_sulit_deals.is_empty():
-		_roll_daily_sulit_deals()
-	LogManager.info("StoryManager", "Uncle Mario's Wholesale Pass unlocked (%d Sulit Deals active today)." % todays_sulit_deals.size())
+	_roll_daily_sulit_deals()
+	LogManager.info("StoryManager", "Uncle Mario's Wholesale Pass level %d unlocked (%d Sulit Deals active today)." % [mario_deals_level, todays_sulit_deals.size()])
 	EventBus.restock_catalog_refresh.emit()
 	_save_progression()
 
@@ -1168,10 +1222,10 @@ func _roll_daily_sulit_deals() -> void:
 		if item and item.can_be_sold and item.tier <= current_tier:
 			pool.append(item)
 	pool.shuffle()
-	var count := mini(pool.size(), randi_range(2, 3))
+	var count := mini(pool.size(), get_sulit_deal_count())
 	for i in range(count):
 		todays_sulit_deals.append(pool[i].resource_path)
-	LogManager.info("StoryManager", "Rolled %d Daily Sulit Deals (-20%%) for Day %d." % [todays_sulit_deals.size(), day])
+	LogManager.info("StoryManager", "Rolled %d Daily Sulit Deals for Day %d." % [todays_sulit_deals.size(), day])
 
 func get_revealed_expected_regulars() -> Array[CustomerData]:
 	ensure_daily_demand_rolled()
@@ -1556,6 +1610,8 @@ func get_save_data() -> Dictionary:
 		"maneki_upgrade_level": maneki_upgrade_level,
 		"radio_upgrade_level": radio_upgrade_level,
 		"has_mario_deals": has_mario_deals,
+		"mario_deals_level": mario_deals_level,
+		"has_recycling": has_recycling,
 		"sto_nino_upgrade_level": sto_nino_upgrade_level,
 		"active_blessing_cards": active_blessing_cards.duplicate(),
 		"sto_nino_blessing_start_hour": sto_nino_blessing_start_hour,
@@ -1661,6 +1717,9 @@ func load_save_data(data: Dictionary) -> void:
 	maneki_upgrade_level = clampi(int(data.get("maneki_upgrade_level", 0)), 0, MANEKI_UPGRADE_SPECS.size() - 1)
 	radio_upgrade_level = clampi(int(data.get("radio_upgrade_level", 0)), 0, RADIO_UPGRADE_SPECS.size() - 1)
 	has_mario_deals = bool(data.get("has_mario_deals", false))
+	mario_deals_level = int(data.get("mario_deals_level", 1 if has_mario_deals else 0))
+	has_mario_deals = mario_deals_level >= 1
+	has_recycling = bool(data.get("has_recycling", false))
 	sto_nino_upgrade_level = clampi(int(data.get("sto_nino_upgrade_level", 0)), 0, STO_NINO_UPGRADE_SPECS.size() - 1)
 	active_blessing_cards.clear()
 	for cid in data.get("active_blessing_cards", []):
@@ -1793,7 +1852,8 @@ func reset_state() -> void:
 	maneki_upgrade_level = 0
 	radio_upgrade_level = 0
 	has_mario_deals = false
-	sto_nino_upgrade_level = 0
+	mario_deals_level = 0
+	has_recycling = false	sto_nino_upgrade_level = 0
 	_clear_sto_nino_blessing()
 	permit_upgrade_level = 0
 	bench_upgrade_level = 0

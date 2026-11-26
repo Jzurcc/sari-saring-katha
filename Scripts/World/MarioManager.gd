@@ -485,6 +485,7 @@ func _is_non_stock_upgrade(item: ItemData) -> bool:
 		or item.get_meta("is_fridge_upgrade", false) \
 		or item.get_meta("is_cat_upgrade", false) \
 		or item.get_meta("is_trash_upgrade", false) \
+		or item.get_meta("is_recycling_upgrade", false) \
 		or item.get_meta("is_maneki_upgrade", false) \
 		or item.get_meta("is_radio_upgrade", false) \
 		or item.get_meta("is_mario_deals_upgrade", false) \
@@ -553,7 +554,8 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var highest_maneki_name := ""
 	var highest_radio_lvl := StoryManager.radio_upgrade_level
 	var highest_radio_name := ""
-	var unlock_mario_deals := false
+	var unlock_recycling := false
+	var highest_deals_lvl := StoryManager.mario_deals_level
 	var highest_sto_nino_lvl := StoryManager.sto_nino_upgrade_level
 	var highest_sto_nino_name := ""
 	var highest_permit_lvl := StoryManager.permit_upgrade_level
@@ -593,8 +595,11 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 				highest_radio_lvl = target_radio
 				highest_radio_name = item.item_name
 			continue
+		if item.get_meta("is_recycling_upgrade", false):
+			unlock_recycling = true
+			continue
 		if item.get_meta("is_mario_deals_upgrade", false):
-			unlock_mario_deals = true
+			highest_deals_lvl = maxi(highest_deals_lvl, int(item.get_meta("mario_deals_level", 1)))
 			continue
 		if item.get_meta("is_sto_nino_upgrade", false):
 			var target_sn: int = int(item.get_meta("sto_nino_level", 1))
@@ -667,11 +672,20 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 			EventBus.show_notification.emit("Radio Upgraded!", "%s (%d Regulars revealed)" % [highest_radio_name, StoryManager.get_revealed_regular_count()], "purchase")
 		LogManager.info("MarioManager", "Barangay Radio upgraded to Level %d (%s)" % [highest_radio_lvl, highest_radio_name])
 
-	if unlock_mario_deals and not StoryManager.has_mario_deals:
-		StoryManager.purchase_mario_deals_upgrade()
+	if unlock_recycling and not StoryManager.has_recycling:
+		StoryManager.purchase_recycling_upgrade()
 		if spawn_in_tree:
-			EventBus.show_notification.emit("Wholesale Pass Active!", "Daily Sulit Deals (-20%) unlocked!", "purchase")
-		LogManager.info("MarioManager", "Uncle Mario's Wholesale Pass unlocked on Mario arrival.")
+			EventBus.show_notification.emit("Recycling Program!", "Trashed items now refund 50% of their value.", "purchase")
+		LogManager.info("MarioManager", "Recycling Program delivered on Mario arrival.")
+
+	if highest_deals_lvl > StoryManager.mario_deals_level:
+		StoryManager.purchase_mario_deals_upgrade(highest_deals_lvl)
+		if spawn_in_tree:
+			if highest_deals_lvl >= 2:
+				EventBus.show_notification.emit("Wholesale Pass II!", "+3 Sulit Deals (5 total) at -30%!", "purchase")
+			else:
+				EventBus.show_notification.emit("Wholesale Pass Active!", "+2 Daily Sulit Deals (-20%) unlocked!", "purchase")
+		LogManager.info("MarioManager", "Uncle Mario's Wholesale Pass level %d unlocked on Mario arrival." % highest_deals_lvl)
 
 	if highest_sto_nino_lvl > StoryManager.sto_nino_upgrade_level:
 		StoryManager.purchase_sto_nino_upgrade(highest_sto_nino_lvl)

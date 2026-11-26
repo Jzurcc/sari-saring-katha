@@ -23,6 +23,7 @@ const NODES: Array[Dictionary] = [
 	{"id": "fridge_2", "title": "Fridge Insulation", "pos": Vector2(1.0, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["fridge_1"], "kind": "fridge"},
 	{"id": "fridge_3", "title": "Inverter Compressor", "pos": Vector2(1.0, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["fridge_2"], "kind": "fridge"},
 	{"id": "wholesale_pass", "title": "Wholesale Pass", "pos": Vector2(1.7, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["fridge_1"], "kind": "mario_deals"},
+	{"id": "wholesale_pass_2", "title": "Wholesale Pass II", "pos": Vector2(1.7, 3.5), "max_level": 1, "target_level": 2, "prereqs": ["wholesale_pass"], "kind": "mario_deals"},
 
 	# ── BRANCH 3 (Tier 3): Tambayan Bench I → II → III (x = 2.45) ──
 	{"id": "bench_1", "title": "Tambayan Bench I", "pos": Vector2(2.45, 1.0), "max_level": 1, "target_level": 1, "req_tier": 3, "prereqs": ["store_tier"], "kind": "bench"},
@@ -34,6 +35,7 @@ const NODES: Array[Dictionary] = [
 	{"id": "radio_2", "title": "Barangay Radio II", "pos": Vector2(3.45, 2.0), "max_level": 1, "target_level": 2, "prereqs": ["radio_1"], "kind": "radio"},
 	{"id": "radio_3", "title": "Barangay Radio III", "pos": Vector2(3.45, 3.0), "max_level": 1, "target_level": 3, "prereqs": ["radio_2"], "kind": "radio"},
 	{"id": "trash_can", "title": "Store Trash Can", "pos": Vector2(4.15, 2.5), "max_level": 1, "target_level": 1, "prereqs": ["radio_1"], "kind": "trash"},
+	{"id": "recycling", "title": "Recycling Program", "pos": Vector2(4.15, 3.5), "max_level": 1, "target_level": 1, "prereqs": ["trash_can"], "kind": "recycling"},
 
 	# ── BRANCH 5 (Tier 4): Barangay Cat I → II (x = 4.9) ──
 	{"id": "cat_1", "title": "Barangay Cat I", "pos": Vector2(4.9, 1.0), "max_level": 1, "target_level": 1, "req_tier": 4, "prereqs": ["store_tier"], "kind": "cat"},
@@ -84,13 +86,15 @@ static func get_node_level(node_id: String, pending_levels: Dictionary = {}) -> 
 		"fridge":
 			owned = StoryManager.fridge_upgrade_level >= req_lvl
 		"mario_deals":
-			owned = StoryManager.has_mario_deals
+			owned = StoryManager.mario_deals_level >= req_lvl
 		"bench":
 			owned = StoryManager.bench_upgrade_level >= req_lvl
 		"radio":
 			owned = StoryManager.radio_upgrade_level >= req_lvl
 		"trash":
 			owned = StoryManager.has_trash_can
+		"recycling":
+			owned = StoryManager.has_recycling
 		"cat":
 			owned = StoryManager.cat_upgrade_level >= req_lvl
 		"sto_nino":
@@ -134,13 +138,15 @@ static func get_node_item(node_id: String, target_level: int = -1) -> ItemData:
 		"fridge":
 			return StoryManager.get_fridge_upgrade_item(lvl)
 		"mario_deals":
-			return StoryManager.get_mario_deals_upgrade_item()
+			return StoryManager.get_mario_deals_upgrade_item(lvl)
 		"bench":
 			return StoryManager.get_bench_upgrade_item(lvl)
 		"radio":
 			return StoryManager.get_radio_upgrade_item(lvl)
 		"trash":
 			return StoryManager.get_trash_can_upgrade_item()
+		"recycling":
+			return StoryManager.get_recycling_upgrade_item()
 		"cat":
 			return StoryManager.get_cat_upgrade_item(lvl)
 		"sto_nino":
@@ -162,13 +168,15 @@ static func get_short_description(node_id: String) -> String:
 		"fridge":
 			return "Keeps cold drinks and frozen goods frosty longer."
 		"mario_deals":
-			return "Daily discounted wholesale stock and faster Mario deliveries."
+			return "Daily discounted wholesale stock and faster Mario deliveries." if int(def.get("target_level", 1)) == 1 else "Mario brings bulk contracts: more daily deals at a deeper discount."
 		"bench":
 			return "Cozy seating outside so neighbors linger and chat."
 		"radio":
 			return "Reveals more daily regulars and neighborhood events."
 		"trash":
 			return "Dispose of unwanted or expired stock cleanly."
+		"recycling":
+			return "Sort your junk: trashing an item refunds 50% of its original value."
 		"cat":
 			return "Welcomes more customers to your counter at once."
 		"sto_nino":
@@ -214,9 +222,15 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 			if d_regen < -0.01:
 				stats.append({"label": "Re-Chill Time:", "value": "%.1fs" % d_regen, "tone": "pos"})
 		"mario_deals":
-			stats.append({"label": "Daily Deals:", "value": "2–3 Items", "tone": "neu"})
-			stats.append({"label": "Wholesale Discount:", "value": "-20%", "tone": "pos"})
-			stats.append({"label": "Mario Cooldown:", "value": "-30%", "tone": "pos"})
+			var deals_lvl := clampi(int(def.get("target_level", 1)), 1, StoryManager.MARIO_DEALS_SPECS.size() - 1)
+			var d_items: int = int(StoryManager.MARIO_DEALS_SPECS[deals_lvl]["items"]) - int(StoryManager.MARIO_DEALS_SPECS[deals_lvl - 1]["items"])
+			var disc := int(roundf((1.0 - float(StoryManager.MARIO_DEALS_SPECS[deals_lvl]["mult"])) * 100.0))
+			stats.append({"label": "Daily Deals:", "value": "+%d Items" % d_items, "tone": "pos"})
+			stats.append({"label": "Wholesale Discount:", "value": "-%d%%" % disc, "tone": "pos"})
+			if deals_lvl == 1:
+				stats.append({"label": "Mario Cooldown:", "value": "-30%", "tone": "pos"})
+		"recycling":
+			stats.append({"label": "Trash Refund:", "value": "+50% Value", "tone": "pos"})
 		"bench":
 			var prev: Dictionary = StoryManager.BENCH_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.BENCH_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.BENCH_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.BENCH_UPGRADE_SPECS.size() - 1)]

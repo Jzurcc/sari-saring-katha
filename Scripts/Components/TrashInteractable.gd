@@ -61,7 +61,17 @@ func receive_item(item: DraggableItem) -> void:
 		# Using 'trash' as a placeholder sound name
 		EventBus.request_sfx.emit("trash")
 	
-	# 4. Cleanup
+	# 4. Recycling Program: refund a share of the item's original value
+	if not item.is_transient:
+		var refund := StoryManager.get_recycling_refund(item.item_data)
+		if refund > 0.0:
+			for gm in get_tree().get_nodes_in_group("game_manager"):
+				if gm.has_method("add_money"):
+					gm.add_money(refund)
+					EventBus.show_notification.emit("Recycled!", "+₱%.2f refunded" % refund, "purchase")
+					break
+
+	# 5. Cleanup
 	item.notify_placed()
 	item.play_disappear_animation()
 

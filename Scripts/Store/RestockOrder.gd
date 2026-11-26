@@ -37,6 +37,7 @@ func get_effective_unit_price(item: ItemData) -> float:
 		or item.get_meta("is_fridge_upgrade", false) \
 		or item.get_meta("is_cat_upgrade", false) \
 		or item.get_meta("is_trash_upgrade", false) \
+		or item.get_meta("is_recycling_upgrade", false) \
 		or item.get_meta("is_maneki_upgrade", false) \
 		or item.get_meta("is_radio_upgrade", false) \
 		or item.get_meta("is_mario_deals_upgrade", false)
