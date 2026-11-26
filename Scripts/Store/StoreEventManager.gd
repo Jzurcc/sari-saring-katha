@@ -176,6 +176,24 @@ func has_unrevealed_broadcast() -> bool:
 		return true
 	return false
 
+var _cooldown_poll_timer: float = 0.0
+
+func _process(delta: float) -> void:
+	if _next_reveal_ready_hour < 0.0:
+		return
+	_cooldown_poll_timer += delta
+	if _cooldown_poll_timer < 0.5:
+		return
+	_cooldown_poll_timer = 0.0
+	if _get_current_hour() >= _next_reveal_ready_hour - 0.01:
+		_next_reveal_ready_hour = -1.0
+		if has_unrevealed_broadcast() and is_instance_valid(StoryManager) and StoryManager.radio_upgrade_level >= 1 and not StoryManager.is_past_closing_time():
+			EventBus.show_notification.emit(
+				"Papa Ulap Ready to Tune",
+				"Tune in to your Counter Radio for a new broadcast.",
+				"interact"
+			)
+
 func get_reveal_cooldown_remaining_hours() -> float:
 	if not has_unrevealed_broadcast() or _next_reveal_ready_hour < 0.0:
 		return 0.0
