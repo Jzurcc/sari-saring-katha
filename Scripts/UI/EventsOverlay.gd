@@ -459,13 +459,21 @@ func _build_visitor_event_card(vis: CustomerData) -> PanelContainer:
 	var stats: Array = [
 		{"label": "Spawn Chance:", "value": "+120%", "tone": "pos"},
 	]
+	var fav_names := PackedStringArray()
+	for fcat in vis.get_favorite_categories():
+		fav_names.append(_category_display(fcat))
+	var fav_list := _format_natural_list(fav_names)
+	var tip_desc := ("One of your friendly neighbors! Likes %s." % fav_list) if not fav_names.is_empty() else "One of your friendly neighbors dropping by today!"
+	var kws: Array = [
+		{"title": vis.character_name.to_upper(), "desc": tip_desc},
+	]
 	return _build_hades_card(
 		"Visitor: %s" % vis.character_name,
 		"!",
 		desc_rich,
 		stats,
 		"event",
-		[],
+		kws,
 		"res://Assets/ui/icons/user-round-exclamation-point.png"
 	)
 
@@ -685,7 +693,7 @@ func _show_keyword_callouts(keyword_ids: Array, anchor_ctrl: Control = null) -> 
 
 	var shown := 0
 	for kw_id in keyword_ids:
-		var info := MayariCardRegistry.get_keyword(str(kw_id))
+		var info: Dictionary = kw_id if kw_id is Dictionary else MayariCardRegistry.get_keyword(str(kw_id))
 		if info.is_empty():
 			continue
 		var box := PanelContainer.new()
