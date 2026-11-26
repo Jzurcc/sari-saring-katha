@@ -149,10 +149,10 @@ func _create_drop_zone() -> void:
 	area.collision_mask = 0
 	var cs := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(shelf_width, 0.4, 0.5)
+	box.size = Vector3(shelf_width, 0.68, 0.62)
 	cs.shape = box
 	area.add_child(cs)
-	area.position = Vector3(shelf_width / 2.0, 0.2, 0.0)
+	area.position = Vector3(shelf_width / 2.0, 0.34, 0.0)
 	add_child(area)
 
 
