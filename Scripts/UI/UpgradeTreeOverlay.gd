@@ -400,6 +400,8 @@ func _show_tooltip_for(node_id: String) -> void:
 					break
 		if not names.is_empty():
 			desc = "Unlocks: " + ", ".join(names)
+		if target_t == 10:
+			desc = (desc + "\nCandy containers will now be separated.") if desc != "" else "Candy containers will now be separated."
 	_tip_desc.text = desc
 	_tip_desc.visible = desc != ""
 

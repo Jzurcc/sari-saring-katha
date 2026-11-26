@@ -232,6 +232,8 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 			var t := clampi(lvl, 2, 10)
 			stats.append({"label": "Catalog Tier:", "value": "Tier %d" % t, "tone": "neu"})
 			stats.append({"label": "Starter Samples:", "value": "+2x Each", "tone": "pos"})
+			if t == 10:
+				stats.append({"label": "Candy Containers:", "value": "Separated", "tone": "pos"})
 		"permit":
 			var prev: Dictionary = StoryManager.PERMIT_UPGRADE_SPECS[clampi(lvl - 1, 0, StoryManager.PERMIT_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.PERMIT_UPGRADE_SPECS[clampi(lvl, 0, StoryManager.PERMIT_UPGRADE_SPECS.size() - 1)]
