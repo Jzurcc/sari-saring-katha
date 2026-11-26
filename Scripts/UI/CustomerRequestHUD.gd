@@ -29,6 +29,7 @@ var _rows: Dictionary = {} # customer_name -> { "row": Control, ... }
 var _trimmed_tex_cache: Dictionary = {} # ItemData -> Texture2D
 var _hovered_row_key: String = ""
 var _hovered_is_dragging: bool = false
+var _held_item_data: ItemData = null
 var is_visible_hud: bool = false
 
 func _ready() -> void:
@@ -41,6 +42,8 @@ func _ready() -> void:
 	if is_instance_valid(InventoryManager) and not InventoryManager.stock_changed.is_connected(_on_stock_changed):
 		InventoryManager.stock_changed.connect(_on_stock_changed)
 	EventBus.customer_hover_changed.connect(_on_customer_hover_changed)
+	EventBus.drag_started.connect(_on_drag_started)
+	EventBus.drag_ended.connect(_on_drag_ended)
 
 func _on_transaction_completed(_item: ItemData, was_correct: bool, _wants_debt: bool, customer_path: String) -> void:
 	if was_correct or customer_path == "":
@@ -407,7 +410,7 @@ func _update_icon_visuals(rect_container: Control, item: ItemData, is_riddle: bo
 	var slot_size := _get_slot_size_for_item(item, is_riddle)
 	rect_container.custom_minimum_size = slot_size
 	icon.size = slot_size
-	icon.pivot_offset = slot_size * 0.5
+	icon.pivot_offset = Vector2(slot_size.x * 0.5, slot_size.y * 0.92)
 	icon.position = Vector2.ZERO
 
 	if is_riddle:
@@ -477,7 +480,7 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool, s
 	if not is_instance_valid(anim_target):
 		anim_target = icon
 	var base_y := anim_target.position.y
-	anim_target.pivot_offset = anim_target.size * 0.5
+	anim_target.pivot_offset = Vector2(anim_target.size.x * 0.5, anim_target.size.y * 0.92)
 	anim_target.scale = Vector2(0.35, 1.35)
 	anim_target.position.y = base_y - 20.0
 	anim_target.modulate.a = 0.0
@@ -494,6 +497,7 @@ func _add_item_icon(items_box: HBoxContainer, item: ItemData, is_riddle: bool, s
 	tw.tween_callback(func():
 		if is_instance_valid(anim_target):
 			_apply_sway(anim_target)
+			_apply_held_match_visual(rect_container)
 	)
 
 func _spawn_fulfill_burst(source_control: Control) -> void:
@@ -642,10 +646,11 @@ func _apply_portrait_bob(portrait: Control) -> void:
 	tilt_tw.tween_interval(hold_dur)
 
 func _apply_sway(icon: Control) -> void:
-	# Varied per-item rock + independent vertical float so neighboring items never bob in lockstep
+	# Calm bottom-pivoted gentle rock so the base feels planted on the shelf bar
+	icon.pivot_offset = Vector2(icon.size.x * 0.5, icon.size.y * 0.92)
 	var sway_dir := 1.0 if randf() < 0.5 else -1.0
-	var sway_dur := randf_range(1.8, 4.6)
-	var angle := randf_range(2.5, 8.0)
+	var sway_dur := randf_range(2.6, 4.6)
+	var angle := randf_range(1.6, 3.0)
 	icon.rotation_degrees = randf_range(-angle, angle)
 
 	var tw := icon.create_tween().set_loops()
@@ -653,14 +658,51 @@ func _apply_sway(icon: Control) -> void:
 	tw.tween_property(icon, "rotation_degrees", angle * sway_dir, sway_dur * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(icon, "rotation_degrees", -angle * sway_dir, sway_dur * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
-	var base_y := icon.position.y
-	var bob_amp := randf_range(2.0, 5.2)
-	var bob_half := randf_range(0.85, 1.75)
-	var bob_dir := 1.0 if randf() < 0.5 else -1.0
-	var bob_tw := icon.create_tween().set_loops()
-	icon.set_meta("bob_tween", bob_tw)
-	bob_tw.tween_property(icon, "position:y", base_y - bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	bob_tw.tween_property(icon, "position:y", base_y + bob_amp * bob_dir, bob_half).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+func _on_drag_started(item: DraggableItem) -> void:
+	_held_item_data = item.item_data if (is_instance_valid(item) and item.item_data != null) else null
+	_refresh_held_match_visuals()
+
+
+func _on_drag_ended(_item: DraggableItem, _dropped_successfully: bool) -> void:
+	_held_item_data = null
+	_refresh_held_match_visuals()
+
+
+func _refresh_held_match_visuals() -> void:
+	for entry in _rows.values():
+		var items_box: HBoxContainer = entry.get("items_box") as HBoxContainer
+		if not is_instance_valid(items_box):
+			continue
+		for child in items_box.get_children():
+			if child is Control and not child.get_meta("is_popping", false):
+				_apply_held_match_visual(child)
+
+
+func _apply_held_match_visual(rect_container: Control) -> void:
+	if not is_instance_valid(rect_container):
+		return
+	var icon := rect_container.get_node_or_null("ItemIcon") as Control
+	if not is_instance_valid(icon) or not icon.visible:
+		return
+	var bound_item := rect_container.get_meta("item_data", null) as ItemData
+	var is_match := (_held_item_data != null and bound_item != null and bound_item == _held_item_data)
+
+	var prev_tw = icon.get_meta("match_tween", null)
+	if prev_tw and prev_tw.is_valid():
+		prev_tw.kill()
+
+	icon.pivot_offset = Vector2(icon.size.x * 0.5, icon.size.y * 0.92)
+	var target_y := -12.0 if is_match else 0.0
+	var target_sc := Vector2(1.14, 1.14) if is_match else Vector2.ONE
+	var tw := icon.create_tween().set_parallel(true)
+	icon.set_meta("match_tween", tw)
+	if is_match:
+		tw.tween_property(icon, "position:y", target_y, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(icon, "scale", target_sc, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	else:
+		tw.tween_property(icon, "position:y", target_y, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		tw.tween_property(icon, "scale", target_sc, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 func _on_customer_hover_changed(customer: Customer, is_dragging: bool) -> void:
 	var next_key := customer.get_order_hud_key().strip_edges() if is_instance_valid(customer) else ""
