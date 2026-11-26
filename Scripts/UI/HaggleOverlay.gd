@@ -318,11 +318,7 @@ func _nudge_step(delta: int) -> void:
 func _price_for_step(st: int) -> float:
 	if _item_data == null:
 		return 0.0
-	var saved := _item_data.current_step
-	_item_data.current_step = st
-	var p := _item_data.get_final_price()
-	_item_data.current_step = saved
-	return p
+	return _item_data.get_price_for_step(st)
 
 
 func _refresh_ui() -> void:

@@ -391,9 +391,12 @@ func _start_haggle_or_refusal(
 				return
 			if accepted:
 				var saved_step := item.item_data.current_step
+				var saved_selling_price := item.item_data.selling_price
 				item.item_data.current_step = offered_step
+				item.item_data.selling_price = item.item_data.get_price_for_step(offered_step)
 				_complete_item_delivery(customer, item, fallback_pos, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 				item.item_data.current_step = saved_step
+				item.item_data.selling_price = saved_selling_price
 			else:
 				_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 		)
