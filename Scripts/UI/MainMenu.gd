@@ -194,7 +194,7 @@ func _build_devlog_and_version() -> void:
 	title_col.add_child(sub_lbl)
 
 	_devlog_toggle_btn = Button.new()
-	_devlog_toggle_btn.text = "▴"
+	_devlog_toggle_btn.text = "▾"
 	_devlog_toggle_btn.custom_minimum_size = Vector2(30, 30)
 	_devlog_toggle_btn.focus_mode = Control.FOCUS_NONE
 	_devlog_toggle_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -208,6 +208,7 @@ func _build_devlog_and_version() -> void:
 	hdr.add_child(_devlog_toggle_btn)
 
 	_devlog_body = VBoxContainer.new()
+	_devlog_body.visible = false
 	_devlog_body.add_theme_constant_override("separation", 7)
 	vb.add_child(_devlog_body)
 
