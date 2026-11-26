@@ -380,6 +380,18 @@ func _start_haggle_or_refusal(
 		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
 		return
 
+	# Haggle triggers by chance (60% base, modified by Mayari Favor/Omen cards)
+	var haggle_chance: float = 0.60
+	if is_instance_valid(StoryManager):
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
+			haggle_chance += 0.25
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+			haggle_chance -= 0.25
+	haggle_chance = clampf(haggle_chance, 0.15, 0.95)
+	if randf() >= haggle_chance:
+		_trigger_price_refusal(customer, item, needs_switch, prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+		return
+
 	var launch_haggle := func():
 		if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
 			return

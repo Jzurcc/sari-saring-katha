@@ -387,6 +387,41 @@ func _make_outlined_label(txt: String, font_res: Font, sz: int, col: Color, outl
 	return lbl
 
 
+func _make_keycap_hint(key_text: String, action_text: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 7)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var cap := PanelContainer.new()
+	cap.custom_minimum_size = Vector2(28, 28)
+	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var cap_style := UIStyle.create_flat_stylebox(Color(0.08, 0.07, 0.06, 0.94), 6, 7, 2)
+	cap_style.border_color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.85)
+	cap_style.set_border_width_all(1)
+	cap_style.border_width_bottom = 2
+	cap_style.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	cap_style.shadow_size = 6
+	cap.add_theme_stylebox_override("panel", cap_style)
+	row.add_child(cap)
+
+	var klbl := Label.new()
+	klbl.text = key_text
+	klbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	klbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	klbl.add_theme_font_override("font", _bold_font)
+	klbl.add_theme_font_size_override("font_size", 15)
+	klbl.add_theme_color_override("font_color", COL_GOLD_SOFT)
+	klbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cap.add_child(klbl)
+
+	var albl := _make_outlined_label(action_text, INDER_FONT, 15, COL_CREAM_MUTED, 3)
+	albl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(albl)
+	return row
+
+
 func _build_ui() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -408,6 +443,20 @@ func _build_ui() -> void:
 	vig.material = mat
 	_root.add_child(vig)
 
+	# Top-center title: "Haggling {Customer Name} for {Item Name}"
+	var iname := _item_data.item_name if _item_data else "Item"
+	var cname := (_customer_data.character_name if (_customer_data != null and _customer_data.character_name != "") else "Neighbor")
+	var top_title := _make_outlined_label("Haggling %s for %s" % [cname, iname], _bold_font, 24, COL_GOLD_SOFT, 5)
+	top_title.anchor_left = 0.5
+	top_title.anchor_right = 0.5
+	top_title.anchor_top = 0.0
+	top_title.anchor_bottom = 0.0
+	top_title.offset_left = -360
+	top_title.offset_right = 360
+	top_title.offset_top = 28
+	top_title.offset_bottom = 66
+	_root.add_child(top_title)
+
 	# Frameless floating haggle HUD anchored cleanly at lower-center
 	_content = VBoxContainer.new()
 	_content.anchor_left = 0.5
@@ -416,16 +465,12 @@ func _build_ui() -> void:
 	_content.anchor_bottom = 1.0
 	_content.offset_left = -330
 	_content.offset_right = 330
-	_content.offset_top = -235
-	_content.offset_bottom = -28
+	_content.offset_top = -205
+	_content.offset_bottom = -26
 	_content.alignment = BoxContainer.ALIGNMENT_CENTER
 	_content.add_theme_constant_override("separation", 8)
 	_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_content)
-
-	var iname := _item_data.item_name if _item_data else "Item"
-	var title := _make_outlined_label("Haggle  •  %s" % iname, _bold_font, 24, COL_GOLD_SOFT, 5)
-	_content.add_child(title)
 
 	# Compact horizontal readout: Offered Price + Acceptance %
 	var readout := HBoxContainer.new()
@@ -459,8 +504,14 @@ func _build_ui() -> void:
 	_diff_lbl = _make_outlined_label("", INDER_FONT, 16, COL_GOOD, 4)
 	_content.add_child(_diff_lbl)
 
-	var hint := _make_outlined_label("Scroll to adjust   •   [F] Offer   •   [Esc] Let Them Go", INDER_FONT, 16, COL_CREAM_MUTED, 4)
-	_content.add_child(hint)
+	var hint_row := HBoxContainer.new()
+	hint_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hint_row.add_theme_constant_override("separation", 22)
+	hint_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_row.add_child(_make_keycap_hint("↕", "Adjust"))
+	hint_row.add_child(_make_keycap_hint("F", "Offer"))
+	hint_row.add_child(_make_keycap_hint("Esc", "Let Them Go"))
+	_content.add_child(hint_row)
 
 	# How-to-Play intro panel (respects Minigame Tutorials setting)
 	_intro_panel = PanelContainer.new()
