@@ -1,15 +1,17 @@
-[gd_resource type="Resource" script_class="CustomerData" format=3]
+[gd_resource type="Resource" script_class="CustomerData" format=3 uid="uid://clqc6kdtmqt6a"]
 
+[ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="1_5ihul"]
+[ext_resource type="AudioStream" uid="uid://c2lr4dhqxkob8" path="res://Audio/DialogueBlips/LoloPilo.wav" id="1_blip"]
 [ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo.dch" id="1_dch"]
-[ext_resource type="AudioStream" path="res://Audio/DialogueBlips/LoloPilo.wav" id="1_blip"]
-[ext_resource type="Script" path="res://Scripts/Data/CustomerData.gd" id="2_script"]
-[ext_resource type="Script" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
-[ext_resource type="Texture2D" path="res://Assets/characters/sprites/LoloPilo.png" id="4_sprite"]
-[ext_resource type="Script" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo/Purchase.dtl" id="pilo_purchase"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo/Visit.dtl" id="pilo_visit"]
-[ext_resource type="Resource" path="res://Dialogue/Timelines/LoloPilo/Story.dtl" id="pilo_story"]
-[ext_resource type="Script" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://b7rtu6knii7es" path="res://Scripts/Data/CustomerData.gd" id="2_script"]
+[ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="3_7cvr6"]
+[ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
+[ext_resource type="Texture2D" uid="uid://dl3n44lgld252" path="res://Assets/characters/sprites/LoloPilo.png" id="4_sprite"]
+[ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Resource" uid="uid://3l0feupwhfmd" path="res://Dialogue/Timelines/LoloPilo/Purchase.dtl" id="pilo_purchase"]
+[ext_resource type="Resource" uid="uid://cdoooy3atel0" path="res://Dialogue/Timelines/LoloPilo/Story.dtl" id="pilo_story"]
+[ext_resource type="Resource" uid="uid://dh3a7yqbvkby1" path="res://Dialogue/Timelines/LoloPilo/Visit.dtl" id="pilo_visit"]
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -52,11 +54,9 @@ script = ExtResource("2_script")
 character_name = "Lolo Pilo"
 dialogic_character = ExtResource("1_dch")
 sprite_texture = ExtResource("4_sprite")
-sprite_scale = 0.32
+sprite_scale = 0.285
 dialogue_blip_sound = ExtResource("1_blip")
 dialogue_blip_volume = -3.0
-unlock_tier = 1
-max_story_chapters = 6
 favorite_categories = Array[String](["candy", "snack", "sachet"])
 story_timeline = ExtResource("pilo_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])

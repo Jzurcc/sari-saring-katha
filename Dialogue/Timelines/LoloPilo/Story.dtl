@@ -1,7 +1,7 @@
 label Greeting
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: First meeting — specifically invites you to play Sipa!
-	LoloPilo: Ho-ho! Easy there, apo—no need to squint! Yes, I'm a duwende, and yes, I'm older than that mango tree down the road.
+	LoloPilo: Ho-ho! Easy there, apo. No need to squint! Yes, I'm a duwende, and yes, I'm older than that mango tree down the road.
 	LoloPilo: Call me Lolo Pilo. I used to watch your lola run this counter back when kids still filled the street with laughter every afternoon.
 	LoloPilo: You look like you've been standing behind that register all day! Come on—let's wake up those reflexes.
 	LoloPilo: I brought my lucky sipa! Care for a quick round with an old champion?
@@ -10,7 +10,7 @@ if {Transaction_Chapter} == 0.0:
 		[signal arg="minigame:sipa"]
 		LoloPilo: Haha! Not bad at all, apo! My old bones feel twenty years lighter already.
 	- Maybe next time, Lolo.
-		LoloPilo: Ayy, busy shopkeeper! Fair enough, apo—I'll catch you for a round another day!
+		LoloPilo: Ayy, busy shopkeeper! Fair enough, apo. I'll catch you for a round another day!
 	LoloPilo: I'll be dropping by whenever I feel like a match. See you soon, apo!
 	[signal arg="story_success"]
 	[end_timeline]
@@ -80,7 +80,7 @@ else:
 		LoloPilo: That's my apo! Ready... set... go!
 		[signal arg="minigame:lolo_pilo_random"]
 		LoloPilo: Haha! Always a joy, apo. May good fortune guard your shelves!
-	- Just chatting today, Lolo.
+	- Maybe next time, Lolo.
 		LoloPilo: Even just a hello from you is a prize in itself, apo. Take care!
 	[signal arg="story_success"]
 	[end_timeline]

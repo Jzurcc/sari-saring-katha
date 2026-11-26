@@ -744,9 +744,10 @@ texture = ExtResource("48_d7jqg")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62619925, 0.9105438, 1.5967443)
 
 [node name="notebook" parent="." unique_id=961263518 instance=ExtResource("59_m7vhu")]
-transform = Transform3D(-0.017711766, 0, -0.009289424, 0, 0.02, 0, 0.009289424, 0, -0.017711766, 2.4487228, 2.193247, -1.08845)
+transform = Transform3D(-0.012793611, 0, -0.01537282, 0, 0.02, 0, 0.01537282, 0, -0.012793611, 2.2274528, 2.193247, -1.0501778)
 
 [node name="NotebookInteractable" type="Area3D" parent="." unique_id=498848053]
+transform = Transform3D(0.92350507, 0, 0.38358623, 0, 1, 0, -0.38358623, 0, 0.92350507, 0.3835593, 0, 0.8943075)
 script = ExtResource("notebook_script_123")
 notebook_ui_scene = ExtResource("notebook_ui_456")
 

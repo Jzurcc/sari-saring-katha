@@ -1,15 +1,15 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://wm1gpkw3glu2"]
 
-[ext_resource type="Script" path="res://Scripts/Data/ItemData.gd" id="1_08rbf"]
+[ext_resource type="Script" uid="uid://dhbe82ueyiql5" path="res://Scripts/Data/ItemData.gd" id="1_08rbf"]
 [ext_resource type="Texture2D" uid="uid://2vx0knhd4rx2" path="res://Assets/items/icons/8_sachet_ariel.png" id="2_owfh5"]
 
 [resource]
 script = ExtResource("1_08rbf")
-type = 3
 item_name = "Aryel"
 texture = ExtResource("2_owfh5")
 price = 14.0
 can_be_sold = false
+type = 3
 category = "sachet"
 tier = 10
 item_hint = "can't clean the 0.1%"
