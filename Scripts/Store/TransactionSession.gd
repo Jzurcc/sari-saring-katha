@@ -597,7 +597,7 @@ func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 			Dialogic.VAR.set_variable("Global_FavoriteDiscoveredLine", _build_favorite_discovery_line(customer.customer_data, discovered_cat))
 			if is_instance_valid(customer) and ctx:
 				EventBus.customer_order_updated.emit(customer.get_order_hud_key(), ctx.desired_items, ctx.is_riddle)
-			if ctx.is_story:
+			if ctx.transaction_type == TransactionContext.Type.STORY:
 				# Play favorite discovery remark first, then seamlessly continue into the story chapter's closing dialogue
 				start_dialogue(FAVORITE_DISCOVERED_TIMELINE_PATH, customer, Phase.TALK, "Partial")
 				Dialogic.timeline_ended.connect(func():
