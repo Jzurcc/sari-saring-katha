@@ -10,7 +10,7 @@ signal events_changed(active_events: Array[StoreEventData])
 
 const EVENTS_DIR := "res://Resources/events"
 const DAILY_EVENT_CHANCE := 0.55
-const EVENT_REVEAL_COOLDOWN_HOURS := 4.0
+const EVENT_REVEAL_COOLDOWN_HOURS := 1.5
 const CHATTER_COOLDOWN_HOURS := 1.0
 
 var _available_events: Dictionary = {} # event_id -> StoreEventData
@@ -169,8 +169,15 @@ func is_chatter_on_cooldown() -> bool:
 func start_chatter_cooldown() -> void:
 	_next_chatter_ready_hour = _get_current_hour() + CHATTER_COOLDOWN_HOURS
 
+func has_unrevealed_broadcast() -> bool:
+	if has_unrevealed_events():
+		return true
+	if is_instance_valid(StoryManager) and StoryManager.has_unrevealed_daily_visitors():
+		return true
+	return false
+
 func get_reveal_cooldown_remaining_hours() -> float:
-	if not has_unrevealed_events() or _next_reveal_ready_hour < 0.0:
+	if not has_unrevealed_broadcast() or _next_reveal_ready_hour < 0.0:
 		return 0.0
 	var rem := _next_reveal_ready_hour - _get_current_hour()
 	if rem <= 0.01:
@@ -189,21 +196,13 @@ func can_reveal_next_event() -> bool:
 		return false
 	return get_reveal_cooldown_remaining_hours() <= 0.0
 
-func peek_next_unrevealed_event() -> StoreEventData:
-	var unrev := get_unrevealed_events()
-	return unrev[0] if not unrev.is_empty() else null
+func can_reveal_next_broadcast() -> bool:
+	if not has_unrevealed_broadcast():
+		return false
+	return get_reveal_cooldown_remaining_hours() <= 0.0
 
-## Reveals the next unrevealed daily event via Papa Ulap's Radio broadcast.
-## Starts the 4-hour cooldown before an extra upgraded event can be revealed,
-## and starts the 1-hour chatter cooldown.
-func reveal_next_event() -> StoreEventData:
-	if not can_reveal_next_event():
-		return null
-	var ev := peek_next_unrevealed_event()
-	if ev == null:
-		return null
-	_revealed_event_ids.append(ev.event_id)
-	if has_unrevealed_events():
+func start_reveal_cooldown() -> void:
+	if has_unrevealed_broadcast():
 		var cd_hours := EVENT_REVEAL_COOLDOWN_HOURS
 		if is_instance_valid(StoryManager):
 			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_ECHOES_ON_THE_DIAL):
@@ -214,6 +213,22 @@ func reveal_next_event() -> StoreEventData:
 	else:
 		_next_reveal_ready_hour = -1.0
 	start_chatter_cooldown()
+
+func peek_next_unrevealed_event() -> StoreEventData:
+	var unrev := get_unrevealed_events()
+	return unrev[0] if not unrev.is_empty() else null
+
+## Reveals the next unrevealed daily event via Papa Ulap's Radio broadcast.
+## Starts the 1.5-hour cooldown before the next broadcast can be revealed,
+## and starts the 1-hour chatter cooldown.
+func reveal_next_event() -> StoreEventData:
+	if not can_reveal_next_event():
+		return null
+	var ev := peek_next_unrevealed_event()
+	if ev == null:
+		return null
+	_revealed_event_ids.append(ev.event_id)
+	start_reveal_cooldown()
 	LogManager.info("StoreEventManager", "Papa Ulap revealed event '%s' (%d/%d revealed)." % [
 		ev.event_name, _revealed_event_ids.size(), _active_events.size()
 	])

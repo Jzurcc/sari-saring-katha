@@ -457,7 +457,7 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 func _build_visitor_event_card(vis: CustomerData) -> PanelContainer:
 	var desc_rich := "Papa Ulap spotted [b]%s[/b] heading toward your store today." % vis.character_name
 	var stats: Array = [
-		{"label": "Spawn Chance:", "value": "+120% (2.2×)", "tone": "pos"},
+		{"label": "Spawn Chance:", "value": "+120%", "tone": "pos"},
 	]
 	return _build_hades_card(
 		"Visitor: %s" % vis.character_name,

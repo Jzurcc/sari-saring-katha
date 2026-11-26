@@ -625,12 +625,12 @@ func purchase_maneki_upgrade(level: int) -> void:
 		get_tree().call_group("store_maneki", "refresh_visibility", true)
 	_save_progression()
 
-# --- Barangay Transistor Radio (Papa Ulap Broadcasts, +1 Daily Events, Expected Regulars) ---
+# --- Barangay Transistor Radio (Papa Ulap Broadcasts, Daily Events & Today's Visitors) ---
 const RADIO_UPGRADE_SPECS: Array[Dictionary] = [
-	{"level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "max_events": 1, "desc": "Daily Market Events and Expected Regulars stay hidden."},
-	{"level": 1, "req_level": 1, "name": "Counter Transistor Radio", "cost": 50.0, "reveals": 1, "max_events": 1, "desc": "Places a Counter Radio tuned to Papa Ulap! Click to reveal today's hidden Market Event (and unlocks 1 Expected Regular in the Restock Menu)."},
-	{"level": 2, "req_level": 4, "name": "Copper Tuning Coil", "cost": 95.0, "reveals": 2, "max_events": 2, "desc": "Upgrades the radio's internal coil for stronger reception — unlocks +1 possible Market Event every day (tune in again after 4h to reveal it) and reveals 2 Expected Regulars."},
-	{"level": 3, "req_level": 7, "name": "High-Gain Signal Amplifier", "cost": 155.0, "reveals": 4, "max_events": 3, "desc": "Boosts the radio's receiver circuitry for crystal-clear airwaves! Unlocks another +1 possible Market Event daily (up to 3/day) and reveals all Expected Regulars."},
+	{"level": 0, "req_level": 1, "name": "No Radio", "cost": 0.0, "reveals": 0, "max_events": 1, "desc": "Daily Market Events and Today's Visitors stay hidden."},
+	{"level": 1, "req_level": 1, "name": "Counter Transistor Radio", "cost": 50.0, "reveals": 1, "max_events": 1, "desc": "Places a Counter Radio tuned to Papa Ulap! Tune in every 1.5h to reveal today's Market Event or a Daily Visitor."},
+	{"level": 2, "req_level": 4, "name": "Copper Tuning Coil", "cost": 95.0, "reveals": 2, "max_events": 2, "desc": "Stronger reception — unlocks +1 possible Market Event daily and up to 2 Daily Visitor sightings on the radio."},
+	{"level": 3, "req_level": 7, "name": "High-Gain Signal Amplifier", "cost": 155.0, "reveals": 4, "max_events": 3, "desc": "Crystal-clear airwaves! Unlocks up to 3 Market Events daily and reveals all of Today's Visitors via Papa Ulap."},
 ]
 var radio_upgrade_level: int = 0
 var _radio_upgrade_item_cache: Dictionary = {}
@@ -1186,8 +1186,9 @@ func reset_storefront_artwork(slot_name: String) -> void:
 		get_tree().call_group("storefront_custom_display", "refresh_display")
 	_save_progression()
 
-# --- Everyday Demand State (Expected Regulars, Daily Sulit Deals, Missed Requests) ---
+# --- Everyday Demand State (Today's Visitors, Daily Sulit Deals, Missed Requests) ---
 var todays_expected_regulars: Array[String] = [] # Array of CustomerData.resource_path (3-4 picked daily)
+var revealed_daily_visitors: Array[String] = [] # Subset of todays_expected_regulars revealed via Radio today
 var todays_sulit_deals: Array[String] = [] # Array of ItemData.resource_path (2-3 at -20% when unlocked)
 var todays_missed_items: Dictionary = {} # ItemData.resource_path -> int missed count today
 
@@ -1199,6 +1200,8 @@ func ensure_daily_demand_rolled() -> void:
 
 func _roll_daily_expected_regulars() -> void:
 	todays_expected_regulars.clear()
+	revealed_daily_visitors.clear()
+	revealed_daily_visitors.clear()
 	var pool: Array[CustomerData] = []
 	for c in available_characters:
 		if c and not c.is_collector() and c.unlock_tier <= current_tier:
@@ -1207,7 +1210,7 @@ func _roll_daily_expected_regulars() -> void:
 	var count := mini(pool.size(), randi_range(3, 4))
 	for i in range(count):
 		todays_expected_regulars.append(pool[i].resource_path)
-	LogManager.info("StoryManager", "Rolled %d Expected Regulars for Day %d: %s" % [
+	LogManager.info("StoryManager", "Rolled %d Daily Visitors for Day %d: %s" % [
 		todays_expected_regulars.size(),
 		day,
 		str(todays_expected_regulars.map(func(p: String): return p.get_file().get_basename()))
@@ -1233,13 +1236,54 @@ func get_revealed_expected_regulars() -> Array[CustomerData]:
 	var result: Array[CustomerData] = []
 	if limit <= 0:
 		return result
-	for path in todays_expected_regulars:
+	for path in revealed_daily_visitors:
 		if result.size() >= limit:
 			break
 		var c := _get_character_data(path)
 		if c:
 			result.append(c)
 	return result
+
+func get_unrevealed_daily_visitors() -> Array[CustomerData]:
+	ensure_daily_demand_rolled()
+	var limit := get_revealed_regular_count()
+	var result: Array[CustomerData] = []
+	if limit <= 0 or revealed_daily_visitors.size() >= limit:
+		return result
+	for path in todays_expected_regulars:
+		if path in revealed_daily_visitors:
+			continue
+		var c := _get_character_data(path)
+		if c:
+			result.append(c)
+	return result
+
+func has_unrevealed_daily_visitors() -> bool:
+	return not get_unrevealed_daily_visitors().is_empty()
+
+func peek_next_unrevealed_visitor() -> CustomerData:
+	var unrev := get_unrevealed_daily_visitors()
+	return unrev[0] if not unrev.is_empty() else null
+
+func reveal_daily_visitor(visitor_path: String = "") -> CustomerData:
+	ensure_daily_demand_rolled()
+	var limit := get_revealed_regular_count()
+	if limit <= 0 or revealed_daily_visitors.size() >= limit:
+		return null
+	var chosen_path := visitor_path
+	if chosen_path.is_empty():
+		var nxt := peek_next_unrevealed_visitor()
+		if nxt == null:
+			return null
+		chosen_path = nxt.resource_path
+	if not (chosen_path in revealed_daily_visitors):
+		revealed_daily_visitors.append(chosen_path)
+	var c := _get_character_data(chosen_path)
+	if c:
+		LogManager.info("StoryManager", "Papa Ulap revealed Daily Visitor '%s' (%d/%d)." % [c.character_name, revealed_daily_visitors.size(), mini(limit, todays_expected_regulars.size())])
+		EventBus.restock_catalog_refresh.emit()
+		_save_progression()
+	return c
 
 func is_item_on_sulit_deal(item: ItemData) -> bool:
 	if (not has_mario_deals and not has_mayari_card(MayariCardRegistry.CARD_WHOLESALE_BLESSING)) or not item:
@@ -1629,6 +1673,7 @@ func get_save_data() -> Dictionary:
 		"custom_poster_stickers": custom_poster_stickers.duplicate(true),
 		"custom_recent_colors": custom_recent_colors.duplicate(),
 		"todays_expected_regulars": todays_expected_regulars.duplicate(),
+		"revealed_daily_visitors": revealed_daily_visitors.duplicate(),
 		"todays_sulit_deals": todays_sulit_deals.duplicate(),
 		"todays_missed_items": todays_missed_items.duplicate(),
 		"daily_stats": ensure_daily_stats().duplicate(true),
@@ -1757,8 +1802,12 @@ func load_save_data(data: Dictionary) -> void:
 			if s_hex != "" and custom_recent_colors.size() < 12:
 				custom_recent_colors.append(s_hex)
 	todays_expected_regulars.clear()
+	revealed_daily_visitors.clear()
 	for p in data.get("todays_expected_regulars", []):
 		todays_expected_regulars.append(str(p))
+	revealed_daily_visitors.clear()
+	for p in data.get("revealed_daily_visitors", []):
+		revealed_daily_visitors.append(str(p))
 	todays_sulit_deals.clear()
 	for p in data.get("todays_sulit_deals", []):
 		todays_sulit_deals.append(str(p))
@@ -1883,6 +1932,7 @@ func reset_state() -> void:
 		get_tree().call_group("storefront_custom_display", "refresh_display")
 		get_tree().call_group("store_door", "refresh_lock_state")
 	todays_expected_regulars.clear()
+	revealed_daily_visitors.clear()
 	todays_sulit_deals.clear()
 	todays_missed_items.clear()
 	reset_daily_stats()

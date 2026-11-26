@@ -471,11 +471,11 @@ const CARDS: Dictionary = {
 		"sigil": "⌁",
 		"icon": "res://Assets/ui/icons/radio-tower.png",
 		"tagline": "+50% Radio CD · +10% Sale / Event",
-		"description": "Crackling static stretches Radio reveal cooldown by +50% (6h) and hides Expected Regulars, but every active Neighborhood Event adds +10% to cash sales!",
+		"description": "Crackling static stretches Radio reveal cooldown by +50% (2.25h) and hides Today's Visitors, but every active Neighborhood Event adds +10% to cash sales!",
 		"description_rich": "Static delays Papa Ulap's tuning, yet each active [b]Neighborhood Event[/b] boosts all [b]Cash Sales[/b].",
 		"keywords": ["neighborhood_events", "cash_sale"],
 		"stats": [
-			{"label": "Radio Cooldown / Regulars:", "value": "+50% / Hidden", "tone": "neg"},
+			{"label": "Radio Cooldown / Visitors:", "value": "+50% / Hidden", "tone": "neg"},
 			{"label": "Cash Sales Per Active Event:", "value": "+10%", "tone": "pos"},
 		],
 		"hud_short": "Static Radio · +10% / Event",

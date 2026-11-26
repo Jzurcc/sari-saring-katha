@@ -15,6 +15,7 @@ var _pulse_time: float = 0.0
 var _sprite: Sprite3D = null
 var _speech_anchor: Marker3D = null
 var _pending_reveal_active: bool = false
+var _pending_visitor_path: String = ""
 
 func _ready() -> void:
 	super._ready()
@@ -48,8 +49,8 @@ func _process(delta: float) -> void:
 	super._process(delta)
 	if not visible or StoryManager.radio_upgrade_level < 1 or not is_instance_valid(_sprite):
 		return
-	# Gentle warm golden pulse when Papa Ulap has an unrevealed broadcast ready
-	if is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_event() and not StoryManager.is_past_closing_time():
+	# Gentle warm golden pulse when Papa Ulap has an unrevealed Event or Visitor broadcast ready
+	if is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast() and not StoryManager.is_past_closing_time():
 		_pulse_time += delta * 2.8
 		var glow := 0.5 + 0.5 * sin(_pulse_time)
 		_sprite.modulate = Color(1.0, 0.94 + glow * 0.06, 0.82 + glow * 0.18, 1.0)
@@ -57,7 +58,7 @@ func _process(delta: float) -> void:
 		_sprite.modulate = Color.WHITE
 
 func _refresh_pulse_state() -> void:
-	if is_instance_valid(_sprite) and (not is_instance_valid(StoreEventManager) or not StoreEventManager.can_reveal_next_event()):
+	if is_instance_valid(_sprite) and (not is_instance_valid(StoreEventManager) or not StoreEventManager.can_reveal_next_broadcast()):
 		_sprite.modulate = Color.WHITE
 
 func _refresh_visual_state(play_pop_in: bool = false) -> void:
@@ -99,19 +100,44 @@ func on_interact() -> void:
 	_play_radio_bounce()
 
 	var is_eclipse: bool = StoryManager.has_mayari_card(MayariCardRegistry.CARD_QUIET_ECLIPSE)
-	var can_reveal: bool = is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_event()
+	var cd_ready: bool = is_instance_valid(StoreEventManager) and StoreEventManager.get_reveal_cooldown_remaining_hours() <= 0.0
+	var has_ev: bool = cd_ready and not is_eclipse and is_instance_valid(StoreEventManager) and StoreEventManager.has_unrevealed_events()
+	var has_vis: bool = cd_ready and is_instance_valid(StoryManager) and StoryManager.has_unrevealed_daily_visitors()
 
-	if can_reveal and not is_eclipse:
-		var ev: StoreEventData = StoreEventManager.peek_next_unrevealed_event()
-		if ev:
-			_pending_reveal_active = true
-			Dialogic.VAR.set_variable("Global_RadioEclipse", false)
-			Dialogic.VAR.set_variable("Global_RadioEventName", ev.event_name)
-			Dialogic.VAR.set_variable("Global_EventRumorText", ev.rumor_text)
-			_start_papa_ulap_dialogue("EventBroadcast")
-			return
+	if has_ev or has_vis:
+		var pick_visitor := false
+		if has_ev and has_vis:
+			pick_visitor = (randf() < 0.5)
+		elif has_vis:
+			pick_visitor = true
+
+		if pick_visitor:
+			var vis: CustomerData = StoryManager.peek_next_unrevealed_visitor()
+			if vis:
+				_pending_reveal_active = true
+				_pending_visitor_path = vis.resource_path
+				Dialogic.VAR.set_variable("Global_RadioEclipse", false)
+				Dialogic.VAR.set_variable("Global_RadioVisitorName", vis.character_name)
+				var favs: PackedStringArray = []
+				for fcat in vis.get_favorite_categories():
+					favs.append(StoryManager.get_category_display_name(fcat))
+				var hint_txt := ("They usually look for %s." % ", ".join(favs)) if not favs.is_empty() else "Keep the shelves ready for them!"
+				Dialogic.VAR.set_variable("Global_RadioVisitorHint", hint_txt)
+				_start_papa_ulap_dialogue("VisitorBroadcast")
+				return
+		else:
+			var ev: StoreEventData = StoreEventManager.peek_next_unrevealed_event()
+			if ev:
+				_pending_reveal_active = true
+				_pending_visitor_path = ""
+				Dialogic.VAR.set_variable("Global_RadioEclipse", false)
+				Dialogic.VAR.set_variable("Global_RadioEventName", ev.event_name)
+				Dialogic.VAR.set_variable("Global_EventRumorText", ev.rumor_text)
+				_start_papa_ulap_dialogue("EventBroadcast")
+				return
 
 	_pending_reveal_active = false
+	_pending_visitor_path = ""
 	if is_instance_valid(StoreEventManager) and StoreEventManager.is_chatter_on_cooldown():
 		_start_papa_ulap_dialogue("CommercialBreak")
 		return
@@ -142,7 +168,7 @@ func _start_papa_ulap_dialogue(label: String) -> void:
 	Dialogic.timeline_ended.connect(_on_dialogue_ended, CONNECT_ONE_SHOT)
 
 func _on_dialogic_signal(arg: String) -> void:
-	if arg == "radio_event_revealed":
+	if arg == "radio_event_revealed" or arg == "radio_visitor_revealed":
 		_commit_pending_event_reveal()
 
 func _on_dialogue_ended() -> void:
@@ -155,6 +181,21 @@ func _commit_pending_event_reveal() -> void:
 	if not _pending_reveal_active:
 		return
 	_pending_reveal_active = false
+	if _pending_visitor_path != "":
+		var vpath := _pending_visitor_path
+		_pending_visitor_path = ""
+		var vis := StoryManager.reveal_daily_visitor(vpath)
+		if is_instance_valid(StoreEventManager):
+			StoreEventManager.start_reveal_cooldown()
+		if vis:
+			EventBus.request_sfx.emit("interact")
+			EventBus.show_notification.emit(
+				"Radyo Karimlan: %s Visiting!" % vis.character_name,
+				"Daily Visitor spotted! Check Today's Visitors in Events [K] or Restock Menu.",
+				"interact"
+			)
+		_refresh_pulse_state()
+		return
 	if not is_instance_valid(StoreEventManager):
 		return
 	var revealed := StoreEventManager.reveal_next_event()
@@ -162,7 +203,7 @@ func _commit_pending_event_reveal() -> void:
 		EventBus.request_sfx.emit("interact")
 		EventBus.show_notification.emit(
 			"Radyo Karimlan: %s" % revealed.event_name,
-			"Event revealed! Check Today's Conditions [C] or the Restock Menu.",
+			"Event revealed! Check Today's Conditions [K] or the Restock Menu.",
 			"interact"
 		)
 
