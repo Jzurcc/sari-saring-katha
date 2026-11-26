@@ -967,6 +967,7 @@ func _resolve_rank_content(entry: Dictionary, r: int) -> Dictionary:
 	var media_title := str(entry.get("rank%d_depiction_title" % r, ""))
 	var media_caption := str(entry.get("rank%d_depiction_caption" % r, ""))
 	var media_source := str(entry.get("rank%d_depiction_source" % r, ""))
+	var media_url := str(entry.get("rank%d_depiction_url" % r, ""))
 	var explicit_orient := str(entry.get("rank%d_depiction_orientation" % r, "")).to_lower()
 
 	match r:
@@ -1008,6 +1009,7 @@ func _resolve_rank_content(entry: Dictionary, r: int) -> Dictionary:
 		"media_title": media_title if media_title != "" else heading,
 		"media_caption": media_caption,
 		"media_source": media_source,
+		"media_url": media_url,
 	}
 
 
@@ -1063,6 +1065,7 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 
 	var cap_txt := str(rank_data["media_caption"]).strip_edges()
 	var src_txt := str(rank_data["media_source"]).strip_edges()
+	var url_txt := str(rank_data.get("media_url", "")).strip_edges()
 	if show_caption_callout and (cap_txt != "" or src_txt != ""):
 		var callout := PanelContainer.new()
 		callout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1076,9 +1079,24 @@ func _build_body_paragraphs(rank_data: Dictionary, show_caption_callout: bool) -
 			cl.add_theme_constant_override("line_spacing", 4)
 			cv.add_child(cl)
 		if src_txt != "":
-			var sl := _make_label(src_txt, 14, COL_MUTED, false)
-			sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			cv.add_child(sl)
+			if url_txt != "":
+				var link := LinkButton.new()
+				link.text = src_txt + " ↗"
+				link.uri = url_txt
+				link.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
+				link.tooltip_text = url_txt
+				link.focus_mode = Control.FOCUS_NONE
+				link.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+				link.add_theme_font_override("font", _reg_font)
+				link.add_theme_font_size_override("font_size", 15)
+				link.add_theme_color_override("font_color", COL_GOLD)
+				link.add_theme_color_override("font_hover_color", COL_GOLD_BRIGHT)
+				link.add_theme_color_override("font_pressed_color", COL_CREAM)
+				cv.add_child(link)
+			else:
+				var sl := _make_label(src_txt, 14, COL_MUTED, false)
+				sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				cv.add_child(sl)
 		v.add_child(callout)
 
 	return v
