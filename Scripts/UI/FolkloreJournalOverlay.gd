@@ -75,6 +75,8 @@ var _reader_holder: MarginContainer
 # Lightbox overlay for inspecting Portrait or Landscape journal art at full size
 var _lightbox_bg: ColorRect
 var _lightbox_tex_rect: TextureRect
+var _lightbox_link_btn: LinkButton
+var _lightbox_url: String = ""
 
 # External link confirmation modal
 var _link_confirm_bg: ColorRect
@@ -529,11 +531,39 @@ func _build_lightbox() -> void:
 	_lightbox_tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(_lightbox_tex_rect)
 
+	var link_center := CenterContainer.new()
+	link_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(link_center)
 
-func _open_lightbox(tex: Texture2D, _title: String = "", _caption: String = "") -> void:
+	_lightbox_link_btn = LinkButton.new()
+	_lightbox_link_btn.text = ""
+	_lightbox_link_btn.uri = ""
+	_lightbox_link_btn.underline = LinkButton.UNDERLINE_MODE_ON_HOVER
+	_lightbox_link_btn.focus_mode = Control.FOCUS_NONE
+	_lightbox_link_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_lightbox_link_btn.add_theme_font_override("font", _reg_font)
+	_lightbox_link_btn.add_theme_font_size_override("font_size", 16)
+	_lightbox_link_btn.add_theme_color_override("font_color", COL_GOLD)
+	_lightbox_link_btn.add_theme_color_override("font_hover_color", COL_GOLD_BRIGHT)
+	_lightbox_link_btn.add_theme_color_override("font_pressed_color", COL_CREAM)
+	_lightbox_link_btn.pressed.connect(func():
+		if not _lightbox_url.is_empty():
+			_open_link_confirm(_lightbox_url)
+	)
+	link_center.add_child(_lightbox_link_btn)
+
+
+func _open_lightbox(tex: Texture2D, source_txt: String = "", source_url: String = "") -> void:
 	if tex == null or not is_instance_valid(_lightbox_bg):
 		return
 	_lightbox_tex_rect.texture = tex
+	_lightbox_url = source_url.strip_edges()
+	if is_instance_valid(_lightbox_link_btn):
+		var clean_src := source_txt.strip_edges()
+		_lightbox_link_btn.visible = clean_src != ""
+		_lightbox_link_btn.text = (clean_src + " ↗") if not _lightbox_url.is_empty() else clean_src
+		_lightbox_link_btn.tooltip_text = _lightbox_url
+		_lightbox_link_btn.disabled = _lightbox_url.is_empty()
 	_lightbox_bg.visible = true
 	_lightbox_bg.modulate.a = 0.0
 	_lightbox_tex_rect.scale = Vector2(0.94, 0.94)
@@ -1232,7 +1262,8 @@ func _build_media_plate(rank_data: Dictionary, is_portrait: bool) -> Control:
 
 	var tex: Texture2D = rank_data["tex"]
 	var title_str := str(rank_data["media_title"])
-	var cap_str := str(rank_data["media_caption"])
+	var src_str := str(rank_data.get("media_source", ""))
+	var url_str := str(rank_data.get("media_url", ""))
 
 	if tex != null:
 		var art_btn := Button.new()
@@ -1252,7 +1283,7 @@ func _build_media_plate(rank_data: Dictionary, is_portrait: bool) -> Control:
 		art_btn.add_theme_stylebox_override("pressed", empty_st)
 		art_btn.mouse_entered.connect(func(): frame.add_theme_stylebox_override("panel", hover_st))
 		art_btn.mouse_exited.connect(func(): frame.add_theme_stylebox_override("panel", normal_st))
-		art_btn.pressed.connect(func(): _open_lightbox(tex, title_str, cap_str))
+		art_btn.pressed.connect(func(): _open_lightbox(tex, src_str, url_str))
 		vbox.add_child(art_btn)
 
 		var img := TextureRect.new()
