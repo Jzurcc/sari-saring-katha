@@ -128,30 +128,64 @@ var _diff_lbl: Label
 var _chance_lbl: Label
 
 
-static func compute_haggle_accept_chance(offered_step: int, tolerance: int) -> float:
+static func compute_haggle_accept_chance(offered_step: int, tolerance: int, original_step: int = 3) -> float:
+	# Offering the exact same price the customer already balked at almost never works
+	var steps_dropped: int = original_step - offered_step
+	if steps_dropped <= 0:
+		return 0.05
+
 	var eff_step: int = offered_step - tolerance
-	var base: float = 1.0
-	if eff_step <= 0:
-		base = 1.0
-	elif eff_step == 1:
-		base = 0.92
-	elif eff_step == 2:
-		base = 0.80
-	elif eff_step == 3:
-		base = 0.55
-	elif eff_step == 4:
-		base = 0.30
-	else:
-		base = 0.12
+	var base: float
+	match eff_step:
+		5, 6, 7, 8, 9, 10:
+			base = 0.05
+		4:
+			base = 0.10
+		3:
+			base = 0.22
+		2:
+			base = 0.38
+		1:
+			base = 0.56
+		0:
+			base = 0.74
+		-1:
+			base = 0.84
+		-2:
+			base = 0.91
+		-3:
+			base = 0.96
+		_:
+			base = 1.0
+
+	# Sticker-shock penalty when customer was initially hit with a steep markup (+4 or +5)
+	var shock_penalty: float = 0.0
+	if original_step >= 5:
+		shock_penalty = 0.19 if offered_step >= 0 else 0.10
+	elif original_step == 4:
+		shock_penalty = 0.09 if offered_step >= 0 else 0.04
+
+	# Barely budging by 1 step feels stingy
+	var stingy_penalty: float = 0.10 if steps_dropped == 1 else 0.0
 
 	var relief: float = StoryManager.get_storefront_price_relief() if is_instance_valid(StoryManager) else 0.0
 	var card_mod: float = 0.0
 	if is_instance_valid(StoryManager):
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
-			card_mod += 0.20
+			card_mod += 0.15
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
 			card_mod -= 0.15
-	return clampf(base + relief + card_mod, 0.05, 1.0)
+
+	# Hard ceiling: base retail price (step >= 0) is never guaranteed, especially after +5 gouging
+	var max_cap: float = 1.0
+	if original_step >= 5:
+		max_cap = 0.72 if offered_step >= 0 else 0.95
+	elif original_step == 4:
+		max_cap = 0.82 if offered_step >= 0 else 0.98
+	elif offered_step >= 0:
+		max_cap = 0.90
+
+	return clampf(base - shock_penalty - stingy_penalty + (relief * 0.65) + card_mod, 0.05, max_cap)
 
 
 func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node3D = null) -> void:
@@ -295,7 +329,7 @@ func _refresh_ui() -> void:
 		return
 	var offered_price := _price_for_step(_offered_step)
 	var orig_price := _price_for_step(_original_step)
-	var chance := compute_haggle_accept_chance(_offered_step, _tolerance)
+	var chance := compute_haggle_accept_chance(_offered_step, _tolerance, _original_step)
 	var pct := int(roundf(chance * 100.0))
 
 	var col := COL_GOOD if chance >= 0.75 else (COL_WARN if chance >= 0.45 else COL_BAD)
@@ -310,11 +344,14 @@ func _refresh_ui() -> void:
 	_price_lbl.text = "₱%.2f" % offered_price
 	var savings := orig_price - offered_price
 	if savings > 0.01:
-		_diff_lbl.text = "-₱%.2f off  (this sale only)" % savings
+		if _offered_step == 0:
+			_diff_lbl.text = "-₱%.2f off  (Base price • this sale only)" % savings
+		else:
+			_diff_lbl.text = "-₱%.2f off  (this sale only)" % savings
 		_diff_lbl.add_theme_color_override("font_color", COL_GOOD)
 	else:
-		_diff_lbl.text = "Original price"
-		_diff_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		_diff_lbl.text = "No discount offered"
+		_diff_lbl.add_theme_color_override("font_color", COL_BAD)
 
 	_chance_lbl.text = "%d%%" % pct
 	_chance_lbl.add_theme_color_override("font_color", col)
@@ -324,7 +361,7 @@ func _confirm_offer() -> void:
 	if _resolved:
 		return
 	_resolved = true
-	var chance := compute_haggle_accept_chance(_offered_step, _tolerance)
+	var chance := compute_haggle_accept_chance(_offered_step, _tolerance, _original_step)
 	var accepted := randf() < chance
 	Juice.play_sfx("pickup" if accepted else "error", 1.18 if accepted else 0.90, 0.5)
 	_finish(accepted, _offered_step)
