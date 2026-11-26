@@ -1,9 +1,9 @@
 class_name ShortcutDockHUD
 extends CanvasLayer
 
-## Vertical mid-left HUD shortcut dock displaying Lucide icons paired with square keycap
-## badges matching the Calendar [C] keycap style:
-##   - Folklore Journal (default [J], action: toggle_journal) + unread gold indicator
+## Bottom-left horizontal HUD shortcut dock displaying double-ringed circular Lucide
+## medallions paired with square keycap badges matching the Calendar [C] keycap style:
+##   - Folklore Journal (default [J], action: toggle_journal) + circular unread gold dot
 ##   - Price Ledger     (default [L], action: toggle_ledger)
 ##   - Store Upgrades   (default [U], action: toggle_upgrades)
 ## Automatically reflects any custom keybind changes made in Settings.
@@ -18,10 +18,26 @@ const SHORTCUTS: Array[Dictionary] = [
 	{"id": "upgrades", "action": "toggle_upgrades", "default_key": KEY_U, "icon": IC_UPGRADES},
 ]
 
+
+class CircleMedallion extends Control:
+	var fill_col: Color = Color(0.06, 0.052, 0.046, 0.92)
+	var outer_ring_col: Color = Color(0.86, 0.66, 0.30, 0.78)
+	var inner_ring_col: Color = Color(0.96, 0.80, 0.42, 0.92)
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r_outer := minf(size.x, size.y) * 0.5 - 1.5
+		var r_inner := r_outer - 4.0
+		draw_circle(c, r_outer, fill_col)
+		# Thin outer ring + thick inner ring (matching Hades diamond event emblems)
+		draw_arc(c, r_outer, 0.0, TAU, 48, outer_ring_col, 1.4, true)
+		draw_arc(c, r_inner, 0.0, TAU, 48, inner_ring_col, 2.8, true)
+
+
 var _root: Control
-var _dock: VBoxContainer
+var _dock: HBoxContainer
 var _key_labels: Dictionary = {} # action -> Label
-var _journal_dot: ColorRect
+var _journal_dot: Panel
 var _sync_timer: float = 0.0
 
 
@@ -58,54 +74,64 @@ func _build_ui() -> void:
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 
-	_dock = VBoxContainer.new()
+	# Bottom-left horizontal dock
+	_dock = HBoxContainer.new()
 	_dock.anchor_left = 0.0
 	_dock.anchor_right = 0.0
-	_dock.anchor_top = 0.5
-	_dock.anchor_bottom = 0.5
-	_dock.offset_left = 20.0
-	_dock.offset_right = 76.0
-	_dock.offset_top = -112.0
-	_dock.offset_bottom = 112.0
-	_dock.alignment = BoxContainer.ALIGNMENT_CENTER
-	_dock.add_theme_constant_override("separation", 16)
+	_dock.anchor_top = 1.0
+	_dock.anchor_bottom = 1.0
+	_dock.offset_left = 24.0
+	_dock.offset_right = 230.0
+	_dock.offset_top = -106.0
+	_dock.offset_bottom = -18.0
+	_dock.add_theme_constant_override("separation", 14)
 	_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_dock)
 
 	for s in SHORTCUTS:
 		var item_v := VBoxContainer.new()
 		item_v.alignment = BoxContainer.ALIGNMENT_CENTER
-		item_v.add_theme_constant_override("separation", 4)
+		item_v.add_theme_constant_override("separation", 5)
 		item_v.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_dock.add_child(item_v)
 
-		# Lucide icon (slightly larger than the square keycap below it)
-		var icon_holder := Control.new()
-		icon_holder.custom_minimum_size = Vector2(36, 36)
-		icon_holder.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		icon_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		item_v.add_child(icon_holder)
+		# Double-ring circular medallion encasing the Lucide icon
+		var circle := CircleMedallion.new()
+		circle.custom_minimum_size = Vector2(50, 50)
+		circle.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		circle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		item_v.add_child(circle)
+
+		var icon_center := CenterContainer.new()
+		icon_center.set_anchors_preset(Control.PRESET_FULL_RECT)
+		icon_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		circle.add_child(icon_center)
 
 		var ic := TextureRect.new()
-		ic.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ic.custom_minimum_size = Vector2(24, 24)
 		ic.texture = s["icon"]
 		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		ic.modulate = Color(1.0, 0.94, 0.80, 0.94)
+		ic.modulate = Color(1.0, 0.94, 0.80, 0.96)
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_holder.add_child(ic)
+		icon_center.add_child(ic)
 
 		if str(s["id"]) == "journal":
-			_journal_dot = ColorRect.new()
-			_journal_dot.color = Color(1.0, 0.84, 0.34, 1.0)
-			_journal_dot.custom_minimum_size = Vector2(8, 8)
-			_journal_dot.size = Vector2(8, 8)
-			_journal_dot.position = Vector2(28, 0)
+			_journal_dot = Panel.new()
+			_journal_dot.custom_minimum_size = Vector2(11, 11)
+			_journal_dot.size = Vector2(11, 11)
+			_journal_dot.position = Vector2(37, 2)
 			_journal_dot.visible = false
 			_journal_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			icon_holder.add_child(_journal_dot)
+			var dot_st := StyleBoxFlat.new()
+			dot_st.bg_color = Color(1.0, 0.86, 0.34, 1.0)
+			dot_st.border_color = Color(0.08, 0.06, 0.04, 0.95)
+			dot_st.set_border_width_all(1)
+			dot_st.set_corner_radius_all(6)
+			_journal_dot.add_theme_stylebox_override("panel", dot_st)
+			circle.add_child(_journal_dot)
 
-		# Square keycap pill (exact same size & style as Calendar [C] keycap in MayariCardHUD)
+		# Square keycap pill (same size & style as Calendar [C] keycap)
 		var key_panel := PanelContainer.new()
 		key_panel.custom_minimum_size = Vector2(30, 30)
 		key_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER

@@ -103,11 +103,11 @@ func _build_ui() -> void:
 
 	_row = HBoxContainer.new()
 	_row.anchor_left = 0.0
-	_row.anchor_top = 1.0
-	_row.anchor_bottom = 1.0
-	_row.offset_left = 24.0
-	_row.offset_top = -86.0
-	_row.offset_bottom = -22.0
+	_row.anchor_top = 0.5
+	_row.anchor_bottom = 0.5
+	_row.offset_left = 22.0
+	_row.offset_top = -150.0
+	_row.offset_bottom = 150.0
 	_row.add_theme_constant_override("separation", 10)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_row)
@@ -128,13 +128,20 @@ func _refresh_icons() -> void:
 		_row.remove_child(child)
 		child.queue_free()
 
+	var diamonds_col := VBoxContainer.new()
+	diamonds_col.alignment = BoxContainer.ALIGNMENT_CENTER
+	diamonds_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	diamonds_col.add_theme_constant_override("separation", 10)
+	diamonds_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_row.add_child(diamonds_col)
+
 	var count := 0
 
 	# 1. Active Neighborhood Events
 	if is_instance_valid(StoreEventManager):
 		for ev in StoreEventManager.get_active_events():
 			var pe: Dictionary = HadesEmblem.palette("event")
-			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, ev.get_icon_path())
+			_add_diamond(_event_sigil(ev.event_id), pe["accent"], pe["bright"], 0.0, ev.get_icon_path(), diamonds_col)
 			count += 1
 
 	# 2. Active Reyna Mayari Moon Card(s)
@@ -148,7 +155,7 @@ func _refresh_icons() -> void:
 			var pc: Dictionary = HadesEmblem.palette("favor" if is_fav else "chill")
 			var acc: Color = pc["accent"]
 			var acc_b: Color = pc["bright"]
-			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b, 0.0, str(card.get("icon", "")))
+			_add_diamond(str(card.get("sigil", "☽")), acc, acc_b, 0.0, str(card.get("icon", "")), diamonds_col)
 			count += 1
 
 	# 3. Active Sto. Niño Blessings (with clockwise radial sweep when timed)
@@ -157,7 +164,7 @@ func _refresh_icons() -> void:
 	for b_id in StoryManager.active_blessing_cards:
 		var b_card := MayariCardRegistry.get_card(b_id)
 		if not b_card.is_empty():
-			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress, str(b_card.get("icon", "")))
+			var d := _add_diamond(str(b_card.get("sigil", "✦")), pb["accent"], pb["bright"], b_progress, str(b_card.get("icon", "")), diamonds_col)
 			_blessing_diamonds.append(d)
 			count += 1
 	if not _blessing_diamonds.is_empty():
@@ -375,7 +382,7 @@ func _build_moon_card_toast(c_data: Dictionary) -> PanelContainer:
 
 	return card
 
-func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0, icon_path: String = "") -> MiniDiamondIcon:
+func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: float = 0.0, icon_path: String = "", target_parent: Control = null) -> MiniDiamondIcon:
 	var d := MiniDiamondIcon.new()
 	d.custom_minimum_size = Vector2(62, 62)
 	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -384,7 +391,7 @@ func _add_diamond(sigil: String, accent: Color, accent_bright: Color, progress: 
 	d.accent_bright = accent_bright
 	d.fill_color = Color(accent.r * 0.28, accent.g * 0.21, accent.b * 0.14, 0.95)
 	d.radial_progress = progress
-	_row.add_child(d)
+	(target_parent if target_parent != null else _row).add_child(d)
 
 	HadesEmblem.populate_emblem_glyph(d, icon_path, sigil, accent_bright, 24.0, 26)
 	return d
