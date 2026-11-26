@@ -151,6 +151,12 @@ func _trigger_price_refusal(
 	item.show_visuals()
 	item.return_to_start()
 
+	# Clear any partial bulk-order tip tracker (rejected/refused customer = guaranteed no tip)
+	if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree() and customer.customer_data:
+		var gm_ref := _tree_owner.get_tree().get_first_node_in_group("game_manager") as GameManager
+		if gm_ref:
+			gm_ref.resolve_bulk_order_tip(customer.customer_data.resource_path, false)
+
 	# World & UI Juice (let the refusal dialogue & -Rep popup carry the message cleanly)
 	EventBus.request_camera_shake.emit(0.18, 0.22)
 	AudioManager.play_sfx("error")
@@ -446,10 +452,6 @@ func _complete_item_delivery(
 
 		VisualEffectManager.spawn_transaction_glimmer(glimmer_pos)
 		var wants_debt: bool = context.wants_debt if context else false
-		if item.item_data.current_step < 0 and not wants_debt:
-			if context:
-				context.tip_active = true
-			Dialogic.VAR.set_variable("Global_TipActive", true)
 		EventBus.transaction_completed.emit(item.item_data, true, wants_debt, c_path)
 
 		if not item.is_transient:
@@ -463,6 +465,10 @@ func _complete_item_delivery(
 		var is_guided: bool = (context != null and context.is_guided_tutorial) or (gm_guided != null and gm_guided.tutorial != null and gm_guided.tutorial.is_guided_timeline_active())
 		var is_whole_order_done: bool = context.desired_items.is_empty() if context else true
 		if is_whole_order_done:
+			if gm_guided and not wants_debt and c_path != "":
+				var bulk_tip := gm_guided.resolve_bulk_order_tip(c_path, true)
+				if bulk_tip > 0.0 and context:
+					context.tip_active = true
 			StoryManager.award_customer_completion_xp(customer)
 		if needs_switch:
 			if not is_guided and context:

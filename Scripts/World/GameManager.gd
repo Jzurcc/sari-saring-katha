@@ -37,6 +37,7 @@ var _mayari_milestones_spoken_count: int = 0
 var _mayari_tally_timeline_path: String = ""
 var _is_day_summary_open: bool = false
 var _day_summary_shown_for_day: int = -1
+var _pending_order_tips: Dictionary = {} # customer_path -> {total_base_price, eff_step_sum, item_count}
 var _mayari_card_hud: Node = null
 var _player_xp_hud: Node = null
 var _events_overlay: Node = null
@@ -131,64 +132,22 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			_last_earning += sale_bonus
 			LogManager.info("GameManager", "Item Sale Bonus applied: +₱%.2f!" % sale_bonus)
 
-		# 2. Customer Tips (curved by perceived effective step, scaling even below -5 when tolerance stacks!)
+		# 2. Accumulate item into bulk-order tip tracker (resolved once when the full order completes; 0 tip if rejected early)
 		var tip: float = 0.0
-		if not wants_debt:
+		if not wants_debt and customer_path != "":
 			var tip_tol := 0
 			if is_instance_valid(StoreEventManager):
 				tip_tol += StoreEventManager.get_item_tolerance_offset(item)
 			tip_tol += StoryManager.get_mayari_tolerance_offset()
-			var tip_cdata: CustomerData = StoryManager._get_character_data(customer_path) if customer_path != "" else null
+			var tip_cdata: CustomerData = StoryManager._get_character_data(customer_path)
 			if tip_cdata and is_instance_valid(CharacterProgressionManager):
 				tip_tol += CharacterProgressionManager.get_reputation_tolerance_bonus(tip_cdata, item)
 			var tip_eff_step: int = item.current_step - tip_tol
-			var base_tip_chance: float = 0.0
-			var base_tip_pct: float = 0.0
-			var flat_tip: float = 0.0
-			if tip_eff_step <= -5:
-				var extra_below := float(-5 - tip_eff_step)
-				base_tip_chance = minf(1.0, 0.95 + extra_below * 0.025)
-				base_tip_pct = 0.45 + extra_below * 0.10
-				flat_tip = 9.0 + extra_below * 3.0
-			else:
-				match tip_eff_step:
-					-4:
-						base_tip_chance = 0.88; base_tip_pct = 0.38; flat_tip = 8.0
-					-3:
-						base_tip_chance = 0.80; base_tip_pct = 0.32; flat_tip = 7.0
-					-2:
-						base_tip_chance = 0.70; base_tip_pct = 0.27; flat_tip = 6.0
-					-1:
-						base_tip_chance = 0.58; base_tip_pct = 0.23; flat_tip = 5.0
-					0:
-						base_tip_chance = 0.45; base_tip_pct = 0.20; flat_tip = 4.0
-					1:
-						base_tip_chance = 0.32; base_tip_pct = 0.17; flat_tip = 3.5
-					2:
-						base_tip_chance = 0.22; base_tip_pct = 0.15; flat_tip = 3.0
-					3:
-						base_tip_chance = 0.15; base_tip_pct = 0.13; flat_tip = 2.5
-					4:
-						base_tip_chance = 0.10; base_tip_pct = 0.12; flat_tip = 2.0
-					_:
-						base_tip_chance = 0.0; base_tip_pct = 0.0; flat_tip = 0.0
-
-			if base_tip_chance > 0.0:
-				base_tip_chance = clampf(base_tip_chance + StoryManager.get_storefront_tip_chance(), 0.0, 1.0)
-				if randf() < base_tip_chance:
-					var total_tip_pct := base_tip_pct + StoryManager.get_maneki_tip_bonus_pct()
-					if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
-						total_tip_pct += 0.12
-					if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
-						total_tip_pct += 0.10
-					if customer_path != "" and is_instance_valid(CharacterProgressionManager):
-						total_tip_pct += CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
-					# Scale percentage off item.price (base wholesale value) so discounts never shrink % tips
-					var pct_tip := StoryManager.calc_scaled_tip(item.price, total_tip_pct, 3.0, 60.0)
-					tip = snappedf(pct_tip + flat_tip, 0.5)
-					_last_earning += tip
-					Dialogic.VAR.set_variable("Global_TipActive", true)
-					LogManager.info("GameManager", "Customer tipped +₱%.2f (eff_step=%d, chance=%.0f%%)!" % [tip, tip_eff_step, base_tip_chance * 100.0])
+			var acc: Dictionary = _pending_order_tips.get(customer_path, {"total_base_price": 0.0, "eff_step_sum": 0, "item_count": 0})
+			acc["total_base_price"] = float(acc["total_base_price"]) + item.price
+			acc["eff_step_sum"] = int(acc["eff_step_sum"]) + tip_eff_step
+			acc["item_count"] = int(acc["item_count"]) + 1
+			_pending_order_tips[customer_path] = acc
 
 		# Reputation Gain/Loss from Sale (based on effective pricing step, coldness, and favorite category)
 		if customer_path != "" and is_instance_valid(CharacterProgressionManager):
@@ -244,6 +203,71 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 
 func _on_utang_accepted(_customer: Customer) -> void:
 	LogManager.info("GameManager", "Utang accepted! Transaction finalized with no immediate payment.")
+
+func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -> float:
+	if customer_path == "" or not _pending_order_tips.has(customer_path):
+		return 0.0
+	var acc: Dictionary = _pending_order_tips[customer_path]
+	_pending_order_tips.erase(customer_path)
+	if not completed_full_order:
+		return 0.0
+	var cnt := maxi(1, int(acc.get("item_count", 1)))
+	var total_base_price := float(acc.get("total_base_price", 0.0))
+	var tip_eff_step: int = int(roundf(float(int(acc.get("eff_step_sum", 0))) / float(cnt)))
+
+	var base_tip_chance: float = 0.0
+	var base_tip_pct: float = 0.0
+	var flat_tip: float = 0.0
+	if tip_eff_step <= -5:
+		var extra_below := float(-5 - tip_eff_step)
+		base_tip_chance = minf(1.0, 0.95 + extra_below * 0.025)
+		base_tip_pct = 0.45 + extra_below * 0.10
+		flat_tip = 9.0 + extra_below * 3.0
+	else:
+		match tip_eff_step:
+			-4:
+				base_tip_chance = 0.88; base_tip_pct = 0.38; flat_tip = 8.0
+			-3:
+				base_tip_chance = 0.80; base_tip_pct = 0.32; flat_tip = 7.0
+			-2:
+				base_tip_chance = 0.70; base_tip_pct = 0.27; flat_tip = 6.0
+			-1:
+				base_tip_chance = 0.58; base_tip_pct = 0.23; flat_tip = 5.0
+			0:
+				base_tip_chance = 0.45; base_tip_pct = 0.20; flat_tip = 4.0
+			1:
+				base_tip_chance = 0.32; base_tip_pct = 0.17; flat_tip = 3.5
+			2:
+				base_tip_chance = 0.22; base_tip_pct = 0.15; flat_tip = 3.0
+			3:
+				base_tip_chance = 0.15; base_tip_pct = 0.13; flat_tip = 2.5
+			4:
+				base_tip_chance = 0.10; base_tip_pct = 0.12; flat_tip = 2.0
+			_:
+				base_tip_chance = 0.0; base_tip_pct = 0.0; flat_tip = 0.0
+
+	if base_tip_chance <= 0.0:
+		return 0.0
+	base_tip_chance = clampf(base_tip_chance + StoryManager.get_storefront_tip_chance(), 0.0, 1.0)
+	if randf() >= base_tip_chance:
+		return 0.0
+
+	var total_tip_pct := base_tip_pct + StoryManager.get_maneki_tip_bonus_pct()
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
+		total_tip_pct += 0.12
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
+		total_tip_pct += 0.10
+	if is_instance_valid(CharacterProgressionManager):
+		total_tip_pct += CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
+	var pct_tip := StoryManager.calc_scaled_tip(total_base_price, total_tip_pct, 3.0, 90.0)
+	var tip: float = snappedf(pct_tip + flat_tip, 0.5)
+	money += tip
+	EventBus.money_changed.emit(money)
+	StoryManager.record_daily_stat_float("tips_earned", tip)
+	Dialogic.VAR.set_variable("Global_TipActive", true)
+	LogManager.info("GameManager", "Bulk order tip +₱%.2f (%d items, avg_eff_step=%d, chance=%.0f%%)!" % [tip, cnt, tip_eff_step, base_tip_chance * 100.0])
+	return tip
+
 
 func deduct_money(amount: float, is_mayari_tribute: bool = false) -> bool:
 	if money >= amount:
