@@ -2051,10 +2051,18 @@ func award_customer_completion_xp(customer: Customer) -> void:
 	if ctx.transaction_type == TransactionContext.Type.VISIT or ctx.is_visit_story:
 		add_player_xp(10, "Visit")
 	else:
-		var xp := 15 + maxi(0, ctx.original_count - 1) * 5
-		if ctx.is_riddle:
-			xp += 10
-		add_player_xp(xp, "Purchase")
+		var orig := maxi(1, ctx.original_count)
+		var delivered := ctx.delivered_items.size()
+		if delivered <= 0:
+			return
+		var full_xp := 15 + maxi(0, orig - 1) * 5
+		if ctx.is_riddle and delivered >= orig:
+			full_xp += 10
+		var xp := full_xp
+		if delivered < orig:
+			var ratio := float(delivered) / float(orig)
+			xp = maxi(3, int(roundf(float(full_xp) * ratio * 0.55)))
+		add_player_xp(xp, "Purchase" if delivered >= orig else "Partial Purchase")
 		purchase_counter += 1
 
 func _on_customer_satisfied(customer) -> void:
