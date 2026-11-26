@@ -626,6 +626,18 @@ func _load_level(lvl: int) -> void:
 	_canvas.queue_redraw()
 
 
+func _get_stroke_pts(stroke_entry) -> Array:
+	if stroke_entry is Dictionary:
+		return stroke_entry.get("pts", [])
+	return stroke_entry
+
+
+func _get_stroke_size_index(stroke_entry) -> int:
+	if stroke_entry is Dictionary:
+		return clampi(int(stroke_entry.get("size", _current_brush_size_index)), 0, 3)
+	return _current_brush_size_index
+
+
 func _rebuild_guide_mask(grace_px: float) -> void:
 	# Exact raster mask matching CANVAS_SIZE (560x750):
 	# 0 = outside line (stray ink), 1 = grace margin, 2 = core guide band
@@ -635,17 +647,19 @@ func _rebuild_guide_mask(grace_px: float) -> void:
 	_guide_mask.resize(w * h)
 	_guide_mask.fill(0)
 
-	var brush_r := CanvasDrawSurface.BRUSH_SIZES[_current_brush_size_index]
-	var core_r := maxf(3.0, brush_r * 0.78)
-	var allow_r := brush_r + grace_px
-	var core_r_sq := core_r * core_r
-	var allow_r_sq := allow_r * allow_r
-	var r_ceil := int(ceilf(allow_r))
-	var step_px := maxf(1.5, core_r * 0.35)
-
-	for stroke in _guide_polylines_norm:
+	for stroke_entry in _guide_polylines_norm:
+		var stroke := _get_stroke_pts(stroke_entry)
 		if stroke.size() < 2:
 			continue
+		var s_idx := _get_stroke_size_index(stroke_entry)
+		var brush_r := CanvasDrawSurface.BRUSH_SIZES[s_idx]
+		var core_r := maxf(3.0, brush_r * 0.78)
+		var allow_r := brush_r + grace_px
+		var core_r_sq := core_r * core_r
+		var allow_r_sq := allow_r * allow_r
+		var r_ceil := int(ceilf(allow_r))
+		var step_px := maxf(1.5, core_r * 0.35)
+
 		for i in range(stroke.size() - 1):
 			var a := Vector2(stroke[i].x * float(w), stroke[i].y * float(h))
 			var b := Vector2(stroke[i + 1].x * float(w), stroke[i + 1].y * float(h))
@@ -734,15 +748,17 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 	var gap_len := 9.0
 	var cycle := dash_len + gap_len
 	var screen_scale := canvas_rect.size.x / maxf(1.0, float(CANVAS_SIZE.x))
-	var brush_r := CanvasDrawSurface.BRUSH_SIZES[_current_brush_size_index]
-	var glow_w := clampf(brush_r * 1.45 * screen_scale, 5.5, 22.0)
-	var core_w := clampf(brush_r * 0.42 * screen_scale, 2.2, 7.5)
 	var glow_col := Color(1.0, 0.94, 0.72, 0.30)
 	var core_col := Color(0.20, 0.11, 0.04, 0.78)
 
-	for stroke in _guide_polylines_norm:
+	for stroke_entry in _guide_polylines_norm:
+		var stroke := _get_stroke_pts(stroke_entry)
 		if stroke.size() < 2:
 			continue
+		var s_idx := _get_stroke_size_index(stroke_entry)
+		var brush_r := CanvasDrawSurface.BRUSH_SIZES[s_idx]
+		var glow_w := clampf(brush_r * 1.45 * screen_scale, 5.5, 22.0)
+		var core_w := clampf(brush_r * 0.42 * screen_scale, 2.2, 7.5)
 		var pts: Array[Vector2] = []
 		for norm_pt in stroke:
 			pts.append(Vector2(
@@ -930,6 +946,10 @@ func _poly_pts(verts: Array[Vector2], closed: bool = true) -> Array:
 	return out
 
 
+func _st(pts: Array, size_idx: int) -> Dictionary:
+	return {"pts": pts, "size": size_idx}
+
+
 func _build_talisman_patterns() -> Array[Dictionary]:
 	var sets: Array[Dictionary] = []
 
@@ -964,149 +984,149 @@ func _build_talisman_patterns() -> Array[Dictionary]:
 		],
 	})
 
-	# 3. Mata ng Bantay — Watcher's Eye (Medium brush, 68% target)
+	# 3. Mata ng Bantay — Watcher's Eye (Medium eye + Fine lashes, 68% target)
 	sets.append({
 		"roman": "III",
 		"name": "Mata ng Bantay",
-		"subtitle": "Watcher's Eye • Medium brush • Protective almond eye.",
+		"subtitle": "Watcher's Eye • Medium & fine brushes • Protective almond eye.",
 		"required_accuracy": 68,
 		"brush_size_index": 1,
 		"grace_px": 7.0,
 		"strokes": [
-			_arc_pts(0.0, 0.28, 0.78, 0.62, deg_to_rad(212.0), deg_to_rad(328.0), 24),
-			_arc_pts(0.0, -0.28, 0.78, 0.62, deg_to_rad(32.0), deg_to_rad(148.0), 24),
-			_circle_pts(0.0, 0.0, 0.24, 0.23, 24),
-			[_pt(0.0, -0.62), _pt(0.0, -0.40)],
-			[_pt(0.0, 0.40), _pt(0.0, 0.62)],
+			_st(_arc_pts(0.0, 0.28, 0.78, 0.62, deg_to_rad(212.0), deg_to_rad(328.0), 24), 1),
+			_st(_arc_pts(0.0, -0.28, 0.78, 0.62, deg_to_rad(32.0), deg_to_rad(148.0), 24), 1),
+			_st(_circle_pts(0.0, 0.0, 0.24, 0.23, 24), 1),
+			_st([_pt(0.0, -0.62), _pt(0.0, -0.40)], 0),
+			_st([_pt(0.0, 0.40), _pt(0.0, 0.62)], 0),
 		],
 	})
 
-	# 4. Tala ng Gabay — Guiding Star (Medium brush, 70% target)
+	# 4. Tala ng Gabay — Guiding Star (Medium star + Fine inner ring, 70% target)
 	sets.append({
 		"roman": "IV",
 		"name": "Tala ng Gabay",
-		"subtitle": "Guiding Star • Medium brush • Four-pointed star inside a ward circle.",
+		"subtitle": "Guiding Star • Medium & fine brushes • Four-pointed star & inner ring.",
 		"required_accuracy": 70,
 		"brush_size_index": 1,
 		"grace_px": 6.5,
 		"strokes": [
-			_poly_pts([
+			_st(_poly_pts([
 				Vector2(0.0, -0.82), Vector2(0.18, -0.18),
 				Vector2(0.76, 0.0), Vector2(0.18, 0.18),
 				Vector2(0.0, 0.82), Vector2(-0.18, 0.18),
 				Vector2(-0.76, 0.0), Vector2(-0.18, -0.18),
-			], true),
-			_circle_pts(0.0, 0.0, 0.34, 0.32, 28),
+			], true), 1),
+			_st(_circle_pts(0.0, 0.0, 0.34, 0.32, 28), 0),
 		],
 	})
 
-	# 5. Tatsulok ng Lunas — Healing Triad (Bold brush, 72% target)
+	# 5. Tatsulok ng Lunas — Healing Triad (Bold triangle + Medium ring & bar, 72% target)
 	sets.append({
 		"roman": "V",
 		"name": "Tatsulok ng Lunas",
-		"subtitle": "Healing Triad • Bold brush • Sacred triangle with inner ring & grounding bar.",
+		"subtitle": "Healing Triad • Bold & medium brushes • Sacred triangle & inner ring.",
 		"required_accuracy": 72,
 		"brush_size_index": 2,
 		"grace_px": 6.5,
 		"strokes": [
-			_poly_pts([Vector2(0.0, -0.78), Vector2(0.74, 0.52), Vector2(-0.74, 0.52)], true),
-			_circle_pts(0.0, 0.08, 0.24, 0.23, 24),
-			[_pt(-0.56, 0.74), _pt(0.56, 0.74)],
-			[_pt(0.0, -0.44), _pt(0.0, -0.16)],
+			_st(_poly_pts([Vector2(0.0, -0.78), Vector2(0.74, 0.52), Vector2(-0.74, 0.52)], true), 2),
+			_st(_circle_pts(0.0, 0.08, 0.24, 0.23, 24), 1),
+			_st([_pt(-0.56, 0.74), _pt(0.56, 0.74)], 1),
+			_st([_pt(0.0, -0.44), _pt(0.0, -0.16)], 0),
 		],
 	})
 
-	# 6. Sinag ng Araw — Sunburst Sigil (Medium brush, 75% target)
-	var sun_strokes: Array = [_circle_pts(0.0, 0.0, 0.34, 0.32, 28)]
+	# 6. Sinag ng Araw — Sunburst Sigil (Bold core + Medium/Fine alternating rays, 75% target)
+	var sun_strokes: Array = [_st(_circle_pts(0.0, 0.0, 0.34, 0.32, 28), 2)]
 	for i in range(8):
 		var ang := float(i) * (TAU / 8.0)
 		var r_in := 0.44
 		var r_out := 0.78 if i % 2 == 0 else 0.66
-		sun_strokes.append([
+		sun_strokes.append(_st([
 			_pt(cos(ang) * r_in, sin(ang) * r_in),
 			_pt(cos(ang) * r_out, sin(ang) * r_out),
-		])
+		], 1 if i % 2 == 0 else 0))
 	sets.append({
 		"roman": "VI",
 		"name": "Sinag ng Araw",
-		"subtitle": "Sunburst Sigil • Medium brush • Eight balanced solar rays.",
+		"subtitle": "Sunburst Sigil • Bold, medium & fine brushes • Solar core & eight rays.",
 		"required_accuracy": 75,
-		"brush_size_index": 1,
+		"brush_size_index": 2,
 		"grace_px": 6.0,
 		"strokes": sun_strokes,
 	})
 
-	# 7. Kalasag ng Hangin — Wind Shield (Medium brush, 77% target)
+	# 7. Kalasag ng Hangin — Wind Shield (Bold crest + Medium chevron + Fine spirals, 77% target)
 	sets.append({
 		"roman": "VII",
 		"name": "Kalasag ng Hangin",
-		"subtitle": "Wind Shield • Medium brush • Protective crest with inner chevron & spirals.",
+		"subtitle": "Wind Shield • Bold, medium & fine brushes • Crest, chevron & spirals.",
 		"required_accuracy": 77,
-		"brush_size_index": 1,
+		"brush_size_index": 2,
 		"grace_px": 5.5,
 		"strokes": [
-			_poly_pts([
+			_st(_poly_pts([
 				Vector2(-0.68, -0.68), Vector2(0.68, -0.68),
 				Vector2(0.68, 0.08), Vector2(0.0, 0.82),
 				Vector2(-0.68, 0.08),
-			], true),
-			[_pt(-0.42, -0.18), _pt(0.0, 0.24), _pt(0.42, -0.18)],
-			[_pt(0.0, -0.54), _pt(0.0, 0.56)],
-			_arc_pts(-0.34, -0.44, 0.16, 0.14, deg_to_rad(180.0), deg_to_rad(420.0), 14),
-			_arc_pts(0.34, -0.44, 0.16, 0.14, deg_to_rad(120.0), deg_to_rad(360.0), 14),
+			], true), 2),
+			_st([_pt(-0.42, -0.18), _pt(0.0, 0.24), _pt(0.42, -0.18)], 1),
+			_st([_pt(0.0, -0.54), _pt(0.0, 0.56)], 1),
+			_st(_arc_pts(-0.34, -0.44, 0.16, 0.14, deg_to_rad(180.0), deg_to_rad(420.0), 14), 0),
+			_st(_arc_pts(0.34, -0.44, 0.16, 0.14, deg_to_rad(120.0), deg_to_rad(360.0), 14), 0),
 		],
 	})
 
-	# 8. Selyo ng Bituin — Hexagram Ward (Fine brush, 80% target)
+	# 8. Selyo ng Bituin — Hexagram Ward (Medium ring + Fine interlaced triangles, 80% target)
 	sets.append({
 		"roman": "VIII",
 		"name": "Selyo ng Bituin",
-		"subtitle": "Interlaced Star Seal • Fine brush • Twin opposing triangles in a sacred ring.",
+		"subtitle": "Interlaced Star Seal • Medium & fine brushes • Sacred ring & twin triangles.",
 		"required_accuracy": 80,
-		"brush_size_index": 0,
+		"brush_size_index": 1,
 		"grace_px": 5.5,
 		"strokes": [
-			_circle_pts(0.0, 0.0, 0.74, 0.70, 36),
-			_poly_pts([Vector2(0.0, -0.64), Vector2(0.58, 0.34), Vector2(-0.58, 0.34)], true),
-			_poly_pts([Vector2(0.0, 0.64), Vector2(0.58, -0.34), Vector2(-0.58, -0.34)], true),
+			_st(_circle_pts(0.0, 0.0, 0.74, 0.70, 36), 1),
+			_st(_poly_pts([Vector2(0.0, -0.64), Vector2(0.58, 0.34), Vector2(-0.58, 0.34)], true), 0),
+			_st(_poly_pts([Vector2(0.0, 0.64), Vector2(0.58, -0.34), Vector2(-0.58, -0.34)], true), 0),
 		],
 	})
 
-	# 9. Orasyon ng Balete — Balete Seal (Fine brush, 82% target)
+	# 9. Orasyon ng Balete — Balete Seal (Medium outer ring + Fine inner seal, 82% target)
 	sets.append({
 		"roman": "IX",
 		"name": "Orasyon ng Balete",
-		"subtitle": "Balete Seal • Fine brush • Twin rings, rooted pillar, crescent & triad.",
+		"subtitle": "Balete Seal • Medium & fine brushes • Twin rings, pillar, crescent & triad.",
 		"required_accuracy": 82,
-		"brush_size_index": 0,
+		"brush_size_index": 1,
 		"grace_px": 5.0,
 		"strokes": [
-			_circle_pts(0.0, 0.0, 0.76, 0.72, 36),
-			_circle_pts(0.0, 0.0, 0.48, 0.46, 30),
-			[_pt(0.0, -0.72), _pt(0.0, 0.72)],
-			[_pt(-0.46, 0.0), _pt(0.46, 0.0)],
-			_arc_pts(0.0, -0.48, 0.24, 0.18, deg_to_rad(15.0), deg_to_rad(165.0), 16),
-			_poly_pts([Vector2(0.0, 0.22), Vector2(0.24, 0.56), Vector2(-0.24, 0.56)], true),
+			_st(_circle_pts(0.0, 0.0, 0.76, 0.72, 36), 1),
+			_st(_circle_pts(0.0, 0.0, 0.48, 0.46, 30), 0),
+			_st([_pt(0.0, -0.72), _pt(0.0, 0.72)], 1),
+			_st([_pt(-0.46, 0.0), _pt(0.46, 0.0)], 0),
+			_st(_arc_pts(0.0, -0.48, 0.24, 0.18, deg_to_rad(15.0), deg_to_rad(165.0), 16), 0),
+			_st(_poly_pts([Vector2(0.0, 0.22), Vector2(0.24, 0.56), Vector2(-0.24, 0.56)], true), 0),
 		],
 	})
 
-	# 10. Dakilang Anting-Anting — Grand Agimat (Fine brush, 85% target)
+	# 10. Dakilang Anting-Anting — Grand Agimat (Bold frame + Medium ring + Fine inner triad & wards, 85% target)
 	sets.append({
 		"roman": "X",
 		"name": "Dakilang Anting-Anting",
-		"subtitle": "Master Agimat • Fine brush • Outer diamond, sacred ring, triad & corner wards.",
+		"subtitle": "Master Agimat • Bold, medium & fine brushes • Frame, ring, triad & wards.",
 		"required_accuracy": 85,
-		"brush_size_index": 0,
+		"brush_size_index": 2,
 		"grace_px": 4.5,
 		"strokes": [
-			_poly_pts([Vector2(0.0, -0.84), Vector2(0.76, 0.0), Vector2(0.0, 0.84), Vector2(-0.76, 0.0)], true),
-			_circle_pts(0.0, 0.0, 0.50, 0.48, 34),
-			_poly_pts([Vector2(0.0, -0.36), Vector2(0.34, 0.26), Vector2(-0.34, 0.26)], true),
-			_circle_pts(0.0, 0.04, 0.14, 0.14, 18),
-			[_pt(-0.62, -0.62), _pt(-0.38, -0.38)],
-			[_pt(0.62, -0.62), _pt(0.38, -0.38)],
-			[_pt(-0.62, 0.62), _pt(-0.38, 0.38)],
-			[_pt(0.62, 0.62), _pt(0.38, 0.38)],
+			_st(_poly_pts([Vector2(0.0, -0.84), Vector2(0.76, 0.0), Vector2(0.0, 0.84), Vector2(-0.76, 0.0)], true), 2),
+			_st(_circle_pts(0.0, 0.0, 0.50, 0.48, 34), 1),
+			_st(_poly_pts([Vector2(0.0, -0.36), Vector2(0.34, 0.26), Vector2(-0.34, 0.26)], true), 0),
+			_st(_circle_pts(0.0, 0.04, 0.14, 0.14, 18), 0),
+			_st([_pt(-0.62, -0.62), _pt(-0.38, -0.38)], 0),
+			_st([_pt(0.62, -0.62), _pt(0.38, -0.38)], 0),
+			_st([_pt(-0.62, 0.62), _pt(-0.38, 0.38)], 0),
+			_st([_pt(0.62, 0.62), _pt(0.38, 0.38)], 0),
 		],
 	})
 
