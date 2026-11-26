@@ -127,14 +127,14 @@ func _ready() -> void:
 
 	pricing_viewport = SubViewport.new()
 	pricing_viewport.transparent_bg = true
-	pricing_viewport.size = Vector2(720, 340)
+	pricing_viewport.size = Vector2(820, 460)
 	pricing_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(pricing_viewport)
 
 	var root_hbox := HBoxContainer.new()
 	root_hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	root_hbox.add_theme_constant_override("separation", 10)
+	root_hbox.add_theme_constant_override("separation", 14)
 	pricing_viewport.add_child(root_hbox)
 
 	pricing_panel = PanelContainer.new()
@@ -252,11 +252,11 @@ func _ready() -> void:
 	stock_label.add_theme_color_override("font_color", COL_DISCOUNT)
 	foot.add_child(stock_label)
 
-	# Right-side column of compact Price Tolerance tooltips (name + effect only)
+	# Right-side column of Hades/Mayari-style stat tooltips (source title + stat rows)
 	_tolerance_col = VBoxContainer.new()
-	_tolerance_col.custom_minimum_size = Vector2(260, 0)
+	_tolerance_col.custom_minimum_size = Vector2(360, 0)
 	_tolerance_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_tolerance_col.add_theme_constant_override("separation", 6)
+	_tolerance_col.add_theme_constant_override("separation", 10)
 	_tolerance_col.hide()
 	root_hbox.add_child(_tolerance_col)
 
@@ -291,35 +291,66 @@ func _make_badge_pill(bg_col: Color, border_col: Color) -> PanelContainer:
 	return pill
 
 
-func _add_tolerance_tooltip(source_name: String, delta: int) -> void:
-	var pill := PanelContainer.new()
-	var border_col := COL_DISCOUNT if delta > 0 else COL_DANGER
-	var st := UIStyle.create_flat_stylebox(COL_ESPRESSO, 8, 12, 7)
-	st.border_color = Color(border_col.r, border_col.g, border_col.b, 0.78)
-	st.set_border_width_all(2)
-	pill.add_theme_stylebox_override("panel", st)
+func _add_effect_tooltip(source_name: String, stats: Array) -> void:
+	if stats.is_empty():
+		return
+	var has_pos := false
+	var has_neg := false
+	for st in stats:
+		var t := str(st.get("tone", "pos"))
+		if t == "pos":
+			has_pos = true
+		elif t == "neg":
+			has_neg = true
+	var border_col := COL_GOLD
+	if has_pos and not has_neg:
+		border_col = COL_DISCOUNT
+	elif has_neg and not has_pos:
+		border_col = COL_DANGER
 
-	var hb := HBoxContainer.new()
-	hb.add_theme_constant_override("separation", 10)
-	pill.add_child(hb)
+	var card := PanelContainer.new()
+	var st_box := UIStyle.create_flat_stylebox(COL_ESPRESSO, 10, 16, 12)
+	st_box.border_color = Color(border_col.r, border_col.g, border_col.b, 0.85)
+	st_box.set_border_width_all(2)
+	st_box.shadow_size = 6
+	st_box.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
+	card.add_theme_stylebox_override("panel", st_box)
 
-	var name_lbl := Label.new()
-	name_lbl.text = source_name
-	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	name_lbl.add_theme_font_override("font", INDER_FONT)
-	name_lbl.add_theme_font_size_override("font_size", 17)
-	name_lbl.add_theme_color_override("font_color", COL_CREAM)
-	hb.add_child(name_lbl)
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	card.add_child(vb)
 
-	var val_lbl := Label.new()
-	val_lbl.text = "%+d" % delta
-	val_lbl.add_theme_font_override("font", _bold_font)
-	val_lbl.add_theme_font_size_override("font_size", 18)
-	val_lbl.add_theme_color_override("font_color", border_col)
-	hb.add_child(val_lbl)
+	var title_lbl := Label.new()
+	title_lbl.text = source_name
+	title_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title_lbl.add_theme_font_override("font", _bold_font)
+	title_lbl.add_theme_font_size_override("font_size", 21)
+	title_lbl.add_theme_color_override("font_color", COL_GOLD_SOFT)
+	vb.add_child(title_lbl)
 
-	_tolerance_col.add_child(pill)
+	for st in stats:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		vb.add_child(row)
+
+		var lbl := Label.new()
+		lbl.text = "▸ " + str(st.get("label", ""))
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl.add_theme_font_override("font", INDER_FONT)
+		lbl.add_theme_font_size_override("font_size", 19)
+		lbl.add_theme_color_override("font_color", COL_CREAM)
+		row.add_child(lbl)
+
+		var val := Label.new()
+		val.text = str(st.get("value", ""))
+		val.add_theme_font_override("font", _bold_font)
+		val.add_theme_font_size_override("font_size", 20)
+		var tone := str(st.get("tone", "pos"))
+		var val_col := COL_DISCOUNT if tone == "pos" else (COL_DANGER if tone == "neg" else COL_GOLD_SOFT)
+		val.add_theme_color_override("font_color", val_col)
+		row.add_child(val)
+
+	_tolerance_col.add_child(card)
 
 
 func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
@@ -329,24 +360,69 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 	var total_tol := 0
 	var count := 0
 
-	# 1. Active Neighborhood Events (revealed or global)
+	# 1. Active Neighborhood Events (show all item-relevant stats per event card)
 	if is_instance_valid(StoreEventManager):
-		var best_targeted_ev: StoreEventData = null
 		var best_targeted_val := 0
 		for ev in StoreEventManager.get_all_active_events():
 			if ev == null:
 				continue
-			if ev.affects_item(item_data) and ev.tolerance_offset > best_targeted_val:
-				best_targeted_val = ev.tolerance_offset
-				best_targeted_ev = ev
+			var ev_stats: Array[Dictionary] = []
+			var affects := ev.affects_item(item_data)
+			var combined_tol := 0
+			if affects and ev.tolerance_offset != 0:
+				combined_tol += ev.tolerance_offset
+				best_targeted_val = maxi(best_targeted_val, ev.tolerance_offset)
 			if ev.global_tolerance_offset != 0:
-				_add_tolerance_tooltip(ev.event_name, ev.global_tolerance_offset)
+				combined_tol += ev.global_tolerance_offset
 				total_tol += ev.global_tolerance_offset
+			if combined_tol != 0:
+				ev_stats.append({
+					"label": "Price Tolerance:",
+					"value": "%+d" % combined_tol,
+					"tone": "pos" if combined_tol > 0 else "neg",
+				})
+			if affects:
+				var demand_pct := int(roundf((ev.demand_multiplier - 1.0) * 100.0))
+				if demand_pct != 0:
+					ev_stats.append({
+						"label": "Item Demand:",
+						"value": "%+d%%" % demand_pct,
+						"tone": "pos" if demand_pct > 0 else "neg",
+					})
+			if ev.tip_bonus_pct > 0.001:
+				ev_stats.append({
+					"label": "Sale Tip Bonus:",
+					"value": "+%d%%" % int(roundf(ev.tip_bonus_pct * 100.0)),
+					"tone": "pos",
+				})
+			if not is_equal_approx(ev.xp_multiplier, 1.0):
+				var xp_pct := int(roundf((ev.xp_multiplier - 1.0) * 100.0))
+				if xp_pct != 0:
+					ev_stats.append({
+						"label": "Sale XP Gain:",
+						"value": "%+d%%" % xp_pct,
+						"tone": "pos" if xp_pct > 0 else "neg",
+					})
+			if not is_equal_approx(ev.restock_cost_multiplier, 1.0):
+				var cost_pct := int(roundf((ev.restock_cost_multiplier - 1.0) * 100.0))
+				if cost_pct != 0:
+					ev_stats.append({
+						"label": "Restock Cost:",
+						"value": "%+d%%" % cost_pct,
+						"tone": "pos" if cost_pct < 0 else "neg",
+					})
+			if item_data.type == ItemData.ItemType.FRIDGE and not is_equal_approx(ev.fridge_drain_multiplier, 1.0):
+				var drain_pct := int(roundf((ev.fridge_drain_multiplier - 1.0) * 100.0))
+				if drain_pct != 0:
+					ev_stats.append({
+						"label": "Fridge Drain:",
+						"value": "%+d%%" % drain_pct,
+						"tone": "pos" if drain_pct < 0 else "neg",
+					})
+			if not ev_stats.is_empty():
+				_add_effect_tooltip(ev.event_name, ev_stats)
 				count += 1
-		if best_targeted_ev != null and best_targeted_val != 0:
-			_add_tolerance_tooltip(best_targeted_ev.event_name, best_targeted_val)
-			total_tol += best_targeted_val
-			count += 1
+		total_tol += best_targeted_val
 
 	# 2. Active Mayari Moon Cards & Sto. Niño Blessings (stack separately)
 	if is_instance_valid(StoryManager):
@@ -355,23 +431,23 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 			or (MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_mayari_cards)
 		)
 		if has_mayari_silver:
-			_add_tolerance_tooltip("Silver Tolerance", 1)
+			_add_effect_tooltip("Silver Tolerance", [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
 			total_tol += 1
 			count += 1
 		if MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_blessing_cards:
-			_add_tolerance_tooltip("Sto. Niño Blessing", 1)
+			_add_effect_tooltip("Sto. Niño Blessing", [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}])
 			total_tol += 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
-			_add_tolerance_tooltip("Eerie Mist Rush", -1)
+			_add_effect_tooltip("Eerie Mist Rush", [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
-			_add_tolerance_tooltip("Reluctant Care", -1)
+			_add_effect_tooltip("Reluctant Care", [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
 			total_tol -= 1
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-			_add_tolerance_tooltip("Restless Crowd", -1)
+			_add_effect_tooltip("Restless Crowd", [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}])
 			total_tol -= 1
 			count += 1
 
@@ -392,7 +468,7 @@ func _rebuild_tolerance_tooltips(item_data: ItemData) -> int:
 				var bonus := CharacterProgressionManager.get_reputation_tolerance_bonus(cust.customer_data, item_data)
 				if bonus > 0:
 					var cname: String = cust.customer_data.character_name if cust.customer_data.character_name != "" else cust.customer_data.get_clean_id().capitalize()
-					_add_tolerance_tooltip(cname, bonus)
+					_add_effect_tooltip(cname, [{"label": "Price Tolerance:", "value": "%+d" % bonus, "tone": "pos"}])
 					best_cust_bonus = maxi(best_cust_bonus, bonus)
 					count += 1
 
