@@ -216,7 +216,36 @@ func open_journal(focus_character_path: String = "") -> void:
 		var p := parts[i]
 		if is_instance_valid(p):
 			p.modulate.a = 0.0
-			_open_close_tween.tween_property(p, "modulate:a", 1.0, 0.20).set_delay(0.03 * float(i)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			p.pivot_offset = p.size * 0.5
+			p.scale = Vector2(0.97, 0.97)
+			var pd := 0.035 * float(i)
+			_open_close_tween.tween_property(p, "modulate:a", 1.0, 0.20).set_delay(pd).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			_open_close_tween.tween_property(p, "scale", Vector2.ONE, 0.24).set_delay(pd).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	# Domino-cascade the left neighbor pills & right Rank I-VI buttons
+	if is_instance_valid(_roster_vbox):
+		var pills := _roster_vbox.get_children()
+		for i in range(mini(pills.size(), 12)):
+			var pill := pills[i]
+			if pill is Control:
+				pill.modulate.a = 0.0
+				pill.pivot_offset = pill.size * 0.5
+				pill.scale = Vector2(0.94, 0.94)
+				var d := 0.025 * float(i)
+				_open_close_tween.tween_property(pill, "modulate:a", 1.0, 0.18).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+				_open_close_tween.tween_property(pill, "scale", Vector2.ONE, 0.22).set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	if is_instance_valid(_rank_track_box):
+		var ranks := _rank_track_box.get_children()
+		for i in range(ranks.size()):
+			var rb := ranks[i]
+			if rb is Control:
+				rb.modulate.a = 0.0
+				rb.pivot_offset = rb.size * 0.5
+				rb.scale = Vector2(0.94, 0.94)
+				var d := 0.06 + 0.03 * float(i)
+				_open_close_tween.tween_property(rb, "modulate:a", 1.0, 0.18).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+				_open_close_tween.tween_property(rb, "scale", Vector2.ONE, 0.22).set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func close_journal() -> void:
@@ -233,8 +262,26 @@ func close_journal() -> void:
 
 	_safe_margin.pivot_offset = get_viewport().get_visible_rect().size * 0.5
 	_open_close_tween = create_tween().set_parallel(true)
-	_open_close_tween.tween_property(_root, "modulate:a", 0.0, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	_open_close_tween.tween_property(_safe_margin, "scale", Vector2(0.975, 0.975), 0.13).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	if is_instance_valid(_roster_vbox):
+		var pills := _roster_vbox.get_children()
+		for i in range(mini(pills.size(), 10)):
+			var pill := pills[i]
+			if pill is Control:
+				pill.pivot_offset = pill.size * 0.5
+				var d := 0.012 * float(i)
+				_open_close_tween.tween_property(pill, "modulate:a", 0.0, 0.11).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+				_open_close_tween.tween_property(pill, "scale", Vector2(0.95, 0.95), 0.11).set_delay(d).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	if is_instance_valid(_rank_track_box):
+		var ranks := _rank_track_box.get_children()
+		for i in range(ranks.size()):
+			var rb := ranks[i]
+			if rb is Control:
+				rb.pivot_offset = rb.size * 0.5
+				var d := 0.014 * float(i)
+				_open_close_tween.tween_property(rb, "modulate:a", 0.0, 0.11).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+				_open_close_tween.tween_property(rb, "scale", Vector2(0.95, 0.95), 0.11).set_delay(d).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_open_close_tween.tween_property(_root, "modulate:a", 0.0, 0.18).set_delay(0.04).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_open_close_tween.tween_property(_safe_margin, "scale", Vector2(0.975, 0.975), 0.18).set_delay(0.04).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	_open_close_tween.set_parallel(false)
 	_open_close_tween.tween_callback(func():
 		if not is_open:

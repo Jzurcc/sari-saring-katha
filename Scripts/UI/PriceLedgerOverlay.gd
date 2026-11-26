@@ -232,6 +232,24 @@ func open_ledger() -> void:
 			if ch is Control:
 				ch.modulate.a = 0.0
 				_open_close_tween.tween_property(ch, "modulate:a", 1.0, 0.18).set_delay(0.035 * float(i)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_animate_rows_domino_in()
+
+
+func _animate_rows_domino_in() -> void:
+	if not is_instance_valid(_items_list):
+		return
+	var rows := _items_list.get_children()
+	var max_anim := mini(rows.size(), 14)
+	var tw := create_tween().set_parallel(true)
+	for i in range(max_anim):
+		var r := rows[i]
+		if r is Control:
+			r.modulate.a = 0.0
+			r.pivot_offset = r.size * 0.5
+			r.scale = Vector2(0.96, 0.96)
+			var d := 0.025 * float(i)
+			tw.tween_property(r, "modulate:a", 1.0, 0.18).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			tw.tween_property(r, "scale", Vector2.ONE, 0.22).set_delay(d).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func close_ledger() -> void:
@@ -251,9 +269,19 @@ func close_ledger() -> void:
 	if is_instance_valid(_safe_root):
 		_safe_root.pivot_offset = _safe_root.size * 0.5
 	_open_close_tween = create_tween().set_parallel(true)
-	_open_close_tween.tween_property(_root, "modulate:a", 0.0, 0.13).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	if is_instance_valid(_items_list):
+		var rows := _items_list.get_children()
+		var max_anim := mini(rows.size(), 10)
+		for i in range(max_anim):
+			var r := rows[i]
+			if r is Control:
+				r.pivot_offset = r.size * 0.5
+				var d := 0.012 * float(i)
+				_open_close_tween.tween_property(r, "modulate:a", 0.0, 0.11).set_delay(d).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+				_open_close_tween.tween_property(r, "scale", Vector2(0.96, 0.96), 0.11).set_delay(d).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_open_close_tween.tween_property(_root, "modulate:a", 0.0, 0.18).set_delay(0.04).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	if is_instance_valid(_safe_root):
-		_open_close_tween.tween_property(_safe_root, "scale", Vector2(0.975, 0.975), 0.13).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		_open_close_tween.tween_property(_safe_root, "scale", Vector2(0.975, 0.975), 0.18).set_delay(0.04).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	_open_close_tween.set_parallel(false)
 	_open_close_tween.tween_callback(func():
 		if not is_open:
@@ -562,10 +590,7 @@ func _populate_category_popover() -> void:
 			if is_instance_valid(AudioManager):
 				AudioManager.play_sfx("tab_switch")
 			refresh_catalog()
-			if is_instance_valid(_items_list):
-				_items_list.modulate.a = 0.0
-				var tw := create_tween()
-				tw.tween_property(_items_list, "modulate:a", 1.0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			_animate_rows_domino_in()
 		)
 		_category_list_box.add_child(btn)
 
