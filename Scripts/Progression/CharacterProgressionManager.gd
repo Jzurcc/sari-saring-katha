@@ -93,13 +93,13 @@ static func get_rep_rank_title(rank: int) -> String:
 
 static func get_rep_rank_perk_summary(rank: int) -> String:
 	match rank:
-		1: return "Journal Profile & Regional Folklore Origin unlocked"
-		2: return "Traditional Beliefs & Taboos unlocked"
-		3: return "+1 Price Tolerance on Favorite Categories & Creature Depiction unlocked"
-		4: return "Historical & Cultural Folklore Origin unlocked"
-		5: return "+10% Scaling Cash Tip Bonus & Rare Folklore Trivia unlocked"
-		6: return "+1 Global Price Tolerance, Gold Stamp & Epilogue unlocked"
-		_: return "Meet this neighbor to begin building Reputation"
+		1: return "Profile & Origin Unlocked"
+		2: return "Beliefs & Taboos Unlocked"
+		3: return "+1 Fav Price Tolerance"
+		4: return "Historical Roots Unlocked"
+		5: return "+10% Cash Tip Bonus"
+		6: return "+1 Global Price Tolerance"
+		_: return "Meet this neighbor to begin"
 
 
 func get_rep_rank_progress(character_path: String) -> Dictionary:

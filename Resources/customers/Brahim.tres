@@ -17,38 +17,47 @@
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
+chapter_name = "Leaving the City Behind"
 categories = PackedStringArray("frozen")
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
+chapter_name = "A Quieter Rhythm"
 categories = PackedStringArray("can")
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
+chapter_name = "Midnight Prayers"
 categories = PackedStringArray("pack")
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
+chapter_name = "Stories by the Canal"
 categories = PackedStringArray("frozen")
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
+chapter_name = "Warmth for the Riverbank"
 categories = PackedStringArray("can")
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
+chapter_name = "The Promotion Left Behind"
 categories = PackedStringArray("pack")
 
 [sub_resource type="Resource" id="chapter_6"]
 script = ExtResource("chapterdata_script")
+chapter_name = "Before the Storm"
 categories = PackedStringArray("frozen")
 
 [sub_resource type="Resource" id="chapter_7"]
 script = ExtResource("chapterdata_script")
+chapter_name = "First House Call"
 categories = PackedStringArray("candy")
 
 [sub_resource type="Resource" id="chapter_8"]
 script = ExtResource("chapterdata_script")
+chapter_name = "Tatay's Brass Bell"
 categories = PackedStringArray("pack")
 
 [sub_resource type="Resource" id="arc_0"]

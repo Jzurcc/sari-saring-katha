@@ -12,6 +12,8 @@ const IC_AWARD: Texture2D = preload("res://Assets/ui/icons/award.png")
 const IC_SPARKLES: Texture2D = preload("res://Assets/ui/icons/sparkles.png")
 const IC_USERS: Texture2D = preload("res://Assets/ui/icons/users.png")
 const IC_HEART: Texture2D = preload("res://Assets/ui/icons/heart-handshake.png")
+const IC_CHECKBOX_ON: Texture2D = preload("res://Assets/ui/mingcute_checkbox-fill.png")
+const IC_CHECKBOX_OFF: Texture2D = preload("res://Assets/ui/carbon_checkbox.png")
 
 # Palette: Cohesive Borderless Dark Warm Espresso + Antique Gold + Crisp Cream
 const COL_BACKDROP := Color(0.048, 0.040, 0.035, 0.96)
@@ -42,14 +44,10 @@ const RANK_CHAPTER_HEADINGS: Dictionary = {
 	6: "Confidant Epilogue & Personal Bond",
 }
 
-enum RosterFilter { ALL, MET, UNREAD }
-
 var is_open: bool = false
 var _prev_mouse_mode: Input.MouseMode = Input.MOUSE_MODE_CAPTURED
 
 var _all_neighbors: Array[CustomerData] = []
-var _filtered_neighbors: Array[CustomerData] = []
-var _active_filter: RosterFilter = RosterFilter.ALL
 var _selected_path: String = ""
 var _selected_rank_tab: int = 1 # 1..6
 
@@ -59,9 +57,9 @@ var _bold_font: FontVariation
 # Core layout nodes
 var _root: Control
 var _safe_margin: MarginContainer
+var _rail_panel: PanelContainer
 var _progress_lbl: Label
 var _progress_bar: ProgressBar
-var _filter_buttons: Dictionary = {} # RosterFilter -> Button
 var _roster_scroll: ScrollContainer
 var _roster_vbox: VBoxContainer
 var _roster_cards: Dictionary = {} # path -> Button
@@ -160,7 +158,6 @@ func open_journal(focus_character_path: String = "") -> void:
 	_collect_neighbors()
 
 	if focus_character_path != "":
-		_active_filter = RosterFilter.ALL
 		_selected_path = focus_character_path
 		_sync_default_rank_for_selected()
 	elif _selected_path == "" and not _all_neighbors.is_empty():
@@ -199,31 +196,6 @@ func _collect_neighbors() -> void:
 				_all_neighbors.append(c)
 
 
-func _apply_roster_filter() -> void:
-	_filtered_neighbors.clear()
-	for c in _all_neighbors:
-		var path := c.resource_path
-		match _active_filter:
-			RosterFilter.MET:
-				if CharacterProgressionManager.has_encountered(path):
-					_filtered_neighbors.append(c)
-			RosterFilter.UNREAD:
-				if CharacterProgressionManager.has_unread_journal(path):
-					_filtered_neighbors.append(c)
-			_:
-				_filtered_neighbors.append(c)
-
-	if not _filtered_neighbors.is_empty():
-		var found := false
-		for c in _filtered_neighbors:
-			if c.resource_path == _selected_path:
-				found = true
-				break
-		if not found:
-			_selected_path = _filtered_neighbors[0].resource_path
-			_sync_default_rank_for_selected()
-
-
 func _get_selected_customer() -> CustomerData:
 	for c in _all_neighbors:
 		if c.resource_path == _selected_path:
@@ -240,17 +212,17 @@ func _sync_default_rank_for_selected() -> void:
 
 
 func _step_neighbor(delta: int) -> void:
-	if _filtered_neighbors.is_empty():
+	if _all_neighbors.is_empty():
 		return
 	var cur_i := 0
-	for i in range(_filtered_neighbors.size()):
-		if _filtered_neighbors[i].resource_path == _selected_path:
+	for i in range(_all_neighbors.size()):
+		if _all_neighbors[i].resource_path == _selected_path:
 			cur_i = i
 			break
-	var next_i := posmod(cur_i + delta, _filtered_neighbors.size())
-	if next_i == cur_i and _filtered_neighbors.size() <= 1:
+	var next_i := posmod(cur_i + delta, _all_neighbors.size())
+	if next_i == cur_i and _all_neighbors.size() <= 1:
 		return
-	_select_neighbor(_filtered_neighbors[next_i].resource_path)
+	_select_neighbor(_all_neighbors[next_i].resource_path)
 
 
 func _select_neighbor(path: String) -> void:
@@ -272,14 +244,6 @@ func _select_rank_tab(rank_idx: int) -> void:
 	_rebuild_rank_track()
 	_rebuild_reader()
 	_animate_reader_fade()
-
-
-func _set_filter(f: RosterFilter) -> void:
-	if _active_filter == f:
-		return
-	_active_filter = f
-	EventBus.request_sfx.emit("tab_switch")
-	_refresh_all()
 
 
 func _animate_reader_fade() -> void:
@@ -339,31 +303,31 @@ func _build_ui() -> void:
 	body_split.add_theme_constant_override("separation", 16)
 	outer_vbox.add_child(body_split)
 
-	# Left Rail: Neighbor Roster
-	var rail_panel := PanelContainer.new()
-	rail_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	rail_panel.size_flags_stretch_ratio = 0.29
-	rail_panel.add_theme_stylebox_override("panel", _make_box_style(COL_SURFACE, COL_BORDER, 14, 12, 12))
-	body_split.add_child(rail_panel)
+	# Left Rail: Fixed-width Neighbor Roster (never squished by right workspace)
+	_rail_panel = PanelContainer.new()
+	_rail_panel.size_flags_horizontal = Control.SIZE_FILL
+	_rail_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_rail_panel.custom_minimum_size = Vector2(310, 0)
+	_rail_panel.add_theme_stylebox_override("panel", _make_box_style(COL_SURFACE, COL_BORDER, 14, 12, 12))
+	body_split.add_child(_rail_panel)
 
 	_roster_scroll = ScrollContainer.new()
 	_roster_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_roster_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_roster_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_style_scrollbar(_roster_scroll)
-	rail_panel.add_child(_roster_scroll)
+	_rail_panel.add_child(_roster_scroll)
 
 	_roster_vbox = VBoxContainer.new()
 	_roster_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_roster_vbox.add_theme_constant_override("separation", 8)
 	_roster_scroll.add_child(_roster_vbox)
 
-	# Right Workspace: Hero Profile + 6-Rank Progression Track + Adaptive Lore Reader
+	# Right Workspace: Prominent Progression Panel + 6-Rank Track + Compact Folklore Reader
 	var right_col := VBoxContainer.new()
 	right_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_col.size_flags_stretch_ratio = 0.71
+	right_col.clip_contents = true
 	right_col.add_theme_constant_override("separation", 12)
 	body_split.add_child(right_col)
 
@@ -442,29 +406,6 @@ func _build_top_bar() -> Control:
 	_progress_bar.add_theme_stylebox_override("background", UIStyle.create_flat_stylebox(Color(0.22, 0.18, 0.14, 0.85), 5, 0, 0))
 	_progress_bar.add_theme_stylebox_override("fill", UIStyle.create_flat_stylebox(COL_GOLD, 5, 0, 0))
 	prog_row.add_child(_progress_bar)
-
-	# Filter buttons (48px minimum touch target height)
-	var filter_row := HBoxContainer.new()
-	filter_row.add_theme_constant_override("separation", 8)
-	bar.add_child(filter_row)
-
-	var filters: Array[Dictionary] = [
-		{"id": RosterFilter.ALL, "label": "All"},
-		{"id": RosterFilter.MET, "label": "Met"},
-		{"id": RosterFilter.UNREAD, "label": "★ Unread"},
-	]
-	for f in filters:
-		var fb := Button.new()
-		fb.text = str(f["label"])
-		fb.custom_minimum_size = Vector2(88, 48)
-		fb.focus_mode = Control.FOCUS_NONE
-		fb.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		fb.add_theme_font_override("font", _bold_font)
-		fb.add_theme_font_size_override("font_size", 16)
-		var fid: RosterFilter = f["id"]
-		fb.pressed.connect(func(): _set_filter(fid))
-		filter_row.add_child(fb)
-		_filter_buttons[fid] = fb
 
 	# 48x48 Close button
 	var close_btn := Button.new()
@@ -589,13 +530,11 @@ func _close_lightbox() -> void:
 # =============================================================================
 
 func _refresh_all() -> void:
-	_apply_roster_filter()
 	var selected := _get_selected_customer()
 	if selected != null and CharacterProgressionManager.has_unread_journal(selected.resource_path):
 		CharacterProgressionManager.mark_journal_read(selected.resource_path)
 
 	_refresh_header_stats()
-	_refresh_filter_buttons()
 	_rebuild_roster()
 	_rebuild_hero_banner()
 	_rebuild_rank_track()
@@ -619,40 +558,12 @@ func _refresh_header_stats() -> void:
 		_progress_bar.value = (float(unlocked_ranks) / float(max_ranks)) * 100.0
 
 
-func _refresh_filter_buttons() -> void:
-	var unread_total := 0
-	var met_total := 0
-	for c in _all_neighbors:
-		if CharacterProgressionManager.has_encountered(c.resource_path):
-			met_total += 1
-		if CharacterProgressionManager.has_unread_journal(c.resource_path):
-			unread_total += 1
-
-	for fid in _filter_buttons.keys():
-		var btn: Button = _filter_buttons[fid]
-		match fid:
-			RosterFilter.ALL:
-				btn.text = "All (%d)" % _all_neighbors.size()
-			RosterFilter.MET:
-				btn.text = "Met (%d)" % met_total
-			RosterFilter.UNREAD:
-				btn.text = "★ New (%d)" % unread_total
-		_apply_button_theme(btn, _active_filter == fid, false)
-
-
 func _rebuild_roster() -> void:
 	for ch in _roster_vbox.get_children():
 		ch.queue_free()
 	_roster_cards.clear()
 
-	if _filtered_neighbors.is_empty():
-		var empty_lbl := _make_label("No neighbors match this filter yet.", 16, COL_MUTED, false)
-		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_roster_vbox.add_child(empty_lbl)
-		return
-
-	for c in _filtered_neighbors:
+	for c in _all_neighbors:
 		var path := c.resource_path
 		var met := CharacterProgressionManager.has_encountered(path)
 		var rank := CharacterProgressionManager.get_rep_rank(path)
@@ -661,7 +572,7 @@ func _rebuild_roster() -> void:
 		var selected := (path == _selected_path)
 
 		var card_btn := Button.new()
-		card_btn.custom_minimum_size = Vector2(0, 68)
+		card_btn.custom_minimum_size = Vector2(0, 76)
 		card_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card_btn.focus_mode = Control.FOCUS_NONE
 		card_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -680,11 +591,11 @@ func _rebuild_roster() -> void:
 
 		# Avatar badge
 		var avatar_tex := _resolve_portrait_texture(c, entry)
-		var av := _build_avatar_frame(avatar_tex, Vector2(48, 48), not met, rank >= 6)
+		var av := _build_avatar_frame(avatar_tex, Vector2(52, 52), not met, rank >= 6)
 		av.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(av)
 
-		# Name + Creature subtitle
+		# Name + Creature subtitle + Star pips (larger, cleaner typography)
 		var name_col := VBoxContainer.new()
 		name_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -692,38 +603,38 @@ func _rebuild_roster() -> void:
 		name_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(name_col)
 
-		var disp_name := (c.character_name if c.character_name != "" else c.get_clean_id().capitalize()) if met else "Unmet Neighbor"
-		var nl := _make_label(disp_name, 17, COL_GOLD_BRIGHT if selected else (COL_CREAM if met else COL_LOCKED), true)
+		var top_line := HBoxContainer.new()
+		top_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		top_line.add_theme_constant_override("separation", 6)
+		top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_col.add_child(top_line)
+
+		var disp_name := (c.character_name if c.character_name != "" else c.get_clean_id().capitalize()) if met else "???"
+		var nl := _make_label(disp_name, 20, COL_GOLD_BRIGHT if selected else (COL_CREAM if met else COL_LOCKED), true)
+		nl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		name_col.add_child(nl)
-
-		var sub_txt := str(entry.get("creature", "Barangay Regular")) if met else "Serve at store to meet"
-		var sl := _make_label(sub_txt, 14, COL_MUTED if met else COL_LOCKED, false)
-		sl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		name_col.add_child(sl)
-
-		# Right side: Unread badge + 6-diamond rank pips (color + shape + text)
-		var right_meta := VBoxContainer.new()
-		right_meta.alignment = BoxContainer.ALIGNMENT_CENTER
-		right_meta.add_theme_constant_override("separation", 3)
-		right_meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(right_meta)
+		top_line.add_child(nl)
 
 		if unread:
-			var new_lbl := _make_label("★ NEW", 14, COL_GOLD_BRIGHT, true)
-			new_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			right_meta.add_child(new_lbl)
-		else:
-			var r_lbl := _make_label("R%d / 6" % rank if met else "Locked", 14, COL_GOLD if rank >= 6 else COL_MUTED, rank >= 6)
-			r_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-			right_meta.add_child(r_lbl)
+			top_line.add_child(_make_label("★ NEW", 14, COL_GOLD_BRIGHT, true))
 
-		var pips := ""
+		var sub_row := HBoxContainer.new()
+		sub_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sub_row.add_theme_constant_override("separation", 8)
+		sub_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		name_col.add_child(sub_row)
+
+		var sub_txt := str(entry.get("creature", "Neighbor")) if met else "Unmet"
+		var sl := _make_label(sub_txt, 16, COL_MUTED if met else COL_LOCKED, false)
+		sl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		sub_row.add_child(sl)
+
+		var stars := ""
 		for ri in range(1, 7):
-			pips += "◆" if rank >= ri else "◇"
-		var pip_lbl := _make_label(pips, 14, COL_GOLD_BRIGHT if rank > 0 else COL_LOCKED, false)
-		pip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		right_meta.add_child(pip_lbl)
+			stars += "★" if rank >= ri else "☆"
+		var star_lbl := _make_label(stars, 16, COL_GOLD_BRIGHT if rank > 0 else COL_LOCKED, false)
+		sub_row.add_child(star_lbl)
 
 		_roster_vbox.add_child(card_btn)
 		_roster_cards[path] = card_btn
@@ -743,22 +654,30 @@ func _rebuild_hero_banner() -> void:
 	var prog := CharacterProgressionManager.get_rep_rank_progress(cpath)
 	var entry: Dictionary = FolkloreCatalogScript.get_entry(c.get_clean_id())
 
-	# 1) Left Portrait Frame (92x92)
-	var portrait_tex := _resolve_portrait_texture(c, entry)
-	var p_frame := _build_avatar_frame(portrait_tex, Vector2(92, 92), not met, rank >= 6)
-	p_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_hero_box.add_child(p_frame)
+	# 1) Left Column (45%): Portrait + Identity + Reputation + Favorites + Perks (1 per row)
+	var left_prog := VBoxContainer.new()
+	left_prog.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_prog.size_flags_stretch_ratio = 0.45
+	left_prog.add_theme_constant_override("separation", 10)
+	_hero_box.add_child(left_prog)
 
-	# 2) Center Identity & Reputation Bar
+	var id_row := HBoxContainer.new()
+	id_row.add_theme_constant_override("separation", 14)
+	left_prog.add_child(id_row)
+
+	var portrait_tex := _resolve_portrait_texture(c, entry)
+	var p_frame := _build_avatar_frame(portrait_tex, Vector2(84, 84), not met, rank >= 6)
+	p_frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	id_row.add_child(p_frame)
+
 	var mid_col := VBoxContainer.new()
 	mid_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	mid_col.size_flags_stretch_ratio = 0.48
 	mid_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	mid_col.add_theme_constant_override("separation", 6)
-	_hero_box.add_child(mid_col)
+	mid_col.add_theme_constant_override("separation", 4)
+	id_row.add_child(mid_col)
 
 	var title_row := HBoxContainer.new()
-	title_row.add_theme_constant_override("separation", 10)
+	title_row.add_theme_constant_override("separation", 8)
 	mid_col.add_child(title_row)
 
 	var disp_name := (c.character_name if c.character_name != "" else c.get_clean_id().capitalize()) if met else "??? (Unmet Neighbor)"
@@ -771,63 +690,45 @@ func _rebuild_hero_banner() -> void:
 		seal_pill.add_child(_make_label("★ CONFIDANT", 14, COL_GOLD_BRIGHT, true))
 		title_row.add_child(seal_pill)
 
-	var folklore_line := "%s   •   %s" % [
-		str(entry.get("creature", "Neighbor")) if met else "Unknown Folklore Origin",
-		str(entry.get("region", "Karimlan")) if met else "Meet at store to identify"
+	var folklore_line := "%s  •  %s" % [
+		str(entry.get("creature", "Neighbor")) if met else "Unknown",
+		str(entry.get("region", "Karimlan")) if met else "Meet at store"
 	]
-	mid_col.add_child(_make_label(folklore_line, 16, COL_GOLD if met else COL_LOCKED, false))
+	var fl_lbl := _make_label(folklore_line, 15, COL_GOLD if met else COL_LOCKED, false)
+	fl_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mid_col.add_child(fl_lbl)
 
-	# Reputation progress bar + exact numbers
+	# Reputation progress bar
 	var rep_hdr := HBoxContainer.new()
 	rep_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid_col.add_child(rep_hdr)
 
 	var rank_title := CharacterProgressionManager.get_rep_rank_title(rank)
-	var rank_txt := "Rank %d / 6 — %s" % [rank, rank_title]
-	var rl := _make_label(rank_txt, 16, COL_CREAM, true)
+	var rl := _make_label("Rank %d / 6 — %s" % [rank, rank_title], 15, COL_CREAM, true)
 	rl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rep_hdr.add_child(rl)
 
 	var rep_status := "MAX RANK" if bool(prog["is_max"]) else ("%d / %d Rep" % [int(prog["current"]), int(prog["needed"])])
 	if not met:
 		rep_status = "0 Rep"
-	rep_hdr.add_child(_make_label(rep_status, 15, COL_GOLD_BRIGHT if bool(prog["is_max"]) else COL_MUTED, false))
+	rep_hdr.add_child(_make_label(rep_status, 14, COL_GOLD_BRIGHT if bool(prog["is_max"]) else COL_MUTED, false))
 
 	var rep_bar := ProgressBar.new()
-	rep_bar.custom_minimum_size = Vector2(0, 12)
+	rep_bar.custom_minimum_size = Vector2(0, 10)
 	rep_bar.max_value = 100.0
 	rep_bar.value = float(prog["ratio"]) * 100.0 if met else 0.0
 	rep_bar.show_percentage = false
-	rep_bar.add_theme_stylebox_override("background", UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.04, 0.92), 6, 0, 0))
-	rep_bar.add_theme_stylebox_override("fill", UIStyle.create_flat_stylebox(COL_GOLD, 6, 0, 0))
+	rep_bar.add_theme_stylebox_override("background", UIStyle.create_flat_stylebox(Color(0.06, 0.05, 0.04, 0.92), 5, 0, 0))
+	rep_bar.add_theme_stylebox_override("fill", UIStyle.create_flat_stylebox(COL_GOLD, 5, 0, 0))
 	mid_col.add_child(rep_bar)
-
-	# Subtle divider
-	var vsep := VSeparator.new()
-	var vs_st := StyleBoxFlat.new()
-	vs_st.bg_color = COL_BORDER
-	vs_st.content_margin_left = 1
-	vs_st.content_margin_right = 1
-	vsep.add_theme_stylebox_override("separator", vs_st)
-	_hero_box.add_child(vsep)
-
-	# 3) Right Gameplay Dossier (Favorites + Story Arcs + Active Perks)
-	var right_meta := VBoxContainer.new()
-	right_meta.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_meta.size_flags_stretch_ratio = 0.52
-	right_meta.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	right_meta.add_theme_constant_override("separation", 7)
-	_hero_box.add_child(right_meta)
 
 	# Favorites row
 	var fav_row := HFlowContainer.new()
 	fav_row.add_theme_constant_override("h_separation", 6)
 	fav_row.add_theme_constant_override("v_separation", 6)
-	right_meta.add_child(fav_row)
+	left_prog.add_child(fav_row)
 
-	var fav_lbl := _make_label("Favorites:", 15, COL_MUTED, true)
-	fav_row.add_child(fav_lbl)
-
+	fav_row.add_child(_make_label("Favorites:", 15, COL_MUTED, true))
 	var favs: Array[String] = c.get_favorite_categories()
 	if favs.is_empty():
 		fav_row.add_child(_make_badge("None", COL_CARD, COL_BORDER, COL_MUTED))
@@ -838,37 +739,97 @@ func _rebuild_hero_banner() -> void:
 			else:
 				fav_row.add_child(_make_badge("? Undiscovered", COL_CARD, COL_BORDER, COL_LOCKED))
 
-	# Perks summary row
-	var perks_row := HFlowContainer.new()
-	perks_row.add_theme_constant_override("h_separation", 6)
-	perks_row.add_theme_constant_override("v_separation", 6)
-	right_meta.add_child(perks_row)
+	# Perks: 1 perk per row!
+	var perks_col := VBoxContainer.new()
+	perks_col.add_theme_constant_override("separation", 5)
+	left_prog.add_child(perks_col)
 
-	perks_row.add_child(_make_label("Perks:", 15, COL_MUTED, true))
+	perks_col.add_child(_make_label("REPUTATION PERKS", 14, COL_GOLD, true))
 	var perk_defs: Array[Dictionary] = [
-		{"req": 3, "short": "+1 Fav Price Tol."},
-		{"req": 5, "short": "+10% Cash Tip"},
-		{"req": 6, "short": "+1 Global Tol."},
+		{"req": 3, "label": "+1 Fav Price Tolerance"},
+		{"req": 5, "label": "+10% Cash Tip Bonus"},
+		{"req": 6, "label": "+1 Global Price Tolerance"},
 	]
 	for p in perk_defs:
 		var req := int(p["req"])
-		if rank >= req:
-			perks_row.add_child(_make_badge("✓ " + str(p["short"]), Color(0.12, 0.24, 0.14, 0.94), COL_POSITIVE, COL_POSITIVE))
-		else:
-			perks_row.add_child(_make_badge("🔒 R%d %s" % [req, str(p["short"])], COL_CARD, COL_BORDER, COL_LOCKED))
+		var unlocked_p := rank >= req
+		var p_txt := ("✓  Rank %d: %s" % [req, str(p["label"])]) if unlocked_p else ("🔒  Rank %d: %s" % [req, str(p["label"])])
+		var p_lbl := _make_label(p_txt, 15, COL_POSITIVE if unlocked_p else COL_LOCKED, unlocked_p)
+		perks_col.add_child(p_lbl)
 
-	# Story Arcs tracker
+	# Subtle divider
+	var vsep := VSeparator.new()
+	var vs_st := StyleBoxFlat.new()
+	vs_st.bg_color = COL_BORDER
+	vs_st.content_margin_left = 1
+	vs_st.content_margin_right = 1
+	vsep.add_theme_stylebox_override("separator", vs_st)
+	_hero_box.add_child(vsep)
+
+	# 2) Right Column (55%): Dedicated Story Arcs & Named Chapters with Checkbox Icons
+	var story_col := VBoxContainer.new()
+	story_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	story_col.size_flags_stretch_ratio = 0.55
+	story_col.add_theme_constant_override("separation", 6)
+	_hero_box.add_child(story_col)
+
+	var total_ch := c.chapters.size()
 	var cur_ch := CharacterProgressionManager.get_chapter(cpath)
-	var arc_str_parts: Array[String] = []
-	for arc_i in range(3):
-		var c1 := arc_i * 2 + 1
-		var c2 := arc_i * 2 + 2
-		arc_str_parts.append("Arc %d %s%s" % [
-			arc_i + 1,
-			"●" if cur_ch >= c1 else "○",
-			"●" if cur_ch >= c2 else "○"
-		])
-	right_meta.add_child(_make_label("Story Chapters:   " + "    •    ".join(arc_str_parts), 15, COL_BODY if met else COL_LOCKED, false))
+	var story_hdr := HBoxContainer.new()
+	story_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	story_col.add_child(story_hdr)
+
+	var sh_lbl := _make_label("STORY PROGRESSION", 15, COL_GOLD, true)
+	sh_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	story_hdr.add_child(sh_lbl)
+	story_hdr.add_child(_make_label("%d / %d Chapters" % [mini(cur_ch, total_ch), total_ch], 14, COL_MUTED, false))
+
+	var story_scroll := ScrollContainer.new()
+	story_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	story_scroll.custom_minimum_size = Vector2(0, 195)
+	story_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_style_scrollbar(story_scroll)
+	story_col.add_child(story_scroll)
+
+	var arcs_vbox := VBoxContainer.new()
+	arcs_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	arcs_vbox.add_theme_constant_override("separation", 8)
+	story_scroll.add_child(arcs_vbox)
+
+	var num_arcs := maxi(1, ceili(float(total_ch) / 3.0))
+	for arc_i in range(num_arcs):
+		var arc_title := c.get_arc_name(arc_i)
+		if arc_title == "":
+			arc_title = "Arc %d" % (arc_i + 1)
+		var arc_lbl := _make_label(arc_title, 15, COL_GOLD_BRIGHT, true)
+		arc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		arcs_vbox.add_child(arc_lbl)
+
+		var ch_start := arc_i * 3
+		var ch_end := mini(total_ch, ch_start + 3)
+		for ch_idx in range(ch_start, ch_end):
+			var done := cur_ch > ch_idx
+			var ch_name := c.get_chapter_name(ch_idx)
+			if ch_name == "":
+				ch_name = "Chapter %d" % (ch_idx + 1)
+			var ch_row := HBoxContainer.new()
+			ch_row.add_theme_constant_override("separation", 8)
+			arcs_vbox.add_child(ch_row)
+
+			var cb := TextureRect.new()
+			cb.texture = IC_CHECKBOX_ON if done else IC_CHECKBOX_OFF
+			cb.custom_minimum_size = Vector2(18, 18)
+			cb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			cb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			cb.modulate = COL_POSITIVE if done else COL_LOCKED
+			cb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			ch_row.add_child(cb)
+
+			var ch_txt := "%d. %s" % [ch_idx + 1, ch_name if (done or ch_idx == cur_ch) else "???"]
+			var ch_lbl := _make_label(ch_txt, 15, COL_CREAM if done else (COL_MUTED if ch_idx == cur_ch else COL_LOCKED), done)
+			ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			ch_row.add_child(ch_lbl)
 
 
 func _rebuild_rank_track() -> void:
@@ -1057,7 +1018,7 @@ func _build_rank_heading_block(r: int, rank_data: Dictionary) -> Control:
 	top_row.add_child(_make_badge(pill_txt, Color(0.24, 0.18, 0.09, 0.96), COL_GOLD, COL_GOLD_BRIGHT))
 
 	if r == 3 or r == 5 or r == 6:
-		var perk_txt := "★ Perk Active: " + CharacterProgressionManager.get_rep_rank_perk_summary(r)
+		var perk_txt := "★ " + CharacterProgressionManager.get_rep_rank_perk_summary(r)
 		top_row.add_child(_make_badge(perk_txt, Color(0.12, 0.24, 0.14, 0.94), COL_POSITIVE, COL_POSITIVE))
 
 	var h_lbl := _make_label(str(rank_data["heading"]), 24, COL_CREAM, true)

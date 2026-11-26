@@ -47,7 +47,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "Behind every fierce rumor in Karimlan is a tired mother working double shifts just to keep breakfast on her family's table.\n\n[Confidant Placeholder — Final Reflection]: Fear shrinks once somebody is met across an honest counter. Whatever wings or burdens Manang Ana carries after hours, your store remains the one place in town where nobody stares—and where her favorite frozen packs are always saved in the back."
 	},
 	"reynamayari": {
-		"creature": "Mayari (Lunar Deity) & Biringan",
+		"creature": "Dalaketnon",
 		"region": "Kapampangan / Tagalog Myth & Samar",
 		"portrait": "res://Assets/characters/portraits/ReynaMayari Face.png",
 		"rank1_origin": "Mayari is revered in Tagalog and Kapampangan cosmology as the one-eyed goddess of the moon, cool night air, and quiet dominion, intertwined here with legends of Biringan—Samar's unseen city of silver and gold.\n\n[Field Note Placeholder — Extended Observation]: Whenever Reyna Mayari steps up to the counter at closing time, the hum of the refrigerator seems to soften and coins ring with a clearer, heavier chime against the wood.",
@@ -63,7 +63,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "Even the Silver Ledger of Biringan yields to honest work, steady kindness, and a neighborhood tindahan kept with heart.\n\n[Confidant Placeholder — Final Reflection]: Debt began as a tether, yet night after night your small storefront proved that ordinary human warmth is worth more than all the illusory gold of an unseen city."
 	},
 	"rosalyn": {
-		"creature": "White Lady (Multo / Aparisyon)",
+		"creature": "Kaperosa",
 		"region": "Quezon City (Balete Drive) & Nationwide",
 		"portrait": "res://Assets/characters/portraits/Rosalyn Face.png",
 		"rank1_origin": "Perhaps the most iconic figure of modern Philippine ghost lore, the White Lady appears along quiet tree-canopied avenues—most famously Quezon City's Balete Drive—draped in timeless white and lingering near streetlights.\n\n[Field Note Placeholder — Extended Observation]: Notice how Rosalyn never leaves wet footprints even on rainy evenings, yet lingers longest when warm OPM ballads play softly from the store radio.",
@@ -95,7 +95,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "Once you learn to laugh at his detours, even the trickiest sprinter in Luzon becomes the fastest friend in your corner.\n\n[Confidant Placeholder — Final Reflection]: No path around Karimlan ever stays confusing for long when the local trickster himself considers your store his favorite pit stop."
 	},
 	"buboy": {
-		"creature": "Tiyanak / Barangay Kid Lore",
+		"creature": "Bungisngis",
 		"region": "Tagalog & Visayan Countryside",
 		"portrait": "res://Assets/characters/portraits/Buboy Face.png",
 		"rank1_origin": "Draws gently from countryside tales of uncanny, fleet-footed children heard giggling near twilight groves, reimagined through the everyday energy of barangay street kids running afternoon errands.\n\n[Field Note Placeholder — Extended Observation]: Buboy's coins are always warm from being clutched tightly during a full-sprint race down the street so he won't forget what his mother told him to buy.",
@@ -127,7 +127,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "Where proud colors and generous hospitality meet, good fortune gladly makes its roost.\n\n[Confidant Placeholder — Final Reflection]: Your humble corner store has earned the rare honor of feeling festive even on an ordinary Tuesday afternoon."
 	},
 	"danilo": {
-		"creature": "Barangay Watcher / Local Rumor-Keeper",
+		"creature": "Daligmata",
 		"region": "Provincial Towns Across the Philippines",
 		"portrait": "res://Assets/characters/portraits/Danilo Face.png",
 		"rank1_origin": "Grounded in everyday barangay life rather than distant myth: the sharp-eyed regular who knows which delivery truck is running late, which storm cloud means business, and who needs a quiet helping hand.\n\n[Field Note Placeholder — Extended Observation]: Danilo leans against the warm edge of the wall with the unhurried calm of a man who has watched three decades of seasons pass down the same street.",
@@ -143,7 +143,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "Every town needs someone who pays attention—and someone behind the counter steady enough to care.\n\n[Confidant Placeholder — Final Reflection]: With Danilo's nod of approval, you aren't just running Lola's old shop anymore; you're truly part of Karimlan's backbone."
 	},
 	"brahim": {
-		"creature": "Albularyo Apprentice / Anting-Anting Keeper",
+		"creature": "Albularyo",
 		"region": "Karimlan, Mount Banahaw & Southern Luzon",
 		"portrait": "res://Assets/characters/portraits/Brahim Face.png",
 		"rank1_origin": "Draws from the living Filipino tradition of the 'albularyo'—herbalists and folk healers who pair medicinal plants like lagundi and sambong with quiet protective prayers and inscribed brass 'anting-anting' charms.\n\n[Field Note Placeholder — Extended Observation]: After walking away from corporate burnout in the city, Brahim returned home to Karimlan to apprentice under his father, trading spreadsheets for mortar-and-pestle remedies and steady brushwork.",
@@ -159,7 +159,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "True protection isn't cold metal—it's choosing a quieter, kinder life in service of the neighbors around you.\n\n[Confidant Placeholder — Final Reflection]: Watching Brahim settle into his father's footsteps feels a lot like tending your own store: proof that coming home can be the bravest chapter of all."
 	},
 	"rodel": {
-		"creature": "Sireno / Siyokoy (Bantay-Tubig)",
+		"creature": "Litao",
 		"region": "Visayan & Bikolano Coastal Waters",
 		"portrait": "res://Assets/characters/portraits/Rodel Face.png",
 		"rank1_origin": "Coastal Visayan and Bikolano traditions speak of the 'Bantay-Tubig'—merfolk, sireno, and scaled water stewards watching over estuaries, coral drop-offs, and tidal rivers.\n\n[Field Note Placeholder — Extended Observation]: Even during Karimlan's driest afternoons, Rodel carries the faint, clean scent of sea salt and rain-cooled river stone.",
@@ -175,7 +175,7 @@ const ENTRIES: Dictionary = {
 		"rank6_epilogue": "No matter how far inland the road winds, gentle currents always find a welcoming shore.\n\n[Confidant Placeholder — Final Reflection]: Your store has become an oasis for Rodel—a cool, friendly harbor far from the noise of open water."
 	},
 	"lolopilo": {
-		"creature": "Duwende (Nuno sa Punso)",
+		"creature": "Duwendo",
 		"region": "Luzon & Visayas Earth Mounds",
 		"portrait": "res://Assets/characters/portraits/LoloPilo Face.png",
 		"rank1_origin": "Known affectionately and warily across the archipelago as the 'Nuno sa Punso'—ancient, diminutive elders of the earth who make their homes beneath hardened clay anthills, mossy stones, and old garden roots.\n\n[Field Note Placeholder — Extended Observation]: Lolo Pilo's eyes crinkle with the exact mischief of someone who has watched four generations of Karimlan kids lose their slippers in the tall grass.",
