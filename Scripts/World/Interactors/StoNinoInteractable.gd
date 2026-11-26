@@ -69,6 +69,12 @@ func on_interact() -> void:
 			EventBus.show_notification.emit("Sto. Niño's Blessing Active", "Active for ~%.1fh more. Press [C] to inspect." % rem, "interact")
 		return
 
+	if StoryManager.is_sto_nino_on_cooldown():
+		EventBus.request_sfx.emit("interact")
+		var cd_rem := StoryManager.get_sto_nino_cooldown_remaining_hours()
+		EventBus.show_notification.emit("Sto. Niño Resting", "Ready to bless again in ~%.1fh." % cd_rem, "interact")
+		return
+
 	var granted := StoryManager.activate_sto_nino_blessing()
 	if granted.is_empty():
 		return

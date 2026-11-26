@@ -752,10 +752,13 @@ const STO_NINO_UPGRADE_SPECS: Array[Dictionary] = [
 	{"level": 2, "req_level": 5, "name": "Double Devotion", "cost": 140.0, "duration_hours": 8.0, "favor_count": 2, "all_day": false, "desc": "Earn Sto. Niño's abundant grace. Grants 2 distinct random Favors at once for 8 hours!"},
 	{"level": 3, "req_level": 9, "name": "Perpetual Benediction", "cost": 225.0, "duration_hours": 0.0, "favor_count": 2, "all_day": true, "desc": "Unbroken protection over your tindahan. Sto. Niño's 2 Blessings last for the entire rest of the day — no re-tapping needed!"},
 ]
+const STO_NINO_COOLDOWN_HOURS := 1.0
 var sto_nino_upgrade_level: int = 0
 var active_blessing_cards: Array[String] = []
+var sto_nino_daily_blessings: Array[String] = [] # Pre-rolled for the day; re-tapping after cooldown grants the same blessing(s)
 var sto_nino_blessing_start_hour: float = -1.0
 var sto_nino_blessing_end_hour: float = -1.0
+var sto_nino_cooldown_end_hour: float = -1.0
 var sto_nino_blessing_all_day: bool = false
 var _sto_nino_upgrade_item_cache: Dictionary = {}
 
@@ -819,30 +822,47 @@ func get_sto_nino_blessing_remaining_hours() -> float:
 		return 0.0
 	return maxf(0.0, sto_nino_blessing_end_hour - clock.current_display_time)
 
-func activate_sto_nino_blessing() -> Array[String]:
-	if sto_nino_upgrade_level < 1:
-		return []
-	check_sto_nino_blessing_expiry()
-	if not active_blessing_cards.is_empty():
-		return []
-	var spec := get_sto_nino_spec()
-	var want_count: int = int(spec["favor_count"])
-	var duration_h: float = float(spec["duration_hours"])
-	var is_all_day: bool = bool(spec["all_day"])
+func get_sto_nino_cooldown_remaining_hours() -> float:
+	if sto_nino_cooldown_end_hour < 0.0:
+		return 0.0
+	var rem := sto_nino_cooldown_end_hour - clock.current_display_time
+	if rem <= 0.01:
+		sto_nino_cooldown_end_hour = -1.0
+		return 0.0
+	return rem
 
+func is_sto_nino_on_cooldown() -> bool:
+	return get_sto_nino_cooldown_remaining_hours() > 0.0
+
+func _ensure_daily_sto_nino_blessings(want_count: int, is_all_day: bool) -> Array[String]:
+	if sto_nino_daily_blessings.size() >= want_count:
+		return sto_nino_daily_blessings.slice(0, want_count)
 	var pool: Array[String] = []
 	for card_id in MayariCardRegistry.CARDS.keys():
 		if not MayariCardRegistry.is_favor(card_id):
 			continue
 		if not is_all_day and card_id == MayariCardRegistry.CARD_MOON_HOLDS_SKY:
 			continue
+		if card_id in sto_nino_daily_blessings:
+			continue
 		pool.append(card_id)
 	pool.shuffle()
+	while sto_nino_daily_blessings.size() < want_count and not pool.is_empty():
+		sto_nino_daily_blessings.append(pool.pop_back())
+	return sto_nino_daily_blessings.duplicate()
 
-	var granted: Array[String] = []
-	for i in range(mini(want_count, pool.size())):
-		granted.append(pool[i])
+func activate_sto_nino_blessing() -> Array[String]:
+	if sto_nino_upgrade_level < 1:
+		return []
+	check_sto_nino_blessing_expiry()
+	if not active_blessing_cards.is_empty() or is_sto_nino_on_cooldown():
+		return []
+	var spec := get_sto_nino_spec()
+	var want_count: int = int(spec["favor_count"])
+	var duration_h: float = float(spec["duration_hours"])
+	var is_all_day: bool = bool(spec["all_day"])
 
+	var granted := _ensure_daily_sto_nino_blessings(want_count, is_all_day)
 	if granted.is_empty():
 		return []
 
@@ -850,6 +870,7 @@ func activate_sto_nino_blessing() -> Array[String]:
 	sto_nino_blessing_all_day = is_all_day
 	sto_nino_blessing_start_hour = clock.current_display_time
 	sto_nino_blessing_end_hour = -1.0 if is_all_day else (clock.current_display_time + duration_h)
+	sto_nino_cooldown_end_hour = -1.0
 	record_daily_stat_int("sto_nino_taps", 1)
 	for g_id in granted:
 		record_daily_list_entry("blessings_used", g_id, false)
@@ -861,21 +882,28 @@ func activate_sto_nino_blessing() -> Array[String]:
 	return granted
 
 func check_sto_nino_blessing_expiry() -> void:
+	if sto_nino_cooldown_end_hour >= 0.0 and clock.current_display_time >= sto_nino_cooldown_end_hour - 0.01:
+		sto_nino_cooldown_end_hour = -1.0
+		if sto_nino_upgrade_level >= 1 and not is_past_closing_time():
+			EventBus.show_notification.emit("Sto. Niño Ready", "Tap Sto. Niño again to renew today's blessing.", "interact")
 	if active_blessing_cards.is_empty() or sto_nino_blessing_all_day or sto_nino_blessing_end_hour < 0.0:
 		return
 	if clock.current_display_time >= sto_nino_blessing_end_hour:
 		active_blessing_cards.clear()
 		sto_nino_blessing_start_hour = -1.0
 		sto_nino_blessing_end_hour = -1.0
-		LogManager.info("StoryManager", "Sto. Niño Blessing expired at %.2fh." % clock.current_display_time)
+		sto_nino_cooldown_end_hour = clock.current_display_time + STO_NINO_COOLDOWN_HOURS
+		LogManager.info("StoryManager", "Sto. Niño Blessing expired at %.2fh (cooldown until %.2fh)." % [clock.current_display_time, sto_nino_cooldown_end_hour])
 		EventBus.sto_nino_blessing_changed.emit()
-		EventBus.show_notification.emit("Sto. Niño's Blessing Faded", "Tap Sto. Niño again for a new Favor.", "interact")
+		EventBus.show_notification.emit("Sto. Niño's Blessing Faded", "Rest a moment — Sto. Niño will be ready again in 1 hour.", "interact")
 		_save_progression()
 
 func _clear_sto_nino_blessing() -> void:
 	active_blessing_cards.clear()
+	sto_nino_daily_blessings.clear()
 	sto_nino_blessing_start_hour = -1.0
 	sto_nino_blessing_end_hour = -1.0
+	sto_nino_cooldown_end_hour = -1.0
 	sto_nino_blessing_all_day = false
 	EventBus.sto_nino_blessing_changed.emit()
 
