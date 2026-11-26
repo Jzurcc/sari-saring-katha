@@ -128,9 +128,13 @@ func _compute_grade_and_highlights() -> void:
 
 	# Weighted daily score
 	var score := 0
-	score += mini(40, int(roundf((cash_sales + utang_repaid + tips) * 0.25)))
-	score += mini(25, total_served * 4)
-	score += mini(15, chapters.size() * 6 + arcs.size() * 10)
+	# Gross income target scales by day: ₱160 on Day 1, growing with both flat + percent each day
+	var day_idx := maxi(0, _day_number - 1)
+	var gross_income := cash_sales + utang_repaid + tips
+	var gross_target := (160.0 + float(day_idx) * 18.0) * (1.0 + float(day_idx) * 0.06)
+	score += mini(40, int(roundf((gross_income / maxf(1.0, gross_target)) * 40.0)))
+	score += mini(36, total_served * 4)
+	score += mini(24, chapters.size() * 6 + arcs.size() * 10)
 	if total_served >= 3 and missed_total == 0:
 		score += 12
 	elif missed_total > 0:
@@ -139,16 +143,18 @@ func _compute_grade_and_highlights() -> void:
 		score += 12
 	elif StoryManager.last_tally_tier == "balanced":
 		score += 6
+	elif StoryManager.last_tally_tier == "shortfall":
+		score -= 10
 
-	if score >= 72:
+	if score >= 85:
 		_grade = "S"
 		_grade_title = "Paldo"
 		_grade_col = Color(1.0, 0.88, 0.42, 1.0)
-	elif score >= 52:
+	elif score >= 62:
 		_grade = "A"
 		_grade_title = "Mabenta"
 		_grade_col = Color(0.58, 0.94, 0.56, 1.0)
-	elif score >= 32:
+	elif score >= 38:
 		_grade = "B"
 		_grade_title = "Mahinahon"
 		_grade_col = Color(0.96, 0.88, 0.72, 1.0)
