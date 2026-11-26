@@ -8,9 +8,9 @@ extends CanvasLayer
 ##   - Store Upgrades   (default [U], action: toggle_upgrades)
 ## Automatically reflects any custom keybind changes made in Settings.
 
-const IC_JOURNAL: Texture2D = preload("res://Assets/ui/icons/award.png")
-const IC_LEDGER: Texture2D = preload("res://Assets/ui/icons/banknote.png")
-const IC_UPGRADES: Texture2D = preload("res://Assets/ui/icons/trending-up.png")
+const IC_JOURNAL: Texture2D = preload("res://Assets/ui/icons/book-bookmark.png")
+const IC_LEDGER: Texture2D = preload("res://Assets/ui/icons/package-pen.png")
+const IC_UPGRADES: Texture2D = preload("res://Assets/ui/icons/book-plus.png")
 
 const SHORTCUTS: Array[Dictionary] = [
 	{"id": "journal", "action": "toggle_journal", "default_key": KEY_J, "icon": IC_JOURNAL},
