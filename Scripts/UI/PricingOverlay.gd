@@ -26,8 +26,17 @@ class PriceStepGauge extends Control:
 	var max_step: int = ItemData.MAX_STEP
 	var accent_color: Color = Color(0.96, 0.85, 0.52, 1.0)
 
+	func _draw_diamond(center: Vector2, r: float, col: Color) -> void:
+		var pts := PackedVector2Array([
+			center + Vector2(0.0, -r),
+			center + Vector2(r, 0.0),
+			center + Vector2(0.0, r),
+			center + Vector2(-r, 0.0),
+		])
+		draw_colored_polygon(pts, col)
+
 	func _draw() -> void:
-		var pad_x := 8.0
+		var pad_x := 10.0
 		var bar_h := 24.0
 		var bar_y := (size.y - bar_h) * 0.5
 		var bar_w := maxf(20.0, size.x - pad_x * 2.0)
@@ -68,9 +77,18 @@ class PriceStepGauge extends Control:
 		draw_rect(bar_rect, frame_col, false, 2.0)
 		draw_rect(bar_rect.grow(-2.0), Color(0.0, 0.0, 0.0, 0.45), false, 1.0)
 
-		# Sleek vertical marker needle at active step (no big circle/diamond)
-		draw_line(Vector2(cur_x, bar_y - 3.0), Vector2(cur_x, bar_y + bar_h + 3.0), Color(0.04, 0.03, 0.02, 0.95), 5.0, true)
-		draw_line(Vector2(cur_x, bar_y - 2.0), Vector2(cur_x, bar_y + bar_h + 2.0), accent_color.lightened(0.32), 2.5, true)
+		# End-cap diamond ornaments (left & right)
+		_draw_diamond(Vector2(pad_x, bar_y + bar_h * 0.5), 5.0, frame_col)
+		_draw_diamond(Vector2(pad_x + bar_w, bar_y + bar_h * 0.5), 5.0, frame_col)
+
+		# Center wholesale diamond marker below track
+		_draw_diamond(Vector2(zero_x, bar_y + bar_h + 6.5), 3.2, Color(0.86, 0.72, 0.42, 0.78))
+
+		# Glowing diamond thumb at active step
+		var thumb_c := Vector2(cur_x, bar_y + bar_h * 0.5)
+		_draw_diamond(thumb_c, 11.0, Color(accent_color.r, accent_color.g, accent_color.b, 0.28))
+		_draw_diamond(thumb_c, 8.0, Color(0.06, 0.05, 0.04, 0.96))
+		_draw_diamond(thumb_c, 5.8, accent_color.lightened(0.25))
 
 
 var pricing_ui: Sprite3D
@@ -119,7 +137,7 @@ func _ready() -> void:
 	pricing_viewport.add_child(root_hbox)
 
 	pricing_panel = PanelContainer.new()
-	pricing_panel.custom_minimum_size = Vector2(410, 300)
+	pricing_panel.custom_minimum_size = Vector2(410, 274)
 	pricing_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	root_hbox.add_child(pricing_panel)
 
@@ -140,15 +158,6 @@ func _ready() -> void:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 6)
 	pricing_panel.add_child(vbox)
-
-	# Branded eyebrow header
-	var eyebrow := Label.new()
-	eyebrow.text = "✦  PRICE LENS  ✦"
-	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	eyebrow.add_theme_font_override("font", _bold_font)
-	eyebrow.add_theme_font_size_override("font_size", 14)
-	eyebrow.add_theme_color_override("font_color", COL_GOLD)
-	vbox.add_child(eyebrow)
 
 	# Compact horizontal badge row (In Demand / Chilled / Frozen / Warm)
 	var badge_row := HBoxContainer.new()
