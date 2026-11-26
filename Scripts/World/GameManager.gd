@@ -218,18 +218,13 @@ func _on_transaction_completed(item: ItemData, was_correct: bool, wants_debt: bo
 			# Cold/Warm fridge bonus/penalty
 			if item.category == "bottle" or item.category == "frozen":
 				rep_delta += (-3 if StoryManager.is_fridge_warm else 3)
-			# Favorite category match + first-time discovery!
+			# Favorite category match + first-time discovery (announced via dialogue, no star toast)
 			if c_data and (item.category in c_data.get_favorite_categories()):
 				rep_delta += 5
 				if CharacterProgressionManager.discover_favorite_category(customer_path, item.category):
 					rep_delta += 10
 					var cat_label := StoryManager.get_category_display_name(item.category)
-					var cname := c_data.character_name if c_data.character_name != "" else c_data.get_clean_id().capitalize()
-					EventBus.show_notification.emit(
-						"Favorite Discovered!",
-						"%s loves %s! (+10 Rep)" % [cname, cat_label],
-						"purchase"
-					)
+					Dialogic.VAR.set_variable("Global_FavoriteDiscoveredCat", cat_label)
 			if rep_delta != 0:
 				CharacterProgressionManager.add_reputation(customer_path, rep_delta, "sale")
 

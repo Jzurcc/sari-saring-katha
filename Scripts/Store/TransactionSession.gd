@@ -31,6 +31,7 @@ var _last_dialogue_frame: int = -1
 var _watchdog_elapsed: float = 0.0
 const WATCHDOG_TIMEOUT_SEC: float = 0.5
 const PRICE_REFUSED_TIMELINE_PATH := "res://Dialogue/Timelines/price_refused.dtl"
+const FAVORITE_DISCOVERED_TIMELINE_PATH := "res://Dialogue/Timelines/favorite_discovered.dtl"
 
 const PRICE_REFUSAL_LINES: Array[String] = [
 	"₱%d for %s?! Ang mahal naman! Sa kabila na lang ako.",
@@ -442,10 +443,57 @@ func _finish_switch_and_start(
 	else:
 		on_wrong_item_given(next_customer)
 
+func _build_favorite_discovery_line(c_data: CustomerData, cat_label: String) -> String:
+	var cid := c_data.get_clean_id() if c_data else ""
+	match cid:
+		"kuyakap":
+			return "Heh... %s. You've got a good eye, apo — that's always my favorite." % cat_label
+		"manangana":
+			return "Aba, %s! You really know what I always come here for, anak." % cat_label
+		"buboy":
+			return "YES! %s is my favorite, Kuya! Keep stocking these, ha?" % cat_label
+		"rosalyn":
+			return "%s... I always end up reaching for these. Thank you for keeping them." % cat_label
+		"tk":
+			return "Ooh, %s! Instant favorite — I'm definitely coming back for more." % cat_label
+		"danilo":
+			return "Hehe, %s! Between us, that's the main reason I stop by your counter." % cat_label
+		"brahim":
+			return "Salamat. %s — I always keep a bit of this on hand." % cat_label
+		"rodel":
+			return "Ah, %s. Honestly, that's my favorite thing you carry here." % cat_label
+		"sarimanok":
+			return "Splendid! %s — truly a favorite worth crossing the street for." % cat_label
+		"lolopilo":
+			return "Ho-ho! %s! That's my favorite, apo — your lola knew it too." % cat_label
+		"reynamayari":
+			return "%s... How fitting. You have a knack for what I favor." % cat_label
+		_:
+			return "Salamat! I really love %s — I'll be back for more!" % cat_label
+
+
 func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
 	if _switching_customer_dialogue:
 		return
 	update_item_names(customer)
+
+	# First-time favorite category discovery plays an in-character dialogue line instead of a star toast
+	var discovered_cat := str(Dialogic.VAR.get_variable("Global_FavoriteDiscoveredCat", ""))
+	if discovered_cat != "":
+		Dialogic.VAR.set_variable("Global_FavoriteDiscoveredCat", "")
+		var ctx := customer.transaction_context
+		if ctx != null and not ctx.is_story and not ctx.wants_debt and ResourceLoader.exists(FAVORITE_DISCOVERED_TIMELINE_PATH):
+			var cname := customer.customer_data.character_name if (customer.customer_data and customer.customer_data.character_name != "") else "Neighbor"
+			if generic_char_res:
+				generic_char_res.display_name = cname
+			Dialogic.VAR.set_variable("Global_FavoriteDiscoveredLine", _build_favorite_discovery_line(customer.customer_data, discovered_cat))
+			var fav_phase = Phase.SATISFIED if is_whole_order_done else Phase.TALK
+			var fav_label = "Satisfy" if is_whole_order_done else "Partial"
+			if is_instance_valid(customer) and ctx:
+				EventBus.customer_order_updated.emit(customer.get_order_hud_key(), ctx.desired_items, ctx.is_riddle)
+			start_dialogue(FAVORITE_DISCOVERED_TIMELINE_PATH, customer, fav_phase, fav_label)
+			return
+
 	if Dialogic.current_timeline != null:
 		var active_path = Dialogic.current_timeline.resource_path
 		var target_path = customer.transaction_context.timeline.resource_path if customer.transaction_context.timeline is Resource else customer.transaction_context.timeline

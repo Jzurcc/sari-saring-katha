@@ -1,0 +1,8 @@
+label Satisfy
+Customer: {Global_FavoriteDiscoveredLine}
+[signal arg="story_success"]
+[end_timeline]
+
+label Partial
+Customer: {Global_FavoriteDiscoveredLine}
+[end_timeline]
