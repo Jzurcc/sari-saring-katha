@@ -88,7 +88,7 @@ const KEYWORDS: Dictionary = {
 	},
 	"featured_category": {
 		"title": "FEATURED CATEGORY",
-		"desc": "Activated by placing 3/3 stickers of one category on your Roof Signage or Promo Poster.",
+		"desc": "Activated by placing 3/3 stickers of one category on your Promo Poster.",
 	},
 	"tambayan": {
 		"title": "TAMBAYAN",
@@ -545,6 +545,17 @@ static func draw_three_cards(tally_tier: String, shifted_odds: bool = false) -> 
 
 	var picked: Array[Dictionary] = []
 	match tally_tier:
+		"include_omens":
+			for _i in range(3):
+				if randf() < 0.50 and not favor_pool.is_empty():
+					picked.append(favor_pool.pop_back())
+				elif not chill_pool.is_empty():
+					picked.append(chill_pool.pop_back())
+				elif not favor_pool.is_empty():
+					picked.append(favor_pool.pop_back())
+		"omens_only":
+			for i in range(mini(3, chill_pool.size())):
+				picked.append(chill_pool[i])
 		"generous", "cleared":
 			for i in range(mini(3, favor_pool.size())):
 				picked.append(favor_pool[i])
@@ -574,6 +585,8 @@ static func draw_three_cards(tally_tier: String, shifted_odds: bool = false) -> 
 ## Returns the slot preview metadata ("favor", "omen", or "mystery") for Beat 1's 3 shadowed slots.
 static func get_slot_preview_kinds(tally_tier: String, shifted_odds: bool = false) -> Array[String]:
 	match tally_tier:
+		"omens_only":
+			return ["omen", "omen", "omen"]
 		"generous", "cleared":
 			return ["favor", "favor", "favor"]
 		"shortfall":

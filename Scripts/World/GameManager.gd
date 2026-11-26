@@ -374,7 +374,7 @@ func _on_day_ended(ended_day_number: int) -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	_is_ending_day = false
 
-func _play_sleep_sequence(ended_day_number: int) -> bool:
+func _play_sleep_sequence(_ended_day_number: int) -> bool:
 	var overlay = sleep_overlay_scene.instantiate()
 	add_child(overlay)
 	
@@ -384,16 +384,7 @@ func _play_sleep_sequence(ended_day_number: int) -> bool:
 	if not is_inside_tree() or not is_instance_valid(overlay):
 		return false
 	
-	# Phase B: Sequential/Random Folklore Quote
-	var quote_index = (ended_day_number - 1)
-	var quote = END_OF_DAY_QUOTES[quote_index] if quote_index < END_OF_DAY_QUOTES.size() else END_OF_DAY_QUOTES.pick_random()
-		
-	overlay.display_text(quote)
-	await overlay.completed
-	if not is_inside_tree() or not is_instance_valid(overlay):
-		return false
-	
-	# Phase C: Clean up
+	# Phase B: Clean up
 	await overlay.fade_out()
 	if is_instance_valid(overlay):
 		overlay.queue_free()

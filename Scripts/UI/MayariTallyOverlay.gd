@@ -511,11 +511,9 @@ var _max_card_picks: int = 1
 var _selected_indices: Array[int] = []
 var _confirmed_shifted_odds: bool = false
 var _reroll_btn: Button
-var _omens_only_btn: CheckBox
+var _omens_only_btn: Button
 var _omens_only: bool = false
 var _sealed_direct_draft: bool = false
-var _cached_normal_cards: Array[Dictionary] = []
-var _cached_omen_cards: Array[Dictionary] = []
 var _accept_cards_btn: Button
 var _accept_style: StyleBoxFlat
 
@@ -832,20 +830,21 @@ func _build_ui() -> void:
 	_reroll_btn.pressed.connect(_on_reroll_pressed)
 	_root.add_child(_reroll_btn)
 
-	# "Omens Only" toggle checkbox with icon right beside the Reroll button
-	_omens_only_btn = CheckBox.new()
+	# "Include Omens" toggle button with icon right beside the Reroll button (takes effect on next Reroll)
+	_omens_only_btn = Button.new()
+	_omens_only_btn.toggle_mode = true
 	_omens_only_btn.anchor_left = 0.5
 	_omens_only_btn.anchor_right = 0.5
 	_omens_only_btn.anchor_top = 0.855
 	_omens_only_btn.anchor_bottom = 0.855
-	_omens_only_btn.offset_left = -248.0
+	_omens_only_btn.offset_left = -242.0
 	_omens_only_btn.offset_right = -62.0
 	_omens_only_btn.offset_top = -24.0
 	_omens_only_btn.offset_bottom = 24.0
 	_omens_only_btn.z_index = 12
 	_omens_only_btn.visible = false
 	_omens_only_btn.text = "Include Omens"
-	_omens_only_btn.tooltip_text = "Mix 50/50 Favors & Omens into your draft pool"
+	_omens_only_btn.tooltip_text = "Light up to mix 50/50 Favors & Omens on your next Reroll"
 	_omens_only_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_omens_only_btn.focus_mode = Control.FOCUS_NONE
 	_omens_only_btn.add_theme_font_override("font", _bold_font)
@@ -1286,12 +1285,10 @@ func _launch_hades_card_flip() -> void:
 	_selected_indices.clear()
 	_show_keyword_callouts([])
 
-	_cached_normal_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
-	_cached_omen_cards.clear()
 	_omens_only = false
 	if is_instance_valid(_omens_only_btn):
 		_omens_only_btn.set_pressed_no_signal(false)
-	_card_data_list = _cached_normal_cards.duplicate(true)
+	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
 	_card_rows.clear()
 	_card_picked = false
 	_hovered_idx = -1
@@ -1301,7 +1298,7 @@ func _launch_hades_card_flip() -> void:
 	match _confirmed_tier:
 		"cleared":
 			_header_title_lbl.text = "T H E   P A C T   I S   S E A L E D"
-			_header_sub_lbl.text = "%s final Favor%s for tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
+			_header_sub_lbl.text = "Choose 1 or 2 Favors for tomorrow." if _max_card_picks >= 2 else "Choose one Favor for tomorrow."
 		"generous":
 			_header_title_lbl.text = "F A V O R   O F   B I R I N G A N"
 			_header_sub_lbl.text = "%s Favor%s for tomorrow." % [pick_phrase, "(s)" if _max_card_picks >= 2 else ""]
@@ -1815,29 +1812,18 @@ func _on_omens_only_toggled(toggled_on: bool) -> void:
 	if not _cards_ready or _card_picked:
 		return
 	_omens_only = toggled_on
-	if _omens_only:
-		if _cached_omen_cards.is_empty():
-			_cached_omen_cards = MayariCardRegistry.draw_three_cards("include_omens", false)
-		_swap_draft_cards(_cached_omen_cards.duplicate(true))
-	else:
-		if _cached_normal_cards.is_empty():
-			_cached_normal_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
-		_swap_draft_cards(_cached_normal_cards.duplicate(true))
+	EventBus.request_sfx.emit("interact")
 
 
 func _on_reroll_pressed() -> void:
 	if not _cards_ready or _card_picked or _rerolls_left <= 0:
 		return
 	_rerolls_left -= 1
-	_cached_normal_cards.clear()
-	_cached_omen_cards.clear()
 	var fresh_cards: Array[Dictionary]
 	if _omens_only:
-		_cached_omen_cards = MayariCardRegistry.draw_three_cards("include_omens", false)
-		fresh_cards = _cached_omen_cards.duplicate(true)
+		fresh_cards = MayariCardRegistry.draw_three_cards("include_omens", false)
 	else:
-		_cached_normal_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
-		fresh_cards = _cached_normal_cards.duplicate(true)
+		fresh_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
 	_swap_draft_cards(fresh_cards)
 
 
