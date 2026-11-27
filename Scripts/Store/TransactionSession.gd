@@ -169,7 +169,6 @@ func _trigger_price_refusal(
 	if customer.customer_data and is_instance_valid(CharacterProgressionManager):
 		CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, -12, "price_refusal")
 		CharacterProgressionManager.set_last_visit_outcome(customer.customer_data.get_clean_id(), "price_walkout")
-		CharacterProgressionManager.add_tally(customer.customer_data.get_clean_id(), -1)
 
 	# Pick a natural refusal line and play walkout dialogue on the customer
 	var tmpl: String = PRICE_REFUSAL_LINES[randi() % PRICE_REFUSAL_LINES.size()]
@@ -591,15 +590,27 @@ func _show_haggle_reaction_badge(customer: Customer, can_haggle: bool, haggle_ch
 func _matches_chapter_substitute(customer: Customer, offered: ItemData) -> bool:
 	if not is_instance_valid(customer) or customer.customer_data == null or offered == null:
 		return false
+	var item_id := offered.get_clean_id().to_lower()
+	var item_cat := offered.category.strip_edges().to_lower()
+
+	# 1. Dynamic dialogue-driven secret substitution (set via [signal arg="allow_sub:mentor,water"])
+	if customer.has_meta("_dynamic_sub_ids"):
+		var dyn_ids: Array = customer.get_meta("_dynamic_sub_ids", [])
+		if item_id in dyn_ids:
+			return true
+	if customer.has_meta("_dynamic_sub_cats"):
+		var dyn_cats: Array = customer.get_meta("_dynamic_sub_cats", [])
+		if item_cat in dyn_cats:
+			return true
+
+	# 2. Static ChapterData substitution definitions
 	var ch_idx := CharacterProgressionManager.get_chapter(customer.customer_data.resource_path) if is_instance_valid(CharacterProgressionManager) else 0
 	var ch_data := customer.customer_data.get_chapter(ch_idx)
 	if ch_data == null:
 		return false
-	var item_id := offered.get_clean_id().to_lower()
 	for sub_id in ch_data.substitute_item_ids:
 		if sub_id.strip_edges().to_lower() == item_id:
 			return true
-	var item_cat := offered.category.strip_edges().to_lower()
 	for sub_cat in ch_data.substitute_categories:
 		if sub_cat.strip_edges().to_lower() == item_cat:
 			return true
@@ -618,16 +629,17 @@ func _complete_item_delivery(
 ) -> bool:
 	var context: TransactionContext = customer.transaction_context
 	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
-	var is_correct: bool = customer.check_item(item.item_data)
-
-	# VA-11 HALL-A Signature Item Substitution Check (on Story Chapters with a SubstituteItem label)
+	# VA-11 HALL-A Category/Item Substitution Check BEFORE check_item() so valid substitutes never flash red error
 	var is_substitute := false
-	if not is_correct and customer.has_been_greeted and context != null and context.transaction_type == TransactionContext.Type.STORY:
+	if customer.has_been_greeted and context != null and context.transaction_type == TransactionContext.Type.STORY:
 		var t_path: String = context.timeline.resource_path if context.timeline is Resource else str(context.timeline)
 		if _matches_chapter_substitute(customer, item.item_data) and StoryManager.is_label_in_timeline(t_path, "SubstituteItem"):
 			is_substitute = true
 			context.delivered_items.append(item.item_data)
 			context.desired_items.clear()
+			customer._on_item_accepted(item.item_data)
+
+	var is_correct: bool = false if is_substitute else customer.check_item(item.item_data)
 
 	if is_correct or is_substitute:
 		EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
@@ -912,12 +924,12 @@ func _register_marker_character(layout: Node, char_res: Resource, marker: Node3D
 func on_dialogic_signal(argument: String) -> void:
 	if argument == "refuse_service":
 		_pending_dismiss = true
-		var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
-		var has_del := delivered != null and delivered > 0
+		var delivered: Variant = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
+		var has_del: bool = delivered != null and float(delivered) > 0.0
 		_refused_with_zero_delivered = not has_del
 		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
-			var cid := current_customer.customer_data.get_clean_id()
-			var is_st := current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
+			var cid: String = current_customer.customer_data.get_clean_id()
+			var is_st: bool = current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
 			if has_del:
 				CharacterProgressionManager.set_last_visit_outcome(cid, "partial_order")
 			elif is_st:
@@ -938,7 +950,7 @@ func on_dialogic_signal(argument: String) -> void:
 		_pending_dismiss = true
 	elif argument == "partial_dismiss" or argument == "story_success":
 		# White-Check Guard: never let a legacy "refuse_service + story_success" pair skip a Story Chapter when 0 items were delivered
-		var is_st_zero := _refused_with_zero_delivered and is_instance_valid(current_customer) and current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
+		var is_st_zero: bool = _refused_with_zero_delivered and is_instance_valid(current_customer) and current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
 		if not is_st_zero:
 			_is_partial_success = true
 		_pending_dismiss = true
@@ -974,6 +986,40 @@ func on_dialogic_signal(argument: String) -> void:
 			CharacterProgressionManager.set_world_flag(fparts[0].strip_edges(), fval)
 		else:
 			CharacterProgressionManager.set_world_flag(fpayload, true)
+	elif argument.begins_with("allow_sub:"):
+		# Dialogue-driven secret substitution pivot: "allow_sub:mentor,water"
+		if is_instance_valid(current_customer):
+			var ids: Array = []
+			for tok in argument.substr(10).split(",", false):
+				var clean := tok.strip_edges().to_lower()
+				if clean != "":
+					ids.append(clean)
+			current_customer.set_meta("_dynamic_sub_ids", ids)
+	elif argument.begins_with("allow_sub_cat:"):
+		# Dialogue-driven secret category substitution pivot: "allow_sub_cat:candy"
+		if is_instance_valid(current_customer):
+			var cats: Array[String] = []
+			for tok in argument.substr(14).split(",", false):
+				var clean := tok.strip_edges().to_lower()
+				if clean != "":
+					cats.append(clean)
+			current_customer.set_meta("_dynamic_sub_cats", cats)
+			current_customer.set_meta("_pivoted_to_sub", true)
+			if current_customer.transaction_context and not cats.is_empty():
+				var cur_spoken := str(Dialogic.VAR.get_variable("Transaction_ItemWants", ""))
+				if cur_spoken != "":
+					current_customer.set_meta("_spoken_item_wants", cur_spoken)
+				var tier_now: int = StoryManager.current_tier if is_instance_valid(StoryManager) else 1
+				var sub_item: ItemData = OrderItemPicker.pick_from_categories_with_stock_bias(cats, tier_now, false, [], 0.95)
+				if sub_item == null:
+					for cand in InventoryManager.get_all_items():
+						if cand.can_be_sold and cand.category.strip_edges().to_lower() in cats:
+							if sub_item == null or cand.tier < sub_item.tier:
+								sub_item = cand
+				if sub_item != null:
+					var typed_sub: Array[ItemData] = [sub_item]
+					current_customer.transaction_context.desired_items.assign(typed_sub)
+					current_customer.transaction_context.requested_category = sub_item.category
 	elif argument.begins_with("tally:"):
 		# Behavioral tally modifier: "tally:+1", "tally:-1", or "tally:manangana:+1"
 		var tpayload := argument.substr(6).strip_edges()
@@ -1011,15 +1057,13 @@ func on_dialogic_signal(argument: String) -> void:
 				AudioManager.sfx_pool.play_sfx_pitched("ui_hover", 0.92, -10.0)
 	elif argument == "utang_accepted":
 		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
-			var cid := current_customer.customer_data.get_clean_id()
+			var cid: String = current_customer.customer_data.get_clean_id()
 			CharacterProgressionManager.set_last_visit_outcome(cid, "utang_accepted")
-			CharacterProgressionManager.add_tally(cid, 1)
 		EventBus.utang_accepted.emit(current_customer)
 	elif argument == "utang_rejected":
 		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
-			var cid := current_customer.customer_data.get_clean_id()
+			var cid: String = current_customer.customer_data.get_clean_id()
 			CharacterProgressionManager.set_last_visit_outcome(cid, "utang_refused")
-			CharacterProgressionManager.add_tally(cid, -1)
 		EventBus.utang_rejected.emit(current_customer)
 		_pending_dismiss = true
 	elif argument == "pulse_red":
@@ -1279,7 +1323,9 @@ func update_item_names(customer: Customer) -> void:
 	InventoryManager.current_item_name = DialogicBridge.join_names(item_names)
 	
 	Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
-	if not item_names.is_empty():
+	if customer.get_meta("_pivoted_to_sub", false) and str(customer.get_meta("_spoken_item_wants", "")) != "":
+		Dialogic.VAR.set_variable("Transaction_ItemWants", str(customer.get_meta("_spoken_item_wants", "")))
+	elif not item_names.is_empty():
 		Dialogic.VAR.set_variable("Transaction_ItemWants", InventoryManager.current_item_name)
 	
 	var total_cnt = ctx.original_count

@@ -402,6 +402,40 @@ func _on_dialogic_signal(argument: String) -> void:
 		
 		LogManager.info("GameManager", "Customer repaid %.2f pesos." % amount)
 
+	elif argument == "forgive_debt":
+		var forgiven: float = float(Dialogic.VAR.get_variable("Transaction_RepaymentAmount", 0.0))
+		Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
+		Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
+		var spawners_f = get_tree().get_nodes_in_group("customer_spawner")
+		if spawners_f.size() > 0 and forgiven > 0.0:
+			var spawner_f := spawners_f[0] as CustomerSpawner
+			var customer_f = spawner_f.current_customer
+			if customer_f and customer_f.customer_data:
+				if customer_f.transaction_context:
+					customer_f.transaction_context.is_repaying = false
+					customer_f.transaction_context.repayment_amount = 0.0
+				var cpath_f: String = customer_f.customer_data.resource_path
+				StoryManager.reduce_debt(cpath_f, forgiven)
+				StoryManager.queue_pending_repayment(cpath_f, forgiven)
+				if is_instance_valid(CharacterProgressionManager):
+					CharacterProgressionManager.add_reputation(cpath_f, 12, "forgive_debt")
+		LogManager.info("GameManager", "Player forgave %.2f pesos of customer debt." % forgiven)
+
+	elif argument == "defer_repay":
+		Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
+		Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)
+		var spawners_d = get_tree().get_nodes_in_group("customer_spawner")
+		if spawners_d.size() > 0:
+			var spawner_d := spawners_d[0] as CustomerSpawner
+			var customer_d = spawner_d.current_customer
+			if customer_d and customer_d.customer_data:
+				if customer_d.transaction_context:
+					customer_d.transaction_context.is_repaying = false
+					customer_d.transaction_context.repayment_amount = 0.0
+				if is_instance_valid(CharacterProgressionManager):
+					CharacterProgressionManager.add_reputation(customer_d.customer_data.resource_path, 5, "defer_repay")
+		LogManager.info("GameManager", "Player deferred customer debt repayment to a later visit.")
+
 func _handle_open_tally_offer() -> void:
 	if _is_tally_overlay_open:
 		return
