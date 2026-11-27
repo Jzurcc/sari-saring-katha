@@ -20,51 +20,69 @@
 script = ExtResource("chapterdata_script")
 chapter_name = "The Flight"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Attempt"
 is_visit_only = true
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Anchor"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Burn"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Silence"
 is_visit_only = true
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Puddle"
 is_visit_only = true
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_6"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Candy"
 categories = PackedStringArray("candy")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_7"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Letting Go"
 is_visit_only = true
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_8"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Departure"
 is_visit_only = true
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")

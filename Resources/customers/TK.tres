@@ -19,46 +19,64 @@
 script = ExtResource("chapterdata_script")
 chapter_name = "The Arrival"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Plan"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Arc 1 Recount"
 categories = PackedStringArray("pack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Burnout"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Arc 2 Scouting"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Arc 2 Recount"
 categories = PackedStringArray("pack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_6"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Realization"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_7"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Choice"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_8"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Final Step"
 categories = PackedStringArray("pack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")

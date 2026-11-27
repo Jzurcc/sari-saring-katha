@@ -17,31 +17,43 @@
 script = ExtResource("chapterdata_script")
 chapter_name = "The 1968 Sipa Champ"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Pastimes from the Punso"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Better Than Gold"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Barangay Rivalry"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Never Forget How to Play"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Champion of Karimlan"
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")

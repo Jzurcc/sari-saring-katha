@@ -19,47 +19,65 @@
 script = ExtResource("chapterdata_script")
 chapter_name = "The Atmosphere of Sand"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Choice of Salt"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Metal Coffins"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Cracking Shield"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Forked Tide"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Echo of Emptiness"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_6"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Terrestrial Rations"
 categories = PackedStringArray("frozen")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_7"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Ambassador's Choice"
 categories = PackedStringArray("bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_8"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Rains of Farewell"
 is_visit_only = true
 categories = null
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")

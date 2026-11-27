@@ -18,53 +18,71 @@
 script = ExtResource("chapterdata_script")
 chapter_name = "The Free Real Estate"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Cough"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Midnight Flight"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Private Conversation"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Highway"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Too Bright"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_6"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Pale Ledger"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_7"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Daligmata - the reveal"
 is_visit_only = true
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_8"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The First Purchase - Arc Finale"
 categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arc_script")
