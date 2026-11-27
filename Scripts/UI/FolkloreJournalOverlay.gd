@@ -1066,6 +1066,16 @@ func _rebuild_hero_banner() -> void:
 			ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 			arcs_vbox.add_child(ch_lbl)
 
+	# Quiet Delayed-Consequence Memory Notes (logged subtly when pivotal choices are made)
+	var mem_notes: Array = CharacterProgressionManager.get_journal_notes(c.get_clean_id()) if is_instance_valid(CharacterProgressionManager) else []
+	if not mem_notes.is_empty():
+		var note_hdr := _make_label("COUNTER NOTES", 13, COL_GOLD, true)
+		arcs_vbox.add_child(note_hdr)
+		for nt in mem_notes:
+			var nl := _make_label("•  %s" % str(nt), 14, COL_MUTED, false)
+			nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			arcs_vbox.add_child(nl)
+
 	# Divider between Story & Perks
 	var vsep2 := VSeparator.new()
 	vsep2.add_theme_stylebox_override("separator", vs_st)

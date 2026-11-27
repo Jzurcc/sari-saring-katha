@@ -22,6 +22,7 @@ var guest_customer: Customer = null
 
 var _pending_dismiss: bool = false
 var _is_partial_success: bool = false
+var _refused_with_zero_delivered: bool = false
 var _greeting_interrupted: bool = false
 var _mosquito_choice: String = ""
 var _switching_customer_dialogue: bool = false
@@ -167,6 +168,8 @@ func _trigger_price_refusal(
 	StoryManager.record_missed_item(item_data)
 	if customer.customer_data and is_instance_valid(CharacterProgressionManager):
 		CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, -12, "price_refusal")
+		CharacterProgressionManager.set_last_visit_outcome(customer.customer_data.get_clean_id(), "price_walkout")
+		CharacterProgressionManager.add_tally(customer.customer_data.get_clean_id(), -1)
 
 	# Pick a natural refusal line and play walkout dialogue on the customer
 	var tmpl: String = PRICE_REFUSAL_LINES[randi() % PRICE_REFUSAL_LINES.size()]
@@ -585,6 +588,24 @@ func _show_haggle_reaction_badge(customer: Customer, can_haggle: bool, haggle_ch
 	tree.process_frame.connect(animate, CONNECT_ONE_SHOT)
 
 
+func _matches_chapter_substitute(customer: Customer, offered: ItemData) -> bool:
+	if not is_instance_valid(customer) or customer.customer_data == null or offered == null:
+		return false
+	var ch_idx := CharacterProgressionManager.get_chapter(customer.customer_data.resource_path) if is_instance_valid(CharacterProgressionManager) else 0
+	var ch_data := customer.customer_data.get_chapter(ch_idx)
+	if ch_data == null:
+		return false
+	var item_id := offered.get_clean_id().to_lower()
+	for sub_id in ch_data.substitute_item_ids:
+		if sub_id.strip_edges().to_lower() == item_id:
+			return true
+	var item_cat := offered.category.strip_edges().to_lower()
+	for sub_cat in ch_data.substitute_categories:
+		if sub_cat.strip_edges().to_lower() == item_cat:
+			return true
+	return false
+
+
 func _complete_item_delivery(
 	customer: Customer,
 	item: DraggableItem,
@@ -599,8 +620,26 @@ func _complete_item_delivery(
 	var c_path: String = customer.customer_data.resource_path if customer.customer_data else ""
 	var is_correct: bool = customer.check_item(item.item_data)
 
-	if is_correct:
+	# VA-11 HALL-A Signature Item Substitution Check (on Story Chapters with a SubstituteItem label)
+	var is_substitute := false
+	if not is_correct and customer.has_been_greeted and context != null and context.transaction_type == TransactionContext.Type.STORY:
+		var t_path: String = context.timeline.resource_path if context.timeline is Resource else str(context.timeline)
+		if _matches_chapter_substitute(customer, item.item_data) and StoryManager.is_label_in_timeline(t_path, "SubstituteItem"):
+			is_substitute = true
+			context.delivered_items.append(item.item_data)
+			context.desired_items.clear()
+
+	if is_correct or is_substitute:
 		EventBus.request_camera_shake.emit(0.1, 0.15) # Small physical bump for selling
+
+		# Story High-Price Begrudging-Buy Fail-Forward (no walkout replay loop, but calls out greed & nudges tally)
+		if is_correct and context != null and context.transaction_type == TransactionContext.Type.STORY and not context.wants_debt:
+			if compute_overpriced_refusal_chance(item.item_data, customer.customer_data) > 0.0:
+				Dialogic.VAR.set_variable("Transaction_StoryGouged", true)
+				if customer.customer_data and is_instance_valid(CharacterProgressionManager):
+					CharacterProgressionManager.add_reputation(c_path, -8, "story_price_gouge")
+					CharacterProgressionManager.add_tally(customer.customer_data.get_clean_id(), -1)
+					CharacterProgressionManager.set_last_visit_outcome(customer.customer_data.get_clean_id(), "gouged_in_story")
 
 		# Spawn glimmer at the customer's visual center (SpeechMarker) or fallback position
 		var glimmer_pos: Vector3 = fallback_pos + Vector3(0, 0.2, 0)
@@ -616,6 +655,17 @@ func _complete_item_delivery(
 			InventoryManager.take_item(item.item_data)
 		item.notify_placed()
 		item.play_give_animation()
+
+		if is_substitute:
+			Dialogic.VAR.set_variable("Transaction_UsedSubstitute", true)
+			Dialogic.VAR.set_variable("Transaction_SubstituteItemName", item.item_data.item_name)
+			StoryManager.award_customer_completion_xp(customer)
+			if needs_switch and is_instance_valid(prev_customer):
+				_finish_dialogue_for_customer(prev_customer, prev_phase, prev_pending_dismiss, prev_partial_success)
+				_switching_customer_dialogue = false
+			current_customer = customer
+			start_dialogue(context.timeline, customer, Phase.SATISFIED, "SubstituteItem")
+			return true
 
 		var gm_guided: GameManager = null
 		if is_instance_valid(_tree_owner) and _tree_owner.is_inside_tree():
@@ -796,6 +846,14 @@ func start_dialogue(timeline, customer: Customer, in_phase: Phase = Phase.NONE, 
 	customer.dialogue_phase = in_phase
 	_current_timeline_path = timeline.resource_path if timeline is Resource else timeline
 
+	# Consume one-shot P1–P3 reactive opener exactly once when the customer greets
+	if in_phase in [Phase.GREETING, Phase.SOCIAL_VISIT] and customer.customer_data != null and not customer.get_meta("_reactive_opener_consumed", false):
+		customer.set_meta("_reactive_opener_consumed", true)
+		var is_st := customer.transaction_context != null and (customer.transaction_context.transaction_type == TransactionContext.Type.STORY or customer.transaction_context.is_visit_story)
+		var resolved_op := DialogueContextResolver.resolve_opener(customer.customer_data, is_st, true)
+		Dialogic.VAR.set_variable("Transaction_ReactiveOpener", resolved_op)
+		Dialogic.VAR.set_variable("Transaction_HasReactiveOpener", resolved_op != "")
+
 	if in_phase in [Phase.TALK, Phase.SATISFIED]:
 		if is_instance_valid(customer) and customer.transaction_context:
 			EventBus.customer_order_updated.emit(customer.get_order_hud_key(), customer.transaction_context.desired_items, customer.transaction_context.is_riddle)
@@ -855,14 +913,34 @@ func on_dialogic_signal(argument: String) -> void:
 	if argument == "refuse_service":
 		_pending_dismiss = true
 		var delivered = Dialogic.VAR.get_variable("Transaction_DeliveredCount")
-		if delivered != null and delivered > 0:
+		var has_del := delivered != null and delivered > 0
+		_refused_with_zero_delivered = not has_del
+		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
+			var cid := current_customer.customer_data.get_clean_id()
+			var is_st := current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
+			if has_del:
+				CharacterProgressionManager.set_last_visit_outcome(cid, "partial_order")
+			elif is_st:
+				CharacterProgressionManager.set_last_visit_outcome(cid, "story_out_of_stock")
+			else:
+				CharacterProgressionManager.set_last_visit_outcome(cid, "out_of_stock")
+				CharacterProgressionManager.add_reputation(current_customer.customer_data.resource_path, -3, "out_of_stock")
+		if has_del:
 			_is_partial_success = true
 			if StoryManager.is_label_in_timeline(_current_timeline_path, "PartialDismiss"):
 				Dialogic.Jump.jump_to_label("PartialDismiss")
 			elif StoryManager.is_label_in_timeline(_current_timeline_path, "Satisfy"):
 				Dialogic.Jump.jump_to_label("Satisfy")
-	elif argument == "partial_dismiss" or argument == "story_success":
+	elif argument == "story_fail_forward":
+		# Explicit Red-Check Fail-Forward: advances Crisis Story Chapters cleanly along the fail-forward track
+		_refused_with_zero_delivered = false
 		_is_partial_success = true
+		_pending_dismiss = true
+	elif argument == "partial_dismiss" or argument == "story_success":
+		# White-Check Guard: never let a legacy "refuse_service + story_success" pair skip a Story Chapter when 0 items were delivered
+		var is_st_zero := _refused_with_zero_delivered and is_instance_valid(current_customer) and current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
+		if not is_st_zero:
+			_is_partial_success = true
 		_pending_dismiss = true
 	elif argument == "event_announced":
 		if is_instance_valid(StoreEventManager):
@@ -896,9 +974,52 @@ func on_dialogic_signal(argument: String) -> void:
 			CharacterProgressionManager.set_world_flag(fparts[0].strip_edges(), fval)
 		else:
 			CharacterProgressionManager.set_world_flag(fpayload, true)
+	elif argument.begins_with("tally:"):
+		# Behavioral tally modifier: "tally:+1", "tally:-1", or "tally:manangana:+1"
+		var tpayload := argument.substr(6).strip_edges()
+		var t_cid := ""
+		var t_delta_str := tpayload
+		if tpayload.find(":") != -1:
+			var tparts := tpayload.split(":", false, 1)
+			t_cid = tparts[0].strip_edges().to_lower()
+			t_delta_str = tparts[1].strip_edges()
+		elif is_instance_valid(current_customer) and current_customer.customer_data:
+			t_cid = current_customer.customer_data.get_clean_id()
+		if t_cid != "" and t_delta_str.is_valid_int():
+			var new_t := CharacterProgressionManager.add_tally(t_cid, int(t_delta_str))
+			if is_instance_valid(current_customer) and current_customer.customer_data and current_customer.customer_data.get_clean_id() == t_cid:
+				Dialogic.VAR.set_variable("Transaction_Tally", float(new_t))
+	elif argument.begins_with("outcome:"):
+		# Final character arc outcome enum: "outcome:ally" or "outcome:manangana:estranged"
+		var opayload := argument.substr(8).strip_edges()
+		var o_cid := ""
+		var o_val := opayload
+		if opayload.find(":") != -1:
+			var oparts := opayload.split(":", false, 1)
+			o_cid = oparts[0].strip_edges().to_lower()
+			o_val = oparts[1].strip_edges()
+		elif is_instance_valid(current_customer) and current_customer.customer_data:
+			o_cid = current_customer.customer_data.get_clean_id()
+		if o_cid != "" and o_val != "":
+			CharacterProgressionManager.set_character_outcome(o_cid, o_val)
+	elif argument.begins_with("note:"):
+		# Quiet delayed-consequence Journal note: "note:Turned her away when the twins were hurt."
+		var npayload := argument.substr(5).strip_edges()
+		if is_instance_valid(current_customer) and current_customer.customer_data and npayload != "":
+			CharacterProgressionManager.add_journal_note(current_customer.customer_data.get_clean_id(), npayload, current_customer.customer_data.resource_path)
+			if is_instance_valid(AudioManager) and is_instance_valid(AudioManager.sfx_pool):
+				AudioManager.sfx_pool.play_sfx_pitched("ui_hover", 0.92, -10.0)
 	elif argument == "utang_accepted":
+		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
+			var cid := current_customer.customer_data.get_clean_id()
+			CharacterProgressionManager.set_last_visit_outcome(cid, "utang_accepted")
+			CharacterProgressionManager.add_tally(cid, 1)
 		EventBus.utang_accepted.emit(current_customer)
 	elif argument == "utang_rejected":
+		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
+			var cid := current_customer.customer_data.get_clean_id()
+			CharacterProgressionManager.set_last_visit_outcome(cid, "utang_refused")
+			CharacterProgressionManager.add_tally(cid, -1)
 		EventBus.utang_rejected.emit(current_customer)
 		_pending_dismiss = true
 	elif argument == "pulse_red":
@@ -991,6 +1112,7 @@ func on_dialogue_ended() -> void:
 	_current_timeline_path = ""
 	_pending_dismiss = false
 	_is_partial_success = false
+	_refused_with_zero_delivered = false
 
 	_finish_dialogue_for_customer(target, ending_phase, was_pending_dismiss, was_partial_success)
 

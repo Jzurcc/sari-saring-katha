@@ -29,6 +29,12 @@ const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd
 ## Leave empty to use category preferences / random selection.
 @export var pinned_items: Array[ChapterItemEntry] = []
 
+@export_group("Signature Substitution (VA-11 HALL-A)")
+## Optional alternate item IDs (e.g. "bubblegum") that trigger label SubstituteItem instead of WrongItem.
+@export var substitute_item_ids: PackedStringArray = PackedStringArray()
+## Optional alternate item categories (e.g. "candy", "cold") that trigger label SubstituteItem instead of WrongItem.
+@export var substitute_categories: PackedStringArray = PackedStringArray()
+
 @export_group("Motion Override")
 ## Optional motion profile override for this story chapter (e.g. ghost counter phase-through).
 ## Leave null to use the character's default/alternate motion profiles.

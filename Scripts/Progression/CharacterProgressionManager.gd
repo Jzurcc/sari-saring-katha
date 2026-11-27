@@ -47,6 +47,11 @@ var customer_story_branches: Dictionary = {}
 var character_reputations: Dictionary = {} # char_path -> int
 var discovered_favorites: Dictionary = {}  # char_path -> Array[String]
 var world_flags: Dictionary = {}           # flag_name -> Variant
+var character_tallies: Dictionary = {}     # clean_id -> int (accumulated behavioral tally)
+var character_outcomes: Dictionary = {}    # clean_id -> String ("ally" | "bittersweet" | "estranged")
+var last_visit_outcomes: Dictionary = {}   # clean_id -> String (last mechanical outcome for P2 openers)
+var consumed_reactive_lines: Dictionary = {} # rule_id -> true (one-shot P1–P3 lines)
+var journal_memory_notes: Dictionary = {}  # clean_id -> Array[String] (quiet Folklore Journal notes)
 var unread_journal_paths: Dictionary = {}  # char_path -> bool
 var todays_rep_deltas: Dictionary = {}     # char_path -> {delta, rank, ranked_up}
 var todays_story_counts: Dictionary = {}
@@ -200,6 +205,94 @@ func set_world_flag(flag_name: String, value: Variant = true) -> void:
 
 func get_world_flag(flag_name: String, default_val: Variant = false) -> Variant:
 	return world_flags.get(flag_name, default_val)
+
+
+# ---------------------------------------------------------------------------
+# Behavioral Tallies, Arc Outcomes, P2 Visit Memory & Quiet Journal Notes
+# ---------------------------------------------------------------------------
+
+func add_tally(clean_id: String, delta: int) -> int:
+	var cid := clean_id.strip_edges().to_lower()
+	if cid.is_empty() or delta == 0:
+		return get_tally(cid)
+	var updated := int(character_tallies.get(cid, 0)) + delta
+	character_tallies[cid] = updated
+	LogManager.info("CharacterProgressionManager", "Tally %+d for '%s' -> %d" % [delta, cid, updated])
+	var sm := _get_story_manager()
+	if sm and sm.has_method("_save_progression"):
+		sm._save_progression()
+	return updated
+
+
+func get_tally(clean_id: String) -> int:
+	return int(character_tallies.get(clean_id.strip_edges().to_lower(), 0))
+
+
+func set_character_outcome(clean_id: String, outcome: String) -> void:
+	var cid := clean_id.strip_edges().to_lower()
+	if cid.is_empty():
+		return
+	character_outcomes[cid] = outcome.strip_edges().to_lower()
+	LogManager.info("CharacterProgressionManager", "Outcome set for '%s': %s" % [cid, character_outcomes[cid]])
+	var sm := _get_story_manager()
+	if sm and sm.has_method("_save_progression"):
+		sm._save_progression()
+
+
+func get_character_outcome(clean_id: String) -> String:
+	return str(character_outcomes.get(clean_id.strip_edges().to_lower(), ""))
+
+
+func set_last_visit_outcome(clean_id: String, outcome: String) -> void:
+	var cid := clean_id.strip_edges().to_lower()
+	if cid.is_empty():
+		return
+	last_visit_outcomes[cid] = outcome.strip_edges().to_lower()
+
+
+func get_last_visit_outcome(clean_id: String) -> String:
+	return str(last_visit_outcomes.get(clean_id.strip_edges().to_lower(), ""))
+
+
+func consume_last_visit_outcome(clean_id: String) -> String:
+	var cid := clean_id.strip_edges().to_lower()
+	var val := str(last_visit_outcomes.get(cid, ""))
+	last_visit_outcomes.erase(cid)
+	return val
+
+
+func mark_reactive_line_consumed(rule_id: String) -> void:
+	if not rule_id.is_empty():
+		consumed_reactive_lines[rule_id] = true
+
+
+func is_reactive_line_consumed(rule_id: String) -> bool:
+	return bool(consumed_reactive_lines.get(rule_id, false))
+
+
+func add_journal_note(clean_id: String, note_text: String, character_path: String = "") -> void:
+	var cid := clean_id.strip_edges().to_lower()
+	var trimmed := note_text.strip_edges()
+	if cid.is_empty() or trimmed.is_empty():
+		return
+	var notes: Array = journal_memory_notes.get(cid, [])
+	if trimmed in notes:
+		return
+	notes.append(trimmed)
+	# Keep the journal clean: cap at 5 most recent memory notes per neighbor
+	if notes.size() > 5:
+		notes.pop_front()
+	journal_memory_notes[cid] = notes
+	if not character_path.is_empty():
+		unread_journal_paths[character_path] = true
+	LogManager.info("CharacterProgressionManager", "Journal note logged for '%s': %s" % [cid, trimmed])
+	var sm := _get_story_manager()
+	if sm and sm.has_method("_save_progression"):
+		sm._save_progression()
+
+
+func get_journal_notes(clean_id: String) -> Array:
+	return journal_memory_notes.get(clean_id.strip_edges().to_lower(), [])
 
 
 func mark_journal_read(character_path: String) -> void:
@@ -415,6 +508,11 @@ func get_save_data() -> Dictionary:
 		"character_reputations": character_reputations.duplicate(),
 		"discovered_favorites": discovered_favorites.duplicate(true),
 		"world_flags": world_flags.duplicate(true),
+		"character_tallies": character_tallies.duplicate(),
+		"character_outcomes": character_outcomes.duplicate(),
+		"last_visit_outcomes": last_visit_outcomes.duplicate(),
+		"consumed_reactive_lines": consumed_reactive_lines.duplicate(),
+		"journal_memory_notes": journal_memory_notes.duplicate(true),
 		"unread_journal_paths": unread_journal_paths.duplicate(),
 		"todays_story_counts": todays_story_counts.duplicate(),
 		"todays_focus_character_path": todays_focus_character_path,
@@ -436,6 +534,11 @@ func load_save_data(data: Dictionary) -> void:
 	character_reputations = data.get("character_reputations", {})
 	discovered_favorites = data.get("discovered_favorites", {})
 	world_flags = data.get("world_flags", {})
+	character_tallies = data.get("character_tallies", {})
+	character_outcomes = data.get("character_outcomes", {})
+	last_visit_outcomes = data.get("last_visit_outcomes", {})
+	consumed_reactive_lines = data.get("consumed_reactive_lines", {})
+	journal_memory_notes = data.get("journal_memory_notes", {})
 	unread_journal_paths = data.get("unread_journal_paths", {})
 
 	# Migration/Reliability: Anyone with story progress is also marked as encountered
@@ -478,6 +581,11 @@ func reset_state() -> void:
 	character_reputations.clear()
 	discovered_favorites.clear()
 	world_flags.clear()
+	character_tallies.clear()
+	character_outcomes.clear()
+	last_visit_outcomes.clear()
+	consumed_reactive_lines.clear()
+	journal_memory_notes.clear()
 	unread_journal_paths.clear()
 	todays_rep_deltas.clear()
 	todays_story_counts.clear()

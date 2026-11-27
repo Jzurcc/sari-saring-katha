@@ -60,6 +60,25 @@ static func sync_transaction(
 	Dialogic.VAR.set_variable("Transaction_DeliveredCount", float(transaction.delivered_items.size()))
 	Dialogic.VAR.set_variable("Transaction_RemainingCount", float(transaction.desired_items.size()))
 
+	# --- Reactive Narrative Hooks (Tallies, Rep Rank, Taboo Trapdoors, P1–P3 Sandwich Opener) ---
+	var cid := transaction.customer_data.get_clean_id()
+	var cpath := transaction.customer_data.resource_path
+	var rep_rank := CharacterProgressionManager.get_rep_rank(cpath) if is_instance_valid(CharacterProgressionManager) else 0
+	var tally := CharacterProgressionManager.get_tally(cid) if is_instance_valid(CharacterProgressionManager) else 0
+	var last_outcome := CharacterProgressionManager.get_last_visit_outcome(cid) if is_instance_valid(CharacterProgressionManager) else ""
+	var is_story := (transaction.transaction_type == TransactionContext.Type.STORY or transaction.is_visit_story)
+	var opener := DialogueContextResolver.resolve_opener(transaction.customer_data, is_story, false)
+
+	Dialogic.VAR.set_variable("Transaction_Tally", float(tally))
+	Dialogic.VAR.set_variable("Transaction_RepRank", float(rep_rank))
+	Dialogic.VAR.set_variable("Transaction_TabooUnlocked", rep_rank >= 2)
+	Dialogic.VAR.set_variable("Transaction_LastOutcome", last_outcome)
+	Dialogic.VAR.set_variable("Transaction_ReactiveOpener", opener)
+	Dialogic.VAR.set_variable("Transaction_HasReactiveOpener", opener != "")
+	Dialogic.VAR.set_variable("Transaction_StoryGouged", false)
+	Dialogic.VAR.set_variable("Transaction_UsedSubstitute", false)
+	Dialogic.VAR.set_variable("Transaction_SubstituteItemName", "")
+
 	# --- Rumor & Per-Customer Modifiers ---
 	Dialogic.VAR.set_variable("Global_RumorActive", 1.0 if transaction.rumor_active else 0.0)
 	Dialogic.VAR.set_variable("Global_RumorType", transaction.rumor_type)

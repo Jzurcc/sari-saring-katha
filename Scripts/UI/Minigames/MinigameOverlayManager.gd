@@ -244,15 +244,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
+	# Sync minigame result into Dialogic BEFORE restoring dialogue so Story Fail-Forward branches work cleanly
+	Dialogic.VAR.set_variable("Transaction_MinigameWon", won)
+	Dialogic.VAR.set_variable("Transaction_MinigameScore", float(result.get("score", result.get("accuracy", 0))))
 	if is_instance_valid(AudioManager):
 		AudioManager.stop_bgm_override()
 	_play_exit_fade()
 	_restore_dialogic_after_minigame()
-	# Award Reputation to the active counter customer (e.g. Lolo Pilo or Mosquito complainant)
+	# Award Reputation & log P2 visit memory on the active counter customer
 	var spawner := get_tree().get_first_node_in_group("customer_spawner")
 	if spawner and spawner.get("current_customer") and is_instance_valid(spawner.current_customer):
 		var cust = spawner.current_customer
 		if cust.customer_data and is_instance_valid(CharacterProgressionManager):
+			CharacterProgressionManager.set_last_visit_outcome(cust.customer_data.get_clean_id(), "minigame_won" if won else "minigame_lost")
 			var rep_gain := 15 if won else 8
 			if minigame_id == "sipa":
 				var kicks := int(result.get("kicks", 0))

@@ -1,7 +1,10 @@
 label Greeting
 # [signal arg="refresh_desires"]
+# P1–P3 Reactive Sandwich Opener (delayed payoff, last visit memory, or world state)
+if {Transaction_HasReactiveOpener}:
+	Customer: {Transaction_ReactiveOpener}
 # 0. Stock Awareness - 40% chance
-if {Global_AwarenessActive}:
+elif {Global_AwarenessActive}:
 	if {Global_StockStatus} == "Empty":
 		Customer: Tao po? [pause=0.3] Parang wala na kayong tinda po ah?
 	elif {Global_StockStatus} == "Low":
