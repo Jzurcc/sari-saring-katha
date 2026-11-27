@@ -1,58 +1,65 @@
 label Greeting
-# [signal arg="refresh_desires"]
-if {Transaction_Chapter} >= 8.0:
-	if {Transaction_GreetingVar} <= 50:
-		ReynaMayari: Good day, mortal. I have returned... for another inspection. [pause=0.5] Yes, an inspection of your sweet inventory.
+if {Transaction_HasReactiveOpener}:
+	ReynaMayari: {Transaction_ReactiveOpener}
+
+set {Variation} = range(1,5).pick_random()
+if {Flag_MayariQueenAtCounter}:
+	if {Variation} == 1.0:
+		ReynaMayari: Keep the disguise secret, shopkeeper. Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color] before my Council notices I slipped out.
+	elif {Variation} == 2.0:
+		ReynaMayari: Real mortal pesos ready. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	elif {Variation} == 3.0:
+		ReynaMayari: Biringan's banquets still cannot beat your shelves. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
 	else:
-		ReynaMayari: The shadows are quiet tonight. [pause=0.4] Which gives me ample time to peruse your colorful earthly provisions.
+		ReynaMayari: Just Maria from two streets over, looking for [color=#0f6e2f]{Transaction_ItemWants}[/color].
 else:
-	if {Transaction_GreetingVar} <= 33:
-		ReynaMayari: The moonlight guided me to your threshold, mortal. [pause=0.4] Do not keep me waiting.
-	elif {Transaction_GreetingVar} <= 66:
-		ReynaMayari: I am here for official Biringan business... [pause=0.5] And perhaps a snack. Let us proceed.
+	if {Variation} == 1.0:
+		ReynaMayari: Strictly a routine daytime inspection. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] while I am here.
+	elif {Variation} == 2.0:
+		ReynaMayari: Act natural, shopkeeper. Just pass over [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Variation} == 3.0:
+		ReynaMayari: I am sampling local inventory for Biringan's records. Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color].
 	else:
-		ReynaMayari: Your shelves are well-lit, child of the soil. [pause=0.4] *Ahem.* Oh look, the colorful wrappers are displayed prominently today.
-
-if {Global_HighPriceActive}:
-	ReynaMayari: The value you place on these items is... [pause=0.4] ambitious. I trust the quality justifies it.
-
+		ReynaMayari: Real pesos in hand, zero balete leaves. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 33:
-	ReynaMayari: I require a {Transaction_ItemWants}. Present it to me with due haste.
-elif {Transaction_TalkVar} <= 66:
-	ReynaMayari: The Queen of the Silver Spires demands {Transaction_ItemWants}. [pause=0.3] Do you have the spicy kind?
-else:
-	ReynaMayari: The transition of goods must proceed. Provide the {Transaction_ItemWants}.
-- Grant me a reprieve, Your Majesty.
-	ReynaMayari: Very well. You have one centennial hour to produce the {Transaction_ItemWants}. [pause=0.4] Or, failing that, a few minutes.
-	[end_timeline]
-- I have failed my Queen. We are out of stock.
-	ReynaMayari: [shake rate=20 level=10]What?![/shake] [pause=0.4] Truly? 
-	ReynaMayari: A tragedy. I shall inform the silver courts of this shortage. [pause=0.3] Good day, mortal!
+ReynaMayari: I am still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color], shopkeeper.
+- Out of stock right now.
+	ReynaMayari: A pity. Restock soon, before my sweet tooth files a formal complaint.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
-	[end_timeline]
-
-
-label Partial
-ReynaMayari: Satisfactory. [pause=0.3] Now present the {Transaction_ItemWants} to complete your tribute.
+- Grabbing it right away!
+	ReynaMayari: Splendid. I have five minutes before anyone misses me in Biringan.
 [end_timeline]
 
+label Partial
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	ReynaMayari: Good. I still need [color=#0f6e2f]{Transaction_ItemWants}[/color].
+elif {Variation} == 2.0:
+	ReynaMayari: That covers part of it. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] as well.
+else:
+	ReynaMayari: Almost done. Just add [color=#0f6e2f]{Transaction_ItemWants}[/color].
+[end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	ReynaMayari:  It is acceptable. Your service remains adequate under the eternal sun.
+if {Global_TipActive} == 1.0:
+	ReynaMayari: Keep the extra coins, shopkeeper. Consider it a discreet daytime favor.
 else:
-	ReynaMayari: The Moon acknowledges your tribute. [pause=0.4] This will pair perfectly with my eternal solitude.
-if {Global_TipActive}:
-	ReynaMayari: Aba, that was quite cheap. Keep the change po!
+	if {Transaction_SatisfyVar} < 34.0:
+		ReynaMayari: Splendid. Remember, you never saw me here.
+	elif {Transaction_SatisfyVar} < 67.0:
+		ReynaMayari: Exactly what I craved. Keep the jars full, shopkeeper.
+	else:
+		ReynaMayari: Real mortal sweets beat silver banquets every time. Until later.
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+ReynaMayari: Here are your [color=#0f6e2f]{Transaction_RepaymentAmount}[/color] pesos. Cross Maria off the lista cleanly.
+[signal arg="repay_debt"]
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	ReynaMayari: This is an insult to Biringan's grace! This is not the {Transaction_ItemWants}.
-else:
-	ReynaMayari: Your vision is clouded, mortal. I requested a {Transaction_ItemWants}, not this shallow offering. [pause=0.4] ...wait, can I still eat it? No! No nevermind, bring the right one!
+ReynaMayari: That is not [color=#0f6e2f]{Transaction_ItemWants}[/color]. Try again, shopkeeper.
 [end_timeline]

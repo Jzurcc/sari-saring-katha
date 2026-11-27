@@ -1,240 +1,163 @@
 label Greeting
+if {Transaction_HasReactiveOpener}:
+	ReynaMayari: {Transaction_ReactiveOpener}
+
 if {Transaction_Chapter} == 0.0:
-	# Chapter 1 — "The Inherited Burden" (DEBUT)
-	# No cracks at all. This is a cold, precise, atmospheric first meeting.
-	ReynaMayari: .[pause=1.0] .[pause=1.0] .[pause=1.0] 
-	ReynaMayari: The candle in the window is missing tonight.
-	ReynaMayari: For thirty-one years, it was never missing. [pause=0.6] And yet here I stand, and the window is dark.
-	- ...Who are you?
-		ReynaMayari: You do not know me. [pause=0.4] That is the first interesting thing you have said.
-		ReynaMayari: Your grandmother knew me very well. [pause=0.3] She was one of the few mortals I ever permitted to address me by name.
-	- Are you a customer?
-		ReynaMayari: .[pause=0.6] .[pause=0.6] .[pause=0.6] 
-		ReynaMayari: A customer.
-		ReynaMayari: That is either the bravest or the most oblivious thing anyone has ever said to me. 
-		ReynaMayari: Your grandmother would have laughed. [pause=0.7] I find that I cannot entirely disagree with her taste.
-	- You're here very late.
-		ReynaMayari: The city of the moon does not observe your daylight hours, child. [pause=0.4] I arrive when I must.
-		ReynaMayari: Your grandmother understood this. She always kept the stove warm at this hour. Just in case.
-	ReynaMayari: I am Mayari. [pause=0.6] Queen of the Silver Spires of Biringan. [pause=0.6] And you are the new keeper of this store.
-	ReynaMayari: I will not soften this for you. [pause=0.6] Your grandmother made a bargain before you were born, and she kept it faithfully unto her last breath.
-	- My grandmother never told me any of this.
-		ReynaMayari: No. [pause=0.5] She would not have. [pause=0.4] She was protective of you in ways she never announced.
-		ReynaMayari: She wanted you to inherit this store as something warm. [pause=0.3] Not something weighted.
-		ReynaMayari: I respected that. [pause=0.4] I am telling you now because she is no longer here to decide for you.
-	- How much did she owe?
-		ReynaMayari: It is not a debt in the way you understand it. [pause=0.5] It is more like... a subscription.
-		ReynaMayari: Paid nightly. In full. [pause=0.4] For as long as the store stands and someone of her line keeps it.
-		ReynaMayari: The remaining balance is considerable. But it is not unmanageable. [pause=0.3] Your grandmother made sure of that.
-	ReynaMayari: The remaining tally on Lola's ledger stands at [color=#2d527c]{Global_TallyGoal}[/color] pesos.
-	ReynaMayari: Each night, you will decide what to offer. Tonight, I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos.
-	ReynaMayari: Do not be frightened. She was not. [pause=0.3] And you have her eyes.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
+	# Chapter 1 — "Maria From Two Streets Over" (candy | 0 tallies — Comedy & Disguise)
+	ReynaMayari: Good day, ordinary merchant. I am merely Maria from two streets over.
+	ReynaMayari: Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] from that crystalline sucrose jar. Quickly, please.
+	- Welcome, totally normal neighbor Maria.
+		ReynaMayari: Excellent. My mortal disguise is completely flawless. Not a soul suspects a thing.
+	- Your Majesty, you are literally glowing.
+		ReynaMayari: Lower your voice! I have a Council summons in twenty minutes and my robe is doing its best.
+	- Sweet tooth acting up, Queen?
+		ReynaMayari: Nonsense. Biringan simply lacks affordable mortal confectioneries for my royal research.
+	ReynaMayari: Do not mention this visit to your uncle. Just pass over [color=#0f6e2f]{Transaction_ItemWants}[/color].
 
 elif {Transaction_Chapter} == 1.0:
-	# Chapter 2 — "A Routine Visit"
-	# Still imperious, but one tiny slip — she notices the bottles.
-	ReynaMayari: Another night. Another tally.
-	ReynaMayari: Your grandmother paid without complaint for thirty years. [pause=0.4] I expect the same discipline from her kin.
-	ReynaMayari: .[pause=0.6].[pause=0.6].[pause=1]I see you have restocked the cold shelf.
-	ReynaMayari: [wave]Irrelevant.[/wave] [pause=1] The drink of mortals is of no interest to the Queen of the Silver Spires.
-	ReynaMayari: Produce the tally. [pause=0.4] Tonight's collection does not wait.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
+	# Chapter 2 — "Balete Leaves in Sunlight" (frozen / candy | Inflection #1: +1 / +1 / -1 — THE UTANG REVERSAL!)
+	ReynaMayari: Back for [color=#0f6e2f]{Transaction_ItemWants}[/color]. Keep the change, here is a crisp Biringan silver coin.
+	ReynaMayari: Wait. Why is it curling up brown? Oh, blast this mortal sunlight.
+	ReynaMayari: It turned into a dry balete leaf on your counter. How utterly mortifying.
+	ReynaMayari: Listen carefully. I left my mortal pesos in Biringan. Could you put [color=#0f6e2f]{Transaction_ItemWants}[/color] on your lista?
+	- Sure. I will list Maria for utang.
+		[signal arg="flag:mayari_owes_utang=true"]
+		[signal arg="tally:+1"]
+		ReynaMayari: Write Maria, not Her Majesty! Though I admit, having a sari-sari tab feels strangely thrilling.
+	- On the house, Your Majesty.
+		[signal arg="tally:+1"]
+		ReynaMayari: A queen does not take charity. I will remember this kindness when I deal your next Moon Cards.
+	- Cash only. Rules are rules.
+		[signal arg="tally:-1"]
+		ReynaMayari: Ruthless. Fine, I have crumpled twenty-peso bills from your own ledger tally in my clutch.
+	ReynaMayari: Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color] before any neighbor sees that leaf.
 
 elif {Transaction_Chapter} == 2.0:
-	# Chapter 3 — "The Black Rice Confession"
-	# She reveals something about Biringan. The cracks begin.
-	ReynaMayari: You are still standing, little mortal. [pause=0.4] Resilient, if nothing else.
-	ReynaMayari: In Biringan, we sustain ourselves on the Black Rice. A single grain feeds an immortal for a century.
-	ReynaMayari:  It is efficient. It is dignified. It is the sacred grain of the moonlit city.
-	ReynaMayari: .[pause=0.7] .[pause=0.7] .[pause=1] [wave]It has no flavor whatsoever.[/wave]
-	ReynaMayari:  [speed=2] Not that flavor is of any consequence to a Queen.
-	ReynaMayari: This is purely an observation. Pay the tally. Move on.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
+	# Chapter 3 — "The Black Rice Box" (bottle -> allow_sub_cat:candy | Inflection #2: Journal Trapdoor + Substitution!)
+	ReynaMayari: No disguise jokes. Biringan's Silver Council caught me tilting your Moon Cards and granting rerolls.
+	ReynaMayari: Their Envoy left this black-lacquered box on my doorstep, addressed to Lola's grandchild.
+	ReynaMayari: Open it if you wish. Inside is Biringan's finest Black Rice, offered as a "generous buyout" for this shop.
+	- No thanks. Black rice binds mortals.
+		[signal arg="flag:mayari_refused_black_rice=true"]
+		[signal arg="tally:+2"]
+		ReynaMayari: Word for word what your Lola told them thirty years ago. You actually read the old lore.
+	- Looks fancy. Should I try some?
+		ReynaMayari: Hands off that box! One grain and the Silver Council owns your soul forever!
+		ReynaMayari: Honestly, mortal, do not scare me like that. I am burning that box myself.
+	- Tell the Envoy this shop stays mine.
+		[signal arg="flag:mayari_refused_black_rice=true"]
+		[signal arg="tally:+1"]
+		ReynaMayari: Good. Never eat a single grain offered by Biringan's Old Houses.
+	ReynaMayari: My nerves are frayed. Just sell me plain [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	- [Slide her sweet candy instead.]
+		[signal arg="allow_sub_cat:candy"]
+		ReynaMayari: Hurry, please. The Envoy is still lurking near the creek bridge.
+	- Coming right up, Your Majesty.
+		ReynaMayari: Thank you. At least one person on this street keeps their head cool.
 
 elif {Transaction_Chapter} == 3.0:
-	# Chapter 4 — "The Real Reason"
-	# She reveals the true nature of the pact. Also: she cannot stop staring at the candy.
-	ReynaMayari: Tonight I will tell you what the ledger truly pays for, since you have earned that much.
-	ReynaMayari: Your grandmother did not borrow money. [pause=0.4] She asked Biringan to keep the darker things of the forest away from this town.
-	ReynaMayari: The ones that do not answer to reason. The hollow, the hungry, the formless.
-	ReynaMayari: Every coin you pay keeps the boundary intact. [pause=0.5] You are not just running a store, child. You are keeping a wall standing.
-	ReynaMayari:  ...Those candies on the third shelf. They are very... [pause=0.4] geometrically interesting for mortal confections.
-	ReynaMayari:  I am studying them for strategic purposes. Produce the tally.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
+	# Chapter 4 — "The Silver Pact" (snack | Inflection #3: +1 / +1 / -1 — THE REAL TRUTH OF LOLA'S PACT!)
+	if {Flag_MayariOwesUtang}:
+		ReynaMayari: First, fifteen real mortal pesos. Cross "Maria" off your utang notebook immediately.
+	ReynaMayari: You deserve the truth before the Silver Council audits us. Your Lola never owed Biringan a loan.
+	ReynaMayari: Decades ago, my Council voted to seal Karimlan's border and pull every spirit away from mortals.
+	ReynaMayari: Your Lola marched to the balete gate, refused their Black Rice, and struck the Silver Pact with me instead.
+	ReynaMayari: Two thousand pesos in honest mortal coin, proving humans and folklore neighbors still need each other.
+	ReynaMayari: Now the Council wants a Charter Trial. How do you plan to answer them, shopkeeper?
+	- Let Karimlan speak. Bring the neighbors.
+		[signal arg="flag:mayari_trust_barangay=true"]
+		[signal arg="tally:+1"]
+		ReynaMayari: Bold. You think this noisy street will actually stand up to Biringan's Old Houses? I hope you are right.
+	- Seal the ledger cleanly by their rules.
+		[signal arg="tally:+1"]
+		ReynaMayari: Practical and sharp. Even the stiffest aristocrat in Biringan cannot argue with a paid ledger.
+	- You should have told me sooner.
+		[signal arg="tally:-1"]
+		ReynaMayari: Fair. Pride kept my mouth shut until the Envoy knocked.
+	ReynaMayari: Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color]. Plotting against my own Council makes me hungry.
 
 elif {Transaction_Chapter} == 4.0:
-	# Chapter 5 — "The Silence of Biringan"
-	# She finally admits why she keeps coming here herself and not sending a subordinate.
-	ReynaMayari: My city does not sleep. [pause=0.4] But it does not wake, either.
-	ReynaMayari: The spires of Biringan are carved from solid moonlight. [pause=0.3] Dust does not settle. Mold does not grow. Nothing decays.
-	ReynaMayari: There is no wind. No tricycle. No one arguing about the weather at the corner of the street at eleven in the evening.
-	ReynaMayari:  ...You may be wondering why I collect the tally personally instead of dispatching a herald.
-	ReynaMayari: The answer has nothing to do with curiosity. [pause=0.4] A queen must verify the collection herself. It is protocol.
-	ReynaMayari:  That is the only reason I am here. Provide the tally. Immediately.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
+	# Chapter 5 — "The Envoy's Omen" (candy / snack | 0 tallies — Barangay Convergence Payoff!)
+	ReynaMayari: The Council's Envoy tried to drop a freezing Omen over Karimlan to make your shop look empty.
+	if {Global_CompletedNeighborsCount} >= 3.0:
+		ReynaMayari: It failed completely. Your neighbors shoved the mist straight back past the creek!
+		if {Flag_BrahimTrueAlbularyo}:
+			ReynaMayari: That young albularyo's brass wards were glowing like hearth fires along the road.
+		if {Flag_KapQuitSmoking}:
+			ReynaMayari: The giant under the acacia just crossed his arms and stared the Envoy down.
+		if {Flag_SmkLivingEmblem}:
+			ReynaMayari: And that golden rooster puffed its feathers so wide the Envoy nearly tripped into a puddle.
+		if {Flag_RosalynAtPeace}:
+			ReynaMayari: Even the highway bend stayed warm and calm. I have never seen anything like it.
+	else:
+		ReynaMayari: Yet your counter stayed open and busy anyway. The Envoy left muttering about stubborn mortals.
+	ReynaMayari: Before the Envoy returns to the Silver Spires, they demanded one proof of worth from your counter. What do we send?
+	- A bag of humble sari-sari candy.
+		ReynaMayari: Let the Silver Council taste real sugar for once. Oh, I am definitely delivering that myself.
+	- Exact change and a spotless receipt.
+		ReynaMayari: Cold, dignified merchant poise. That will sting their aristocratic pride nicely.
+	- Tell them to visit for merienda.
+		ReynaMayari: Inviting Biringan's auditors to a wooden bench. Your Lola would have applauded that.
+	ReynaMayari: Now pass over [color=#0f6e2f]{Transaction_ItemWants}[/color]. I earned a snack after that spectacle.
 
 elif {Transaction_Chapter} == 5.0:
-	# Chapter 6 — "The One-Eyed Child"
-	# The Buboy encounter. She is flustered and a little pleased.
-	ReynaMayari: There was an incident this week that I am required to disclose.
-	ReynaMayari: The one-eyed child from the neighborhood — Buboy, I believe — he was loitering near the street.
-	ReynaMayari: He looked directly at me and said, with complete confidence, [pause=0.4] "Ate, nice cosplay."
-	ReynaMayari:  "Ate."
-	ReynaMayari:  I was preparing a mild haunting. A very tasteful one. [pause=0.3] Just some disembodied wind. Nothing permanent.
-	ReynaMayari: But then he held up one of your snacks and said it was "for the pretty moon lady."
-	ReynaMayari:  I accepted the tribute. [pause=0.3] Because it was politically appropriate to do so. Not for any other reason.
-	ReynaMayari: Produce tonight's tally before I reconsider sparing you from the disembodied wind.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
+	# Chapter 6 — "Embassy of the Pale Moon" (candy / frozen | Accumulated Tally Resolution!)
+	ReynaMayari: The Silver Council withdrew the audit. Karimlan's border stays open, permanently.
+	if {Transaction_Tally} >= 3.0 and ({Flag_MayariRefusedBlackRice} or {Flag_MayariTrustBarangay}):
+		[signal arg="outcome:queen_at_the_counter"]
+		ReynaMayari: I named your little tindahan an official Embassy of Karimlan. No Old House can touch this street.
+		ReynaMayari: Take this Silver Peso of Biringan. I enchanted it myself so sunlight will never turn it into a leaf.
+		ReynaMayari: And yes, I am keeping the disguise for daytime candy runs. Less fuss on the street, shopkeeper.
+	elif {Transaction_Tally} >= 1.0:
+		[signal arg="outcome:honored_charter"]
+		ReynaMayari: Lola's Silver Pact stands honored. You proved this counter belongs to both worlds.
+		ReynaMayari: Keep my favorite jar stocked, shopkeeper. I am not giving up my daytime errands now.
+	else:
+		[signal arg="outcome:clean_ledger"]
+		ReynaMayari: The Charter holds cleanly by the letter of our agreement. You ran a disciplined shop.
+		ReynaMayari: Our business stands settled with full respect.
+	ReynaMayari: Now then, real mortal pesos in hand. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
 
-elif {Transaction_Chapter} == 6.0:
-	# Chapter 7 — "Almost Done"
-	# She is acting more impatient than usual, as if she's trying to get this over with —
-	# but clearly not because she wants it to end.
-	ReynaMayari: The ledger is nearly closed. [pause=0.5] I have calculated that two, perhaps three more installments will settle the remaining balance.
-	ReynaMayari: After which, my official obligations to this establishment conclude.
-	ReynaMayari:  I will no longer be required to visit this particular storefront. [pause=0.4] Which is, of course, completely fine.
-	ReynaMayari: The silence of Biringan is dignified. The eternal moonlight is restful. The Black Rice is... it is food.
-	ReynaMayari:  ...Are those snacks on the shelf a new stock?
-	ReynaMayari:  Also irrelevant. Tally. Now. Let us finish this.
-	[signal arg="open_tally_offer"]
-	[wait time="0.5"]
-	[end_timeline]
-
-elif {Transaction_Chapter} == 7.0:
-	# Chapter 8 — "The Ledger Closes"
-	# The debt is paid. She makes her decree, then invents a reason to stay.
-	ReynaMayari:  It is done.
-	ReynaMayari: The debt of your bloodline is cleared. [pause=0.4] As Queen of Biringan, I declare the pact sealed and renewed.
-	ReynaMayari: Whatever walks the forests at night — the hollow, the hungry, the formless — they will not cross your threshold.
-	ReynaMayari: You have earned your grandmother's peace. And I... [pause=0.5] I have fulfilled my duty.
-	ReynaMayari:  ...The protection requires periodic verification, of course.
-	ReynaMayari: I will need to conduct on-site inspections. At irregular intervals. At night.
-	ReynaMayari: Possibly several times a week. [pause=0.3] It is a very thorough pact.
-	ReynaMayari:  Keep your coins tonight. [pause=0.3] I will... see myself out.
-	[signal arg="story_success"]
-	[end_timeline]
-
-elif {Transaction_Chapter} == 8.0:
-	# Chapter 9 — "The Patron of the Moon"
-	# She has fully dropped the act. Warmly embarrassed. Genuinely fond.
-	ReynaMayari: I am here on an inspection. [pause=0.5] A routine one.
-	ReynaMayari:  ...Alright. I may also be here because Biringan is very quiet tonight and someone left a trail of your candy wrappers outside my gate.
-	ReynaMayari: I have no proof that was intentional. [pause=0.3] But if I did, I would call it a masterful act of mortal diplomacy.
-	ReynaMayari:  Your grandmother used to leave a candle in the window on nights when the forest was restless. I would see it from the spires.
-	ReynaMayari:  She never asked for anything in return. She just kept the light on.
-	ReynaMayari:  She would have liked you very much, I think.
-	ReynaMayari: Here. [pause=0.3] This is for you. [pause=0.5] Do not read too much into it.
-	[signal arg="unlock_collectible" value="SilverPesoOfBiringan"]
-	[signal arg="story_success"]
-	[end_timeline]
-
-label SuccessFirst
-ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos. ...Acceptable.
-ReynaMayari: Your first offering has been recorded in silver ink. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
-ReynaMayari:  Do not disappoint me tomorrow.
-[signal arg="story_success"]
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Generous
-ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos — more than I asked. [pause=0.5] ...That is unusual for a mortal.
-ReynaMayari:  Only [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. The silver spires remember generosity.
-[signal arg="story_success"]
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Success
-if {Transaction_SatisfyVar} <= 33:
-	ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos. The balance holds for now — [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
-elif {Transaction_SatisfyVar} <= 66:
-	ReynaMayari:  [color=#9a630a]{Global_TallyOffer}[/color] pesos is a passable offering. [color=#2d527c]{Global_TallyRemaining}[/color] left to settle.
-else:
-	ReynaMayari:  You honor the pact well, child. [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded; [color=#2d527c]{Global_TallyRemaining}[/color] remaining.
-[signal arg="story_success"]
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Shortfall
-label Angry
-if {Global_TallyOffer} <= 0:
-	ReynaMayari: [wave blue]Nothing at all tonight?[/wave] [pause=0.5] Not a single coin for the pact?
-	ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos still weigh on this store. Expect a chill over Karimlan tomorrow.
-else:
-	ReynaMayari: [wave blue]Only {Global_TallyOffer} pesos?[/wave] [pause=0.5] That falls short of what the ledger expects.
-	ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. Mind the ledger tomorrow, child.
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label MilestoneAlso
-ReynaMayari: Also... [pause=0.35]
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Milestone_reroll_1
-ReynaMayari: You have passed the first seal of the Silver Ledger — [color=#9a630a]Moon's Grace[/color]. [pause=0.4]
-ReynaMayari: From this night on, I will allow you a [color=#9a630a]reroll[/color] whenever the moon's cards displease you. Use it wisely.
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Milestone_daytime_mayari
-ReynaMayari: Your ledger has reached [color=#9a630a]Daylight Audience[/color]. [pause=0.4]
-ReynaMayari: I find myself curious about what you sell beneath the sun. Expect me at your counter during business hours from time to time.
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Milestone_shifted_odds_reroll_2
-ReynaMayari: Half the ledger stands paid in silver — [color=#9a630a]Silver Favor[/color] is yours. [pause=0.4]
-ReynaMayari: The moon will tilt its hand more kindly toward Favors, and I grant you a [color=#9a630a]second reroll[/color] each night.
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label Milestone_twin_moons
-ReynaMayari: Three-quarters of your grandmother's pact, honored — [color=#9a630a]Twin Moons[/color]. [pause=0.4]
-ReynaMayari: Henceforth, you may claim up to [color=#9a630a]two Moon Cards[/color] each night to shape tomorrow's trade.
-[signal arg="check_mayari_milestones"]
-[end_timeline]
-
-label LedgerCleared
-ReynaMayari:  It is done.
-ReynaMayari: The debt of your bloodline is cleared. [pause=0.4] As Queen of Biringan, I declare the pact sealed and renewed.
-ReynaMayari: Whatever walks the forests at night — the hollow, the hungry, the formless — they will not cross your threshold.
-ReynaMayari: You have earned your grandmother's peace. And I... [pause=0.5] I have fulfilled my duty.
-ReynaMayari:  ...The protection requires periodic verification, of course.
-ReynaMayari: I will need to conduct on-site inspections. At irregular intervals. [pause=0.3] It is a very thorough pact.
-ReynaMayari:  Keep your coins from now on. [pause=0.3] I will... see myself out.
-[signal arg="story_success"]
 [end_timeline]
 
 label Talk
-ReynaMayari:  I require [color=#0f6e2f]{Transaction_ItemWants}[/color].
-ReynaMayari: Do not make the Queen of Biringan stand and wait.
-- Grant me a reprieve, Your Majesty.
-	ReynaMayari:  Very well. You have one centennial hour... or however long it takes mortals to find a snack.
-	[end_timeline]
-- I have failed my Queen. We are out of stock.
-	ReynaMayari:  Truly? [pause=0.3] A tragedy. I shall inform the silver courts of this shortage. [pause=0.3] Good day, mortal!
+ReynaMayari: Still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color], shopkeeper.
+- Out of stock right now, Your Majesty.
+	ReynaMayari: Unfortunate. Call your uncle and restock before my next daytime errand.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
-	[end_timeline]
+- Grabbing it right now!
+	ReynaMayari: Take your time. I am merely "Maria" browsing the shelves.
+[end_timeline]
 
+label Partial
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	ReynaMayari: Good start. Still missing [color=#0f6e2f]{Transaction_ItemWants}[/color].
+elif {Variation} == 2.0:
+	ReynaMayari: That is one part handled. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] too.
+else:
+	ReynaMayari: Almost complete. I still need [color=#0f6e2f]{Transaction_ItemWants}[/color].
+[end_timeline]
+
+label SubstituteItem
+[signal arg="tally:+1"]
+ReynaMayari: Wait. I asked for water, and you slid me [color=#0f6e2f]{Transaction_SubstituteItemName}[/color].
+ReynaMayari: You really think sweet candy solves a political crisis in Biringan?
+ReynaMayari: Fine. Keep quiet and let me unwrap one. You are dangerously perceptive, shopkeeper.
+[signal arg="story_success"]
+[end_timeline]
 
 label Satisfy
-ReynaMayari: The Moon acknowledges your effort. [pause=0.3] ...You may carry on.
+if {Transaction_StoryGouged}:
+	ReynaMayari: Steep markup for a sovereign in disguise. I will pay it, though I am noting it.
+else:
+	if {Global_TipActive} == 1.0:
+		ReynaMayari: Keep the extra coins. A queen appreciates brisk, discreet service.
+	else:
+		ReynaMayari: Splendid. Not a word of this visit to Uncle Mario, understood?
+[signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-ReynaMayari:  That is not the [color=#0f6e2f]{Transaction_ItemWants}[/color]. [pause=0.4] Look again. Carefully.
+ReynaMayari: That is not [color=#0f6e2f]{Transaction_ItemWants}[/color]. Check the jar again, shopkeeper.
 [end_timeline]

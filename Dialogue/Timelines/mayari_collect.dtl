@@ -2,110 +2,180 @@ label Greeting
 label CollectionIntro
 if {Global_TallyRemaining} <= 0:
 	jump SealedIntro
-ReynaMayari: I am here for tonight's tally.
-ReynaMayari: The remaining balance on Lola's ledger is [color=#2d527c]{Global_TallyRemaining}[/color] of [color=#2d527c]{Global_TallyGoal}[/color] pesos.
-ReynaMayari: Tonight, I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos. Decide what you will offer. [pause=0.4]
+if {Global_MayariMet} == false:
+	jump DebutIntro
+set {Variation} = range(1,4).pick_random()
+if {Global_LedgerTier} >= 4.0:
+	# Tier 4 (75-99%): Near-sealed, Council watching closely
+	if {Variation} == 1.0:
+		ReynaMayari: Only [color=#2d527c]{Global_TallyRemaining}[/color] pesos left on Lola's Silver Ledger.
+		ReynaMayari: Biringan's Council has stopped betting against you. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
+	elif {Variation} == 2.0:
+		ReynaMayari: The final quarter of the ledger, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
+		ReynaMayari: Offer at least [color=#2d527c]{Global_TallyMin}[/color] pesos, and let us see what the moon grants.
+	else:
+		ReynaMayari: Almost sealed. [color=#2d527c]{Global_TallyRemaining}[/color] pesos stand between you and a closed ledger.
+		ReynaMayari: Set your share on the counter. At least [color=#2d527c]{Global_TallyMin}[/color] pesos.
+elif {Global_LedgerTier} >= 3.0:
+	# Tier 3 (50-74%): Halfway, Silver Favor unlocked
+	if {Variation} == 1.0:
+		ReynaMayari: Past the halfway mark. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
+		ReynaMayari: The Council noticed I tilted your lunar odds. Make it worth my trouble. Minimum [color=#2d527c]{Global_TallyMin}[/color] pesos.
+	elif {Variation} == 2.0:
+		ReynaMayari: Your shelves look busier every shift. [color=#2d527c]{Global_TallyRemaining}[/color] pesos left of [color=#2d527c]{Global_TallyGoal}[/color].
+		ReynaMayari: Place at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the wood.
+	else:
+		ReynaMayari: Half the silver already recorded in Biringan. [color=#2d527c]{Global_TallyRemaining}[/color] pesos to go.
+		ReynaMayari: Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos. Decide what you will offer.
+elif {Global_LedgerTier} >= 2.0:
+	# Tier 2 (30-49%): Daylight Audience unlocked (playful denial of daytime visits)
+	if {Variation} == 1.0:
+		ReynaMayari: Strictly Silver Ledger business. Do not bring up my daytime errands.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos.
+	elif {Variation} == 2.0:
+		ReynaMayari: I see you restocked the candy jar. Irrelevant.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos left on Lola's ledger. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
+	else:
+		ReynaMayari: Business first, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] of [color=#2d527c]{Global_TallyGoal}[/color] pesos remain.
+		ReynaMayari: Set at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the counter.
+elif {Global_LedgerTier} >= 1.0:
+	# Tier 1 (15-29%): First seal broken, Reroll unlocked
+	if {Variation} == 1.0:
+		ReynaMayari: The first seal broke cleanly. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
+		ReynaMayari: Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos. Generosity still earns kinder Favors.
+	elif {Variation} == 2.0:
+		ReynaMayari: Word travels fast past the balete tree. You are steadier than Biringan expected.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos left. Set at least [color=#2d527c]{Global_TallyMin}[/color] pesos down.
+	else:
+		ReynaMayari: Time to weigh the counter, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
+		ReynaMayari: At least [color=#2d527c]{Global_TallyMin}[/color] pesos, then draw your Moon Card.
+else:
+	# Tier 0 (0-14%): Early, brisk and regal
+	if {Variation} == 1.0:
+		ReynaMayari: Shutters closed, coins ready. [color=#2d527c]{Global_TallyRemaining}[/color] of [color=#2d527c]{Global_TallyGoal}[/color] pesos remain.
+		ReynaMayari: I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos.
+	elif {Variation} == 2.0:
+		ReynaMayari: The Silver Ledger is open. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on Lola's pact.
+		ReynaMayari: Offer at least [color=#2d527c]{Global_TallyMin}[/color] pesos, then face the Moon Cards.
+	else:
+		ReynaMayari: Count carefully, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos still stand on the ledger.
+		ReynaMayari: Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos. Decide your share.
+[signal arg="open_tally_offer"]
+[wait time="0.5"]
+[end_timeline]
+
+label DebutIntro
+ReynaMayari: The candle by the counter is missing. Your Lola never forgot it once.
+- Who are you?
+	ReynaMayari: Reyna Mayari, Sovereign of Biringan. And you hold your grandmother's counter.
+- Are you a late customer?
+	ReynaMayari: Bold guess for a mortal. I am Mayari, Queen of Biringan.
+- You knew my Lola?
+	ReynaMayari: Better than most in Karimlan. I am Mayari of Biringan.
+ReynaMayari: Your Lola signed a Silver Ledger with my city. [color=#2d527c]{Global_TallyGoal}[/color] pesos remain to seal it.
+ReynaMayari: Each shift you pay, the moon answers with Favors for generosity, or Omens if you fall short.
+ReynaMayari: Even a sharp shopkeeper can turn an Omen into profit. Place at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the wood.
 [signal arg="open_tally_offer"]
 [wait time="0.5"]
 [end_timeline]
 
 label SealedIntro
-set {Variation} = range(1,7).pick_random()
+set {Variation} = range(1,5).pick_random()
 if {Variation} == 1.0:
-	ReynaMayari: Good evening, Patron of the Moon. [pause=0.4] No coins are owed tonight — I come only to offer the moon's blessing for tomorrow.
+	ReynaMayari: No coins owed, Patron. Keep your register closed and pick a lunar Favor instead.
 elif {Variation} == 2.0:
-	ReynaMayari: The Silver Ledger rests sealed in Biringan, yet I still find myself walking down your lane at dusk. [pause=0.4] Choose which lunar favor shall watch over your shelves tomorrow.
+	ReynaMayari: The Silver Ledger rests sealed in Biringan, yet I still drop by to bless your shelves.
 elif {Variation} == 3.0:
-	ReynaMayari: Another busy day in Karimlan, I see. [pause=0.4] Keep your earnings, child — let us simply read what fortune the moonlight offers for the morrow.
-elif {Variation} == 4.0:
-	ReynaMayari: Your grandmother's debt is long settled, yet a queen honors her friends. [pause=0.4] Come — draw tonight's moon cards before you lock the shutters.
-elif {Variation} == 5.0:
-	ReynaMayari: The evening air is calm over your sari-sari store. [pause=0.4] No tribute is asked of you — only tell me which blessing you wish to carry into dawn.
+	ReynaMayari: Keep your earnings, shopkeeper. Let us simply pick which Favor watches over your counter next.
 else:
-	ReynaMayari: Still awake by the counter, suki? [pause=0.4] The silver spires owe you no ledger, only gratitude. Pick your favor for tomorrow's trade.
+	ReynaMayari: Lola's pact is settled in full. Draw your Moon Card before you lock up.
 [signal arg="open_tally_offer"]
 [wait time="0.5"]
 [end_timeline]
 
 label Generous
-ReynaMayari: ...You offered [color=#9a630a]{Global_TallyOffer}[/color] pesos. More than I asked. [pause=0.5]
-ReynaMayari: Only [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. [pause=0.3] The silver spires remember generosity.
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos. More than I asked, and [color=#2d527c]{Global_TallyRemaining}[/color] left on the ledger.
+	ReynaMayari: The Silver Spires remember generosity. Enjoy your Favor.
+elif {Variation} == 2.0:
+	ReynaMayari: Generous coin, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
+	ReynaMayari: Keep that pace up and Biringan's Council will run out of excuses.
+else:
+	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded in silver. Only [color=#2d527c]{Global_TallyRemaining}[/color] left.
+	ReynaMayari: Your Lola used to slide extra coins over with that exact same grin.
 [signal arg="check_mayari_milestones"]
-if {Global_QuotaDay} == 2.0:
-	ReynaMayari: Actually, I've been meaning to see what your store offers by daylight.
-	ReynaMayari: Expect a visit from me soon. [pause=0.4]
-ReynaMayari: Until tomorrow. [pause=0.3]
 [end_timeline]
 
 label Success
-ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded in the Silver Ledger. [pause=0.4]
-ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on your grandmother's pact.
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded cleanly. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
+elif {Variation} == 2.0:
+	ReynaMayari: Fair coin, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos left on Lola's ledger.
+else:
+	ReynaMayari: Exact and orderly. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain before the pact seals.
 [signal arg="check_mayari_milestones"]
-if {Global_QuotaDay} == 2.0:
-	ReynaMayari: Actually, I've been meaning to check what your store offers.
-	ReynaMayari: I think I will see what you have here tomorrow. [pause=0.5]
-ReynaMayari: Until tomorrow. [pause=0.3]
 [end_timeline]
 
 label Shortfall
 label Angry
 if {Global_TallyOffer} <= 0:
-	ReynaMayari: [wave blue]Nothing at all tonight?[/wave] [pause=0.5]
-	ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos still stand unpaid. Expect a chill over Karimlan tomorrow.
+	ReynaMayari: Nothing on the wood? [color=#2d527c]{Global_TallyRemaining}[/color] pesos still stand unpaid.
+	ReynaMayari: Brace your shelves for a lunar Omen, shopkeeper.
 else:
-	ReynaMayari: [wave blue]Only {Global_TallyOffer} pesos.[/wave] [pause=0.5] That falls short of tonight's expectation.
-	ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. Expect... [pause=0.3] a mild chill over Karimlan tomorrow.
+	ReynaMayari: Only [color=#9a630a]{Global_TallyOffer}[/color] pesos. Short of the mark, with [color=#2d527c]{Global_TallyRemaining}[/color] remaining.
+	ReynaMayari: An Omen follows a light ledger. Let us see if you can profit from it anyway.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label MilestoneAlso
-ReynaMayari: Also... [pause=0.35]
+ReynaMayari: One more thing before I go.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_reroll_1
-ReynaMayari: You have passed the first seal of the Silver Ledger — [color=#9a630a]Moon's Grace[/color]. [pause=0.4]
-ReynaMayari: From this night on, I will allow you a [color=#9a630a]reroll[/color] whenever the moon's cards displease you. Use it wisely.
+ReynaMayari: You broke the first seal, [color=#9a630a]Moon's Grace[/color].
+ReynaMayari: I will bend the court's rules just a little. Take one free [color=#9a630a]reroll[/color] on your Moon Cards from now on.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_daytime_mayari
-ReynaMayari: Your ledger has reached [color=#9a630a]Daylight Audience[/color]. [pause=0.4]
-ReynaMayari: I find myself curious about what you sell beneath the sun. Expect me at your counter during business hours from time to time.
+ReynaMayari: Thirty percent settled. You have earned [color=#9a630a]Daylight Audience[/color].
+ReynaMayari: Expect me at your counter during business hours. Strictly to inspect the shop, of course.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_shifted_odds_reroll_2
-ReynaMayari: Half the ledger stands paid in silver — [color=#9a630a]Silver Favor[/color] is yours. [pause=0.4]
-ReynaMayari: The moon will tilt its hand more kindly toward Favors, and I grant you a [color=#9a630a]second reroll[/color] each night.
+ReynaMayari: Half the Silver Ledger paid, [color=#9a630a]Silver Favor[/color] is yours.
+ReynaMayari: I am tilting the lunar deck kindly toward Favors, and slipping you a [color=#9a630a]second reroll[/color]. Do not tell the Council.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_twin_moons
-ReynaMayari: Three-quarters of your grandmother's pact, honored — [color=#9a630a]Twin Moons[/color]. [pause=0.4]
-ReynaMayari: Henceforth, you may claim up to [color=#9a630a]two Moon Cards[/color] each night to shape tomorrow's trade.
+ReynaMayari: Three-quarters honored. You have unlocked [color=#9a630a]Twin Moons[/color].
+ReynaMayari: Claim up to [color=#9a630a]two Moon Cards[/color] at once from now on. You have earned the double blessing.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label LedgerCleared
-ReynaMayari: It is done. [pause=0.5]
-ReynaMayari: Every last peso of your bloodline's tally has been settled.
-ReynaMayari: As Queen of Biringan, I declare the pact sealed and renewed. Karimlan rests under my protection. [pause=0.4]
-ReynaMayari: Keep your coins from now on, child. [pause=0.3] I will... see myself out.
+ReynaMayari: Every last peso on Lola's Silver Ledger, settled in full.
+if {Global_CompletedNeighborsCount} >= 3.0:
+	ReynaMayari: And look down the road. Half of Karimlan is glowing with wards, warm lanterns, and goodwill.
+	ReynaMayari: Biringan's Council cannot touch a street this alive. The Silver Pact is permanently sealed, friend.
+else:
+	ReynaMayari: Clean numbers, exact coin, not a centavo short. The Silver Pact is sealed by the letter of the law.
+	ReynaMayari: Keep your earnings from now on, shopkeeper. Karimlan remains open beneath my watch.
 [end_timeline]
 
 label SealedOutro
-set {Variation} = range(1,7).pick_random()
+set {Variation} = range(1,5).pick_random()
 if {Variation} == 1.0:
-	ReynaMayari: It is set in silver. [pause=0.4] Rest well tonight, Patron — tomorrow's tide will be kind to your counter.
+	ReynaMayari: Sealed in silver. Rest well, Patron.
 elif {Variation} == 2.0:
-	ReynaMayari: A wise choice. [pause=0.4] Lock up and get some sleep; Karimlan is safe beneath my watch.
+	ReynaMayari: Wise choice. Lock the shutters and get some sleep, shopkeeper.
 elif {Variation} == 3.0:
-	ReynaMayari: The moon hears you. [pause=0.4] May your shelves stay full and your neighbors leave smiling tomorrow.
-elif {Variation} == 4.0:
-	ReynaMayari: Done. [pause=0.4] Perhaps I will drop by for some candy in the daylight too. Until tomorrow.
-elif {Variation} == 5.0:
-	ReynaMayari: Your blessing is woven into the morning breeze. [pause=0.4] Good night, child — Lola would be proud of this little shop.
+	ReynaMayari: Done. Keep the candy jar full in case I drop by during business hours.
 else:
-	ReynaMayari: Then let tomorrow shine brightly over Karimlan. [pause=0.4] Until our next evening beneath the moon.
+	ReynaMayari: Your Favor is set. Lola would be grinning ear to ear right now.
 [end_timeline]

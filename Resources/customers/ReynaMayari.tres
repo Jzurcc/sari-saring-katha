@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://dgv0l67j267oy" path="res://Scripts/Data/ChapterItemEntry.gd" id="2_rfb6u"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://0xq4murrv6sb" path="res://Assets/characters/sprites/ReynaMayari.png" id="5_uua7o"]
+[ext_resource type="Texture2D" path="res://Assets/characters/sprites/ReynaMayariDisguised.png" id="6_disguised"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://dr2hqiaw704jy" path="res://Resources/motions/reynamayari_moonlight_glide.tres" id="motion_mayari_glide"]
@@ -16,82 +17,55 @@
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Inherited Burden"
-categories = PackedStringArray("cigarette")
+chapter_name = "Maria From Two Streets Over"
+categories = PackedStringArray("candy")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "A Routine Visit"
-categories = PackedStringArray("bottle")
+chapter_name = "Balete Leaves in Sunlight"
+categories = PackedStringArray("frozen", "candy")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Black Rice Confession"
-categories = PackedStringArray("cigarette")
+chapter_name = "The Black Rice Box"
+categories = PackedStringArray("bottle")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Real Reason"
-categories = PackedStringArray("candy")
+chapter_name = "The Silver Pact"
+categories = PackedStringArray("snack")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Silence of Biringan"
-categories = PackedStringArray("cigarette")
+chapter_name = "The Envoy's Omen"
+categories = PackedStringArray("candy", "snack")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The One-Eyed Child"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Almost Done"
-categories = PackedStringArray("candy")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Ledger Closes"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Patron of the Moon"
-categories = PackedStringArray("sachet")
+chapter_name = "Embassy of the Pale Moon"
+categories = PackedStringArray("candy", "frozen")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: The Silver Tribute"
+arc_name = "Arc 1: Daylight Disguise"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: Cracks in the Spire"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: Patron of the Moon"
+arc_name = "Arc 2: The Silver Council"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("purchase_dtl")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("visit_dtl")])
 
@@ -101,12 +75,13 @@ character_name = "Reyna Mayari"
 unlock_tier = 99
 dialogic_character = ExtResource("1_w2e88")
 sprite_texture = ExtResource("5_uua7o")
+daytime_sprite_texture = ExtResource("6_disguised")
 sprite_scale = 0.43
 dialogue_blip_sound = ExtResource("2_1p4eh")
 dialogue_blip_volume = -6.0
 is_nightly_collector = true
-favorite_categories = Array[String](["candy"])
+favorite_categories = Array[String](["candy", "frozen"])
 story_timeline = ExtResource("story_dtl")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_mayari_glide")

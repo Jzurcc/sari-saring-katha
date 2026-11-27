@@ -1,112 +1,262 @@
+# Uncle Mario - Restock Calls, Cooldowns, Incoming Tier Alerts & Bespoke Upgrade Deliveries
+# Voice: Energetic, practical, affectionate tricycle-supplier Tito. Fast on utility calls; proud on upgrades!
+# Rules: 100% spoken voice. Counter, not grille. Zero [pause] spam, zero em-dashes, zero time-of-day words.
+
 label Call
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Oh hello? What is it again? Need to restock your shelves?
+	UncleMario: O, anak! Sidecar's empty and ready. Running low on stock?
 elif {Variation} == 2.0:
-	UncleMario: Uy, [i]anak[/i]! Calling Uncle already? [pause=0.4] Don't worry, I've got your restock covered. What do you need today?
+	UncleMario: Uncle Mario on the line! What are we loading onto the tricycle, anak?
 else:
-	UncleMario: Hello? [pause=0.8] [shake rate=20 level=10]Yawn...[/shake] [pause=0.7] Oh, hello anak. I was just about to have my second coffee. Need a restock?
-- Restock my shelves.
+	UncleMario: Just finished strapping the crate rack, anak! Need a restock run?
+- Send a restock order.
 	[signal arg="mario_open_restock"]
-	UncleMario: Sige, just send me the list and I'll bring it right over!
-- Nevermind, wrong dial!
+	UncleMario: Sige, punch in your list and I'll kick-start the tricycle!
+- Wrong dial, Uncle!
 	[signal arg="mario_cancel_call"]
-	UncleMario: Haha, okay lang, [i]anak[/i]! Just call me whenever you need stock.
+	UncleMario: Haha, pocket-dialed your own uncle? Ring back anytime, anak!
 [end_timeline]
 
 label Busy
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Oy, aren't you busy right now? Serve that customer first before telling me what you need. Call me back when the counter is clear.
+	UncleMario: Oy, take care of the neighbor at your counter first, anak! Ring me right after.
 elif {Variation} == 2.0:
-	UncleMario: Huy! You have a customer waiting, [i]anak[/i]. [pause=0.4] Multi-tasking is good, but don't ignore the people in front of you. Call me later!
+	UncleMario: Eyes on the counter, kid! Finish up with your customer, I'm not going anywhere.
 else:
-	UncleMario: Focus, kid! The customer is waiting. I can hang on, but they might not. I'll stay by the phone, just call again when you're done.
+	UncleMario: Serve your suki first before calling your supplier, ha! Talk soon.
 [end_timeline]
 
 label CallRest
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Anak, I just delivered to you recently... I'm still resting! Give me {Transaction_MarioRestTime} first!
+	UncleMario: Easy, anak, my tricycle engine's still ticking hot! Give me {Transaction_MarioRestTime} to cool it down.
 elif {Variation} == 2.0:
-	UncleMario: Pang-ilan na 'to? I'm currently having my merienda. Give me {Transaction_MarioRestTime} to breathe while I eat, anak.
+	UncleMario: Catching my breath over merienda first, anak. Ring me again in {Transaction_MarioRestTime}!
 else:
-	UncleMario: Wait lang, I'm recharging. Give me {Transaction_MarioRestTime} while I prep my tricycle and my own energy!
+	UncleMario: Still loading crates at the warehouse! Give your uncle {Transaction_MarioRestTime}, ha.
 [end_timeline]
 
 label Delivery
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: Here are the items you requested! I put the items where you can find them!
+	UncleMario: Fresh haul unloaded, anak! Bags are right by the corner whenever your hands are free.
 elif {Variation} == 2.0:
-	UncleMario: Delivery is here! Everything's stocked up. Stay alert, okay? The night is still young, but don't overwork.
+	UncleMario: Restock's all stacked! Don't forget to drink water behind that counter, ha.
 else:
-	UncleMario: Alright, here's your order. I've placed the bags near the door. [pause=0.5] Don't work too hard, [i]anak[/i]. See you around!
+	UncleMario: Everything on your list made it in one piece, anak! Holler if shelves run thin.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label TierUpgradeDelivery
+UncleMario: Big haul, anak! Unloaded your new stock tier plus free starter samples in the bags!
+UncleMario: Word's spreading fast down the road that Lola's shop carries the good stuff again.
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
 label UpgradeCall
-UncleMario: Uy, [i]anak[/i]! Good thing you picked up!
-UncleMario: I just got a fresh batch of next-tier stock ready to be bought for your store!
-UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
-UncleMario: I've got the upgrade package ready for you right now — want to take a look?
-- Let's check the store upgrades!
+UncleMario: Uy, anak, glad you picked up! My supplier in town just opened a fresh wholesale tier for us.
+UncleMario: Look what I can haul for your shelves now: {Global_UpgradeItemsList}
+UncleMario: Want to check out the store upgrades while I'm at the warehouse?
+- Check store upgrades!
 	[signal arg="mario_open_upgrade"]
-	UncleMario: That's the spirit! Here's what we've got ready.
-- Actually, I just need to restock.
+	UncleMario: Now we're talking! Take a look at what's ready.
+- Just restocking for now.
 	[signal arg="mario_open_restock"]
-	UncleMario: No problem, [i]anak[/i]! Send me your restock list instead.
+	UncleMario: Sige, regular restock first! Send me your list.
 - Maybe later, Uncle.
 	[signal arg="mario_cancel_call"]
-	UncleMario: Sige, take your time! Just ring me up whenever you're ready to expand.
+	UncleMario: No rush, anak! Ring me whenever your register's ready to expand.
 [end_timeline]
 
 label MissedUpgradeCall
-UncleMario: Uy, [i]anak[/i]! I was just trying to call you earlier, ah! Must've been busy at the counter.
-UncleMario: Anyway, good thing you called back — I've got a fresh batch of next-tier stock ready to be bought for your store!
-UncleMario: Here's what's newly available: {Global_UpgradeItemsList}
-UncleMario: I've got the upgrade package ready for you right now — want to take a look?
-- Let's check the store upgrades!
+UncleMario: There you are, anak! Tried ringing you earlier, counter must've been packed!
+UncleMario: Good news from the warehouse: new wholesale stock just opened up, including {Global_UpgradeItemsList}
+UncleMario: Want to browse the upgrade list right now, or stick to a regular restock?
+- Check store upgrades!
 	[signal arg="mario_open_upgrade"]
-	UncleMario: That's the spirit! Here's what we've got ready.
-- Actually, I just need to restock.
+	UncleMario: Let's see what catches your eye, anak!
+- Just restocking for now.
 	[signal arg="mario_open_restock"]
-	UncleMario: No problem, [i]anak[/i]! Send me your restock list instead.
+	UncleMario: Got you covered! Punch in your usual restock list.
 - Maybe later, Uncle.
 	[signal arg="mario_cancel_call"]
-	UncleMario: Sige, take your time! Just ring me up whenever you're ready to expand.
+	UncleMario: Sige, take your time! I'll keep those crates reserved for you.
 [end_timeline]
 
 label StoreUpgradeDelivery
-UncleMario: I've upgraded your store! Ingat anak.
+UncleMario: All bolted down and ready to roll, anak! Shop's looking sharper every run.
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
 label StoreUpgradeAlso
-UncleMario: Also...
+UncleMario: Oh, and one more thing off the sidecar, anak!
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
+# --- Refrigerator Upgrades (Lv. 1-3) ---
+label FridgeUpgradeDelivery1
+UncleMario: Fitted that new magnetic gasket onto Lola's fridge door, anak!
+UncleMario: Snaps shut nice and tight now, so cold air won't slip out half as fast.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label FridgeUpgradeDelivery2
+UncleMario: Packed heavy-duty thermal lining inside the fridge walls, anak!
+UncleMario: Your bottles and frozen packs will stay frosty way longer during busy rushes.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label FridgeUpgradeDelivery3
+UncleMario: Swapped in the commercial inverter compressor, anak! Listen to how quiet that hum is!
+UncleMario: Your Lola used to whack the side of this fridge with a slipper. Now it cools ice-cold in seconds!
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Store Cat Upgrades (Lv. 1-2) ---
 label CatUpgradeDelivery1
-UncleMario: Look who I found sneaking near my tricycle — this is Mingming!
-UncleMario: Neighbors love dropping by when there's a sleepy cat on the shelf. Looks like your counter can handle two customers at once now, anak!
+UncleMario: Look who hopped straight into my sidecar at the market, anak! Meet Mingming!
+UncleMario: Neighbors always linger where a fat orange cat naps, so two customers can line up at your counter now.
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
 label CatUpgradeDelivery2
-UncleMario: Brought a big bag of premium cat food for Mingming!
-UncleMario: A well-fed lucky cat brings the whole barangay to your counter — three neighbors can line up at once now, anak!
+UncleMario: Unloaded the big sack of cat food for Boss Mingming, anak!
+UncleMario: Spoiled cat means a lively stoop, get ready for up to three neighbors crowding your counter at once!
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
+# --- Trash Can & Recycling (Lv. 1-2) ---
 label TrashCanUpgradeDelivery
-UncleMario: Dropped off a sturdy trash can in the corner for you, anak!
-UncleMario: Just toss any extra or unwanted stock right in whenever you need to clear shelf space.
+UncleMario: Set a heavy-duty bin right in the corner for you, anak.
+UncleMario: Toss any extra or unwanted items straight in whenever your shelves need breathing room.
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
 label RecyclingUpgradeDelivery
-UncleMario: Sorted bins, anak! Nothing goes to waste with these.
-UncleMario: Toss in any item and I'll get you half of what it was worth.
+UncleMario: Brought you proper sorting bins, anak! Zero waste in this tindahan.
+UncleMario: Anything you toss in there, I'll haul back to town and refund half its price to your drawer.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Maneki-Neko Upgrades (Lv. 1-2) ---
+label ManekiUpgradeDelivery1
+UncleMario: Set the little waving porcelain cat right on your counter, anak!
+UncleMario: Keeps folks in a generous mood, expect bigger cash tips clinking into your tray.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label ManekiUpgradeDelivery2
+UncleMario: Popped fresh heavy-duty batteries into your waving cat, anak! Look at that paw go!
+UncleMario: Extra good fortune on every cash sale now. Don't forget your uncle when you're rich, ha!
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Barangay Radio Upgrades (Lv. 1-3) ---
+label RadioUpgradeDelivery1
+UncleMario: Hooked up a counter transistor radio tuned straight to Papa Ulap's station, anak!
+UncleMario: Tap the dial whenever it's ready to catch market trends and hear who's strolling down the road.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label RadioUpgradeDelivery2
+UncleMario: Soldered a copper tuning coil into your radio, anak. Way less static now!
+UncleMario: Papa Ulap's signal comes in strong enough to tip you off on more visitors and market swings.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label RadioUpgradeDelivery3
+UncleMario: Mounted a high-gain antenna amplifier onto your radio, anak! Crystal-clear across all of Karimlan!
+UncleMario: Not a single market rush or regular on the road will catch your shelves by surprise now.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Wholesale Pass Upgrades (Lv. 1-2) ---
+label WholesaleUpgradeDelivery1
+UncleMario: Talked my warehouse boss into putting your shop on my family wholesale card, anak!
+UncleMario: You get two discounted Sulit Deals every shift now, and I can turn my tricycle around much faster.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label WholesaleUpgradeDelivery2
+UncleMario: Signed you onto a full bulk contract at the depot, anak!
+UncleMario: Five deep Sulit Deals on every restock sheet now. Even big groceries in town don't get rates that sweet!
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Sto. Niño Altar Upgrades (Lv. 1-3) ---
+label StoNinoUpgradeDelivery1
+UncleMario: Cleared a clean spot on your shelf for the Sto. Niño altar, anak.
+UncleMario: Tap gently to ask for a blessing over your shift whenever the counter needs a little grace.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label StoNinoUpgradeDelivery2
+UncleMario: Polished the altar stand and set fresh candles beside Sto. Niño, anak.
+UncleMario: Every prayer grants two blessings side by side now. Your Lola would love seeing this corner tended.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label StoNinoUpgradeDelivery3
+UncleMario: Brought the heirloom brass vestment for your Sto. Niño altar, anak.
+UncleMario: Once you tap for grace now, both blessings hold steady until you close up shop.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Business Permit Upgrades (Lv. 1-3) ---
+label PermitUpgradeDelivery1
+UncleMario: Picked up your framed Barangay Business Permit from the hall, anak!
+UncleMario: Your Lola kept hers tucked behind the soy sauce bottles. Hang yours proud for faster store growth!
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label PermitUpgradeDelivery2
+UncleMario: Fresh from the municipal office, anak, official town accreditation for your tindahan!
+UncleMario: Whole municipality knows your counter runs fair and square now.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label PermitUpgradeDelivery3
+UncleMario: Hold onto your chair, anak. The council awarded your shop Karimlan Heritage Recognition!
+UncleMario: From your Lola's hands straight to yours. Wish she were standing here to read that brass plate.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Tambayan Bench Upgrades (Lv. 1-3) ---
+label BenchUpgradeDelivery1
+UncleMario: Unloaded a solid wooden tambayan bench right outside your storefront, anak!
+UncleMario: Neighbors love resting their feet in the shade, and lingering folks mean livelier stories at your counter.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label BenchUpgradeDelivery2
+UncleMario: Sanded and varnished the tambayan bench with extra footrests, anak!
+UncleMario: Folks are getting so comfortable out there you'll pick up plenty of experience just chatting between rushes.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label BenchUpgradeDelivery3
+UncleMario: Upgraded the whole tambayan corner, anak! Nobody wants to go home early anymore.
+UncleMario: Half the neighbors chatting on that bench will work up a fresh craving and step right back up to buy!
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+# --- Storefront Customization Upgrades (Lv. 1-3) ---
+label StorefrontUpgradeDelivery1
+UncleMario: Hoisted your blank roof signboard right above the eaves, anak!
+UncleMario: Open your Store Upgrades menu anytime to paint it however you want. Make the whole road look twice!
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label StorefrontUpgradeDelivery2
+UncleMario: Mounted the promo poster frame out front, anak!
+UncleMario: Slap three matching item stickers on your poster whenever you want neighbors craving that category.
+[signal arg="mario_delivery_next"]
+[end_timeline]
+
+label StorefrontUpgradeDelivery3
+UncleMario: Found this tarnished brass key tucked inside my old toolbox, anak. Fits your shop's side door.
+UncleMario: Whenever you want to stretch your legs and see Karimlan from the street, that door unlocks for you now.
 [signal arg="mario_delivery_next"]
 [end_timeline]

@@ -1,43 +1,42 @@
-UncleMario: Good morning, [i]'nak[/i]. [input]I see you've finished moving in, ah?
-UncleMario: Your [i]Lola[/i] would be proud seeing you behind that counter.
-UncleMario: Need a quick rundown of the store, or are you ready to run this place on your own? (Use mouse wheel or arrow keys to choose)
-- Help me out, Uncle
-	UncleMario: [i][wave]Mabuti.[/wave][/i] Let's keep it quick!
-- Nah, I'm good!
-	UncleMario: [i]Naku, anak[/i]. [shake]You're not![/shake]
-	UncleMario: Let's start from the beginning.
-UncleMario: First... pricing! Press [i]Alt[/i] to toggle your pricing lens, look at any product on the shelf, and scroll to adjust its price steps.
-UncleMario: Go ahead and try adjusting the price of an [color=#0f6e2f]Anoba[/color] on the shelf to your left!
+# Uncle Mario - Guided First-Shift Tutorial (Hands-On, Punchy, Witty Fake-Skip)
+# On-screen HelperPrompt shows exact keybinds while Uncle Mario speaks in warm, brisk Tito voice.
+# Covers: Pricing (Alt/L), First Sale (Anoba), Fridge, Nokia Call, Store Upgrades (U), Events & Calendar (C).
+
+UncleMario: Settled in behind the counter already, anak?
+UncleMario: Your Lola would grin ear to ear seeing these shelves open again.
+UncleMario: Ready for a quick test run before neighbors walk up?
+- Show me the ropes, Uncle.
+	UncleMario: Sige, hands-on is fastest!
+- I've got this, Uncle!
+	UncleMario: Nice try, anak! Your Lola made me swear on her good frying pan I'd test you first.
+	UncleMario: Relax, it'll take less than a minute!
+
+UncleMario: Check the shelf on your left first. Try tweaking the price on [color=#0f6e2f]Anoba[/color].
 [signal arg="wait_for_price_change"]
-UncleMario: Nice! 
-UncleMario: You can also press [i]L[/i] anytime to open your full Store Price Ledger.
-UncleMario: Remember, lower prices earn generous tips from customers, while higher prices might get a few complaints — so pick your choice, ah!
-UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], I'm starving! Grab one from the shelf and hand it to me!
+UncleMario: Sharp! Fair prices earn extra tips, greedy markups earn complaints.
+UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], sell me a pack! Skipped breakfast hauling your crates.
 [signal arg="wait_for_sale"]
-UncleMario: [wave]Crunch crunch...[/wave] Ahh! That hits the spot.
-UncleMario: Over to your right is the Refrigerator for cold drinks and frozen goods. Click the handle to open it!
+UncleMario: Ahh, still crispy! First honest peso in your drawer, anak.
+UncleMario: Next, check Lola's refrigerator on your right. Pull the handle.
 [signal arg="wait_for_fridge"]
-UncleMario: See that coldness bar? Always make sure to close the door when you're done — leave it open too long and the cold escapes, making chilled goods lose value until it cools back down!
-UncleMario: Last thing! Whenever you run low on stock — or want to upgrade your store with new tiers, fridge parts, a trash can, or even a lucky cat — use the Nokia phone behind you.
-UncleMario: Type [i]MARIO[/i] on the keypad and press the top-right button — or just press the asterisk (*) shortcut.
-UncleMario: Go on, give it a test call right now!
+UncleMario: Keep that door shut between grabs so the cold doesn't leak out.
+UncleMario: Now ring me on the Nokia behind you! That's how you order restocks.
 [signal arg="wait_for_tutorial_call"]
-UncleMario: Haha!
-UncleMario: I'm standing right here in front of you, [i]'nak[/i]!
-UncleMario: At least you know it works! Oh — and right beside the phone is the Debt Notebook for any customers asking for [color=#0f6e2f]utang[/color].
+UncleMario: Haha! Standing two feet away and my pocket still buzzed!
+UncleMario: Lola's utang notebook sits right beside that phone too, in case neighbors ask for credit.
+UncleMario: Quick peek at your Store Upgrades board too, anak. That's where you grow Lola's shop.
+[signal arg="wait_for_upgrades"]
+UncleMario: Nice, right? New stock tiers, fridge parts, Mingming, I haul all of it on my tricycle.
+UncleMario: One last board! Pull up the Calendar and Events menu so market rushes never blindside you.
+[signal arg="wait_for_events"]
+UncleMario: Good eye! Active events, moon cards, and your day tracker all live right there.
 jump SuccessOutro
 
 label Satisfy
 label SuccessOutro
-UncleMario: That's everything you need to know!
-UncleMario: I'm going to grab my coffee and pandesal now.
-jump Outro
-
-label SkipOutro
-UncleMario: Right, you've always been a quick one.
-UncleMario: If you're that confident, I'll leave you to it. Just don't burn the place down!
+UncleMario: That's the whole counter, anak! You're ready for real customers.
 jump Outro
 
 label Outro
-UncleMario: Good luck today, [i]anak[/i]. See you around!
+UncleMario: Tricycle's idling outside. Ring my Nokia anytime you need a haul, ha!
 [signal arg="refuse_service"]
