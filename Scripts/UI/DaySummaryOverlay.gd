@@ -917,6 +917,7 @@ func _make_event_hover_info(ev: StoreEventData) -> Dictionary:
 		"desc_rich": desc_rich,
 		"stats": stats,
 		"kind": "event",
+		"rarity": ev.get_rarity(),
 	}
 
 
@@ -930,6 +931,7 @@ func _make_card_hover_info(c_data: Dictionary, kind: String) -> Dictionary:
 		"desc_rich": str(c_data.get("description_rich", c_data.get("description", ""))),
 		"stats": c_data.get("stats", []),
 		"kind": kind,
+		"rarity": MayariCardRegistry.get_card_rarity(raw_id),
 	}
 
 
@@ -1083,6 +1085,7 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	hbox.add_child(text_col)
 
 	var top_line := HBoxContainer.new()
+	top_line.add_theme_constant_override("separation", 10)
 	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(top_line)
 
@@ -1094,6 +1097,27 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
+
+	var rarity: String = str(info.get("rarity", ""))
+	if not rarity.is_empty():
+		var r_col: Color = MayariCardRegistry.get_rarity_color(rarity)
+		var rp_lbl := Label.new()
+		rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity)
+		rp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		rp_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		rp_lbl.add_theme_font_size_override("font_size", 16)
+		rp_lbl.add_theme_color_override("font_color", r_col)
+		rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(rp_lbl)
+
+		var dot_lbl := Label.new()
+		dot_lbl.text = "·"
+		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		dot_lbl.add_theme_font_size_override("font_size", 16)
+		dot_lbl.add_theme_color_override("font_color", COL_GOLD_ZERO)
+		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(dot_lbl)
 
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag.capitalize()

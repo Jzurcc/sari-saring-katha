@@ -19,6 +19,7 @@ extends MeshInstance3D
 const OPEN_ANGLE_DEG := 90.0   ## Flip sign if the door swings the wrong way
 const ANIM_DURATION   := 0.5
 const OUTLINE_SHADER  := "res://Shaders/outline.gdshader"
+const DISEMBODIED_WIND_HOURLY_CHANCE := 0.25
 
 # ----- State --------------------------------------------------------------------
 var is_open: bool = false
@@ -26,8 +27,7 @@ var _tween: Tween
 var _outline_mat: ShaderMaterial
 var _pivot: Node3D
 var _active_mists: Array[CPUParticles3D] = []
-var _wind_gusts_remaining: int = 0
-var _wind_timer: float = 0.0
+var _last_wind_hour: int = -1
 
 # ================================================================================
 func _ready() -> void:
@@ -48,24 +48,30 @@ func _on_mayari_card_changed(_card_id: String) -> void:
 	_schedule_disembodied_wind()
 
 func _schedule_disembodied_wind() -> void:
-	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
-		_wind_gusts_remaining = 2
-		_wind_timer = randf_range(35.0, 75.0)
+	if is_instance_valid(StoryManager) and StoryManager.clock:
+		_last_wind_hour = int(floorf(StoryManager.clock.current_display_time))
 	else:
-		_wind_gusts_remaining = 0
-		_wind_timer = 0.0
+		_last_wind_hour = 5
 
 func _process(delta: float) -> void:
-	# Disembodied Wind Moon Card: 1-2 eerie gusts pop the fridge open during the day
-	if _wind_gusts_remaining > 0 and StoryManager.is_clock_running and Dialogic.current_timeline == null:
-		_wind_timer -= delta
-		if _wind_timer <= 0.0:
-			if not is_open:
-				_wind_gusts_remaining -= 1
-				_wind_timer = randf_range(55.0, 95.0)
-				_trigger_disembodied_wind_gust()
-			else:
-				_wind_timer = 12.0
+	# Disembodied Wind (25%/hr) & Slamming Draft (20%/hr): hourly fridge gust chance (at most once per half-skip)
+	if is_instance_valid(StoryManager) and StoryManager.clock \
+			and StoryManager.is_clock_running \
+			and not StoryManager.is_past_closing_time() \
+			and Dialogic.current_timeline == null:
+		var gust_chance := 0.0
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
+			gust_chance += DISEMBODIED_WIND_HOURLY_CHANCE
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SLAMMING_DRAFT):
+			gust_chance += 0.20
+		if gust_chance > 0.0:
+			var cur_hour: int = int(floorf(StoryManager.clock.current_display_time))
+			if cur_hour < _last_wind_hour:
+				_last_wind_hour = cur_hour
+			elif cur_hour > _last_wind_hour:
+				_last_wind_hour = cur_hour
+				if not is_open and randf() < minf(0.85, gust_chance):
+					_trigger_disembodied_wind_gust()
 
 	var prev_cold := StoryManager.fridge_coldness
 	var prev_warm := StoryManager.is_fridge_warm

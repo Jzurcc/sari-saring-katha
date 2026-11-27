@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "biringan_silver_mist"
+event_name = "Silver Mist Off the Creek"
+description = "A cool, silvery morning fog drifts up from the creek, slowing fridge drain and nudging neighbors to stock up."
+rumor_text = "Ooh, malamig ang hangin today — silver mist rolling off the creek! Folks are bundling up on sachets and canned goods."
+icon_path = "res://Assets/ui/icons/cloud-fog.png"
+affected_categories = Array[String](["sachet", "can"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.9
+tolerance_offset = 1
+multi_item_chance_bonus = 0.15
+fridge_drain_multiplier = 0.85
+roll_weight = 0.65

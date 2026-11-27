@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "morning_palengke_spill"
+event_name = "Morning Palengke Overflow"
+description = "Early market trucks offload surplus crates down the road, discounting wholesale restocks while neighbors hunt sachets and noodles."
+rumor_text = "Sobra-sobra ang bagsak sa palengke! Uncle Mario's wholesale prices are 10% off today, and folks are craving sachets and noodles."
+icon_path = "res://Assets/ui/icons/shopping-basket.png"
+affected_categories = Array[String](["sachet", "pack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.8
+tolerance_offset = 1
+restock_cost_multiplier = 0.9
+roll_weight = 1.0

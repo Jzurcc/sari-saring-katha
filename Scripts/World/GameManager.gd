@@ -19,6 +19,7 @@ const END_OF_DAY_QUOTES = [
 @onready var sleep_overlay_scene = preload("res://Scenes/UI/SleepOverlay.tscn")
 const MayariTallyOverlayScript = preload("res://Scripts/UI/MayariTallyOverlay.gd")
 const DaySummaryOverlayScript = preload("res://Scripts/UI/DaySummaryOverlay.gd")
+const EpilogueOverlayScript = preload("res://Scripts/UI/EpilogueOverlay.gd")
 const MayariCardHUDScript = preload("res://Scripts/UI/MayariCardHUD.gd")
 const PlayerXPHUDScript = preload("res://Scripts/UI/PlayerXPHUD.gd")
 const EventsOverlayScript = preload("res://Scripts/UI/EventsOverlay.gd")
@@ -36,6 +37,7 @@ var _mayari_milestone_said_also: bool = false
 var _mayari_milestones_spoken_count: int = 0
 var _mayari_tally_timeline_path: String = ""
 var _is_day_summary_open: bool = false
+var _is_epilogue_open: bool = false
 var _day_summary_shown_for_day: int = -1
 var _pending_order_tips: Dictionary = {} # customer_path -> {total_base_price, eff_step_sum, item_count}
 var _mayari_card_hud: Node = null
@@ -259,6 +261,18 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 		total_tip_pct += 0.12
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
 		total_tip_pct += 0.10
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE):
+		total_tip_pct += 0.10
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SHY_NEIGHBORS):
+		total_tip_pct += 0.12
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILENT_STORIES):
+		total_tip_pct += 0.10
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_GOLDEN_COUNTER):
+		total_tip_pct += 0.15
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SOUR_CHANGE):
+		total_tip_pct += 0.20
+	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_BORROWED_HOUR):
+		total_tip_pct += 0.20
 	if is_instance_valid(CharacterProgressionManager):
 		total_tip_pct += CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
 	var pct_tip := StoryManager.calc_scaled_tip(total_base_price, total_tip_pct, 3.0, 90.0)
@@ -292,6 +306,51 @@ func add_money(amount: float) -> void:
 		return
 	money += amount
 	EventBus.money_changed.emit(money)
+
+
+func show_epilogue_overlay() -> void:
+	if _is_epilogue_open:
+		return
+	_is_epilogue_open = true
+
+	var had_dialogic: bool = Dialogic.current_timeline != null
+	if had_dialogic:
+		Dialogic.paused = true
+		var dialog_layout = Dialogic.Styles.get_layout_node()
+		if is_instance_valid(dialog_layout):
+			dialog_layout.hide()
+
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	var overlay := EpilogueOverlayScript.new()
+	overlay.setup()
+	add_child(overlay)
+
+	var action: String = str(await overlay.completed)
+	_is_epilogue_open = false
+	if not is_inside_tree():
+		return
+
+	if is_instance_valid(SaveManager):
+		SaveManager.force_save("Silver Ledger Sealed", true)
+
+	if action == "main_menu":
+		if had_dialogic:
+			SaveManager.is_quitting = true
+			Dialogic.paused = false
+			Dialogic.end_timeline()
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		if has_node("/root/SceneTransition"):
+			SceneTransition.change_scene("res://Scenes/MainMenu.tscn")
+		else:
+			get_tree().change_scene_to_file("res://Scenes/MainMenu.tscn")
+		return
+
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if had_dialogic:
+		var dialog_layout = Dialogic.Styles.get_layout_node()
+		if is_instance_valid(dialog_layout):
+			dialog_layout.show()
+		Dialogic.paused = false
 
 
 func show_day_summary(show_mayari: bool = true) -> Dictionary:
@@ -375,6 +434,8 @@ func _on_dialogic_signal(argument: String) -> void:
 		_handle_open_tally_offer()
 	elif argument == "check_mayari_milestones":
 		_handle_check_mayari_milestones()
+	elif argument == "show_epilogue":
+		show_epilogue_overlay()
 	
 	# Let TutorialManager handle tutorial-specific signals
 	elif tutorial.handle_dialogic_signal(argument):
@@ -384,8 +445,14 @@ func _on_dialogic_signal(argument: String) -> void:
 		var amount: float = float(Dialogic.VAR.get_variable("Transaction_RepaymentAmount", 0.0))
 		if amount <= 0.0:
 			return
-		money += amount
-		StoryManager.record_daily_stat_add("utang_repaid", amount)
+		var repay_mult: float = 1.0
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_HONORED_LISTA):
+			repay_mult *= 1.20
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_OVERDUE_LISTA):
+			repay_mult *= 1.35
+		var paid_cash: float = snappedf(amount * repay_mult, 0.5) if not is_equal_approx(repay_mult, 1.0) else amount
+		money += paid_cash
+		StoryManager.record_daily_stat_add("utang_repaid", paid_cash)
 		EventBus.money_changed.emit(money)
 		Dialogic.VAR.set_variable("Transaction_RepaymentAmount", 0.0)
 		Dialogic.VAR.set_variable("Transaction_IsRepaying", 0.0)

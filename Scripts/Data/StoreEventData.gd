@@ -58,6 +58,13 @@ func affects_item(item: ItemData) -> bool:
 func get_icon_path() -> String:
 	return icon_path if not icon_path.is_empty() else "res://Assets/ui/icons/zap.png"
 
+func get_rarity() -> String:
+	if roll_weight <= 0.55:
+		return "rare"
+	if roll_weight <= 0.75:
+		return "uncommon"
+	return "common"
+
 ## Builds standardized Hades-style stat rows for EventsOverlay, DaySummaryOverlay, and PriceLedgerOverlay.
 func build_stat_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
@@ -128,11 +135,12 @@ func build_stat_rows() -> Array[Dictionary]:
 			"value": ("%+d%%" % drain_pct),
 			"tone": "pos" if drain_pct < 0 else "neg",
 		})
-	if linger_chance_bonus > 0.001:
+	if absf(linger_chance_bonus) > 0.001:
+		var l_pct := int(roundf(linger_chance_bonus * 100.0))
 		rows.append({
 			"label": "Tambayan Linger Chance:",
-			"value": ("+%d%%" % int(roundf(linger_chance_bonus * 100.0))),
-			"tone": "pos",
+			"value": ("%+d%%" % l_pct),
+			"tone": "pos" if l_pct > 0 else "neg",
 		})
 	if global_tolerance_offset != 0:
 		rows.append({
@@ -156,7 +164,7 @@ func get_keywords() -> Array[String]:
 		kws.append("cash_tip_bonus")
 	if not is_equal_approx(xp_multiplier, 1.0):
 		kws.append("player_xp")
-	if linger_chance_bonus > 0.001:
+	if absf(linger_chance_bonus) > 0.001:
 		kws.append("tambayan")
 	if not is_equal_approx(fridge_drain_multiplier, 1.0):
 		kws.append("coldness_drain")

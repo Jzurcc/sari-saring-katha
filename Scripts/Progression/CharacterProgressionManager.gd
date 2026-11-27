@@ -129,6 +129,25 @@ func get_rep_rank_progress(character_path: String) -> Dictionary:
 func add_reputation(character_path: String, delta: int, reason: String = "") -> Dictionary:
 	if character_path.is_empty() or delta == 0:
 		return {"new_rep": get_rep(character_path), "delta": 0, "new_rank": get_rep_rank(character_path), "ranked_up": false}
+	var sm_mod := _get_story_manager()
+	if delta > 0 and sm_mod and sm_mod.has_method("has_mayari_card"):
+		var rep_mult: float = 1.0
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_WARM_WELCOME):
+			rep_mult *= 1.25
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_OPEN_EARS):
+			rep_mult *= 1.15
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE):
+			rep_mult *= 1.20
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_MAYARI_FULL_MOON):
+			rep_mult *= 1.20
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_MERIENDA_BENCH):
+			rep_mult *= 1.20
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_LOOSE_TAB):
+			rep_mult *= 1.30
+		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_SHY_NEIGHBORS):
+			rep_mult *= 0.75
+		if not is_equal_approx(rep_mult, 1.0):
+			delta = maxi(1, int(roundf(float(delta) * rep_mult)))
 	record_encounter(character_path)
 	var old_rank := get_rep_rank(character_path)
 	var old_rep := get_rep(character_path)

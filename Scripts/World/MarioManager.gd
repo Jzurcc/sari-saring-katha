@@ -569,10 +569,14 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items := _pending_delivery_items.duplicate()
 	_pending_delivery_items.clear()
 
-	# Silver-Touched Bag (+2) and/or Foggy Highway (+1): slip free bonus units into delivery!
+	# Bonus delivery stock cards
 	var has_silver_bag := StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG)
 	var has_foggy_hwy := StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY)
-	if has_silver_bag or has_foggy_hwy:
+	var has_moonlit_bounty := StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIT_BOUNTY)
+	var has_heavy_bags := StoryManager.has_mayari_card(MayariCardRegistry.CARD_HEAVY_BAGS)
+	var has_tikbalang := StoryManager.has_mayari_card(MayariCardRegistry.CARD_TIKBALANG_SHORTCUT)
+	var has_duwende := StoryManager.has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF)
+	if has_silver_bag or has_foggy_hwy or has_moonlit_bounty or has_heavy_bags or has_tikbalang or has_duwende:
 		var eligible_regular: Array[ItemData] = []
 		for it in items.keys():
 			if _is_non_stock_upgrade(it):
@@ -581,7 +585,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 				continue
 			eligible_regular.append(it)
 		if not eligible_regular.is_empty():
-			var bonus_count := (2 if has_silver_bag else 0) + (1 if has_foggy_hwy else 0)
+			var bonus_count := (2 if has_silver_bag else 0) + (1 if has_foggy_hwy else 0) + (1 if has_moonlit_bounty else 0) + (2 if has_heavy_bags else 0) + (1 if has_tikbalang else 0) + (2 if has_duwende else 0)
 			var granted := 0
 			for _b in range(bonus_count):
 				var chosen: ItemData = eligible_regular.pick_random()
@@ -590,7 +594,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 					items[chosen] = int(items[chosen]) + 1
 					granted += 1
 			if granted > 0 and spawn_in_tree:
-				var src_name := "Silver-Touched Bag" if has_silver_bag else "Foggy Highway"
+				var src_name := "Silver-Touched Bag" if has_silver_bag else ("Moonlit Bounty" if has_moonlit_bounty else ("Tikbalang's Shortcut" if has_tikbalang else ("Duwende Mischief" if has_duwende else ("Heavy Bags" if has_heavy_bags else "Foggy Highway"))))
 				LogManager.info("MarioManager", "%s granted +%d bonus item(s)!" % [src_name, granted])
 				EventBus.show_notification.emit("%s!" % src_name, "+%d free bonus item(s) slipped into your bag!" % granted, "purchase")
 

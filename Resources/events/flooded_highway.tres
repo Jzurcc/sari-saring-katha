@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "flooded_highway"
+event_name = "Flooded Access Road"
+description = "Ankle-deep runoff stalls delivery vans outside the barangay, slowing restocks and nudging wholesale fees up."
+rumor_text = "Baha sa kanto ng highway! Uncle Mario's delivery runs are taking 30% longer today, with a small surcharge on wholesale crates."
+icon_path = "res://Assets/ui/icons/cloud-rain.png"
+affected_categories = Array[String]([])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.0
+tolerance_offset = 0
+restock_cost_multiplier = 1.1
+delivery_cooldown_multiplier = 1.3
+roll_weight = 1.0

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "duwende_penny_trail"
+event_name = "Duwende Coin Trail"
+description = "Tiny sparkling footprints line the gutter — shoppers are stricter on markups, yet leave gleaming extra change on satisfied sales."
+rumor_text = "Tabi-tabi po! Glittering coins on the pavement — folks are fussy about markups today, pero generous ang sukli if you keep prices fair!"
+icon_path = "res://Assets/ui/icons/sparkles.png"
+affected_categories = Array[String](["candy", "snack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.0
+tolerance_offset = 0
+tip_bonus_pct = 0.12
+global_tolerance_offset = -1
+roll_weight = 0.65

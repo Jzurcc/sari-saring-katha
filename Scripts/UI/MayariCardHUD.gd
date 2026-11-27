@@ -290,7 +290,8 @@ func _play_morning_cards_toast(card_ids: Array) -> void:
 			kind_str,
 			str(c_data.get("icon", "")),
 			str(cid),
-			unified
+			unified,
+			MayariCardRegistry.get_card_rarity(str(cid))
 		))
 	if cards.is_empty():
 		TopBannerQueue.complete()
@@ -326,7 +327,8 @@ func _play_radio_card_toast(payload: Dictionary) -> void:
 				"event",
 				ev.get_icon_path(),
 				ev.event_id,
-				unified
+				unified,
+				ev.get_rarity()
 			))
 	elif ptype == "visitor":
 		var vis: CustomerData = payload.get("visitor", null)
@@ -441,7 +443,7 @@ func _format_natural_list(names: PackedStringArray) -> String:
 	return "%s, and %s" % [", ".join(leading), names[count - 1]]
 
 
-func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, icon_path: String, fx_id: String, unified_size: Vector2) -> PanelContainer:
+func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, icon_path: String, fx_id: String, unified_size: Vector2, rarity: String = "") -> PanelContainer:
 	var pal: Dictionary = HadesEmblem.palette(kind)
 	var accent: Color = pal["accent"]
 	var accent_bright: Color = pal["bright"]
@@ -488,6 +490,7 @@ func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, 
 	hbox.add_child(text_col)
 
 	var top_line := HBoxContainer.new()
+	top_line.add_theme_constant_override("separation", 10)
 	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(top_line)
 
@@ -499,6 +502,26 @@ func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, 
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
+
+	if not rarity.is_empty():
+		var r_col: Color = MayariCardRegistry.get_rarity_color(rarity)
+		var rp_lbl := Label.new()
+		rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity)
+		rp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		rp_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		rp_lbl.add_theme_font_size_override("font_size", 16)
+		rp_lbl.add_theme_color_override("font_color", r_col)
+		rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(rp_lbl)
+
+		var dot_lbl := Label.new()
+		dot_lbl.text = "·"
+		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		dot_lbl.add_theme_font_size_override("font_size", 16)
+		dot_lbl.add_theme_color_override("font_color", Color(0.84, 0.78, 0.69, 0.75))
+		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(dot_lbl)
 
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag

@@ -663,7 +663,7 @@ func _build_neighborhood_event_card(ev: StoreEventData) -> PanelContainer:
 		desc_rich = "%s Neighbors are actively seeking [b]%s[/b] today." % [ev.description, targets_str]
 	var stats: Array = ev.build_stat_rows()
 	var kws: Array = ev.get_keywords()
-	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws, ev.get_icon_path(), ev.event_id)
+	return _build_hades_card(ev.event_name, _event_sigil(ev.event_id), desc_rich, stats, "event", kws, ev.get_icon_path(), ev.event_id, ev.get_rarity())
 
 func _build_visitor_event_card(vis: CustomerData) -> PanelContainer:
 	var desc_rich := "Papa Ulap spotted [b]%s[/b] heading toward your store today." % vis.character_name
@@ -696,6 +696,7 @@ func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false, car
 	var kws: Array = c_data.get("keywords", [])
 	var kind_str := "blessing" if is_blessing else ("favor" if is_fav else "omen")
 	var fx_id := card_id if card_id != "" else str(c_data.get("id", c_data.get("title", "")))
+	var card_rarity := MayariCardRegistry.get_card_rarity(fx_id)
 	return _build_hades_card(
 		str(c_data.get("title", "Moon Card")),
 		str(c_data.get("sigil", "☽")),
@@ -704,7 +705,8 @@ func _build_mayari_event_card(c_data: Dictionary, is_blessing: bool = false, car
 		kind_str,
 		kws,
 		str(c_data.get("icon", "")),
-		fx_id
+		fx_id,
+		card_rarity
 	)
 
 func _get_unified_card_height() -> float:
@@ -720,7 +722,7 @@ func _sync_card_heights() -> void:
 		if ch is PanelContainer and ch.has_meta("is_hades_card"):
 			ch.custom_minimum_size = Vector2(0, target_h)
 
-func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, keywords: Array = [], icon_path: String = "", fx_id: String = "") -> PanelContainer:
+func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: Array, kind: String, keywords: Array = [], icon_path: String = "", fx_id: String = "", rarity: String = "") -> PanelContainer:
 	var pal: Dictionary = HadesEmblem.palette(kind)
 	var accent: Color = pal["accent"]
 	var accent_bright: Color = pal["bright"]
@@ -767,6 +769,7 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	hbox.add_child(text_col)
 
 	var top_line := HBoxContainer.new()
+	top_line.add_theme_constant_override("separation", 10)
 	top_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	text_col.add_child(top_line)
 
@@ -778,6 +781,26 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
+
+	if not rarity.is_empty():
+		var r_col: Color = MayariCardRegistry.get_rarity_color(rarity)
+		var rp_lbl := Label.new()
+		rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity)
+		rp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		rp_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		rp_lbl.add_theme_font_size_override("font_size", 16)
+		rp_lbl.add_theme_color_override("font_color", r_col)
+		rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(rp_lbl)
+
+		var dot_lbl := Label.new()
+		dot_lbl.text = "·"
+		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		dot_lbl.add_theme_font_size_override("font_size", 16)
+		dot_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(dot_lbl)
 
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag

@@ -575,6 +575,19 @@ func _rebuild_tolerance_tooltips(item_data: ItemData, is_fridge_item: bool, is_w
 			_add_effect_tooltip("Sto. Niño Blessing", [ {"label": "Price Tolerance", "value": "+1", "tone": "pos"}], "blessing", b_ico)
 			total_tol += 1
 			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE).get("icon", ""))
+			_add_effect_tooltip("Silver Ledger Grace", [
+				{"label": "Price Tolerance", "value": "+1", "tone": "pos"},
+				{"label": "Tip Bonus", "value": "+10%", "tone": "pos"},
+			], "favor", c_ico)
+			total_tol += StoryManager.get_mayari_card_stack_count(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SHARP_BARGAINERS):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SHARP_BARGAINERS).get("icon", ""))
+			_add_effect_tooltip("Sharp Bargainers", [ {"label": "Price Tolerance", "value": "+2", "tone": "pos"}], "omen", c_ico)
+			total_tol += 2
+			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH).get("icon", ""))
 			_add_effect_tooltip("Eerie Mist Rush", [ {"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
@@ -593,21 +606,103 @@ func _rebuild_tolerance_tooltips(item_data: ItemData, is_fridge_item: bool, is_w
 			], "omen", c_ico)
 			total_tol -= 1
 			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS).get("icon", ""))
+			_add_effect_tooltip("Stubborn Hagglers", [
+				{"label": "Price Tolerance", "value": "-1", "tone": "neg"},
+				{"label": "Haggle Chance", "value": "+35%", "tone": "pos"},
+			], "omen", c_ico)
+			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MAYARI_FULL_MOON):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_MAYARI_FULL_MOON).get("icon", ""))
+			_add_effect_tooltip("Blessing of the Full Moon", [ {"label": "Price Tolerance", "value": "+1", "tone": "pos"}], "favor", c_ico)
+			total_tol += StoryManager.get_mayari_card_stack_count(MayariCardRegistry.CARD_MAYARI_FULL_MOON)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SOUR_CHANGE):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SOUR_CHANGE).get("icon", ""))
+			_add_effect_tooltip("Sour Change", [
+				{"label": "Price Tolerance", "value": "-1", "tone": "neg"},
+				{"label": "Tip Bonus", "value": "+20%", "tone": "pos"},
+			], "omen", c_ico)
+			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF).get("icon", ""))
+			_add_effect_tooltip("Duwende Mischief", [ {"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
+			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_PHANTOM_QUEUE).get("icon", ""))
+			_add_effect_tooltip("Phantom Queue", [ {"label": "Price Tolerance", "value": "-1", "tone": "neg"}], "omen", c_ico)
+			total_tol -= 1
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN).get("icon", ""))
+			_add_effect_tooltip("Blood Moon Bargain", [
+				{"label": "Price Tolerance", "value": "-2", "tone": "neg"},
+				{"label": "All Cash Sales", "value": "+25%", "tone": "pos"},
+			], "omen", c_ico)
+			total_tol -= 2
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_COINS_IN_THE_JAR):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_COINS_IN_THE_JAR).get("icon", ""))
+			_add_effect_tooltip("Coins in the Jar", [ {"label": "Sale Bonus (≤ 0)", "value": "+12%", "tone": "pos"}], "favor", c_ico)
+			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND) and (item_data.category == "bottle" or item_data.category == "frozen"):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_DISEMBODIED_WIND).get("icon", ""))
 			var dw_stats: Array[Dictionary] = []
 			if not StoryManager.is_fridge_warm:
 				dw_stats.append({"label": "Cold Sale Bonus", "value": "+12%", "tone": "pos"})
-			dw_stats.append({"label": "Fridge Drain", "value": "+40%", "tone": "neg"})
+			dw_stats.append({"label": "Fridge Gust", "value": "25%/hr", "tone": "neg"})
 			_add_effect_tooltip("Disembodied Wind", dw_stats, "omen", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SWIFT_CHILL) and (item_data.category == "bottle" or item_data.category == "frozen") and not StoryManager.is_fridge_warm:
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SWIFT_CHILL).get("icon", ""))
+			_add_effect_tooltip("Swift Chill", [ {"label": "Cold Sale Bonus", "value": "+8%", "tone": "pos"}], "favor", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FROSTBITTEN_COILS) and (item_data.category == "bottle" or item_data.category == "frozen") and not StoryManager.is_fridge_warm:
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_FROSTBITTEN_COILS).get("icon", ""))
+			_add_effect_tooltip("Frostbitten Coils", [ {"label": "Cold Sale Bonus", "value": "+18%", "tone": "pos"}], "omen", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_THIRSTY_NIGHT) and (item_data.category == "bottle" or item_data.category == "frozen") and not StoryManager.is_fridge_warm:
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_THIRSTY_NIGHT).get("icon", ""))
+			_add_effect_tooltip("Thirsty Night", [ {"label": "Cold Sale Bonus", "value": "+20%", "tone": "pos"}], "omen", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_ALBULARYO_CHARM) and (item_data.category == "bottle" or item_data.category == "frozen") and not StoryManager.is_fridge_warm:
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_ALBULARYO_CHARM).get("icon", ""))
+			_add_effect_tooltip("Albularyo's Charm", [ {"label": "Cold Sale Bonus", "value": "+10%", "tone": "pos"}], "favor", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SLAMMING_DRAFT) and (item_data.category == "bottle" or item_data.category == "frozen") and not StoryManager.is_fridge_warm:
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SLAMMING_DRAFT).get("icon", ""))
+			_add_effect_tooltip("Slamming Draft", [
+				{"label": "Cold Sale Bonus", "value": "+10%", "tone": "pos"},
+				{"label": "Fridge Gust", "value": "20%/hr", "tone": "neg"},
+			], "omen", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_BORROWED_HOUR):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_BORROWED_HOUR).get("icon", ""))
+			_add_effect_tooltip("Borrowed Hour", [ {"label": "Tip Bonus", "value": "+20%", "tone": "pos"}], "omen", c_ico)
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_MOONLIGHT_TIPS).get("icon", ""))
 			_add_effect_tooltip("Moonlight Tips", [ {"label": "Tip Bonus", "value": "+12%", "tone": "pos"}], "favor", c_ico)
 			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_GOLDEN_COUNTER):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_GOLDEN_COUNTER).get("icon", ""))
+			_add_effect_tooltip("Golden Counter", [ {"label": "Tip Bonus", "value": "+15%", "tone": "pos"}], "favor", c_ico)
+			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
 			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_FADING_MEMORY).get("icon", ""))
 			_add_effect_tooltip("Fading Memory", [ {"label": "Tip Bonus", "value": "+10%", "tone": "pos"}], "favor", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SHY_NEIGHBORS):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SHY_NEIGHBORS).get("icon", ""))
+			_add_effect_tooltip("Shy Neighbors", [ {"label": "Tip Bonus", "value": "+12%", "tone": "pos"}], "omen", c_ico)
+			count += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILENT_STORIES):
+			var c_ico := str(MayariCardRegistry.get_card(MayariCardRegistry.CARD_SILENT_STORIES).get("icon", ""))
+			_add_effect_tooltip("Silent Stories", [ {"label": "Tip Bonus", "value": "+10%", "tone": "pos"}], "omen", c_ico)
 			count += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
 			var ev_cnt := StoreEventManager.get_active_events().size()

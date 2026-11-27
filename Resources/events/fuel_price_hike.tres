@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "fuel_price_hike"
+event_name = "Wholesale Fuel Hike"
+description = "Overnight diesel hikes squeeze suppliers — wholesale restocks cost noticeably more and arrive slower."
+rumor_text = "Tumaas na naman ang krudo! Suppliers are charging +20% more per wholesale order and running fewer delivery trips today."
+icon_path = "res://Assets/ui/icons/truck.png"
+affected_categories = Array[String]([])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.0
+tolerance_offset = 0
+restock_cost_multiplier = 1.2
+delivery_cooldown_multiplier = 1.25
+roll_weight = 0.65

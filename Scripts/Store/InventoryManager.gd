@@ -372,8 +372,16 @@ func start_delivery_cooldown() -> void:
 			hours *= 0.70 # -30% Delivery Cooldown from Wholesale Pass (5.0h -> 3.5h)
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
 			hours *= 0.65 # -35% Delivery Cooldown
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EXPRESS_RESTOCK):
+			hours *= 0.75 # -25% Delivery Cooldown
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MOONLIT_BOUNTY):
+			hours *= 0.70 # -30% Delivery Cooldown
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_TIKBALANG_SHORTCUT):
+			hours *= 0.60 # -40% Delivery Cooldown
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY):
 			hours *= 1.65 # +65% Delivery Cooldown
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_HEAVY_BAGS):
+			hours *= 1.35 # +35% Delivery Cooldown
 	if is_instance_valid(StoreEventManager):
 		hours *= StoreEventManager.get_delivery_cooldown_multiplier()
 	delivery_cooldown_end_hour = _get_current_game_hour() + hours

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "afternoon_brownout_drill"
+event_name = "Power Line Maintenance"
+description = "Flickering voltage makes fridges warm faster, pushing neighbors toward dry snacks and candies."
+rumor_text = "Heads up, Karimlan! Linemen are fixing the main pole — watch your fridge coldness and keep snacks and candies stocked!"
+icon_path = "res://Assets/ui/icons/zap.png"
+affected_categories = Array[String](["snack", "candy"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.9
+tolerance_offset = 1
+xp_multiplier = 1.15
+fridge_drain_multiplier = 1.25
+roll_weight = 1.0

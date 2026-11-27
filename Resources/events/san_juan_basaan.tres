@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "san_juan_basaan"
+event_name = "Basaan Street Festival"
+description = "Playful water splashes cool the whole block, slowing fridge drain and keeping laughing crowds hanging around your bench."
+rumor_text = "Basaan na sa kanto! Everybody's soaked and laughing — your fridge stays cool longer while folks stock up on cold drinks, frozen treats, and sachets!"
+icon_path = "res://Assets/ui/icons/cloud-rain.png"
+affected_categories = Array[String](["bottle", "frozen", "sachet"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.3
+tolerance_offset = 2
+fridge_drain_multiplier = 0.75
+linger_chance_bonus = 0.25
+roll_weight = 0.45

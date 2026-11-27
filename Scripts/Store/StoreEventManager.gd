@@ -239,7 +239,11 @@ func start_reveal_cooldown() -> void:
 		if is_instance_valid(StoryManager):
 			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_ECHOES_ON_THE_DIAL):
 				cd_hours *= 0.50
+			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_CLEAR_SIGNAL):
+				cd_hours *= 0.50
 			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES):
+				cd_hours *= 1.50
+			if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SLOW_DIAL):
 				cd_hours *= 1.50
 		_next_reveal_ready_hour = _get_current_hour() + cd_hours
 	else:

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "kapre_cigar_fog"
+event_name = "Kapre's Smoke Drift"
+description = "Warm mahogany smoke drifts down from the old acacia, packing your counter with an extra slot and generous tips."
+rumor_text = "Amoy tabako galing sa lumang akasya... Must be the old Kapre relaxing! Expect a packed counter and generous tips on drinks, yosi, and canned goods."
+icon_path = "res://Assets/ui/icons/ghost.png"
+affected_categories = Array[String](["cigarette", "bottle", "can"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.2
+tolerance_offset = 1
+tip_bonus_pct = 0.1
+extra_counter_slots = 1
+roll_weight = 0.45

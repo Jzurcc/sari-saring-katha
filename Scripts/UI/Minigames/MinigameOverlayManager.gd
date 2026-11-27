@@ -262,13 +262,14 @@ func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -
 				var kicks := int(result.get("kicks", 0))
 				rep_gain = 22 if kicks >= 32 else (15 if kicks >= 6 else 8)
 			CharacterProgressionManager.add_reputation(cust.customer_data.resource_path, rep_gain, "minigame_" + minigame_id)
+	var reward_mult: float = StoryManager.get_minigame_reward_multiplier() if is_instance_valid(StoryManager) else 1.0
 	if minigame_id == "sipa":
 		var kicks := int(result.get("kicks", 0))
 		var xp_cap := int(result.get("xp_cap", 32))
 		var capped_kicks := mini(kicks, xp_cap)
 		if capped_kicks > 0:
-			var xp_gain := capped_kicks
-			var cash_gain := float(capped_kicks)
+			var xp_gain := int(roundf(float(capped_kicks) * reward_mult))
+			var cash_gain := roundf(float(capped_kicks) * reward_mult)
 			if is_instance_valid(StoryManager):
 				StoryManager.add_player_xp(xp_gain, "minigame_sipa")
 			var gm := get_tree().get_first_node_in_group("game_manager")
@@ -281,8 +282,9 @@ func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -
 	elif minigame_id == "talisman" and won:
 		var lvl := clampi(int(result.get("level", 1)), 1, 10)
 		var acc := int(result.get("accuracy", 0))
-		var xp_gain := 15 + lvl * 2
-		var cash_gain := float(15 + lvl * 2)
+		var base_val := 15 + lvl * 2
+		var xp_gain := int(roundf(float(base_val) * reward_mult))
+		var cash_gain := roundf(float(base_val) * reward_mult)
 		if is_instance_valid(StoryManager):
 			StoryManager.add_player_xp(xp_gain, "minigame_talisman")
 		var gm := get_tree().get_first_node_in_group("game_manager")
@@ -291,11 +293,13 @@ func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -
 			EventBus.money_changed.emit(gm.money)
 		EventBus.show_notification.emit("Anting-Anting Empowered!", "%d%% Accuracy  •  +₱%d  •  +%d XP" % [acc, int(cash_gain), xp_gain], "purchase")
 	elif won:
+		var xp_gain := int(roundf(15.0 * reward_mult))
+		var cash_gain := roundf(15.0 * reward_mult)
 		if is_instance_valid(StoryManager):
-			StoryManager.add_player_xp(15, "minigame_" + minigame_id)
+			StoryManager.add_player_xp(xp_gain, "minigame_" + minigame_id)
 		var gm := get_tree().get_first_node_in_group("game_manager")
 		if gm and "money" in gm:
-			gm.money += 15.0
+			gm.money += cash_gain
 			EventBus.money_changed.emit(gm.money)
-		EventBus.show_notification.emit("Minigame Victory!", "+₱15  •  +15 XP", "purchase")
+		EventBus.show_notification.emit("Minigame Victory!", "+₱%d  •  +%d XP" % [int(cash_gain), xp_gain], "purchase")
 	EventBus.minigame_completed.emit(minigame_id, won, result)

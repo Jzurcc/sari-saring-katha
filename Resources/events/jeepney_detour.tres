@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "jeepney_detour"
+event_name = "Jeepney Route Detour"
+description = "Main avenue traffic diverts past your kanto — heavier foot traffic, though Uncle Mario's deliveries take longer."
+rumor_text = "Beep-beep! Jeepneys are rerouting right past your counter today! Extra commuters grabbing cold drinks, yosi, and candy — deliveries might lag a bit."
+icon_path = "res://Assets/ui/icons/route.png"
+affected_categories = Array[String](["bottle", "cigarette", "candy"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.0
+tolerance_offset = 1
+foot_traffic_scale = 0.85
+delivery_cooldown_multiplier = 1.2
+roll_weight = 0.65

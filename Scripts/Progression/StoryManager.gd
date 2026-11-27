@@ -51,6 +51,7 @@ const LEDGER_MILESTONES: Array[Dictionary] = [
 	{"id": "reroll_1", "ratio": 0.15, "amount": 300.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
 	{"id": "daytime_mayari", "ratio": 0.30, "amount": 600.0, "title": "Daylight Audience", "desc": "Reyna Mayari can now visit and shop during the day like a regular neighbor."},
 	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 1000.0, "title": "Silver Favor", "desc": "Fair odds shift to 50% Favor / 50% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
+	{"id": "rare_moon_odds", "ratio": 0.66, "amount": 1320.0, "title": "Gilded Crescent", "desc": "+20% Increased Rarity on Reyna Mayari's nightly Moon Card draft."},
 	{"id": "twin_moons", "ratio": 0.75, "amount": 1500.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards per night (choose 1 or 2)."},
 	{"id": "sealed_ledger", "ratio": 1.00, "amount": 2000.0, "title": "Patron of the Moon", "desc": "Permanently seals the Silver Ledger."},
 ]
@@ -148,6 +149,17 @@ func get_nightly_reroll_count(paid_override: float = -1.0) -> int:
 func has_shifted_mayari_odds(paid_override: float = -1.0) -> bool:
 	return is_ledger_milestone_unlocked("shifted_odds_reroll_2", paid_override)
 
+func has_rare_moon_odds(paid_override: float = -1.0) -> bool:
+	return is_ledger_milestone_unlocked("rare_moon_odds", paid_override)
+
+func get_minigame_reward_multiplier() -> float:
+	var mult := 1.0
+	if has_mayari_card(MayariCardRegistry.CARD_LUCKY_WRIST):
+		mult *= 1.50
+	if has_mayari_card(MayariCardRegistry.CARD_SILENT_STORIES):
+		mult *= 1.60
+	return mult
+
 func get_max_mayari_card_picks(paid_override: float = -1.0) -> int:
 	return 2 if is_ledger_milestone_unlocked("twin_moons", paid_override) else 1
 
@@ -213,6 +225,25 @@ func get_item_sale_bonus(item: ItemData, base_sale: float, revealed_events_only:
 	if has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
 		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
 			bonus += calc_scaled_tip(base_sale, 0.12, 2.0, 15.0)
+	if has_mayari_card(MayariCardRegistry.CARD_SWIFT_CHILL):
+		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
+			bonus += calc_scaled_tip(base_sale, 0.08, 1.0, 12.0)
+	if has_mayari_card(MayariCardRegistry.CARD_FROSTBITTEN_COILS):
+		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
+			bonus += calc_scaled_tip(base_sale, 0.18, 2.0, 20.0)
+	if has_mayari_card(MayariCardRegistry.CARD_THIRSTY_NIGHT):
+		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
+			bonus += calc_scaled_tip(base_sale, 0.20, 2.0, 22.0)
+	if has_mayari_card(MayariCardRegistry.CARD_ALBULARYO_CHARM):
+		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
+			bonus += calc_scaled_tip(base_sale, 0.10, 1.0, 14.0)
+	if has_mayari_card(MayariCardRegistry.CARD_SLAMMING_DRAFT):
+		if (item.category == "bottle" or item.category == "frozen") and not is_fridge_warm:
+			bonus += calc_scaled_tip(base_sale, 0.10, 1.0, 14.0)
+	if has_mayari_card(MayariCardRegistry.CARD_COINS_IN_THE_JAR) and item.current_step <= 0:
+		bonus += calc_scaled_tip(base_sale, 0.12, 2.0, 16.0)
+	if has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
+		bonus += calc_scaled_tip(base_sale, 0.25, 3.0, 28.0)
 	if has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD) and item.current_step <= 1:
 		bonus += calc_scaled_tip(base_sale, 0.15, 3.0, 16.0)
 	if has_mayari_card(MayariCardRegistry.CARD_STATIC_AIRWAVES) and is_instance_valid(StoreEventManager):
@@ -243,12 +274,26 @@ func get_mayari_card_stack_count(card_id: String) -> int:
 func get_mayari_tolerance_offset() -> int:
 	var offset := 0
 	offset += get_mayari_card_stack_count(MayariCardRegistry.CARD_SILVER_TOLERANCE)
+	offset += get_mayari_card_stack_count(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE)
+	offset += get_mayari_card_stack_count(MayariCardRegistry.CARD_MAYARI_FULL_MOON)
+	if has_mayari_card(MayariCardRegistry.CARD_SHARP_BARGAINERS):
+		offset += 2
 	if has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
 		offset -= 1
 	if has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
 		offset -= 1
 	if has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
 		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS):
+		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_SOUR_CHANGE):
+		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF):
+		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+		offset -= 1
+	if has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
+		offset -= 2
 	return offset
 
 func get_restock_discount_multiplier() -> float:
@@ -257,6 +302,12 @@ func get_restock_discount_multiplier() -> float:
 		mult *= 0.85
 	if has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
 		mult *= 0.90
+	if has_mayari_card(MayariCardRegistry.CARD_EXPRESS_RESTOCK):
+		mult *= 0.92
+	if has_mayari_card(MayariCardRegistry.CARD_MOONLIT_BOUNTY):
+		mult *= 0.85
+	if has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF):
+		mult *= 0.85
 	if has_mayari_card(MayariCardRegistry.CARD_TIGHT_WHOLESALE):
 		mult *= 1.20
 	if is_instance_valid(StoreEventManager):
@@ -279,6 +330,14 @@ func get_foot_traffic_time_scale() -> float:
 		scale *= 0.75
 	if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP):
 		scale *= 0.85
+	if has_mayari_card(MayariCardRegistry.CARD_BRISK_COUNTER):
+		scale *= 0.75
+	if has_mayari_card(MayariCardRegistry.CARD_BRIGHT_AWNING):
+		scale *= 0.85
+	if has_mayari_card(MayariCardRegistry.CARD_THIRSTY_NIGHT):
+		scale *= 0.80
+	if has_mayari_card(MayariCardRegistry.CARD_BORROWED_HOUR):
+		scale *= 0.70
 	if is_instance_valid(StoreEventManager):
 		scale *= StoreEventManager.get_foot_traffic_time_scale()
 	return clampf(scale, 0.45, 1.35)
@@ -286,8 +345,12 @@ func get_foot_traffic_time_scale() -> float:
 func get_effective_closing_hour() -> float:
 	if has_mayari_card(MayariCardRegistry.CARD_MOON_HOLDS_SKY):
 		return 22.0
+	if has_mayari_card(MayariCardRegistry.CARD_MAYARI_FULL_MOON):
+		return 21.0
 	if has_mayari_card(MayariCardRegistry.CARD_EARLY_DUSK):
 		return 18.5
+	if has_mayari_card(MayariCardRegistry.CARD_BORROWED_HOUR):
+		return 19.0
 	return CLOSING_HOUR
 var customer_debts: Dictionary = {}
 var pending_debts: Array[Dictionary] = [] # [{ "customer_path": String, "amount": float }]
@@ -333,6 +396,16 @@ func get_xp_multiplier() -> float:
 		mult *= 1.35
 	if has_mayari_card(MayariCardRegistry.CARD_TIGHT_WHOLESALE):
 		mult *= 1.30
+	if has_mayari_card(MayariCardRegistry.CARD_CLEAR_SIGNAL):
+		mult *= 1.20
+	if has_mayari_card(MayariCardRegistry.CARD_GOLDEN_COUNTER):
+		mult *= 1.25
+	if has_mayari_card(MayariCardRegistry.CARD_RESTLESS_BENCH):
+		mult *= 1.30
+	if has_mayari_card(MayariCardRegistry.CARD_SLAMMING_DRAFT):
+		mult *= 1.30
+	if has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
+		mult *= 1.35
 	if has_mayari_card(MayariCardRegistry.CARD_FADING_MEMORY):
 		mult *= 0.65
 	if is_instance_valid(StoreEventManager):
@@ -414,6 +487,12 @@ func get_fridge_drain_rate() -> float:
 		rate *= 0.60
 	if has_mayari_card(MayariCardRegistry.CARD_WARM_TRADE_WINDS):
 		rate *= 1.60
+	if has_mayari_card(MayariCardRegistry.CARD_THIRSTY_NIGHT):
+		rate *= 1.45
+	if has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+		rate *= 1.30
+	if has_mayari_card(MayariCardRegistry.CARD_ALBULARYO_CHARM):
+		rate *= 0.60
 	if is_instance_valid(StoreEventManager):
 		rate *= StoreEventManager.get_fridge_drain_multiplier()
 	return rate
@@ -423,6 +502,12 @@ func get_fridge_regen_rate() -> float:
 	var rate := 100.0 / float(FRIDGE_UPGRADE_SPECS[lvl]["regen_sec"])
 	if has_mayari_card(MayariCardRegistry.CARD_FROST_OF_BIRINGAN):
 		rate *= 1.40
+	if has_mayari_card(MayariCardRegistry.CARD_SWIFT_CHILL):
+		rate *= 1.50
+	if has_mayari_card(MayariCardRegistry.CARD_ALBULARYO_CHARM):
+		rate *= 1.40
+	if has_mayari_card(MayariCardRegistry.CARD_FROSTBITTEN_COILS):
+		rate *= 0.65
 	return rate
 
 func get_fridge_upgrade_item(level: int) -> ItemData:
@@ -469,14 +554,14 @@ var cat_upgrade_level: int = 0
 var _cat_upgrade_item_cache: Dictionary = {}
 
 func get_max_counter_slots() -> int:
-	var bonus := 1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0
+	var bonus := (1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0) + (1 if has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE) else 0)
 	if is_instance_valid(StoreEventManager):
 		bonus += StoreEventManager.get_extra_counter_slots()
 	return clampi(1 + cat_upgrade_level + bonus, 1, 3)
 
 ## Extra counter slots beyond the 3-slot cap convert into +10% Foot Traffic each instead of going to waste.
 func get_overflow_counter_slots() -> int:
-	var bonus := 1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0
+	var bonus := (1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0) + (1 if has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE) else 0)
 	if is_instance_valid(StoreEventManager):
 		bonus += StoreEventManager.get_extra_counter_slots()
 	return maxi(0, (1 + cat_upgrade_level + bonus) - 3)
@@ -1003,9 +1088,15 @@ func get_bench_linger_chance() -> float:
 	var ch := float(get_bench_spec()["linger_chance"])
 	if has_mayari_card(MayariCardRegistry.CARD_TAMBAYAN_WARMTH):
 		ch += 0.25
+	if has_mayari_card(MayariCardRegistry.CARD_MERIENDA_BENCH):
+		ch += 0.20
+	if has_mayari_card(MayariCardRegistry.CARD_BRISK_COUNTER):
+		ch -= 0.35
+	if has_mayari_card(MayariCardRegistry.CARD_RESTLESS_BENCH):
+		ch -= 0.25
 	if is_instance_valid(StoreEventManager):
 		ch += StoreEventManager.get_linger_chance_bonus()
-	return minf(0.95, ch)
+	return clampf(ch, 0.0, 0.95)
 
 func get_bench_max_lingering() -> int:
 	var mx := int(get_bench_spec()["max_lingering"])
@@ -1096,6 +1187,14 @@ func get_storefront_tip_chance() -> float:
 	var lvl := clampi(storefront_upgrade_level, 0, STOREFRONT_UPGRADE_SPECS.size() - 1)
 	var ch := float(STOREFRONT_UPGRADE_SPECS[lvl]["tip_chance"])
 	if has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW):
+		ch += 0.15
+	if has_mayari_card(MayariCardRegistry.CARD_LUCKY_WRIST):
+		ch += 0.20
+	if has_mayari_card(MayariCardRegistry.CARD_BRIGHT_AWNING):
+		ch += 0.12
+	if has_mayari_card(MayariCardRegistry.CARD_GOLDEN_COUNTER):
+		ch += 0.20
+	if has_mayari_card(MayariCardRegistry.CARD_COINS_IN_THE_JAR):
 		ch += 0.15
 	return clampf(ch, 0.0, 0.90)
 
@@ -1654,13 +1753,10 @@ func process_pending_unlock() -> void:
 	_save_progression()
 
 func _save_progression() -> void:
-	if not _save_requested:
-		_save_requested = true
-		call_deferred("_flush_save")
-
-func _flush_save() -> void:
-	_save_requested = false
-	SaveManager.force_save()
+	# Mark dirty instead of hammering disk on every XP tick / encounter.
+	# Actual disk writes happen cleanly at smart checkpoints (Day Start, Day End, Tier Up, Manual Save, Quit).
+	if is_instance_valid(SaveManager) and SaveManager.has_method("mark_dirty"):
+		SaveManager.mark_dirty()
 
 # ── Persistence ──────────────────────────────────────────────────────────
 ## Persistence ID
@@ -2222,13 +2318,14 @@ func _on_customer_satisfied(customer) -> void:
 					customer.set_meta("full_basket_rep_awarded", true)
 					if customer.customer_data and is_instance_valid(CharacterProgressionManager):
 						CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, 4, "full_basket")
-				# Picky Cravings Omen upside: +18% Bundle Bonus when completing a full 2+ multi-item cash order!
-				if has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS) and not ctx_done.wants_debt and ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
+				# Full 2+ multi-item cash order bundle bonuses (Picky Cravings +18%, Silver Bell Counter +20%)
+				var bundle_pct := (0.18 if has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS) else 0.0) + (0.20 if has_mayari_card(MayariCardRegistry.CARD_SILVER_BELL_COUNTER) else 0.0)
+				if bundle_pct > 0.0 and not ctx_done.wants_debt and ctx_done.delivered_items.size() >= 2 and ctx_done.delivered_items.size() >= ctx_done.desired_items.size():
 					var basket_total := 0.0
 					for dit in ctx_done.delivered_items:
 						if dit:
 							basket_total += dit.get_final_price()
-					var bundle_bonus := calc_scaled_tip(basket_total, 0.18, 5.0, 25.0)
+					var bundle_bonus := calc_scaled_tip(basket_total, bundle_pct, 5.0, 35.0)
 					if bundle_bonus > 0.0 and is_instance_valid(_game_manager):
 						_game_manager.money += bundle_bonus
 						EventBus.money_changed.emit(_game_manager.money)

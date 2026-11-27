@@ -196,7 +196,15 @@ static func build_transaction_context(
 		transaction.transaction_type = TransactionContext.Type.STORY
 		transaction.timeline = data.story_timeline
 	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0:
-		if randf() < STORY_ROLL_CHANCE:
+		var effective_story_chance: float = STORY_ROLL_CHANCE
+		if sm.has_mayari_card(MayariCardRegistry.CARD_OPEN_EARS):
+			effective_story_chance += 0.25
+		if sm.has_mayari_card(MayariCardRegistry.CARD_SLOW_DIAL):
+			effective_story_chance += 0.25
+		if sm.has_mayari_card(MayariCardRegistry.CARD_SILENT_STORIES):
+			effective_story_chance -= 0.30
+		effective_story_chance = clampf(effective_story_chance, 0.05, 0.95)
+		if randf() < effective_story_chance:
 			transaction.transaction_type = TransactionContext.Type.STORY
 			transaction.timeline = data.story_timeline
 		else:
@@ -231,9 +239,13 @@ static func build_transaction_context(
 			if transaction.transaction_type == TransactionContext.Type.PURCHASE:
 				if sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS) or sm.has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS):
 					target_item_count = maxi(target_item_count, randi_range(2, 3))
-				elif is_instance_valid(StoreEventManager):
-					var ev_multi_bonus := StoreEventManager.get_multi_item_chance_bonus()
-					if ev_multi_bonus > 0.0 and randf() < ev_multi_bonus:
+				else:
+					var multi_bonus: float = (StoreEventManager.get_multi_item_chance_bonus() if is_instance_valid(StoreEventManager) else 0.0)
+					if sm.has_mayari_card(MayariCardRegistry.CARD_SILVER_BELL_COUNTER):
+						multi_bonus += 0.25
+					if sm.has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+						multi_bonus += 0.25
+					if multi_bonus > 0.0 and randf() < multi_bonus:
 						target_item_count = maxi(target_item_count, randi_range(2, 3))
 
 			# Build general store pool (always filtering out excluded categories)
@@ -457,11 +469,19 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 
 	# Utang (Debt)
 	if transaction.transaction_type == TransactionContext.Type.PURCHASE and transaction.customer_data.can_request_utang():
-		transaction.wants_debt = randf() < transaction.customer_data.get_utang_chance()
+		var utang_chance: float = transaction.customer_data.get_utang_chance()
+		if sm.has_mayari_card(MayariCardRegistry.CARD_LOOSE_TAB):
+			utang_chance = clampf(utang_chance + 0.25, 0.0, 0.95)
+		transaction.wants_debt = randf() < utang_chance
 
 	# Repayment
 	var current_debt: float = sm.customer_debts.get(transaction.customer_data.resource_path, 0.0)
 	var repay_chance: float = transaction.customer_data.get_repayment_chance() if transaction.customer_data else REPAYMENT_CHANCE
+	if sm.has_mayari_card(MayariCardRegistry.CARD_HONORED_LISTA):
+		repay_chance += 0.30
+	if sm.has_mayari_card(MayariCardRegistry.CARD_OVERDUE_LISTA):
+		repay_chance -= 0.25
+	repay_chance = clampf(repay_chance, 0.05, 1.0)
 	if current_debt > 0 and randf() < repay_chance:
 		transaction.is_repaying = true
 		transaction.repayment_amount = current_debt
@@ -531,6 +551,14 @@ static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -
 	var target_item_count: int = OrderItemPicker.item_count_for_tier(sm.current_tier)
 	if sm.has_mayari_card(MayariCardRegistry.CARD_GENEROUS_BASKETS) or sm.has_mayari_card(MayariCardRegistry.CARD_PICKY_CRAVINGS):
 		target_item_count = maxi(target_item_count, randi_range(2, 3))
+	else:
+		var multi_bonus: float = (StoreEventManager.get_multi_item_chance_bonus() if is_instance_valid(StoreEventManager) else 0.0)
+		if sm.has_mayari_card(MayariCardRegistry.CARD_SILVER_BELL_COUNTER):
+			multi_bonus += 0.25
+		if sm.has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+			multi_bonus += 0.25
+		if multi_bonus > 0.0 and randf() < multi_bonus:
+			target_item_count = maxi(target_item_count, randi_range(2, 3))
 
 	var pool: Array[ItemData] = []
 	for item in InventoryManager.get_items_available_on_display():

@@ -326,7 +326,13 @@ func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node
 	if is_instance_valid(StoryManager):
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
 			_max_patience += 1
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS):
+			_max_patience += 1
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
+			_max_patience = maxi(2, _max_patience - 1)
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SHARP_BARGAINERS):
+			_max_patience = maxi(2, _max_patience - 1)
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF):
 			_max_patience = maxi(2, _max_patience - 1)
 	_patience = _max_patience
 

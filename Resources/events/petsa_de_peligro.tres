@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "petsa_de_peligro"
+event_name = "Petsa de Peligro"
+description = "Payday is still days away — neighbors pinch every peso and walk past the counter more cautiously."
+rumor_text = "Aray ko, petsa de peligro na naman! Wallets are thin across Karimlan today — slower foot traffic and zero patience for steep markups."
+icon_path = "res://Assets/ui/icons/percent.png"
+affected_categories = Array[String]([])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.0
+tolerance_offset = 0
+foot_traffic_scale = 1.15
+global_tolerance_offset = -1
+roll_weight = 1.0

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "aswang_curfew_rumor"
+event_name = "Tiktik Curfew Whisper"
+description = "Uneasy whispers of wings over the rooftops thin out the street, empty the bench, and make shoppers impatient."
+rumor_text = "Psst... folks swear they heard a tiktik near the creek last night. Streets are quiet, nobody's hanging out, and shoppers are tense on prices."
+icon_path = "res://Assets/ui/icons/ghost.png"
+affected_categories = Array[String]([])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.0
+tolerance_offset = 0
+foot_traffic_scale = 1.25
+linger_chance_bonus = -0.35
+global_tolerance_offset = -1
+roll_weight = 0.45

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "balikbayan_box_day"
+event_name = "Balikbayan Box Day"
+description = "A neighbor's balikbayan relative is treating the whole street — big baskets and generous change all day."
+rumor_text = "Aba, may umuwing balikbayan sa kabilang kanto! Everybody's buying extra frozen ulam, canned goods, and packs for the salu-salo!"
+icon_path = "res://Assets/ui/icons/gift.png"
+affected_categories = Array[String](["frozen", "can", "pack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.2
+tolerance_offset = 2
+multi_item_chance_bonus = 0.25
+tip_bonus_pct = 0.08
+roll_weight = 0.45

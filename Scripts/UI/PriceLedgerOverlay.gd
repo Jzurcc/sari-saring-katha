@@ -699,6 +699,10 @@ func _collect_global_effect_cards() -> Array[Dictionary]:
 			]})
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
 			out.append({"title": "Silver Tolerance", "stats": [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE):
+			out.append({"title": "Silver Ledger Grace", "stats": [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SHARP_BARGAINERS):
+			out.append({"title": "Sharp Bargainers", "stats": [{"label": "Price Tolerance:", "value": "+2", "tone": "pos"}]})
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
 			out.append({"title": "Eerie Mist Rush", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
@@ -707,6 +711,21 @@ func _collect_global_effect_cards() -> Array[Dictionary]:
 			out.append({"title": "Restless Crowd", "stats": [
 				{"label": "Price Tolerance:", "value": "-1", "tone": "neg"},
 				{"label": "Sale Bonus (≤ +1):", "value": "+15%", "tone": "pos"},
+			]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS):
+			out.append({"title": "Stubborn Hagglers", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MAYARI_FULL_MOON):
+			out.append({"title": "Blessing of the Full Moon", "stats": [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SOUR_CHANGE):
+			out.append({"title": "Sour Change", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF):
+			out.append({"title": "Duwende Mischief", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+			out.append({"title": "Phantom Queue", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
+			out.append({"title": "Blood Moon Bargain", "stats": [
+				{"label": "Price Tolerance:", "value": "-2", "tone": "neg"},
+				{"label": "All Cash Sales:", "value": "+25%", "tone": "pos"},
 			]})
 		if StoryManager.is_fridge_warm:
 			out.append({"title": "Warm Fridge", "stats": [{"label": "Cold Item Value:", "value": "-20%", "tone": "neg"}]})
@@ -747,6 +766,10 @@ func _collect_item_effect_cards(item: ItemData) -> Array[Dictionary]:
 
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOLERANCE):
 			out.append({"title": "Silver Tolerance", "stats": [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_LEDGER_GRACE):
+			out.append({"title": "Silver Ledger Grace", "stats": [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SHARP_BARGAINERS):
+			out.append({"title": "Sharp Bargainers", "stats": [{"label": "Price Tolerance:", "value": "+2", "tone": "pos"}]})
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
 			out.append({"title": "Eerie Mist Rush", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
@@ -755,6 +778,21 @@ func _collect_item_effect_cards(item: ItemData) -> Array[Dictionary]:
 			out.append({"title": "Restless Crowd", "stats": [
 				{"label": "Price Tolerance:", "value": "-1", "tone": "neg"},
 				{"label": "Sale Bonus (≤ +1):", "value": "+15%", "tone": "pos"},
+			]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS):
+			out.append({"title": "Stubborn Hagglers", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_MAYARI_FULL_MOON):
+			out.append({"title": "Blessing of the Full Moon", "stats": [{"label": "Price Tolerance:", "value": "+1", "tone": "pos"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_SOUR_CHANGE):
+			out.append({"title": "Sour Change", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DUWENDE_MISCHIEF):
+			out.append({"title": "Duwende Mischief", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_PHANTOM_QUEUE):
+			out.append({"title": "Phantom Queue", "stats": [{"label": "Price Tolerance:", "value": "-1", "tone": "neg"}]})
+		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
+			out.append({"title": "Blood Moon Bargain", "stats": [
+				{"label": "Price Tolerance:", "value": "-2", "tone": "neg"},
+				{"label": "All Cash Sales:", "value": "+25%", "tone": "pos"},
 			]})
 		if item.type == ItemData.ItemType.FRIDGE and StoryManager.is_fridge_warm:
 			out.append({"title": "Warm Fridge", "stats": [{"label": "Sale Value:", "value": "-20%", "tone": "neg"}]})
@@ -766,16 +804,7 @@ func _get_effective_item_tolerance(item: ItemData) -> int:
 	if is_instance_valid(StoreEventManager):
 		tol += StoreEventManager.get_item_tolerance_offset(item)
 	if is_instance_valid(StoryManager):
-		if StoryManager.active_mayari_card == MayariCardRegistry.CARD_SILVER_TOLERANCE or (MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_mayari_cards):
-			tol += 1
-		if MayariCardRegistry.CARD_SILVER_TOLERANCE in StoryManager.active_blessing_cards:
-			tol += 1
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_EERIE_MIST_RUSH):
-			tol -= 1
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
-			tol -= 1
-		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-			tol -= 1
+		tol += StoryManager.get_mayari_tolerance_offset()
 	return tol
 
 

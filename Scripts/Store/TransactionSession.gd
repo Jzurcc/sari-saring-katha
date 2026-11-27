@@ -382,11 +382,21 @@ func _start_haggle_or_refusal(
 	if is_instance_valid(StoryManager):
 		var has_unrushed := StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR)
 		var has_restless := StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD)
+		var has_stubborn := StoryManager.has_mayari_card(MayariCardRegistry.CARD_STUBBORN_HAGGLERS)
+		var has_chorus := StoryManager.has_mayari_card(MayariCardRegistry.CARD_BARGAIN_CHORUS)
 		if has_unrushed:
 			haggle_chance += 0.25
+		if has_chorus:
+			haggle_chance += 0.25
+		if has_stubborn:
+			haggle_chance += 0.35
 		if has_restless:
 			haggle_chance -= 0.25
-		if has_unrushed and not has_restless:
+		if has_stubborn:
+			modifier_label = "Stubborn Hagglers"
+		elif has_chorus:
+			modifier_label = "Bargain Chorus"
+		elif has_unrushed and not has_restless:
 			modifier_label = "Unrushed Hour"
 		elif has_restless and not has_unrushed:
 			modifier_label = "Restless Crowd"
@@ -414,6 +424,13 @@ func _start_haggle_or_refusal(
 				if not is_instance_valid(customer) or not is_instance_valid(item) or item.item_data == null:
 					return
 				if accepted:
+					if is_instance_valid(StoryManager) and StoryManager.has_mayari_card(MayariCardRegistry.CARD_BARGAIN_CHORUS):
+						var gm := _tree_owner.get_tree().get_first_node_in_group("game_manager")
+						if gm and "money" in gm:
+							gm.money += 15.0
+							EventBus.money_changed.emit(gm.money)
+							StoryManager.record_daily_stat_add("tips_earned", 15.0)
+							EventBus.show_notification.emit("Bargain Chorus!", "+₱15 Haggle Win Bonus!", "purchase")
 					var saved_step := item.item_data.current_step
 					var saved_selling_price := item.item_data.selling_price
 					item.item_data.current_step = offered_step

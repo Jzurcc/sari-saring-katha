@@ -512,6 +512,7 @@ var _max_rerolls: int = 0
 var _max_card_picks: int = 1
 var _selected_indices: Array[int] = []
 var _confirmed_shifted_odds: bool = false
+var _confirmed_rare_odds: bool = false
 var _reroll_btn: Button
 var _omens_only_btn: Button
 var _omens_only: bool = false
@@ -1264,6 +1265,7 @@ func _launch_hades_card_flip() -> void:
 	_phase = 2
 	var projected_paid := minf(_goal, _total_paid + _confirmed_offer)
 	_confirmed_shifted_odds = StoryManager.has_shifted_mayari_odds(projected_paid)
+	_confirmed_rare_odds = StoryManager.has_rare_moon_odds(projected_paid)
 	_rerolls_left = StoryManager.get_nightly_reroll_count(projected_paid)
 	_max_rerolls = _rerolls_left
 	_max_card_picks = StoryManager.get_max_mayari_card_picks(projected_paid)
@@ -1273,7 +1275,8 @@ func _launch_hades_card_flip() -> void:
 	_omens_only = false
 	if is_instance_valid(_omens_only_btn):
 		_omens_only_btn.set_pressed_no_signal(false)
-	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+	var rarity_boost: float = 0.20 if _confirmed_rare_odds else 0.0
+	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds, rarity_boost)
 	_card_rows.clear()
 	_card_picked = false
 	_hovered_idx = -1
@@ -1432,6 +1435,26 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	sel_pill.add_child(sel_lbl)
 	top_line.add_child(sel_pill)
 	card.set_meta("sel_pill", sel_pill)
+
+	var rarity_id: String = MayariCardRegistry.get_card_rarity(str(c_data.get("id", "")))
+	var rarity_col: Color = MayariCardRegistry.get_rarity_color(rarity_id)
+	var rp_lbl := Label.new()
+	rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity_id)
+	rp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rp_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	rp_lbl.add_theme_font_size_override("font_size", 16)
+	rp_lbl.add_theme_color_override("font_color", rarity_col)
+	rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(rp_lbl)
+
+	var dot_lbl := Label.new()
+	dot_lbl.text = "·"
+	dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	dot_lbl.add_theme_font_size_override("font_size", 16)
+	dot_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(dot_lbl)
 
 	var rarity_lbl := Label.new()
 	rarity_lbl.text = "Favor" if is_fav else "Omen"
@@ -1834,10 +1857,11 @@ func _on_reroll_pressed() -> void:
 		return
 	_rerolls_left -= 1
 	var fresh_cards: Array[Dictionary]
+	var rarity_boost: float = 0.20 if _confirmed_rare_odds else 0.0
 	if _omens_only:
-		fresh_cards = MayariCardRegistry.draw_three_cards("include_omens", false)
+		fresh_cards = MayariCardRegistry.draw_three_cards("include_omens", false, rarity_boost)
 	else:
-		fresh_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds)
+		fresh_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds, rarity_boost)
 	_swap_draft_cards(fresh_cards)
 
 
