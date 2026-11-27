@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "duwende_lucky_breeze"
+event_name = "Punso Good-Luck Charm"
+description = "A sweet mound offering lifts neighborhood spirits, tips, and goodwill."
+rumor_text = "Somebody left sweets by the mango mound! Old duwende luck is drifting down the lane, lifting tips, goodwill XP, and sweet cravings."
+icon_path = "res://Assets/ui/icons/sparkles.png"
+affected_categories = Array[String](["candy", "snack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.9
+tolerance_offset = 1
+tip_bonus_pct = 0.08
+xp_multiplier = 1.15
+roll_weight = 0.65

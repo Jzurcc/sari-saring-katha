@@ -6,11 +6,12 @@
 script = ExtResource("1_script")
 event_id = "barangay_liga"
 event_name = "Barangay Basketball Finals"
-description = "Championship day at the covered court brings thirsty fans."
-rumor_text = "Uy, boss. Covered court is packed today. Championship match of the barangay league. Whole neighborhood's gonna be parched and looking for cold drinks and snacks after the buzzer."
+description = "Championship match at the covered court packs your counter with thirsty fans."
+rumor_text = "Covered court is roaring for the league finals! Parched fans are crowding the counter for cold bottles and snacks."
 icon_path = "res://Assets/ui/icons/trophy.png"
-affected_categories = Array[String](["snack", "bottle"])
+affected_categories = Array[String](["bottle", "snack"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
-demand_multiplier = 2.5
+demand_multiplier = 2.3
 tolerance_offset = 2
-foot_traffic_scale = 0.85
+extra_counter_slots = 1
+tip_bonus_pct = 0.06

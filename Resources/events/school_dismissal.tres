@@ -6,11 +6,11 @@
 script = ExtResource("1_script")
 event_id = "school_dismissal"
 event_name = "School Dismissal Rush"
-description = "Early dismissal sends students flocking for snacks and sweets."
-rumor_text = "Heads up, boss! Karimlan Elementary let the kids out early today. A wave of students is heading down your street looking for candy, snacks, and cold treats."
+description = "Early dismissal sends students flocking for candy, snacks, and cold drinks."
+rumor_text = "Karimlan Elementary just rang the early bell! A fast wave of kids is sprinting over for candy, snacks, and cold drinks."
 icon_path = "res://Assets/ui/icons/backpack.png"
-affected_categories = Array[String](["candy", "snack", "frozen"])
+affected_categories = Array[String](["candy", "snack", "bottle"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
-demand_multiplier = 2.5
-tolerance_offset = 2
+demand_multiplier = 2.4
+tolerance_offset = 1
 foot_traffic_scale = 0.85

@@ -6,12 +6,12 @@
 script = ExtResource("1_script")
 event_id = "videoke_night"
 event_name = "Street Videoke & Tambay"
-description = "Street videoke keeps neighbors lingering, snacking, and tipping late."
-rumor_text = "Can you hear 'My Way' echoing down the alley, boss? Someone rented a videoke machine! Neighbors are gonna hang out longer, tip extra, and keep coming back for drinks, pulutan snacks, and smokes."
+description = "Alley videoke keeps neighbors lingering, snacking, and tipping well."
+rumor_text = "Someone rented a videoke machine down the alley! Folks are lingering longer and tipping nicely for cold bottles, snacks, and smokes."
 icon_path = "res://Assets/ui/icons/mic-vocal.png"
 affected_categories = Array[String](["bottle", "cigarette", "snack"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
-demand_multiplier = 2.2
+demand_multiplier = 2.1
 tolerance_offset = 1
-tip_bonus_pct = 0.12
+tip_bonus_pct = 0.10
 linger_chance_bonus = 0.25

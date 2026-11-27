@@ -6,11 +6,11 @@
 script = ExtResource("1_script")
 event_id = "merienda_hour"
 event_name = "Merienda Craze"
-description = "Everyone is craving afternoon merienda bundles today."
-rumor_text = "Smells like hot water and noodles all over the block, boss. Folks are in a merienda mood today—expect plenty of combo orders for coffee sachets, snacks, and pancit packs."
+description = "Neighbors are craving warm merienda combos across the block."
+rumor_text = "Smells like hot water and instant noodles down the block! Expect combo orders for coffee sachets, snacks, and packs."
 icon_path = "res://Assets/ui/icons/coffee.png"
 affected_categories = Array[String](["sachet", "snack", "pack"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
-demand_multiplier = 2.2
-tolerance_offset = 2
-multi_item_chance_bonus = 0.20
+demand_multiplier = 2.1
+tolerance_offset = 1
+multi_item_chance_bonus = 0.18

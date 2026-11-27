@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "tikbalang_sunshower"
+event_name = "Tikbalang Sunshower"
+description = "Rain under bright sun brings cozy awning chats, coffee, and noodles."
+rumor_text = "Rain falling under bright sun, mga suki! Elders say a tikbalang is getting married. Expect cozy chats, coffee sachets, and noodles."
+icon_path = "res://Assets/ui/icons/sun-medium.png"
+affected_categories = Array[String](["sachet", "pack"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 2.0
+tolerance_offset = 1
+xp_multiplier = 1.15
+linger_chance_bonus = 0.20
+roll_weight = 0.65

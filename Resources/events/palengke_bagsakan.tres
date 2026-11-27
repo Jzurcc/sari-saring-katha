@@ -6,12 +6,13 @@
 script = ExtResource("1_script")
 event_id = "palengke_bagsakan"
 event_name = "Palengke Bagsakan"
-description = "Fresh market trucks roll in with steep wholesale deals."
-rumor_text = "Good news from the public market, boss! Wholesale trucks just dropped off a huge shipment at the bagsakan. Uncle Mario's cutting restock prices and running faster trips all day!"
+description = "Fresh market trucks roll in with wholesale restock savings."
+rumor_text = "Wholesale trucks just unloaded at the palengke! Uncle Mario is running cheaper, quicker restock trips all round."
 icon_path = "res://Assets/ui/icons/truck.png"
 affected_categories = Array[String]([])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
 demand_multiplier = 1.0
 tolerance_offset = 0
-restock_cost_multiplier = 0.85
-delivery_cooldown_multiplier = 0.75
+restock_cost_multiplier = 0.88
+delivery_cooldown_multiplier = 0.80
+roll_weight = 0.65

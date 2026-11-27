@@ -5,13 +5,14 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "typhoon_warning"
-event_name = "Typhoon Warning"
-description = "A storm is coming—neighbors stock up on rations as roads slow."
-rumor_text = "Psst. Boss. Heavy clouds rolling in over the hills. Word from the terminal is Signal No. 1 tonight. Folks are grabbing multi-item bundles of canned goods, noodles, and coffee before the rain hits."
+event_name = "Signal No. 1 Advisory"
+description = "Storm clouds slow deliveries while households bundle pantry staples."
+rumor_text = "Dark clouds over the hills, mga kapitbahay! Mario's deliveries run slower while households bundle canned goods, frozen ulam, and packs."
 icon_path = "res://Assets/ui/icons/cloud-rain.png"
-affected_categories = Array[String](["can", "sachet", "pack"])
+affected_categories = Array[String](["can", "frozen", "pack"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
-demand_multiplier = 2.5
+demand_multiplier = 2.3
 tolerance_offset = 2
-multi_item_chance_bonus = 0.25
-delivery_cooldown_multiplier = 1.25
+multi_item_chance_bonus = 0.20
+delivery_cooldown_multiplier = 1.20
+roll_weight = 0.65

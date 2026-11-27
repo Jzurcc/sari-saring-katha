@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "albularyo_porch_line"
+event_name = "Creekside Herb Brew"
+description = "Neighbors waiting near Tatay's herb porch pack your counter for comfort staples."
+rumor_text = "Warm scent of boiled lagundi drifting up from the creek porch! Folks waiting their turn are crowding your counter for tins, frozen ulam, and cold bottles."
+icon_path = "res://Assets/ui/icons/flame.png"
+affected_categories = Array[String](["can", "frozen", "bottle"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.9
+tolerance_offset = 1
+multi_item_chance_bonus = 0.15
+extra_counter_slots = 1

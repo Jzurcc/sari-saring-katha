@@ -5,13 +5,13 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "barangay_health_drive"
-event_name = "Barangay Clean-Up Drive"
+event_name = "Bayanihan Clean-Up"
 description = "Volunteers tidy Karimlan, lifting community spirit and goodwill."
-rumor_text = "Volunteers are out with walis tingting across Karimlan today, boss! Supporting the barangay clean-up earns you extra goodwill XP, plus a small discount from local suppliers."
-icon_path = "res://Assets/ui/icons/heart-pulse.png"
+rumor_text = "Volunteers are out sweeping with walis tingting! Great goodwill XP, a tiny supplier break, and thirsty sweepers."
+icon_path = "res://Assets/ui/icons/heart-handshake.png"
 affected_categories = Array[String](["bottle", "sachet"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
 demand_multiplier = 1.8
 tolerance_offset = 1
-xp_multiplier = 1.25
-restock_cost_multiplier = 0.90
+xp_multiplier = 1.20
+restock_cost_multiplier = 0.92

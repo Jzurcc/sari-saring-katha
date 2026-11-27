@@ -5,12 +5,13 @@
 [resource]
 script = ExtResource("1_script")
 event_id = "brownout_notice"
-event_name = "Scheduled Power Outage"
-description = "Line maintenance strains your fridge while neighbors stock up."
-rumor_text = "Psst. Boss. Overheard the linemen by the main road. Power's getting cut tonight for line repairs. Expect folks looking for canned food and smokes before it gets dark—and watch your fridge!"
+event_name = "Scheduled Brownout"
+description = "Line maintenance strains your cooler while neighbors bundle pantry staples."
+rumor_text = "Linemen are cutting power for repairs soon! Watch your cooler while folks bundle up canned food, noodles, and smokes."
 icon_path = "res://Assets/ui/icons/zap.png"
-affected_categories = Array[String](["can", "cigarette"])
+affected_categories = Array[String](["can", "pack", "cigarette"])
 affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
 demand_multiplier = 2.0
 tolerance_offset = 2
-fridge_drain_multiplier = 1.30
+multi_item_chance_bonus = 0.15
+fridge_drain_multiplier = 1.25

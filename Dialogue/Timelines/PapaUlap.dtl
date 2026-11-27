@@ -1,31 +1,36 @@
+# Papa Ulap - 88.7 Radyo Karimlan (Tawong Lipod Wind-Engkanto FM DJ)
+# Voice: Warm, musical, snappy Filipino community FM DJ broadcasting from above the mango canopy.
+# Syncs: 2-phase daily schedule (before_noon / after_noon) + live {Global_RadioTimeCheck} + folklore trivia + commercials + world news.
+# Rules: Zero em-dashes. Zero ellipses. Zero [pause] tags. Zero [b] tags. Zero faded blue color walls.
+
 label EventBroadcast
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: Magandang araw, mga suki sa hangin! This is Papa Ulap on 88.7 Radyo Karimlan!
+	PapaUlap: Timecheck on 88.7 Radyo Karimlan, {Global_RadioTimeCheck}! Fresh barangay bulletin riding the wind!
 elif {Variation} == 2.0:
-	PapaUlap: Coming to you live from somewhere above the mango trees — Papa Ulap with a fresh barangay bulletin!
+	PapaUlap: Turn that dial up, mga kapitbahay! {Global_RadioTimeCheck} news flash straight from above the roofs!
 else:
-	PapaUlap: Turn that dial up, boss! The wind just whispered something big into my mic.
-PapaUlap: {Global_RadioEventName} — {Global_EventRumorText}
+	PapaUlap: Papa Ulap breaking in at {Global_RadioTimeCheck} with a live street advisory!
+PapaUlap: {Global_RadioEventName}! {Global_EventRumorText}
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: [color=#6C8FA6]Stock up smart and mind your prices, 'no? Keep it breezy out there![/color]
+	PapaUlap: Stock smart and mind your tags, suki! Keep it breezy behind that counter!
 elif {Variation} == 2.0:
-	PapaUlap: [color=#6C8FA6]You heard it first on the breeze! Stay cool behind that counter, suki.[/color]
+	PapaUlap: You heard it first on 88.7! Stay sharp and keep your coin jar ready!
 else:
-	PapaUlap: [color=#6C8FA6]That's the word riding the wind today. Tune back in anytime![/color]
+	PapaUlap: That is the word on the wind, mga ka-tindahan! Back to the music!
 [signal arg="radio_event_revealed"]
 [end_timeline]
 
 label VisitorBroadcast
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: Quick street report from above the rooftops! Just spotted {Global_RadioVisitorName} heading toward your store today.
+	PapaUlap: 88.7 Street Watch at {Global_RadioTimeCheck}! Just spotted {Global_RadioVisitorName} heading your way!
 elif {Variation} == 2.0:
-	PapaUlap: Heads up, suki! The breeze says {Global_RadioVisitorName} is planning a stop by your counter today.
+	PapaUlap: Heads up from the clouds, suki! {Global_RadioVisitorName} is walking down your lane!
 else:
-	PapaUlap: Street watch on 88.7 Radyo Karimlan — {Global_RadioVisitorName} was just seen walking down your lane!
-PapaUlap: [color=#6C8FA6]{Global_RadioVisitorHint}[/color]
+	PapaUlap: Rooftop radar on 88.7 Radyo Karimlan! Looks like {Global_RadioVisitorName} is stopping by!
+PapaUlap: {Global_RadioVisitorHint}
 [signal arg="radio_visitor_revealed"]
 [end_timeline]
 
@@ -33,46 +38,123 @@ label Chatter
 if {Global_RadioEclipse}:
 	set {Variation} = range(1,4).pick_random()
 	if {Variation} == 1.0:
-		PapaUlap: Strange hush over Karimlan today, suki. Even the wind is holding its breath under the eclipse.
-		PapaUlap: [color=#6C8FA6]No big market rushes on the airwaves today — just quiet skies and soft wind.[/color]
+		PapaUlap: {Global_RadioTimeCheck} under a quiet eclipse, mga kapitbahay. Even the wind is whispering up here.
+		PapaUlap: Zero market rushes on the radar. Just soft static and steady shelves!
 	elif {Variation} == 2.0:
-		PapaUlap: Papa Ulap here, drifting through a weirdly calm sky. Not a single neighborhood rumor blowing past my tower today.
-		PapaUlap: [color=#6C8FA6]Take it easy behind the counter while the moon keeps things hush-hush, ha?[/color]
+		PapaUlap: Papa Ulap checking in at {Global_RadioTimeCheck}. Strange hush over every roof in Karimlan!
+		PapaUlap: Take it easy behind the counter while the moon keeps the street quiet, suki.
 	else:
-		PapaUlap: Testing, testing... anybody down there? The eclipse has the whole barangay moving like a whisper today.
-		PapaUlap: [color=#6C8FA6]No special events on the radar — just you, me, and the breeze.[/color]
+		PapaUlap: Testing, one, two! Signal is crystal clear at {Global_RadioTimeCheck}, though the road below is hushed.
+		PapaUlap: No big bulletins riding the breeze. Just you, me, and the hum of your cooler!
 	[end_timeline]
-set {Variation} = range(1,9).pick_random()
+
+set {Variation} = range(1,17).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: Papa Ulap checking in! Light breeze from the east, smell of garlic rice from three streets over, and zero traffic at the tricycle stand.
-	PapaUlap: [color=#6C8FA6]Perfect day to keep the shelves tidy, boss.[/color]
+	# Cross-Web News #1: Triangle A (Kap / Ana)
+	if {Flag_KapSubCandy}:
+		PapaUlap: Street note at {Global_RadioTimeCheck}! Folks passing the acacia report zero smoke and a strong scent of mint candy!
+		PapaUlap: Somebody behind a wooden counter is working quiet miracles, mga kapitbahay!
+	elif {Flag_AnaFlewAgain} or {Flag_BuboyTrustedErrand}:
+		PapaUlap: Word along the road says a hardworking nanay finally got a break from her stove!
+		PapaUlap: Clear breeze above the rooftops, mga suki! Good hearing laughter up here!
+	else:
+		PapaUlap: Timecheck on 88.7, {Global_RadioTimeCheck}! Smell of garlic rice drifting three blocks up from the karinderya!
+		PapaUlap: Don't forget to eat behind that register, ka-tindahan!
 elif {Variation} == 2.0:
-	PapaUlap: Listeners always ask where my studio is. Easy! Just look up at the tallest balete cloud and wave — if I wave back, you didn't see anything.
-	PapaUlap: [color=#6C8FA6]Stay breezy, mga ka-tindahan![/color]
+	# Cross-Web News #2: Triangle B (Brahim / Danilo / Rosalyn)
+	if {Flag_BrahimLanternWard} or {Flag_DaniloTracedTether}:
+		PapaUlap: Traffic note at {Global_RadioTimeCheck}! Drivers rounding the highway bend say the cold fog finally lifted by the waiting shed!
+		PapaUlap: Keep your porch bulbs warm and your neighbors close, mga kapitbahay!
+	else:
+		PapaUlap: 88.7 Folklore Minute! Ever feel a sudden cool gust on a windless street?
+		PapaUlap: Bicol elders call us Tawong Lipod, the hidden folk of the breeze. Relax, suki, I'm just checking your awning!
 elif {Variation} == 3.0:
-	PapaUlap: Friendly reminder from Papa Ulap: close the refrigerator door, anak! Even up here in the clouds I can feel your electricity bill sweating.
+	# Cross-Web News #3: Pair 1 (Lolo Pilo / T.K.)
+	if {Flag_PiloWagerSet} or {Flag_TKRematchAccepted}:
+		PapaUlap: Half-court sports update at {Global_RadioTimeCheck}! Sipa is officially back in Karimlan!
+		PapaUlap: One tiny sixty-eight legend and one seven-foot rookie keeping that lead washer airborne!
+	else:
+		PapaUlap: 88.7 Folklore Minute! Lost on a familiar trail and circling the same mango tree?
+		PapaUlap: Old folks swear by baliktad ang damit, wearing your shirt inside out! Works even better than phone GPS!
 elif {Variation} == 4.0:
-	PapaUlap: Shoutout to whoever's burning dried leaves near the creek — the smoke just drifted straight through my booth. Still sounding smooth, though!
+	# Cross-Web News #4: Pair 2 (Rodel / Sarimanok)
+	if {Flag_RodelShelteredBird} or {Flag_SmkHonoredRodel}:
+		PapaUlap: Creek bank report at {Global_RadioTimeCheck}! Not a single wrapper in the bamboo roots, and kids are calling Dayu-dayu across the bridge!
+		PapaUlap: Even a famous painted rooster knows good manners by the water!
+	else:
+		PapaUlap: 88.7 Folklore Minute! Passing a termite mound or creek bamboo? Say Tabi-tabi po or Dayu-dayu!
+		PapaUlap: Polite words cost zero centavos, suki, and save you from mysterious knotted shoelaces!
 elif {Variation} == 5.0:
-	PapaUlap: Ever feel a sudden cool gust when nobody's around? Don't panic — that's just Papa Ulap doing a quick neighborhood flyby to check on my favorite suki.
+	# Folklore Trivia #1: Tawong Lipod
+	PapaUlap: Listeners keep asking where my broadcast booth sits! Easy, suki, look up at the tallest mango cloud!
+	PapaUlap: A Tawong Lipod needs zero steel towers to ride 88.7 Radyo Karimlan!
 elif {Variation} == 6.0:
-	PapaUlap: Saw Uncle Mario's tricycle zipping down the highway earlier. Man drives like the wind — and trust me, I know a thing or two about the wind.
+	# Folklore Trivia #2: Tikbalang Sunshower
+	PapaUlap: Karimlan Almanac at {Global_RadioTimeCheck}! Ever wonder why folks grin when rain falls under bright sun?
+	PapaUlap: May kinakasal na tikbalang! Just a joyful old proverb, though our tall jogger blushes every time I say it!
 elif {Variation} == 7.0:
-	PapaUlap: No new bulletins riding the airwaves right now, boss. Just clear skies, clinking coins, and warm afternoon sun over Karimlan.
+	# Folklore Trivia #3: Albularyo Alay Ethics
+	PapaUlap: Karimlan Almanac on 88.7! True folk healers never hang a price list outside their porch!
+	PapaUlap: In old tradition, healing is paid only in humble alay, never fixed cash fees!
 elif {Variation} == 8.0:
-	PapaUlap: Someone just texted the station asking if Biringan gets FM reception. Haha! Let's just say... our signal reaches places that aren't on any map.
+	# Folklore Trivia #4: Biringan & Black Rice
+	PapaUlap: Caller just asked if Biringan gets 88.7 reception! Haha, our signal reaches places missing from every map!
+	PapaUlap: Just remember the old rule, suki: if a glowing city offers you black rice, politely pass!
+elif {Variation} == 9.0:
+	# Folklore Trivia #5: Duwende & Sweets
+	PapaUlap: Quick trivia riding the breeze! Old stories say mound spirits remember kindness ten times longer than gold!
+	PapaUlap: A single sweet candy left respectfully buys luck money cannot touch!
+elif {Variation} == 10.0:
+	# Folklore Trivia #6: Maranao Sarimanok Fish Emblem
+	PapaUlap: Karimlan Almanac at {Global_RadioTimeCheck}! Notice how traditional Sarimanok carvings always hold a fish in their beak or talons?
+	PapaUlap: Maranao elders honor it as a bridge of abundance, not just a shiny mural!
+elif {Variation} == 11.0:
+	# Time-of-Day Block #1 (Before Noon vs After Noon)
+	if {Global_TimeOfDayPhase} == "before_noon":
+		PapaUlap: Magandang umaga, mga ka-tindahan! Timecheck is {Global_RadioTimeCheck}, shutters up and coffee steaming!
+		PapaUlap: Roosters are clocking out and Uncle Mario's crate route is warming up!
+	else:
+		PapaUlap: Good vibes rolling past noon! Timecheck is {Global_RadioTimeCheck} on 88.7 Radyo Karimlan!
+		PapaUlap: Breeze is picking up over the half-court, prime merienda stretch ahead!
+elif {Variation} == 12.0:
+	# Time-of-Day Block #2
+	if {Global_TimeOfDayPhase} == "before_noon":
+		PapaUlap: {Global_RadioTimeCheck} on your counter radio! First sweep of the broom, first clink of coins!
+		PapaUlap: Keep those front jars shining, suki, early regulars love a neat counter!
+	else:
+		PapaUlap: {Global_RadioTimeCheck} check-in from above the trees! Shadows are stretching across the main road!
+		PapaUlap: Porch bulbs will be clicking on soon, mga kapitbahay. Stay cozy behind the wood!
+elif {Variation} == 13.0:
+	# Time-of-Day Block #3
+	if {Global_TimeOfDayPhase} == "before_noon":
+		PapaUlap: Breeze check at {Global_RadioTimeCheck}! Cool air off the creek and zero traffic at the tricycle stand!
+		PapaUlap: Fine stretch to organize your stock before the rush hits, boss!
+	else:
+		PapaUlap: Afternoon groove on 88.7 at {Global_RadioTimeCheck}! Smells like toasted garlic and fried snacks down the lane!
+		PapaUlap: Keep that fridge door shut tight, suki! I can feel your power bill sweating from up here!
+elif {Variation} == 14.0:
+	PapaUlap: Friendly reminder from Papa Ulap at {Global_RadioTimeCheck}: stretch your shoulders behind that counter!
+	PapaUlap: Your Lola used to tap her foot to 88.7 while counting change, suki!
+elif {Variation} == 15.0:
+	PapaUlap: Saw Uncle Mario's tricycle zipping down the highway! Man drives like the wind, and I know a thing about wind!
+	PapaUlap: Stay tuned to 88.7 Radyo Karimlan!
 else:
-	PapaUlap: Papa Ulap on 88.7 Radyo Karimlan! Keep your change ready, your snacks crisp, and your ears open — the wind always brings news sooner or later.
+	PapaUlap: Shoutout to whoever burned dried leaves by the creek! Smoke floated straight through my cloud booth!
+	PapaUlap: Still sounding smooth at {Global_RadioTimeCheck}, mga kapitbahay!
 [end_timeline]
 
 label CommercialBreak
-set {Variation} = range(1,5).pick_random()
+set {Variation} = range(1,7).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: 88.7 Radyo Karimlan is on a quick commercial break! Papa Ulap will be right back after these messages!
+	PapaUlap: Kopimo! Wake up before the rooster does! Timecheck {Global_RadioTimeCheck}, back after these messages!
 elif {Variation} == 2.0:
-	PapaUlap: Commercial break! Need a crisp, cold merienda? Visit your friendly neighborhood sari-sari store today! Papa Ulap returns shortly!
+	PapaUlap: Craving Argentita? Open a tin, cook garlic rice, instant fiesta! Papa Ulap returns shortly!
 elif {Variation} == 3.0:
-	PapaUlap: Still on commercial break, suki — Papa Ulap's grabbing a quick sip of coffee up in the clouds. Stay tuned!
+	PapaUlap: Mentor Candy! Cool enough to make a kapre put down his smoke! Stay tuned to 88.7!
+elif {Variation} == 4.0:
+	PapaUlap: Uncle Mario's Express Restock! Fast crates, questionable brakes! 88.7 Radyo Karimlan is right back!
+elif {Variation} == 5.0:
+	PapaUlap: Cenchuree Tuna! Silver fish so fresh even a Litao stops to stare! Commercial break, suki!
 else:
-	PapaUlap: "Kopimo! Para sa umagang mas presko pa sa hangin!" ...We'll be right back with Papa Ulap in a bit!
+	PapaUlap: Ice-cold Kokaloka! Best cure for a hot tricycle ride! Papa Ulap returns in a breeze at {Global_RadioTimeCheck}!
 [end_timeline]

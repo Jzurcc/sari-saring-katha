@@ -164,11 +164,7 @@ func on_interact() -> void:
 				_pending_visitor_path = vis.resource_path
 				Dialogic.VAR.set_variable("Global_RadioEclipse", false)
 				Dialogic.VAR.set_variable("Global_RadioVisitorName", vis.character_name)
-				var favs: PackedStringArray = []
-				for fcat in vis.get_favorite_categories():
-					favs.append(StoryManager.get_category_display_name(fcat))
-				var hint_txt := ("They usually look for %s." % ", ".join(favs)) if not favs.is_empty() else "Keep the shelves ready for them!"
-				Dialogic.VAR.set_variable("Global_RadioVisitorHint", hint_txt)
+				Dialogic.VAR.set_variable("Global_RadioVisitorHint", _build_visitor_radio_hint(vis))
 				_start_papa_ulap_dialogue("VisitorBroadcast")
 				return
 		else:
@@ -198,6 +194,7 @@ func _start_papa_ulap_dialogue(label: String) -> void:
 		LogManager.error("RadioInteractable", "Missing PapaUlap timeline: %s" % TIMELINE_PATH)
 		return
 
+	_sync_radio_clock_and_flags()
 	Dialogic.Styles.load_style("FollowBubble")
 	var layout = Dialogic.start(TIMELINE_PATH, label)
 
@@ -265,3 +262,59 @@ func _ensure_outline_material() -> void:
 	super._ensure_outline_material()
 	if _outline_mat:
 		_outline_mat.set_shader_parameter("fixed_y_billboard", true)
+
+func _sync_radio_clock_and_flags() -> void:
+	var hour: float = 8.0
+	if is_instance_valid(StoryManager) and StoryManager.clock:
+		hour = StoryManager.clock.get_effective_display_time()
+	var total_mins: int = int(roundf(hour * 60.0))
+	var h24: int = int(total_mins / 60) % 24
+	var mins: int = total_mins % 60
+	var ampm: String = "AM" if h24 < 12 else "PM"
+	var h12: int = h24 % 12
+	if h12 == 0:
+		h12 = 12
+	var time_str: String = "%d:%02d %s" % [h12, mins, ampm]
+	Dialogic.VAR.set_variable("Global_RadioTimeCheck", time_str)
+	Dialogic.VAR.set_variable("Global_TimeOfDayPhase", "before_noon" if hour < 12.0 else "after_noon")
+
+	if is_instance_valid(CharacterProgressionManager):
+		Dialogic.VAR.set_variable("Flag_KapSubCandy", bool(CharacterProgressionManager.get_world_flag("kap_sub_candy", false)))
+		Dialogic.VAR.set_variable("Flag_AnaFlewAgain", CharacterProgressionManager.get_character_outcome("manangana") == "flew_again")
+		Dialogic.VAR.set_variable("Flag_BuboyTrustedErrand", bool(CharacterProgressionManager.get_world_flag("buboy_trusted_errand", false)))
+		Dialogic.VAR.set_variable("Flag_BrahimLanternWard", bool(CharacterProgressionManager.get_world_flag("brahim_lantern_ward", false)))
+		Dialogic.VAR.set_variable("Flag_DaniloTracedTether", bool(CharacterProgressionManager.get_world_flag("danilo_traced_tether", false)))
+		Dialogic.VAR.set_variable("Flag_PiloWagerSet", bool(CharacterProgressionManager.get_world_flag("pilo_wager_set", false)))
+		Dialogic.VAR.set_variable("Flag_TKRematchAccepted", bool(CharacterProgressionManager.get_world_flag("tk_rematch_accepted", false)))
+		Dialogic.VAR.set_variable("Flag_RodelShelteredBird", bool(CharacterProgressionManager.get_world_flag("rodel_sheltered_bird", false)))
+		Dialogic.VAR.set_variable("Flag_SmkHonoredRodel", bool(CharacterProgressionManager.get_world_flag("smk_honored_rodel", false)))
+
+func _build_visitor_radio_hint(vis: CustomerData) -> String:
+	var favs: PackedStringArray = []
+	for fcat in vis.get_favorite_categories():
+		favs.append(StoryManager.get_category_display_name(fcat))
+	var fav_list: String = ", ".join(favs)
+	var cid: String = vis.get_clean_id()
+	match cid:
+		"kuyakap":
+			return ("Spotted Kuya Kap stepping out from the acacia shade! Keep %s handy, suki." % fav_list) if not fav_list.is_empty() else "Spotted Kuya Kap crossing over from the acacia shade!"
+		"manangana":
+			return ("Manang Ana just locked her karinderya pot and headed up the road! Stock up on %s." % fav_list) if not fav_list.is_empty() else "Manang Ana is heading up from the karinderya!"
+		"buboy":
+			return ("Buboy is sprinting down the lane with a crumpled list! Keep %s within reach!" % fav_list) if not fav_list.is_empty() else "Buboy is sprinting down the lane right now!"
+		"lolopilo":
+			return ("Tiny hat spotted hopping past the half-court mango mound! Lolo Pilo favors %s." % fav_list) if not fav_list.is_empty() else "Lolo Pilo is hopping over from the mango mound!"
+		"tk":
+			return ("Big stride by the corner checking a chunky keypad phone! T.K. loves %s." % fav_list) if not fav_list.is_empty() else "T.K. is jogging down your lane right now!"
+		"brahim":
+			return ("Brahim just crossed the creek bridge from Tatay's porch! He usually reaches for %s." % fav_list) if not fav_list.is_empty() else "Brahim is strolling up from the creek bridge!"
+		"danilo":
+			return ("Amber sunglasses spotted slouching toward your shady awning! Danilo likes %s." % fav_list) if not fav_list.is_empty() else "Danilo is heading for your shady corner!"
+		"rosalyn":
+			return ("A quiet breeze drifted in from the highway bend! Rosalyn appreciates %s." % fav_list) if not fav_list.is_empty() else "A gentle visitor is drifting in from the highway bend!"
+		"rodel":
+			return ("Rodel just stepped up from the creekside bamboo clump! Keep %s stocked." % fav_list) if not fav_list.is_empty() else "Rodel is walking up from the creek bamboo!"
+		"sarimanok":
+			return ("Glittering plumes swooping past the welcome arch! Hide your receipts and prep %s!" % fav_list) if not fav_list.is_empty() else "Sarimanok was just spotted swooping past the welcome arch!"
+		_:
+			return ("Spotted %s heading down your lane! They usually look for %s." % [vis.character_name, fav_list]) if not fav_list.is_empty() else ("Spotted %s heading down your lane, suki!" % vis.character_name)

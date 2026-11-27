@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StoreEventData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Data/StoreEventData.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+event_id = "balete_cool_breeze"
+event_name = "Amihan Off the Balete"
+description = "A crisp tree breeze eases fridge drain and puts shoppers in a generous mood."
+rumor_text = "Crisp amihan breeze blowing straight from the old balete! Your cooler runs easy while neighbors stroll out for sweets, smokes, and frozen ulam."
+icon_path = "res://Assets/ui/icons/wind.png"
+affected_categories = Array[String](["candy", "cigarette", "frozen"])
+affected_items = Array[Resource("res://Scripts/Data/ItemData.gd")]([])
+demand_multiplier = 1.8
+tolerance_offset = 1
+tip_bonus_pct = 0.06
+fridge_drain_multiplier = 0.80
+roll_weight = 0.65
