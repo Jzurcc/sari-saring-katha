@@ -1,18 +1,38 @@
+# Lolo Pilo - Unified Social Visit & Optional Street Game Timeline
+# Voice: Joyful, spry 1968 plaza champion Duwende. Zero time-of-day words. Zero em-dashes.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	LoloPilo: Ho-ho! Just passing by to rest my feet, apo. The breeze near your awning is the best in Karimlan!
-	LoloPilo: Back in '68, nobody could beat me in the plaza games. Still got the wrist for it, too!
+if {Transaction_HasReactiveOpener}:
+	LoloPilo: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	LoloPilo: Ho-ho! Just resting my boots under your awning, apo. Best breeze on the road!
+	LoloPilo: Brought my game pouch along in case your hands want a quick break from counting coins!
+elif {Transaction_VisitVar} < 67:
+	LoloPilo: O, apo! Quiet stretch on the half-court, so I hopped over to check on your counter.
+	LoloPilo: Care for a friendly round with the sixty-eight plaza champ?
 else:
-	LoloPilo: Magandang araw, apo! Just checking if the neighborhood kids still remember how to play outside.
-	LoloPilo: Keep the counter lively, ha? I'll hang around by the shade for a bit!
+	LoloPilo: Hehe, caught you standing still behind that register again, apo!
+	LoloPilo: Spare a minute for a quick street game to keep the good luck rolling?
+- Sure Lolo, let's play!
+	LoloPilo: Ho-ho, eyes sharp now! Show me what you've got, apo!
+	[signal arg="minigame:lolo_pilo_random"]
+	if {Transaction_MinigameWon}:
+		LoloPilo: Bravo, apo! Quick wrists and sharp eyes, your Lola would be beaming!
+	else:
+		LoloPilo: Haha, good match! Still takes practice to dethrone the mound champion, apo!
+- Hands are full right now, Lolo.
+	LoloPilo: Duty first, apo! Keep those shelves tidy and save me a rematch next visit!
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	LoloPilo: Hehe! Watching folks come and go here reminds me of the old fiesta days, apo.
-	LoloPilo: Alright, my punso's calling me home. Don't forget to stretch your legs too!
+if {Transaction_VisitVar} < 34:
+	LoloPilo: Watching neighbors pass your counter reminds me of the old fiesta crowds, apo.
+	LoloPilo: Alright, back to the mango mound I go. Stretch your legs soon, ha!
+elif {Transaction_VisitVar} < 67:
+	LoloPilo: A little play keeps mortal and duwende hearts young alike, apo!
+	LoloPilo: Keep your eyes peeled for my next challenge!
 else:
-	LoloPilo: You know, apo, a good game keeps a tired spirit young—human or duwende alike!
-	LoloPilo: I'll be heading off now. Next time I drop by, be ready for a match!
+	LoloPilo: Hehe, if your broom moves an inch by itself, don't blame me, apo!
+	LoloPilo: Take care behind that counter!
 [end_timeline]

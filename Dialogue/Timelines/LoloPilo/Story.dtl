@@ -1,86 +1,241 @@
+# Lolo Pilo - 6-Chapter Core Arc (Pair 1 - Character #1)
+# Voice: Joyful, spry, mischievous 1968 plaza champion Duwende from the mango mound.
+# Rules: 90-95% English with light Filipino sprinkles. Zero parentheses. Zero time-of-day words. Zero em-dashes.
+# Substitute Category: candy ONLY in Ch. 3 (decided via dialogue choice -> allow_sub_cat:candy).
+
 label Greeting
+if {Transaction_HasReactiveOpener}:
+	LoloPilo: {Transaction_ReactiveOpener}
+
 if {Transaction_Chapter} == 0.0:
-	# Chapter 1: First meeting — specifically invites you to play Sipa!
-	LoloPilo: Ho-ho! Easy there, apo. No need to squint! Yes, I'm a duwende, and yes, I'm older than that mango tree down the road.
-	LoloPilo: Call me Lolo Pilo. I used to watch your lola run this counter back when kids still filled the street with laughter every afternoon.
-	LoloPilo: You look like you've been standing behind that register all day! Come on—let's wake up those reflexes.
-	LoloPilo: I brought my lucky sipa! Care for a quick round with an old champion?
+	# Chapter 1: "The 1968 Wrist" (0 choice tallies; +1 only if Sipa won)
+	LoloPilo: Ho-ho! No need to squint over the counter, apo, I'm standing right here!
+	LoloPilo: Call me Lolo Pilo. My mango mound sits right past the basketball half-court.
+	- Tabi-tabi po, Lolo Pilo.
+		LoloPilo: Haha! Polite just like your Lola, though I'm visiting your turf right now!
+	- Barely saw your hat over the wood!
+		LoloPilo: Aba, careful! Small frame, championship reach, apo!
+	- [Lean over the counter and wave.]
+		LoloPilo: Ho-ho, good eyes! Most grown-ups stare right past my beard!
+	LoloPilo: Back in sixty-eight, nobody in Karimlan could beat my wrist at the plaza games.
+	LoloPilo: You look stiff behind that register! Care for one quick Sipa round first?
 	- Let's play Sipa, Lolo!
-		LoloPilo: Ho-ho, that's the spirit! Watch the bottom line, don't swing too early, and keep it flying!
+		LoloPilo: Ho-ho, that's the spirit! Watch the drop and flick your ankle clean!
 		[signal arg="minigame:sipa"]
-		LoloPilo: Haha! Not bad at all, apo! My old bones feel twenty years lighter already.
-	- Maybe next time, Lolo.
-		LoloPilo: Ayy, busy shopkeeper! Fair enough, apo. I'll catch you for a round another day!
-	LoloPilo: I'll be dropping by whenever I feel like a match. See you soon, apo!
-	[signal arg="story_success"]
+		if {Transaction_MinigameWon}:
+			[signal arg="tally:+1"]
+			[signal arg="note:Kept up with Lolo Pilo's 1968 championship Sipa challenge right at the counter."]
+			LoloPilo: Aba! Same quick ankles as your Lola! My old knees feel twenty years lighter!
+		else:
+			[signal arg="note:Tried a warm-up round of Sipa with Lolo Pilo at the counter."]
+			LoloPilo: Haha, good hustle, apo! Rusty shopkeeper knees, good thing your coach lives nearby!
+	- Shelves first, rematch next visit.
+		LoloPilo: Fair enough, apo! Duty before glory, just keep those ankles warm for me!
+	LoloPilo: Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], apo. Champions run on sweets!
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
-	# Chapter 2: Subsequent story arcs invite you to play without naming a specific minigame
-	LoloPilo: Magandang araw, apo! I was sorting through my little wooden chest under the punso and found my favorite old pastime.
-	LoloPilo: The street gets so quiet these days... everyone's staring at tiny screens instead of laughing together!
-	LoloPilo: Spare a minute for an old duwende? Let's play a quick game right here at the counter!
-	- Sure, Lolo! Let's play!
-		LoloPilo: Ho-ho! Now we're talking! Show me what you've got, apo!
-		[signal arg="minigame:lolo_pilo_random"]
-		LoloPilo: Haha, what a match! Nothing beats a little friendly competition!
-	- Sorry Lolo, I'm swamped right now.
-		LoloPilo: No harm done, apo. Duty first! Keep those shelves neat for me, ha?
-	[signal arg="story_success"]
+	# Chapter 2: "Shortcut Past the Mound" (Tally Inflection #1: +1 appreciate trick / 0 fair / -1 scold)
+	[signal arg="flag:pilo_punso_rattled=true"]
+	LoloPilo: Sus, apo, look at all this red soil on my lucky vest!
+	LoloPilo: Some buff horse-man came galloping past my mango mound staring at a loud little phone!
+	LoloPilo: His gadget shouted turn left, and his big hooves rattled dirt straight into my teacup!
+	LoloPilo: Zero Tabi-tabi po! So I knotted his fancy sneakers together on the bench, hehe.
+	- Classic trick. Still sharp, Lolo.
+		[signal arg="tally:+1"]
+		[signal arg="note:Laughed along with Lolo Pilo's harmless shoelace prank on the noisy jogger."]
+		LoloPilo: Ho-ho! Harmless little knot, apo, didn't even scuff his bright laces!
+		LoloPilo: I even spun the wooden trail arrow sideways so he gets extra cardio!
+	- Maybe he was just lost.
+		[signal arg="note:Suggested the noisy jogger past Lolo Pilo's mango mound might just be lost."]
+		LoloPilo: A tikbalang getting lost? Aba, that would make the ancestors fall out of their trees!
+		LoloPilo: Still, manners cost zero centavos when you pass an old neighbor's roof!
+	- Leave joggers and signs alone, Lolo.
+		[signal arg="tally:-1"]
+		[signal arg="note:Scolded Lolo Pilo for pranking the jogger near the basketball half-court."]
+		LoloPilo: Hmph. Taking the loud phone's side over an old suki, ha?
+		LoloPilo: Better a knotted shoelace than a sprained ankle from a grumpy punso, apo.
+	LoloPilo: Anyway, hand me [color=#0f6e2f]{Transaction_ItemWants}[/color] so I can dust off in peace.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
-	# Chapter 3: Sharing stories about the old barangay
-	LoloPilo: Ho-ho! Look at your tindahan, apo—always warm, always welcoming.
-	LoloPilo: You know why duwendes like me stay near shops like yours? Because laughter is better than gold.
-	LoloPilo: Come on, take a short breather from counting coins. Up for another game with Lolo Pilo?
-	- Always ready, Lolo!
-		LoloPilo: Hehe! Don't go easy on me just because of my beard!
-		[signal arg="minigame:lolo_pilo_random"]
-		LoloPilo: Bravo, apo! That brought back forty years of good memories in one minute!
-	- Let's play another day, Lolo.
-		LoloPilo: Alright, alright—save your energy for the rush, apo!
-	[signal arg="story_success"]
+	# Chapter 3: "Bitter Modern Taste" (Tally Inflection #2: +1 candy sub OR +1 reassure / -1 dismiss)
+	[signal arg="flag:tk_true_name_known=true"]
+	LoloPilo: O, apo. Brought my teks deck and sipa washer out to the plaza lines earlier.
+	LoloPilo: Sat on the bench rattling my best washer, and not a single soul looked up.
+	LoloPilo: Even big Tiburcio jogged past holding iced coffee and tapping buttons on that brick phone.
+	LoloPilo: Maybe sweets and street games belong in a museum now. Give me [color=#0f6e2f]{Transaction_ItemWants}[/color] instead, apo.
+	- [Slip him sweet candy instead.]
+		[signal arg="allow_sub_cat:candy"]
+		LoloPilo: Oy, apo, why are your hands drifting toward the candy jars? I asked for grown-up stuff!
+		[end_timeline]
+	- Good games never go out of style.
+		[signal arg="tally:+1"]
+		[signal arg="note:Reminded Lolo Pilo that real street games never go out of style, plus learned the jogger's name is Tiburcio."]
+		LoloPilo: Heh. You really think so, apo? Even with everyone glued to little glowing bricks?
+		LoloPilo: Hearing that behind your Lola's counter warms an old duwende's beard.
+		LoloPilo: Sige, let me try [color=#0f6e2f]{Transaction_ItemWants}[/color] just once to see the fuss.
+	- Wait, who is big Tiburcio?
+		[signal arg="note:Learned from Lolo Pilo that T.K.'s real name from the Kalumpang ridge is Tiburcio."]
+		LoloPilo: Ho-ho! That buff tikbalang calling himself T.K. now! Knew him when he was all knees!
+		LoloPilo: Don't tell him I spilled it, ha! Just pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+	- Times change. Coffee suits people better.
+		[signal arg="tally:-1"]
+		[signal arg="note:Told Lolo Pilo modern coffee suits the neighborhood better than old plaza games."]
+		LoloPilo: Ah. Straight between the eyes, apo.
+		LoloPilo: Sige. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] then, before I take up more counter space.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
-	# Chapter 4: Friendly rivalry
-	LoloPilo: Apo! I've been practicing since sunrise—even the chickens by the fence were cheering me on!
-	LoloPilo: I refuse to let a youngster outshine the undisputed barangay legend.
-	LoloPilo: Clear a little corner on the counter—care for a rematch?
-	- Bring it on, Lolo Pilo!
-		LoloPilo: Ho-ho! That's what I like to hear! Let's begin!
-		[signal arg="minigame:lolo_pilo_random"]
-		LoloPilo: Whew! You really keep me on my toes, apo. Best rival I've had in decades!
-	- I'll have to pass today, Lolo.
-		LoloPilo: Hmph! Ducking the champion, eh? Hehe, I'll let you off the hook today!
-	[signal arg="story_success"]
+	# Chapter 4: "The Champion's Wager" (Tally Inflection #3: +1 coach Sipa / 0 truce / -1 dismiss)
+	LoloPilo: Hehe, apo, maybe I spun that wooden trail arrow a touch too well!
+	LoloPilo: Big Tiburcio lost phone signal by the creek and circled the half-court five times!
+	LoloPilo: Poor guy even turned his gym jersey inside out trying to break a spell!
+	LoloPilo: Flip one quick round of Teks while an old duwende thinks this over?
+	- Flip one round of Teks!
+		LoloPilo: Ho-ho, sharp eyes on my thumb now! One, two, bagsak!
+		[signal arg="minigame:teks"]
+		if {Transaction_MinigameWon}:
+			LoloPilo: Aba, clean read! You caught my lucky card right out of the air!
+		else:
+			LoloPilo: Hehe, sixty-eight plaza wrist still holds the crown, apo!
+	- Save the cards, tell me more.
+		LoloPilo: Fair enough, apo, straight to the referee's table!
+	LoloPilo: All my years under that mango tree, I've never met a tikbalang who gets himself lost.
+	LoloPilo: Feels unsportsmanlike pranking a rookie whose hooves don't know the soil yet.
+	- Coach him in Sipa and landmarks!
+		[signal arg="flag:pilo_wager_set=true"]
+		[signal arg="tally:+1"]
+		[signal arg="note:Encouraged Lolo Pilo to coach T.K. in Sipa footwork and old-school trail landmarks."]
+		LoloPilo: Aba! Trade sipa footwork for real trail sense? Seven-foot student, pocket-sized coach!
+		LoloPilo: Ho-ho, if those giant hooves don't crush my washer, we have a match!
+	- Straighten the sign and call truce.
+		[signal arg="flag:pilo_wager_set=true"]
+		[signal arg="note:Advised Lolo Pilo to straighten the trail arrow and settle things fairly with T.K."]
+		LoloPilo: Fair call, apo. I'll turn the arrow straight and toss him a friendly sipa challenge instead!
+	- Let his fancy phone guide him.
+		[signal arg="tally:-1"]
+		[signal arg="note:Told Lolo Pilo to leave T.K. to his phone instead of reaching out."]
+		LoloPilo: Harsh referee behind this counter, apo. Even a clumsy rival deserves a fair court.
+	LoloPilo: Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color] first so I don't coach on an empty stomach!
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
-	# Chapter 5: Passing the torch
-	LoloPilo: You know, apo... a lot of the older spirits worry that Karimlan is forgetting how to play.
-	LoloPilo: That everything is just debt, bills, and hurrying home before dark.
-	LoloPilo: Whenever you stop to play a silly little game with an old duwende, you remind the whole block it's okay to smile.
-	LoloPilo: One more round for good luck, apo?
-	- Of course, Lolo!
-		LoloPilo: Ho-ho! Let's make it a good one!
-		[signal arg="minigame:lolo_pilo_random"]
-		LoloPilo: Splendid! You've got the heart of a true barangay champion, apo.
-	- Maybe later, Lolo.
-		LoloPilo: Whenever you're ready, apo. My pouch of games is always open.
-	[signal arg="story_success"]
+	# Chapter 5: "Hooves on the Half-Court" (0 tallies - Ten Twist & Pair 1 Payoff)
+	if {Flag_PiloWagerSet} or {Flag_TKRematchAccepted}:
+		LoloPilo: Ho-ho, apo, you should've seen the basketball half-court earlier!
+		LoloPilo: Big Tiburcio pocketed his noisy phone, bowed to my mound, and boomed Tabi-tabi po!
+		if {Flag_PiloSubSweet}:
+			LoloPilo: He even set sweet candy on my flat root stone! Did you tip him off, apo?
+		LoloPilo: First kick of sipa, he punted my lead washer straight onto the barangay hall roof!
+		LoloPilo: Tenth kick, he learned ankle rhythm, and half the street stopped by the fence to count!
+		- Told you the court missed you.
+			LoloPilo: Heh. Hearing kids count kicks out loud again nearly made my beard mist up, apo!
+		- Did he dent the hall roof?
+			LoloPilo: Haha! Climbed a mango branch and fetched my washer in two seconds flat!
+		- Who won the final count?
+			LoloPilo: Still the sixty-eight champ, apo, though those long legs are catching up fast!
+	else:
+		LoloPilo: O, apo. Turned that wooden trail arrow back straight by the creek earlier.
+		LoloPilo: Big Tiburcio gave a polite nod jog-trotting past my mango mound, zero dust in my cup.
+		LoloPilo: Quiet truce on the half-court, even if nobody stopped to kick a washer.
+		- At least your teacup stays clean.
+			LoloPilo: True enough, apo. Peace and quiet has its uses, I suppose.
+		- Never too late for a game.
+			LoloPilo: Heh. Maybe on another pass, apo, if folks ever slow their boots down.
+	LoloPilo: Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] for the walk back to my mound, apo.
 	[end_timeline]
 
-else:
-	# Chapter 6+: Warm repeatable finale / hangout game
-	LoloPilo: Ho-ho, my favorite opponent! The sun feels kinder whenever I stop by your tindahan.
-	LoloPilo: What do you say—one quick game to keep the good luck rolling?
-	- Let's play, Lolo!
-		LoloPilo: That's my apo! Ready... set... go!
-		[signal arg="minigame:lolo_pilo_random"]
-		LoloPilo: Haha! Always a joy, apo. May good fortune guard your shelves!
-	- Maybe next time, Lolo.
-		LoloPilo: Even just a hello from you is a prize in itself, apo. Take care!
-	[signal arg="story_success"]
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6: "Keeper of the Play" (Accumulated Tally Resolution -> 3 Bespoke Outcomes)
+	if {Flag_PiloWagerSet} and {Transaction_Tally} >= 3:
+		[signal arg="outcome:grand_champion"]
+		[signal arg="flag:pilo_champion=true"]
+		[signal arg="note:Lolo Pilo left his 1968 Lucky Plaza Washer at the counter and vowed to tip fortune in your favor."]
+		LoloPilo: Clear a tiny spot beside your register, apo! Brought you championship brass!
+		LoloPilo: That's my lucky sixty-eight plaza washer. Won three fiestas straight with that little disc!
+		LoloPilo: Rode up the Kalumpang ridge on Tiburcio's shoulder teaching him wind and bamboo markers.
+		LoloPilo: Back down on the half-court, kids were chalking fresh game lines on the concrete!
+		- Honored to hold it, Lolo Champ.
+			LoloPilo: Ho-ho! Belongs on the liveliest counter in Karimlan, right where your Lola stood!
+		- One victory round of Sipa, Lolo?
+			LoloPilo: Aba, music to my ears! Show the champ your footwork, apo!
+			[signal arg="minigame:sipa"]
+			if {Transaction_MinigameWon}:
+				LoloPilo: Ho-ho! Officially passing the plaza crown to this counter, apo!
+			else:
+				LoloPilo: Haha! Close enough to make sixty-eight proud, apo!
+		- [Set the brass washer beside the register.]
+			LoloPilo: Fits right in next to your coin tray, apo!
+		LoloPilo: Listen close, apo. Earth spirits under the roots feel when that Pale Queen comes collecting.
+		LoloPilo: When she weighs your Lola's ledger, this old duwende stands squarely in your corner!
+		LoloPilo: Now pass me [color=#0f6e2f]{Transaction_ItemWants}[/color] to toast our undefeated streak!
+	elif {Transaction_Tally} >= 1:
+		[signal arg="outcome:happy_trickster"]
+		[signal arg="note:Lolo Pilo stayed a cheerful suki keeping street games alive around the plaza."]
+		LoloPilo: Ho-ho, apo! Bounce is right back in my old boots lately!
+		LoloPilo: Big Tiburcio calls out Tabi-tabi po every run, and the plaza bench feels lively again.
+		LoloPilo: Good knowing your Lola's shop still makes room for an old trickster's stories.
+		- Always room for you here, Lolo.
+			LoloPilo: Salamat, apo! Keep those candy jars stocked and your ankles loose!
+		- Keep that sipa washer flying, Lolo.
+			LoloPilo: Count on it, apo! Sixty-eight form never rusts!
+		LoloPilo: Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color] before my next round on the court!
+	else:
+		[signal arg="outcome:quiet_mound"]
+		[signal arg="note:Lolo Pilo kept his old street games tucked quietly inside his mango mound."]
+		LoloPilo: O, apo. Quiet walk over from the mango mound.
+		LoloPilo: Packed my old teks cards and washers neat inside my chest under the roots.
+		LoloPilo: Folks move fast on paved roads now. An old duwende knows when to stay tucked away.
+		- Take care under the mango tree, Lolo.
+			LoloPilo: You too behind that counter, apo.
+		- What can I get you, Lolo?
+			LoloPilo: Straight and brisk, fair enough, apo.
+		LoloPilo: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for my pantry, salamat.
 	[end_timeline]
+
+label Talk
+LoloPilo: Take your time, apo. I've lived past a hundred, a minute won't hurt!
+- Almost got it, Lolo.
+	[end_timeline]
+- Sorry Lolo, we're out of stock.
+	LoloPilo: Ay, sayang! No worries, apo, I'll hop back over after Mario restocks!
+	[signal arg="refuse_service"]
+	[end_timeline]
+
+label Partial
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	LoloPilo: Salamat, apo! Still waiting on the rest whenever your hands are free!
+elif {Variation} == 2.0:
+	LoloPilo: Pocketed that one! Take your time grabbing what's left, apo.
+else:
+	LoloPilo: Ho-ho, good start! My mound isn't running anywhere, apo.
+[end_timeline]
+
+label SubstituteItem
+[signal arg="flag:pilo_sub_sweet=true"]
+[signal arg="tally:+1"]
+[signal arg="note:Swapped Lolo Pilo's gloomy grown-up order for sweet {Transaction_SubstituteItemName}, bringing back his real laugh."]
+LoloPilo: Aba! Wait just a second, apo!
+LoloPilo: Since when does [color=#0f6e2f]{Transaction_SubstituteItemName}[/color] count as serious modern fare?
+LoloPilo: Ho-ho! Thank goodness! Instant coffee smells like boiled tree bark anyway!
+LoloPilo: Your Lola used to leave sweets just like this beside my mound, you know.
+LoloPilo: Keep the extra coins, apo. You saved an old champ from turning boring!
+[signal arg="story_success"]
+[end_timeline]
+
+label Satisfy
+if {Transaction_StoryGouged}:
+	LoloPilo: Aba, apo! Even the lucky coins under my punso felt that markup!
+	LoloPilo: Easy on an old neighbor's pouch next pass, ha?
+else:
+	LoloPilo: Ho-ho, spot on! May your coin jar stay noisy and full, apo!
+	if {Global_TipActive}:
+		LoloPilo: Fair price! Keep a little lucky change from the mound, apo!
+[signal arg="story_success"]
+[end_timeline]
+
+label WrongItem
+LoloPilo: Hehe, nice sleight of hand, apo, except that isn't what I asked for!
+[end_timeline]

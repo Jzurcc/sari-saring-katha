@@ -1,52 +1,100 @@
+# Lolo Pilo - Unified Everyday Purchase Timeline (3-Slot Sandwich Pattern)
+# Shifts ONLY on meaningful story flags (Flag_PiloChampion / Flag_PiloSubSweet).
+# Voice: Spry, joyful 1968 plaza champ Duwende. Zero time-of-day words. Zero em-dashes.
+
 label Greeting
-if {Transaction_GreetingVar} <= 50:
-	LoloPilo: Ho-ho! Tabi-tabi po? Haha, no need, apo—I'm the one visiting your tindahan!
+# Slot 1: P1-P3 Reactive Opener or High-Price Remark
+if {Transaction_HasReactiveOpener}:
+	LoloPilo: {Transaction_ReactiveOpener}
+elif {Global_HighPriceActive}:
+	LoloPilo: Aba, apo, prices jumped higher than a championship sipa kick! Easy on my pouch, ha?
+
+# Slot 2: Upfront Utang Ask OR Flag-Driven Request Pool (4 grounded variations per state)
+if {Transaction_WantsDebt}:
+	LoloPilo: Ay, naku, apo! Reached into my vest for [color=#0f6e2f]{Transaction_ItemWants}[/color] and pulled out three shiny pebbles instead of coins!
+	LoloPilo: Put it on your lista for old Lolo Pilo? I'll bring real pesos on my next hop over!
+	- Sure Lolo, on the lista.
+		[signal arg="utang_accepted"]
+		LoloPilo: Ho-ho, salamat, apo! Grab [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you're ready!
+	- Sorry Lolo, register's tight right now.
+		[signal arg="utang_rejected"]
+		LoloPilo: Fair rules, apo! Even plaza games need a strict referee. Let me fetch my coin tin!
+elif {Flag_PiloChampion}:
+	if {Transaction_GreetingVar} < 25:
+		LoloPilo: Ho-ho, my favorite doubles partner! Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], apo!
+	elif {Transaction_GreetingVar} < 50:
+		LoloPilo: Half-court's lively again, apo! Let me refuel with [color=#0f6e2f]{Transaction_ItemWants}[/color]!
+	elif {Transaction_GreetingVar} < 75:
+		LoloPilo: Worked up an appetite coaching big hooves down the road! Got [color=#0f6e2f]{Transaction_ItemWants}[/color], apo?
+	else:
+		LoloPilo: Undefeated service behind this counter! [color=#0f6e2f]{Transaction_ItemWants}[/color] please, apo!
+elif {Flag_PiloSubSweet}:
+	if {Transaction_GreetingVar} < 25:
+		LoloPilo: No bitter grown-up drinks for me! Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], apo!
+	elif {Transaction_GreetingVar} < 50:
+		LoloPilo: Still got your candy wrapper in my lucky vest! Got [color=#0f6e2f]{Transaction_ItemWants}[/color] on the shelf, apo?
+	elif {Transaction_GreetingVar} < 75:
+		LoloPilo: Hopped over from the mango mound for a real treat! Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+	else:
+		LoloPilo: Ho-ho! Coins ready on the wood! [color=#0f6e2f]{Transaction_ItemWants}[/color] for old Lolo Pilo, ha?
 else:
-	LoloPilo: Good day, apo! My old knees brought me all the way from the mango mound for a little merienda.
-
-if {Global_HighPriceActive}:
-	LoloPilo: Aba, apo... prices climbed higher than my old bamboo stilts! Easy on an old duwende's coins, ha?
-
+	if {Transaction_GreetingVar} < 25:
+		LoloPilo: Ho-ho! No need for Tabi-tabi po, apo, I'm visiting your counter! Got [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 50:
+		LoloPilo: Spry knees brought me straight from the mango mound! Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], apo!
+	elif {Transaction_GreetingVar} < 75:
+		LoloPilo: Shelves look lucky and neat, apo! Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're free.
+	else:
+		LoloPilo: O, apo! Taking a breather from the plaza bench. [color=#0f6e2f]{Transaction_ItemWants}[/color] please!
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
-	LoloPilo: Do you have a {Transaction_ItemWants} tucked away on those shelves, apo?
-else:
-	LoloPilo: I've been craving a {Transaction_ItemWants} all afternoon. Got one for old Lolo Pilo?
-- Just a moment, Lolo!
-	LoloPilo: Take your time, apo. No rush at all—I've lived a hundred years, I can wait a minute!
+LoloPilo: Take your time, apo! Still looking for [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever your hands are free!
+- Coming right up, Lolo!
 	[end_timeline]
 - Sorry Lolo, we're out of stock.
-	LoloPilo: Ayy, sayang! No worries, apo. I'll wobble back another time!
+	LoloPilo: Ay, sayang! No harm done, apo, I'll bounce back after Mario delivers!
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
 
 label Partial
-LoloPilo: Salamat, apo! Now if you could also hand over a {Transaction_ItemWants}, I'll be set!
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	LoloPilo: Salamat, apo! Just [color=#0f6e2f]{Transaction_ItemWants}[/color] left on my craving list!
+elif {Variation} == 2.0:
+	LoloPilo: Tucked that away! Still need [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you spot it, apo.
+else:
+	LoloPilo: Ho-ho, half the trick done! Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] next, apo!
 [end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	LoloPilo: Ah, just the thing! You run a fine tindahan, apo. May your coin jar never run dry!
+if {Transaction_WantsDebt}:
+	LoloPilo: Salamat, apo! Write Lolo Pilo neat on that lista, real coins coming soon!
 else:
-	LoloPilo: Ho-ho, perfect! Nothing beats a neighborhood shop with good heart. Salamat, apo!
-if {Global_TipActive}:
-	LoloPilo: Aba, such a fair price! Keep a little lucky change from an old duwende!
+	if {Global_TipActive}:
+		LoloPilo: Aba, fair price! Keep a little lucky change from the punso, apo!
+	elif {Transaction_SatisfyVar} < 34:
+		LoloPilo: Ho-ho, just the thing! May your coin jar never run dry, apo!
+	elif {Transaction_SatisfyVar} < 67:
+		LoloPilo: Salamat, apo! Nothing beats a counter with quick hands and good cheer!
+	else:
+		LoloPilo: Spot on! Don't forget to wiggle your ankles behind that register, ha!
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+LoloPilo: Before anything else, apo, real pesos this time! Here's the {Transaction_RepaymentAmount} pesos I owed!
+- Thanks, Lolo Pilo. All clear!
+	[signal arg="repay_debt"]
+	LoloPilo: Ho-ho! Clean slate on the lista, just how a champion likes it!
+- Keep it, Lolo. On the house!
+	[signal arg="forgive_debt"]
+	LoloPilo: Aba! Generous just like your Lola! May double that fortune roll back to your shelves, apo!
+- No rush, Lolo. Pay next pass.
+	[signal arg="defer_repay"]
+	LoloPilo: Hehe, easygoing referee! I'll keep these coins warm in my vest for next visit, apo!
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	LoloPilo: Hehe, my eyes may be old, apo, but that's not what I asked for!
-else:
-	LoloPilo: Ay, naku! Wrong pouch, apo—I was hoping for something else!
-[end_timeline]
-
-label PriceRefusal
-LoloPilo: Naku po, apo! Even the gold under my punso won't stretch for that price. Maybe next time!
-[end_timeline]
-
-label WarmDrink
-LoloPilo: Ayy, it's lukewarm, apo! Still, I won't let it go to waste.
+LoloPilo: Hehe, trying to pull a fast one on a duwende? I asked for [color=#0f6e2f]{Transaction_ItemWants}[/color], apo!
 [end_timeline]

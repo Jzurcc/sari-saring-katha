@@ -8,56 +8,115 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://dl3n44lgld252" path="res://Assets/characters/sprites/LoloPilo.png" id="4_sprite"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Resource" uid="uid://3l0feupwhfmd" path="res://Dialogue/Timelines/LoloPilo/Purchase.dtl" id="pilo_purchase"]
 [ext_resource type="Resource" uid="uid://cdoooy3atel0" path="res://Dialogue/Timelines/LoloPilo/Story.dtl" id="pilo_story"]
 [ext_resource type="Resource" uid="uid://dh3a7yqbvkby1" path="res://Dialogue/Timelines/LoloPilo/Visit.dtl" id="pilo_visit"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
+
+[sub_resource type="Resource" id="prereq_ch1_tk"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "tk"
+min_chapter = 1
+
+[sub_resource type="Resource" id="prereq_group_ch1"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch1_tk")])
+
+[sub_resource type="Resource" id="prereq_ch2_tk"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "tk"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch2"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch2_tk")])
+
+[sub_resource type="Resource" id="prereq_ch3_tk"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "tk"
+min_chapter = 3
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_tk")])
+
+[sub_resource type="Resource" id="prereq_ch4_tk"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "tk"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch4"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_tk")])
+
+[sub_resource type="Resource" id="prereq_ch5_tk"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "tk"
+min_chapter = 5
+
+[sub_resource type="Resource" id="prereq_group_ch5"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch5_tk")])
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The 1968 Sipa Champ"
-categories = null
+chapter_name = "The 1968 Wrist"
+categories = PackedStringArray("candy")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Pastimes from the Punso"
-categories = null
+chapter_name = "Shortcut Past the Mound"
+categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch1")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Better Than Gold"
-categories = null
+chapter_name = "Bitter Modern Taste"
+categories = PackedStringArray("sachet")
+prerequisites = SubResource("prereq_group_ch2")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Barangay Rivalry"
-categories = null
+chapter_name = "The Champion's Wager"
+categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Never Forget How to Play"
-categories = null
+chapter_name = "Hooves on the Half-Court"
+categories = PackedStringArray("candy")
+prerequisites = SubResource("prereq_group_ch4")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Champion of Karimlan"
-categories = null
+chapter_name = "Keeper of the Play"
+categories = PackedStringArray("candy", "snack")
+prerequisites = SubResource("prereq_group_ch5")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: Street Games & Old Stories"
+arc_name = "Arc 1: Tricks of the Mound"
+purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("pilo_purchase")])
+visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("pilo_visit")])
+
+[sub_resource type="Resource" id="arc_1"]
+script = ExtResource("arcdata_script")
+arc_name = "Arc 2: Keeper of the Play"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("pilo_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("pilo_visit")])
 
@@ -69,9 +128,12 @@ sprite_texture = ExtResource("4_sprite")
 sprite_scale = 0.285
 dialogue_blip_sound = ExtResource("1_blip")
 dialogue_blip_volume = -3.0
+requests_utang = true
+utang_chance = 0.12
+repayment_chance = 0.5
 spawn_weight = 1.35
 favorite_categories = Array[String](["candy", "snack", "sachet"])
 story_timeline = ExtResource("pilo_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 metadata/_custom_type_script = "res://Scripts/Data/CustomerData.gd"

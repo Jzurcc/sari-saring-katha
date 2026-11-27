@@ -1,19 +1,26 @@
+# T.K. - Unified Social Visit & Trail Breather Timeline
+# Voice: Buff, upbeat modern-life-loving Tikbalang adventurer. Zero time-of-day words. Zero em-dashes.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	TK: Just captured some insane B-roll of the Balete tree. [pause=0.4] 
-	TK: Literal gold. I think the neighborhood spirits are finally ready for their close-up. Catch you in the comments, fam!
+if {Transaction_HasReactiveOpener}:
+	TK: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	TK: Uy, boss! Just cooling down under your awning after a steep hill sprint.
+	TK: Still blows my mind how smooth paved roads feel under proper sneakers!
+elif {Transaction_VisitVar} < 67:
+	TK: Checking my Nokia map pins under your shade, boss. Best signal spot on the road!
+	TK: Holler if any heavy delivery boxes need lifting behind the counter!
 else:
-	TK: scouting out a new 'Hidden Spot' near the river. [pause=0.6] 
-	TK: The lighting is peak right now. [pause=0.3] You have a good heart for keeping this base camp open. Stay peak!
+	TK: Just passing through, boss! Knees nearly hit my chin tying my laces out front, haha!
+	TK: Good seeing your storefront bright and busy!
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	TK: Okay, just reviewed the footage I shot out front—[pause=0.3] absolute cinema, fam!
-	TK: Gonna go edit this before the lighting fades. Catch you on the next upload!
+if {Transaction_VisitVar} < 34:
+	TK: Heart rate's back to normal! Time to hit the road again, boss!
+elif {Transaction_VisitVar} < 67:
+	TK: Five bars locked in! Catch you on my next trail pass, boss!
 else:
-	TK: Yo, hanging out by your store is low-key the best vibe in the barangay. [pause=0.3]
-	TK: Alright, gotta bounce and film the outro. Stay peak!
+	TK: Alright, legs are itching to move! Stay strong behind that counter, boss!
 [end_timeline]
-

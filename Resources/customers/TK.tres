@@ -8,91 +8,117 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="4_timeline_script"]
 [ext_resource type="Texture2D" uid="uid://dkniinpqcxqbj" path="res://Assets/characters/sprites/TK.png" id="5_0aich"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Resource" uid="uid://b2xvvlu20dfrp" path="res://Resources/motions/tk_cameo_lost_wander.tres" id="motion_tk_cameo"]
 [ext_resource type="Resource" uid="uid://bfdfrex33yuiu" path="res://Resources/motions/tk_wrong_turn_enter.tres" id="motion_tk_wrong_turn"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://bkxgcd1fe4pf" path="res://Dialogue/Timelines/TK/Purchase.dtl" id="tk_purchase"]
 [ext_resource type="Resource" uid="uid://crmfh6krc8b5c" path="res://Dialogue/Timelines/TK/Visit.dtl" id="tk_visit"]
 
+[sub_resource type="Resource" id="prereq_ch1_pilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "lolopilo"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch1"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch1_pilo")])
+
+[sub_resource type="Resource" id="prereq_ch2_pilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "lolopilo"
+min_chapter = 3
+
+[sub_resource type="Resource" id="prereq_group_ch2"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch2_pilo")])
+
+[sub_resource type="Resource" id="prereq_ch3_pilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "lolopilo"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_pilo")])
+
+[sub_resource type="Resource" id="prereq_ch4_pilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "lolopilo"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch4"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_pilo")])
+
+[sub_resource type="Resource" id="prereq_ch5_pilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "lolopilo"
+min_chapter = 5
+
+[sub_resource type="Resource" id="prereq_group_ch5"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch5_pilo")])
+
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Arrival"
+chapter_name = "Pin on the Map"
 categories = PackedStringArray("bottle")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Plan"
+chapter_name = "Inside-Out Jersey"
 categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch1")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Arc 1 Recount"
-categories = PackedStringArray("pack")
+chapter_name = "One Bar Battery"
+categories = PackedStringArray("cigarette")
+prerequisites = SubResource("prereq_group_ch2")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Burnout"
-categories = PackedStringArray("bottle")
+chapter_name = "Offline Navigation"
+categories = PackedStringArray("snack", "pack")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Arc 2 Scouting"
-categories = PackedStringArray("snack")
+chapter_name = "Sipa and Landmarks"
+categories = PackedStringArray("bottle")
+prerequisites = SubResource("prereq_group_ch4")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Arc 2 Recount"
-categories = PackedStringArray("pack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Realization"
-categories = PackedStringArray("snack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Choice"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Final Step"
-categories = PackedStringArray("pack")
+chapter_name = "Base Camp Karimlan"
+categories = PackedStringArray("pack", "bottle")
+prerequisites = SubResource("prereq_group_ch5")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: The Viral Scout"
+arc_name = "Arc 1: Five Bars & Wrong Turns"
 purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
 visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: The Viewfinder's Limit"
-purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
-visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: The Path Forward"
+arc_name = "Arc 2: Base Camp Karimlan"
 purchase_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_purchase")])
 visit_timelines = Array[ExtResource("4_timeline_script")]([ExtResource("tk_visit")])
 
@@ -105,9 +131,12 @@ sprite_texture = ExtResource("5_0aich")
 sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("2_0aich")
 dialogue_blip_volume = -5.0
-favorite_categories = Array[String](["cigarette", "pack"])
+requests_utang = true
+utang_chance = 0.12
+repayment_chance = 0.5
+favorite_categories = Array[String](["bottle", "snack", "pack"])
 story_timeline = ExtResource("4_timeline")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_tk_wrong_turn")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_tk_cameo")])

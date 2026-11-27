@@ -2,7 +2,7 @@
 "@path": "res://addons/dialogic/Resources/character.gd",
 "@subpath": NodePath(""),
 &"_translation_id": "",
-&"color": Color(0, 0, 0, 1),
+&"color": Color(0.76, 0.52, 0.28, 1),
 &"custom_info": {
 "prefix": "",
 "sound_mood_default": "",
@@ -11,10 +11,10 @@
 "suffix": ""
 },
 &"default_portrait": "",
-&"description": "",
+&"description": "A buff, modern-life-loving Tikbalang adventurer who relies on his Nokia GPS because he constantly gets himself lost.",
 &"display_name": "T.K.",
 &"mirror": false,
-&"nicknames": [""],
+&"nicknames": ["TK", "Tiburcio"],
 &"offset": Vector2(0, 0),
 &"portraits": {},
 &"scale": 1.0
