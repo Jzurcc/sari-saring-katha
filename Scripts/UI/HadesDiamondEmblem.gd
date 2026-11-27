@@ -59,6 +59,8 @@ static func populate_emblem_glyph(emblem: Control, icon_path: String, fallback_s
 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		center.add_child(tr)
 		emblem.add_child(center)
+		emblem.set_meta("_glyph_tr", tr)
+		emblem.set_meta("_glyph_base_col", glyph_color)
 		return
 	var sigil_lbl := Label.new()
 	sigil_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -141,7 +143,47 @@ func _process(delta: float) -> void:
 	if fx_kind == "" or not is_visible_in_tree():
 		return
 	_anim_time += delta
+	_animate_center_glyph(_anim_time + fx_phase)
 	queue_redraw()
+
+func _animate_center_glyph(t: float) -> void:
+	if not has_meta("_glyph_tr"):
+		return
+	var tr := get_meta("_glyph_tr") as TextureRect
+	if not is_instance_valid(tr) or tr.size.x <= 1.0:
+		return
+	tr.pivot_offset = tr.size * 0.5
+	var base_col: Color = get_meta("_glyph_base_col", accent_bright)
+	match DiamondFXLibrary.glyph_motion_for_fx(fx_kind):
+		"pulse_beat":
+			var cyc := fmod(t * 0.85, 1.0)
+			var beat := maxf(exp(-pow((cyc - 0.12) * 14.0, 2.0)), exp(-pow((cyc - 0.28) * 16.0, 2.0)) * 0.65)
+			var s := 1.0 + beat * 0.08
+			tr.scale = Vector2(s, s)
+			tr.rotation = 0.0
+			tr.modulate = base_col.lerp(Color(1.0, 0.98, 0.94, base_col.a), beat * 0.35)
+		"float":
+			var s := 1.0 + sin(t * 2.0) * 0.025
+			tr.scale = Vector2(s, s)
+			tr.rotation = sin(t * 1.5) * 0.035
+			tr.modulate = base_col
+		"shimmer":
+			var gl := 0.5 + 0.5 * sin(t * 5.2)
+			var s := 1.0 + gl * 0.035
+			tr.scale = Vector2(s, s)
+			tr.rotation = 0.0
+			tr.modulate = base_col.lerp(Color(1.0, 1.0, 0.96, base_col.a), gl * 0.24)
+		"sway":
+			var s := 1.0 + sin(t * 2.4) * 0.03
+			tr.scale = Vector2(s, s)
+			tr.rotation = sin(t * 2.2) * 0.055
+			tr.modulate = base_col
+		_:
+			var p := 0.5 + 0.5 * sin(t * 2.1)
+			var s := 1.0 + p * 0.04
+			tr.scale = Vector2(s, s)
+			tr.rotation = 0.0
+			tr.modulate = base_col.lerp(Color(1.0, 0.98, 0.92, base_col.a), p * 0.14)
 
 func _sync_triangle_rect() -> void:
 	if not is_instance_valid(_tri_rect):

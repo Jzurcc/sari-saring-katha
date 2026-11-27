@@ -1041,30 +1041,67 @@ func _rebuild_hero_banner() -> void:
 
 	var arcs_vbox := VBoxContainer.new()
 	arcs_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	arcs_vbox.add_theme_constant_override("separation", 6)
+	arcs_vbox.add_theme_constant_override("separation", 5)
 	story_scroll.add_child(_wrap_scroll_content(arcs_vbox, 14))
 
-	var num_arcs := maxi(1, ceili(float(total_ch) / 3.0))
+	# Smart arc grouping: keep 1-arc stories (including 5-chapter pairs) continuous under one heading
+	var num_arcs := maxi(1, c.arc_names.size()) if c.arc_names.size() > 0 else 1
+	var ch_per_arc := maxi(1, ceili(float(total_ch) / float(num_arcs)))
 	for arc_i in range(num_arcs):
+		var ch_start := arc_i * ch_per_arc
+		if ch_start >= total_ch:
+			break
+		var ch_end := mini(total_ch, ch_start + ch_per_arc)
 		var arc_title := c.get_arc_name(arc_i)
 		if arc_title == "":
-			arc_title = "Arc %d" % (arc_i + 1)
-		var arc_lbl := _make_label(arc_title, 17, COL_GOLD_BRIGHT, true)
+			arc_title = "Story Arc" if num_arcs == 1 else ("Arc %d" % (arc_i + 1))
+		var arc_lbl := _make_label(arc_title, 16, COL_GOLD_BRIGHT, true)
 		arc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		arcs_vbox.add_child(arc_lbl)
 
-		var ch_start := arc_i * 3
-		var ch_end := mini(total_ch, ch_start + 3)
 		for ch_idx in range(ch_start, ch_end):
 			var done := cur_ch > ch_idx
+			var is_next := (ch_idx == cur_ch)
 			var ch_name := c.get_chapter_name(ch_idx)
 			if ch_name == "":
 				ch_name = "Chapter %d" % (ch_idx + 1)
-			var ch_txt := "Chapter %d: %s" % [ch_idx + 1, ch_name if (done or ch_idx == cur_ch) else "???"]
-			var ch_lbl := _make_label(ch_txt, 16, COL_CREAM if done else (COL_MUTED if ch_idx == cur_ch else COL_LOCKED), done)
-			ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-			arcs_vbox.add_child(ch_lbl)
+
+			var row := HBoxContainer.new()
+			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_theme_constant_override("separation", 8)
+			arcs_vbox.add_child(row)
+
+			if done:
+				var ic := _make_label("✓", 15, COL_POSITIVE, true)
+				row.add_child(ic)
+				var ch_lbl := _make_label("Ch. %d · %s" % [ch_idx + 1, ch_name], 15, COL_CREAM, false)
+				ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				row.add_child(ch_lbl)
+			elif is_next:
+				var is_ready := CharacterProgressionManager.is_story_chapter_available(c, ch_idx)
+				var ic := _make_label("◆" if is_ready else "◇", 15, COL_GOLD_BRIGHT if is_ready else COL_MUTED, true)
+				row.add_child(ic)
+				var ch_lbl := _make_label("Ch. %d · %s" % [ch_idx + 1, ch_name], 15, COL_CREAM if is_ready else COL_MUTED, is_ready)
+				ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				row.add_child(ch_lbl)
+				var status_lbl := _make_label("Ready" if is_ready else "Waiting", 13, COL_GOLD_BRIGHT if is_ready else COL_LOCKED, true)
+				row.add_child(status_lbl)
+
+				if not is_ready:
+					var hint_str := _get_unmet_prereq_hint(c, ch_idx)
+					if not hint_str.is_empty():
+						var hint_lbl := _make_label("    ↳ %s" % hint_str, 13, COL_MUTED, false)
+						hint_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+						arcs_vbox.add_child(hint_lbl)
+			else:
+				var ic := _make_label("·", 15, COL_LOCKED, false)
+				row.add_child(ic)
+				var ch_lbl := _make_label("Ch. %d · ???" % (ch_idx + 1), 15, COL_LOCKED, false)
+				ch_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				row.add_child(ch_lbl)
 
 	# Quiet Delayed-Consequence Memory Notes (logged subtly when pivotal choices are made)
 	var mem_notes: Array = CharacterProgressionManager.get_journal_notes(c.get_clean_id()) if is_instance_valid(CharacterProgressionManager) else []
@@ -1618,3 +1655,35 @@ func _style_scrollbar(sc: ScrollContainer) -> void:
 	vbar.add_theme_stylebox_override("grabber_highlight", grab_h)
 	vbar.add_theme_stylebox_override("grabber_pressed", grab_h)
 	vbar.add_theme_stylebox_override("scroll", trk)
+
+
+func _get_unmet_prereq_hint(c: CustomerData, ch_idx: int) -> String:
+	var group: StoryPrerequisiteGroup = c.get_chapter_prerequisites(ch_idx)
+	if group == null or group.prerequisites.is_empty():
+		return ""
+	var parts: PackedStringArray = []
+	for p in group.prerequisites:
+		if p == null or p.is_met(StoryManager):
+			continue
+		if p is ChapterPrerequisite:
+			var cp := p as ChapterPrerequisite
+			var target_name := ""
+			if cp.target_character != null:
+				target_name = cp.target_character.character_name
+			elif cp.target_character_id.strip_edges() != "" and is_instance_valid(StoryManager) and StoryManager.has_method("_get_character_data"):
+				var td: CustomerData = StoryManager._get_character_data(cp.target_character_id.strip_edges())
+				target_name = td.character_name if td != null else cp.target_character_id.capitalize()
+			if target_name != "":
+				parts.append("%s (Ch. %d)" % [target_name, cp.min_chapter])
+		elif p is VariablePrerequisite:
+			var vp := p as VariablePrerequisite
+			var vname := vp.variable_name.to_lower()
+			if "day" in vname:
+				parts.append("Day %s" % vp.required_value)
+			elif "tier" in vname or "level" in vname:
+				parts.append("Store Level %s" % vp.required_value)
+			else:
+				parts.append("further neighborhood progress")
+	if parts.is_empty():
+		return ""
+	return "Waiting on " + " · ".join(parts)
