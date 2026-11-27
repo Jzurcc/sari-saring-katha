@@ -18,6 +18,34 @@
 [ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://c3sj15wq5i3pc" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
 
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "What Did Mama Say?"
+categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Teks Under the Acacia"
+categories = PackedStringArray("snack", "candy")
+substitute_item_ids = null
+substitute_categories = null
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Top-Secret Ulams"
+categories = PackedStringArray("can", "pack")
+substitute_item_ids = null
+substitute_categories = null
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Don't Drop the Bag"
+categories = PackedStringArray("can", "pack")
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch4_kap"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "kuyakap"
@@ -27,36 +55,20 @@ min_chapter = 3
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_kap")])
 
-[sub_resource type="Resource" id="chapter_0"]
-script = ExtResource("chapterdata_script")
-chapter_name = "What Did Mama Say?"
-categories = PackedStringArray("snack")
-
-[sub_resource type="Resource" id="chapter_1"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Teks Under the Acacia"
-categories = PackedStringArray("snack", "candy")
-
-[sub_resource type="Resource" id="chapter_2"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Top-Secret Ulams"
-categories = PackedStringArray("can", "pack")
-
-[sub_resource type="Resource" id="chapter_3"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Don't Drop the Bag"
-categories = PackedStringArray("can", "pack")
-
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Candy Detective"
 categories = PackedStringArray("snack", "candy")
 prerequisites = SubResource("prereq_group_ch4")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Official Street Runner"
 categories = PackedStringArray("snack", "candy")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")

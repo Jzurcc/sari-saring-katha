@@ -16,7 +16,7 @@ if {Transaction_WantsDebt}:
 	- Sure Kuya, I'll put it on the list.
 		[signal arg="utang_accepted"]
 		KuyaKap: Salamat, nak. Grab [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever your hands are free.
-	- Sorry Kuya, cash is tight at the register right now.
+	- Sorry Kuya, cash is tight right now.
 		[signal arg="utang_rejected"]
 		KuyaKap: Ay, oo naman, business first. Let me walk back to my tree and fetch my coins.
 elif {Flag_KapQuitSmoking}:

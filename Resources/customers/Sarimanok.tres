@@ -7,8 +7,8 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://wcnibayq5f8k" path="res://Assets/characters/sprites/Sarimanok.png" id="7_sprite"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="8_arcdata"]
-[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Resource" uid="uid://nask6ft0k0b" path="res://Resources/motions/sarimanok_cameo_swoop.tres" id="motion_smk_cameo"]
 [ext_resource type="Resource" uid="uid://ch04nrjojccvx" path="res://Resources/motions/sarimanok_flap_swoop.tres" id="motion_smk_flap"]
@@ -17,15 +17,6 @@
 [ext_resource type="Resource" uid="uid://c2s7pfyxbggpr" path="res://Dialogue/Timelines/Sarimanok/Purchase.dtl" id="smk_purchase"]
 [ext_resource type="Resource" uid="uid://br147rott8bhs" path="res://Dialogue/Timelines/Sarimanok/Story.dtl" id="smk_story"]
 [ext_resource type="Resource" uid="uid://dlcphfad8n24f" path="res://Dialogue/Timelines/Sarimanok/Visit.dtl" id="smk_visit"]
-
-[sub_resource type="Resource" id="prereq_ch3_rodel"]
-script = ExtResource("chap_prereq_script")
-target_character_id = "rodel"
-min_chapter = 2
-
-[sub_resource type="Resource" id="prereq_group_ch3"]
-script = ExtResource("prereq_group_script")
-prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rodel")])
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -48,6 +39,15 @@ chapter_name = "Heavy Plumes"
 categories = PackedStringArray("pack")
 substitute_item_ids = null
 substitute_categories = null
+
+[sub_resource type="Resource" id="prereq_ch3_rodel"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rodel"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rodel")])
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")

@@ -8,10 +8,18 @@ if {Transaction_VisitVar} < 34:
 	Buboy: Vroom, screech! Did you see how fast I sprinted from the acacia tree, Kuya?!
 	Buboy: Just catching my breath by your counter, po, then I'm zooming right back out!
 elif {Transaction_VisitVar} < 67:
-	Buboy: Kuya, look what I found near the tricycle stand!
-	Buboy: Super shiny bottle cap without a single dent, gonna turn it into my new lucky pamato!
+	Buboy: Kuya, I brought my lucky Teks stack from the corner!
+	Buboy: Wanna play one quick round before Mama calls me back for chores?!
+	- Sure, deal the Teks cards!
+		[signal arg="minigame:teks"]
+		if {Transaction_MinigameWon}:
+			Buboy: Whoa, Kuya! Lightning fingers! You flipped my best hero card clean!
+		else:
+			Buboy: Haha! Champion of the acacia strikes again! Rematch next pass, Kuya!
+	- Busy behind the counter, Buboy!
+		Buboy: Aw, okay po! Save your wrists for next time, I'll keep practicing!
 else:
-	Buboy: Not buying anything right now, Kuya, [i]Damulag[/i] just wanted to peek if your shop cat is awake!
+	Buboy: Not buying anything right now, Kuya, just wanted to peek if your shop cat is awake!
 	Buboy: Hehe, see you around the road, po!
 [signal arg="story_success"]
 [end_timeline]
@@ -19,7 +27,7 @@ else:
 label Smalltalk
 if {Transaction_VisitVar} < 34:
 	Buboy: Kuya, I counted seven clouds while hanging out outside, and the biggest one looked just like pancit canton!
-	Buboy: Gotta run, [i]Damulag[/i]'s ready to roll!
+	Buboy: Gotta run, see you next pass!
 elif {Transaction_VisitVar} < 67:
 	Buboy: Knees are fully recharged, Kuya! Gonna race the next tricycle back to the corner, bye po!
 else:

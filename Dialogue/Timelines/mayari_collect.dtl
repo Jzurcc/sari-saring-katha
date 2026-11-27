@@ -160,12 +160,35 @@ ReynaMayari: Claim up to [color=#9a630a]two Moon Cards[/color] at once from now 
 
 label LedgerCleared
 ReynaMayari: Every last peso on Lola's Silver Ledger, settled in full.
-if {Global_CompletedNeighborsCount} >= 3.0:
-	ReynaMayari: And look down the road. Half of Karimlan is glowing with wards, warm lanterns, and goodwill.
+if {Global_CompletedNeighborsCount} >= 6.0:
+	ReynaMayari: And look outside your awning. Half of Karimlan is standing along this road to vouch for Lola's counter.
+	if {Flag_KapQuitSmoking}:
+		ReynaMayari: The giant under the acacia tossed his lighter and stood watch by your corner.
+	if {Flag_AnaFlewAgain}:
+		ReynaMayari: Your karinderya neighbor took to the sky again, and left warm adobo on your wood.
+	if {Flag_BrahimTrueAlbularyo}:
+		ReynaMayari: The young albularyo's brass bell and Grand Agimat hum straight through the mist.
+	if {Flag_RosalynAtPeace}:
+		ReynaMayari: Even the highway bend went quiet once that last candy errand was finished.
+	if {Flag_SmkLivingEmblem}:
+		ReynaMayari: A gilded rooster bowed by the creek so the whole street learned the Litao's name.
+	if {Flag_PiloChampion}:
+		ReynaMayari: An old duwende and a seven-foot tikbalang brought sipa back to the half-court.
 	ReynaMayari: Biringan's Council cannot touch a street this alive. The Silver Pact is permanently sealed, friend.
+elif {Global_CompletedNeighborsCount} >= 2.0:
+	ReynaMayari: More than coin answered my ledger. A loyal circle of neighbors found warmth across your wood.
+	if {Flag_KapQuitSmoking}:
+		ReynaMayari: The giant under the acacia breathes easier because of this counter.
+	if {Flag_BrahimTrueAlbularyo}:
+		ReynaMayari: Your counter glows with a true albularyo's Grand Agimat.
+	if {Flag_RosalynAtPeace}:
+		ReynaMayari: Even the highway bend rests quietly now.
+	ReynaMayari: The Silver Pact is sealed with honor. Keep your earnings from now on, shopkeeper.
 else:
-	ReynaMayari: Clean numbers, exact coin, not a centavo short. The Silver Pact is sealed by the letter of the law.
-	ReynaMayari: Keep your earnings from now on, shopkeeper. Karimlan remains open beneath my watch.
+	ReynaMayari: Clean numbers, exact coin, not a centavo short. Though the bench outside stayed quiet.
+	ReynaMayari: The Silver Pact is sealed by the letter of the law. Karimlan remains open beneath my watch.
+[signal arg="show_epilogue"]
+[wait time="0.5"]
 [end_timeline]
 
 label SealedOutro

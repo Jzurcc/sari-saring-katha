@@ -18,15 +18,6 @@
 [ext_resource type="Resource" uid="uid://b5ajudb37ubvf" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
 
-[sub_resource type="Resource" id="prereq_ch3_ana"]
-script = ExtResource("chap_prereq_script")
-target_character_id = "manangana"
-min_chapter = 2
-
-[sub_resource type="Resource" id="prereq_group_ch3"]
-script = ExtResource("prereq_group_script")
-prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_ana")])
-
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Old Suki"
@@ -47,6 +38,15 @@ chapter_name = "Something for the Throat"
 categories = PackedStringArray("cigarette")
 substitute_item_ids = null
 substitute_categories = null
+
+[sub_resource type="Resource" id="prereq_ch3_ana"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "manangana"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_ana")])
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")

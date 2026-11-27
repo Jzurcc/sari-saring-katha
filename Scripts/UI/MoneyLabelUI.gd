@@ -18,6 +18,8 @@ var _displayed_amount: float = 0.0
 var _count_tween: Tween = null
 var _color_tween: Tween = null
 var _punch_tween: Tween = null
+var _shake_tween: Tween = null
+var _shake_orig_x: float = 0.0
 
 func _ready() -> void:
 	EventBus.money_changed.connect(_on_money_changed)
@@ -54,10 +56,12 @@ func _on_money_changed(amount: float) -> void:
 			if _punch_tween and _punch_tween.is_valid():
 				_punch_tween.kill()
 			container.pivot_offset = container.size / 2.0
-			var strength := clampf(1.10 + minf(diff, 200.0) / 200.0 * 0.12, 1.10, 1.22)
+			var strength := clampf(1.08 + minf(diff, 200.0) / 200.0 * 0.12, 1.08, 1.20)
 			_punch_tween = create_tween()
-			_punch_tween.tween_property(container, "scale", Vector2(strength, strength), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			_punch_tween.tween_property(container, "scale", Vector2.ONE, 0.26).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+			_punch_tween.set_ignore_time_scale(true)
+			# Area-preserving squash & stretch
+			_punch_tween.tween_property(container, "scale", Vector2(strength, 1.0 / strength), 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			_punch_tween.tween_property(container, "scale", Vector2.ONE, 0.24).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	else:
 		_flash_label(COLOR_SPEND_FLASH, 0.6)
 		if is_instance_valid(container):
@@ -66,8 +70,9 @@ func _on_money_changed(amount: float) -> void:
 			container.pivot_offset = container.size / 2.0
 			container.rotation = 0.0
 			_punch_tween = create_tween()
-			_punch_tween.tween_property(container, "scale", Vector2(0.94, 0.94), 0.07).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-			_punch_tween.tween_property(container, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			_punch_tween.set_ignore_time_scale(true)
+			_punch_tween.tween_property(container, "scale", Vector2(0.93, 1.07), 0.07).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			_punch_tween.tween_property(container, "scale", Vector2.ONE, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_spawn_delta_popup(diff)
 
 
@@ -80,6 +85,7 @@ func _roll_counter_to(target: float, is_gain: bool, magnitude: float) -> void:
 	if not is_gain:
 		duration *= 0.70
 	_count_tween = create_tween()
+	_count_tween.set_ignore_time_scale(true)
 	_count_tween.tween_method(func(v: float):
 		_displayed_amount = v
 		text = "%.2f" % v
@@ -95,6 +101,7 @@ func _flash_label(flash_color: Color, hold: float) -> void:
 		_color_tween.kill()
 	add_theme_color_override("font_color", flash_color)
 	_color_tween = create_tween()
+	_color_tween.set_ignore_time_scale(true)
 	_color_tween.tween_interval(0.12)
 	_color_tween.tween_method(func(c: Color):
 		add_theme_color_override("font_color", c)
@@ -133,6 +140,7 @@ func _spawn_delta_popup(diff: float) -> void:
 			var next_y: float = float(old_slot.get_meta("_target_y", old_slot.position.y)) + POPUP_STACK_STEP
 			old_slot.set_meta("_target_y", next_y)
 			var nudge: Tween = old_slot.create_tween()
+			nudge.set_ignore_time_scale(true)
 			nudge.tween_property(old_slot, "position:y", next_y, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			old_slot.set_meta("_nudge_tw", nudge)
 	_active_popups = still_valid
@@ -208,6 +216,7 @@ func _spawn_delta_popup(diff: float) -> void:
 	popup.modulate = Color(1.0, 1.0, 1.0, 0.0)
 
 	var tw := popup.create_tween()
+	tw.set_ignore_time_scale(true)
 	# Lively squash-and-stretch pop-in + playful tilt settle
 	tw.tween_property(popup, "modulate:a", 1.0, 0.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(popup, "position:y", 0.0, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -234,21 +243,25 @@ func _spawn_delta_popup(diff: float) -> void:
 
 func _on_insufficient_funds() -> void:
 	EventBus.request_sfx.emit("error")
-	if is_shaking:
+	var container := get_parent() as Control
+	if not is_instance_valid(container):
 		return
+	if not is_shaking:
+		_shake_orig_x = container.position.x
 	is_shaking = true
+	if _shake_tween and _shake_tween.is_valid():
+		_shake_tween.kill()
 	add_theme_color_override("font_color", Color("#CB6245"))
-	var container = get_parent()
-	var orig_x = container.position.x
-	var tween = create_tween()
-	
-	tween.tween_property(container, "position:x", orig_x + 6, 0.05)
-	tween.tween_property(container, "position:x", orig_x - 6, 0.05)
-	tween.tween_property(container, "position:x", orig_x + 6, 0.05)
-	tween.tween_property(container, "position:x", orig_x - 6, 0.05)
-	tween.tween_property(container, "position:x", orig_x, 0.05)
-	
-	tween.tween_callback(func():
+	# Smooth decaying trauma-based shake (summed sines, squared decay, guaranteed snap to rest)
+	_shake_tween = create_tween()
+	_shake_tween.set_ignore_time_scale(true)
+	_shake_tween.tween_method(func(t: float):
+		var decay := (1.0 - t) * (1.0 - t)
+		var wave := sin(t * 28.0) * 0.65 + sin(t * 47.0) * 0.35
+		container.position.x = _shake_orig_x + wave * 9.0 * decay
+	, 0.0, 1.0, 0.30)
+	_shake_tween.tween_callback(func():
+		container.position.x = _shake_orig_x
 		add_theme_color_override("font_color", original_color)
 		is_shaking = false
 	)

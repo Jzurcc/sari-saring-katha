@@ -38,6 +38,8 @@ var pan_sensitivity: float = 0.15
 var current_offset_x: float = 0.0
 var current_offset_y: float = 0.0
 
+const LoadSlotsOverlayScript = preload("res://Scripts/UI/LoadSlotsOverlay.gd")
+
 var _menu_font: Font
 var _bold_body: FontVariation
 var _gradient_vignette: TextureRect
@@ -46,6 +48,7 @@ var _devlog_panel: PanelContainer
 var _devlog_body: VBoxContainer
 var _devlog_toggle_btn: Button
 var _version_lbl: Label
+var _load_slots_overlay: Control
 var _btn_tweens: Dictionary = {}
 var _glow_tween: Tween = null
 var _active_btn: Button = null
@@ -82,23 +85,19 @@ func _ready() -> void:
 	_build_directional_vignette()
 	_build_hover_glow()
 	_build_devlog_and_version()
+	_build_load_slots_overlay()
 
 	# Hook up button hover glow + slide + click sound
 	for btn in buttons.get_children():
 		if btn is Button:
 			_register_button(btn)
 
-	# Show Continue only if a save file exists
-	var continue_btn = buttons.get_node_or_null("Continue")
-	var new_game_btn = buttons.get_node("NewGame")
-	var can_continue = continue_btn != null and SaveManager.has_save()
-
-	if continue_btn:
-		continue_btn.visible = can_continue
-
+	_refresh_save_buttons()
 	_play_entrance_animation()
 
-	if can_continue:
+	var continue_btn := buttons.get_node_or_null("Continue") as Button
+	var new_game_btn := buttons.get_node("NewGame") as Button
+	if continue_btn != null and continue_btn.visible:
 		continue_btn.grab_focus()
 	else:
 		new_game_btn.grab_focus()
@@ -375,14 +374,35 @@ func _process(delta: float) -> void:
 	cam.position.y = lerp(cam.position.y, target_pos_y, delta * 3.0)
 
 
+func _build_load_slots_overlay() -> void:
+	_load_slots_overlay = LoadSlotsOverlayScript.new()
+	_load_slots_overlay.z_index = 25
+	add_child(_load_slots_overlay)
+	_load_slots_overlay.load_slot_requested.connect(_on_slot_loaded)
+	_load_slots_overlay.load_backup_requested.connect(_on_backup_loaded)
+	_load_slots_overlay.new_game_slot_requested.connect(_on_new_game_slot_chosen)
+	_load_slots_overlay.slot_deleted.connect(_on_slot_deleted)
+	_load_slots_overlay.closed.connect(_on_load_slots_closed)
+
+
+func _refresh_save_buttons() -> void:
+	var any_save := SaveManager.has_any_save()
+	var continue_btn := buttons.get_node_or_null("Continue") as Button
+	var load_btn := buttons.get_node_or_null("LoadGame") as Button
+	if continue_btn:
+		continue_btn.visible = any_save
+	if load_btn:
+		load_btn.visible = any_save
+
+
 # ─── Actions ──────────────────────────────────────────────────────────────────
 
 func _on_new_game_pressed() -> void:
-	if SaveManager.has_save():
-		_play_click()
-		confirm_overlay.open("New Game", "Are you sure you want to start a new game? This will overwrite your current progress.")
+	if SaveManager.has_any_save():
 		_update_menu_interaction(false)
+		_load_slots_overlay.open(LoadSlotsOverlayScript.Mode.NEW_GAME)
 		return
+	SaveManager.set_active_slot(1)
 	_start_new_game()
 
 func _on_new_game_confirmed() -> void:
@@ -393,8 +413,39 @@ func _start_new_game() -> void:
 	_transition_to_game(target_scene)
 
 func _on_continue_pressed() -> void:
+	if not SaveManager.has_save():
+		for s in range(1, SaveManager.MAX_SLOTS + 1):
+			if SaveManager.has_slot_save(s):
+				SaveManager.set_active_slot(s)
+				break
 	if SaveManager.has_save():
 		_transition_to_game("res://Scenes/MainGame.tscn")
+
+func _on_load_game_pressed() -> void:
+	_update_menu_interaction(false)
+	_load_slots_overlay.open(LoadSlotsOverlayScript.Mode.LOAD)
+
+func _on_slot_loaded(slot_id: int) -> void:
+	SaveManager.set_active_slot(slot_id)
+	_transition_to_game("res://Scenes/MainGame.tscn")
+
+func _on_backup_loaded(slot_id: int, backup_path: String) -> void:
+	SaveManager.set_pending_backup_load(slot_id, backup_path)
+	_transition_to_game("res://Scenes/MainGame.tscn")
+
+func _on_new_game_slot_chosen(slot_id: int) -> void:
+	SaveManager.set_active_slot(slot_id)
+	_start_new_game()
+
+func _on_slot_deleted(_slot_id: int) -> void:
+	_refresh_save_buttons()
+	var sync_node := get_node_or_null("TitleScreen3D")
+	if sync_node and sync_node.has_method("refresh_from_save"):
+		sync_node.refresh_from_save()
+
+func _on_load_slots_closed() -> void:
+	_refresh_save_buttons()
+	_update_menu_interaction(true)
 
 func _transition_to_game(scene_path: String) -> void:
 	is_starting_game = true

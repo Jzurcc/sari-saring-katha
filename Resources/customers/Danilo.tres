@@ -17,6 +17,13 @@
 [ext_resource type="Resource" uid="uid://cjllu4anoqql8" path="res://Dialogue/Timelines/Danilo/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
 
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Front-Row Snacks"
+categories = PackedStringArray("snack")
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch1_rosalyn"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "rosalyn"
@@ -25,22 +32,6 @@ min_chapter = 1
 [sub_resource type="Resource" id="prereq_group_ch1"]
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch1_rosalyn")])
-
-[sub_resource type="Resource" id="prereq_ch3_rosalyn"]
-script = ExtResource("chap_prereq_script")
-target_character_id = "rosalyn"
-min_chapter = 4
-
-[sub_resource type="Resource" id="prereq_group_ch3"]
-script = ExtResource("prereq_group_script")
-prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rosalyn")])
-
-[sub_resource type="Resource" id="chapter_0"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Front-Row Snacks"
-categories = PackedStringArray("snack")
-substitute_item_ids = null
-substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
@@ -56,6 +47,15 @@ chapter_name = "Fluorescent Glare"
 categories = PackedStringArray("sachet")
 substitute_item_ids = null
 substitute_categories = null
+
+[sub_resource type="Resource" id="prereq_ch3_rosalyn"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rosalyn"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rosalyn")])
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
@@ -102,7 +102,6 @@ requests_utang = true
 utang_chance = 0.12
 repayment_chance = 0.4
 spreads_rumors = true
-purchase_only_on_final_chapter = false
 spawn_weight = 0.95
 favorite_categories = Array[String](["snack", "bottle", "sachet"])
 story_timeline = ExtResource("story_res")

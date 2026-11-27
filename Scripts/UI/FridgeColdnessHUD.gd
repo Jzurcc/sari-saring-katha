@@ -170,25 +170,34 @@ func _process(delta: float) -> void:
 	if _stripe_mat:
 		_stripe_mat.set_shader_parameter("scroll_offset", _stripe_scroll)
 
-	# Subtle urgent tremble when coldness is critically low while open
+	# Multi-frequency trauma-scaled shiver when coldness is critically low while open
 	if _is_open and _coldness < 25.0:
-		_shimmer_time += delta * 26.0
-		_frame_panel.position.x = sin(_shimmer_time) * 2.0
+		var trauma := clampf((25.0 - _coldness) / 25.0, 0.15, 1.0)
+		var amp := 2.6 * trauma * trauma
+		_shimmer_time += delta
+		_frame_panel.position.x = (sin(_shimmer_time * 31.0) * 0.65 + sin(_shimmer_time * 53.0) * 0.35) * amp
 	else:
-		_frame_panel.position.x = move_toward(_frame_panel.position.x, 0.0, delta * 20.0)
+		_frame_panel.position.x = move_toward(_frame_panel.position.x, 0.0, delta * 24.0)
 
 	if _warm_badge.visible:
-		var pulse := 0.78 + 0.22 * sin(Time.get_ticks_msec() * 0.008)
+		var pulse := 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
 		_warm_badge.modulate.a = pulse
 
 func _on_fridge_coldness_changed(coldness: float, is_open: bool, is_warm: bool) -> void:
 	var was_open := _is_open
+	var was_warm := _is_warm
 	var was_below_full := _coldness < 100.0
 	_coldness = clampf(coldness, 0.0, 100.0)
 	_is_open = is_open
 	_is_warm = is_warm
 
 	_update_bar_visuals()
+	if _is_warm and not was_warm:
+		_warm_badge.pivot_offset = _warm_badge.size * 0.5
+		_warm_badge.scale = Vector2(1.18, 0.85)
+		var pop := create_tween()
+		pop.set_ignore_time_scale(true)
+		pop.tween_property(_warm_badge, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 	var should_show := _is_open or _coldness < 100.0
 	if should_show and not _is_shown:
@@ -229,6 +238,7 @@ func _animate_in() -> void:
 		_vis_tween.kill()
 	_holder.offset_left = _base_holder_x + 44.0
 	_vis_tween = create_tween().set_parallel(true)
+	_vis_tween.set_ignore_time_scale(true)
 	_vis_tween.tween_property(_holder, "offset_left", _base_holder_x, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_vis_tween.tween_property(_holder, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
 
@@ -237,6 +247,7 @@ func _animate_out(flash_chilled: bool) -> void:
 	if _vis_tween and _vis_tween.is_valid():
 		_vis_tween.kill()
 	_vis_tween = create_tween()
+	_vis_tween.set_ignore_time_scale(true)
 	if flash_chilled:
 		_vis_tween.tween_property(_frame_panel, "modulate", Color(1.35, 1.45, 1.55, 1.0), 0.12).set_trans(Tween.TRANS_SINE)
 		_vis_tween.tween_property(_frame_panel, "modulate", Color.WHITE, 0.16).set_trans(Tween.TRANS_SINE)

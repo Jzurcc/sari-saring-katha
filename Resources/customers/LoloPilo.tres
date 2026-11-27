@@ -8,13 +8,20 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://dl3n44lgld252" path="res://Assets/characters/sprites/LoloPilo.png" id="4_sprite"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
-[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://3l0feupwhfmd" path="res://Dialogue/Timelines/LoloPilo/Purchase.dtl" id="pilo_purchase"]
 [ext_resource type="Resource" uid="uid://cdoooy3atel0" path="res://Dialogue/Timelines/LoloPilo/Story.dtl" id="pilo_story"]
 [ext_resource type="Resource" uid="uid://dh3a7yqbvkby1" path="res://Dialogue/Timelines/LoloPilo/Visit.dtl" id="pilo_visit"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
 [ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
+
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The 1968 Wrist"
+categories = PackedStringArray("candy")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="prereq_ch1_tk"]
 script = ExtResource("chap_prereq_script")
@@ -25,6 +32,14 @@ min_chapter = 1
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch1_tk")])
 
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Shortcut Past the Mound"
+categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch1")
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch2_tk"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "tk"
@@ -33,6 +48,14 @@ min_chapter = 2
 [sub_resource type="Resource" id="prereq_group_ch2"]
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch2_tk")])
+
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Bitter Modern Taste"
+categories = PackedStringArray("sachet")
+prerequisites = SubResource("prereq_group_ch2")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="prereq_ch3_tk"]
 script = ExtResource("chap_prereq_script")
@@ -43,6 +66,14 @@ min_chapter = 3
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_tk")])
 
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "The Champion's Wager"
+categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch3")
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch4_tk"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "tk"
@@ -52,6 +83,14 @@ min_chapter = 4
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_tk")])
 
+[sub_resource type="Resource" id="chapter_4"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Hooves on the Half-Court"
+categories = PackedStringArray("candy")
+prerequisites = SubResource("prereq_group_ch4")
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch5_tk"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "tk"
@@ -60,45 +99,6 @@ min_chapter = 5
 [sub_resource type="Resource" id="prereq_group_ch5"]
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch5_tk")])
-
-[sub_resource type="Resource" id="chapter_0"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The 1968 Wrist"
-categories = PackedStringArray("candy")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_1"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Shortcut Past the Mound"
-categories = PackedStringArray("snack")
-prerequisites = SubResource("prereq_group_ch1")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_2"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Bitter Modern Taste"
-categories = PackedStringArray("sachet")
-prerequisites = SubResource("prereq_group_ch2")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_3"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Champion's Wager"
-categories = PackedStringArray("snack")
-prerequisites = SubResource("prereq_group_ch3")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_4"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Hooves on the Half-Court"
-categories = PackedStringArray("candy")
-prerequisites = SubResource("prereq_group_ch4")
-substitute_item_ids = null
-substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")

@@ -80,6 +80,25 @@ theme_override_styles/focus = SubResource("btn_hover")
 text = "Continue"
 alignment = 0
 
+[node name="LoadGame" type="Button" parent="Buttons" unique_id=189234761]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_focus_color = Color(1, 0.92, 0.79, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.73, 0.63, 1)
+theme_override_colors/font_hover_color = Color(1.15, 1.15, 1.15, 1)
+theme_override_colors/font_outline_color = Color(0.24, 0.14, 0.06, 0.92)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("4_ghw46")
+theme_override_font_sizes/font_size = 54
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_normal")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/disabled = SubResource("btn_disabled")
+theme_override_styles/focus = SubResource("btn_hover")
+text = "Load Game"
+alignment = 0
+
 [node name="NewGame" type="Button" parent="Buttons" unique_id=415128291]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.79, 1)
@@ -165,6 +184,7 @@ text = "Now Playing - Song by BGM President"
 vertical_alignment = 2
 
 [connection signal="pressed" from="Buttons/Continue" to="." method="_on_continue_pressed"]
+[connection signal="pressed" from="Buttons/LoadGame" to="." method="_on_load_game_pressed"]
 [connection signal="pressed" from="Buttons/NewGame" to="." method="_on_new_game_pressed"]
 [connection signal="pressed" from="Buttons/Options" to="." method="_on_options_pressed"]
 [connection signal="pressed" from="Buttons/Exit" to="." method="_on_exit_pressed"]

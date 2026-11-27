@@ -309,7 +309,9 @@ func _build_visitor_radio_hint(vis: CustomerData) -> String:
 		"brahim":
 			return ("Brahim just crossed the creek bridge from Tatay's porch! He usually reaches for %s." % fav_list) if not fav_list.is_empty() else "Brahim is strolling up from the creek bridge!"
 		"danilo":
-			return ("Amber sunglasses spotted slouching toward your shady awning! Danilo likes %s." % fav_list) if not fav_list.is_empty() else "Danilo is heading for your shady corner!"
+			return ("That laid-back watcher is strolling toward your shady awning! Danilo likes %s." % fav_list) if not fav_list.is_empty() else "Danilo is heading for your shady corner!"
+		"reynamayari":
+			return ("Someone in a suspiciously fancy disguise is strolling down your lane! Keep %s stocked!" % fav_list) if not fav_list.is_empty() else "Someone in a very regal disguise is strolling toward your counter!"
 		"rosalyn":
 			return ("A quiet breeze drifted in from the highway bend! Rosalyn appreciates %s." % fav_list) if not fav_list.is_empty() else "A gentle visitor is drifting in from the highway bend!"
 		"rodel":

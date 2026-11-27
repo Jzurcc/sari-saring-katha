@@ -19,6 +19,22 @@
 [ext_resource type="Resource" uid="uid://d2s4cte6itmct" path="res://Dialogue/Timelines/Rosalyn/Visit.dtl" id="ros_visit"]
 [ext_resource type="Resource" uid="uid://bnumeiduxs8n1" path="res://Dialogue/Timelines/Rosalyn/Story.dtl" id="story_timeline"]
 
+[sub_resource type="Resource" id="chapter_0"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Under the Bulb"
+is_visit_only = true
+categories = null
+substitute_item_ids = null
+substitute_categories = null
+
+[sub_resource type="Resource" id="chapter_1"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Under the Floorboards"
+is_visit_only = true
+categories = null
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch2_brahim"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "brahim"
@@ -28,6 +44,15 @@ min_chapter = 1
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch2_brahim")])
 
+[sub_resource type="Resource" id="chapter_2"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Sleeves Down"
+is_visit_only = true
+categories = null
+prerequisites = SubResource("prereq_group_ch2")
+substitute_item_ids = null
+substitute_categories = null
+
 [sub_resource type="Resource" id="prereq_ch3_danilo"]
 script = ExtResource("chap_prereq_script")
 target_character_id = "danilo"
@@ -36,6 +61,15 @@ min_chapter = 2
 [sub_resource type="Resource" id="prereq_group_ch3"]
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_danilo")])
+
+[sub_resource type="Resource" id="chapter_3"]
+script = ExtResource("chapterdata_script")
+chapter_name = "Four Centavos"
+is_visit_only = true
+categories = null
+prerequisites = SubResource("prereq_group_ch3")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="prereq_ch4_brahim"]
 script = ExtResource("chap_prereq_script")
@@ -51,38 +85,21 @@ min_chapter = 4
 script = ExtResource("prereq_group_script")
 prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_brahim"), SubResource("prereq_ch4_danilo")])
 
-[sub_resource type="Resource" id="chapter_0"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Under the Bulb"
-is_visit_only = true
-
-[sub_resource type="Resource" id="chapter_1"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Under the Floorboards"
-is_visit_only = true
-
-[sub_resource type="Resource" id="chapter_2"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Sleeves Down"
-is_visit_only = true
-prerequisites = SubResource("prereq_group_ch2")
-
-[sub_resource type="Resource" id="chapter_3"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Four Centavos"
-is_visit_only = true
-prerequisites = SubResource("prereq_group_ch3")
-
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "The Grain of the Wood"
 is_visit_only = true
+categories = null
 prerequisites = SubResource("prereq_group_ch4")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Two Green Wrappers"
 categories = PackedStringArray("candy")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")

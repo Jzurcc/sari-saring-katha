@@ -142,6 +142,7 @@ func _show_pill(immediate: bool) -> void:
 	_pill.modulate.a = 0.0
 	_pill.scale = Vector2(0.92, 0.92)
 	_vis_tween = create_tween().set_parallel(true)
+	_vis_tween.set_ignore_time_scale(true)
 	_vis_tween.tween_property(_pill, "position:x", 24.0, 0.34).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_vis_tween.tween_property(_pill, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
 	_vis_tween.tween_property(_pill, "scale", Vector2.ONE, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -159,6 +160,7 @@ func _hide_pill(immediate: bool) -> void:
 		_pill.modulate.a = 0.0
 		return
 	_vis_tween = create_tween().set_parallel(true)
+	_vis_tween.set_ignore_time_scale(true)
 	_vis_tween.tween_property(_pill, "position:x", -16.0, 0.24).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	_vis_tween.tween_property(_pill, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
 	_vis_tween.chain().tween_callback(func():
@@ -166,16 +168,23 @@ func _hide_pill(immediate: bool) -> void:
 			_pill.visible = false
 	)
 
+var _pop_tween: Tween = null
+
 func _pop_attention() -> void:
+	if _pop_tween and _pop_tween.is_valid():
+		_pop_tween.kill()
 	_pill.pivot_offset = _pill.size * 0.5
-	var tw := create_tween()
-	tw.tween_property(_pill, "scale", Vector2(1.07, 1.07), 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_pill, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_pop_tween = create_tween()
+	_pop_tween.set_ignore_time_scale(true)
+	# Area-preserving squash & stretch pop
+	_pop_tween.tween_property(_pill, "scale", Vector2(1.10, 0.91), 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_pop_tween.tween_property(_pill, "scale", Vector2.ONE, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _start_border_pulse() -> void:
 	if _pulse_tween and _pulse_tween.is_valid():
 		return
 	_pulse_tween = create_tween().set_loops()
+	_pulse_tween.set_ignore_time_scale(true)
 	_pulse_tween.tween_property(_pill_style, "border_color", COL_GOLD_BRIGHT, 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_pulse_tween.tween_property(_pill_style, "border_color", Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.45), 0.85).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 

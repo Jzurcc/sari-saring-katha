@@ -37,6 +37,10 @@ class CircleMedallion extends Control:
 var _root: Control
 var _dock: HBoxContainer
 var _key_labels: Dictionary = {} # action -> Label
+var _medallions: Dictionary = {} # action -> Control
+var _keycaps: Dictionary = {} # action -> Control
+var _medallion_tweens: Dictionary = {} # action -> Tween
+var _dot_tweens: Dictionary = {} # Panel -> Tween
 var _journal_dot: Panel
 var _upgrades_dot: Panel
 var _sync_timer: float = 0.0
@@ -48,6 +52,14 @@ func _ready() -> void:
 	_ensure_input_actions()
 	_build_ui()
 	_refresh_keycaps()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	for s in SHORTCUTS:
+		var act := str(s["action"])
+		if event.is_action_pressed(act):
+			_pop_medallion(act)
+			break
 
 
 func _process(delta: float) -> void:
@@ -148,7 +160,10 @@ func _build_ui() -> void:
 		key_panel.add_child(key_lbl)
 		circle.add_child(key_panel)
 
-		_key_labels[str(s["action"])] = key_lbl
+		var act_key := str(s["action"])
+		_key_labels[act_key] = key_lbl
+		_medallions[act_key] = circle
+		_keycaps[act_key] = key_panel
 
 
 func _refresh_keycaps() -> void:
@@ -209,8 +224,60 @@ func _has_any_buyable_upgrade() -> bool:
 	return false
 
 
+func _pop_medallion(action: String) -> void:
+	var circle: Control = _medallions.get(action)
+	if not is_instance_valid(circle):
+		return
+	var prev: Tween = _medallion_tweens.get(action)
+	if prev and prev.is_valid():
+		prev.kill()
+	circle.pivot_offset = circle.size * 0.5
+	var tw := create_tween()
+	tw.set_ignore_time_scale(true)
+	# Crisp area-preserving press squash -> overshoot -> rest
+	tw.tween_property(circle, "scale", Vector2(0.88, 1.12), 0.06).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(circle, "scale", Vector2(1.06, 0.95), 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(circle, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var keycap: Control = _keycaps.get(action)
+	if is_instance_valid(keycap):
+		keycap.pivot_offset = keycap.size * 0.5
+		tw.parallel().tween_property(keycap, "scale", Vector2(0.86, 0.86), 0.06).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.chain().tween_property(keycap, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_medallion_tweens[action] = tw
+
+
+func _set_dot_visible(dot: Panel, should_show: bool) -> void:
+	if not is_instance_valid(dot):
+		return
+	if dot.visible == should_show:
+		return
+	var prev: Tween = _dot_tweens.get(dot)
+	if prev and prev.is_valid():
+		prev.kill()
+	dot.visible = should_show
+	dot.pivot_offset = dot.size * 0.5
+	if should_show:
+		dot.scale = Vector2.ZERO
+		var tw := create_tween()
+		tw.set_ignore_time_scale(true)
+		tw.tween_property(dot, "scale", Vector2.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_callback(func():
+			if not is_instance_valid(dot) or not dot.visible:
+				return
+			var pulse := create_tween().set_loops()
+			pulse.set_ignore_time_scale(true)
+			pulse.tween_property(dot, "scale", Vector2(1.14, 1.14), 0.90).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			pulse.tween_property(dot, "scale", Vector2.ONE, 0.90).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			_dot_tweens[dot] = pulse
+		)
+		_dot_tweens[dot] = tw
+	else:
+		dot.scale = Vector2.ONE
+		_dot_tweens.erase(dot)
+
+
 func _refresh_visibility_and_badges() -> void:
 	if is_instance_valid(_journal_dot) and is_instance_valid(CharacterProgressionManager):
-		_journal_dot.visible = CharacterProgressionManager.has_any_unread_journal()
+		_set_dot_visible(_journal_dot, CharacterProgressionManager.has_any_unread_journal())
 	if is_instance_valid(_upgrades_dot):
-		_upgrades_dot.visible = _has_any_buyable_upgrade()
+		_set_dot_visible(_upgrades_dot, _has_any_buyable_upgrade())

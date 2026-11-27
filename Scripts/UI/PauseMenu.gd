@@ -557,16 +557,16 @@ func _on_main_menu_pressed() -> void:
 			Dialogic.end_timeline()
 
 	if has_node("/root/SceneTransition"):
-		SaveManager.force_save()
+		SaveManager.force_save("Return to Menu", false)
 		SceneTransition.change_scene("res://Scenes/MainMenu.tscn")
 	else:
-		SaveManager.force_save()
+		SaveManager.force_save("Return to Menu", false)
 		get_tree().change_scene_to_file("res://Scenes/MainMenu.tscn")
 
 
 func _on_save_game_pressed() -> void:
 	_play_confirm()
-	SaveManager.force_save()
+	SaveManager.create_manual_save()
 	var save_btn := buttons.get_node_or_null("SaveGame") as Button
 	if is_instance_valid(save_btn):
 		if _save_flash_tween and _save_flash_tween.is_valid():
@@ -584,7 +584,7 @@ func _on_save_game_pressed() -> void:
 
 func _on_exit_pressed() -> void:
 	_play_confirm()
-	SaveManager.force_save()
+	SaveManager.force_save("Exit Save", false)
 	get_tree().quit()
 
 

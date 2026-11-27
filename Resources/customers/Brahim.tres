@@ -18,15 +18,6 @@
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
 [ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 
-[sub_resource type="Resource" id="prereq_ch3_rosalyn"]
-script = ExtResource("chap_prereq_script")
-target_character_id = "rosalyn"
-min_chapter = 3
-
-[sub_resource type="Resource" id="prereq_group_ch3"]
-script = ExtResource("prereq_group_script")
-prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rosalyn")])
-
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Chalk and Bronze"
@@ -47,6 +38,15 @@ chapter_name = "What the Pulse Costs"
 categories = PackedStringArray("can")
 substitute_item_ids = null
 substitute_categories = null
+
+[sub_resource type="Resource" id="prereq_ch3_rosalyn"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rosalyn"
+min_chapter = 3
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rosalyn")])
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
