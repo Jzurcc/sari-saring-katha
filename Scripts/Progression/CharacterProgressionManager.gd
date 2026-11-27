@@ -426,9 +426,10 @@ func _get_unlocked_characters_from(all_chars: Array, current_tier: int, current_
 		# Day 1 special rule: Mario is the tutorial, not a regular customer
 		if current_day == 1 and c.get_clean_id() == "unclemario":
 			continue
-		# Reyna Mayari only appears after day 2
+		# Reyna Mayari joins daytime waves once the 30% Daylight Audience milestone is unlocked
 		if c.is_collector():
-			if current_quota_day > 2:
+			var sm := _get_story_manager()
+			if sm != null and sm.is_daytime_mayari_unlocked():
 				unlocked.append(c)
 		elif c.unlock_tier <= current_tier:
 			unlocked.append(c)

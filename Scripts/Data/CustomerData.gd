@@ -17,6 +17,8 @@ const MotionProfileScript = preload("res://Scripts/Data/CustomerMotionProfile.gd
 @export_group("Visuals")
 ## The sprite sheet / texture displayed for this customer in the 3D world.
 @export var sprite_texture: Texture2D
+## Optional alternate sprite texture used during daytime store visits (e.g., Reyna Mayari disguised).
+@export var daytime_sprite_texture: Texture2D
 ## Multiplier applied to the 3D sprite scale.
 @export var sprite_scale: float = 1.0
 ## Vertical ratio for the speech bubble position relative to total height (0.0 to 1.0).

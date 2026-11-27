@@ -541,8 +541,7 @@ func handle_social_visit_finished(customer: Customer) -> void:
 
 	var ctx := customer.transaction_context
 	if not customer.get_meta("visit_stat_recorded", false) \
-		and (ctx == null or not ctx.is_guided_tutorial) \
-		and (customer.customer_data == null or not customer.customer_data.is_collector()):
+		and (ctx == null or (not ctx.is_guided_tutorial and not ctx.is_nightly_collection)):
 		customer.set_meta("visit_stat_recorded", true)
 		StoryManager.award_customer_completion_xp(customer)
 		StoryManager.record_daily_stat_int("visits_served", 1)

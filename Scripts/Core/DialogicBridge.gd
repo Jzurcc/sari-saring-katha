@@ -92,6 +92,73 @@ static func sync_transaction(
 		Dialogic.VAR.set_variable("Flag_BuboyTrustedErrand", bool(CharacterProgressionManager.get_world_flag("buboy_trusted_errand", false)))
 		Dialogic.VAR.set_variable("Flag_BuboyRunner", CharacterProgressionManager.get_character_outcome("buboy") == "trusted_runner")
 
+		# --- Pair 1 Persistent Cross-Web Flags ---
+		Dialogic.VAR.set_variable("Flag_PiloPunsoRattled", bool(CharacterProgressionManager.get_world_flag("pilo_punso_rattled", false)))
+		Dialogic.VAR.set_variable("Flag_PiloSubSweet", bool(CharacterProgressionManager.get_world_flag("pilo_sub_sweet", false)))
+		Dialogic.VAR.set_variable("Flag_PiloWagerSet", bool(CharacterProgressionManager.get_world_flag("pilo_wager_set", false)))
+		Dialogic.VAR.set_variable("Flag_PiloChampion", CharacterProgressionManager.get_character_outcome("lolopilo") == "grand_champion")
+		Dialogic.VAR.set_variable("Flag_TKTrueNameKnown", bool(CharacterProgressionManager.get_world_flag("tk_true_name_known", false)))
+		Dialogic.VAR.set_variable("Flag_TKSubHydrate", bool(CharacterProgressionManager.get_world_flag("tk_sub_hydrate", false)))
+		Dialogic.VAR.set_variable("Flag_TKRematchAccepted", bool(CharacterProgressionManager.get_world_flag("tk_rematch_accepted", false)))
+		Dialogic.VAR.set_variable("Flag_TKTrailWarden", CharacterProgressionManager.get_character_outcome("tk") == "trail_warden")
+
+		# --- Pair 2 Persistent Cross-Web Flags ---
+		Dialogic.VAR.set_variable("Flag_RodelNameRemembered", bool(CharacterProgressionManager.get_world_flag("rodel_name_remembered", false)))
+		Dialogic.VAR.set_variable("Flag_RodelSubWater", bool(CharacterProgressionManager.get_world_flag("rodel_sub_water", false)))
+		Dialogic.VAR.set_variable("Flag_RodelShelteredBird", bool(CharacterProgressionManager.get_world_flag("rodel_sheltered_bird", false)))
+		Dialogic.VAR.set_variable("Flag_RodelRememberedAnito", CharacterProgressionManager.get_character_outcome("rodel") == "remembered_anito")
+		Dialogic.VAR.set_variable("Flag_SmkMetRodel", bool(CharacterProgressionManager.get_world_flag("smk_met_rodel", false)))
+		Dialogic.VAR.set_variable("Flag_SmkSubFish", bool(CharacterProgressionManager.get_world_flag("smk_sub_fish", false)))
+		Dialogic.VAR.set_variable("Flag_SmkHonoredRodel", bool(CharacterProgressionManager.get_world_flag("smk_honored_rodel", false)))
+		Dialogic.VAR.set_variable("Flag_SmkLivingEmblem", CharacterProgressionManager.get_character_outcome("sarimanok") == "living_emblem")
+
+		# --- Triangle B Persistent Cross-Web Flags ---
+		Dialogic.VAR.set_variable("Flag_RosalynSeen", bool(CharacterProgressionManager.get_world_flag("rosalyn_seen", false)))
+		Dialogic.VAR.set_variable("Flag_RosalynWelcome", bool(CharacterProgressionManager.get_world_flag("rosalyn_welcome", false)))
+		Dialogic.VAR.set_variable("Flag_RosalynErrandKnown", bool(CharacterProgressionManager.get_world_flag("rosalyn_errand_known", false)))
+		Dialogic.VAR.set_variable("Flag_RosalynAtPeace", CharacterProgressionManager.get_character_outcome("rosalyn") == "peaceful_anchor")
+		Dialogic.VAR.set_variable("Flag_BrahimSteadyStart", bool(CharacterProgressionManager.get_world_flag("brahim_steady_start", false)))
+		Dialogic.VAR.set_variable("Flag_BrahimSubRest", bool(CharacterProgressionManager.get_world_flag("brahim_sub_rest", false)))
+		Dialogic.VAR.set_variable("Flag_BrahimLanternWard", bool(CharacterProgressionManager.get_world_flag("brahim_lantern_ward", false)))
+		Dialogic.VAR.set_variable("Flag_BrahimTrueAlbularyo", CharacterProgressionManager.get_character_outcome("brahim") == "true_albularyo")
+		Dialogic.VAR.set_variable("Flag_DaniloSawRosalyn", bool(CharacterProgressionManager.get_world_flag("danilo_saw_rosalyn", false)))
+		Dialogic.VAR.set_variable("Flag_DaniloEyesKnown", bool(CharacterProgressionManager.get_world_flag("danilo_eyes_known", false)))
+		Dialogic.VAR.set_variable("Flag_DaniloTracedTether", bool(CharacterProgressionManager.get_world_flag("danilo_traced_tether", false)))
+		Dialogic.VAR.set_variable("Flag_DaniloWatchfulAlly", CharacterProgressionManager.get_character_outcome("danilo") == "watchful_ally")
+
+		# --- Reyna Mayari Persistent Flags & Barangay Convergence ---
+		Dialogic.VAR.set_variable("Flag_MayariOwesUtang", bool(CharacterProgressionManager.get_world_flag("mayari_owes_utang", false)))
+		Dialogic.VAR.set_variable("Flag_MayariRefusedBlackRice", bool(CharacterProgressionManager.get_world_flag("mayari_refused_black_rice", false)))
+		Dialogic.VAR.set_variable("Flag_MayariTrustBarangay", bool(CharacterProgressionManager.get_world_flag("mayari_trust_barangay", false)))
+		Dialogic.VAR.set_variable("Flag_MayariQueenAtCounter", CharacterProgressionManager.get_character_outcome("reynamayari") == "queen_at_the_counter")
+
+		var ally_count: int = 0
+		if CharacterProgressionManager.get_character_outcome("kuyakap") in ["quit_smoking", "cutting_back"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("manangana") in ["flew_again", "steady_kitchen"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("buboy") in ["trusted_runner", "teks_buddy"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("lolopilo") in ["grand_champion", "happy_trickster"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("tk") in ["trail_warden", "modern_strider"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("rodel") in ["remembered_anito", "coastal_envoy"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("sarimanok") in ["living_emblem", "proud_patron"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("brahim") in ["true_albularyo", "steady_apprentice"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("danilo") in ["watchful_ally", "bench_regular"]:
+			ally_count += 1
+		if CharacterProgressionManager.get_character_outcome("rosalyn") in ["peaceful_anchor", "lingering_guest"]:
+			ally_count += 1
+		Dialogic.VAR.set_variable("Global_CompletedNeighborsCount", float(ally_count))
+
+	if is_instance_valid(StoryManager):
+		Dialogic.VAR.set_variable("Global_MayariMet", StoryManager.is_mayari_met)
+		Dialogic.VAR.set_variable("Global_LedgerTier", float(StoryManager.get_ledger_tier()))
+
 	# --- Rumor & Per-Customer Modifiers ---
 	Dialogic.VAR.set_variable("Global_RumorActive", 1.0 if transaction.rumor_active else 0.0)
 	Dialogic.VAR.set_variable("Global_RumorType", transaction.rumor_type)

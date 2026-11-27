@@ -86,31 +86,40 @@ func _sync_collision_layer() -> void:
 		on_hover(false)
 
 
+func _get_active_sprite_texture() -> Texture2D:
+	if not customer_data:
+		return null
+	if customer_data.daytime_sprite_texture != null and transaction_context != null and not transaction_context.is_nightly_collection:
+		return customer_data.daytime_sprite_texture
+	return customer_data.sprite_texture
+
+
 func _apply_character_visuals() -> void:
 	if not customer_data or not body_sprite:
 		return
-	if customer_data.sprite_texture:
-		body_sprite.texture = customer_data.sprite_texture
+	var active_tex: Texture2D = _get_active_sprite_texture()
+	if active_tex:
+		body_sprite.texture = active_tex
 		# Dynamically set the offset to half the texture height (in pixels).
 		# Since 'centered' is true, this pins the texture bottom to the node origin.
-		body_sprite.offset.y = customer_data.sprite_texture.get_height() / 2.0
+		body_sprite.offset.y = active_tex.get_height() / 2.0
 
 	body_sprite.position.y = 0
 	body_sprite.scale = Vector3.ONE * customer_data.sprite_scale
 
 	# Position the SpeechMarker relative to the character's height and data ratio.
 	var speech_marker = get_node_or_null("SpeechMarker")
-	if speech_marker and customer_data.sprite_texture:
-		var full_height_y = customer_data.sprite_texture.get_height() * body_sprite.pixel_size
+	if speech_marker and active_tex:
+		var full_height_y = active_tex.get_height() * body_sprite.pixel_size
 		var ratio = customer_data.speech_marker_height_ratio
 		speech_marker.position.y = (full_height_y * ratio) * customer_data.sprite_scale
 
 	# Adjust the collision shape so it tightly fits the customer's sprite boundaries.
 	var collision_shape = get_node_or_null("CollisionShape3D")
-	if collision_shape and collision_shape.shape is BoxShape3D and customer_data.sprite_texture:
+	if collision_shape and collision_shape.shape is BoxShape3D and active_tex:
 		var shape_copy: BoxShape3D = collision_shape.shape.duplicate()
-		var sprite_w = customer_data.sprite_texture.get_width() * body_sprite.pixel_size * customer_data.sprite_scale
-		var sprite_h = customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale
+		var sprite_w = active_tex.get_width() * body_sprite.pixel_size * customer_data.sprite_scale
+		var sprite_h = active_tex.get_height() * body_sprite.pixel_size * customer_data.sprite_scale
 		shape_copy.size = Vector3(sprite_w, sprite_h, shape_copy.size.z)
 		collision_shape.shape = shape_copy
 		collision_shape.position.y = shape_copy.size.y / 2.0
@@ -136,8 +145,9 @@ func setup(context: TransactionContext, target: Vector3, exit: Vector3 = Vector3
 		_attention_badge = AttentionBadge3D.new()
 		add_child(_attention_badge)
 		var badge_y := 1.8
-		if customer_data.sprite_texture:
-			badge_y = (customer_data.sprite_texture.get_height() * body_sprite.pixel_size * customer_data.sprite_scale) + 0.24
+		var badge_tex: Texture2D = _get_active_sprite_texture()
+		if badge_tex:
+			badge_y = (badge_tex.get_height() * body_sprite.pixel_size * customer_data.sprite_scale) + 0.24
 		elif speech_marker:
 			badge_y = speech_marker.position.y + 0.55
 		_attention_badge.position = Vector3(0.0, badge_y, 0.0)

@@ -12,6 +12,7 @@ var is_tutorial_task_active: bool = false
 var is_blocking_pickup: bool = false
 var current_tutorial_task_id: String = ""
 var _current_task_signal: Signal
+var _overlay_task_opened: bool = false
 
 func _init(manager: Node) -> void:
 	gm = manager
@@ -123,7 +124,7 @@ func handle_dialogic_signal(argument: String) -> bool:
 		return true
 	elif argument == "wait_for_price_change" or argument == "wait_for_price_increase" or argument == "wait_for_profit_increase":
 		is_blocking_pickup = false
-		_start_tutorial_task("wait_for_price_change", "Press Alt, hover an item on the shelf, and scroll to adjust its price.", EventBus.price_increased)
+		_start_tutorial_task("wait_for_price_change", "Hold Alt + scroll on Anoba to adjust price (or press L for Price Ledger).", EventBus.price_increased)
 		if not EventBus.price_decreased.is_connected(_on_tutorial_task_completed):
 			EventBus.price_decreased.connect(_on_tutorial_task_completed, CONNECT_ONE_SHOT)
 		return true
@@ -145,6 +146,20 @@ func handle_dialogic_signal(argument: String) -> bool:
 		if layout:
 			layout.hide()
 		EventBus.helper_prompt_requested.emit("Click the Nokia phone behind you.", true)
+		return true
+	elif argument == "wait_for_upgrades":
+		_start_overlay_tutorial_task(
+			"wait_for_upgrades",
+			"Press U to open the Store Upgrades board.",
+			EventBus.upgrades_overlay_toggled
+		)
+		return true
+	elif argument == "wait_for_events":
+		_start_overlay_tutorial_task(
+			"wait_for_events",
+			"Press C to open the Calendar & Events board.",
+			EventBus.events_overlay_toggled
+		)
 		return true
 	elif argument == "wait_look_at_fridge":
 		_start_tutorial_task_timed(3.0, "Look at the Refrigerator.")
@@ -209,6 +224,36 @@ func _start_tutorial_task(task_id: String, prompt: String, completion_signal: Si
 
 	if not _current_task_signal.is_connected(_on_tutorial_task_completed):
 		_current_task_signal.connect(_on_tutorial_task_completed)
+
+func _start_overlay_tutorial_task(task_id: String, prompt: String, toggle_signal: Signal) -> void:
+	is_blocking_pickup = true
+	is_tutorial_task_active = true
+	current_tutorial_task_id = task_id
+	_overlay_task_opened = false
+	Dialogic.paused = true
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	var layout = Dialogic.Styles.get_layout_node()
+	if layout:
+		layout.hide()
+	EventBus.helper_prompt_requested.emit(prompt, true)
+	_current_task_signal = toggle_signal
+	if not _current_task_signal.is_connected(_on_overlay_tutorial_toggled):
+		_current_task_signal.connect(_on_overlay_tutorial_toggled)
+
+func _on_overlay_tutorial_toggled(opened: bool) -> void:
+	if not is_tutorial_task_active:
+		return
+	if opened:
+		_overlay_task_opened = true
+		if current_tutorial_task_id == "wait_for_upgrades":
+			EventBus.helper_prompt_requested.emit("Browse your upgrades, then press U or Esc to close.", true)
+		elif current_tutorial_task_id == "wait_for_events":
+			EventBus.helper_prompt_requested.emit("Check events & calendar, then press C or Esc to close.", true)
+	elif _overlay_task_opened:
+		_overlay_task_opened = false
+		if _current_task_signal and not _current_task_signal.is_null() and _current_task_signal.is_connected(_on_overlay_tutorial_toggled):
+			_current_task_signal.disconnect(_on_overlay_tutorial_toggled)
+		_on_tutorial_task_completed()
 
 func _start_tutorial_task_timed(duration: float, prompt: String) -> void:
 	is_tutorial_task_active = true
@@ -290,5 +335,9 @@ func cancel_tutorial_tasks() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _cancel_tutorial_signal_connection() -> void:
-	if _current_task_signal and _current_task_signal.is_connected(_on_tutorial_task_completed):
-		_current_task_signal.disconnect(_on_tutorial_task_completed)
+	_overlay_task_opened = false
+	if _current_task_signal and not _current_task_signal.is_null():
+		if _current_task_signal.is_connected(_on_tutorial_task_completed):
+			_current_task_signal.disconnect(_on_tutorial_task_completed)
+		if _current_task_signal.is_connected(_on_overlay_tutorial_toggled):
+			_current_task_signal.disconnect(_on_overlay_tutorial_toggled)

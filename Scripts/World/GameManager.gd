@@ -517,9 +517,6 @@ func _handle_open_tally_offer() -> void:
 	if tier == "cleared" or StoryManager.tally_total_paid >= StoryManager.TALLY_GOAL - 0.01:
 		StoryManager.tally_total_paid = StoryManager.TALLY_GOAL
 		StoryManager.is_mayari_debt_active = false
-		var mayari_path := "res://Resources/customers/ReynaMayari.tres"
-		while CharacterProgressionManager.get_chapter(mayari_path) < 8:
-			CharacterProgressionManager.advance_story_direct(mayari_path)
 
 	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if is_sufficient else 0.0)
 	Dialogic.VAR.set_variable("Global_TallyOffer", int(roundf(offer_amount)))
@@ -530,6 +527,8 @@ func _handle_open_tally_offer() -> void:
 	Dialogic.VAR.set_variable("Global_TallyGenerous", int(roundf(StoryManager.get_nightly_generous_tally())))
 	Dialogic.VAR.set_variable("Global_TallyTier", tier)
 	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
+	Dialogic.VAR.set_variable("Global_MayariMet", StoryManager.is_mayari_met)
+	Dialogic.VAR.set_variable("Global_LedgerTier", float(StoryManager.get_ledger_tier()))
 
 	EventBus.tally_contribution_made.emit(offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL)
 	EventBus.debt_quota_met.emit(is_sufficient)
@@ -596,6 +595,8 @@ func prepare_nightly_quota() -> float:
 	Dialogic.VAR.set_variable("Global_TallyRemaining", int(roundf(StoryManager.get_tally_remaining())))
 	Dialogic.VAR.set_variable("Global_HasEnoughMoney", 1.0 if can_meet_min else 0.0)
 	Dialogic.VAR.set_variable("Global_QuotaDay", float(quota_day))
+	Dialogic.VAR.set_variable("Global_MayariMet", StoryManager.is_mayari_met)
+	Dialogic.VAR.set_variable("Global_LedgerTier", float(StoryManager.get_ledger_tier()))
 	LogManager.info("GameManager", "Prepared Nightly Tally: Min=₱%.0f, Generous=₱%.0f, Paid=₱%.0f/₱%.0f" % [
 		_pending_quota, generous_amt, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL
 	])
