@@ -2,7 +2,7 @@
 "@path": "res://addons/dialogic/Resources/character.gd",
 "@subpath": NodePath(""),
 &"_translation_id": "",
-&"color": Color(0, 0, 0, 1),
+&"color": Color(0.32, 0.68, 0.72, 1),
 &"custom_info": {
 "prefix": "",
 "sound_mood_default": "",
@@ -11,10 +11,10 @@
 "suffix": ""
 },
 &"default_portrait": "",
-&"description": "",
+&"description": "A courteous, fish-out-of-water Ilokano Litao from the northern seas whose ancient name has been overshadowed by Sirena and Siyokoy lore.",
 &"display_name": "Rodel",
 &"mirror": false,
-&"nicknames": [""],
+&"nicknames": ["Litao"],
 &"offset": Vector2(0, 0),
 &"portraits": {},
 &"scale": 1.0

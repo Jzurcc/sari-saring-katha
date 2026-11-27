@@ -1,47 +1,100 @@
+# Rodel - Unified Everyday Purchase Timeline (3-Slot Sandwich Pattern)
+# Shifts ONLY on meaningful story flags (Flag_RodelRememberedAnito / Flag_RodelSubWater).
+# Voice: Courteous, slightly formal Ilokano Litao water anito. Zero time-of-day words. Zero em-dashes.
+
 label Greeting
-# [signal arg="refresh_desires"]
-if {Transaction_GreetingVar} <= 50:
-	Rodel: Greetings, Keeper of the Dry Shelves. I find the atmosphere here remarkably abrasive today.
+# Slot 1: P1-P3 Reactive Opener or High-Price Remark
+if {Transaction_HasReactiveOpener}:
+	Rodel: {Transaction_ReactiveOpener}
+elif {Global_HighPriceActive}:
+	Rodel: Steep tide on your price tags, keeper. I shall measure my coins with care.
+
+# Slot 2: Upfront Utang Ask OR Flag-Driven Request Pool (4 grounded variations per state)
+if {Transaction_WantsDebt}:
+	Rodel: Pardon me, keeper. I reached for [color=#0f6e2f]{Transaction_ItemWants}[/color] and brought smooth sea shells instead of paper pesos.
+	Rodel: Might you record my name in your lista until my next walk up from the creek?
+	- Sure Rodel, on the lista.
+		[signal arg="utang_accepted"]
+		Rodel: Salamat, keeper. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever your hands are free.
+	- Sorry Rodel, cash only right now.
+		[signal arg="utang_rejected"]
+		Rodel: Fair custom, keeper. I shall return to the bamboo clump for proper inland coins.
+elif {Flag_RodelRememberedAnito}:
+	if {Transaction_GreetingVar} < 25:
+		Rodel: Dayu-dayu, keeper. Calm breeze down by the creek bamboo. May I get [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 50:
+		Rodel: Two neighbors greeted me by name on the walk over. Let me buy [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	elif {Transaction_GreetingVar} < 75:
+		Rodel: Your counter feels like a steady shore, keeper. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		Rodel: Exact inland coins ready on the wood. [color=#0f6e2f]{Transaction_ItemWants}[/color], salamat.
+elif {Flag_RodelSubWater}:
+	if {Transaction_GreetingVar} < 25:
+		Rodel: Your cold shelves ease this dry concrete road, keeper. May I purchase [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 50:
+		Rodel: Dayu-dayu, keeper. Stopping up from the creek for [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Transaction_GreetingVar} < 75:
+		Rodel: Still marveling at your neat inland packaging. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	else:
+		Rodel: Polite greeting to the counter. Let me take [color=#0f6e2f]{Transaction_ItemWants}[/color].
 else:
-	Rodel: Ambassador. Your terrestrial sun is behaving like a relentless predator. My fluid-reserves are low.
-	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
-
-if {Global_HighPriceActive}:
-	Rodel: This... this is quite steep for a local shop, don't you think? [pause=0.3] I expected more competitive pricing.
-
+	if {Transaction_GreetingVar} < 25:
+		Rodel: Dayu-dayu, keeper. Dry crossing from the creek. May I buy [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 50:
+		Rodel: Pardon the damp hem, keeper. I am hoping for [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Transaction_GreetingVar} < 75:
+		Rodel: Your shelves are neatly kept. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color] when you are ready.
+	else:
+		Rodel: Inland coins counted properly this pass. [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
-	Rodel: I require a {Transaction_ItemWants} to stabilize my hydro-stasis. 
-else:
-	Rodel: I must acquire a {Transaction_ItemWants}. [pause=0.4] This land-fuel is necessary for my continued search.
-- Stand by, Rodel.
-	Rodel: Understood. Maintaining position. Efficiency check: optimal.
+Rodel: No hurry, keeper. Still hoping for [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever your hands are free.
+- Coming right up, Rodel.
 	[end_timeline]
-- Sorry, Rodel, we're fresh out of stock.
-	Rodel: A critical error. My search must be re-routed. [pause=0.4] Farewell, Ambassador.
+- Sorry Rodel, we're out of stock.
+	Rodel: Even full rivers run shallow at times. I shall check back another pass.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
-
 
 label Partial
-Rodel: Acceptable. I still require a {Transaction_ItemWants} to complete this module.
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Rodel: Salamat, keeper. Still waiting politely on [color=#0f6e2f]{Transaction_ItemWants}[/color].
+elif {Variation} == 2.0:
+	Rodel: Received with thanks. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] remaining.
+else:
+	Rodel: Fine start. Take your time with [color=#0f6e2f]{Transaction_ItemWants}[/color], keeper.
 [end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	Rodel: Excellent. [pause=0.4] A successful exchange. My thank-currents to you, Ambassador.
+if {Transaction_WantsDebt}:
+	Rodel: Salamat, keeper. Spell Litao cleanly beside my name on your lista.
 else:
-	Rodel: My hydro-stasis is stabilized for now. [pause=0.5] May the tides of your commerce remain high.
-if {Global_TipActive}:
-	Rodel: Aba, that was quite cheap. Keep the change po!
+	if {Global_TipActive}:
+		Rodel: Fair measure deserves fair return. Please keep the extra coins, keeper.
+	elif {Transaction_SatisfyVar} < 34:
+		Rodel: Salamat, keeper. May calm water keep your house steady.
+	elif {Transaction_SatisfyVar} < 67:
+		Rodel: Just what I hoped for. Back to the bamboo shade I go.
+	else:
+		Rodel: Always courteous service behind this wood. Thank you, keeper.
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+Rodel: Proper inland currency first, keeper. Here is the {Transaction_RepaymentAmount} pesos from your lista.
+- Thanks, Rodel. All settled.
+	[signal arg="repay_debt"]
+	Rodel: Clean slate, like smooth sand after high tide. Salamat.
+- Keep it, Rodel. On the house.
+	[signal arg="forgive_debt"]
+	Rodel: Wait, truly? Inland hospitality runs deeper than I guessed. Salamat, keeper.
+- No rush, Rodel. Next pass.
+	[signal arg="defer_repay"]
+	Rodel: Patient as a deep current. I shall keep these pesos dry until next visit.
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	Rodel: This is... [pause=0.5] incorrect. This item lacks the necessary properties for a {Transaction_ItemWants}.
-else:
-	Rodel: I believe there has been a desync in our communication. This is not the {Transaction_ItemWants} I requested.
+Rodel: Pardon me, keeper, I believe I asked for [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]

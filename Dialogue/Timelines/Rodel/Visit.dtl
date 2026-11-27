@@ -1,19 +1,26 @@
+# Rodel - Unified Social Visit & Inland Curiosity Timeline
+# Voice: Courteous, slightly formal Ilokano Litao water anito. Zero time-of-day words. Zero em-dashes.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	Rodel: The air today... [pause=0.6] it feels like ground glass in my gills. [pause=0.4] 
-	Rodel: I miss the crushing silence of the Abyssal Court. There, the world is... [pause=0.3] supportive. [pause=0.4] Here, it is merely heavy.
+if {Transaction_HasReactiveOpener}:
+	Rodel: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	Rodel: Dayu-dayu, keeper. Stepping out of the sun to rest beneath your awning.
+	Rodel: Strange how concrete holds heat long after river stones would have cooled.
+elif {Transaction_VisitVar} < 67:
+	Rodel: Just passing up from the creek bamboo, keeper. Your counter stays remarkably orderly.
+	Rodel: Inland folk hang sachets in neat rows like drying fishing nets. Quite clever.
 else:
-	Rodel: Ambassador. I was just observing your concrete rivers. 
-	Rodel: They flow with such violence and yet... they contain no life. [pause=0.6] A strange preference. [pause=0.4] Be well in your stone fortress.
+	Rodel: No errand this pass, keeper. Only paying polite respect to a welcoming threshold.
+	Rodel: The wind off the creek almost smelled like northern salt earlier.
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	Rodel: Even on dry land, the stillness outside your counter is... [pause=0.4] surprisingly tolerable, Ambassador.
-	Rodel: I shall return to the deeper currents now. Farewell.
+if {Transaction_VisitVar} < 34:
+	Rodel: Good shade beneath your roof. I shall return to the bamboo bank now.
+elif {Transaction_VisitVar} < 67:
+	Rodel: Always a quiet pleasure observing inland trade. Take care, keeper.
 else:
-	Rodel: Your neighbors pass like schools of noisy minnows... [pause=0.4] yet there is warmth here.
-	Rodel: I take my leave of your stone fortress, Ambassador. Until next time.
+	Rodel: Dayu-dayu, keeper. May your shelves stay full and your road calm.
 [end_timeline]
-

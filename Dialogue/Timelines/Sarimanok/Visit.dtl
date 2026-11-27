@@ -1,37 +1,26 @@
-label Greeting
-if {Transaction_CurrentArc} == 1.0:
-	if {Transaction_VisitVar} < 50:
-		Sarimanok: [shake]BA-KAAWK!![/shake]
-	else:
-		Sarimanok: [shake]BA-KAWK! BA-KAWK![/shake]
-elif {Transaction_CurrentArc} == 2.0:
-	if {Transaction_VisitVar} < 50:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares intensely at your clean counter before flapping away)[/color][/wave]
-	else:
-		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It looks at you upside down, judging your shopkeeping posture before departing)[/color][/wave]
-elif {Transaction_CurrentArc} == 3.0:
-	if {Transaction_VisitVar} < 50:
-		Sarimanok: Simply stopping by to check on the local retail climate. Carry on, proprietor.
-	else:
-		Sarimanok: Delightful weather for a stroll through the barangay, wouldn't you agree? Ba-kawk!
+# Sarimanok - Unified Social Visit & Awning Perch Timeline
+# Voice (Approved Exception): Ba-kawk! variations ONLY + punchy, playful parentheticals.
 
+label Greeting
+if {Transaction_HasReactiveOpener}:
+	Sarimanok: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	Sarimanok: Ba-kawk. (Checks its reflection in the candy jar. Fixes one crooked crest feather.)
+	Sarimanok: Ba-kawk! (Glares a noisy tricycle down the road until it leaves.)
+elif {Transaction_VisitVar} < 67:
+	Sarimanok: [shake]Ba-kawk![/shake] (Hops beside the register, ignores every shelf, and claims the shade.)
+	Sarimanok: ba-kawk. (Nudges a slightly crooked jar half an inch straighter.)
+else:
+	Sarimanok: ba-kawk. (Tucks behind the jars with its bright tail hidden from the street.)
+	Sarimanok: Ba-kawk. (Slow royal blink. Official no-photo zone declared.)
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_CurrentArc} == 1.0:
-	if {Transaction_VisitVar} <= 50:
-		Sarimanok: [shake]Ba-kawk![/shake] [pause=0.3] [shake]Kawk![/shake]
-	else:
-		Sarimanok: [shake]Brr-kawk![/shake]
-elif {Transaction_CurrentArc} == 2.0:
-	if {Transaction_VisitVar} <= 50:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It puffs its feathers proudly after its stroll and gives you a polite nod)[/color][/wave]
-	else:
-		Sarimanok: [shake]Kawk-kawk...[/shake][input][wave][color=#145263] (It hops once in front of the counter, satisfied with its neighborhood inspection)[/color][/wave]
+if {Transaction_VisitVar} < 34:
+	Sarimanok: Ba-kawk. (Shakes out its golden plumage once and launches to the roofs.)
+elif {Transaction_VisitVar} < 67:
+	Sarimanok: [shake]Ba-kawk![/shake] (Leaves a tiny trail of gold dust and glides off.)
 else:
-	if {Transaction_VisitVar} <= 50:
-		Sarimanok: A splendid little promenade outside your shop, proprietor. [pause=0.3] I shall take my leave now. Ba-kawk!
-	else:
-		Sarimanok: One must never rush a proper afternoon stroll. [pause=0.3] Until our next meeting, good shopkeeper!
+	Sarimanok: ba-kawk. (One brief, dignified crest nod before swooping out.)
 [end_timeline]

@@ -1,123 +1,76 @@
+# Sarimanok - Unified Everyday Purchase Timeline (3-Slot Sandwich Pattern)
+# Shifts ONLY on meaningful story flags (Flag_SmkLivingEmblem / Flag_SmkSubFish).
+# Voice (Approved Exception): Ba-kawk! variations ONLY + punchy, playful parentheticals.
+
 label Greeting
-# [signal arg="refresh_desires"]
-if {Transaction_CurrentArc} == 1.0:
-	if {Transaction_GreetingVar} < 50:
-		Sarimanok: [shake]BA-KAAWK!![/shake][input][wave][color=#145263] (It flaps its wings aggressively, demanding the {Transaction_ItemWants})[/color][/wave]
-	else:
-		Sarimanok: [shake]BA-KAWK! BA-KAWK![/shake][input][wave][color=#145263] (It pecks the counter loudly until you look at the {Transaction_ItemWants})[/color][/wave]
-elif {Transaction_CurrentArc} == 2.0:
-	if {Transaction_GreetingVar} < 50:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares unblinkingly at you, then at the {Transaction_ItemWants})[/color][/wave]
-	else:
-		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It sighs in a bird-like way, indicating the {Transaction_ItemWants} with a wing)[/color][/wave]
-elif {Transaction_CurrentArc} == 3.0:
-	if {Transaction_GreetingVar} < 50:
-		Sarimanok: Good day to you. Might I procure your finest {Transaction_ItemWants}?
-	else:
-		Sarimanok: Ba-kawk! A pleasure to see you. I am in need of some {Transaction_ItemWants} for my associates.
+# Slot 1: P1-P3 Reactive Opener or High-Price Remark
+if {Transaction_HasReactiveOpener}:
+	Sarimanok: {Transaction_ReactiveOpener}
+elif {Global_HighPriceActive}:
+	Sarimanok: [shake]BA-KAAWK!![/shake] (Squints at your price card. Drags one coin half an inch back.)
 
-if {Global_HighPriceActive}:
-	if {Transaction_CurrentArc} == 3.0:
-		Sarimanok: Expensive? Cheap? To a bird of gold, these are but earthly trifles... [pause=0.4] but my human friends might not agree.
+# Slot 2: Flag-Driven Request Pool (4 grounded variations per state)
+if {Flag_SmkLivingEmblem}:
+	if {Transaction_GreetingVar} < 25:
+		Sarimanok: Ba-kawk! (Stacks exact gleaming coins neatly. Nods toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_GreetingVar} < 50:
+		Sarimanok: Ba-kawk. (Hops up calmly, ignoring the street, and gestures at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_GreetingVar} < 75:
+		Sarimanok: ba-kawk. (Preens one golden wingtip. Taps beside [color=#0f6e2f]{Transaction_ItemWants}[/color].)
 	else:
-		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It seems very offended by the price!)[/color][/wave]
-
-- Yes, I'll get it.
-	Sarimanok: [shake]Ba-kawk![/shake]
+		Sarimanok: [shake]Ba-kawk![/shake] (Gives one regal crest bow before pointing at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+elif {Flag_SmkSubFish}:
+	if {Transaction_GreetingVar} < 25:
+		Sarimanok: Ba-kawk! (Checks your fish tins first. Points sharply at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_GreetingVar} < 50:
+		Sarimanok: [shake]Ba-kawk![/shake] (Buffs a coin on its feathers. Slides it over for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_GreetingVar} < 75:
+		Sarimanok: ba-kawk. (Checks both shoulders for fans. Taps the wood for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	else:
+		Sarimanok: Ba-kawk. (Fluffs its okir collar neat and waits by [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+else:
+	if {Transaction_GreetingVar} < 25:
+		Sarimanok: [shake]Ba-kawk![/shake] (Spits a damp coin on your wood. Jabs at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_GreetingVar} < 50:
+		Sarimanok: Ba-kawk? (Checks your counter for dust. Points at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_GreetingVar} < 75:
+		Sarimanok: [shake]Ba-kawk![/shake] (Flaps once, scattering receipts, and demands [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	else:
+		Sarimanok: Ba-kawk, ba-kawk. (Taps one golden talon until you grab [color=#0f6e2f]{Transaction_ItemWants}[/color].)
 [end_timeline]
-
 
 label Talk
-if {Transaction_CurrentArc} == 1.0:
-	if {Transaction_TalkVar} < 50:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It taps its talons rhythmically while waiting for the {Transaction_ItemWants})[/color][/wave]
-	else:
-		Sarimanok: [shake]Ba-kawk?[/shake][input][wave][color=#145263] (It tilts its head, checking if you've forgotten the {Transaction_ItemWants})[/color][/wave]
-elif {Transaction_CurrentArc} == 2.0:
-	if {Transaction_TalkVar} < 50:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares upside down, intensely monitoring your retrieval of the {Transaction_ItemWants})[/color][/wave]
-	else:
-		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It continues judging your inventory as you fetch the {Transaction_ItemWants})[/color][/wave]
-elif {Transaction_CurrentArc} == 3.0:
-	if {Transaction_TalkVar} < 50:
-		Sarimanok: Time is capital, my friend. Is the {Transaction_ItemWants} ready?
-	else:
-		Sarimanok: Do try to optimize your retrieval process. I await the {Transaction_ItemWants}.
-- Coming right up.
-	Sarimanok: [shake]Ba-kawk![/shake]
+Sarimanok: Ba-kawk. (Drums one talon on the wood. Eyes glued to [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+- Coming right up!
+	Sarimanok: Ba-kawk. (Narrows its eyes. Times you silently.)
 	[end_timeline]
-- Sorry, out of stock.
-	Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It leaves in an apparent huff)[/color][/wave]
+- Sorry, we're out of stock.
+	Sarimanok: [shake]BA-KAAWK!![/shake] (Kicks a stray wrapper off the wood and swoops out.)
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
-
 
 label Partial
-if {Transaction_CurrentArc} == 1.0:
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It tucks the item under a wing and pecks impatiently for the {Transaction_ItemWants})[/color][/wave]
-elif {Transaction_CurrentArc} == 2.0:
-	Sarimanok: [shake]Ba-kawk.[/shake][input][wave][color=#145263] (It nods once, then gestures with a golden talon toward the {Transaction_ItemWants})[/color][/wave]
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Sarimanok: Ba-kawk. (Grips item one. Jabs its beak toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+elif {Variation} == 2.0:
+	Sarimanok: Ba-kawk! (One sharp nod. Points straight at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
 else:
-	Sarimanok: Splendid start. Now, let us not forget the {Transaction_ItemWants} on my order.
+	Sarimanok: Ba-kawk, ba-kawk. (Taps the empty spot meant for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
 [end_timeline]
 
-
 label Satisfy
-if {Transaction_WantsDebt}:
-	# Sarimanok is highly capitalist, he wouldn't ask for debt. If he does, it's a corporate loan!
-	if {Transaction_CurrentArc} < 3.0:
-		Sarimanok: [shake]Ba-kawk!![/shake][input][wave][color=#145263] (It indicates a makeshift IOU note drawn in dirt)[/color][/wave]
-		- Fine, but you owe me.
-			[signal arg="utang_accepted"]
-			Sarimanok: [shake]Ba-kawk![/shake]
-		- Absolutely not. No bird credit.
-			[signal arg="utang_rejected"]
-			Sarimanok: [shake]BA-KAWK!![/shake]
-	else:
-		Sarimanok: Would you be amenable to a short-term line of credit, pending my Q4 dividends?
-		- I suppose a gentleman is good for it.
-			[signal arg="utang_accepted"]
-			Sarimanok: Splendid. My accountants shall wire the funds anon.
-		- No credit lines approved today, sorry.
-			[signal arg="utang_rejected"]
-			Sarimanok: A stringent fiscal policy! Respectable, but inconvenient. Good day to you.
+if {Global_TipActive}:
+	Sarimanok: Ba-kawk! (Flicks a dazzling bonus coin in. Chest twice its size.)
+elif {Transaction_SatisfyVar} < 34:
+	Sarimanok: [shake]Ba-kawk![/shake] (Hoists the goods in one talon and swoops off.)
+elif {Transaction_SatisfyVar} < 67:
+	Sarimanok: Ba-kawk. (One approving tilt of the jeweled crest. Glides out.)
 else:
-	if {Transaction_CurrentArc} == 1.0:
-		if {Transaction_SatisfyVar} < 50:
-			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It snatches the item and flies off immediately)[/color][/wave]
-		else:
-			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It drops the coins and disappears out the door)[/color][/wave]
-	elif {Transaction_CurrentArc} == 2.0:
-		if {Transaction_SatisfyVar} < 50:
-			Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It chugs the item instantly and struts out with a satisfied look)[/color][/wave]
-		else:
-			Sarimanok: [shake]Ba-kawk.[/shake][input][wave][color=#145263] (It nods respectfully at your service and departs)[/color][/wave]
-	elif {Transaction_CurrentArc} == 3.0:
-		if {Transaction_SatisfyVar} < 50:
-			Sarimanok: A most efficient transaction! My compliments to the proprietor. [shake]Ba-kawk![/shake]
-		else:
-			Sarimanok: Delightful. I shall pen a resplendent review in the local journals. Good day!
-	if {Global_TipActive}:
-		Sarimanok: Aba, that was quite cheap. Keep the change po!
+	Sarimanok: ba-kawk. (Smooths a tail plume. Departs like a one-bird parade.)
 [signal arg="story_success"]
 [end_timeline]
 
-
 label WrongItem
-if {Transaction_CurrentArc} == 1.0:
-	if {Transaction_WrongItemVar} < 50:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It aggressively pecks the wrong item, demanding the {Transaction_ItemWants})[/color][/wave]
-	else:
-		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It shakes its head furiously, pointing instead at the {Transaction_ItemWants})[/color][/wave]
-elif {Transaction_CurrentArc} == 2.0:
-	if {Transaction_WrongItemVar} < 50:
-		Sarimanok: [shake]Ba-kawk...[/shake][input][wave][color=#145263] (It sighs heavily, staring pointedly at the {Transaction_ItemWants})[/color][/wave]
-	else:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It flick the wrong item aside and waits for the {Transaction_ItemWants})[/color][/wave]
-elif {Transaction_CurrentArc} == 3.0:
-	if {Transaction_WrongItemVar} < 50:
-		Sarimanok: Ah, a minor clerical error. I specified the {Transaction_ItemWants}. 
-	else:
-		Sarimanok: Precision is key in retail, my good friend! I require the {Transaction_ItemWants}.
+Sarimanok: [shake]BA-KAAWK!![/shake] (Shoves it back. Glares hard at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
 [end_timeline]

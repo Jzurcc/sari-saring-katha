@@ -7,77 +7,67 @@
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="3_timeline"]
 [ext_resource type="Texture2D" uid="uid://wcnibayq5f8k" path="res://Assets/characters/sprites/Sarimanok.png" id="7_sprite"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="8_arcdata"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Resource" uid="uid://nask6ft0k0b" path="res://Resources/motions/sarimanok_cameo_swoop.tres" id="motion_smk_cameo"]
 [ext_resource type="Resource" uid="uid://ch04nrjojccvx" path="res://Resources/motions/sarimanok_flap_swoop.tres" id="motion_smk_flap"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://c2s7pfyxbggpr" path="res://Dialogue/Timelines/Sarimanok/Purchase.dtl" id="smk_purchase"]
 [ext_resource type="Resource" uid="uid://br147rott8bhs" path="res://Dialogue/Timelines/Sarimanok/Story.dtl" id="smk_story"]
 [ext_resource type="Resource" uid="uid://dlcphfad8n24f" path="res://Dialogue/Timelines/Sarimanok/Visit.dtl" id="smk_visit"]
 
+[sub_resource type="Resource" id="prereq_ch3_rodel"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rodel"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rodel")])
+
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Stare"
+chapter_name = "The Arrival"
+is_visit_only = true
 categories = null
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Judgment"
-is_visit_only = true
-categories = null
+chapter_name = "The Royal Inspection"
+categories = PackedStringArray("snack")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Annoyance"
-is_visit_only = true
-categories = null
+chapter_name = "Heavy Plumes"
+categories = PackedStringArray("pack")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Scrutiny"
-is_visit_only = true
-categories = null
+chapter_name = "Bamboo in the Crest"
+categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Theft"
-categories = PackedStringArray("snack")
+chapter_name = "Quiet Perch"
+categories = PackedStringArray("can")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Audit"
-categories = PackedStringArray("pack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Clearing of the Throat"
-categories = PackedStringArray("snack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Macroeconomics"
-categories = PackedStringArray("can")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Calling Card"
-categories = PackedStringArray("can")
+chapter_name = "The Crown's Word"
+categories = PackedStringArray("can", "snack")
 substitute_item_ids = null
 substitute_categories = null
 
@@ -89,13 +79,7 @@ visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("8_arcdata")
-arc_name = "Arc 2: The Silent Auditor"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_purchase")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("8_arcdata")
-arc_name = "Arc 3: The Avian Investor"
+arc_name = "Arc 2: Beyond the Mural"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("smk_visit")])
 
@@ -108,9 +92,9 @@ sprite_texture = ExtResource("7_sprite")
 sprite_scale = 0.3
 dialogue_blip_sound = ExtResource("2_eiccw")
 dialogue_blip_volume = -6.0
-favorite_categories = Array[String](["snack", "pack"])
+favorite_categories = Array[String](["can", "snack", "pack"])
 story_timeline = ExtResource("smk_story")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("8_arcdata")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("8_arcdata")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_smk_flap")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_smk_cameo")])

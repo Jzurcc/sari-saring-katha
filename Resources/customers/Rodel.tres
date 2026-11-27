@@ -8,92 +8,77 @@
 [ext_resource type="Texture2D" uid="uid://bqhf8bb28mylt" path="res://Assets/characters/sprites/Rodel.png" id="5_xkoom"]
 [ext_resource type="Resource" uid="uid://dwi4bgdufy8s8" path="res://Dialogue/Timelines/Rodel/Story.dtl" id="11_hxk1p"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Resource" uid="uid://bjs0k3n62gps8" path="res://Resources/motions/rodel_cameo_patrol.tres" id="motion_rodel_cameo"]
 [ext_resource type="Resource" uid="uid://crw7wsfs0efbc" path="res://Resources/motions/rodel_heavy_diplomat.tres" id="motion_rodel_diplomat"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://dp41iwukbcg12" path="res://Dialogue/Timelines/Rodel/Purchase.dtl" id="rodel_purchase"]
 [ext_resource type="Resource" uid="uid://b5rduauht166t" path="res://Dialogue/Timelines/Rodel/Visit.dtl" id="rodel_visit"]
 
+[sub_resource type="Resource" id="prereq_ch3_smk"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "sarimanok"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_smk")])
+
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Atmosphere of Sand"
+chapter_name = "Stranded Inland"
 categories = PackedStringArray("bottle")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Choice of Salt"
-categories = PackedStringArray("snack")
+chapter_name = "The Tinned Sea"
+categories = PackedStringArray("can")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Metal Coffins"
-categories = PackedStringArray("bottle")
+chapter_name = "Name on the Water"
+categories = PackedStringArray("pack")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Cracking Shield"
-categories = PackedStringArray("bottle")
+chapter_name = "Shade by the Creek"
+categories = PackedStringArray("frozen")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Forked Tide"
-categories = PackedStringArray("snack")
+chapter_name = "Rice Cake by the Roots"
+categories = PackedStringArray("bottle")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Echo of Emptiness"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Terrestrial Rations"
-categories = PackedStringArray("frozen")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Ambassador's Choice"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Rains of Farewell"
-is_visit_only = true
-categories = null
+chapter_name = "The Tide Remembers"
+categories = PackedStringArray("bottle", "frozen")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: The Abrasive World"
+arc_name = "Arc 1: Far From the Coast"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: The Drying Search"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_purchase")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: The Final Current"
+arc_name = "Arc 2: Bamboo and Shore"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("rodel_visit")])
 
@@ -107,9 +92,12 @@ sprite_scale = 0.4
 speech_marker_height_ratio = 0.55
 dialogue_blip_sound = ExtResource("2_7nk2y")
 dialogue_blip_volume = -4.0
+requests_utang = true
+utang_chance = 0.1
+repayment_chance = 0.5
 favorite_categories = Array[String](["frozen", "bottle"])
 story_timeline = ExtResource("11_hxk1p")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_rodel_diplomat")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_rodel_cameo")])

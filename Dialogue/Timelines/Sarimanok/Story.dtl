@@ -1,176 +1,168 @@
+# Sarimanok - 6-Chapter Core Arc (Pair 2 - Character #2)
+# Voice (Approved Exception): Ba-kawk! variations ONLY + punchy, playful, show-not-tell parentheticals.
+# Rules: Zero Cluck/Bawk. Zero time-of-day words. Zero em-dashes. Zero ellipses. Zero [pause] tags.
+# Substitute Category: can ONLY in Ch. 3 (decided via dialogue choice -> allow_sub_cat:can).
+
 label Greeting
+if {Transaction_HasReactiveOpener}:
+	Sarimanok: {Transaction_ReactiveOpener}
+
 if {Transaction_Chapter} == 0.0:
-	# Chapter 1: The Stare (Visit)
+	# Chapter 1: "The Arrival" (Visit Only — iconic spontaneous zero-choice exit!)
 	Sarimanok: [shake]BA-KAAWK!![/shake]
 	[signal arg="story_success"]
 	[end_timeline]
+
 elif {Transaction_Chapter} == 1.0:
-	# Chapter 2: The Judgment (Visit)
-	Sarimanok: [shake]Ba-kawk![/shake]
-	[signal arg="story_success"]
+	# Chapter 2: "The Royal Inspection" (Tally Inflection #1: +1 respect / 0 dry joke / -1 pluck feather)
+	Sarimanok: [shake]Ba-kawk![/shake] (Spits a shiny coin onto your wood. Polishes it twice with one wing.)
+	Sarimanok: Ba-kawk? (Squints up at your bare awning. Zero royal banners? Bold choice.)
+	Sarimanok: [shake]Ba-kawk![/shake] (Jabs its beak at [color=#0f6e2f]{Transaction_ItemWants}[/color]. Taps one impatient talon.)
+	- Welcome, honored guest. Best stock ready.
+		[signal arg="tally:+1"]
+		[signal arg="note:Greeted Sarimanok with genuine courtesy instead of chasing it for luck or photos."]
+		Sarimanok: Ba-kawk! (Puffs its chest two sizes up. Slides the coin closer.)
+	- Sorry, fresh out of red carpets.
+		[signal arg="note:Joked dryly about having no royal banners for Sarimanok's counter inspection."]
+		Sarimanok: Ba-kawk. (Slow, judgmental blink. Nudges the coin over anyway.)
+	- Can I pluck one lucky feather?
+		[signal arg="tally:-1"]
+		[signal arg="note:Asked Sarimanok for a lucky feather, earning an outraged wing-slap on the counter."]
+		Sarimanok: [shake]BA-KAAWK!![/shake] (Slaps both wings on the wood. Your receipt pad goes flying.)
 	[end_timeline]
+
 elif {Transaction_Chapter} == 2.0:
-	# Chapter 3: The Annoyance (Visit)
-	Sarimanok: [shake]Ba-kawk! Ba-kawk![/shake]
-	[signal arg="story_success"]
+	# Chapter 3: "Heavy Plumes" (Tally Inflection #2: +1 fish can sub OR +1 safe haven / -1 living billboard)
+	Sarimanok: [shake]Ba-kawk![/shake] (Dives behind your candy jars. One bent tail feather still sticks straight up.)
+	Sarimanok: ba-kawk. (Peeks past the lids as folks outside yell Lucky Rooster!)
+	Sarimanok: Ba-kawk. (Drops two dull coins and nudges them toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	- [Slide a gleaming fish can instead.]
+		[signal arg="allow_sub_cat:can"]
+		Sarimanok: Ba-kawk? (Tracks your hand drifting past the packs toward the shiny tins.)
+		[end_timeline]
+	- Stay behind the jars. No photos.
+		[signal arg="tally:+1"]
+		[signal arg="note:Let Sarimanok catch its breath behind the candy jars away from feather-chasing crowds."]
+		Sarimanok: ba-kawk. (Flattens its crooked plume. Leans one wing against the warm glass.)
+		Sarimanok: Ba-kawk. (Taps politely beside [color=#0f6e2f]{Transaction_ItemWants}[/color], finally breathing easy.)
+	- Pose by my sign for customers?
+		[signal arg="tally:-1"]
+		[signal arg="note:Asked Sarimanok to pose by the storefront sign like a lucky mascot."]
+		Sarimanok: [shake]BA-KAAWK!![/shake] (Turns its back completely. Back-kicks its coins across the counter.)
 	[end_timeline]
+
 elif {Transaction_Chapter} == 3.0:
-	# Chapter 4: The Scrutiny (Visit)
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It stares intently, judging your establishment)[/color][/wave]
-	[signal arg="story_success"]
+	# Chapter 4: "Bamboo in the Crest" (Tally Inflection #3: +2 trapdoor / +1 kind / -1 vain — single Rodel crossover)
+	Sarimanok: [shake]Ba-kawk![/shake] (Two green bamboo leaves stick straight out of its royal crest. Pretends it is high fashion.)
+	Sarimanok: ba-kawk. (Glances toward the creek, then nudges one shiny coin toward the corner where Rodel stood.)
+	Sarimanok: Ba-kawk. (Points one sharp wingtip at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	if {Flag_RodelShelteredBird} or {Flag_RodelNameRemembered}:
+		- Nobody knows his name. Help them see.
+			[signal arg="flag:smk_honored_rodel=true"]
+			[signal arg="tally:+2"]
+			[signal arg="note:Nudged Sarimanok to use its fame to make sure neighbors learn Rodel's Litao name."]
+			Sarimanok: Ba-kawk! (Tilts its jeweled head, puffs twice its size, and gives one decisive regal nod.)
+	- Nice having a quiet neighbor, huh?
+		[signal arg="flag:smk_honored_rodel=true"]
+		[signal arg="tally:+1"]
+		[signal arg="note:Noticed Sarimanok appreciating Rodel's quiet bamboo shade without any photo-seekers."]
+		Sarimanok: ba-kawk. (Tucks one bamboo leaf slightly neater behind its ear-plume. Soft wing-pat on the wood.)
+	- Brush those cheap leaves off, royalty.
+		[signal arg="tally:-1"]
+		[signal arg="note:Told Sarimanok to shake off the bamboo leaves and keep up its royal appearances."]
+		Sarimanok: [shake]BA-KAAWK!![/shake] (Shakes the leaves off violently, glaring down its beak at the floor.)
 	[end_timeline]
+
 elif {Transaction_Chapter} == 4.0:
-	# Chapter 5: The Theft (Purchase)
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (The bird spits a mouthful of damp, dirty coins onto your clean counter)[/color][/wave]
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It points a sharp beak directly toward the {Transaction_ItemWants})[/color][/wave]
-	# [signal arg="refresh_desires"]
-	- ...You want that?
-		Sarimanok: [shake]Ba-kawk![/shake]
-	[end_timeline]
-elif {Transaction_Chapter} == 5.0:
-	# Chapter 6: The Audit (Purchase)
-	Sarimanok: [shake]Ba-kawk! Ba-kawk! Ba-kawk![/shake][input][wave][color=#145263] (It drops a crisp blue bill and gestures at the {Transaction_ItemWants})[/color][/wave]
-	# [signal arg="refresh_desires"]
-	- Are you sure you're not a thief?
-		Sarimanok: [shake]BA-KAAWK!![/shake]
-	[end_timeline]
-elif {Transaction_Chapter} == 6.0:
-	# Chapter 7: The Clearing of the Throat (Purchase - Gentleman Reveal)
-	Sarimanok: [shake]Ba-kawk![/shake] ...ahem.
-	Sarimanok: My most profound apologies, proprietor. I had something dreadfully stuck in my throat for the past few weeks.
-	Sarimanok: It is utterly uncivilized to communicate via screeching. Ba-kawk.
-	Sarimanok: I must say, your inventory management has improved substantially. Might I procure your finest {Transaction_ItemWants}, please?
-	# [signal arg="refresh_desires"]
-	- You... you can talk?!
-		Sarimanok: Indeed. I presumed that was profoundly evident by this point.
-	[end_timeline]
-elif {Transaction_Chapter} == 7.0:
-	# Chapter 8: The Macroeconomics (Purchase)
-	Sarimanok: Ba-kawk! [input] Splendid day to you, my good proprietor. Simply resplendent.
-	Sarimanok: I would be delighted to partake in your exquisite {Transaction_ItemWants}.
-	# [signal arg="refresh_desires"]
-	- Coming right up, sir.
-		Sarimanok: Tell me, what are your thoughts on the macroeconomic climate of Karimlan?
-		Sarimanok: The fluctuating interest rates of the Pale Queen's quotas must put a ghastly strain on your overhead. Very resilient of you to weather the storm. Ba-kawk!
-	[end_timeline]
-elif {Transaction_Chapter} == 8.0:
-	# Chapter 9: The Calling Card (Visit)
-	Sarimanok: Ba-kawk! [input] Alas, I must take my leave of your charming establishment today.
-	Sarimanok: The stock market awaits no avian, as they say. Do keep up the marvelous work.
-	Sarimanok: I have left my card, should you ever wish to discuss a franchise opportunity. Ba-kawk![input][wave][color=#145263] (He walks away from the counter, leaving behind a dazzling, golden feather on the ledger)[/color][/wave]
-	[signal arg="story_success"]
-	[end_timeline]
-
-if {Transaction_WantsDebt}:
-	# Sarimanok is highly capitalist, he wouldn't ask for debt. If he does, it's a corporate loan!
-	if {Transaction_Chapter} < 6.0:
-		Sarimanok: [shake]Ba-kawk!![/shake][input][wave][color=#145263] (It spreads a wing and points to a makeshift IOU note drawn in dirt)[/color][/wave]
-		- Fine, but you owe me.
-			[signal arg="utang_accepted"]
-			Sarimanok: [shake]Ba-kawk![/shake]
-			[end_timeline]
-		- Absolutely not. No bird credit.
-			[signal arg="utang_rejected"]
-			Sarimanok: [shake]BA-KAWK!![/shake]
-			[end_timeline]
+	# Chapter 5: "Quiet Perch" (0 tallies - Sarimanok's OWN Ten Payoff)
+	if {Flag_SmkHonoredRodel} or {Flag_RodelShelteredBird}:
+		Sarimanok: [shake]Ba-kawk![/shake] (Struts right up in full view. Zero bent feathers. Zero hiding behind jars.)
+		Sarimanok: ba-kawk. (Waves one bright wing at a passing kid. Nobody tries to pluck its tail!)
+		Sarimanok: Ba-kawk. (Drops exact gleaming coins in a neat row for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		- Finally stopped hiding behind the jars?
+			Sarimanok: Ba-kawk! (Puffs its chest proudly. Pretends it never hid there once.)
+		- Fancy bamboo look suits you.
+			Sarimanok: ba-kawk. (Angles its crest toward the candy jar glass to admire the leaf.)
+		- Glad the street calmed down.
+			Sarimanok: Ba-kawk. (One warm, unhurried blink. Sets a talon beside the coin stack.)
 	else:
-		Sarimanok: Would you be amenable to a short-term line of credit, pending my Q4 dividends?
-		- I suppose a gentleman is good for it.
-			[signal arg="utang_accepted"]
-			Sarimanok: Splendid. My accountants shall wire the funds anon.
-			[end_timeline]
-		- No credit lines approved today, sorry.
-			[signal arg="utang_rejected"]
-			Sarimanok: A stringent fiscal policy! Respectable, but inconvenient. Good day to you.
-			[end_timeline]
+		Sarimanok: Ba-kawk. (Darts under your awning, checks both corners for fans, and slides coins for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		- Coast is clear under my roof.
+			Sarimanok: ba-kawk. (Drops its shoulders half an inch and waits behind the register.)
+		- Tough life being famous.
+			Sarimanok: [shake]Ba-kawk![/shake] (Aggressive feather-fluff. Clearly agrees.)
+	[end_timeline]
 
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6: "The Crown's Word" (Accumulated Tally Resolution -> Single Spoken Blessing on Best Outcome!)
+	if {Flag_SmkHonoredRodel} and {Transaction_Tally} >= 3:
+		[signal arg="outcome:living_emblem"]
+		[signal arg="flag:smk_living_emblem=true"]
+		[signal arg="note:Sarimanok laid a golden okir feather by the register and spoke two rare words of blessing before Mayari's Convergence."]
+		Sarimanok: ba-kawk. (Lays one gleaming golden okir feather beside your register. Clears its throat once.)
+		Sarimanok: A humble counter needs no banners when it remembers every guest's true name.
+		Sarimanok: When the Pale Moon weighs your ledger, my wings stand beside this house.
+		Sarimanok: [shake]Ba-kawk.[/shake] (Snaps its beak shut. Stares straight ahead, pretending it never spoke a word.)
+		- Wait, did you just talk?!
+			Sarimanok: [shake]BA-KAAWK!![/shake] (Outraged innocence. Jabs aggressively at [color=#0f6e2f]{Transaction_ItemWants}[/color]!)
+		- [Tuck the golden feather by the ledger.]
+			Sarimanok: ba-kawk. (One tiny, satisfied crest nod toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	elif {Transaction_Tally} >= 1:
+		[signal arg="outcome:proud_patron"]
+		[signal arg="note:Sarimanok left a bright plume and became a delighted, dramatic regular at the counter."]
+		Sarimanok: [shake]Ba-kawk![/shake] (Leaves a bright golden plume beside your coin jar like a five-star rating.)
+		Sarimanok: ba-kawk. (Taps two polished coins neatly on the wood for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		- Five-star review from royalty?
+			Sarimanok: Ba-kawk! (Puffs its chest proudly. Expects top-shelf service.)
+		- Coming right up, Your Majesty.
+			Sarimanok: ba-kawk. (Approving crest tilt.)
+	else:
+		[signal arg="outcome:passing_spectacle"]
+		[signal arg="note:Sarimanok remained an aloof, dramatic visitor who kept its distance."]
+		Sarimanok: [shake]BA-KAAWK!![/shake] (Drops exact coins from beak height. Zero eye contact.)
+		Sarimanok: Ba-kawk. (Points one talon sharply at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	[end_timeline]
 
 label Talk
-if {Transaction_Chapter} == 4.0:
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It screeches angrily, impatient for its {Transaction_ItemWants})[/color][/wave]
-	- Finding it!
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It taps a foot rhythmically)[/color][/wave]
-		[end_timeline]
-	- Out of stock! Shoo!
-		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It flaps its wings furiously and flies out)[/color][/wave]
-		[signal arg="refuse_service"]
-		[signal arg="story_success"]
-		[end_timeline]
-elif {Transaction_Chapter} == 5.0:
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It continues analyzing your ledger, waiting for the {Transaction_ItemWants})[/color][/wave]
-	- Almost done!
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It turns a page with its beak)[/color][/wave]
-		[end_timeline]
-	- Bad news, we're out of stock.
-		Sarimanok: [shake]BA-KAWK!![/shake][input][wave][color=#145263] (It squawks angrily, tears a corner of the ledger page, and flies off)[/color][/wave]
-		[signal arg="refuse_service"]
-		[signal arg="story_success"]
-		[end_timeline]
-elif {Transaction_Chapter} == 6.0:
-	Sarimanok: I await the {Transaction_ItemWants} with bated breath. Do make haste.
-	- Give me a moment.
-		Sarimanok: Time is capital, my friend. Ba-kawk!
-		[end_timeline]
-	- I regret to inform you we are out of stock.
-		Sarimanok: A tragic flaw in your supply chain. Farewell for now.
-		[signal arg="refuse_service"]
-		[signal arg="story_success"]
-		[end_timeline]
-elif {Transaction_Chapter} == 7.0:
-	Sarimanok: I am still quite eager for my {Transaction_ItemWants}. Do not let the macroeconomic pressures distract you.
-	- Still looking...
-		Sarimanok: Do try to optimize your retrieval process.
-		[end_timeline]
-	- Supply chain issues. I'm completely out.
-		Sarimanok: Pity. I shall take my investments elsewhere. Good day.
-		[signal arg="refuse_service"]
-		[signal arg="story_success"]
-		[end_timeline]
-else:
-	# Fallback: visit-type chapter reached Talk — dismiss cleanly to avoid soft-lock.
-	Sarimanok: [shake]Ba-kawk![/shake]
+Sarimanok: Ba-kawk. (Paces three steps left, three steps right. Eyes locked on [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+- Grabbing it right now.
+	Sarimanok: Ba-kawk. (Folds both wings behind its back like a tiny king.)
+	[end_timeline]
+- Sorry, we're out of stock.
+	Sarimanok: [shake]BA-KAAWK!![/shake] (Flares its collar feathers and launches off in a cloud of gold dust.)
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
 
-
 label Partial
-if {Transaction_Chapter} < 6.0:
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It clacks its beak impatiently, gesturing toward where the [color=#0f6e2f]{Transaction_ItemWants}[/color] should be)[/color][/wave]
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Sarimanok: Ba-kawk. (Tucks item one under a wing. Taps its beak for the rest.)
+elif {Variation} == 2.0:
+	Sarimanok: Ba-kawk! (Approves with one sharp nod. Points back at the shelf.)
 else:
-	Sarimanok: A commendable partial fulfillment. [pause=0.3] However, I still require the [color=#0f6e2f]{Transaction_ItemWants}[/color] to close the transaction. Ba-kawk!
+	Sarimanok: Ba-kawk, ba-kawk. (Counts on its talons. Clearly not done yet.)
 [end_timeline]
 
-label Satisfy
-if {Transaction_WantsDebt}:
-	if {Transaction_Chapter} < 6.0:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It snatches the item and flies off)[/color][/wave]
-	else:
-		Sarimanok: Most gratified. We shall settle the account in due course. Good day!
-else:
-	if {Transaction_Chapter} == 4.0:
-		Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It snaps the item up in its beak and flies out the door without a second glance)[/color][/wave]
-	elif {Transaction_Chapter} == 5.0:
-		Sarimanok: [shake]Ba-kawk.[/shake][input][wave][color=#145263] (It nods respectfully at your transaction speed, closes the ledger, and departs)[/color][/wave]
-	elif {Transaction_Chapter} == 6.0:
-		Sarimanok: A most efficient transaction! My compliments to the proprietor. [shake]Ba-kawk![/shake]
-	elif {Transaction_Chapter} == 7.0:
-		Sarimanok: Delightful. I shall pen a resplendent review in the Karimlan Financial Times. Good day!
+label SubstituteItem
+[signal arg="flag:smk_sub_fish=true"]
+[signal arg="tally:+1"]
+[signal arg="note:Slid a gleaming tin of {Transaction_SubstituteItemName} to Sarimanok, honoring the real Maranao fish emblem."]
+Sarimanok: Ba-kawk?! (Freezes mid-peck. Stares at [color=#0f6e2f]{Transaction_SubstituteItemName}[/color] like buried gold.)
+Sarimanok: ba-kawk. (Taps the silver lid gently, then hoists the tin proudly in its talons.)
+Sarimanok: [shake]Ba-kawk![/shake] (Bows its jeweled crest once. Slides two gleaming bonus coins over.)
 [signal arg="story_success"]
 [end_timeline]
 
+label Satisfy
+if {Transaction_StoryGouged}:
+	Sarimanok: [shake]BA-KAAWK!![/shake] (Slams exact coins down one by one. Glare could melt tin.)
+else:
+	Sarimanok: [shake]Ba-kawk![/shake] (Snatches the goods, flicks its golden tail, and struts off.)
+	if {Global_TipActive}:
+		Sarimanok: Ba-kawk! (Flicks one extra shiny coin into your jar mid-strut.)
+[signal arg="story_success"]
+[end_timeline]
 
 label WrongItem
-if {Transaction_Chapter} == 4.0:
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It aggressively pecks the wrong item, sliding it back and demanding the {Transaction_ItemWants})[/color][/wave]
-	[end_timeline]
-elif {Transaction_Chapter} == 5.0:
-	Sarimanok: [shake]Ba-kawk![/shake][input][wave][color=#145263] (It points at an entry in the ledger with its beak, glaring until you find the {Transaction_ItemWants})[/color][/wave]
-	[end_timeline]
-elif {Transaction_Chapter} == 6.0:
-	Sarimanok: Ah, a minor clerical error. I specified the {Transaction_ItemWants}. Precision is key! Ba-kawk!
-	[end_timeline]
-elif {Transaction_Chapter} == 7.0:
-	Sarimanok: I believe there has been a mix-up in your inventory tracking. The {Transaction_ItemWants} was the request.
-	Sarimanok: [shake]Ba-kawk![/shake]
-	[end_timeline]
+Sarimanok: [shake]BA-KAAWK!![/shake] (Shoves it right back across the wood. Wrong order!)
+[end_timeline]
