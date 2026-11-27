@@ -691,9 +691,6 @@ func _collect_global_effect_cards() -> Array[Dictionary]:
 				out.append({"title": ev.event_name, "stats": rows})
 
 	if is_instance_valid(StoryManager):
-		var relief := int(roundf(StoryManager.get_storefront_price_relief() * 100.0))
-		if relief > 0:
-			out.append({"title": "Storefront Appeal", "stats": [{"label": "Markup Relief:", "value": "+%d%%" % relief, "tone": "pos"}]})
 		var feat_cat := StoryManager.get_poster_featured_category()
 		if feat_cat != "":
 			out.append({"title": "Promo Poster", "stats": [

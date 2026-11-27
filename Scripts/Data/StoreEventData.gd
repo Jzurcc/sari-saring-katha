@@ -39,6 +39,8 @@ extends Resource
 @export var global_tolerance_offset: int = 0
 ## If true, excluded from random morning daily rolls (triggered by special encounters only).
 @export var excluded_from_daily_roll: bool = false
+## Relative daily roll weight (1.0 = common, 0.65 = uncommon, 0.45 = rare).
+@export_range(0.1, 3.0, 0.05) var roll_weight: float = 1.0
 
 func has_target_items() -> bool:
 	return not affected_categories.is_empty() or not affected_items.is_empty()
@@ -82,7 +84,7 @@ func build_stat_rows() -> Array[Dictionary]:
 		})
 	if extra_counter_slots != 0:
 		rows.append({
-			"label": "Simultaneous Counter Slots:",
+			"label": "Counter Slots:",
 			"value": ("%+d" % extra_counter_slots),
 			"tone": "pos" if extra_counter_slots > 0 else "neg",
 		})
@@ -94,7 +96,7 @@ func build_stat_rows() -> Array[Dictionary]:
 		})
 	if tip_bonus_pct > 0.001:
 		rows.append({
-			"label": "Cash Sale Tip Bonus:",
+			"label": "Cash Tip Bonus:",
 			"value": ("+%d%%" % int(roundf(tip_bonus_pct * 100.0))),
 			"tone": "pos",
 		})
@@ -108,21 +110,21 @@ func build_stat_rows() -> Array[Dictionary]:
 	if not is_equal_approx(restock_cost_multiplier, 1.0):
 		var cost_pct := int(roundf((restock_cost_multiplier - 1.0) * 100.0))
 		rows.append({
-			"label": "Wholesale Restock Cost:",
+			"label": "Restock Cost:",
 			"value": ("%+d%%" % cost_pct),
 			"tone": "pos" if cost_pct < 0 else "neg",
 		})
 	if not is_equal_approx(delivery_cooldown_multiplier, 1.0):
 		var cd_pct := int(roundf((delivery_cooldown_multiplier - 1.0) * 100.0))
 		rows.append({
-			"label": "Uncle Mario Cooldown:",
+			"label": "Delivery Cooldown:",
 			"value": ("%+d%%" % cd_pct),
 			"tone": "pos" if cd_pct < 0 else "neg",
 		})
 	if not is_equal_approx(fridge_drain_multiplier, 1.0):
 		var drain_pct := int(roundf((fridge_drain_multiplier - 1.0) * 100.0))
 		rows.append({
-			"label": "Fridge Coldness Drain:",
+			"label": "Coldness Drain:",
 			"value": ("%+d%%" % drain_pct),
 			"tone": "pos" if drain_pct < 0 else "neg",
 		})
@@ -146,12 +148,20 @@ func get_keywords() -> Array[String]:
 		kws.append("price_tolerance")
 	if not is_equal_approx(foot_traffic_scale, 1.0):
 		kws.append("foot_traffic")
+	if extra_counter_slots != 0:
+		kws.append("counter_slots")
 	if multi_item_chance_bonus > 0.001:
-		kws.append("multi_item")
+		kws.append("multi_item_order")
+	if tip_bonus_pct > 0.001:
+		kws.append("cash_tip_bonus")
+	if not is_equal_approx(xp_multiplier, 1.0):
+		kws.append("player_xp")
 	if linger_chance_bonus > 0.001:
 		kws.append("tambayan")
 	if not is_equal_approx(fridge_drain_multiplier, 1.0):
-		kws.append("fridge_coldness")
+		kws.append("coldness_drain")
+	if not is_equal_approx(restock_cost_multiplier, 1.0):
+		kws.append("restock")
 	if not is_equal_approx(delivery_cooldown_multiplier, 1.0):
 		kws.append("delivery_cooldown")
 	return kws

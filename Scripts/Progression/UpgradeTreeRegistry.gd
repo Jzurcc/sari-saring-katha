@@ -308,11 +308,8 @@ static func get_node_stats(node_id: String, target_level: int = -1) -> Array[Dic
 			var prev: Dictionary = StoryManager.STOREFRONT_UPGRADE_SPECS[clampi(sf_lvl - 1, 0, StoryManager.STOREFRONT_UPGRADE_SPECS.size() - 1)]
 			var spec: Dictionary = StoryManager.STOREFRONT_UPGRADE_SPECS[clampi(sf_lvl, 0, StoryManager.STOREFRONT_UPGRADE_SPECS.size() - 1)]
 			var d_tip := int(roundf((float(spec["tip_chance"]) - float(prev["tip_chance"])) * 100.0))
-			var d_rel := int(roundf((float(spec["price_relief"]) - float(prev["price_relief"])) * 100.0))
 			if d_tip > 0:
 				stats.append({"label": "Tip Chance:", "value": "+%d%%" % d_tip, "tone": "pos"})
-			if d_rel > 0:
-				stats.append({"label": "Price Relief:", "value": "+%d%%" % d_rel, "tone": "pos"})
 			if sf_lvl == 2:
 				stats.append({"label": "Promo Bonus:", "value": "+₱3", "tone": "pos"})
 			elif sf_lvl == 3:

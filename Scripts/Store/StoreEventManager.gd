@@ -78,13 +78,12 @@ func roll_daily_events() -> void:
 		events_changed.emit(get_active_events())
 		return
 
-	pool.shuffle()
 	var max_slots: int = StoryManager.get_max_daily_events() if (is_instance_valid(StoryManager) and StoryManager.has_method("get_max_daily_events")) else 1
 	for _slot in range(max_slots):
 		if pool.is_empty():
 			break
 		if randf() <= DAILY_EVENT_CHANCE:
-			var ev: StoreEventData = pool.pop_front() as StoreEventData
+			var ev: StoreEventData = _pop_weighted_event(pool)
 			if ev:
 				_active_events.append(ev)
 
@@ -110,15 +109,30 @@ func roll_bonus_slots_for_radio_upgrade() -> void:
 	for ev in _available_events.values():
 		if ev is StoreEventData and not ev.excluded_from_daily_roll and not _active_events.has(ev):
 			pool.append(ev)
-	pool.shuffle()
 	while _active_events.size() < max_slots and not pool.is_empty():
 		if randf() <= DAILY_EVENT_CHANCE:
-			var ev: StoreEventData = pool.pop_front() as StoreEventData
+			var ev: StoreEventData = _pop_weighted_event(pool)
 			if ev:
 				_active_events.append(ev)
 				LogManager.info("StoreEventManager", "Bonus Radio upgrade event rolled: %s" % ev.event_name)
 		else:
 			break
+
+func _pop_weighted_event(pool: Array) -> StoreEventData:
+	if pool.is_empty():
+		return null
+	var total_w: float = 0.0
+	for ev in pool:
+		total_w += maxf(0.05, float(ev.roll_weight))
+	var r: float = randf() * total_w
+	var acc: float = 0.0
+	for i in range(pool.size()):
+		acc += maxf(0.05, float(pool[i].roll_weight))
+		if r <= acc:
+			var picked: StoreEventData = pool[i] as StoreEventData
+			pool.remove_at(i)
+			return picked
+	return pool.pop_back() as StoreEventData
 
 func record_encounter() -> void:
 	_daily_encounter_count += 1
@@ -313,6 +327,10 @@ func get_foot_traffic_time_scale() -> float:
 	var scale := 1.0
 	for event in _active_events:
 		scale *= event.foot_traffic_scale
+	if is_instance_valid(StoryManager) and StoryManager.has_method("get_overflow_counter_slots"):
+		var overflow: int = StoryManager.get_overflow_counter_slots()
+		for _i in range(overflow):
+			scale *= 0.90
 	return clampf(scale, 0.50, 1.50)
 
 func get_multi_item_chance_bonus() -> float:

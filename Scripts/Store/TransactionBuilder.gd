@@ -137,7 +137,7 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 	var new_characters := unlocked.filter(func(c: CustomerData) -> bool:
 		var c_ch: int = CharacterProgressionManager.get_chapter(c.resource_path)
 		var is_new: bool = not CharacterProgressionManager.has_encountered(c.resource_path) or c_ch == 0
-		return is_new and not c.is_collector() and c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
+		return is_new and c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
 	)
 
 	if not new_characters.is_empty():
@@ -149,7 +149,7 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 	# Priority 1: Cooldown is 0, check for available story chapters
 	if CharacterProgressionManager.global_story_cooldown <= 0:
 		var story_candidates := unlocked.filter(func(c: CustomerData) -> bool:
-			if c.resource_path == CharacterProgressionManager.last_story_advancer_path or c.resource_path == sm.last_character_path or c.is_collector():
+			if c.resource_path == CharacterProgressionManager.last_story_advancer_path or c.resource_path == sm.last_character_path:
 				return false
 			return _has_available_story_chapter(c)
 		)
@@ -159,9 +159,9 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 			force_story = true
 			LogManager.info("StoryManager", "Cooldown 0: Forcing chapter %d for: %s" % [CharacterProgressionManager.get_chapter(char_data.resource_path), char_data.get_clean_id()])
 		else:
-			# Soft-lock override (never pull collectors into daytime story chapters)
+			# Soft-lock override
 			var fallback := unlocked.filter(func(c: CustomerData) -> bool:
-				return not c.is_collector() and c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
+				return c.resource_path != sm.last_character_path and _has_available_story_chapter(c)
 			)
 			if not fallback.is_empty():
 				char_data = fallback.pick_random()
@@ -189,13 +189,13 @@ static func build_transaction_context(
 
 	var chapter: int = CharacterProgressionManager.get_chapter(data.resource_path)
 	var story_pending: bool = chapter < data.max_story_chapters and data.story_timeline != null
-	var is_collector: bool = data.is_collector()
-	var story_available: bool = allow_story and story_pending and CharacterProgressionManager.is_story_chapter_available(data, chapter)
+	var block_story_for_collector: bool = data.is_collector() and not sm.is_daytime_mayari_unlocked()
+	var story_available: bool = allow_story and story_pending and not block_story_for_collector and CharacterProgressionManager.is_story_chapter_available(data, chapter)
 
-	if (chapter == 0 or force_story) and story_available and not is_collector:
+	if (chapter == 0 or force_story) and story_available:
 		transaction.transaction_type = TransactionContext.Type.STORY
 		transaction.timeline = data.story_timeline
-	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0 and not is_collector:
+	elif story_available and CharacterProgressionManager.global_story_cooldown <= 0:
 		if randf() < STORY_ROLL_CHANCE:
 			transaction.transaction_type = TransactionContext.Type.STORY
 			transaction.timeline = data.story_timeline
@@ -203,6 +203,9 @@ static func build_transaction_context(
 			build_generic_transaction(sm, transaction, data, chapter)
 	else:
 		build_generic_transaction(sm, transaction, data, chapter)
+
+	if transaction.transaction_type == TransactionContext.Type.STORY and data.is_visit_story_chapter(chapter):
+		transaction.is_visit_story = true
 
 	# Assign Desired Items
 	if transaction.transaction_type != TransactionContext.Type.VISIT and not transaction.is_visit_story:
@@ -361,7 +364,7 @@ static func build_generic_transaction(
 ) -> void:
 	var is_purchase: bool = randf() < (1.0 - sm.visit_chance)
 
-	if is_purchase and data.is_visit_only_until_final_chapter() and chapter < data.max_story_chapters - 1:
+	if is_purchase and data.is_visit_only_until_final_chapter() and chapter < data.max_story_chapters:
 		is_purchase = false
 
 	var purchase_pool := data.get_purchase_timelines(chapter)
@@ -422,9 +425,6 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		high_price_chance = HIGH_PRICE_DESIRED_EXTREME_CHANCE
 	if has_store_extreme:
 		high_price_chance = maxf(high_price_chance, HIGH_PRICE_STORE_CHANCE)
-	var relief: float = sm.get_storefront_price_relief()
-	if high_price_chance > 0.0 and relief > 0.0:
-		high_price_chance = maxf(0.0, high_price_chance - relief)
 
 	var high_price_active: bool = high_price_chance > 0.0 and (randf() < high_price_chance)
 
@@ -494,41 +494,17 @@ static func build_collection_transaction(sm: Node) -> TransactionContext:
 	var path: String = data.resource_path
 	var chapter: int = CharacterProgressionManager.get_chapter(path)
 
-	# Once the ledger is permanently sealed, still let Mayari visit at closing time
-	# (Chapter 9 epilogue first if not yet seen, otherwise her nightly Favor card visit).
-	if sm.is_tally_cleared():
-		if chapter == 8 and chapter < data.max_story_chapters:
-			transaction.transaction_type = TransactionContext.Type.STORY
-			transaction.is_visit_story = true
-			transaction.timeline = data.story_timeline
-			DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
-			LogManager.info("StoryManager", "Mayari EPILOGUE visit (Chapter 9: Patron of the Moon).")
-			return transaction
-		transaction.transaction_type = TransactionContext.Type.VISIT
-		transaction.timeline = MAYARI_COLLECT_TIMELINE
-		DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
-		LogManager.info("StoryManager", "Mayari SEALED-LEDGER nightly visit (Favor draft).")
-		return transaction
-
-	var should_play_story: bool = false
-	if not sm.is_mayari_met:
-		should_play_story = true
-		LogManager.info("StoryManager", "Mayari DEBUT nightly visit.")
-	elif sm.last_mayari_collection_successful and chapter < 7 and chapter < data.max_story_chapters:
-		should_play_story = true
-		LogManager.info("StoryManager", "Mayari STORY nightly visit (Chapter %d)." % chapter)
-
-	if should_play_story:
-		transaction.transaction_type = TransactionContext.Type.STORY
-		transaction.is_visit_story = true
-		transaction.timeline = data.story_timeline
-	else:
-		transaction.transaction_type = TransactionContext.Type.VISIT
-		transaction.timeline = MAYARI_COLLECT_TIMELINE
-		if not sm.last_mayari_collection_successful:
-			LogManager.info("StoryManager", "Mayari RECOVERY nightly visit (Generic).")
-
+	# Nightly collection ALWAYS runs mayari_collect.dtl (ledger-tier driven).
+	# It NEVER auto-advances Reyna Mayari's 6-chapter daytime story arc.
+	transaction.transaction_type = TransactionContext.Type.VISIT
+	transaction.timeline = MAYARI_COLLECT_TIMELINE
 	DialogicBridge.sync_transaction(transaction, chapter, 0, 0)
+	if sm.is_tally_cleared():
+		LogManager.info("StoryManager", "Mayari SEALED-LEDGER nightly visit (Favor draft).")
+	elif not sm.is_mayari_met:
+		LogManager.info("StoryManager", "Mayari DEBUT nightly visit.")
+	else:
+		LogManager.info("StoryManager", "Mayari NIGHTLY collection visit (Ledger Tier %d)." % sm.get_ledger_tier())
 
 	return transaction
 
@@ -539,8 +515,8 @@ static func build_lingering_purchase_transaction(sm: Node, data: CustomerData) -
 		return null
 	var path: String = data.resource_path
 	var chapter: int = CharacterProgressionManager.get_chapter(path)
-	# Danilo doesn't place purchase orders before his final chapter
-	if data.get_clean_id() == "danilo" and chapter < data.max_story_chapters - 1:
+	# Visit-only-until-finale characters don't place bench purchase orders until finishing their final chapter
+	if data.is_visit_only_until_final_chapter() and chapter < data.max_story_chapters:
 		return null
 
 	var tx := TransactionContext.new()

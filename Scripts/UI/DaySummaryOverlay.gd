@@ -238,25 +238,83 @@ func _compute_grade_and_highlights() -> void:
 	for i in range(mini(3, candidates.size())):
 		_highlights.append(candidates[i])
 
-	# Contextual 1-line post-summary quip for Reyna Mayari at the counter
+	# Contextual post-summary quip for Reyna Mayari at the counter (reactive to arcs, Omens, upgrades, and daily grade)
+	var had_active_omen := false
+	var check_cards: Array[String] = StoryManager.active_mayari_cards.duplicate()
+	if check_cards.is_empty() and StoryManager.active_mayari_card != "":
+		check_cards.append(StoryManager.active_mayari_card)
+	for cid in check_cards:
+		if MayariCardRegistry.is_chill(cid):
+			had_active_omen = true
+			break
+
 	if not arcs.is_empty():
 		var first_arc := str(arcs[0])
 		var first_char := first_arc.split("'s ")[0] if first_arc.contains("'s ") else first_arc
-		_quip = "You saw %s's tale to a turning point today. Karimlan remembers such kindness." % first_char
+		var arc_key := first_char.to_lower().replace(" ", "").replace(".", "")
+		var arc_quips: Dictionary = {
+			"kuyakap": "The giant under the acacia breathes easier now. Even Biringan notices when an old smoke clears.",
+			"manangana": "Your karinderya neighbor took to the sky at last. A good counter knows when to let someone rest.",
+			"buboy": "Even the loud one-eyed boy pulled off a real errand. Karimlan surprises me every week.",
+			"lolopilo": "That old duwende is grinning like it is 1968 again. You certainly keep the plaza lively.",
+			"tk": "A tikbalang who finally knows his own roads. Do not tell the Silver Council, they will never believe it.",
+			"rodel": "Neighbors are greeting the Litao by his true name again. Memory is rarer than silver, shopkeeper.",
+			"sarimanok": "The gilded rooster actually bowed to a neighbor. I would have paid silver to witness that.",
+			"brahim": "That young albularyo's wards are clean and warm. Your Lola would have liked him.",
+			"danilo": "The quiet watcher by your awning finally stepped off his bench. You have a strange gravity, shopkeeper.",
+			"rosalyn": "The highway bend feels quiet and warm now. Some errands only needed Lola's counter to finish.",
+			"reynamayari": "A strange feeling, standing on this side of the counter without a ledger. Rest well, shopkeeper.",
+		}
+		if arc_quips.has(arc_key):
+			_quip = str(arc_quips[arc_key])
+		else:
+			_quip = "You saw %s's story through to a turning point. Karimlan remembers such patience." % first_char
 	elif not milestones.is_empty():
-		_quip = "A new seal opens upon the Silver Ledger. You grow bolder, shopkeeper."
+		var m_quips: Array[String] = [
+			"Another seal breaks on the Silver Ledger. Biringan's Council is watching your numbers closely now.",
+			"A new seal opens on Lola's pact. You have more nerve behind that counter than I expected.",
+		]
+		_quip = m_quips[randi() % m_quips.size()]
+	elif had_active_omen and (_grade == "S" or _grade == "A"):
+		var omen_quips: Array[String] = [
+			"You turned a lunar Omen into a gleaming ledger. Your Lola used to grin the exact same way.",
+			"An Omen hung over Karimlan and you still cleared the shelves. Impressive, shopkeeper.",
+		]
+		_quip = omen_quips[randi() % omen_quips.size()]
+	elif upgrades_bought >= 1:
+		var upg_quips: Array[String] = [
+			"New fixtures behind the counter. Keep polishing this little tindahan and Biringan might get jealous.",
+			"Fresh upgrades for Lola's shop. Careful, or your regulars will never leave the awning.",
+		]
+		_quip = upg_quips[randi() % upg_quips.size()]
 	elif _grade == "S":
-		_quip = "A gleaming ledger tonight, shopkeeper. Even Biringan speaks well of your tindahan."
+		var s_quips: Array[String] = [
+			"A gleaming ledger, shopkeeper. Even the Silver Spires would call that a royal haul.",
+			"Paldo, as your neighbors say. Rest your hands, you earned every peso on that wood.",
+		]
+		_quip = s_quips[randi() % s_quips.size()]
 	elif _grade == "A":
-		_quip = "Steady hands and brisk trade today. Rest well before the morning bell."
+		var a_quips: Array[String] = [
+			"Steady hands and brisk trade. Keep your candy jar stocked and we will get along fine.",
+			"Clean numbers and happy regulars. Your Lola's counter is in capable hands.",
+		]
+		_quip = a_quips[randi() % a_quips.size()]
 	elif missed_total >= 3:
-		_quip = "Empty shelves turn neighbors away. Call your uncle at dawn and stock well."
+		_quip = "Empty shelves send neighbors home hungry. Call your uncle early and restock the jars."
 	elif utang_granted >= 2:
-		_quip = "So much credit written in ink today... make sure your neighbors keep their word."
+		_quip = "Generous with the lista, shopkeeper. Just make sure your neighbors honor their word."
 	elif _grade == "B":
-		_quip = "A fair day's work behind the counter. Tomorrow brings fresh coin."
+		var b_quips: Array[String] = [
+			"A calm shift behind the wood. Rest up, fresh coins will roll in soon enough.",
+			"Measured and steady. Not every shift needs fireworks to hold the border open.",
+		]
+		_quip = b_quips[randi() % b_quips.size()]
 	else:
-		_quip = "A quiet ledger tonight. Let the night air clear the dust, and try again at dawn."
+		var c_quips: Array[String] = [
+			"A quiet ledger. Let the cool air clear the dust, and open sharp next shift.",
+			"Slow trade happens even in Biringan. Rest well, shopkeeper.",
+		]
+		_quip = c_quips[randi() % c_quips.size()]
 
 
 func _build_ui() -> void:

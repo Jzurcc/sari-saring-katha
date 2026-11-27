@@ -301,8 +301,7 @@ static func compute_haggle_accept_chance(offered_step: int, tolerance: int, orig
 	var eff_step: int = offered_step - tolerance
 	var base: float = clampf(0.74 - float(eff_step) * 0.17, 0.05, 1.0)
 	var shock_penalty: float = 0.19 if (original_step >= 5 and offered_step >= 0) else (0.09 if original_step == 4 else 0.0)
-	var relief: float = StoryManager.get_storefront_price_relief() if is_instance_valid(StoryManager) else 0.0
-	return clampf(base - shock_penalty + (relief * 0.65), 0.05, 0.95)
+	return clampf(base - shock_penalty, 0.05, 0.95)
 
 
 func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node3D = null) -> void:
@@ -331,8 +330,7 @@ func setup(item_data: ItemData, customer_data: CustomerData, customer_node: Node
 			_max_patience = maxi(2, _max_patience - 1)
 	_patience = _max_patience
 
-	var relief: float = StoryManager.get_storefront_price_relief() if is_instance_valid(StoryManager) else 0.0
-	_power_scale = clampf(1.18 - float(dist_from_neg1 - 3) * 0.12 + relief * 0.45, 0.66, 1.28)
+	_power_scale = clampf(1.18 - float(dist_from_neg1 - 3) * 0.12, 0.66, 1.28)
 	_turn_timer_duration = clampf(TURN_TIMER_BASE - float(maxi(0, dist_from_neg1 - 3)) * 0.9, 4.5, TURN_TIMER_BASE)
 	_turn_time_left = _turn_timer_duration
 	_display_convince = _convince

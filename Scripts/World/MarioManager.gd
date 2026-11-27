@@ -241,16 +241,13 @@ func _format_upgrade_items_list(items: Array[ItemData]) -> String:
 		if item and item.can_be_sold:
 			names.append("[color=#0f6e2f]%s[/color]" % item.item_name)
 	if names.is_empty():
-		return "brand new products for your store!"
+		return "fresh wholesale stock for your shelves."
 	if names.size() == 1:
-		return names[0] + "!"
-	var joined := ""
-	for i in range(names.size()):
-		if i == names.size() - 1:
-			joined += "and " + names[i] + "!"
-		else:
-			joined += names[i] + "... [pause=0.35]"
-	return joined
+		return names[0] + "."
+	if names.size() == 2:
+		return names[0] + " and " + names[1] + "."
+	var head := ", ".join(names.slice(0, names.size() - 1))
+	return head + ", and " + names[-1] + "."
 
 func answer_incoming_upgrade_call(anchor: Node) -> void:
 	_stop_incoming_ring()
@@ -517,11 +514,14 @@ func start_delivery(items_to_restock: Dictionary) -> void:
 func _build_delivery_dialogue_queue(items_to_restock: Dictionary) -> Array[String]:
 	var queue: Array[String] = []
 	var has_bag_delivery := false
+	var has_tier_upgrade := false
 
 	for d_item in items_to_restock.keys():
 		if d_item == null:
 			continue
-		if d_item.get_meta("is_fridge_upgrade", false) or d_item.get_meta("is_store_prop_upgrade", false):
+		if d_item.get_meta("is_upgrade", false):
+			has_tier_upgrade = true
+		elif d_item.get_meta("is_fridge_upgrade", false) or d_item.get_meta("is_store_prop_upgrade", false):
 			var custom_label: String = str(d_item.get_meta("delivery_dialogue_label", ""))
 			var resolved := "StoreUpgradeDelivery"
 			if custom_label != "" and StoryManager.is_label_in_timeline(TIMELINE_PATH, custom_label):
@@ -531,7 +531,9 @@ func _build_delivery_dialogue_queue(items_to_restock: Dictionary) -> Array[Strin
 		else:
 			has_bag_delivery = true
 
-	if has_bag_delivery:
+	if has_tier_upgrade and StoryManager.is_label_in_timeline(TIMELINE_PATH, "TierUpgradeDelivery"):
+		queue.push_front("TierUpgradeDelivery")
+	elif has_bag_delivery:
 		queue.push_front("Delivery")
 	if queue.is_empty():
 		queue.append("Delivery")
@@ -567,7 +569,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 	var items := _pending_delivery_items.duplicate()
 	_pending_delivery_items.clear()
 
-	# Silver-Touched Bag (+1-2) and/or Foggy Highway (+1): slip free bonus units into delivery!
+	# Silver-Touched Bag (+2) and/or Foggy Highway (+1): slip free bonus units into delivery!
 	var has_silver_bag := StoryManager.has_mayari_card(MayariCardRegistry.CARD_SILVER_TOUCHED_BAG)
 	var has_foggy_hwy := StoryManager.has_mayari_card(MayariCardRegistry.CARD_FOGGY_HIGHWAY)
 	if has_silver_bag or has_foggy_hwy:
@@ -579,7 +581,7 @@ func _commit_pending_delivery(spawn_in_tree: bool) -> void:
 				continue
 			eligible_regular.append(it)
 		if not eligible_regular.is_empty():
-			var bonus_count := (randi_range(1, 2) if has_silver_bag else 0) + (1 if has_foggy_hwy else 0)
+			var bonus_count := (2 if has_silver_bag else 0) + (1 if has_foggy_hwy else 0)
 			var granted := 0
 			for _b in range(bonus_count):
 				var chosen: ItemData = eligible_regular.pick_random()

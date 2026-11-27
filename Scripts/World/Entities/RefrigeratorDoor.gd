@@ -49,7 +49,7 @@ func _on_mayari_card_changed(_card_id: String) -> void:
 
 func _schedule_disembodied_wind() -> void:
 	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_DISEMBODIED_WIND):
-		_wind_gusts_remaining = randi_range(1, 2)
+		_wind_gusts_remaining = 2
 		_wind_timer = randf_range(35.0, 75.0)
 	else:
 		_wind_gusts_remaining = 0

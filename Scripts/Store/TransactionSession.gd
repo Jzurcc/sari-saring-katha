@@ -94,19 +94,10 @@ static func compute_overpriced_refusal_chance(item_data: ItemData, customer_data
 	var effective_step: int = item_data.current_step - tolerance
 	if effective_step < 3:
 		return 0.0
-	var base_chance: float = 0.0
 	match effective_step:
-		3: base_chance = 0.15
-		4: base_chance = 0.40
-		_: base_chance = 0.70
-	var relief: float = StoryManager.get_storefront_price_relief()
-	var card_mod: float = 0.0
-	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-		card_mod += 0.20
-	if StoryManager.has_mayari_card(MayariCardRegistry.CARD_UNRUSHED_HOUR):
-		card_mod -= 0.20
-	var final_chance: float = base_chance - relief + card_mod
-	return maxf(0.05, final_chance) if effective_step >= 4 else maxf(0.0, final_chance)
+		3: return 0.15
+		4: return 0.40
+		_: return 0.70
 
 
 func _matches_desired_preview(context: TransactionContext, offered: ItemData) -> bool:
@@ -259,11 +250,11 @@ func on_customer_clicked(customer: Customer, is_nokia_open: bool) -> void:
 	var timeline = customer.transaction_context.timeline
 	var label: String = ""
 
-	# Danilo visit override fallback
-	if customer.customer_data.get_clean_id() == "danilo":
+	# Visit-only-until-finale fallback (e.g. Rosalyn before completing her final story chapter)
+	if customer.customer_data and customer.customer_data.is_visit_only_until_final_chapter():
 		var path = customer.customer_data.resource_path
 		var chapter = CharacterProgressionManager.get_chapter(path)
-		if chapter < customer.customer_data.max_story_chapters - 1:
+		if chapter < customer.customer_data.max_story_chapters:
 			if customer.transaction_context.transaction_type == TransactionContext.Type.PURCHASE:
 				customer.transaction_context.transaction_type = TransactionContext.Type.VISIT
 
@@ -767,7 +758,7 @@ func _build_favorite_discovery_line(c_data: CustomerData, cat_label: String) -> 
 		"buboy":
 			return "YES! %s is my favorite, Kuya! Keep stocking these, ha?" % cat_label
 		"rosalyn":
-			return "%s... I always end up reaching for these. Thank you for keeping them." % cat_label
+			return "%s. I always end up reaching for these, po. Thank you for keeping them." % cat_label
 		"tk":
 			return "Ooh, %s! Instant favorite — I'm definitely coming back for more." % cat_label
 		"danilo":

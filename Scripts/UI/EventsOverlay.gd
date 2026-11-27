@@ -550,6 +550,7 @@ func close_overlay() -> void:
 	Input.mouse_mode = _previous_mouse_mode
 	if is_instance_valid(AudioManager):
 		AudioManager.play_sfx("drop")
+	EventBus.events_overlay_toggled.emit(false)
 
 func _input(event: InputEvent) -> void:
 	if not is_open:

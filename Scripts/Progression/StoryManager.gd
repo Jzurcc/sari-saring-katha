@@ -154,6 +154,21 @@ func get_max_mayari_card_picks(paid_override: float = -1.0) -> int:
 func is_daytime_mayari_unlocked() -> bool:
 	return is_ledger_milestone_unlocked("daytime_mayari")
 
+## Returns Reyna Mayari's nightly ledger lore tier (0..5) based on percentage of the Silver Ledger paid.
+func get_ledger_tier() -> int:
+	if is_tally_cleared():
+		return 5
+	var ratio: float = tally_total_paid / maxf(1.0, TALLY_GOAL)
+	if ratio >= 0.75:
+		return 4
+	if ratio >= 0.50:
+		return 3
+	if ratio >= 0.30:
+		return 2
+	if ratio >= 0.15:
+		return 1
+	return 0
+
 func get_nightly_min_tally() -> float:
 	var rem := get_tally_remaining()
 	if rem <= 0.01:
@@ -431,6 +446,7 @@ func get_fridge_upgrade_item(level: int) -> ItemData:
 	item.set_meta("upgrade_desc", str(spec["desc"]))
 	item.set_meta("drain_sec", float(spec["drain_sec"]))
 	item.set_meta("regen_sec", float(spec["regen_sec"]))
+	item.set_meta("delivery_dialogue_label", "FridgeUpgradeDelivery%d" % lvl)
 	_fridge_upgrade_item_cache[lvl] = item
 	return item
 
@@ -457,6 +473,13 @@ func get_max_counter_slots() -> int:
 	if is_instance_valid(StoreEventManager):
 		bonus += StoreEventManager.get_extra_counter_slots()
 	return clampi(1 + cat_upgrade_level + bonus, 1, 3)
+
+## Extra counter slots beyond the 3-slot cap convert into +10% Foot Traffic each instead of going to waste.
+func get_overflow_counter_slots() -> int:
+	var bonus := 1 if has_mayari_card(MayariCardRegistry.CARD_CROWDED_STOOP) else 0
+	if is_instance_valid(StoreEventManager):
+		bonus += StoreEventManager.get_extra_counter_slots()
+	return maxi(0, (1 + cat_upgrade_level + bonus) - 3)
 
 func get_cat_upgrade_item(level: int) -> ItemData:
 	var lvl := clampi(level, 1, CAT_UPGRADE_SPECS.size() - 1)
@@ -607,6 +630,7 @@ func get_maneki_upgrade_item(level: int) -> ItemData:
 	item.set_meta("customer_hours", float(spec["customer_hours"]))
 	item.set_meta("visit_hours", float(spec["visit_hours"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("delivery_dialogue_label", "ManekiUpgradeDelivery%d" % lvl)
 	_maneki_upgrade_item_cache[lvl] = item
 	return item
 
@@ -672,6 +696,7 @@ func get_radio_upgrade_item(level: int) -> ItemData:
 	item.set_meta("reveals", int(spec["reveals"]))
 	item.set_meta("max_events", int(spec.get("max_events", 1)))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("delivery_dialogue_label", "RadioUpgradeDelivery%d" % lvl)
 	_radio_upgrade_item_cache[lvl] = item
 	return item
 
@@ -731,6 +756,7 @@ func get_mario_deals_upgrade_item(level: int = 1) -> ItemData:
 		item.set_meta("upgrade_desc", "Unlocks Uncle Mario's Daily Sulit Deals (+2 items at 20% off wholesale) and cuts his restock cooldown by 30% (5h → 3.5h).")
 	else:
 		item.set_meta("upgrade_desc", "Mario brings bulk contracts: +3 more Daily Sulit Deals (5 total) and a deeper wholesale discount (30% off).")
+	item.set_meta("delivery_dialogue_label", "WholesaleUpgradeDelivery%d" % lvl)
 	_mario_deals_upgrade_items[lvl] = item
 	return item
 
@@ -788,6 +814,7 @@ func get_sto_nino_upgrade_item(level: int) -> ItemData:
 	item.set_meta("favor_count", int(spec["favor_count"]))
 	item.set_meta("all_day", bool(spec["all_day"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("delivery_dialogue_label", "StoNinoUpgradeDelivery%d" % lvl)
 	_sto_nino_upgrade_item_cache[lvl] = item
 	return item
 
@@ -940,6 +967,7 @@ func get_permit_upgrade_item(level: int) -> ItemData:
 	item.set_meta("req_level", int(spec["req_level"]))
 	item.set_meta("xp_mult", float(spec["xp_mult"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("delivery_dialogue_label", "PermitUpgradeDelivery%d" % lvl)
 	_permit_upgrade_item_cache[lvl] = item
 	return item
 
@@ -1022,6 +1050,7 @@ func get_bench_upgrade_item(level: int) -> ItemData:
 	item.set_meta("smalltalk_xp", int(spec["smalltalk_xp"]))
 	item.set_meta("return_to_buy", bool(spec["return_to_buy"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("delivery_dialogue_label", "BenchUpgradeDelivery%d" % lvl)
 	_bench_upgrade_item_cache[lvl] = item
 	return item
 
@@ -1144,6 +1173,7 @@ func get_storefront_upgrade_item(level: int) -> ItemData:
 	item.set_meta("tip_chance", float(spec["tip_chance"]))
 	item.set_meta("price_relief", float(spec["price_relief"]))
 	item.set_meta("upgrade_desc", str(spec["desc"]))
+	item.set_meta("delivery_dialogue_label", "StorefrontUpgradeDelivery%d" % lvl)
 	_storefront_upgrade_item_cache[lvl] = item
 	return item
 
@@ -2131,7 +2161,7 @@ func award_customer_completion_xp(customer: Customer) -> void:
 		return
 	if not customer.transaction_context:
 		return
-	if customer.customer_data != null and customer.customer_data.is_collector():
+	if customer.transaction_context.is_nightly_collection:
 		return
 	customer.set_meta("_xp_awarded", true)
 	var ctx: TransactionContext = customer.transaction_context

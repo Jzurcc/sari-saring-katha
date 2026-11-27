@@ -122,7 +122,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				close_tree()
 			return
 		if is_upgrade_toggle:
-			if Dialogic.current_timeline != null:
+			var gm: Node = get_tree().get_first_node_in_group("game_manager")
+			var allow_during_tut: bool = gm != null and gm.get("tutorial") != null and gm.tutorial.can_interact_with_world()
+			if Dialogic.current_timeline != null and not allow_during_tut:
 				return
 			if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
 				return
@@ -152,6 +154,7 @@ func open_tree(_focus_node_id: String = "") -> void:
 		_tooltip.visible = false
 
 	EventBus.request_sfx.emit("tab_switch")
+	EventBus.upgrades_overlay_toggled.emit(true)
 	_elevate_hud_money()
 	_refresh_all()
 	call_deferred("_play_open_cascade")
@@ -190,6 +193,7 @@ func close_tree() -> void:
 	_restore_hud_money()
 	Input.mouse_mode = _prev_mouse_mode
 	EventBus.request_sfx.emit("drop")
+	EventBus.upgrades_overlay_toggled.emit(false)
 
 	if not _pending_delivery_items.is_empty():
 		var items_copy := _pending_delivery_items.duplicate()

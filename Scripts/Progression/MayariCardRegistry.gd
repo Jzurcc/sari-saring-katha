@@ -42,57 +42,121 @@ const CARD_PICKY_CRAVINGS := "picky_cravings"
 
 ## Core mechanical vocabulary for Hades-style hover side callouts.
 const KEYWORDS: Dictionary = {
+	# ── Pricing, Sales & Tips ──
 	"price_tolerance": {
 		"title": "PRICE TOLERANCE",
-		"desc": "How many price steps above base cost neighbors accept before refusing to buy.",
+		"desc": "How many price steps above base cost neighbors accept before pushing back.",
 	},
-	"fridge_coldness": {
-		"title": "FRIDGE COLDNESS",
-		"desc": "Keeps cold drinks & frozen stock fresh. If depleted, fridge items sell for 25% less.",
+	"haggle": {
+		"title": "HAGGLE",
+		"desc": "Counter-offer chance to talk a hesitant shopper into accepting a marked-up price.",
 	},
 	"cash_sale": {
 		"title": "CASH SALE",
-		"desc": "A purchase paid upfront in pesos — excludes Utang (credit) sales.",
+		"desc": "A purchase paid upfront in pesos, excluding Utang (credit) sales.",
+	},
+	"cash_tip_bonus": {
+		"title": "CASH TIP BONUS",
+		"desc": "Extra percentage of pesos added on top of satisfied Cash Sales.",
+	},
+	"tip_chance": {
+		"title": "TIP CHANCE",
+		"desc": "Probability that a satisfied shopper leaves an Appreciation Tip after a Cash Sale.",
+	},
+	"featured_category": {
+		"title": "FEATURED CATEGORY",
+		"desc": "Activated by placing 3/3 stickers of one category on your Promo Poster for extra demand and bonus cash.",
+	},
+	"cold_sale_bonus": {
+		"title": "COLD SALE BONUS",
+		"desc": "Extra percentage of pesos earned on chilled Cold Drinks & Frozen sales while the fridge stays cold.",
+	},
+	# ── Fridge & Inventory ──
+	"fridge_coldness": {
+		"title": "FRIDGE COLDNESS",
+		"desc": "Keeps Cold Drinks & Frozen stock fresh. If depleted, fridge items sell for 25% less.",
+	},
+	"coldness_drain": {
+		"title": "COLDNESS DRAIN",
+		"desc": "How fast your fridge loses Coldness over time or when the door swings open.",
+	},
+	"rechill_speed": {
+		"title": "RE-CHILL SPEED",
+		"desc": "How fast your fridge recovers Coldness back to ice-cold once the door is shut.",
 	},
 	"restock": {
 		"title": "RESTOCK",
 		"desc": "Wholesale stock ordered by calling Uncle Mario on the store phone.",
 	},
+	"delivery_cooldown": {
+		"title": "DELIVERY COOLDOWN",
+		"desc": "Wait time before Uncle Mario can run another Restock trip.",
+	},
 	"bonus_stock": {
 		"title": "BONUS STOCK",
-		"desc": "Extra free items tucked into Uncle Mario's delivery bag, up to shelf capacity.",
-	},
-	"store_hours": {
-		"title": "STORE HOURS",
-		"desc": "Normally closes at 8:00 PM, after which Reyna Mayari arrives to collect.",
-	},
-	"multi_item_order": {
-		"title": "MULTI-ITEM ORDER",
-		"desc": "A neighbor requesting 2+ items at once — grants +5 bonus Player XP per extra item.",
-	},
-	"player_xp": {
-		"title": "PLAYER XP",
-		"desc": "Earned from sales, visits, and stories to level up and unlock higher product tiers & upgrades.",
-	},
-	"neighborhood_events": {
-		"title": "NEIGHBORHOOD EVENTS",
-		"desc": "Daily Karimlan conditions revealed via Papa Ulap's Radio that boost demand and Price Tolerance.",
-	},
-	"foot_traffic": {
-		"title": "FOOT TRAFFIC",
-		"desc": "Speeds up customer arrivals and shortens time skips between waves so more neighbors visit each day.",
+		"desc": "Extra free items tucked into Uncle Mario's delivery bag, up to Shelf Capacity.",
 	},
 	"sulit_deals": {
 		"title": "SULIT DEALS",
 		"desc": "Daily discounted wholesale picks from Uncle Mario in the Restock Menu.",
 	},
-	"featured_category": {
-		"title": "FEATURED CATEGORY",
-		"desc": "Activated by placing 3/3 stickers of one category on your Promo Poster.",
+	# ── Customers, Traffic & Counter Flow ──
+	"foot_traffic": {
+		"title": "FOOT TRAFFIC",
+		"desc": "Speeds up customer arrivals and shortens time skips between waves so more neighbors visit.",
+	},
+	"counter_slots": {
+		"title": "COUNTER SLOTS",
+		"desc": "How many neighbors can stand at your counter at once (up to 3).",
+	},
+	"multi_item_order": {
+		"title": "MULTI-ITEM ORDER",
+		"desc": "A neighbor requesting 2+ items at once, granting +5 bonus Player XP per extra item.",
 	},
 	"tambayan": {
 		"title": "TAMBAYAN",
 		"desc": "Lingering neighbors who hang out around the store, granting passive XP and occasional extra purchases.",
+	},
+	"daily_visitors": {
+		"title": "DAILY VISITORS",
+		"desc": "Specific named neighbors spotted by Papa Ulap who are scheduled to visit today.",
+	},
+	"store_hours": {
+		"title": "STORE HOURS",
+		"desc": "Normally closes at 8:00 PM, after which Reyna Mayari arrives to collect.",
+	},
+	# ── Progression, Credit & Broadcasts ──
+	"player_xp": {
+		"title": "PLAYER XP",
+		"desc": "Earned from sales, visits, and stories to level up and unlock higher product tiers and upgrades.",
+	},
+	"reputation": {
+		"title": "REPUTATION",
+		"desc": "Bond earned with each neighbor to unlock Folklore Journal chapters and deeper trust.",
+	},
+	"utang": {
+		"title": "UTANG",
+		"desc": "Neighborhood credit recorded on your lista, repaid in full on a future visit.",
+	},
+	"events": {
+		"title": "EVENTS",
+		"desc": "Daily Karimlan conditions revealed via Papa Ulap's Radio that shift demand, prices, and store flow.",
+	},
+	"neighborhood_events": {
+		"title": "EVENTS",
+		"desc": "Daily Karimlan conditions revealed via Papa Ulap's Radio that shift demand, prices, and store flow.",
+	},
+	"radio_cooldown": {
+		"title": "RADIO COOLDOWN",
+		"desc": "Wait time between Papa Ulap's Event and Daily Visitor broadcasts on the Counter Radio.",
+	},
+	"minigame_rewards": {
+		"title": "MINIGAME REWARDS",
+		"desc": "Multiplier on pesos and Player XP earned from Sipa, Teks, Talisman, and Mosquito Swat minigames.",
+	},
+	"story_chance": {
+		"title": "STORY CHANCE",
+		"desc": "Extra chance for unlocked neighbors to trigger their next Story Chapter instead of a routine purchase.",
 	},
 }
 
@@ -122,13 +186,13 @@ const CARDS: Dictionary = {
 		"title": "Frost of Biringan",
 		"sigil": "❄",
 		"icon": "res://Assets/ui/icons/snowflake.png",
-		"tagline": "40% Slower Fridge Drain",
+		"tagline": "-40% Drain · +40% Re-Chill",
 		"description": "Cool lunar air lingers in your store. Your refrigerator loses coldness 40% slower and chills back 40% faster.",
-		"description_rich": "Cool lunar air lingers in your fridge, preserving [b]Fridge Coldness[/b] far longer.",
-		"keywords": ["fridge_coldness"],
+		"description_rich": "Cool lunar air lingers in your fridge, slowing [b]Coldness Drain[/b] and speeding up [b]Re-Chill Speed[/b].",
+		"keywords": ["coldness_drain", "rechill_speed"],
 		"stats": [
-			{"label": "Fridge Coldness Drain:", "value": "-40%", "tone": "pos"},
-			{"label": "Fridge Re-Chill Speed:", "value": "+40%", "tone": "pos"},
+			{"label": "Coldness Drain:", "value": "-40%", "tone": "pos"},
+			{"label": "Re-Chill Speed:", "value": "+40%", "tone": "pos"},
 		],
 		"hud_short": "Fridge Frost Blessing",
 	},
@@ -138,12 +202,12 @@ const CARDS: Dictionary = {
 		"title": "Moonlight Tips",
 		"sigil": "✦",
 		"icon": "res://Assets/ui/icons/sparkles.png",
-		"tagline": "+12% Tip Per Cash Sale",
-		"description": "Gratitude shines bright under the silver spires. Earn a +12% Moonlight Tip on every satisfied cash sale tomorrow.",
-		"description_rich": "Gratitude shines under the silver spires. Earn a scaling bonus tip on every satisfied [b]Cash Sale[/b].",
-		"keywords": ["cash_sale"],
+		"tagline": "+12% Cash Tip Bonus",
+		"description": "Gratitude shines bright under the silver spires. Earn a +12% Cash Tip Bonus on every satisfied cash sale tomorrow.",
+		"description_rich": "Gratitude shines under the silver spires. Earn a scaling [b]Cash Tip Bonus[/b] on every satisfied [b]Cash Sale[/b].",
+		"keywords": ["cash_tip_bonus", "cash_sale"],
 		"stats": [
-			{"label": "Tip Per Cash Sale:", "value": "+12%", "tone": "pos"},
+			{"label": "Cash Tip Bonus:", "value": "+12%", "tone": "pos"},
 		],
 		"hud_short": "+12% Moonlight Tips",
 	},
@@ -153,15 +217,15 @@ const CARDS: Dictionary = {
 		"title": "Clear Road",
 		"sigil": "»",
 		"icon": "res://Assets/ui/icons/route.png",
-		"tagline": "35% Faster Mario & 10% Off",
+		"tagline": "-35% Delivery CD · -10% Restock",
 		"description": "The moonlight clears the road for Uncle Mario: 10% off restock orders and 35% shorter delivery cooldown.",
-		"description_rich": "Moonlight clears the road for Uncle Mario, lowering [b]Restock[/b] costs and cutting delivery cooldown time.",
-		"keywords": ["restock"],
+		"description_rich": "Moonlight clears the road for Uncle Mario, lowering [b]Restock[/b] costs and cutting [b]Delivery Cooldown[/b].",
+		"keywords": ["restock", "delivery_cooldown"],
 		"stats": [
 			{"label": "Restock Cost:", "value": "-10%", "tone": "pos"},
 			{"label": "Delivery Cooldown:", "value": "-35%", "tone": "pos"},
 		],
-		"hud_short": "10% Off Restock & -35% Mario CD",
+		"hud_short": "-10% Restock · -35% Delivery CD",
 	},
 	CARD_SILVER_TOUCHED_BAG: {
 		"id": CARD_SILVER_TOUCHED_BAG,
@@ -169,14 +233,14 @@ const CARDS: Dictionary = {
 		"title": "Silver-Touched Bag",
 		"sigil": "✧",
 		"icon": "res://Assets/ui/icons/package.png",
-		"tagline": "+1–2 Free Restock Units",
-		"description": "Biringan's abundance slips into your delivery bags. Every restock delivery tomorrow includes 1–2 free bonus items.",
+		"tagline": "+2 Free Restock Units",
+		"description": "Biringan's abundance slips into your delivery bags. Every restock delivery tomorrow includes +2 free bonus items.",
 		"description_rich": "Biringan's abundance slips into your delivery bags, adding free [b]Bonus Stock[/b] to every drop.",
 		"keywords": ["bonus_stock"],
 		"stats": [
-			{"label": "Free Items Per Delivery:", "value": "+1–2", "tone": "pos"},
+			{"label": "Free Items Per Delivery:", "value": "+2", "tone": "pos"},
 		],
-		"hud_short": "Bonus Restock Items",
+		"hud_short": "+2 Bonus Restock Units",
 	},
 	CARD_MOON_HOLDS_SKY: {
 		"id": CARD_MOON_HOLDS_SKY,
@@ -308,15 +372,15 @@ const CARDS: Dictionary = {
 		"title": "Unrushed Hour",
 		"sigil": "◷",
 		"icon": "res://Assets/ui/icons/clock.png",
-		"tagline": "+20% Haggle · -20% Refusal",
-		"description": "Easy conversation flows at your counter. Neighbors are 20% less likely to refuse markups and 20% more likely to accept a Haggle.",
-		"description_rich": "Easy conversation flows at your counter, softening [b]Price Tolerance[/b] pushback and boosting Haggle odds.",
-		"keywords": ["price_tolerance"],
+		"tagline": "+25% Haggle · +1 Patience",
+		"description": "Easy conversation flows at your counter. Neighbors are 25% more likely to negotiate a Haggle and give you +1 extra Haggle patience.",
+		"description_rich": "Easy conversation flows at your counter, boosting [b]Haggle[/b] odds and patience.",
+		"keywords": ["haggle"],
 		"stats": [
-			{"label": "Haggle Accept Chance:", "value": "+20%", "tone": "pos"},
-			{"label": "Markup Refusal Chance:", "value": "-20%", "tone": "pos"},
+			{"label": "Haggle Trigger Chance:", "value": "+25%", "tone": "pos"},
+			{"label": "Haggle Patience:", "value": "+1", "tone": "pos"},
 		],
-		"hud_short": "+20% Haggle · -20% Refusal",
+		"hud_short": "+25% Haggle · +1 Patience",
 	},
 
 	# ── Omen (12 Double-Edged Debuffs / Quirks) ──────────────────────────
@@ -326,15 +390,15 @@ const CARDS: Dictionary = {
 		"title": "Disembodied Wind",
 		"sigil": "〰",
 		"icon": "res://Assets/ui/icons/wind.png",
-		"tagline": "Fridge Gusts · +12% Cold Bonus",
-		"description": "Eerie gusts swing your fridge door open 1–2× tomorrow — shut it fast! Cold Drinks & Frozen Treats sold cold earn a +12% Chilled Bonus.",
-		"description_rich": "Eerie gusts swing your fridge door open — guard [b]Fridge Coldness[/b] to earn a bonus on cold [b]Cash Sales[/b]!",
-		"keywords": ["fridge_coldness", "cash_sale"],
+		"tagline": "2 Fridge Gusts · +12% Cold Bonus",
+		"description": "Eerie gusts swing your fridge door open 2× tomorrow — shut it fast! Cold Drinks & Frozen stock sold cold earn a +12% Cold Sale Bonus.",
+		"description_rich": "Eerie gusts swing your fridge door open — guard [b]Fridge Coldness[/b] to earn a [b]Cold Sale Bonus[/b]!",
+		"keywords": ["fridge_coldness", "cold_sale_bonus"],
 		"stats": [
-			{"label": "Refrigerator Door Gusts:", "value": "1–2", "tone": "neg"},
-			{"label": "Chilled Fridge Sale Bonus:", "value": "+12%", "tone": "pos"},
+			{"label": "Fridge Door Gusts:", "value": "2", "tone": "neg"},
+			{"label": "Cold Sale Bonus:", "value": "+12%", "tone": "pos"},
 		],
-		"hud_short": "Fridge Gusts · +12% Cold",
+		"hud_short": "2 Fridge Gusts · +12% Cold",
 	},
 	CARD_EERIE_MIST_RUSH: {
 		"id": CARD_EERIE_MIST_RUSH,
@@ -454,15 +518,16 @@ const CARDS: Dictionary = {
 		"title": "Restless Crowd",
 		"sigil": "⚡",
 		"icon": "res://Assets/ui/icons/flame.png",
-		"tagline": "-1 Tol & Walkouts · +15% Fair Tip",
-		"description": "Impatient shoppers have -1 Tolerance and +20% markup walkout chance, but fair-priced cash sales (Step 0 or +1) earn a +15% Fair-Trade Tip.",
-		"description_rich": "Harsher [b]Price Tolerance[/b] and walkouts on markups, yet fair [b]Cash Sales[/b] pay a generous tip.",
-		"keywords": ["price_tolerance", "cash_sale"],
+		"tagline": "-1 Tol · -25% Haggle · +15% Fair Tip",
+		"description": "Impatient shoppers have -1 Price Tolerance and -25% Haggle chance, but fair-priced cash sales (Step 0 or +1) earn a +15% Fair-Trade Tip.",
+		"description_rich": "Harsher [b]Price Tolerance[/b] and impatient [b]Haggle[/b] odds, yet fair [b]Cash Sales[/b] pay a generous tip.",
+		"keywords": ["price_tolerance", "haggle", "cash_sale"],
 		"stats": [
-			{"label": "Price Tolerance / Walkouts:", "value": "-1 / +20%", "tone": "neg"},
+			{"label": "All Items Price Tolerance:", "value": "-1", "tone": "neg"},
+			{"label": "Haggle Trigger Chance:", "value": "-25%", "tone": "neg"},
 			{"label": "Fair Price (0/+1) Tip:", "value": "+15%", "tone": "pos"},
 		],
-		"hud_short": "Strict Prices · +15% Fair Tip",
+		"hud_short": "-1 Tol · +15% Fair Tip",
 	},
 	CARD_STATIC_AIRWAVES: {
 		"id": CARD_STATIC_AIRWAVES,
@@ -533,52 +598,106 @@ static func get_cards_by_kind(kind: String) -> Array[Dictionary]:
 			result.append(c)
 	return result
 
-## Draws 3 unique cards for the post-tally roguelike draft:
+## Relative draft weights by rarity: common = 1.0, uncommon = 0.65, rare = 0.35.
+const CARD_WEIGHTS: Dictionary = {
+	# Favors
+	CARD_SILVER_TOLERANCE: 1.0,
+	CARD_MOONLIGHT_TIPS: 1.0,
+	CARD_GENEROUS_BASKETS: 1.0,
+	CARD_UNRUSHED_HOUR: 1.0,
+	CARD_FROST_OF_BIRINGAN: 0.65,
+	CARD_CLEAR_ROAD: 0.65,
+	CARD_SILVER_RENOWN: 0.65,
+	CARD_TAMBAYAN_WARMTH: 0.65,
+	CARD_ECHOES_ON_THE_DIAL: 0.65,
+	CARD_CURBSIDE_GLOW: 0.65,
+	CARD_MOON_HOLDS_SKY: 0.35,
+	CARD_SILVER_TOUCHED_BAG: 0.35,
+	CARD_CROWDED_STOOP: 0.35,
+	CARD_WHOLESALE_BLESSING: 0.35,
+	# Omens
+	CARD_EERIE_MIST_RUSH: 1.0,
+	CARD_RELUCTANT_CARE: 1.0,
+	CARD_FADING_MEMORY: 1.0,
+	CARD_TIGHT_WHOLESALE: 1.0,
+	CARD_DISEMBODIED_WIND: 0.65,
+	CARD_FOGGY_HIGHWAY: 0.65,
+	CARD_WARM_TRADE_WINDS: 0.65,
+	CARD_RESTLESS_CROWD: 0.65,
+	CARD_EARLY_DUSK: 0.35,
+	CARD_QUIET_ECLIPSE: 0.35,
+	CARD_STATIC_AIRWAVES: 0.35,
+	CARD_PICKY_CRAVINGS: 0.35,
+}
+
+static func get_card_rarity(card_id: String) -> String:
+	var w: float = float(CARD_WEIGHTS.get(card_id, 1.0))
+	if w <= 0.40:
+		return "rare"
+	if w <= 0.75:
+		return "uncommon"
+	return "common"
+
+static func _pop_weighted_card(pool: Array[Dictionary]) -> Dictionary:
+	if pool.is_empty():
+		return {}
+	var total_w: float = 0.0
+	for c in pool:
+		total_w += float(CARD_WEIGHTS.get(str(c.get("id", "")), 1.0))
+	var r: float = randf() * total_w
+	var acc: float = 0.0
+	for i in range(pool.size()):
+		acc += float(CARD_WEIGHTS.get(str(pool[i].get("id", "")), 1.0))
+		if r <= acc:
+			var picked: Dictionary = pool[i]
+			pool.remove_at(i)
+			return picked
+	return pool.pop_back()
+
+## Draws 3 unique cards for the post-tally roguelike draft using rarity-weighted sampling:
 ## - "generous" / "cleared": 3 guaranteed Favor cards
 ## - "shortfall": 100% Omen normally; 75% Omen / 25% Favor with 50% Silver Favor milestone
 ## - "balanced": 80% Omen / 20% Favor normally; 50% Omen / 50% Favor with 50% Silver Favor milestone
 static func draw_three_cards(tally_tier: String, shifted_odds: bool = false) -> Array[Dictionary]:
 	var favor_pool := get_cards_by_kind(KIND_FAVOR)
 	var chill_pool := get_cards_by_kind(KIND_CHILL)
-	favor_pool.shuffle()
-	chill_pool.shuffle()
 
 	var picked: Array[Dictionary] = []
 	match tally_tier:
 		"include_omens":
 			for _i in range(3):
 				if randf() < 0.50 and not favor_pool.is_empty():
-					picked.append(favor_pool.pop_back())
+					picked.append(_pop_weighted_card(favor_pool))
 				elif not chill_pool.is_empty():
-					picked.append(chill_pool.pop_back())
+					picked.append(_pop_weighted_card(chill_pool))
 				elif not favor_pool.is_empty():
-					picked.append(favor_pool.pop_back())
+					picked.append(_pop_weighted_card(favor_pool))
 		"omens_only":
-			for i in range(mini(3, chill_pool.size())):
-				picked.append(chill_pool[i])
+			for _i in range(mini(3, chill_pool.size())):
+				picked.append(_pop_weighted_card(chill_pool))
 		"generous", "cleared":
-			for i in range(mini(3, favor_pool.size())):
-				picked.append(favor_pool[i])
+			for _i in range(mini(3, favor_pool.size())):
+				picked.append(_pop_weighted_card(favor_pool))
 		"shortfall":
 			if shifted_odds:
 				for _i in range(3):
 					if randf() < 0.25 and not favor_pool.is_empty():
-						picked.append(favor_pool.pop_back())
+						picked.append(_pop_weighted_card(favor_pool))
 					elif not chill_pool.is_empty():
-						picked.append(chill_pool.pop_back())
+						picked.append(_pop_weighted_card(chill_pool))
 			else:
-				for i in range(mini(3, chill_pool.size())):
-					picked.append(chill_pool[i])
+				for _i in range(mini(3, chill_pool.size())):
+					picked.append(_pop_weighted_card(chill_pool))
 		_:
 			# "balanced" (sufficient): 80% Omen / 20% Favor normally, or 50% Favor / 50% Omen when shifted
 			var favor_prob := 0.50 if shifted_odds else 0.20
 			for _i in range(3):
 				if randf() < favor_prob and not favor_pool.is_empty():
-					picked.append(favor_pool.pop_back())
+					picked.append(_pop_weighted_card(favor_pool))
 				elif not chill_pool.is_empty():
-					picked.append(chill_pool.pop_back())
+					picked.append(_pop_weighted_card(chill_pool))
 				elif not favor_pool.is_empty():
-					picked.append(favor_pool.pop_back())
+					picked.append(_pop_weighted_card(favor_pool))
 
 	return picked
 
