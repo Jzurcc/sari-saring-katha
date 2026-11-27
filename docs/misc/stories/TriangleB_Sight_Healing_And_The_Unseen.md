@@ -26,9 +26,9 @@ All three characters casually anchor their stories to the same 4 places outside 
 
 ```mermaid
 graph TD
-    BRA["BRAHIM (Albularyo)<br/>Recovering corporate overthinker learning<br/>Tatay's folk healing & talisman craft"]
+    BRA["BRAHIM (Albularyo)<br/>Warm former UC Baguio professor bringing<br/>gentle curiosity to Tatay's folk craft"]
     DAN["DANILO (Daligmata)<br/>Lazy 'tambay' with dozens of hidden eyes<br/>who avoids using his soul-finding gift"]
-    ROS["ROSALYN (Kaperosa)<br/>Painfully shy White Lady who knows she died<br/>but cannot remember why she is still wandering"]
+    ROS["ROSALYN (Kaperosa)<br/>Shy White Lady drawn back to Lola's store,<br/>slowly recognizing Lola's features in you"]
 
     BRA <-->|"Has the gentle Lantern Ward & prayers, but<br/>needs Danilo's Daligmata sight past the veil"| DAN
     DAN <-->|"Spots Rosalyn looping by the highway shed;<br/>must drop his lazy act to trace her lost sister"| ROS
@@ -36,10 +36,10 @@ graph TD
 ```
 
 ### Shared Thematic Thread (*Kishōtenketsu* Braiding)
-All three arcs ask the same human question from three angles: **What is the difference between fixing or watching someone from a safe distance, and actually staying present with them?**
-- **Brahim** fled corporate Manila because spreadsheets hollowed him out, yet he still approaches *albularyo* work like an anxious project manager terrified of failing a KPI. Trying to help Rosalyn teaches him that folk healing is not "troubleshooting an anomaly"—it is holding a warm lamp so someone frightened can breathe.
+All three arcs ask the same human question from three angles: **What is the difference between studying or watching someone from a safe distance, and actually staying present with them?**
+- **Brahim** happily traded his lectern as a professor at the **University of the Cordilleras in Baguio** to come home and learn *Tatay*'s craft—bringing an easygoing educator's curiosity, neat margin notes, and gentle warmth, while discovering that some neighborhood mysteries ask for an open heart rather than a lecture outline.
 - **Danilo** hides dozens of sleepless eyes behind dark lenses and lazy *tambay* banter (*"Not my department, boss, I just watch"*), because opening his full *Daligmata* soul-sight hurts like welding glare and forces him to care. Stepping off the bench to trace Rosalyn's broken thread turns him from a detached spectator into a true neighbor.
-- **Rosalyn** feels quietly ashamed that she is "doing death wrong," walking from the highway to your sari-sari counter without remembering why. Her *Ten* (perspective turn): she wasn't haunting the road out of vengeance—**she died mid-errand running to a sari-sari store after telling her feverish little sister to wait under the highway shed**, and once Danilo and Brahim prove her sister grew up safe without blaming her, the terrified loop finally lets go.
+- **Rosalyn** feels quietly ashamed that she is "doing death wrong," walking from the highway to **this exact sari-sari store** without remembering why—while slowly catching uncanny echoes of your **Lola** (and a tiny childhood version of *you*) in your eyes and hands. Her *Ten* (perspective turn): she died mid-errand running to **Lola's counter** for cough candy while her feverish little sister waited under the highway shed, and once Danilo and Brahim prove her sister grew up safe without blaming her, she finally completes that last errand across Lola's wood—handed to her by Lola's grown grandchild.
 
 ---
 
@@ -47,9 +47,9 @@ All three arcs ask the same human question from three angles: **What is the diff
 
 | Character | Legacy Problems | Modernized Triangle B Fix |
 | :--- | :--- | :--- |
-| **Brahim** | Blandly serene from Chapter 1 (zero internal friction); forced 10 back-to-back minigames with placeholder sigil names; praised the player identically even when losing; zero ties to Danilo or Rosalyn. | **Recovering Corporate Overthinker** with genuine imposter syndrome under Tatay's shadow. Uses **4 purposeful, story-driven talismans** mapped to real `TalismanTraceMinigame.gd` sigils (`1`, `4`, `7`/`10`, `20`) with full Win/Fail-Forward (`{Transaction_MinigameWon}`) reactions and a moral choice over how to treat Rosalyn. |
-| **Danilo** | 9 cluttered chapters recapping *other* characters' scenes in brown BBCode walls; `[pause=0.4]` spam; hardcoded `3 AM last Tuesday` / `Sunday`; passive gossip machine with zero personal stakes. | Distilled to **6 crisp chapters** (`is_visit_only` Ch. 1–5, iconic First Purchase in Ch. 6). Lean, funny **lazy *tambay* voice** whose core conflict is whether he will endure the migraine of opening his *Daligmata* soul-sight to trace Rosalyn's lost tether alongside Brahim. |
-| **Rosalyn** | Unreadable `[wave]H[pause=1.0]-hello.[pause=0.6]...[/wave]` spam; **zero player choices across 9 chapters**; abruptly disappeared at the end despite still spawning in regular store gameplay. | **Zero `[pause]` spam and zero stuttering soup.** Ch. 1 opens with pure, striking `...` silence while the player gently tries talking to her before she slips away. Ch. 2–6 use hushed, clean `4 to 12 word` lines, real player choices in every chapter, and a cozy resolution that breaks her trauma loop while letting her peacefully visit your warm light until the pale moon closes. |
+| **Brahim** | Temporary corporate placeholder; forced 10 back-to-back minigames with placeholder sigil names; praised the player identically even when losing; zero ties to Danilo or Rosalyn. | **Warm Former UC Baguio Professor**—lighthearted, grounded, and curious, with affectionate ex-faculty quirks (annotating Tatay's *librito*, Benguet coffee). Uses **4 purposeful, story-driven talismans** mapped to real `TalismanTraceMinigame.gd` sigils (`1`, `4`, `7`/`10`, `20`) with full Win/Fail-Forward reactions and a moral choice over how to treat Rosalyn. |
+| **Danilo** | 9 cluttered chapters recapping *other* characters' scenes in brown BBCode walls; `[pause=0.4]` spam; hardcoded `3 AM last Tuesday` / `Sunday`; arbitrarily blocked from buying items despite being a physical *tambay*. | Distilled to **6 crisp chapters** where he **actually buys snacks, cold drinks, and coffee** like a true *sari-sari tambay*! Lean, wry voice whose core conflict is whether he will endure the migraine of opening his *Daligmata* soul-sight to trace Rosalyn's lost tether alongside Brahim. |
+| **Rosalyn** | Unreadable `[wave]H[pause=1.0]-hello.[pause=0.6]...[/wave]` spam; **zero player choices across 9 chapters**; held physical bottles as early as Ch. 3; abruptly vanished at the end despite still spawning in gameplay. | **She is the intangible visitor (`is_visit_only` across Ch. 1–5, `purchase_only_on_final_chapter = true`)!** Her hands pass straight through coins and counter wood until Brahim's lantern and Danilo's sight anchor her—making **Chapter 6 her unforgettable First Real Purchase** across Lola's counter! Zero `[pause]` spam; Ch. 1 opens with pure `...` silence. |
 
 ---
 
@@ -61,41 +61,41 @@ All three arcs ask the same human question from three angles: **What is the diff
 > - **Short player choices:** `3 to 7 words` (hard max 8 words).
 > - **Clean cadence:** `6 to 16 words` per bubble (one thought per click), open `counter` (never `grille`), zero em-dashes, zero mid-sentence `...` crutches, and zero time-of-day or weekday words.
 
-### A. Brahim (*Albularyo* — Recovering Corporate Apprentice)
-- **External Agenda:** Master his aging father *Tatay*'s herbal remedies, pulse-reading (*pagpupulso*), and bronze *anting-anting* brushwork so Tatay can finally rest his arthritic hands.
-- **Internal Fear:** Deep imposter syndrome—worrying that ten years behind a Manila office desk ruined his intuition, that neighbors secretly look past him waiting for his "real" healer father, and that he's treating sacred craft like a corporate checklist.
-- **Tactical Filter:** Earnest, polite, slightly over-prepared ex-office worker. When nervous, corporate phrasing accidentally slips into his folk healing (*"actionable remedies," "color-coding Tatay's dried roots," "quarterly—sorry, seasonal herbs"*), followed by an embarrassed laugh at himself.
-- **Usual Order & Disruption:** Buys `can`, `sachet`, and `pack` staples for Tatay's kitchen. Disruption: in Chapter 2 he backslides into buying `Kopimo` coffee sachets to pull a corporate-style all-nighter cramming Tatay's *librito*—inviting you to swap his order to calming **`bottle`** (`Tubig`) via `allow_sub_cat:bottle`.
+### A. Brahim (*Albularyo* — Warm Former UC Baguio Professor)
+- **External Agenda:** Happily apprentice under his aging father *Tatay* after stepping away from his teaching post at the **University of the Cordilleras in Baguio**, learning herbal remedies, pulse-reading (*pagpupulso*), and bronze *anting-anting* brushwork so Tatay can finally rest his hands.
+- **Internal Tension (Light & Grounded, Zero Imposter Angst):** Balancing an educator's fondness for neat notes, clear explanations, and late-night coffee with Tatay's unhurried, intuitive folk tradition—learning when to put the notebook down and simply listen to a neighbor's story.
+- **Tactical Filter:** Warm, encouraging, lightly humorous favorite-professor energy. Drops charming little faculty habits into everyday conversation (*bookmarking Tatay's handwritten librito like a favorite text, explaining sigil geometry like an engaging seminar, laughing about drinking too much Baguio coffee while grading papers*).
+- **Usual Order & Disruption:** Buys `can`, `sachet`, and `pack` staples for Tatay's kitchen. Disruption: in Chapter 2 he cheerfully admits old Baguio faculty habits die hard—buying `Kopimo` coffee sachets while cross-referencing Tatay's *librito* late—inviting you to swap his order to refreshing **`bottle`** (`Tubig`) via `allow_sub_cat:bottle`.
 - **Voice Fingerprint:**
-  - *Sentence Geometry:* Warm, articulate, slightly self-correcting (`7 to 15 words`).
-  - *Lexicon:* Ink, brass, wrist pulse, boiled leaves, Tatay, brush steadiness, old desk habits (`"Salamat"`, `"Tatay"`, `"albularyo"`, `"orasyon"`, `"alay"`).
-  - *Register:* Courteous, grounded neighbor in his late twenties/early thirties—never a cryptic wizard, never an internet-meme caricature.
+  - *Sentence Geometry:* Warm, articulate, gently self-correcting (`7 to 15 words`).
+  - *Lexicon:* Ink, brass, wrist pulse, boiled leaves, Tatay, lecture notes, Baguio fog (`"Salamat"`, `"Tatay"`, `"albularyo"`, `"orasyon"`, `"alay"`).
+  - *Register:* Courteous, grounded former professor in his early thirties—never a cryptic wizard, never pompous, never an internet-meme caricature.
   - *Forbidden Words:* Never talks like a fantasy mage, never charges cash for healing, never uses time-of-day or weekday words.
-  - *Affection Tell:* Credits your steady hand on talismans, brings soothing herbal advice for your sore shoulders, and treats your counter as the one place he doesn't have to pretend he knows everything yet.
+  - *Affection Tell:* Credits your steady hand on talismans, checks on your posture/shoulders like a caring mentor, and treats your counter as the one place he doesn't have to pretend he has all the answers.
 
-### B. Danilo (*Daligmata* — Lazy "Tambay" Soul-Finder)
-- **External Agenda:** Claim the shady corner of your counter for free, trade dry street observations, keep his heavy amber sunglasses firmly on, and avoid "clocking in" on supernatural problems at all costs.
+### B. Danilo (*Daligmata* — Snack-Munching "Tambay" Soul-Finder)
+- **External Agenda:** Claim the shady corner of your counter with a bag of crunchy snacks or a cold bottle, trade dry street observations, keep his heavy amber sunglasses firmly on, and avoid "clocking in" on supernatural problems at all costs.
 - **Internal Fear:** Opening all his hidden *Daligmata* eyes at once. Tracing a fractured soul across the spirit plane triggers blinding sensory overload—and worse, breaks his safe rule of watching Karimlan from an emotional distance.
-- **Tactical Filter:** Effortless barangay *tambay* deflection. Frames uncanny, impossible visual details (seeing through walls, spotting spirits half a kilometer away, noticing what someone held inside a closed pocket) as casual street *tsismis*, shrugging off follow-up questions with *"lucky guess, boss"* or *"I'm on permanent break."*
-- **Usual Order & Disruption:** **Buys nothing at all (`is_visit_only = true`) across Chapters 1 to 5** (`purchase_only_on_final_chapter = true`). Disruption: in **Chapter 6**, once Rosalyn's highway loop is broken and he finally lets himself belong to the street instead of just surveilling it, he slaps real coins onto your counter for his **very first `snack` / `bottle` purchase**!
+- **Tactical Filter:** Effortless barangay *tambay* deflection. Frames uncanny, impossible visual details (seeing through walls, spotting spirits half a kilometer away, noticing what someone held inside a closed pocket) as casual street *tsismis* over snacks, shrugging off follow-up questions with *"lucky guess, boss"* or *"I'm on permanent break."*
+- **Usual Order & Disruption:** Buys **`snack`**, **`bottle`**, and **`sachet`** staples (`Dantes`, `Marites`, `NgaragYa`, `Kokaloka`, `Kopimo`) right from Chapter 1, with light occasional *utang* (`utang_chance = 0.12`, *"Left my coins in my other pants, boss"*). Disruption: in Chapter 3, when fluorescent glare triggers a *Daligmata* eye-strain migraine and he orders `Kopimo` (`sachet`), you can swap his order to cold **`bottle`** (`Tubig`) via `allow_sub_cat:bottle` to press against his aching temples!
 - **Voice Fingerprint:**
   - *Sentence Geometry:* Crisp, punchy, laid-back fragments (`4 to 13 words`), often contrasting a sharp observation with a lazy 3-word shrug.
-  - *Lexicon:* Shade, glare, lenses, front-row view, off the clock (`"Uy, boss"`, `"Psst"`, `"Relax, boss"`, `"Sayang"`, `"'no?"`).
+  - *Lexicon:* Shade, glare, lenses, crunchy snacks, front-row view, off the clock (`"Uy, boss"`, `"Psst"`, `"Relax, boss"`, `"Sayang"`, `"'no?"`).
   - *Register:* Cool, wry, neighborly *tambay* uncle/older-brother energy—never verbose, never melodramatic, zero colored-text gimmicks.
   - *Forbidden Words:* Never begs, never gives long speeches, never uses `[pause]` tags or hardcoded clock times (`3 AM`, `Tuesday`).
-  - *Affection Tell:* Quietly tips you off when someone vulnerable needs gentleness, takes off his glasses for two seconds to rub his temples around you, and finally becomes a paying customer.
+  - *Affection Tell:* Quietly tips you off when someone vulnerable needs gentleness, takes off his glasses for two seconds to rub his temples around you, and leaves his spare **Amber Spectacles** behind your register.
 
-### C. Rosalyn (*Kaperosa* — Shy, Quiet Wandering Ghost)
-- **External Agenda:** Step up to the one warm light along the dark road that doesn't pass straight through her, hold onto something solid, and piece together why her feet keep walking from the highway waiting shed to a sari-sari counter.
-- **Internal Fear:** Being chased away or "cleansed" by a folk healer before she remembers what unfinished promise kept her here; feeling terribly impolite for taking up a living shopkeeper's attention.
-- **Tactical Filter:** Hushed, earnest brevity and quiet ghost pragmatism. In Chapter 1 she can't get a single word out (`...`). Once she finds her voice in Chapter 2, she speaks in short, soft, crystal-clear sentences (`3 to 11 words`—**zero** stuttering `H-h-hello` or `[pause=1.0]` tags!), treating ghostly inconveniences (coins slipping through un-concentrated palms, needing ice-cold bottles to feel an edge) with gentle, self-aware politeness.
-- **Usual Order & Disruption:** Starts `is_visit_only` in Ch. 1, moves to cold **`bottle`** drinks (`Tubig` / `Kokaloka`) in Ch. 2–3 as physical anchors, and pivots in Ch. 4 to **`candy`** (`Mentor` menthol sweets via `allow_sub_cat:candy`), unlocking the sensory memory of her coughing little sister!
+### C. Rosalyn (*Kaperosa* — Shy, Intangible Wandering Ghost)
+- **External Agenda:** Step up to **this exact sari-sari store**—the only warm light along the dark road that doesn't pass straight through her—and piece together why both this wooden counter and *your* face feel hauntingly familiar, even though she physically **cannot touch or hold a single solid thing**.
+- **Internal Fear:** Being chased away or "cleansed" by a folk healer before she remembers what unfinished promise kept her walking to this counter; feeling terribly impolite for standing at a shopkeeper's counter when her hands pass right through coins and glass.
+- **Tactical Filter:** Hushed, earnest brevity, quiet ghost pragmatism, and **gradual recognition of Lola in you**. In Chapter 1 she can't get a single word out (`...`), lingering a beat on your eyes before retreating. Across Chapters 2 to 5 (`is_visit_only = true`), she cannot hold physical items at all—yet breadcrumb by breadcrumb, she recognizes your shared features with the silver-haired woman (**Lola**) who used to run this exact store, and faintly remembers a small kid (*you!*) peeking from behind Lola's candy jars. Speaks in short, soft, crystal-clear sentences (`3 to 11 words`—**zero** stuttering `H-h-hello` or `[pause=1.0]` tags!).
+- **Usual Order & Disruption:** **Strictly Visit-Only (`is_visit_only = true`, `purchase_only_on_final_chapter = true`) across Chapters 1 to 5** because her ghostly hands pass through matter! Disruption: once Brahim's *Suki's Lantern* and Danilo's *Daligmata* trace anchor her spirit at the end of Chapter 5, **Chapter 6 unlocks her very first real `candy` / `bottle` purchase** across Lola's wood—and opens her post-arc `Purchase.dtl` visits!
 - **Voice Fingerprint:**
   - *Sentence Geometry:* Short, still, delicate sentences (`3 to 11 words`). Standalone `...` is used **only** for her silent Chapter 1 beat—never as mid-sentence filler!
-  - *Lexicon:* Cold glass, warm bulb, coins, guardrail, rain puddles, footsteps (`"po"`, `"Ate"`, `"Salamat po"`).
+  - *Lexicon:* Warm bulb, counter wood, coins slipping through, guardrail, rain puddles, footsteps (`"po"`, `"Ate"`, `"Salamat po"`).
   - *Register:* Soft, polite, slightly formal English with tiny tender Filipino family touches once her memory returns.
   - *Forbidden Words:* Never wails or threatens like a horror ghost, never stutters with hyphens (`I-I`), never uses `[wave]` or `[pause]` spam.
-  - *Affection Tell:* Stops apologizing for standing in your light, holds an item cleanly with one hand without dropping it, and leaves dried *sampaguita* by your register.
+  - *Affection Tell:* Stops apologizing for standing in your light without buying anything, finally taps solid knuckles on your counter in Ch. 5, holds her Ch. 6 cough candy with steady hands, and leaves dried *sampaguita* by your register.
 
 ---
 
@@ -108,20 +108,20 @@ Every character strictly obeys our **Max 3 Persistent World Flags + 1 Integer Ta
 | Character | World Flag (`Dialogic` Var) | Set When | Scheduled Cross-Web & Arc Payoff |
 | :--- | :--- | :--- | :--- |
 | **Rosalyn** | `rosalyn_seen` (`Flag_RosalynSeen`) | **Rosalyn Ch. 1** (her silent `...` first visit) | Unlocks recognition in **Danilo Ch. 2** (*"You met my pale highway regular, boss?"*) and unlocks the **Trapdoor** in **Brahim Ch. 4** (*"Wait—she isn't dangerous, she visits my counter"*). |
-| **Rosalyn** | `rosalyn_cold_anchor` (`Flag_RosalynColdAnchor`) | **Rosalyn Ch. 2** (patiently helping her hold her first cold bottle without flinching) | Deepens trust in **Rosalyn Ch. 3** and lets **Danilo Ch. 3** remark that she stopped fading at the curb. |
-| **Rosalyn** | `rosalyn_memory_sparked` (`Flag_RosalynMemorySparked`) | **Rosalyn Ch. 4** (`allow_sub_cat:candy` -> `label SubstituteItem`: handing her menthol/sweet candy) | Sparks the half-memory of someone small coughing under a tin shed; unlocks the fullest **Rosalyn Ch. 5–6** payoff. |
+| **Rosalyn** | `rosalyn_welcome` (`Flag_RosalynWelcome`) | **Rosalyn Ch. 2** (welcoming her under your light even after her hands pass right through her coins) | Deepens trust in **Rosalyn Ch. 3** so she lingers long enough to recognize Lola's eyes in yours. |
+| **Rosalyn** | `rosalyn_errand_known` (`Flag_RosalynErrandKnown`) | **Rosalyn Ch. 4** (deducing from her storm memory that she ran across the highway to Lola's store for cough candy) | Unlocks the fullest **Rosalyn Ch. 5–6** convergence payoff when she finally holds real cough candy in Ch. 6. |
 | **Brahim** | `brahim_steady_start` (`Flag_BrahimSteadyStart`) | **Brahim Ch. 1** (winning `minigame:talisman:1` *First Ward*) | Gives Brahim early confidence in **Brahim Ch. 3** and a warm `P2` callback. |
-| **Brahim** | `brahim_sub_rest` (`Flag_BrahimSubRest`) | **Brahim Ch. 2** (`allow_sub_cat:bottle` -> swapping his cramming `Kopimo` order for `Tubig` water) | Breaks his corporate all-nighter reflex; shifts his `Purchase.dtl` request pool away from frantic caffeine. |
+| **Brahim** | `brahim_sub_rest` (`Flag_BrahimSubRest`) | **Brahim Ch. 2** (`allow_sub_cat:bottle` -> swapping his cramming `Kopimo` order for `Tubig` water) | Breaks his old faculty exam-cramming reflex; shifts his `Purchase.dtl` request pool away from frantic caffeine. |
 | **Brahim** | `brahim_lantern_ward` (`Flag_BrahimLanternWard`) | **Brahim Ch. 4** (choosing gentle `minigame:talisman:7` *Suki's Lantern* over forceful `talisman:10` *Wind Shield*) | **Major Triangle B Detonation:** Warms **Rosalyn Ch. 5** so her memory clears gently instead of scattering; praised by **Danilo Ch. 5**; required for `outcome:true_albularyo`. |
 | **Danilo** | `danilo_saw_rosalyn` (`Flag_DaniloSawRosalyn`) | **Danilo Ch. 2** (Danilo tips you off about Rosalyn looping by the highway waiting shed) | Unlocks a perceptive choice in **Rosalyn Ch. 3** (*"Someone mentioned the waiting shed"*) and informs **Brahim Ch. 4**. |
-| **Danilo** | `danilo_eyes_known` (`Flag_DaniloEyesKnown`) | **Danilo Ch. 3** (catching his *"three of them won't shut"* Daligmata slip with chill respect) | Unlocks the direct **Trapdoor** in **Danilo Ch. 4** (*"Drop the tambay act, Daligmata—help Brahim look"*). |
+| **Danilo** | `danilo_eyes_known` (`Flag_DaniloEyesKnown`) | **Danilo Ch. 3** (handing him cold `bottle` water for his eye-glare migraine via `allow_sub_cat:bottle` or catching his slip with chill respect) | Unlocks the direct **Trapdoor** in **Danilo Ch. 4** (*"Pair your eyes with Brahim's lantern"*). |
 | **Danilo** | `danilo_traced_tether` (`Flag_DaniloTracedTether`) | **Danilo Ch. 4** (convincing lazy Danilo to open his full soul-sight past the highway bend) | **Major Triangle B Detonation:** Delivers the concrete vision of Rosalyn's grown sister *Lia* in **Danilo Ch. 5** and **Rosalyn Ch. 5**; required for `outcome:watchful_ally`. |
 
 *(Outcome convenience booleans synced in `DialogicBridge.gd` for `Purchase.dtl` / `Visit.dtl` pools: `Flag_BrahimTrueAlbularyo`, `Flag_DaniloWatchfulAlly`, `Flag_RosalynAtPeace`.)*
 
 ### B. Brahim's Curated Talisman Progression (Real `TalismanTraceMinigame.gd` IDs)
 Instead of exhausting the player with 10 back-to-back tracing screens, Story Chapters feature **4 meaningful inscriptions** (1 single sigil per beat, each with bespoke `if {Transaction_MinigameWon}:` Win and Fail-Forward lines!):
-1. **Brahim Ch. 1 -> `minigame:talisman:1` (*First Ward*):** Charcoal pillar & Crimson crossbar. Testing if your storekeeper hand shakes less than his ex-corporate coffee hand.
+1. **Brahim Ch. 1 -> `minigame:talisman:1` (*First Ward*):** Charcoal pillar & Crimson crossbar. Testing if your storekeeper hand shakes less than a former Baguio professor's chalk-and-coffee hand.
 2. **Brahim Ch. 3 -> `minigame:talisman:4` (*Watcher's Eye*):** Indigo eye, Charcoal iris & Fine Gold lashes. A threshold sight-ward that Danilo later roasts with affectionate precision.
 3. **Brahim Ch. 4 -> Choice-Driven Talisman:**
    - **Gentle Path (`minigame:talisman:7` — *Suki's Lantern*):** Crimson lantern, Gold core & Indigo tassel—warms a lost *kalag*'s memory without forcing her off the road (`sets brahim_lantern_ward = true`).
@@ -134,23 +134,23 @@ Instead of exhausting the player with 10 back-to-back tracing screens, Story Cha
 ## 5. 6-Chapter Core Arc Blueprints (4-Point Tally Validated)
 
 ### Character #1: Brahim (*Albularyo*)
-*Core Spine:* Unlearning anxious corporate "optimization" to inherit Tatay's quiet, ethical folk-healing heart.
-- **Ch. 1 — "Spreadsheet Hands" (`frozen` / `can` | `0` choice tally, `+1` if `talisman:1` won):**
-  - *Beat:* Late entry—Brahim holds his palm over your counter to show a faint tremor, laughing sheepishly that ten years of Manila office espresso is bad training for an apprentice *albularyo*. Introduces his aging father *Tatay* down by the creek bridge and asks to test one beginner bronze blank together (`minigame:talisman:1` — *First Ward*).
+*Core Spine:* A warm, curious former UC Baguio professor trading chilly lecture halls for Tatay's porch—blending gentle educator wit with traditional folk-healing heart.
+- **Ch. 1 — "Chalk and Bronze" (`frozen` / `can` | `0` choice tally, `+1` if `talisman:1` won):**
+  - *Beat:* Late entry—Brahim introduces himself warmly, joking that his fingers are more used to whiteboard markers and grading bluebooks than bronze *anting-anting* brushes. Mentions moving home to help *Tatay* down by the creek bridge and invites you—like a favorite professor pairing up for a lab exercise—to trace a beginner ward together (`minigame:talisman:1` — *First Ward*).
   - *Fail-Forward:*
-    - **Win (`Transaction_MinigameWon == true`):** Sets `brahim_steady_start = true`, `tally:+1`. He marvels at how steady a neighborhood storekeeper's hand is.
-    - **Lose (`Transaction_MinigameWon == false`):** `tally:0`. He laughs warmly with genuine relief—*"Thank goodness, I thought I was the only one drawing crooked crossbars!"*—and keeps the smudged charm as a lucky practice piece.
-- **Ch. 2 — "Cramming the Librito" (`sachet` -> Secret Substitution `allow_sub_cat:bottle` | Inflection #1):**
-  - *Beat:* Brahim arrives bleary-eyed trying to buy `Kopimo` (`sachet`), confessing he stayed up making color-coded study tabs for Tatay's Latin *orasyon* booklet because a grandmother came to the porch and asked *"Where's the real albularyo?"* right to his face.
+    - **Win (`Transaction_MinigameWon == true`):** Sets `brahim_steady_start = true`, `tally:+1`. Gives you top marks with an appreciative grin.
+    - **Lose (`Transaction_MinigameWon == false`):** `tally:0`. Chuckles warmly—*"Every first draft needs a little character!"*—and pockets the smudged charm happily.
+- **Ch. 2 — "Margin Notes in the Librito" (`sachet` -> Secret Substitution `allow_sub_cat:bottle` | Inflection #1):**
+  - *Beat:* Brahim drops by for `Kopimo` (`sachet`), smiling sheepishly that old habits from teaching at the **University of the Cordilleras in Baguio** die hard—he caught himself staying up late writing neat margin notes beside Tatay's herbal recipes like a course syllabus, while Tatay teased him to go touch actual leaves instead.
   - *Choices (3–7 words):*
-    - `- [Swap his coffee for cold water.]` (`allow_sub_cat:bottle` -> `label SubstituteItem`: sets `brahim_sub_rest = true`, `tally:+1`). He blinks at the water bottle, laughs at himself for treating folk healing like a corporate deadline, and promises to rest.
-    - `- Give yourself time to learn, Brahim.` (`tally:0` — warm reassurance, serves his normal order).
-    - `- Memorize faster so they respect you.` (`tally:-1` — feeds his corporate hustle anxiety).
+    - `- [Swap his coffee for cold water.]` (`allow_sub_cat:bottle` -> `label SubstituteItem`: sets `brahim_sub_rest = true`, `tally:+1`). He laughs warmly at getting "assigned hydration" by his own storekeeper and takes the hint to rest.
+    - `- Old professor habits die hard, ha?` (`tally:0` — friendly banter, serves his normal order).
+    - `- Just skip the notes altogether.` (`tally:-1` — brushes off his thoughtful care).
 - **Ch. 3 — "What the Pulse Costs" (`can` + `minigame:talisman:4` *Watcher's Eye* | Inflection #2):**
-  - *Beat:* A man in a shiny SUV offered Brahim five hundred pesos cash to rush a private luck charm ahead of neighbors waiting on Tatay's porch. Brahim is conflicted—old corporate instinct says *bill the premium client*, while Tatay's iron *albularyo* rule says healing only accepts voluntary *alay* or the gift dries up.
+  - *Beat:* An old acquaintance offered Brahim five hundred pesos cash as a "consultation fee" to rush a private luck charm ahead of neighbors waiting on Tatay's porch. In academia, guest lectures and consultations carry a stipend; in Tatay's *albularyo* ethic, charging fixed fees instead of humble *alay* hollows out the gift.
   - *Choices:*
     - `- Trust Tatay's rule. Keep it sacred.` (`tally:+1` — affirms *albularyo* ethics).
-    - `- Take the cash if it helps.` (`tally:-1` — treats the calling like consultancy).
+    - `- Charge a fee for your expertise.` (`tally:-1` — treats the calling like paid consultancy).
     - `- Tell him to wait in line.` (`tally:0` — practical middle ground).
   - *Minigame Beat:* Inscribes `minigame:talisman:4` (*Watcher's Eye*) for the creek bridge (`Win` vs. `Lose` fail-forward reaction, `0` extra tally so there's no inflation).
 - **Ch. 4 — "Cold Draft by the Guardrail" (`pack` + Moral Talisman Choice | Inflection #3):**
@@ -173,79 +173,78 @@ Instead of exhausting the player with 10 back-to-back tracing screens, Story Cha
 ---
 
 ### Character #2: Danilo (*Daligmata*)
-*Core Spine:* Karimlan's lazy sunglasses *tambay* finally taking off his shades and risking a splitting soul-sight migraine to bring a lost girl's memory home.
-- **Ch. 1 — "Zero Rent Shade" (`is_visit_only = true` | `0` tallies):**
-  - *Beat:* Late entry—Danilo leans under your awning in oversized amber sunglasses, admiring the sightline down the road and cheerfully informing you upfront he isn't buying a single thing. Drops one uncanny detail (noticing T.K. circling the same mango tree four times) before strolling off.
-  - *Choices:* `- Buying anything, or just loafing?` / `- Nice sunglasses for standing in shade.` / `- Suit yourself, shade's free.`
-- **Ch. 2 — "Girl by the Guardrail" (`is_visit_only = true` | Inflection #1: `+1 / 0 / -1`):**
-  - *Beat:* Sets `danilo_saw_rosalyn = true`. Danilo leans in (`"Psst, boss"`), mentioning the pale girl in the white shawl (**Rosalyn**) standing by the highway waiting shed while tricycles pass straight through her—then lazily shrugs that lost *kalag* souls are *"way above a retired tambay's pay grade."*
+*Core Spine:* Karimlan's snack-munching sunglasses *tambay* finally taking off his shades and risking a splitting soul-sight migraine to bring a lost girl's memory home.
+- **Ch. 1 — "Front-Row Snacks" (`snack` Purchase | `0` tallies):**
+  - *Beat:* Late entry—Danilo leans under your awning in oversized amber sunglasses, ordering `[color=#0f6e2f]{Transaction_ItemWants}[/color]` just so he has a polite excuse to claim your shady corner. Crunches happily, admires the sightline down the road, and drops one uncanny detail (noticing T.K. circling the same mango tree four times).
+  - *Choices:* `- Best view on the road, boss.` / `- Nice sunglasses for standing in shade.` / `- Long as you're a paying customer.`
+- **Ch. 2 — "Girl by the Guardrail" (`bottle` / `snack` Purchase | Inflection #1: `+1 / 0 / -1`):**
+  - *Beat:* Sets `danilo_saw_rosalyn = true`. While asking for `[color=#0f6e2f]{Transaction_ItemWants}[/color]`, Danilo leans in (`"Psst, boss"`), mentioning the pale girl in the white shawl (**Rosalyn**) standing by the highway waiting shed whose hands pass straight through everything—then lazily shrugs that lost *kalag* souls are *"way above a snacking tambay's pay grade."*
   - *Choices:*
     - `- Sounds like you actually care, Danilo.` (`tally:+1` — catches the worry behind his lazy mask).
     - `- Thanks for the heads-up, boss.` (`tally:0` — casual acknowledgment).
     - `- Not our problem if she lingers.` (`tally:-1` — reinforces his detached apathy).
-- **Ch. 3 — "Fluorescent Glare" (`is_visit_only = true` | Inflection #2: `+1 / 0 / -1`):**
-  - *Beat:* Danilo winces at your storefront bulb, rubbing his forehead and accidentally slipping: *"Wish I could shut my eyes and sleep, boss, except three of them always stay open."* Catches himself immediately and blames cheap instant coffee—then chuckles about watching **Brahim** down by the creek practicing pulse-reading on his own wrist like an exam.
+- **Ch. 3 — "Fluorescent Glare" (`sachet` -> Secret Substitution `allow_sub_cat:bottle` | Inflection #2):**
+  - *Beat:* Danilo winces at your storefront bulb with a brutal headache, ordering `[color=#0f6e2f]{Transaction_ItemWants}[/color]` (`sachet` coffee) and accidentally slipping: *"Wish I could shut my eyes and sleep, boss, except three of them always stay open."* Catches himself immediately, blames cheap coffee, and chuckles about watching **Brahim** down by the creek practicing pulse-reading on his own wrist like a Baguio finals exam.
   - *Choices:*
+    - `- [Swap to cold water for his eyes.]` (`allow_sub_cat:bottle` -> `label SubstituteItem`: sets `danilo_eyes_known = true`, `tally:+1`! Pressing a cold bottle against his temples catches the untouchable watcher completely off guard—nobody ever looks out for *him*).
     - `- Your secret's safe here, boss.` (`tally:+1`, sets `danilo_eyes_known = true` — quiet respect without making it weird).
-    - `- Must be some strong coffee.` (`tally:0`, sets `danilo_eyes_known = true` — plays along smoothly).
     - `- Wait, how many eyes?!` (`tally:-1` — makes him clam up and pull his brim down).
-- **Ch. 4 — "Clocking Back In" (`is_visit_only = true` | Inflection #3: `+2 / +1 / -1`):**
-  - *Beat:* Rosalyn keeps walking the same hundred meters between the waiting shed and your counter because she can't see past the highway bend, and mortal apprentice **Brahim** can't see soul-threads across towns. Danilo knows *exactly* what you're about to ask him, groaning that opening full *Daligmata* fast-vision gives him a two-day migraine.
+- **Ch. 4 — "Clocking Back In" (`snack` Purchase | Inflection #3: `+2 / +1 / -1`):**
+  - *Beat:* Rosalyn still can't touch a single solid thing or see past the highway bend, and mortal ex-professor **Brahim** can't trace soul-threads across towns. Over `[color=#0f6e2f]{Transaction_ItemWants}[/color]`, Danilo knows *exactly* what you're about to ask him, groaning that opening full *Daligmata* fast-vision gives him a brutal migraine.
   - *Choices:*
     - *Trapdoor (if `danilo_eyes_known` or `brahim_lantern_ward`):* `- Pair your eyes with Brahim's lantern.` (`tally:+2`, sets `danilo_traced_tether = true` — invokes the real folklore healer + *Daligmata* partnership!).
     - `- Just one look for her, Danilo.` (`tally:+1`, sets `danilo_traced_tether = true` — convinces him softly).
     - `- Stay on break then, boss.` (`tally:-1`, leaves `danilo_traced_tether = false` — lets him off the hook).
-- **Ch. 5 — "Welding Sparks" (`is_visit_only = true` | `0` tallies — *Ten* Payoff):**
+- **Ch. 5 — "Welding Sparks" (`bottle` Purchase | `0` tallies — *Ten* Payoff):**
   - *Beat:*
-    - *If `danilo_traced_tether`:* Danilo slouches against your counter pressing two fingers to his brow, groaning about "welding-spark headaches"—then drops the gossip act completely. He traced Rosalyn's silver thread two towns past the bridge: **a young schoolteacher named Lia lighting a white church candle and setting a menthol candy beside a framed photo of her older sister Rosalyn.** *"Tell the kid in the white shawl nobody's shivering under that shed anymore, boss."*
-    - *If `!danilo_traced_tether`:* Danilo admits quietly he still glanced toward the highway shed from afar, wishing someone had untangled it sooner, admitting his "retired" excuse feels hollow lately.
-- **Ch. 6 — "First Paying Customer" (`snack` / `bottle` Purchase! | Accumulated Tally Resolution):**
-  - *Beat:* For the **first time in the entire game**, Danilo sets real coins on your wood and orders `[color=#0f6e2f]{Transaction_ItemWants}[/color]`.
+    - *If `danilo_traced_tether`:* Danilo slouches against your counter asking for a cold `[color=#0f6e2f]{Transaction_ItemWants}[/color]` to press to his brow after "welding-spark headaches"—then drops the gossip act completely. He traced Rosalyn's silver thread two towns past the bridge: **a young schoolteacher named Lia lighting a white church candle and setting menthol candy beside a framed photo of her older sister Rosalyn.** *"Tell the kid in the white shawl nobody's shivering under that shed anymore, boss."*
+    - *If `!danilo_traced_tether`:* Danilo quietly buys `[color=#0f6e2f]{Transaction_ItemWants}[/color]`, admitting he still glanced toward the highway shed from afar and that his "retired" excuse feels hollow lately.
+- **Ch. 6 — "Eyes on Your Corner" (`snack` / `can` Purchase | Accumulated Tally Resolution):**
+  - *Beat:* With the highway finally quiet, Danilo strolls up without his old guarded distance and orders `[color=#0f6e2f]{Transaction_ItemWants}[/color]`.
   - *Outcomes:*
     - **`outcome:watchful_ally`** (`Flag_DaniloTracedTether` and `Tally >= 3`): Slides a spare pair of **Amber Spectacles** onto your counter, grins that he could finally blink for five whole seconds thanks to your store, and promises every eye he has will back your ledger when the Queen of Biringan visits.
-    - **`outcome:bench_regular`** (`Tally >= 1`): Buys his snack happily, officially upgrades himself from freeloader to *suki*, and keeps friendly watch on the road.
-    - **`outcome:distant_eyes`** (`Tally <= 0`): Pays exact coins once out of curiosity, tips his hat politely, and keeps his distance behind dark glass.
+    - **`outcome:bench_regular`** (`Tally >= 1`): Munching happily on his favorite snacks as a true *suki* who keeps friendly watch on the road.
+    - **`outcome:distant_eyes`** (`Tally <= 0`): Pays exact coins, tips his hat politely, and keeps his distance behind dark glass.
 
 ---
 
 ### Character #3: Rosalyn (*Kaperosa*)
-*Core Spine:* From wordless `...` silence to remembering the little sister she ran into the rain for—finding peace under your warm storefront light without a single `[pause]` tag.
-- **Ch. 1 — "Under the Bulb" (`is_visit_only = true` | `0` tallies — Pure Silence Beat):**
-  - *Beat:* Rosalyn drifts into your warm light in her pale hooded shawl. Zero stuttering tags, zero `[pause=1.0]` delays—just pure, delicate silence:
+*Core Spine:* Completely intangible across Chapters 1–5 (`is_visit_only = true`, `purchase_only_on_final_chapter = true`)—moving from wordless `...` silence to recognizing **Lola** in your face, until Brahim's lantern and Danilo's trace anchor her enough to **finally touch and buy cough candy across Lola's counter in Chapter 6**.
+- **Ch. 1 — "Under the Bulb" (`is_visit_only = true` | `0` tallies — Pure Silence & First Foreshadowing):**
+  - *Beat:* Rosalyn drifts into your warm light in her pale hooded shawl. Zero stuttering tags, zero `[pause=1.0]` delays—just pure, delicate silence while her gaze catches on your face behind the counter:
     - `Rosalyn: ...`
     - Player tries greeting her (`- Hi there. Need something?` / `- Take your time, miss.` / `- [Wait quietly and nod.]`).
     - `Rosalyn: ...`
     - Player offers one gentle follow-up (`- Looking for something cold?` / `- Warm light's free. No rush.`).
     - `Rosalyn: ...`
-    - Overwhelmed by being looked *at* instead of *through*, she gives up and slips quietly back out (`sets rosalyn_seen = true`, `[signal arg="story_success"]`).
-- **Ch. 2 — "Cold Glass" (`bottle` Purchase | Inflection #1: `+1 / 0 / -1`):**
-  - *Beat:* She returns and speaks her very first hushed, clear words: `"Good day. Sorry I ran off last time."` She explains with earnest, heartbreakingly practical ghost logic that coins slip straight through her palms unless she focuses hard—and **cold bottles** (`Tubig` / `Kokaloka`) give her fingers a crisp edge she can actually hold.
+    - Startled by something familiar in your eyes—and overwhelmed by being looked *at* instead of *through*—she slips quietly back out (`sets rosalyn_seen = true`, `[signal arg="story_success"]`).
+- **Ch. 2 — "Coins Through the Wood" (`is_visit_only = true` | Inflection #1: `+1 / 0 / -1` + Foreshadowing #2):**
+  - *Beat:* She returns and speaks her very first hushed, clear words: `"Good day. Sorry I ran off last time."` She tries to buy something, reaches out carefully—and **her fingers and coins pass straight through your wooden counter**. Embarrassed (*"Sorry. My hands still don't listen when I'm nervous."*), she apologizes for taking up counter space when she physically cannot buy anything, pausing as you rest your hand on the wood: *"Sorry. Someone else used to rest their hand in that exact spot."*
   - *Choices:*
-    - `- Set the coins down slow. Ready.` (`tally:+1`, sets `rosalyn_cold_anchor = true` — treats her like any welcome neighbor).
-    - `- Cold bottle, coming right up.` (`tally:0`, sets `rosalyn_cold_anchor = true` — calm and straightforward).
-    - `- Wait, your hand went right through!` (`tally:-1` — startles her into apologizing for scaring you).
-- **Ch. 3 — "The Hundred-Meter Walk" (`bottle` Purchase | Inflection #2: `+1 / 0 / -1`):**
-  - *Beat:* Holding cold glass gets easier. Rosalyn quietly admits she *knows* she died by the highway bend—what embarrasses her is not knowing **why** she hasn't crossed over, or why her feet keep walking from the waiting shed straight to a sari-sari counter. Worse, she smelled *kamangyan* smoke near the bridge (**Brahim**) and worries the *albularyo* will sweep her out like dust before she remembers.
+    - `- Stay in the light anytime.` (`tally:+1`, sets `rosalyn_welcome = true` — welcomes her warmly even though she can't buy a thing).
+    - `- No problem, try another visit.` (`tally:0`, sets `rosalyn_welcome = true` — calm and polite).
+    - `- Your hand went right through!` (`tally:-1` — startles her into retreating fast).
+- **Ch. 3 — "Same Eyes Behind the Counter" (`is_visit_only = true` | Inflection #2: `+1 / 0 / -1` + Foreshadowing #3):**
+  - *Beat:* Still unable to touch the counter, she keeps her hands folded politely in her sleeves—and looking closer at your brow and eyes under the bulb, puts another piece together: *"You have her eyes. An older lady with silver hair used to stand here, with a little kid peeking behind the candy jars."* She admits she *knows* she died by the highway bend: she wasn't walking toward *any* store, she was trying to reach **Lola's store**, and worries the *albularyo* smoke by the bridge (**Brahim**) will sweep an intangible ghost away before she remembers why.
   - *Choices:*
-    - *Trapdoor (if `danilo_saw_rosalyn`):* `- Nobody here is chasing you away.` (`tally:+1` — promises your counter and neighbors won't banish her).
-    - `- Maybe you were buying something important.` (`tally:+1` — gently nudges her errand memory).
+    - *Trapdoor (if `danilo_saw_rosalyn`):* `- That was Lola. You're safe here.` (`tally:+1` — confirms Lola's memory and promises nobody will banish her).
+    - `- Was that little kid me?` (`tally:+1` — warm, wondering connection to her memory of Lola's shop).
     - `- Usually spirits cross over faster.` (`tally:-1` — stings her quiet insecurity about "doing death wrong").
-- **Ch. 4 — "Tin Roof Rain" (`bottle` -> Secret Substitution `allow_sub_cat:candy` | Inflection #3):**
-  - *Beat:* Rosalyn stares at your shelves, remembering rain hammering a corrugated waiting-shed roof and telling someone smaller than her, *"Stay dry right here, Ate will run across."* Her throat feels scratchy just remembering—someone was coughing hard. She asks politely for `[color=#0f6e2f]{Transaction_ItemWants}[/color]`.
-  - *Choices:*
-    - `- [Reach for the candy jar instead.]` (`allow_sub_cat:candy` -> `label SubstituteItem`: sets `rosalyn_memory_sparked = true`, `tally:+2`! The menthol/sweet wrapper hits her senses immediately: *"Cough candy. Oh. I ran across the highway for cough candy, po."*).
-    - `- Your little sibling was sick?` (`tally:+1` — gentle listening without item swap).
-    - `- Here's your drink, miss.` (`tally:0` — routine service).
-- **Ch. 5 — "Lia's Candle" (`is_visit_only = true` | `0` tallies — *Ten* Convergence Payoff):**
-  - *Beat:* Everything from **Brahim** and **Danilo** converges here!
-    - *Full Convergence (`danilo_traced_tether` + `brahim_lantern_ward`):* Rosalyn steps up without trembling—Brahim's warm lantern by the shed steadied the cold mist, and when you tell her what Danilo saw two towns past the bridge (her little sister **Lia**, grown up safe into a schoolteacher, lighting a white candle beside menthol candy for her *Ate*), Rosalyn goes completely still. *"She made it home. She didn't stay in the rain waiting for me."*
-    - *Partial / Solo Path:* Even if Danilo didn't trace the thread or Brahim sealed the road harshly, your counter conversations help Rosalyn piece together that decades have passed since that storm—meaning Lia isn't a child under that shed anymore—bringing a quieter, bittersweet release.
-- **Ch. 6 — "Still Light" (`candy` / `bottle` Purchase | Accumulated Tally Resolution):**
-  - *Beat:* Why doesn't she vanish mid-game? Because **breaking a trauma loop isn't being deleted**—for the first time, the highway isn't yanking her backward into headlights anymore! She can rest gently in Karimlan's warm light until the pale moon closes its cycle, holding `[color=#0f6e2f]{Transaction_ItemWants}[/color]` with one steady hand without a single apology.
+- **Ch. 4 — "Tin Roof Rain" (`is_visit_only = true` | Inflection #3: Multi-Step Dialogic Deduction Puzzle!):**
+  - *Beat:* Looking past you at **Lola's shelves** unlocks sensory fragments of the storm, staged as a **2-step Dialogic choice deduction puzzle** inside `Story.dtl`:
+    1. *Clue 1 (Who was waiting?):* Rain hammering corrugated tin across the road, a tiny hand gripping her hem, someone small burning up and coughing. Player deduces *who* she left under the waiting shed (`- A younger sibling waiting in the rain?` vs. distractions).
+    2. *Clue 2 (What did she run to Lola's counter for?):* Only a few centavos in her wet pocket—not enough for bottled syrup or canned food, something cool and sharp from the glass jar on Lola's counter to soothe a raw throat (`- Menthol candy from Lola's jar.` vs. `- Cold bottled soda.` vs. `- Canned soup for dinner.`).
+  - *Payoff:* Solving the deduction (`tally:+2`, sets `rosalyn_errand_known = true`; partial guess `tally:+1` still fails forward cleanly!) makes her breath catch—remembering the exact unfinished errand to Lola's counter!
+- **Ch. 5 — "Lia's Candle & First Tap" (`is_visit_only = true` | `0` tallies — *Ten* Convergence & Becoming Solid!):**
+  - *Beat:* Everything from **Brahim**, **Danilo**, and **Lola's store** converges here!
+    - *Full Convergence (`danilo_traced_tether` + `brahim_lantern_ward`):* Brahim's warm *Suki's Lantern* steadied her flickering edges by the shed, and when you share what Danilo traced two towns past the bridge (her little sister **Lia**, grown up safe into a schoolteacher, lighting a white candle beside menthol candy for her *Ate*), Rosalyn looks at you in quiet wonder: *"You grew up too. Just like Lia did. Nobody's shivering under that shed waiting for me anymore."* As she exhales, **her fingertips actually tap solidly against Lola's wooden counter for the very first time**.
+    - *Partial / Solo Path:* Realizing the little kid behind Lola's candy jars is now grown—and running the shop—proves to Rosalyn how many years have passed and that Lia made it out of the rain, letting her fingertips brush solid wood at last.
+- **Ch. 6 — "Errand Finished" (`candy` Purchase — HER VERY FIRST PURCHASE! | Accumulated Tally Resolution):**
+  - *Beat:* For the **first time in the entire game**, Rosalyn carefully sets real coins onto Lola's counter—and **they stay put**. An Order HUD opens for `[color=#0f6e2f]{Transaction_ItemWants}[/color]` (`candy`)! Handing her the candy across Lola's wood finally completes the errand she started years ago—fulfilled by Lola's own grandchild. Free from the highway's trauma loop, she can now touch solid things and peacefully visit your warm light (`Purchase.dtl` / `Visit.dtl`) until the pale moon closes its cycle.
   - *Outcomes:*
-    - **`outcome:peaceful_anchor`** (`(Flag_RosalynMemorySparked or Flag_DaniloTracedTether)` and `Tally >= 3`): Leaves a dried, rain-scented **Sampaguita** beside your register and promises softly that when Reyna Mayari comes to weigh your store, she will stand in your light as living proof of who you sheltered.
-    - **`outcome:lingering_guest`** (`Tally >= 1`): Peaceful, soft-spoken regular who enjoys cold drinks under your bulb without fear.
-    - **`outcome:faint_echo`** (`Tally <= 0`): Polite, translucent, and distant—buys quietly and drifts back into the mist.
+    - **`outcome:peaceful_anchor`** (`(Flag_RosalynErrandKnown or Flag_DaniloTracedTether)` and `Tally >= 3`): Holds her candy with both steady hands, leaves a dried, rain-scented **Sampaguita** beside your register, and promises softly that when Reyna Mayari weighs your Lola's covenant, she will stand in your light as witness to both generations who kept this counter warm.
+    - **`outcome:lingering_guest`** (`Tally >= 1`): Peaceful, newly solid regular who buys sweets and cold drinks under your bulb without fear.
+    - **`outcome:faint_echo`** (`Tally <= 0`): Barely solid enough to take her single order quietly before drifting back into the mist.
 
 ---
 
@@ -259,11 +258,27 @@ Instead of exhausting the player with 10 back-to-back tracing screens, Story Cha
 
 ---
 
-## 7. Pre-Implementation Engine Notes (For When We Start Character #1 Later)
+## 7. Inter-Arc `ChapterPrerequisite` DAG & Pre-Implementation Notes
 
-1. **`TransactionBuilder.gd` Visit-Story Fix (2-Line Bugfix Before Danilo/Rosalyn):**
-   - Currently `if data.is_visit_story_chapter(chapter): transaction.is_visit_story = true` sits inside `build_generic_transaction()` (`TransactionBuilder.gd:384`), which is skipped when `transaction_type = STORY` rolls on lines 196/200. Moving those two lines right after story assignment in `build_transaction_context()` ensures `is_visit_only = true` chapters (`Danilo` Ch. 1–5, `Rosalyn` Ch. 1 & Ch. 5) never roll accidental item orders.
-2. **Optional Talisman Choice on `Brahim/Visit.dtl`:**
-   - Give the player a crisp 2-choice prompt (`- Sure, pass me the brush.` -> `[signal arg="minigame:talisman_random"]` vs. `- Hands are full right now, Brahim.`) plus `{Transaction_MinigameWon}` acknowledgment so everyday visits stay snappy when the counter is busy.
-3. **Recommended Authoring Order (Following Pilot Workflow):**
-   - **Character #1: Brahim** (locks the Talisman Win/Fail-Forward cadence + `brahim_lantern_ward` setup) -> **Character #2: Danilo** (wires the 5 Visit-Only chapters + Ch. 6 First Purchase + `danilo_traced_tether`) -> **Character #3: Rosalyn** (wires Ch. 1 silent `...` visit, cold-bottle/candy anchors, and the full Triangle B convergence payoff).
+Because players do not control random customer spawn order, Triangle B uses an **acyclic `ChapterPrerequisite` graph** (`target_character_id` in `.tres`, zero circular preload risk!) so cross-character story turns **never** fire before their setup scenes:
+
+```mermaid
+flowchart LR
+    R1["Rosalyn Ch. 1 (rosalyn >= 1)"] --> D2["Danilo Ch. 2 (spots Rosalyn)"]
+    B1["Brahim Ch. 1 (brahim >= 1)"] --> R3["Rosalyn Ch. 3 (smells kamangyan)"]
+    D2 --> R4["Rosalyn Ch. 4 (3-lock storm deduction)"]
+    R3 --> B4["Brahim Ch. 4 (Lantern vs. Shield ward)"]
+    R4 --> D4["Danilo Ch. 4 (Trace Lia vs. Stay off-clock)"]
+    B4 --> R5["Rosalyn Ch. 5 (Full Convergence!)"]
+    D4 --> R5
+```
+
+1. **Guaranteed Cross-Web State on `Rosalyn` Ch. 5:**
+   - `Rosalyn` Ch. 3 requires `brahim >= 1`; `Rosalyn` Ch. 4 requires `danilo >= 2`; `Rosalyn` Ch. 5 requires **`brahim >= 4` AND `danilo >= 4`**.
+   - Whenever Rosalyn spawns while waiting on Brahim or Danilo, `TransactionBuilder` automatically routes her to her shy, interactive `Visit.dtl`.
+2. **Swapping Visit-Only Mechanic From Danilo to Rosalyn (`TransactionBuilder.gd` & `TransactionSession.gd`):**
+   - `Rosalyn.tres` owns `purchase_only_on_final_chapter = true` + `is_visit_only = true` on Chapters 1–5; `Danilo.tres` switches to `purchase_only_on_final_chapter = false` when authored.
+3. **Optional Talisman Choice on `Brahim/Visit.dtl`:**
+   - Crisp 2-choice prompt (`- Sure, pass me the brush.` -> `[signal arg="minigame:talisman_random"]` vs. `- Hands are full right now, Brahim.`).
+4. **Authoring Order:**
+   - **Character #1: Rosalyn** (Done — ultra-shy 1–7 word interactive deduction voice + `ChapterPrerequisite` gates) -> **Character #2: Brahim** (UC Baguio professor + `brahim_lantern_ward` choice + `rosalyn >= 3` gate on Ch. 4) -> **Character #3: Danilo** (snack/drink *tambay* + `danilo_traced_tether` choice + `rosalyn >= 1` / `rosalyn >= 4` gates).
