@@ -11,67 +11,59 @@
 [ext_resource type="Resource" uid="uid://d2bs58pcxejrb" path="res://Dialogue/Timelines/Brahim/Purchase.dtl" id="brahim_purchase"]
 [ext_resource type="Resource" uid="uid://dgxmsapgmuqq3" path="res://Dialogue/Timelines/Brahim/Visit.dtl" id="brahim_visit"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://bwpn5rx3x0uys" path="res://Resources/motions/brahim_cameo_chill_stroll.tres" id="motion_brahim_cameo"]
 [ext_resource type="Resource" uid="uid://b5iqeqn565hx4" path="res://Resources/motions/brahim_chill_walk.tres" id="motion_brahim_walk"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
+
+[sub_resource type="Resource" id="prereq_ch3_rosalyn"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rosalyn"
+min_chapter = 3
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rosalyn")])
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Leaving the City Behind"
-categories = PackedStringArray("frozen")
+chapter_name = "Chalk and Bronze"
+categories = PackedStringArray("can", "frozen")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "A Quieter Rhythm"
-categories = PackedStringArray("can")
+chapter_name = "Margin Notes in the Librito"
+categories = PackedStringArray("sachet")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Midnight Prayers"
-categories = PackedStringArray("pack")
+chapter_name = "What the Pulse Costs"
+categories = PackedStringArray("can")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Stories by the Canal"
-categories = PackedStringArray("frozen")
+chapter_name = "Cold Draft by the Guardrail"
+categories = PackedStringArray("pack")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Warmth for the Riverbank"
+chapter_name = "Smoke and Still Water"
 categories = PackedStringArray("can")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Promotion Left Behind"
-categories = PackedStringArray("pack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Before the Storm"
-categories = PackedStringArray("frozen")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "First House Call"
-categories = PackedStringArray("candy")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Tatay's Brass Bell"
 categories = PackedStringArray("pack")
@@ -80,19 +72,13 @@ substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("1_h0x5s")
-arc_name = "Arc 1: Leaving the Desk Behind"
+arc_name = "Arc 1: Chalk and Bronze"
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
 visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("1_h0x5s")
-arc_name = "Arc 2: Learning Tatay's Hand"
-purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
-visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("1_h0x5s")
-arc_name = "Arc 3: A Quiet Healer of Karimlan"
+arc_name = "Arc 2: The Gentle Lantern"
 purchase_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_purchase")])
 visit_timelines = Array[ExtResource("3_5iw5y")]([ExtResource("brahim_visit")])
 
@@ -105,9 +91,9 @@ sprite_scale = 0.8
 dialogue_blip_sound = ExtResource("6_e6vk5")
 dialogue_blip_volume = -3.0
 spawn_weight = 1.35
-favorite_categories = Array[String](["can", "sachet"])
+favorite_categories = Array[String](["can", "sachet", "bottle"])
 story_timeline = ExtResource("10_story")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("1_h0x5s")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_brahim_walk")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_brahim_cameo")])

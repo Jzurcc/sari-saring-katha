@@ -1,45 +1,74 @@
 label Greeting
-if {Transaction_GreetingVar} <= 50:
-	Brahim: Magandang araw. Just stopping by between errands for Tatay.
+if {Transaction_HasReactiveOpener}:
+	Brahim: {Transaction_ReactiveOpener}
+
+set {Variation} = range(1,5).pick_random()
+if {Flag_BrahimTrueAlbularyo}:
+	if {Variation} == 1.0:
+		Brahim: Quick breather between house calls! Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color], friend.
+	elif {Variation} == 2.0:
+		Brahim: Tatay's brass bell has kept me busy! Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	elif {Variation} == 3.0:
+		Brahim: Stopping by my favorite counter on the way from the creek. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		Brahim: Fresh herbs sorted, porch swept. Just need [color=#0f6e2f]{Transaction_ItemWants}[/color] now.
+elif {Flag_BrahimSubRest}:
+	if {Variation} == 1.0:
+		Brahim: Staying hydrated like you ordered, professor's honor! Let me take [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Variation} == 2.0:
+		Brahim: Put the librito down for a proper break. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	elif {Variation} == 3.0:
+		Brahim: Tatay sent me out for kitchen supplies. Hoping you have [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		Brahim: Easy pace on the walk over. Just picking up [color=#0f6e2f]{Transaction_ItemWants}[/color].
 else:
-	Brahim: Hello! Nothing beats a quiet walk through Karimlan before the sun gets too high.
-
-if {Global_HighPriceActive}:
-	Brahim: Ang mahal naman... [pause=0.3] Isang araw na ulam na rin ang presyo nito.
-
+	if {Variation} == 1.0:
+		Brahim: Good walk over from the creek bridge! Could I get [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Variation} == 2.0:
+		Brahim: Taking a quick break from Tatay's herb shed. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	elif {Variation} == 3.0:
+		Brahim: My fingers smell like boiled lagundi and ink. Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		Brahim: Quick errand for Tatay's kitchen. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] when you can.
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
-	Brahim: Do you happen to have {Transaction_ItemWants}?
-else:
-	Brahim: I'm hoping to pick up {Transaction_ItemWants} for the house today.
-- Coming right up.
-	Brahim: Salamat. No hurry at all.
-	[end_timeline]
-- Sorry, we're out.
-	Brahim: That's alright—I'll check back another time. Take care!
+Brahim: No hurry at all! I am just picking up [color=#0f6e2f]{Transaction_ItemWants}[/color].
+- Out of stock right now, Brahim.
+	Brahim: No worries! I will swing by again after Mario's next delivery.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
-	[end_timeline]
-
+- Coming right up!
+	Brahim: Salamat! Take your time.
+[end_timeline]
 
 label Partial
-Brahim: Salamat! I'll still need {Transaction_ItemWants} too, if you have it.
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Brahim: Got that one, salamat! Still need [color=#0f6e2f]{Transaction_ItemWants}[/color] too.
+elif {Variation} == 2.0:
+	Brahim: Appreciate it. Just waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color] to finish up.
+else:
+	Brahim: One checked off the list! Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] when ready.
 [end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	Brahim: Just what I needed. Salamat!
+if {Global_TipActive} == 1.0:
+	Brahim: Keep the extra change, friend! You earned it.
 else:
-	Brahim: Always a pleasure stopping by your store. Take it easy!
-if {Global_TipActive}:
-	Brahim: Aba, that was quite cheap. Keep the change po!
+	if {Transaction_SatisfyVar} < 34.0:
+		Brahim: Just what we needed. Salamat, shopkeeper!
+	elif {Transaction_SatisfyVar} < 67.0:
+		Brahim: Always a warm stop at Lola's counter. Take care!
+	else:
+		Brahim: Back to Tatay's porch I go. Salamat!
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+Brahim: Here is the [color=#0f6e2f]{Transaction_RepaymentAmount}[/color] pesos I owe you. Salamat for trusting me!
+[signal arg="repay_debt"]
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	Brahim: Oh, I think that's a different one—I was looking for {Transaction_ItemWants}.
-else:
-	Brahim: Almost! I actually needed {Transaction_ItemWants} today.
+Brahim: Almost! I was actually looking for [color=#0f6e2f]{Transaction_ItemWants}[/color], friend.
 [end_timeline]

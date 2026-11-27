@@ -1,119 +1,290 @@
+# Rosalyn (Kaperosa) - 6-Chapter Interactive Deduction Arc (Triangle B - Character #1)
+# Voice: Painfully shy, hushed 1-to-7 word fragments. Never chatty; the player nudges & deduces!
+# Mechanic: Intangible (is_visit_only) Ch. 1-5; gated by Brahim & Danilo prerequisites; Ch. 6 First Purchase!
+# Rules: 100% spoken voice. Counter, not grille. Zero [pause]/[wave] spam. Zero time-of-day/weekday words.
+
 label Greeting
+if {Transaction_HasReactiveOpener}:
+	Rosalyn: {Transaction_ReactiveOpener}
+
 if {Transaction_Chapter} == 0.0:
-	# Chapter 1: "The Flight"
-	Rosalyn: [wave].[pause=1.0].[pause=1.0].[pause=1.0][/wave]
-	Rosalyn: [wave]H[pause=1.0]-hello.[pause=0.6].[pause=0.6].[pause=1.0][/wave]
-	Rosalyn: [wave]I.[pause=0.6].[pause=0.6]. [pause=1.0]um.[/wave]
-	Rosalyn: [wave].[pause=0.6].[pause=0.6].[pause=1.0][/wave]
+	# Chapter 1: "Under the Bulb" (is_visit_only | 0 tallies - Pure silent first contact)
+	Rosalyn: ...
+	- Hi there. Need something?
+	- Take your time, miss.
+	- [Wait quietly and nod.]
+	Rosalyn: ...
+	- Looking for something cold?
+	- Warm light's free. No rush.
+	Rosalyn: ...
+	[signal arg="flag:rosalyn_seen=true"]
+	[signal arg="note:A pale floating girl in a tattered white dress with messy long hair stood silently in the light, staring at my face before slipping away."]
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
-	# Chapter 2: "The Attempt"
-	Rosalyn: [wave]H-hello again... [pause=1.0] um.[pause=0.6].[pause=0.6].[/wave]
-	Rosalyn: [wave]I.[pause=0.6].[pause=0.6]. [pause=1.0] I brought coins this time... [pause=1.0] see?[/wave]
-	Rosalyn: [wave].[pause=0.6].[pause=0.6].[pause=1.0][/wave]
-	Rosalyn: [wave]oh.[/wave]
-	Rosalyn: [wave]They just passed straight through my hands.[pause=0.6].[pause=0.6].[/wave]
-	Rosalyn: [wave]I'm sorry... [pause=0.6] over the mess. [pause=1.0] I can't... [pause=1.0] pick them up.[/wave]
-	Rosalyn: [wave]I should go. [pause=1.0] I'll... [pause=1.0] try again tomorrow.[/wave]
+	# Chapter 2: "Under the Floorboards" (is_visit_only | Player nudges & deduces why she can't pay | +1 / 0 / -1)
+	Rosalyn: ...
+	- You came back.
+	- Take your time, miss.
+	Rosalyn: Hello, po.
+	- Looking to buy something?
+	- Just visiting the light?
+	Rosalyn: Brought coins.
+	Rosalyn: Oh.
+	Rosalyn: ...
+	- Did you forget your purse?
+		Rosalyn: Held them tight, po.
+		Rosalyn: Under your floorboards now.
+	- Did they drop on the floor?
+		Rosalyn: Not on it, po.
+		Rosalyn: Straight through the wood.
+	- Changed your mind?
+		Rosalyn: Tried paying, po.
+		Rosalyn: Fell straight through my palm.
+	Rosalyn: Sorry. Can't pick them up.
+	Rosalyn: Should go.
+	- Stay anyway. Light's free.
+		[signal arg="flag:rosalyn_welcome=true"]
+		[signal arg="tally:+1"]
+		[signal arg="note:Welcomed Rosalyn to stay under the warm bulb even after her coins phased straight through the wood."]
+		Rosalyn: Without buying?
+		- Just rest here.
+			Rosalyn: Cars pass right through outside.
+			Rosalyn: Quiet here, po.
+	- Try again next visit.
+		[signal arg="flag:rosalyn_welcome=true"]
+		Rosalyn: Opo. Will focus harder.
+	- Your hand went through wood!
+		[signal arg="tally:-1"]
+		Rosalyn: Sorry, po.
+		Rosalyn: Didn't mean to scare you.
+	Rosalyn: ...
+	- Something else?
+	- What are you looking at?
+	Rosalyn: Your hand on the tray.
+	Rosalyn: Familiar, po.
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
-	# Chapter 3: "The Anchor"
-	Rosalyn: [wave]Good day.[pause=0.6].[pause=0.6]. [pause=1.0][/wave]
-	Rosalyn: [wave]May I... [pause=1.0] try again? [pause=1.0] A {Transaction_ItemWants}, please.[/wave] 
-	Rosalyn: [wave]Cold... [pause=1.0] if you have it.[/wave]
-	Rosalyn: [wave]Let me just... [pause=1.0] one coin... [pause=1.0] two...[/wave]
-	Rosalyn: [wave]They stayed. [pause=1.0] On the counter.[/wave] 
-	Rosalyn: [wave]It takes so much... [pause=1.0] concentration.[/wave]
-	Rosalyn: [wave]The cold helps. [pause=1.0] It gives my hands something to remember.[/wave]
-	Rosalyn: [wave]Thank you for your patience.[/wave]
+	# Chapter 3: "Sleeves Down" (Prereq: brahim >= 1 | Player deduces Lola & albularyo smoke | +1 / 0 / -1)
+	Rosalyn: ...
+	- Keeping your sleeves pulled down?
+	- Standing further back?
+	Rosalyn: Safer, po. Nothing drops.
+	Rosalyn: ...
+	- You keep glancing at me.
+	- Do I look familiar?
+	Rosalyn: Your eyes, po.
+	Rosalyn: Silver hair. Same counter.
+	- My Lola? This was hers.
+		Rosalyn: Lola.
+	- An old neighbor from before?
+		Rosalyn: No, po. Owned the jars.
+	- Wrong shop, maybe?
+		Rosalyn: Same glass jars, po.
+	Rosalyn: Small kid on a stool.
+	- That little kid was me.
+		Rosalyn: Tall now, po.
+	- Why do you walk here?
+		Rosalyn: Don't remember yet, po.
+	Rosalyn: Smelled smoke near the bridge.
+	- Boiled leaves and kamangyan?
+		Rosalyn: Albularyo smoke, po.
+	- Someone burning dry leaves?
+		Rosalyn: Prayer smoke, po. Albularyo.
+	- Cigarette smoke?
+		Rosalyn: Resins and herbs, po. Albularyo.
+	Rosalyn: Died by the highway bend.
+	Rosalyn: Will he sweep me away, po?
+	- I won't let anyone chase you.
+		[signal arg="tally:+1"]
+		[signal arg="note:Rosalyn recognized Lola's eyes in mine and feared the albularyo's smoke might banish her before she remembers."]
+		if {Flag_DaniloSawRosalyn}:
+			Rosalyn: Sunglasses man didn't shoo me either.
+		Rosalyn: Salamat po.
+	- He only treats sick neighbors.
+		Rosalyn: Hope so, po.
+	- Ghosts shouldn't stay on roads.
+		[signal arg="tally:-1"]
+		Rosalyn: Sorry, po. Don't know how yet.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
-	# Chapter 4: "The Burn"
-	Rosalyn: [wave]Good day. [pause=1.0] Could I have a hot coffee today?[/wave] 
-	Rosalyn: [wave]Actually... [pause=1.0] um... [pause=1.0][/wave]
-	Rosalyn: [wave]...No. [pause=1.0] Last Tuesday... [pause=1.0] I tried to hold a warm cup elsewhere.[/wave]
-	Rosalyn: [wave]My hand still couldn't feel the warmth. [pause=1.0] Just... [pause=1.0] the shape.[/wave] 
-	Rosalyn: [wave]I'll just take a cold {Transaction_ItemWants} instead, please. [pause=1.0] I know that works.[/wave]
+	# Chapter 4: "Four Centavos" (Prereq: danilo >= 2 | 3-Lock Interactive Memory Deduction! +2 / +1 / 0)
+	Rosalyn: ...
+	- Staring at Lola's candy jars?
+	- Remembering something?
+	Rosalyn: Loud rain, po.
+	Rosalyn: Tin roof rattling across the asphalt.
+	- Under the highway waiting shed?
+		set {Variation} = 1.0
+		Rosalyn: Waiting shed. Opo.
+	- Inside the stone chapel?
+		set {Variation} = 0.0
+		Rosalyn: No pews, po. Waiting shed.
+	- Under Kap's acacia tree?
+		set {Variation} = 0.0
+		Rosalyn: Tin roof, po. Waiting shed.
+	Rosalyn: Wet school collar. Burning forehead.
+	Rosalyn: Tugged my skirt. Called me Ate.
+	- Your sick little sister?
+		set {Variation} = {Variation} + 1.0
+		Rosalyn: Lia.
+		Rosalyn: Wrapped my dry cardigan on her.
+	- An elder waiting on buses?
+		Rosalyn: Called me Ate, po.
+		Rosalyn: Lia. My sister.
+	- Me when I was small?
+		Rosalyn: You were inside with Lola, po.
+		Rosalyn: Lia. My sister.
+	Rosalyn: Ran toward your Lola's bulb.
+	Rosalyn: Four centavos. Dry, barking cough.
+	Rosalyn: Front glass jar on this wood.
+	- Menthol candy for her cough?
+		set {Variation} = {Variation} + 1.0
+		Rosalyn: Two green wrappers, po.
+		Rosalyn: White headlights. Never reached the wood.
+	- Cold bottled water?
+		Rosalyn: Four coins couldn't buy bottles, po.
+		Rosalyn: Green wrappers. Menthol candy.
+	- Canned soup for fever?
+		Rosalyn: Glass jar, po. Menthol candy.
+	if {Variation} >= 3.0:
+		[signal arg="flag:rosalyn_errand_known=true"]
+		[signal arg="tally:+2"]
+		[signal arg="note:Deduced all three pieces of Rosalyn's storm memory: leaving sick little Lia under the shed to buy menthol candy from Lola's jar."]
+	elif {Variation} >= 2.0:
+		[signal arg="flag:rosalyn_errand_known=true"]
+		[signal arg="tally:+1"]
+		[signal arg="note:Helped Rosalyn piece together her unfinished errand to Lola's counter for her little sister Lia."]
+	else:
+		[signal arg="note:Rosalyn remembered leaving her sick sister Lia under the waiting shed while running for cough candy."]
+	Rosalyn: Told Lia don't move.
+	- Afraid she stayed in the rain?
+		Rosalyn: Fog blocks me past the bend, po.
+	- Someone can look past the bend.
+		Rosalyn: Please, po.
+	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
-	# Chapter 5: "The Silence"
-	Rosalyn: [wave]Good day. [pause=1.0] I didn't bring coins tonight. [pause=1.0] I just wanted to... [pause=1.0] stand here.[/wave]
-	Rosalyn: [wave]The highway outside is so brightly lit... [pause=1.0] but there is no sound.[/wave] 
-	Rosalyn: [wave]The cars just... [pause=1.0] push right through.[/wave] 
-	Rosalyn: [wave]But earlier... [pause=1.0] a stray cat stopped to look at me.[/wave] 
-	Rosalyn: [wave]It didn't run away. [pause=1.0] Just... [pause=1.0] looked.[/wave]
-	Rosalyn: [wave]I just wanted to tell someone who could actually see me.[/wave] 
+	# Chapter 5: "The Grain of the Wood" (Prereq: brahim >= 4 AND danilo >= 4 | Full Cross-Web Payoff!)
+	if {Flag_BrahimLanternWard}:
+		Rosalyn: Red lantern by the guardrail, po.
+		- Brahim hung it for you.
+			Rosalyn: Warm. Sleeves stopped fading.
+		- Did the cold mist lift?
+			Rosalyn: Didn't sting at all, po.
+	else:
+		Rosalyn: Heavy ward by the shed, po.
+		Rosalyn: Pushed hard against my chest.
+		- Sorry. Still walked through?
+			Rosalyn: Needed to know about Lia, po.
+	if {Flag_DaniloTracedTether}:
+		Rosalyn: Sunglasses man passed the shed.
+		Rosalyn: Looked straight at me, po.
+		- He traced Lia past the bridge.
+			Rosalyn: ...
+			Rosalyn: Tell me, po.
+			- She's safe. She's a teacher.
+				Rosalyn: Teacher.
+				Rosalyn: Wrote her letters backwards back then.
+			- She lights white candles for Ate.
+				Rosalyn: Not angry at me?
+				- Never angry. Leaves menthol candy.
+					Rosalyn: Oh.
+	else:
+		Rosalyn: Nobody looked past the bend, po?
+		- Look at me behind Lola's counter.
+			Rosalyn: ...
+			Rosalyn: Tiny kid on that stool.
+		- Count the years since Lola's shop.
+			Rosalyn: ...
+			Rosalyn: You grew up, po.
+		Rosalyn: Lia grew up too?
+		- Someone surely walked her home.
+			Rosalyn: Umbrellas always passed that shed.
+	Rosalyn: ...
+	- Did your fingers tap the wood?
+	- Wait, did you hear that tap?
+	Rosalyn: My fingertips, po.
+	Rosalyn: Didn't pass through.
+	- Finish your errand next visit.
+		Rosalyn: Opo.
 	[signal arg="story_success"]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
-	# Chapter 6: "The Puddle"
-	Rosalyn: [wave]I only came to visit tonight. [pause=1.0][/wave]
-	Rosalyn: [wave]I stood by a puddle on the shoulder of the road.[/wave] 
-	Rosalyn: [wave]I tried to look down... [pause=1.0] to find myself in the water.[/wave] 
-	Rosalyn: [wave]There was nothing. [pause=1.0] Just the streetlamp reflecting back.[/wave]
-	Rosalyn: [wave]But looking at it... [pause=1.0] I remembered the rain.[/wave]
-	Rosalyn: [wave]A blinding light. [pause=1.0] A loud screech of tires... [pause=1.0] and then... [pause=1.0][/wave]
-	Rosalyn: [wave]...Nothing.[/wave]
-	Rosalyn: [wave]I keep coming back to that rain.[/wave]
-	[signal arg="story_success"]
-	[end_timeline]
-
-elif {Transaction_Chapter} == 6.0:
-	# Chapter 7: "The Candy"
-	Rosalyn: [wave]Good day. [pause=1.0] Could I have one of the {Transaction_ItemWants}, please?[/wave]
-	Rosalyn: [wave]The menthol ones.[/wave] 
-	Rosalyn: [wave]One coin... [pause=1.0] two. [pause=1.0] There.[/wave] 
-	Rosalyn: [wave]It feels familiar. [pause=1.0] The smell... [pause=1.0] the coldness on the tongue.[/wave]
-	Rosalyn: [wave]I used to stare at your store's lights from the road. [pause=1.0] They always looked so warm.[/wave] 
-	Rosalyn: [wave]I'm glad I finally stepped inside.[/wave]
-	[end_timeline]
-
-elif {Transaction_Chapter} == 7.0:
-	# Chapter 8: "Letting Go"
-	Rosalyn: [wave]The candy... [pause=1.0] from last time.[/wave] 
-	Rosalyn: [wave]Ramon used to carry them. [pause=1.0] He said they kept him awake on long drives.[/wave] 
-	Rosalyn: [wave]We were supposed to meet... [pause=1.0] I was running late. [pause=1.0] I ran across the road without looking, and— [pause=1.5][/wave]
-	Rosalyn: [wave]...I don't think he's waiting for me anymore.[/wave] 
-	Rosalyn: [wave]He's probably lived a whole life by now. [pause=1.0] I shouldn't keep waiting either.[/wave]
-	Rosalyn: [wave]Your lights really helped me realize that. [pause=1.0] Thank you.[/wave]
-	[signal arg="story_success"]
-	[end_timeline]
-
-elif {Transaction_Chapter} == 8.0:
-	# Chapter 9: "The Departure"
-	Rosalyn: [wave]I won't be staying tonight. [pause=1.0] I just wanted to say goodbye.[/wave]
-	Rosalyn: [wave]You have a very kind heart. [pause=1.0] To listen to someone like me.[/wave] 
-	Rosalyn: [wave]Please... [pause=1.0] keep your lights warmly lit. [pause=1.0] It helps the lost ones find their way out of the dark.[/wave]
-	Rosalyn: [wave]Goodbye... [pause=1.0] and thank you.[/wave]
-	[signal arg="story_success"]
+	# Chapter 6: "Two Green Wrappers" (HER VERY FIRST PURCHASE: candy! | Accumulated Tally Resolution)
+	if ({Flag_RosalynErrandKnown} and ({Flag_BrahimLanternWard} or {Flag_DaniloTracedTether})) and {Transaction_Tally} >= 3:
+		[signal arg="outcome:peaceful_anchor"]
+		[signal arg="note:Held real coins at Lola's counter, left a dried sampaguita, and promised to stand witness before Reyna Mayari."]
+		Rosalyn: Coins stayed on the wood, po.
+		- Every single one.
+			Rosalyn: Left dried sampaguita by your register.
+		- Steady hands now.
+			Rosalyn: Left a dried flower there, po.
+		Rosalyn: Highway stopped pulling me back.
+		Rosalyn: Resting near your bulb until Mayari's moon.
+		- Rest here as long as you want.
+			Rosalyn: Salamat po.
+		- Lola would smile seeing this.
+			Rosalyn: Same gentle eyes, po.
+		Rosalyn: When Reyna Mayari comes, I'll stand witness.
+		Rosalyn: [color=#0f6e2f]{Transaction_ItemWants}[/color], please, po.
+	elif {Transaction_Tally} >= 1:
+		[signal arg="outcome:lingering_guest"]
+		[signal arg="note:Found enough peace to set coins on the wood and complete her first purchase."]
+		Rosalyn: Coins didn't fall through, po.
+		- Ready for your first order?
+			Rosalyn: Practiced a long time, po.
+		- Glad your hands steadied.
+			Rosalyn: Your bulb helped, po.
+		Rosalyn: If the pale moon asks, remember me.
+		Rosalyn: [color=#0f6e2f]{Transaction_ItemWants}[/color], please, po.
+	else:
+		[signal arg="outcome:faint_echo"]
+		[signal arg="note:Steadied her hands briefly to finish her walk to Lola's counter."]
+		Rosalyn: Coins stayed put, po.
+		- What can I get you?
+			Rosalyn: Just finishing my walk, po.
+		Rosalyn: [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
 	[end_timeline]
 
 label Talk
-Rosalyn: [wave]Oh... [pause=1.0] um... [pause=1.0] I can wait. [pause=1.0] I have... [pause=1.0] plenty of time.[/wave]
-Rosalyn: [wave]I just need {Transaction_ItemWants}...[/wave]
-- I'll be quick.
+Rosalyn: No rush, po. Still hoping for [color=#0f6e2f]{Transaction_ItemWants}[/color].
+- Almost got it, Rosalyn.
 	[end_timeline]
-- Sorry, we're out.
-	Rosalyn: [wave]Oh... [pause=1.0] I see. [pause=1.0] I'm sorry for asking. [pause=1.0] Goodbye.[/wave]
+- Sorry, we're out of stock.
+	Rosalyn: Alright, po. Another walk is fine.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
 
+label Partial
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Rosalyn: Stayed in my palm, po.
+elif {Variation} == 2.0:
+	Rosalyn: Holding tight, po. No rush.
+else:
+	Rosalyn: Solid, po. Take your time.
+[end_timeline]
+
 label Satisfy
-Rosalyn: [wave]Oh! [pause=1.0] Thank you. [pause=1.0] It... [pause=1.0] um... [pause=1.0] it feels very real.[/wave]
-if {Global_TipActive}:
-	Rosalyn: [wave]Um... please keep the extra change. You're very kind.[/wave]
+if {Transaction_StoryGouged}:
+	Rosalyn: Cost less in Lola's time, po.
+	Rosalyn: Still, salamat po.
+else:
+	Rosalyn: Cold wrapper. Solid in my palm.
+	Rosalyn: Salamat po.
+	if {Global_TipActive}:
+		Rosalyn: Extra coins for your bulb, po.
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Rosalyn: [wave]Um... [pause=1.0] I don't think this is the {Transaction_ItemWants}.[/wave] 
-Rosalyn: [wave]I'm sorry. [pause=1.0] Maybe I... [pause=1.0] um... [pause=1.0] I'll wait.[/wave]
+Rosalyn: Sorry, po. Different label.
 [end_timeline]

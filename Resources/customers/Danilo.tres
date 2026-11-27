@@ -8,97 +8,86 @@
 [ext_resource type="Texture2D" uid="uid://gwiwtia4ccck" path="res://Assets/characters/sprites/Danilo.png" id="5_png"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arc_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://dvps8884o1s8l" path="res://Dialogue/Timelines/Danilo/Purchase.dtl" id="danilo_purchase"]
 [ext_resource type="Resource" uid="uid://csh0cxkt44aci" path="res://Dialogue/Timelines/Danilo/Visit.dtl" id="danilo_visit"]
 [ext_resource type="Resource" uid="uid://jt6xop1ylgt7" path="res://Resources/motions/danilo_hesitant_linger.tres" id="motion_danilo_linger"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://cjllu4anoqql8" path="res://Dialogue/Timelines/Danilo/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
 
+[sub_resource type="Resource" id="prereq_ch1_rosalyn"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rosalyn"
+min_chapter = 1
+
+[sub_resource type="Resource" id="prereq_group_ch1"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch1_rosalyn")])
+
+[sub_resource type="Resource" id="prereq_ch3_rosalyn"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "rosalyn"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_rosalyn")])
+
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Free Real Estate"
+chapter_name = "Front-Row Snacks"
 categories = PackedStringArray("snack")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Cough"
-is_visit_only = true
-categories = PackedStringArray("snack")
+chapter_name = "Girl by the Guardrail"
+categories = PackedStringArray("bottle", "snack")
+prerequisites = SubResource("prereq_group_ch1")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Midnight Flight"
-is_visit_only = true
-categories = PackedStringArray("snack")
+chapter_name = "Fluorescent Glare"
+categories = PackedStringArray("sachet")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Private Conversation"
-is_visit_only = true
+chapter_name = "Clocking Back In"
 categories = PackedStringArray("snack")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Highway"
-is_visit_only = true
-categories = PackedStringArray("snack")
+chapter_name = "Welding Sparks"
+categories = PackedStringArray("bottle")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Too Bright"
-is_visit_only = true
-categories = PackedStringArray("snack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Pale Ledger"
-is_visit_only = true
-categories = PackedStringArray("snack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Daligmata - the reveal"
-is_visit_only = true
-categories = PackedStringArray("snack")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The First Purchase - Arc Finale"
-categories = PackedStringArray("snack")
+chapter_name = "Eyes on Your Corner"
+categories = PackedStringArray("snack", "can")
 substitute_item_ids = null
 substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arc_script")
-arc_name = "Arc 1: The Watcher in the Shade"
+arc_name = "Arc 1: Shade Under the Awning"
 purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_purchase")])
 visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arc_script")
-arc_name = "Arc 2: The Weight of Many Eyes"
-purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_purchase")])
-visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arc_script")
-arc_name = "Arc 3: The Guardian's Gaze"
+arc_name = "Arc 2: Seeing Past the Bend"
 purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_purchase")])
 visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("danilo_visit")])
 
@@ -109,11 +98,14 @@ dialogic_character = ExtResource("1_dch")
 sprite_texture = ExtResource("5_png")
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_wav")
+requests_utang = true
+utang_chance = 0.12
+repayment_chance = 0.4
 spreads_rumors = true
-purchase_only_on_final_chapter = true
-spawn_weight = 0.55
-favorite_categories = Array[String](["can", "snack"])
+purchase_only_on_final_chapter = false
+spawn_weight = 0.95
+favorite_categories = Array[String](["snack", "bottle", "sachet"])
 story_timeline = ExtResource("story_res")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_danilo_linger")

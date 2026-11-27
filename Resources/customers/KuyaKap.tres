@@ -6,14 +6,26 @@
 [ext_resource type="Texture2D" uid="uid://c67wkx8kwglhy" path="res://Assets/characters/sprites/Kuya_Kap.png" id="6_5suku"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://bnlbs41r6ge5c" path="res://Dialogue/Timelines/KuyaKap.dch" id="dch_kuyakap"]
 [ext_resource type="Resource" uid="uid://vd6vqcihb85s" path="res://Dialogue/Timelines/Kuyakap/Purchase.dtl" id="kuyakap_purchase"]
 [ext_resource type="Resource" uid="uid://d2xpnhja6r33a" path="res://Dialogue/Timelines/Kuyakap/Visit.dtl" id="kuyakap_visit"]
 [ext_resource type="Resource" uid="uid://ysohv6gqo6ci" path="res://Resources/motions/kuyakap_cameo_stroll.tres" id="motion_kuyakap_cameo"]
 [ext_resource type="Resource" uid="uid://bee6vva2uqq0e" path="res://Resources/motions/kuyakap_heavy_stroll.tres" id="motion_kuyakap_stroll"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://b5ajudb37ubvf" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
+
+[sub_resource type="Resource" id="prereq_ch3_ana"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "manangana"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_ana")])
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -40,6 +52,7 @@ substitute_categories = null
 script = ExtResource("chapterdata_script")
 chapter_name = "Cranky Withdrawal"
 categories = PackedStringArray("candy", "bottle")
+prerequisites = SubResource("prereq_group_ch3")
 substitute_item_ids = null
 substitute_categories = null
 

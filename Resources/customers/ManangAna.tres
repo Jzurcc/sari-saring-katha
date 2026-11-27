@@ -8,12 +8,33 @@
 [ext_resource type="Texture2D" uid="uid://dxyx405jevl77" path="res://Assets/characters/sprites/ManangAna.png" id="5_4587l"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://bpb60ibkybakm" path="res://Dialogue/Timelines/ManangAna/Purchase.dtl" id="mana_purchase"]
 [ext_resource type="Resource" uid="uid://dc1yt6iiwlltd" path="res://Dialogue/Timelines/ManangAna/Story.dtl" id="mana_story"]
 [ext_resource type="Resource" uid="uid://dw2evopysv3yc" path="res://Dialogue/Timelines/ManangAna/Visit.dtl" id="mana_visit"]
 [ext_resource type="Resource" uid="uid://imu23ii5o5lj" path="res://Resources/motions/manang_ana_cameo_sky_flyby.tres" id="motion_ana_cameo_sky"]
 [ext_resource type="Resource" uid="uid://c05shp0ji6r0g" path="res://Resources/motions/manang_ana_flight.tres" id="motion_ana_flight"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
+
+[sub_resource type="Resource" id="prereq_ch3_kap"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "kuyakap"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_kap")])
+
+[sub_resource type="Resource" id="prereq_ch4_buboy"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "buboy"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch4"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_buboy")])
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -34,11 +55,13 @@ categories = PackedStringArray("bottle", "can")
 script = ExtResource("chapterdata_script")
 chapter_name = "Broth and Ginger"
 categories = PackedStringArray("can")
+prerequisites = SubResource("prereq_group_ch3")
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Locked Out of the Kitchen"
 categories = PackedStringArray("pack", "can")
+prerequisites = SubResource("prereq_group_ch4")
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")

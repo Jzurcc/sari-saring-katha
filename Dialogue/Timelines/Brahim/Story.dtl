@@ -1,151 +1,193 @@
 label Greeting
-# [signal arg="refresh_desires"]
-if {Transaction_Chapter} == 0:
-	Brahim: Magandang araw. [pause=0.3] You must be the new face behind the counter. I'm Brahim.
-	Brahim: I just moved back home to Karimlan a few weeks ago. Left my corporate job in the city—couldn't stare at another spreadsheet under fluorescent lights.
-	- That's a big change of pace.
-		Brahim: The best kind. Out here I'm apprenticing under my father—he's been Karimlan's albularyo for forty years.
-	- How's the quiet life treating you?
-		Brahim: Honestly? I slept eight straight hours for the first time in years. My father's been teaching me the old albularyo craft since I got back.
-	Brahim: Speaking of which, my hand still shakes a little from too much office coffee. Mind helping me trace two beginner talismans before I head back to Tatay's?
-	Brahim: First one is the Krus ng Simula—a simple ward to calm a fresh bronze piece.
+if {Transaction_HasReactiveOpener}:
+	Brahim: {Transaction_ReactiveOpener}
+
+if {Transaction_Chapter} == 0.0:
+	# Chapter 1 — "Chalk and Bronze" (can / frozen + minigame:talisman:1 | 0 choice tally, +1 if won)
+	Brahim: You must be the new keeper behind Lola's counter. I am Brahim, from past the creek bridge.
+	Brahim: I used to teach up at the University of the Cordilleras in Baguio. Moved home to apprentice under Tatay.
+	- Big jump from Baguio lectures to herbs!
+		Brahim: My fingers are still better with whiteboard markers and bluebooks than bronze brushes, honestly.
+	- Tatay is Karimlan's albularyo, right?
+		Brahim: Forty years on that porch. High time I learned his craft so his hands can rest.
+	- Miss the Baguio fog yet?
+		Brahim: Only the cool air and strong coffee! Though Karimlan's warm breeze grows on you fast.
+	Brahim: Speaking of steady hands, want to pair up on a quick lab exercise?
+	Brahim: This is the First Ward, a simple starter sigil for fresh bronze. Mind tracing it with me?
 	[signal arg="minigame:talisman:1"]
-	Brahim: Clean, balanced lines! Even a simple ward hums when it's drawn with care.
-	Brahim: Let's try one more—Buwan ni Mayari. Travelers keep this crescent close on dark barangay roads.
-	[signal arg="minigame:talisman:2"]
-	Brahim: Mayari's crescent! You've got a steadier hand than I do.
-	Brahim: Salamat for the help. I'll also grab {Transaction_ItemWants} for Tatay and me—we're preparing herbs by the creek tonight.
-	[end_timeline]
+	if {Transaction_MinigameWon}:
+		[signal arg="flag:brahim_steady_start=true"]
+		[signal arg="tally:+1"]
+		Brahim: Top marks, shopkeeper! Clean charcoal pillar, steady crimson crossbar. Even Tatay would nod at that.
+	else:
+		Brahim: Haha, every first draft needs a little character! Still hums better than my first five attempts.
+	Brahim: Salamat for the practice. Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] for Tatay's kitchen too.
 
-elif {Transaction_Chapter} == 1:
-	Brahim: Your little store has a good rhythm to it. [pause=0.3] Everything right where it belongs.
-	Brahim: That old fridge humming in the corner reminds me of my parents' kitchen when I was a kid.
-	- It's a little slow, honestly.
-		Brahim: Slow isn't a bad thing. In the city, everyone's rushing to beat a deadline nobody remembers the next week.
-	- It belonged to my lola.
-		Brahim: You can tell. Things that get looked after keep a quiet kind of warmth.
-	Brahim: Tatay had me sorting dried sambong and lagundi leaves all morning. My fingers smell like rain and ginger.
-	Brahim: I'll take {Transaction_ItemWants}, please. Need something to share with him before our afternoon rounds.
-	[end_timeline]
+elif {Transaction_Chapter} == 1.0:
+	# Chapter 2 — "Margin Notes in the Librito" (sachet -> allow_sub_cat:bottle | Inflection #1)
+	Brahim: Caught myself doing something ridiculous on Tatay's porch.
+	Brahim: I started writing neat margin notes and color-coded tabs inside his handwritten librito like a course syllabus.
+	Brahim: Tatay took one look, laughed, and told me to stop grading his orasyon and go smell actual lagundi leaves.
+	Brahim: Old professor habits die hard! Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] so I can keep reviewing my notes.
+	- [Swap his coffee for cold water.]
+		[signal arg="allow_sub_cat:bottle"]
+		Brahim: Salamat! Just need a quick cup before I cross-reference the pulse chapters.
+	- Old professor habits die hard, ha?
+		Brahim: Guilty as charged. At least Tatay has a good sense of humor about my sticky notes.
+	- Just toss the notebook aside.
+		[signal arg="tally:-1"]
+		Brahim: Harsh critique, shopkeeper! Even folk craft deserves careful study, you know.
 
-elif {Transaction_Chapter} == 2:
-	Brahim: Tatay had me up past midnight practicing prayers for the household wards.
-	Brahim: Back at my old office, staying up late meant fixing someone else's slide deck. Doing it for our neighbors feels completely different.
-	- Are you getting the hang of it?
-		Brahim: Little by little. Tatay says the words only work if your heart isn't in a hurry.
-	- You look much more at ease today.
-		Brahim: Karimlan does that to you. The air actually lets you breathe.
-	Brahim: I brought two protective charms that need fresh ink before sundown. Mind lending your steady hand again?
-	Brahim: First is Mata ng Bantay—the watcher's eye, to keep mischief off a doorstep.
-	[signal arg="minigame:talisman:3"]
-	Brahim: You can almost feel it watching back. That'll keep bad luck well away.
-	Brahim: And the second—Tala ng Gabay, a guiding star for a fisherman heading out early tomorrow.
+elif {Transaction_Chapter} == 2.0:
+	# Chapter 3 — "What the Pulse Costs" (can + minigame:talisman:4 | Inflection #2)
+	Brahim: Strange visit on Tatay's porch earlier. An old acquaintance offered me five hundred pesos cash.
+	Brahim: Wanted a private luck charm rushed ahead of the neighbors waiting in line. Called it a consultation fee.
+	Brahim: Back at UC Baguio, guest lectures came with a stipend. Here, Tatay says fixed cash hollows out an albularyo's gift.
+	- Trust Tatay's rule. Keep it sacred.
+		[signal arg="tally:+1"]
+		Brahim: That settles it. Healing is a vocation answered with voluntary alay, never a price tag.
+	- Charge a fee for your expertise.
+		[signal arg="tally:-1"]
+		Brahim: Practical, sure. Still, something about putting a rate card on prayer feels wrong in my chest.
+	- Tell him to wait his turn.
+		Brahim: Fair enough! First come, first served, same rule as office hours.
+	if {Flag_BrahimSteadyStart}:
+		Brahim: Since your brushwork scored top marks last time, mind helping me trace Watcher's Eye for the creek bridge?
+	else:
+		Brahim: Before I head back, mind helping me trace Watcher's Eye? It keeps mischief off the creek bridge.
 	[signal arg="minigame:talisman:4"]
-	Brahim: Sharp points and a steady circle—this charm will never lose its north.
-	Brahim: Thanks again. I'll pick up {Transaction_ItemWants} on my way back to Tatay's.
-	[end_timeline]
+	if {Transaction_MinigameWon}:
+		Brahim: Look at those fine gold lashes! Crisp as a textbook diagram, with real warmth in it.
+	else:
+		Brahim: A little wobbly around the iris, haha! No harm done, I will touch up the edges at Tatay's table.
+	Brahim: Salamat, friend. Let me pick up [color=#0f6e2f]{Transaction_ItemWants}[/color] for dinner too.
 
-elif {Transaction_Chapter} == 3:
-	Brahim: I passed by the canal earlier and saw some neighborhood kids poking at an anthill, daring each other to say "tabi-tabi po" backwards.
-	Brahim: Tatay would've had a fit if he saw them.
-	- Did you stop them?
-		Brahim: Gently. Told them the old stories instead of scolding them. Kids listen better when you treat them like they're part of the secret.
-	- Were they actually scared?
-		Brahim: Only until I reminded them how dark that path gets after six. They ran home pretty fast after that.
-	Brahim: I promised I'd bring a small peace offering back by the mound later. I'll take {Transaction_ItemWants} for the walk.
-	[end_timeline]
+elif {Transaction_Chapter} == 3.0:
+	# Chapter 4 — "Cold Draft by the Guardrail" (pack + Moral Talisman Choice | Inflection #3)
+	Brahim: Neighbors reported sudden cold spots and melted candle wax near the highway waiting shed.
+	Brahim: Tatay's knees are swollen, so I am handling this solo. Sounds like a restless kaperosa by the bend.
+	if {Flag_RosalynSeen} or {Flag_DaniloSawRosalyn}:
+		- Wait. That is Rosalyn, she is harmless!
+			Brahim: You know her? She visits your counter? Hold on, that changes my entire plan!
+		- Sounds cold out by that guardrail.
+			Brahim: Freezing, according to the tricycle drivers. Still, I do not want to hurt anyone by mistake.
+	Brahim: I have two bronze blanks ready. Either a warm guiding lantern, or a strict wind barrier to clear the road.
+	- Craft a warm lantern to guide.
+		[signal arg="flag:brahim_lantern_ward=true"]
+		[signal arg="tally:+1"]
+		Brahim: Suki's Lantern. Crimson frame, gold core, indigo tassel. Help me trace it steady, friend.
+		[signal arg="minigame:talisman:7"]
+		if {Transaction_MinigameWon}:
+			[signal arg="tally:+1"]
+			Brahim: Look at that gold core glow! Gentle enough to steady a shy soul without pushing her away.
+		else:
+			Brahim: A bit uneven on the tassel, yet the warmth still holds. She will feel welcome, not chased.
+	- Seal the road so she leaves.
+		[signal arg="flag:brahim_lantern_ward=false"]
+		[signal arg="tally:-1"]
+		Brahim: Wind Shield it is. Strict charcoal crest and indigo chevron to close off the guardrail.
+		[signal arg="minigame:talisman:10"]
+		if {Transaction_MinigameWon}:
+			Brahim: Sharp, clean barrier. Nothing restless will linger by that shed for long.
+		else:
+			Brahim: Rough edges, still heavy enough to push the cold draft back from the road.
+	Brahim: Salamat for the brushwork. Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] before I walk over to the bend.
 
-elif {Transaction_Chapter} == 4:
-	Brahim: A neighbor down by the river came to Tatay's house with a stubborn fever this morning.
-	Brahim: Nothing serious, just exhaustion and a fright from walking home late in the rain. Tatay asked me to prepare two warming charms for her family.
-	- That's a lot of trust from your father.
-		Brahim: It is. He barely even hovered over my shoulder this time.
-	- Need a hand with the brushwork?
-		Brahim: I was hoping you'd offer. You have a real knack for this.
-	Brahim: Let's start with Tatsulok ng Lunas—the healing triad. The old albularyos always swore by the triangle.
-	[signal arg="minigame:talisman:5"]
-	Brahim: Steady and centered. Tatay would be proud of that one.
-	Brahim: Now Sinag ng Araw—eight solar rays to bring warmth back to a damp house.
-	[signal arg="minigame:talisman:6"]
-	Brahim: Bright as high noon! This one carries real warmth.
-	Brahim: Salamat. I'll grab {Transaction_ItemWants} as well—always good to bring something to eat when visiting a recovering neighbor.
-	[end_timeline]
+elif {Transaction_Chapter} == 4.0:
+	# Chapter 5 — "Smoke and Still Water" (can | 0 tallies — Ten Payoff!)
+	if {Flag_BrahimLanternWard} and {Flag_DaniloTracedTether}:
+		Brahim: You will not believe what happened when I hung Suki's Lantern by the waiting shed!
+		Brahim: That laid-back guy from your bench walked over, squinted past the mist, and pointed straight across the creek.
+		Brahim: He traced her tether two towns out so I knew exactly where to aim Tatay's calming orasyon!
+	elif {Flag_BrahimLanternWard}:
+		Brahim: Suki's Lantern worked like magic by the guardrail. The cold mist warmed right up without hurting a soul.
+		Brahim: Tatay squeezed my shoulder when I got back and did not correct a single line in my notes.
+	else:
+		Brahim: The barrier ward cleared the highway bend, sure. The air went dead quiet right away.
+		Brahim: Still sits heavy in my chest, honestly. Feels like I solved a symptom and missed the person underneath.
+	- You listened instead of forcing it.
+		Brahim: Funny how the best lessons in Karimlan happen when I finally close my notebook.
+	- Sounds like Tatay would be proud.
+		Brahim: He even poured me fresh lagundi tea without lecturing me once. High praise!
+	- Glad the highway bend is quiet.
+		Brahim: Quiet and safe, that is what matters.
+	Brahim: Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] for Tatay's porch.
 
-elif {Transaction_Chapter} == 5:
-	Brahim: Funny thing happened today. An old coworker from Manila messaged me, asking if I regretted walking away from the promotion.
-	Brahim: I looked out the window at the bamboo swaying in the breeze and didn't even know how to explain it to him.
-	- What did you tell him?
-		Brahim: That I traded a corner desk for a quiet porch, and I'd make the same trade twice.
-	- You belong here in Karimlan.
-		Brahim: It's starting to feel that way. Even the stray dogs know my footsteps now.
-	Brahim: Tatay's resting his knees today, so I'm doing the errands. Just {Transaction_ItemWants} for me, please.
-	[end_timeline]
+elif {Transaction_Chapter} == 5.0:
+	# Chapter 6 — "Tatay's Brass Bell" (pack + minigame:talisman:20 Grand Agimat | Accumulated Tally Resolution)
+	if {Flag_BrahimLanternWard} and {Transaction_Tally} >= 3.0:
+		[signal arg="outcome:true_albularyo"]
+		Brahim: Tatay handed me his worn brass bell earlier. Said his hands are ready to rest and mine are ready to carry it.
+		Brahim: Before I ring it for the barangay, I want us to trace one masterwork ward for Lola's counter.
+		Brahim: The Grand Agimat. All four ritual inks, steady as you go!
+		[signal arg="minigame:talisman:20"]
+		if {Transaction_MinigameWon}:
+			Brahim: Masterwork! Even my old UC Baguio dean would give that a standing ovation!
+		else:
+			Brahim: A few bold strokes on the outer ring, and it still hums warm as a hearth!
+		Brahim: When Reyna Mayari weighs Karimlan's ledger, this albularyo stands right beside your counter, friend.
+	elif {Transaction_Tally} >= 1.0:
+		[signal arg="outcome:steady_apprentice"]
+		Brahim: Still apprenticing at Tatay's pace, and loving every step of it. No rush to graduate!
+		Brahim: Brought a Grand Agimat blank so we can ward your threshold together. Ready, lab partner?
+		[signal arg="minigame:talisman:20"]
+		if {Transaction_MinigameWon}:
+			Brahim: Crisp lines all the way through! Your counter is in good hands.
+		else:
+			Brahim: Good effort on a tricky sigil! Still plenty warm enough to guard Lola's wood.
+		Brahim: Salamat for keeping this little shop open for all of us.
+	else:
+		[signal arg="outcome:textbook_herbalist"]
+		Brahim: I have Tatay's herbal notes organized neatly now. Practical work, steady results.
+		Brahim: Here is a threshold ward for your counter, if you want to help trace it.
+		[signal arg="minigame:talisman:20"]
+		if {Transaction_MinigameWon}:
+			Brahim: Clean geometry. That should keep drafts off your shelves.
+		else:
+			Brahim: Close enough for a standard ward.
+	Brahim: Let me pick up [color=#0f6e2f]{Transaction_ItemWants}[/color] for Tatay's table too.
 
-elif {Transaction_Chapter} == 6:
-	Brahim: The wind's been picking up since dawn. Tatay says the mountain air gets restless before a heavy storm.
-	Brahim: He asked me to prepare two stronger wards for the barangay chapel and the bridge.
-	- Those sound trickier than the early ones.
-		Brahim: They are—more intersecting lines, less room for error. Good thing I've got you as my co-inscriber.
-	- Ready when you are.
-		Brahim: Appreciate it. First up is Kalasag ng Hangin—the wind shield.
-	[signal arg="minigame:talisman:7"]
-	Brahim: Solid as narra wood, light as the breeze. No storm's getting past that.
-	Brahim: Next is Selyo ng Bituin—twin opposing triangles bound by a sacred ring. Take your time with the intersections.
-	[signal arg="minigame:talisman:8"]
-	Brahim: Not a single tremor in those intersections—you really have an albularyo's hand!
-	Brahim: I'll take {Transaction_ItemWants} for Tatay too. He's been craving a snack all afternoon.
-	[end_timeline]
-
-elif {Transaction_Chapter} == 7:
-	Brahim: I handled my first house call completely on my own today. [pause=0.3] Down at the south end of the barangay.
-	Brahim: A family couldn't sleep because of rattling eaves and cold drafts. Turned out to be half loose tin roof, half an old restless spirit looking for quiet.
-	- How did you handle it?
-		Brahim: Nailed down the loose sheet first, then lit a little kamangyan and spoke the calming prayer Tatay taught me. Both worked together.
-	- Tatay must be thrilled.
-		Brahim: He didn't say much—just poured me a cup of barako and smiled. That's high praise from him.
-	Brahim: I'll grab {Transaction_ItemWants} to celebrate a quiet evening.
-	[end_timeline]
-
-elif {Transaction_Chapter} == 8:
-	Brahim: Tatay handed me his old brass bell this morning. [pause=0.4] Said his hands are ready to rest, and mine are ready to carry the work.
-	Brahim: Leaving the corporate world felt terrifying a year ago. Now I can't imagine being anywhere else than right here in Karimlan.
-	- Congratulations, Brahim. You earned it.
-		Brahim: I couldn't have gotten here without Tatay's patience—and honestly, without stopping by your store whenever I needed a breather.
-	- Your father must be so proud.
-		Brahim: He pretended he had dust in his eyes. I let him have that one.
-	Brahim: For my first official set as Karimlan's new albularyo, I'd be honored if you helped me inscribe two master charms.
-	Brahim: First is Orasyon ng Balete—the seal of the rooted tree.
-	[signal arg="minigame:talisman:9"]
-	Brahim: Whoa... the air around the counter actually went quiet. That's the real deal.
-	Brahim: And the last one—Dakilang Anting-Anting. The grand agimat.
-	[signal arg="minigame:talisman:10"]
-	Brahim: A masterwork agimat! I couldn't have inscribed this half as well on my own.
-	Brahim: Thank you for everything, friend. I'll take {Transaction_ItemWants}—Tatay and I are having a proper dinner tonight.
-	[end_timeline]
+[end_timeline]
 
 label Talk
-Brahim: No rush at all—I'm just waiting on {Transaction_ItemWants}.
-- On it.
-	Brahim: Salamat. Take your time.
-	[end_timeline]
-- Sorry, we're out.
-	Brahim: No worries at all. I'll drop by again once you've restocked.
+Brahim: No rush at all. Still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color].
+- Out of stock right now, Brahim.
+	Brahim: No problem at all! I will swing back once Mario drops off a fresh crate.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
-	[end_timeline]
+- Grabbing it right now!
+	Brahim: Take your time, shopkeeper.
+[end_timeline]
 
 label Partial
-Brahim: Got that one, salamat. [pause=0.3] I'm still looking for [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you're ready.
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Brahim: Got that one, salamat! Still need [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you are ready.
+elif {Variation} == 2.0:
+	Brahim: Appreciate it! Just missing [color=#0f6e2f]{Transaction_ItemWants}[/color] to finish Tatay's list.
+else:
+	Brahim: One down, salamat. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] too when you can.
+[end_timeline]
+
+label SubstituteItem
+[signal arg="flag:brahim_sub_rest=true"]
+[signal arg="tally:+1"]
+Brahim: Wait a second. I asked for coffee, and you handed me [color=#0f6e2f]{Transaction_SubstituteItemName}[/color]?
+Brahim: Haha, am I getting assigned mandatory hydration by my own storekeeper?
+Brahim: Point taken! I will put the notebook down and take a breather. Salamat, friend.
+[signal arg="story_success"]
 [end_timeline]
 
 label Satisfy
-Brahim: Perfect, just what I needed. Salamat!
-if {Global_TipActive}:
-	Brahim: Keep the change—you've earned it.
+if {Transaction_StoryGouged}:
+	Brahim: Whoa, steep markup on that one! Paying anyway, though Tatay is going to tease me about my budgeting.
+else:
+	if {Global_TipActive} == 1.0:
+		Brahim: Keep the extra coins, shopkeeper! Good service deserves a tip.
+	else:
+		Brahim: Just what Tatay's kitchen needed. Salamat, friend!
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Brahim: Ah, I think that's not quite what I asked for.
-Brahim: I was looking for {Transaction_ItemWants}, if you still have it.
+Brahim: Close, though I think that is a different item! I was looking for [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]

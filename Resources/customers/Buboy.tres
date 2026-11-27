@@ -10,10 +10,22 @@
 [ext_resource type="Resource" uid="uid://chirwjrehoxjg" path="res://Dialogue/Timelines/Buboy/Purchase.dtl" id="buboy_purchase"]
 [ext_resource type="Resource" uid="uid://c5xtxtkwciuu5" path="res://Dialogue/Timelines/Buboy/Visit.dtl" id="buboy_visit"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://cditajqb4872q" path="res://Resources/motions/buboy_cameo_zoom.tres" id="motion_buboy_cameo"]
 [ext_resource type="Resource" uid="uid://b064ca4ex7cxi" path="res://Resources/motions/buboy_skip_dash.tres" id="motion_buboy_skip"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://c3sj15wq5i3pc" path="res://Dialogue/Timelines/Buboy/Story.dtl" id="story_timeline"]
+
+[sub_resource type="Resource" id="prereq_ch4_kap"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "kuyakap"
+min_chapter = 3
+
+[sub_resource type="Resource" id="prereq_group_ch4"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_kap")])
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
@@ -39,6 +51,7 @@ categories = PackedStringArray("can", "pack")
 script = ExtResource("chapterdata_script")
 chapter_name = "Candy Detective"
 categories = PackedStringArray("snack", "candy")
+prerequisites = SubResource("prereq_group_ch4")
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")

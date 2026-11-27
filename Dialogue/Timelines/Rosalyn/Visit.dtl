@@ -1,18 +1,50 @@
+# Rosalyn - Unified Interactive Visit & Tambayan Smalltalk Timeline
+# Fires frequently while intangible (Ch. 1-5) and while waiting on Brahim/Danilo prerequisites!
+# Voice: Ultra-shy 2-to-7 word whispers nudged gently by the player.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	Rosalyn: [wave]Your lights... [pause=1.0] they're very bright tonight.[/wave]
-	Rosalyn: [wave]I like to just... [pause=1.0] sit near them for a while. [pause=1.0] If that's okay. [pause=1.0] It makes the road feel... [pause=1.0] less empty.[/wave]
+if {Transaction_HasReactiveOpener}:
+	Rosalyn: {Transaction_ReactiveOpener}
+
+if {Transaction_Chapter} < 6.0:
+	Rosalyn: ...
+	- Resting near the bulb?
+		if {Transaction_VisitVar} < 50:
+			Rosalyn: Warm here, po.
+		else:
+			Rosalyn: Just a minute, po.
+	- Quiet out on the road?
+		if {Transaction_VisitVar} < 50:
+			Rosalyn: Stray cat looked at me, po.
+		else:
+			Rosalyn: Keeping my sleeves down, po.
 else:
-	Rosalyn: [wave]I saw a cat outside... [pause=1.0] it looked at me. [pause=1.0][/wave]
-	Rosalyn: [wave]Most things don't look. [pause=1.0] Thank you for... [pause=1.0] um... [pause=1.0] keeping the door open.[/wave]
+	if {Transaction_VisitVar} < 34:
+		Rosalyn: Just resting in the light, po.
+	elif {Transaction_VisitVar} < 67:
+		Rosalyn: Puddles look calm outside, po.
+	else:
+		Rosalyn: Good day, po.
+	- Stay as long as you like.
+		Rosalyn: Salamat po.
+	- Peaceful out there?
+		Rosalyn: Very quiet, po.
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	Rosalyn: [wave]Thank you for letting me... [pause=0.8] stay in the warm light for a bit.[/wave]
-	Rosalyn: [wave]I should drift along now... [pause=0.8] take care of yourself, okay?[/wave]
+if {Transaction_Chapter} < 6.0:
+	if {Transaction_VisitVar} < 34:
+		Rosalyn: Crickets sound loud from here, po.
+	elif {Transaction_VisitVar} < 67:
+		Rosalyn: Candy jars still catch the light, po.
+	else:
+		Rosalyn: Thank you for seeing me, po.
 else:
-	Rosalyn: [wave]It was nice... [pause=0.8] just listening to the store from out there.[/wave]
-	Rosalyn: [wave]I'll go now... [pause=0.8] thank you for seeing me.[/wave]
+	if {Transaction_VisitVar} < 34:
+		Rosalyn: Bench feels solid under my hand, po.
+	elif {Transaction_VisitVar} < 67:
+		Rosalyn: Sampaguita still smells like rain, po.
+	else:
+		Rosalyn: Rest your feet too, po.
 [end_timeline]

@@ -8,97 +8,91 @@
 [ext_resource type="Texture2D" uid="uid://bnah6st44t36f" path="res://Assets/characters/sprites/Rosalyn.png" id="5_8o33b"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Resource" uid="uid://chi1qpdxkbtgh" path="res://Resources/motions/rosalyn_cameo_left_to_right.tres" id="motion_rosalyn_cameo_lr"]
 [ext_resource type="Resource" uid="uid://gkwjgidnemes" path="res://Resources/motions/rosalyn_cameo_pass_through.tres" id="motion_rosalyn_cameo_pass"]
 [ext_resource type="Resource" uid="uid://ca2owlapu1ecn" path="res://Resources/motions/rosalyn_ghost_phase_enter.tres" id="motion_rosalyn_phase"]
+[ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
+[ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
 [ext_resource type="Resource" uid="uid://bosnm7nb7n52i" path="res://Dialogue/Timelines/Rosalyn/Purchase.dtl" id="ros_purchase"]
 [ext_resource type="Resource" uid="uid://d2s4cte6itmct" path="res://Dialogue/Timelines/Rosalyn/Visit.dtl" id="ros_visit"]
 [ext_resource type="Resource" uid="uid://bnumeiduxs8n1" path="res://Dialogue/Timelines/Rosalyn/Story.dtl" id="story_timeline"]
 
+[sub_resource type="Resource" id="prereq_ch2_brahim"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "brahim"
+min_chapter = 1
+
+[sub_resource type="Resource" id="prereq_group_ch2"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch2_brahim")])
+
+[sub_resource type="Resource" id="prereq_ch3_danilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "danilo"
+min_chapter = 2
+
+[sub_resource type="Resource" id="prereq_group_ch3"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch3_danilo")])
+
+[sub_resource type="Resource" id="prereq_ch4_brahim"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "brahim"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_ch4_danilo"]
+script = ExtResource("chap_prereq_script")
+target_character_id = "danilo"
+min_chapter = 4
+
+[sub_resource type="Resource" id="prereq_group_ch4"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch4_brahim"), SubResource("prereq_ch4_danilo")])
+
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Flight"
-categories = null
-substitute_item_ids = null
-substitute_categories = null
+chapter_name = "Under the Bulb"
+is_visit_only = true
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Attempt"
+chapter_name = "Under the Floorboards"
 is_visit_only = true
-categories = null
-substitute_item_ids = null
-substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Anchor"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
+chapter_name = "Sleeves Down"
+is_visit_only = true
+prerequisites = SubResource("prereq_group_ch2")
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Burn"
-categories = PackedStringArray("bottle")
-substitute_item_ids = null
-substitute_categories = null
+chapter_name = "Four Centavos"
+is_visit_only = true
+prerequisites = SubResource("prereq_group_ch3")
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Silence"
+chapter_name = "The Grain of the Wood"
 is_visit_only = true
-categories = null
-substitute_item_ids = null
-substitute_categories = null
+prerequisites = SubResource("prereq_group_ch4")
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Puddle"
-is_visit_only = true
-categories = null
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Candy"
+chapter_name = "Two Green Wrappers"
 categories = PackedStringArray("candy")
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Letting Go"
-is_visit_only = true
-categories = null
-substitute_item_ids = null
-substitute_categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Departure"
-is_visit_only = true
-categories = null
-substitute_item_ids = null
-substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: Learning to Hold On"
+arc_name = "Arc 1: Weightless in the Light"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: The Echo of the Rain"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_purchase")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: Finding Your Way Out"
+arc_name = "Arc 2: Lola's Front Jar"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("ros_visit")])
 
@@ -109,9 +103,10 @@ dialogic_character = ExtResource("1_epene")
 sprite_texture = ExtResource("5_8o33b")
 sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_r53lf")
-favorite_categories = Array[String](["candy", "sachet"])
+purchase_only_on_final_chapter = true
+favorite_categories = Array[String](["candy", "bottle"])
 story_timeline = ExtResource("story_timeline")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_rosalyn_phase")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_rosalyn_cameo_pass"), ExtResource("motion_rosalyn_cameo_lr")])

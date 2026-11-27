@@ -1,20 +1,29 @@
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	Brahim: Hey there. Just taking a breather from sorting herbs with Tatay.
-	Brahim: Mind helping me transcribe a quick talisman before I head back? Your hand's always steadier than mine.
+if {Transaction_HasReactiveOpener}:
+	Brahim: {Transaction_ReactiveOpener}
+
+if {Transaction_VisitVar} < 34.0:
+	Brahim: Taking a quick walk from Tatay's porch. Brought a fresh bronze piece if you want to trace a talisman!
+elif {Transaction_VisitVar} < 67.0:
+	Brahim: My brush hand is a bit stiff from sorting herbs. Care to co-inscribe a quick charm with me?
 else:
-	Brahim: Magandang araw! Tatay asked me to prepare a fresh charm for a neighbor, and I figured I'd drop by.
-	Brahim: Have a moment to help me trace this one?
-[signal arg="minigame:talisman_random"]
-Brahim: Salamat! That came out way cleaner than my morning attempt.
+	Brahim: Always calmer under your awning than grading bluebooks! Up for a quick talisman practice?
+- Sure, pass me the brush.
+	[signal arg="minigame:talisman_random"]
+	if {Transaction_MinigameWon}:
+		Brahim: Top marks again! Steady strokes like that make Tatay look twice. Salamat!
+	else:
+		Brahim: Haha, good warm-up! Every shaky line still teaches the wrist. Salamat for trying!
+- Hands are full right now, Brahim.
+	Brahim: Totally fair! Catch your breath, I will save the ink for our next pass.
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	Brahim: I still can't believe I used to spend my afternoons stuck in traffic instead of out here. [pause=0.3]
-	Brahim: I'll head back to Tatay's before the tea gets cold. See you around!
+if {Transaction_VisitVar} < 34.0:
+	Brahim: Remember to stretch your shoulders behind that counter. Old professor advice!
+elif {Transaction_VisitVar} < 67.0:
+	Brahim: Tatay's lagundi tea smells extra strong past the creek. Better head back before it cools!
 else:
-	Brahim: The breeze out front of your store is the best spot in Karimlan. [pause=0.3]
-	Brahim: Better get this charm delivered while the ink's fresh. Ingat!
+	Brahim: Funny how a quiet street teaches you more than a whole semester of lectures. Ingat!
 [end_timeline]

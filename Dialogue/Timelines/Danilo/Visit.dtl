@@ -1,34 +1,34 @@
 label Greeting
+if {Transaction_HasReactiveOpener}:
+	Danilo: {Transaction_ReactiveOpener}
+
 if {Global_EventRumorActive}:
 	Danilo: {Global_EventRumorText}
-	[pause=0.3]
-	Danilo: [color=#8B6855]Keep that in mind, boss. Could be good business if you play it right.[/color] [pause=0.4] Stay focused, 'no? I'm watching the road.
+	Danilo: Keep that in mind, boss. Good business if you play it sharp.
 	[signal arg="event_announced"]
 	[signal arg="story_success"]
 	[end_timeline]
 elif {Global_RumorActive}:
 	if {Global_RumorType} == 0.0:
-		Danilo: Psst. Boss. I saw {Global_LastCustomer} walking past the tricycle stand just now. [pause=0.3] Looking a bit tired, 'no?
+		Danilo: Psst, boss. Saw {Global_LastCustomer} pass the tricycle stand looking pretty busy.
 	else:
-		Danilo: Uy, boss. {Global_LastCustomer} bought that {Global_LastItem}? [pause=0.3] Interesting choice. I've been watching that item on the shelf for a while.
-	[pause=0.4]
-	Danilo: Anyway... just staying focused. Don't mind me.
+		Danilo: Uy, boss. {Global_LastCustomer} walked off happy with {Global_LastItem}. Good call.
+	Danilo: Anyway, just checking the street. Stay sharp, 'no?
 else:
-	if {Transaction_VisitVar} <= 50:
-		Danilo: Psst. Boss. Have you seen that vlogger lately?
-		Danilo: [color=#8B6855]I saw him walking past the same mango tree four times today.[/color] Needs a better map, that one. [pause=0.4] Anyway, carry on. I'm just watching.
+	if {Transaction_VisitVar} < 34.0:
+		Danilo: Uy, boss. Just borrowing your awning shade for two minutes. Best view of the road.
+	elif {Transaction_VisitVar} < 67.0:
+		Danilo: All quiet down by the creek bridge, boss. Folks sure love walking past your warm bulb.
 	else:
-		Danilo: Uy, boss. You know, people are talking about the new lights in here. 
-		Danilo: [color=#8B6855]They say it looks like a sanctuary from the main road.[/color] I think they're right. [pause=0.5] Stay focused, boss. I'm looking out for ya.
+		Danilo: Just a lazy tambay checking in, boss. Keep the cold bottles frosty, ha?
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	Danilo: All clear down the street, boss. [pause=0.3] Just did a quick sweep while standing out there.
-	Danilo: [color=#8B6855]Nothing suspicious—except maybe how good your shop smells.[/color] Catch you later, 'no?
+if {Transaction_VisitVar} < 34.0:
+	Danilo: All clear down the street, boss. Nothing weird except how good your snacks smell.
+elif {Transaction_VisitVar} < 67.0:
+	Danilo: Good view of Karimlan from this bench. Stay sharp behind that counter, ha?
 else:
-	Danilo: Alright, boss, I'm heading back to my post. [pause=0.3]
-	Danilo: Good view of the barangay from right here. Stay sharp, ha?
+	Danilo: Heading back to my shady post, boss. Holler if anyone gives you trouble.
 [end_timeline]
-

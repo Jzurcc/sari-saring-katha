@@ -1,55 +1,89 @@
 label Greeting
-# [signal arg="refresh_desires"]
+if {Transaction_HasReactiveOpener}:
+	Danilo: {Transaction_ReactiveOpener}
+
 if {Global_RumorActive}:
 	if {Global_RumorType} == 0.0:
-		Danilo: Psst. Boss. {Global_LastCustomer} just left? They looked... [pause=0.3] interesting.
+		Danilo: Psst, boss. {Global_LastCustomer} just walked past looking busy. Street never sleeps, 'no?
 	else:
-		Danilo: Uy, boss. I saw {Global_LastCustomer} walking away with that {Global_LastItem}. Good choice on your part.
-	[pause=0.4]
-	Danilo: Anyway, I've been watching the stock levels... figured I'd snag something for myself for a change.
+		Danilo: Uy, boss. Saw {Global_LastCustomer} leave with {Global_LastItem}. Good taste.
+
+set {Variation} = range(1,5).pick_random()
+if {Flag_DaniloWatchfulAlly}:
+	if {Variation} == 1.0:
+		Danilo: Road is all clear, boss. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color] for bench duty.
+	elif {Variation} == 2.0:
+		Danilo: Eyes finally rested for once! Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color], boss.
+	elif {Variation} == 3.0:
+		Danilo: Front-row shade feels even better now. Grabbing [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		Danilo: Uy, boss. Fueling up the watch post with [color=#0f6e2f]{Transaction_ItemWants}[/color].
+elif {Flag_DaniloEyesKnown}:
+	if {Variation} == 1.0:
+		Danilo: Bulbs are calmer on my eyes this pass. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color], boss.
+	elif {Variation} == 2.0:
+		Danilo: Still off the clock, boss. Just grabbing [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Variation} == 3.0:
+		Danilo: Good breeze under your awning. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		Danilo: Psst, boss. Slide over [color=#0f6e2f]{Transaction_ItemWants}[/color] before I lose my shade spot.
 else:
-	if {Transaction_GreetingVar} <= 50:
-		Danilo: Uy, boss. Nice day today, 'no? Busy queue. [pause=0.4] I was thinking of actually buying something for a change.
+	if {Variation} == 1.0:
+		Danilo: Uy, boss. Buying [color=#0f6e2f]{Transaction_ItemWants}[/color] so I earn my awning shade.
+	elif {Variation} == 2.0:
+		Danilo: Watching the street works up an appetite. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Variation} == 3.0:
+		Danilo: Relax, boss, paying customer this pass. Grabbing [color=#0f6e2f]{Transaction_ItemWants}[/color].
 	else:
-		Danilo: Psst. Boss. High-quality inventory today, 'no? I've been watching the stock levels... figured I'd snag something.
+		Danilo: Psst, boss. Let me snag [color=#0f6e2f]{Transaction_ItemWants}[/color] for the bench.
 
-if {Global_HighPriceActive}:
-	Danilo: Medyo mataas ata ang markup natin ngayon ah? [pause=0.3] Sige lang, para naman sa ikauunlad ng tindahan niyo.
-
+if {Transaction_WantsDebt} == 1.0:
+	Danilo: Ah, left my coins in my other pants, boss. Can we put this on the lista?
+	- Sure, I will list it, Danilo.
+		[signal arg="utang_accepted"]
+		Danilo: Lifesaver, boss. I will pay it back clean next pass.
+	- Cash only this round, boss.
+		[signal arg="utang_rejected"]
+		Danilo: Fair call. Let me dig around my jacket pocket instead.
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
-	Danilo: Give me a {Transaction_ItemWants}. I need to see if it's as good as they say.
-else:
-	Danilo: No rush, boss. I'm just here for a {Transaction_ItemWants}. I've got all the time in the world to watch.
-- Coming right up.
-	Danilo: Sige, boss. No hurry.
-	[end_timeline]
-- Sorry, Danilo, we're fresh out of stock.
-	Danilo: Ah, sayang. Next time then. [pause=0.4] I'll go check the other store down the road. Peace!
+Danilo: No hurry, boss. Still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color].
+- Out of stock right now, Danilo.
+	Danilo: Sayang. Catch you after Mario swings by, boss.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
-	[end_timeline]
-
+- Coming right up!
+	Danilo: Solid. I have all the time in the world.
+[end_timeline]
 
 label Partial
-Danilo: Nice one, boss. Still missing the {Transaction_ItemWants} though. Hit me.
-[end_timeline]
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Danilo: Nice one, boss. Still missing [color=#0f6e2f]{Transaction_ItemWants}[/color].
+elif {Variation} == 2.0:
+	Danilo: Got that! Just slide over [color=#0f6e2f]{Transaction_ItemWants}[/color] too.
+else:
+	Danilo: Almost set, boss. Still need [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	Danilo: Salamat, boss. [pause=0.4] See you on the high ground!
+if {Global_TipActive} == 1.0:
+	Danilo: Keep the extra coins, boss. Best shade in Karimlan.
 else:
-	Danilo: Perfect. Exact change. [pause=0.5] I'll tell the guys at the tricycle stand you're doing a great job.
-if {Global_TipActive}:
-	Danilo: Aba, that was quite cheap. Keep the change po!
+	if {Transaction_SatisfyVar} < 34.0:
+		Danilo: Salamat, boss. See you from the corner!
+	elif {Transaction_SatisfyVar} < 67.0:
+		Danilo: Solid trade. I will keep an eye on the road for ya.
+	else:
+		Danilo: Perfect. Catch you on the next pass, boss.
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+Danilo: Found those missing coins, boss. Here is [color=#0f6e2f]{Transaction_RepaymentAmount}[/color] pesos for my lista!
+[signal arg="repay_debt"]
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	Danilo: Uh... boss? That's not the {Transaction_ItemWants}. My eyes might be many, but they're not wrong.
-else:
-	Danilo: Ha! Careful, boss. You might be tired. This isn't the {Transaction_ItemWants}.
+Danilo: Careful, boss. That is not [color=#0f6e2f]{Transaction_ItemWants}[/color]. Try again.
 [end_timeline]

@@ -1,45 +1,71 @@
+# Rosalyn - Unified Post-Arc Purchase Timeline (3-Slot Sandwich Pattern)
+# Unlocks ONLY after Chapter 6 (purchase_only_on_final_chapter = true).
+# Voice: Painfully shy, hushed 3-to-8 word fragments. Zero [pause] or [wave] spam.
+
 label Greeting
-# [signal arg="refresh_desires"]
-if {Transaction_GreetingVar} <= 50:
-	Rosalyn: [wave]H... [pause=1.0] hello... [pause=1.0] um... [pause=1.0] could I...[/wave]
+if {Transaction_HasReactiveOpener}:
+	Rosalyn: {Transaction_ReactiveOpener}
+elif {Global_HighPriceActive}:
+	Rosalyn: Cost less in Lola's time, po.
+
+if {Flag_RosalynAtPeace}:
+	if {Transaction_GreetingVar} < 25:
+		Rosalyn: Coins stayed flat, po. [color=#0f6e2f]{Transaction_ItemWants}[/color], please?
+	elif {Transaction_GreetingVar} < 50:
+		Rosalyn: Warm bulb, po. [color=#0f6e2f]{Transaction_ItemWants}[/color], please?
+	elif {Transaction_GreetingVar} < 75:
+		Rosalyn: Hands feel steady, po. [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	else:
+		Rosalyn: Quiet road, po. May I get [color=#0f6e2f]{Transaction_ItemWants}[/color]?
 else:
-	Rosalyn: [wave]Good day... [pause=1.0] I... [pause=1.0] I have coins today.[/wave]
-
-if {Global_HighPriceActive}:
-	Rosalyn: [wave]Ang bigat naman po yata ng halaga nito ngayon... [pause=0.4] Parang dati mas madaling makuha.[/wave]
-
+	if {Transaction_GreetingVar} < 25:
+		Rosalyn: Hello, po. [color=#0f6e2f]{Transaction_ItemWants}[/color], please?
+	elif {Transaction_GreetingVar} < 50:
+		Rosalyn: Coins on the wood, po. [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 75:
+		Rosalyn: Focusing hard, po. [color=#0f6e2f]{Transaction_ItemWants}[/color], please?
+	else:
+		Rosalyn: Sorry to bother, po. [color=#0f6e2f]{Transaction_ItemWants}[/color]?
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
-	Rosalyn: [wave]I would like a {Transaction_ItemWants}... [pause=1.0] if that's okay.[/wave]
-else:
-	Rosalyn: [wave]Could you spare a {Transaction_ItemWants}? [pause=1.0] I... [pause=1.0] I think I can hold it.[/wave]
-- Just a moment, I'm finding it.
-	Rosalyn: [wave]Oh... [pause=1.0] um... [pause=1.0] okay. [pause=1.0] I can wait. [pause=1.0] I have... [pause=1.0] plenty of time.[/wave]
+Rosalyn: No rush, po. Waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color].
+- Coming right up, Rosalyn.
 	[end_timeline]
-- Sorry, Rosalyn, we're fresh out of stock.
-	Rosalyn: [wave]Oh... [pause=1.0] I see. [pause=1.0] I'm sorry for asking. [pause=1.0] Goodbye.[/wave]
+- Sorry, we're out of stock.
+	Rosalyn: Alright, po. Next visit.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
 
 label Partial
-Rosalyn: [wave]Thank you... [pause=1.0] um... [pause=1.0] I still need a {Transaction_ItemWants} as well.[/wave]
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	Rosalyn: Got it, po. Still [color=#0f6e2f]{Transaction_ItemWants}[/color].
+elif {Variation} == 2.0:
+	Rosalyn: Holding steady, po. Still [color=#0f6e2f]{Transaction_ItemWants}[/color].
+else:
+	Rosalyn: Thank you, po. Just [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	Rosalyn: [wave]Oh... [pause=1.0] thank you. [pause=1.0] It's... [pause=1.0] it's very solid.[/wave]
-else:
-	Rosalyn: [wave]I have it. [pause=1.0] It's... [pause=1.0] it's warm. [pause=1.0] Thank you.[/wave]
 if {Global_TipActive}:
-	Rosalyn: Aba, that was quite cheap. Keep the change po!
+	Rosalyn: Extra coins for the light, po.
+elif {Transaction_SatisfyVar} < 34:
+	Rosalyn: Solid and cool. Salamat po.
+elif {Transaction_SatisfyVar} < 67:
+	Rosalyn: Didn't drop it, po. Salamat.
+else:
+	Rosalyn: Thank you, po.
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+Rosalyn: {Transaction_RepaymentAmount} pesos from your lista, po.
+- Thank you, Rosalyn.
+	[signal arg="repay_debt"]
+	Rosalyn: Salamat po.
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	Rosalyn: [wave]Oh... [pause=1.0] I don't think this is it. [pause=1.0] I'm sorry.[/wave]
-else:
-	Rosalyn: [wave]Um... [pause=1.0] this isn't quite what I... [pause=1.0] um... [pause=1.0] practice for.[/wave]
+Rosalyn: Sorry, po. Asked for [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]
