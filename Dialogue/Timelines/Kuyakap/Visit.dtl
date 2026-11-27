@@ -1,18 +1,26 @@
+# Kuya Kap - Unified Social Visit & Tambayan Smalltalk Timeline
+# Voice: Homey Filipino elderly tito. Zero time-of-day markers. Zero em-dashes.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	KuyaKap: Just passing by to see how the neighborhood is breathing, apo.
-	KuyaKap: Looks like things are quiet for now. [pause=0.4] Keep up the good work. People notice when the lights stay on.
+if {Transaction_HasReactiveOpener}:
+	KuyaKap: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	KuyaKap: Relax, apo, not buying anything. Just stretching my old back across the road.
+	KuyaKap: Kumain ka na ba? Don't skip meals just because the counter gets busy.
+elif {Transaction_VisitVar} < 67:
+	KuyaKap: Breeze is nicer under your awning than under my tree right now.
+	KuyaKap: Your Lola used to keep a small electric fan right by that register. Smart woman.
 else:
-	KuyaKap: Hoho! I was just talking to some of the guys at the tricycle stand.
-	KuyaKap: They say the new face at the sari-sari store is a good one. [pause=0.5] I told them I already knew that. [pause=0.3] Stay strong, anak.
+	KuyaKap: Just checking in on you, nak. Tricycle drivers down the road say you run a fair counter.
+	KuyaKap: Keep that up. Good word travels fast in Karimlan.
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	KuyaKap: Hoho, caught my breath out there by the breeze. [pause=0.4] Good spot you've got here, apo.
-	KuyaKap: I'll head back to my tree now. Don't forget to rest your feet too, anak.
+if {Transaction_VisitVar} < 34:
+	KuyaKap: Alright, knees are awake again. Back to my post, apo.
+elif {Transaction_VisitVar} < 67:
+	KuyaKap: Good breather. Keep an eye on those candy jars when Buboy runs past, ha.
 else:
-	KuyaKap: Nice watching the street from your shade for a bit. [pause=0.3] Reminds me of the old days.
-	KuyaKap: Take care of the store, apo. I'll be around if you need a hand.
+	KuyaKap: Sige, nak, back to the acacia. Just wave if you need a hand.
 [end_timeline]

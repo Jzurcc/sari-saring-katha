@@ -79,6 +79,19 @@ static func sync_transaction(
 	Dialogic.VAR.set_variable("Transaction_UsedSubstitute", false)
 	Dialogic.VAR.set_variable("Transaction_SubstituteItemName", "")
 
+	# --- Triangle A Persistent Cross-Web Flags ---
+	if is_instance_valid(CharacterProgressionManager):
+		Dialogic.VAR.set_variable("Flag_KapClinicKnown", bool(CharacterProgressionManager.get_world_flag("kap_clinic_known", false)))
+		Dialogic.VAR.set_variable("Flag_KapSubCandy", bool(CharacterProgressionManager.get_world_flag("kap_sub_candy", false)))
+		Dialogic.VAR.set_variable("Flag_KapQuitSmoking", CharacterProgressionManager.get_character_outcome("kuyakap") == "quit_smoking")
+		Dialogic.VAR.set_variable("Flag_AnaUtangAccepted", bool(CharacterProgressionManager.get_world_flag("ana_utang_accepted_early", false)))
+		Dialogic.VAR.set_variable("Flag_AnaUtangRefused", bool(CharacterProgressionManager.get_world_flag("ana_utang_refused_early", false)))
+		Dialogic.VAR.set_variable("Flag_AnaSubFeast", bool(CharacterProgressionManager.get_world_flag("ana_sub_feast", false)))
+		Dialogic.VAR.set_variable("Flag_AnaFlewAgain", CharacterProgressionManager.get_character_outcome("manangana") == "flew_again")
+		Dialogic.VAR.set_variable("Flag_BuboyTeksWon", bool(CharacterProgressionManager.get_world_flag("buboy_teks_won", false)))
+		Dialogic.VAR.set_variable("Flag_BuboyTrustedErrand", bool(CharacterProgressionManager.get_world_flag("buboy_trusted_errand", false)))
+		Dialogic.VAR.set_variable("Flag_BuboyRunner", CharacterProgressionManager.get_character_outcome("buboy") == "trusted_runner")
+
 	# --- Rumor & Per-Customer Modifiers ---
 	Dialogic.VAR.set_variable("Global_RumorActive", 1.0 if transaction.rumor_active else 0.0)
 	Dialogic.VAR.set_variable("Global_RumorType", transaction.rumor_type)

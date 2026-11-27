@@ -1,21 +1,27 @@
+# Buboy - Unified Social Visit & Tambayan Smalltalk Timeline
+# Voice: Energetic, innocent Bungisngis kid. Mainly English with light Filipino sprinkles.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	Buboy: Vroom! Vroom! [pause=0.4] 
-	Buboy: Did you see how fast I was? I ran all the way from the big mango tree!
-	Buboy: I'm just catching my breath. Hah... hah... okay! Bye!
+if {Transaction_HasReactiveOpener}:
+	Buboy: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	Buboy: Vroom, screech! Did you see how fast I sprinted from the acacia tree, Kuya?!
+	Buboy: Just catching my breath by your counter, po, then I'm zooming right back out!
+elif {Transaction_VisitVar} < 67:
+	Buboy: Kuya, look what I found near the tricycle stand!
+	Buboy: Super shiny bottle cap without a single dent, gonna turn it into my new lucky pamato!
 else:
-	Buboy: Hihi! Look what I found near the tricycle stand! [pause=0.6] 
-	Buboy: It's a shiny bottle cap! It's mine now. Treasure! [pause=0.4]
-	Buboy: See you later, Boss! Vroom!
+	Buboy: Not buying anything right now, Kuya, [i]Damulag[/i] just wanted to peek if your shop cat is awake!
+	Buboy: Hehe, see you around the road, po!
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	Buboy: Hehe! I counted seven clouds while waiting out there! [pause=0.3]
-	Buboy: One of them looked like a giant pancit canton! Okay, gotta zoom! Vroom!
+if {Transaction_VisitVar} < 34:
+	Buboy: Kuya, I counted seven clouds while hanging out outside, and the biggest one looked just like pancit canton!
+	Buboy: Gotta run, [i]Damulag[/i]'s ready to roll!
+elif {Transaction_VisitVar} < 67:
+	Buboy: Knees are fully recharged, Kuya! Gonna race the next tricycle back to the corner, bye po!
 else:
-	Buboy: Boss! My legs are all charged up again! [pause=0.3]
-	Buboy: I'm gonna race the wind back to the mango tree! Bye-bye!
+	Buboy: Salamat for the shade, Kuya! Holler if you ever need the fastest kid on the road!
 [end_timeline]
-

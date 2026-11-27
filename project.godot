@@ -162,6 +162,16 @@ audio/channel_defaults={
 }
 }
 variables={
+"Flag_AnaFlewAgain": false,
+"Flag_AnaSubFeast": false,
+"Flag_AnaUtangAccepted": false,
+"Flag_AnaUtangRefused": false,
+"Flag_BuboyRunner": false,
+"Flag_BuboyTeksWon": false,
+"Flag_BuboyTrustedErrand": false,
+"Flag_KapClinicKnown": false,
+"Flag_KapQuitSmoking": false,
+"Flag_KapSubCandy": false,
 "Global_AwarenessActive": 0.0,
 "Global_DaySummaryQuip": "",
 "Global_EventRumorActive": false,

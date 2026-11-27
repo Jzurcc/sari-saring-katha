@@ -1,170 +1,259 @@
+# Kuya Kap - 6-Chapter Core Arc (Pilot Character #1)
+# Voice: Warm, homey Filipino "elderly tito" under the acacia. 100% spoken voice (zero narrator parentheses).
+# Rules: Zero time-of-day markers. Zero em-dashes. 6-16 word social-feed rhythm. Show via voice, never tell.
+# Substitute Category: candy ONLY (decided via dialogue choice -> allow_sub_cat:candy).
+
 label Greeting
-# [signal arg="refresh_desires"]
+if {Transaction_HasReactiveOpener}:
+	KuyaKap: {Transaction_ReactiveOpener}
+
 if {Transaction_Chapter} == 0.0:
-	# Chapter 1: "The New Face"
-	KuyaKap: Oh.[pause=0.8] .[pause=0.8] .[pause=0.8]  so the rumors were true. [pause=0.8]A fresh pair of eyes behind the counter.
-	KuyaKap: Nice to finally meet you, apo. [pause=0.8] I'm Kap.[pause=0.8] .[pause=0.8] .[pause=0.8] though most folks around Karimlan just call me Kuya Kap.
-	- Nice to meet you, Kuya Kap.
-		KuyaKap: The pleasure is mine. [pause=0.4] Your Lola... she used to keep these shelves so orderly. I hope you find the same peace in this work that she did.
-	- I hope I'm doing her proud.
-		KuyaKap: Hehe. [pause=0.3] You're standing where she stood. That's already half the battle won, isn't it?
-	- Lola mentioned you were her favorite customer.
-		KuyaKap: Favorite? [pause=0.7] I think I was just the most talkative, apo. [pause=0.3] She always had a way of making you feel like you were the only one in the room, even when the tricycle queue was three streets long.
-	KuyaKap: I've been coming here for a long, long time. Buying the same thing to end the day. 
-	KuyaKap: Just a pack of {Transaction_ItemWants}, if you please. [pause=0.4] I like to think of it as my little anchor in the world.
+	# Chapter 1: "The Old Suki"
+	KuyaKap: Aba. Mario wasn't exaggerating. Somebody really did open the shutters again.
+	KuyaKap: Look at you, apo. Same height as your Lola behind that counter.
+	- Hey, I'm not short! This counter is just built high.
+		KuyaKap: Haha! Tell it to the candy jars, nak, you're barely clearing the lids.
+	- [Stand on your tiptoes behind the register.]
+		KuyaKap: Oy, I saw that! Don't pull a calf muscle on my account, apo.
+	- Easy for a giant kapre to say, Kuya.
+		KuyaKap: Heh. Fair point. Half the barangay looks pocket-sized from up here.
+	KuyaKap: Call me Kuya Kap. I've had that acacia across the road since Mario was in shorts.
+	- Mario didn't mention the shorts part, Kuya.
+		KuyaKap: Heh. Don't tell him I brought it up, baka magtampo na naman 'yon.
+		KuyaKap: Good to hear footsteps inside this tindahan again, nak. The road felt too quiet.
+	- Inspecting the shelves, Kuya, or actually buying?
+		KuyaKap: Aba, matapang! Definitely your Lola's grandchild.
+		KuyaKap: She used to shoo me off the counter with a rag whenever I lingered too long.
+	- [Settle back down and wipe the counter quietly.]
+		KuyaKap: All business already, ha? Fair enough, you're still finding where she kept the jars.
+		KuyaKap: Give it a week. Everyone on this road ends up chatting at this counter.
+	KuyaKap: Sige, warming up the register for my favorite tindero.
+	KuyaKap: Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color], apo. Take your time finding the rack.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
-	# Chapter 2: "He Knows Everyone"
-	KuyaKap: It’s a quiet night, isn’t it? [pause=0.5] I was just passing by Manang Ana’s house. 
-	KuyaKap: She was staring at your new sign... I think she’s still deciding if she trusts a new face with her vinegar and salt. 
-	- Is she always like that?
-		KuyaKap: Hehe. She just likes her routines. Like most of us who’ve been here since the roads were still dirt.
-	- I'll try to win her over.
-		KuyaKap: Patience is the best cure for a closed door, anak. 
-	- You seem to know everyone's business, Kuya.
-		KuyaKap: Not business, anak. [pause=0.6] Just their stories. [pause=0.4] Everyone has one if you look long enough. [pause=0.3] Sometimes, people just need someone to remember the small things, like how they like their coffee.
-	KuyaKap: Anyway... I’m just here for my anchor. The usual {Transaction_ItemWants}, ha? 
-	KuyaKap: Routine is the only thing that keeps the clock from ticking too fast.
+	# Chapter 2: "Tricycle Dust" (Tally Inflection #1: +1 discreet / 0 lecture / -1 ignore)
+	KuyaKap: O, apo. Pahingi ulit ng [color=#0f6e2f]{Transaction_ItemWants}[/color], ha.
+	KuyaKap: Wait, sandali, [shake rate=18 level=7]khhk, khhk![/shake]
+	KuyaKap: Tsk. Excuse me, nak. Those tricycles on the road really need their mufflers checked.
+	KuyaKap: Ay, sandali, something fell out with my coins. Don't mind that yellow clinic paper, ha.
+	- [Slide the yellow slip back to him without reading a word.]
+		[signal arg="flag:kap_clinic_known=true"]
+		[signal arg="tally:+1"]
+		[signal arg="note:Quietly returned the barangay clinic slip he dropped while coughing."]
+		KuyaKap: Salamat, nak. Didn't even peek, ha? Good trait for a storekeeper.
+		KuyaKap: Nothing to fuss about anyway. Young doctor at the barangay clinic gets bored if he doesn't scribble something.
+	- Barangay clinic paper, Kuya? Sure you should be buying smokes?
+		[signal arg="flag:kap_clinic_known=true"]
+		[signal arg="note:Called out his barangay clinic slip; he blamed an overeager young doctor."]
+		KuyaKap: Susmaryosep, pati ba naman ikaw? You sound just like Manang Ana.
+		KuyaKap: One routine checkup and suddenly everyone on the road thinks they have a stethoscope.
+		KuyaKap: Konting ubo lang, apo. Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color] before I get lectured twice.
+	- [Turn toward the shelves so he can pocket it in peace.]
+		[signal arg="tally:-1"]
+		KuyaKap: Ahem. Shirt pocket's getting loose, I swear.
+		KuyaKap: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're ready, apo.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
-	# Chapter 3: "Almost"
-	KuyaKap: Good day. [pause=0.6] The usual {Transaction_ItemWants} for me, apo.
-	KuyaKap:  ...
-	KuyaKap: Those candies... [pause=0.4] They're quite bright today, aren't they?
-	- Kuya, do you want some candy too?
-		KuyaKap:  Haha! [pause=0.3] Oh, maybe some other time na lang. I wouldn’t want to surprise my lungs with something sweet.
-		KuyaKap: Let's stick to the old ways for now.
-		[end_timeline]
-	- Here you go.
-		KuyaKap: Hehe. [pause=0.4] Salamat, apo. [pause=0.5] See you tomorrow. I’ll be here. Same time.
-		[end_timeline]
+	# Chapter 3: "Something for the Throat" (Trapdoor + Candy Category Pivot -> +1 on SubstituteItem)
+	KuyaKap: Hoo, init sa labas. Even the leaves on my acacia are too lazy to move.
+	KuyaKap: Ahem, khm. Let me get my usual [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+	KuyaKap: Huh. Those candy jars on your counter look fuller than last time, nak. Colorful, ha.
+	if {Flag_KapClinicKnown}:
+		- Didn't that clinic slip say to lay off the smoke, Kuya?
+			KuyaKap: Naku, I knew you read that paper. Nothing stays secret at a sari-sari counter.
+			KuyaKap: Forty years with a smoke in my hand, nak. Without it, I don't know where to put my fingers.
+			- [Reach quietly for the candy jars instead of the cigarette rack.]
+				[signal arg="allow_sub_cat:candy"]
+				KuyaKap: Oy, why did you go quiet like that? Just grab my usual pack, ha.
+				[end_timeline]
+			- Alright, Kuya. Your usual for now, just go easy on your chest.
+				KuyaKap: Heh. Salamat, apo. Last pack for a while, promise.
+				[end_timeline]
+	- [Nod politely, but plan to grab him candy instead of cigarettes.]
+		[signal arg="allow_sub_cat:candy"]
+		KuyaKap: Aba, why are you looking at me like you're plotting mischief?
+		KuyaKap: Don't get cute behind that counter, nak. Just my usual.
+	- Caught you eyeing the candy jars, Kuya. Sweet tooth?
+		KuyaKap: Sus! Candy is for Buboy and the grade-schoolers.
+		KuyaKap: Imagine a full-grown kapre unwrapping sweets by the road. Ruin my whole reputation.
+		- [Test that theory and swap his request to candy anyway.]
+			[signal arg="allow_sub_cat:candy"]
+			KuyaKap: Hey, eyes on the cigarette rack, ha! I see you looking at the jars.
+		- Fair enough, Kuya. Keeping your dignity intact.
+			KuyaKap: Good kid. Just [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+	- Coming right up, Kuya. Same as always.
+		KuyaKap: Yan ang suki ko. No sermons, quick hands.
+		KuyaKap: Throat's just dry from the dust on the road anyway.
+	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
-	# Chapter 4: "Just a Bit Tired"
-	KuyaKap:  Ah... do you have it? My {Transaction_ItemWants}?
-	- You look tired, Kuya.
-		KuyaKap:  Is it that obvious? Hehe. [pause=0.3] Even the strongest tree eventually starts to lean, apo.
-	- Long day?
-		KuyaKap: The sun just took its time setting today. [pause=0.5] Or maybe I’m the one getting slower.
-	- You should take a break from the 'anchors' for a bit.
-		KuyaKap:  Anchors keep us grounded, apo. [pause=0.4] But... [pause=0.3] maybe they're starting to get a bit heavy. [pause=0.4] I'll think on that. 
-	KuyaKap: I stopped by the clinic yesterday. The doctor told me not to worry too much. [pause=0.5] Doctors... they always have such careful faces. 
-	KuyaKap: He’s just resting anyway. Doesn't really have anything else to do, that doctor. [pause=0.4] Unlike you, always keeping this place alive.
-	KuyaKap: Here's the exact change. [pause=0.3] Right down to the last centavo.
+	# Chapter 4: "Cranky Withdrawal" (Delayed Ana Ripple + "Shade, Not the Smoke")
+	if {Flag_AnaUtangRefused}:
+		KuyaKap: Sandali lang, nak, digging for loose coins.
+		KuyaKap: Passed Ana counting centavos by her karinderya, so I slipped her my twenties. Stubborn woman tried handing them back twice.
+	if {Flag_KapSubCandy}:
+		KuyaKap: Sus, even the tricycles sound louder when you're off tobacco.
+		KuyaKap: Look what you started, apo. My jaw aches from chewing sweets like Buboy, and my shirt pocket is sticky.
+		KuyaKap: Give me [color=#0f6e2f]{Transaction_ItemWants}[/color] before I start arguing with the electric post outside.
+		- People come to the acacia for your shade, Kuya, not the smoke.
+			[signal arg="flag:kap_shade_affirmed=true"]
+			[signal arg="tally:+1"]
+			[signal arg="note:Reminded him the neighborhood comes for his shade, not his smoke."]
+			KuyaKap: Aba. Wait, you made me lose count of my coins.
+			KuyaKap: Where did a kid your age learn to talk like that, ha?
+			KuyaKap: Careful, nak. Keep sounding like your Lola and I won't know how to argue back.
+		- Cranky Tito mode, ha? At least your cough sounds quieter.
+			KuyaKap: Quiet? Tell that to my patience, apo. Even the stray dogs are steering clear of my tree.
+			KuyaKap: Sige na, hand over [color=#0f6e2f]{Transaction_ItemWants}[/color] while I'm still behaving.
+		- Nobody's forcing you, Kuya. The cigarette rack is still right here.
+			[signal arg="tally:-1"]
+			KuyaKap: Huwag mo akong tuksuhin, nak. Hard enough walking past it on my own.
+			KuyaKap: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for me. Don't make me waste all this grumpy effort.
+	else:
+		KuyaKap: Hoo. Throat feels like sandpaper, apo. Must be the dry wind on the road.
+		KuyaKap: Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color]. Something to clear my voice a bit.
+		- Take care of yourself, Kuya. The whole road counts on seeing you under that acacia.
+			[signal arg="flag:kap_shade_affirmed=true"]
+			[signal arg="tally:+1"]
+			KuyaKap: Heh. Somebody has to make sure the kids don't trip in the canal, nak.
+			KuyaKap: Don't worry about this old trunk. Still rooted deep.
+		- Sure it's the wind, Kuya, and not the packs you've been finishing?
+			KuyaKap: Sus, everyone's a doctor behind this counter.
+			KuyaKap: Let an old tito keep his excuses in peace, apo. Just [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		- Coming right up, Kuya.
+			KuyaKap: Salamat, nak. Quick hands as always.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
-	# Chapter 5: "For Buboy"
-	KuyaKap:  That neighbor kid, Buboy... [pause=0.4] he was sitting on my porch on Sunday.
-	KuyaKap: He pointed at this pack and asked, "Kuya Kap, why don’t you just throw that away?"
-	KuyaKap:  Kids, right? They think the world is made of light switches. Off... and on.
-	- He's a good kid.
-		set {Transaction_Branch} = 0.0
-		KuyaKap: Aye. Too smart for his own good. [pause=0.5] He sees the smoke, apo. But he doesn't understand the fire beneath it.
-	- He might be right.
-		set {Transaction_Branch} = 1.0
-		KuyaKap:  Maybe. [pause=0.5] But truth is a heavy thing to swallow when you're my age.
-	- What kind of candy does Buboy like?
-		KuyaKap:  Anything sweet and colorful, apo. [pause=0.4] He says they look like treasure from a storybook. [pause=0.3] I think he just likes having something that's definitely, purely good.
-	KuyaKap: Give me my usual {Transaction_ItemWants}. [pause=0.4] And... let me have a piece of that candy too. For the boy. [pause=0.3] I want him to have something sweet for every hard question he asks.
+	# Chapter 5: "Smoke or Shade" (Tally Inflection #4: +1 on SubstituteItem hold-the-line / -2 on relapse cave)
+	if {Flag_KapSubCandy}:
+		KuyaKap: Apo.
+		KuyaKap: Huwag ka munang magsalita, ha. Just sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		KuyaKap: Shed roof leaked, clinic nurse lectured me again, and my hands won't sit still. Ngayon lang ulit, promise.
+		- Not happening, Kuya. You didn't chew all that candy just to start over.
+			[signal arg="allow_sub_cat:candy"]
+			KuyaKap: Tsk. Pulling rank behind your own counter now, ha?
+			KuyaKap: Fine, nak. Give me whatever sweet thing you're reaching for before I argue.
+		- [Say nothing. Skip the cigarette rack and reach for the candy jars.]
+			[signal arg="allow_sub_cat:candy"]
+			KuyaKap: Oy. That's the wrong shelf, apo. My eyes still work.
+			KuyaKap: Hay naku. Well, I'm still standing here, aren't I? Hand it over.
+		- Alright, Kuya. Just this once.
+			[signal arg="tally:-2"]
+			KuyaKap: Ah. Didn't think you'd actually say yes, nak.
+			KuyaKap: Oo, sige. Just needed the quiet.
+	else:
+		KuyaKap: O, apo. Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color], my usual.
+		KuyaKap: Funny thing, nak. Used to finish a pack and feel nothing. Lately the walk across the road feels two steps longer.
+		KuyaKap: Heh, listen to me complaining. Must be the humidity. Coins are on the counter, apo.
+		- [Step in before it gets worse. Swap his request to candy instead.]
+			[signal arg="allow_sub_cat:candy"]
+			KuyaKap: Aba, why the serious face, apo? Just grab my order when you're ready.
+		- Go easy on the smoke at least, Kuya. Who else is gonna guard that tree?
+			KuyaKap: Heh. Trying to retire me early? Not a chance, nak.
+			KuyaKap: I'll pace myself. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for now.
+		- [color=#0f6e2f]{Transaction_ItemWants}[/color], coming right up.
+			KuyaKap: Salamat, apo. Steady as clockwork.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
-	# Chapter 6: "A Short Pause"
-	KuyaKap:  ...
-	KuyaKap: Look at those moths... [pause=0.6] circling the light. Over and over.
-	KuyaKap:  My {Transaction_ItemWants}, if you please.
-	- Is everything okay, Kuya?
-		if {Transaction_Branch} == 1.0:
-			KuyaKap:  I’ve just been... listening to the wind. [pause=0.4] It has a way of reminding you what’s loose.
-		else:
-			KuyaKap: Of course. [pause=0.5] Just a bit too much dust in the air today. Makes it hard to catch a full breath.
-	- Here's your item.
-		KuyaKap:  Salamat. [pause=0.6] ...Salamat talaga.
-	KuyaKap: I'm alright. [pause=0.5] I'll see you tomorrow. [pause=0.4] I think... I'll see you tomorrow.
-	[end_timeline]
-
-elif {Transaction_Chapter} == 6.0:
-	# Chapter 7: "Taking His Time"
-	KuyaKap:  You know... your Lola... [pause=0.5] she actually hid a stone in the candy jar once.
-	KuyaKap: A white one. Smooth. [pause=0.4] Like it had been polished by a hundred years of river water.
-	- A stone? 
-		KuyaKap:  Aye. I asked her why she kept it there. [pause=0.6] She just smiled and said it keeps the sweetness from floating away.
-	- She had her reasons.
-		KuyaKap:  Haha! That she did. [pause=0.3] She always was more of a poet than a shopkeeper.
-	- Do you still have that stone?
-		KuyaKap:  I do. [pause=0.4] I've carried it in my pocket for... [pause=0.3] well, longer than I can remember. [pause=0.4] It's a bit heavy today. But I'm not ready to put it down yet.
-	KuyaKap: I... [pause=1.2] ...
-	KuyaKap: One last look, I suppose. [pause=0.5] Just the {Transaction_ItemWants}. [pause=0.5] One more time. [pause=0.4] For old times' sake.
-	[end_timeline]
-
-elif {Transaction_Chapter} == 7.0:
-	# Chapter 8: "Not Today"
-	KuyaKap:  ...
-	KuyaKap: Could you get me... [pause=0.6] ...
-	KuyaKap: Actually... [pause=1.0] no. [pause=0.8] Not today.
-	KuyaKap: Wait... [pause=0.6] my hands... [pause=0.5] I didn't even bring the coins this time.
-	- Alright, apo. # (Using apo as a gentle acknowledgement)
-		set {Transaction_Branch} = 0.0
-		KuyaKap:  Yes. [pause=0.4] Alright.
-	- Are you sure, Kuya?
-		set {Transaction_Branch} = 1.0
-		KuyaKap:  I think... [pause=0.4] I think my lungs have had enough anchors. I’d like to see if I can float for a bit.
-	- Did Buboy finally win?
-		set {Transaction_Branch} = 2.0
-		KuyaKap:  Hehe. [pause=0.4] Let’s just say he’s a very persistent little mirror.
-	KuyaKap:  Just a bottle of water, if you please. [pause=0.5] And... [pause=0.3] I think tomorrow, I'll finally bring that stone in.
-	[end_timeline]
-
-elif {Transaction_Chapter} == 8.0:
-	# Chapter 9: "Candy"
-	KuyaKap:  A piece of candy today. [pause=0.5] One of those {Transaction_ItemWants}.
-	KuyaKap: Let me... [pause=0.4] this wrapper is a bit stubborn. [pause=0.5] There. [pause=0.4] I look more rested than usual, don't I?
-	KuyaKap:  Your Lola... she was a good woman. She told me once, "Kap, give that to whoever owns the store next. They'll need it more than you do."
-	if {Transaction_Branch} == 0.0:
-		KuyaKap:  I didn't think the right time would come. [pause=0.5] But I suppose time has a way of deciding for itself.
-	elif {Transaction_Branch} == 1.0:
-		KuyaKap:  I was so afraid that if I stopped the routine, I'd stop being... me. [pause=0.4] But I'm still here. Hehe.
-	elif {Transaction_Branch} == 2.0:
-		KuyaKap:  If the kid thinks it's time to let go... I should probably listen. [pause=0.4] He hasn't been wrong yet.
-	KuyaKap: Here. [pause=0.4] It's yours now. It's a bit cool, isn't it?
-	KuyaKap: This candy is actually... [pause=0.4] it's quite sweet. [pause=0.5] Salamat, apo. [pause=0.4] I'll see you tomorrow. [pause=0.3] For real, this time.
-	[signal arg="unlock_collectible"]
-	[end_timeline]
-
-if {Transaction_WantsDebt}:
-	KuyaKap: Anak... [pause=0.4] I seems I left my change at home. Pwede pa-utang?
-	- Fine, one time lang.
-		[signal arg="utang_accepted"]
-		KuyaKap: Salamat. [pause=0.4] You're a kind soul, just like your Lola.
-	- No utang today, Kuya.
-		[signal arg="utang_rejected"]
-		KuyaKap: Haha! Can't blame me for trying.
+	# Chapter 6: "The Acacia Holds" (Accumulated Tally Resolution -> 3 Bespoke Outcomes)
+	if {Flag_KapSubCandy} and {Transaction_Tally} >= 3:
+		[signal arg="outcome:quit_smoking"]
+		[signal arg="flag:kap_quit_smoking=true"]
+		[signal arg="note:Left his old brass lighter at the counter and quit smoking for good."]
+		KuyaKap: O, apo. Clear a little spot by your register? Not for coins.
+		KuyaKap: Heto. That's my old brass lighter. Keep it in a drawer, or toss it in the bin for me.
+		KuyaKap: Haven't lit a stick in weeks, nak, and my chest finally stopped rattling.
+		KuyaKap: Turns out the acacia casts the exact same shade without the smoke.
+		- Proud of you, Kuya. Does this make me your official candy supplier?
+			KuyaKap: Haha! Huwag kang maingay, nak, Buboy already teases me enough.
+		- Lola would've smiled seeing that lighter on the counter, Kuya.
+			KuyaKap: Heh. Knowing her, she'd charge me storage rent for leaving it here.
+		- [Tuck the brass lighter safely beside the register.]
+			KuyaKap: Good spot for it, apo. Safer with you than in my pocket.
+		KuyaKap: Listen, nak. Neighbors talk, and I know who comes collecting when the moon turns pale.
+		KuyaKap: When she comes to weigh your ledger, just look toward the acacia. I'll step right up to this counter with you.
+		KuyaKap: Sige na, pahingi ng [color=#0f6e2f]{Transaction_ItemWants}[/color] before we both get dramatic.
+	elif {Transaction_Tally} >= 1:
+		[signal arg="outcome:cutting_back"]
+		[signal arg="note:Cut way back on cigarettes and promised to watch over the store."]
+		KuyaKap: O, nak. Before you squint at me, check my shirt pocket. Empty.
+		KuyaKap: Haven't quit all the way yet, an old kapre takes time to turn around. Down to two sticks a week, though.
+		KuyaKap: Even that young doctor at the barangay clinic nearly fell off his chair.
+		- Progress is progress, Kuya. Glad your lungs are getting a breather.
+			KuyaKap: Salamat, apo. Easier when somebody behind this counter actually pays attention.
+		- Two sticks a week? Careful, Kuya, soon it'll be zero.
+			KuyaKap: Sus, one step at a time, boss! Let my knees catch up first.
+		KuyaKap: You've done right by your Lola's store, nak. If that Pale Queen's tally ever gets heavy, you've got family across the road.
+		KuyaKap: Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color] for my walk back.
+	else:
+		[signal arg="outcome:kept_the_smoke"]
+		[signal arg="note:Stayed behind his old smoking habit, polite as ever."]
+		KuyaKap: O, apo. Khm, excuse me. Still holding the fort behind the counter, ha.
+		KuyaKap: I'll stand a step back so the smoke doesn't drift inside your shop.
+		KuyaKap: Funny how fast seasons move on this road. Storefront changes hands, prices shift, and I'm still leaning on the same bark.
+		- Take care of that cough, Kuya.
+			KuyaKap: Ah, konting alikabok lang 'yan, nak. Nothing forty years hasn't seen.
+		- What can I get for you, Kuya?
+			KuyaKap: Straight to the register. Fair enough, apo.
+		KuyaKap: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for me. Keep your shelves neat, ha.
 	[end_timeline]
 
 label Talk
-KuyaKap:  No rush, apo. Take your time. I'll wait for the {Transaction_ItemWants}.
-- Coming right up.
-	KuyaKap: Sige.
+KuyaKap: Take your time, apo. My acacia isn't walking anywhere.
+- Almost got it, Kuya.
 	[end_timeline]
-- Wala, kuya... [Refuse service]
-	KuyaKap: Ah... gano'n ba? Sige apo, I'll come back next time.
+- Sorry Kuya, we're out of stock right now.
+	KuyaKap: Ay, ubos na? No problem, nak. I'll stroll back over after Mario delivers.
 	[signal arg="refuse_service"]
+	[end_timeline]
+
+label Partial
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	KuyaKap: Salamat, nak. Still waiting on the rest whenever your hands are free.
+elif {Variation} == 2.0:
+	KuyaKap: Got this one, apo. Take your time with the rest.
+else:
+	KuyaKap: Ayos. No rush, nak, my acacia isn't going anywhere.
+[end_timeline]
+
+label SubstituteItem
+if {Transaction_Chapter} == 4.0:
+	[signal arg="flag:kap_sub_candy=true"]
+	[signal arg="tally:+1"]
+	[signal arg="note:Held the line and handed him {Transaction_SubstituteItemName} when he nearly relapsed."]
+	KuyaKap: Heh. [color=#0f6e2f]{Transaction_SubstituteItemName}[/color] na naman, ha.
+	KuyaKap: Matigas talaga ulo mo, nak. Worse than your Lola when she made up her mind.
+	KuyaKap: Salamat, apo. Honestly. Keep the rest of the coins.
+	[signal arg="story_success"]
+	[end_timeline]
+else:
+	[signal arg="flag:kap_sub_candy=true"]
+	[signal arg="tally:+1"]
+	[signal arg="note:Slipped him {Transaction_SubstituteItemName} instead of cigarettes."]
+	KuyaKap: Aba. Wait a second.
+	KuyaKap: Since when does [color=#0f6e2f]{Transaction_SubstituteItemName}[/color] look like a pack of smokes to you, apo?
+	KuyaKap: Hay, look at me holding candy in my palm like Buboy. Heh.
+	KuyaKap: Ikaw talaga. Good thing you look like your Lola, or I'd scold you.
+	KuyaKap: Sige na. Keep the change before I change my mind.
 	[signal arg="story_success"]
 	[end_timeline]
 
 label Satisfy
-if {Transaction_WantsDebt}:
-	KuyaKap: Salamat talaga, apo. Mag-iingat ka.
+if {Transaction_StoryGouged}:
+	KuyaKap: Uy. Heavy markup for a neighbor across the road, nak.
+	KuyaKap: I'll pay it, pero dahan-dahan sa presyo, ha.
 else:
-	KuyaKap: Salamat! See you tomorrow.
+	KuyaKap: Ayos. Salamat, apo. Don't forget to sit down between customers, ha.
 	if {Global_TipActive}:
-		KuyaKap: Aba, that was quite fair. Keep the change, apo!
+		KuyaKap: Keep the extra coins. Buy yourself merienda later.
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-KuyaKap: That's not the {Transaction_ItemWants}. I'll wait.
+KuyaKap: Uy, wrong grab, apo. Eyes tired? Check the shelf again.
 [end_timeline]

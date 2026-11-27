@@ -1,19 +1,26 @@
+# Manang Ana - Unified Social Visit & Tambayan Smalltalk Timeline
+# Voice: Quietly warm, observant, genuine Nanay voice. Zero superficial exclamation crutches.
+
 label Greeting
-if {Transaction_VisitVar} <= 50:
-	ManangAna: Jusko, anak. I feel like I'm cleaning up after eight people instead of four.
-	ManangAna: One is making a mess in the kitchen while the other is tracking mud in the living room... Susmaryosep. [pause=0.4] I just need to lean on this counter and pretend I'm on vacation for five minutes.
+if {Transaction_HasReactiveOpener}:
+	ManangAna: {Transaction_ReactiveOpener}
+if {Transaction_VisitVar} < 34:
+	ManangAna: Not buying anything right now, anak. Just hiding under your awning for two quiet minutes.
+	ManangAna: My four teenagers are debating who gets the electric fan at home, and I chose peace.
+elif {Transaction_VisitVar} < 67:
+	ManangAna: Walking back from the wet market, anak. Have you had real rice yet, or just snacks from your own rack?
+	ManangAna: Watch your stomach, ha. Nobody else is opening these shutters if you catch a fever.
 else:
-	ManangAna: Have you ever tried scrubbing bat wings, anak? Hehe! 
-	ManangAna: I'm just joking... sort of. [pause=0.6] Everything is just so heavy tonight. [pause=0.4] But seeing the store open... it’s a nice sight. Stay safe here, ha?
+	ManangAna: Nice seeing a lamp burning behind this counter again, anak.
+	ManangAna: Used to chat with your Lola right here whenever the soup pots were simmering slow.
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
-if {Transaction_VisitVar} <= 50:
-	ManangAna: Hay salamat, that little breather helped so much, anak. [pause=0.3]
-	ManangAna: Back to the laundry mountain I go! Hehe, ingat ka rito ha?
+if {Transaction_VisitVar} < 34:
+	ManangAna: Calf cramp finally let go, anak. Back to my kitchen I go.
+elif {Transaction_VisitVar} < 67:
+	ManangAna: Break's over before my four kids start wondering where dinner went. Take care, anak.
 else:
-	ManangAna: Okay, okay, break time is over before the kids notice I'm gone. [pause=0.4]
-	ManangAna: Thank you for letting this tita tambay for a bit, anak. See you later!
+	ManangAna: Good catching my breath here, anak. Pull up a stool whenever the road goes quiet.
 [end_timeline]
-

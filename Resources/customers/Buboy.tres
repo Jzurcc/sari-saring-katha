@@ -17,75 +17,43 @@
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Memory Game"
-categories = null
+chapter_name = "What Did Mama Say?"
+categories = PackedStringArray("snack")
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The First Task"
-categories = PackedStringArray("can")
+chapter_name = "Teks Under the Acacia"
+categories = PackedStringArray("snack", "candy")
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Big Neighbor"
-categories = PackedStringArray("snack")
+chapter_name = "Top-Secret Ulams"
+categories = PackedStringArray("can", "pack")
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Smell of Smoke"
-categories = PackedStringArray("sachet")
+chapter_name = "Don't Drop the Bag"
+categories = PackedStringArray("can", "pack")
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Direct Question"
-categories = PackedStringArray("snack")
+chapter_name = "Candy Detective"
+categories = PackedStringArray("snack", "candy")
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Where is He?"
-categories = PackedStringArray("pack")
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Idea"
-categories = PackedStringArray("bottle")
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Secret"
-categories = PackedStringArray("candy")
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "No More Smoke"
-categories = PackedStringArray("snack")
-
-[sub_resource type="Resource" id="chapter_9"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Masterpiece"
-categories = PackedStringArray("pack")
+chapter_name = "Official Street Runner"
+categories = PackedStringArray("snack", "candy")
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: Games and Errands"
+arc_name = "Arc 1: Forgotten Errands"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: Questions on the Porch"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_purchase")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: Strawberry Success"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_purchase")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_visit")])
-
-[sub_resource type="Resource" id="arc_3"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 4: The Masterpiece"
+arc_name = "Arc 2: Secret Mission"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("buboy_visit")])
 
@@ -98,10 +66,13 @@ sprite_scale = 0.4
 dialogue_blip_sound = ExtResource("2_siajg")
 dialogue_blip_volume = -8.0
 prefers_riddles = true
+requests_utang = true
+utang_chance = 0.12
+repayment_chance = 0.45
 favorite_categories = Array[String](["snack", "candy"])
 story_timeline = ExtResource("story_timeline")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8"), SubResource("chapter_9")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2"), SubResource("arc_3")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_buboy_skip")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_buboy_cameo")])
 metadata/_custom_type_script = "res://Scripts/Data/CustomerData.gd"

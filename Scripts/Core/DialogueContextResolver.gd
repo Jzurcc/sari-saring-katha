@@ -13,64 +13,83 @@ extends RefCounted
 
 # P1 Cross-Character & Delayed-Consequence Rules (populated as each character arc is authored).
 # Each entry: { "id": String, "char_id": String, "flag": String, "line": String }
-const P1_WEB_RULES: Array[Dictionary] = []
+const P1_WEB_RULES: Array[Dictionary] = [
+	{
+		"id": "p1_kap_saw_ana_refused",
+		"char_id": "kuyakap",
+		"flag": "ana_utang_refused_early",
+		"line": "Ana's been pulling extra shifts down the road, nak. Rough stretch for her.",
+	},
+	{
+		"id": "p1_ana_saw_kap_candy",
+		"char_id": "manangana",
+		"flag": "kap_sub_candy",
+		"line": "Saw Kap unwrapping candy under the acacia. Your doing, anak?",
+	},
+	{
+		"id": "p1_buboy_saw_kap_candy",
+		"char_id": "buboy",
+		"flag": "kap_sub_candy",
+		"line": "Kuya! Manong Kap smells like candy instead of smoke now!",
+	},
+]
 
 # P2 Voice-Differentiated Gameplay Memory Openers (char_id -> outcome -> line).
 # Falls back to "_default" if a character doesn't have a custom voice line yet.
 const P2_OUTCOME_LINES: Dictionary = {
 	"price_walkout": {
-		"kuyakap": "Checking the tag first today, apo. Last time stung.",
-		"manangana": "Before I pick anything—did the prices cool down?",
-		"buboy": "Kuya, please tell me it's cheaper today. Mama counted my coins.",
-		"lolopilo": "Let's see if your numbers are friendlier today, apo.",
-		"danilo": "Brave pricing yesterday, boss. Let's see how today goes.",
-		"brahim": "Let us hope the scales are gentler today.",
+		"kuyakap": "Uy, nak, checking the price tag first. Last visit nearly gave me a cough.",
+		"manangana": "Before I pick anything, anak, did the prices cool down?",
+		"buboy": "Kuya, please tell me it's cheaper now. Mama counted my coins.",
+		"lolopilo": "Let's see if your numbers are friendlier now, apo.",
+		"danilo": "Brave pricing last time, boss. Let's see how it looks now.",
+		"brahim": "Let us hope the scales are gentler this visit.",
 		"rosalyn": "I brought exact change this time. Just in case.",
-		"tk": "Yo, tell me the VIP markup is over today.",
+		"tk": "Yo, tell me the VIP markup is over.",
 		"rodel": "I expect fairer rates than last time.",
 		"sarimanok": "Gold is abundant, yet I still dislike being overcharged.",
-		"_default": "Checking the price first today—last time was too steep.",
+		"_default": "Checking the price first, last time was a bit steep.",
 	},
 	"out_of_stock": {
-		"kuyakap": "Shelf looks fuller today. Good.",
-		"manangana": "Please tell me Mario dropped off stock today, anak.",
+		"kuyakap": "Aba, shelves look fuller now, apo. Mario passed through?",
+		"manangana": "Please tell me Mario dropped off stock, anak.",
 		"buboy": "Meron na po ba? I ran all the way here!",
-		"lolopilo": "Empty shelves yesterday, apo. Let's try again.",
+		"lolopilo": "Empty shelves last visit, apo. Let's try again.",
 		"danilo": "Looks like you restocked, boss. Good timing.",
-		"brahim": "Hopefully what I need has arrived today.",
+		"brahim": "Hopefully what I need has arrived.",
 		"rosalyn": "You were out last time. Is it here now?",
 		"tk": "Restock day? Tell me we're back in business.",
 		"rodel": "I came back hoping your shelves are no longer bare.",
 		"sarimanok": "A proper shop keeps its offerings ready. Let us see.",
-		"_default": "Hoping you're stocked up today.",
+		"_default": "Hoping you're stocked up now.",
 	},
 	"story_out_of_stock": {
-		"kuyakap": "Back again, apo. Got what I asked for this time?",
-		"manangana": "Anak, I came back—please tell me you have it now.",
+		"kuyakap": "O, apo, walked back across the road. Meron na ba this time?",
+		"manangana": "Anak, I came back, please tell me you have it now.",
 		"buboy": "Kuya! Do you have it now? I waited!",
 		"lolopilo": "Round two, apo. Don't send an old man away empty again.",
 		"brahim": "I returned when the shelves looked fuller.",
 		"rosalyn": "I came back... hoping you found one for me.",
 		"tk": "Take two! Tell me you restocked what I needed.",
-		"rodel": "I'm giving your counter a second chance today.",
+		"rodel": "I'm giving your counter a second chance.",
 		"sarimanok": "I have returned. Surely you are prepared now.",
-		"_default": "Back again—do you have what I needed last time?",
+		"_default": "Back again, do you have what I needed last time?",
 	},
 	"partial_order": {
-		"manangana": "Hoping you have the whole list today, anak.",
-		"kuyakap": "Only got half my run last time. Let's finish clean today.",
+		"manangana": "Hoping you have the whole list this time, anak.",
+		"kuyakap": "Only got half my run last pass, nak. Let's finish clean.",
 		"buboy": "No missing snacks this time, ha Kuya?",
-		"_default": "Hopefully you've got everything on my list today.",
+		"_default": "Hopefully you've got everything on my list now.",
 	},
 	"utang_refused": {
-		"manangana": "Don't worry, anak. Cash in hand today.",
-		"kuyakap": "Exact coins today. No favors needed.",
-		"danilo": "Relax, boss—checked my pockets before walking over.",
+		"manangana": "Don't worry, anak. Cash in hand this time.",
+		"kuyakap": "Brought my coin pouch this time, apo. No lista needed.",
+		"danilo": "Relax, boss, checked my pockets before walking over.",
 		"_default": "Brought cash this time, don't worry.",
 	},
 	"gouged_in_story": {
 		"manangana": "My wallet still remembers that markup, anak.",
-		"kuyakap": "Heh. Still charging tourist rates to neighbors, apo?",
+		"kuyakap": "Heh. Easy on the neighbor pricing this time, ha apo?",
 		"lolopilo": "Your lola never gouged me like that, apo.",
 		"_default": "Still remembering what you charged me last time.",
 	},
@@ -80,9 +99,9 @@ const P2_OUTCOME_LINES: Dictionary = {
 		"_default": "Not bad on that last round!",
 	},
 	"minigame_lost": {
-		"lolopilo": "Heh—still sore from losing at sipa, apo?",
+		"lolopilo": "Heh, still sore from losing at sipa, apo?",
 		"brahim": "A shaky brush still teaches the hand. We'll try again.",
-		"_default": "Tough luck last time—you'll get it next round.",
+		"_default": "Tough luck last time, you'll get it next round.",
 	},
 }
 
@@ -153,11 +172,11 @@ static func _lookup_p2_line(cid: String, outcome: String) -> String:
 static func _resolve_p3_world_line() -> String:
 	if is_instance_valid(StoryManager):
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_RESTLESS_CROWD):
-			return "Everyone's on edge tonight—let's make this quick."
+			return "Everyone's a bit restless out on the road, let's make this quick."
 		if StoryManager.has_mayari_card(MayariCardRegistry.CARD_QUIET_ECLIPSE):
-			return "Too quiet on the radio today. Gives me the chills."
+			return "Awfully quiet on the radio right now. Gives me the chills."
 	if is_instance_valid(StoreEventManager) and StoreEventManager.has_method("get_active_events"):
 		var evs: Array = StoreEventManager.get_active_events()
 		if not evs.is_empty() and randf() < 0.35:
-			return "Papa Ulap wasn't kidding about the rush today."
+			return "Papa Ulap wasn't kidding about the rush."
 	return ""

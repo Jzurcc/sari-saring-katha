@@ -1,59 +1,130 @@
+# Manang Ana - Unified Everyday Purchase Timeline (3-Slot Sandwich Pattern)
+# Shifts ONLY on meaningful story flags (Flag_AnaFlewAgain / Flag_AnaUtangAccepted).
+# Includes 3-Choice Repayment (Accept / Forgive / Defer) and Smooth First-Utang Story Bridge.
+# Voice: Quietly warm, observant, genuine Nanay voice. Zero superficial exclamation crutches.
+
 label Greeting
-# [signal arg="refresh_desires"]
-if {Transaction_GreetingVar} <= 50:
-	ManangAna:  Jusko, what a long day at the karinderya. Good day, anak.
-else:
-	ManangAna: Good day. My feet are just... they think they're made of lead tonight.
+# Slot 1: P1-P3 Reactive Opener or High-Price Remark
+if {Transaction_HasReactiveOpener}:
+	ManangAna: {Transaction_ReactiveOpener}
+elif {Global_HighPriceActive}:
+	ManangAna: Prices crept up again, anak? Even garlic at the market is getting hard to budget.
 
-if {Global_HighPriceActive}:
-	ManangAna: Jusko, pati ba naman dito? [pause=0.4] Ang mahal na talaga ng mabuhay ngayon, anak. Konting bawas naman sana.
-
+# Slot 2: Upfront Utang Ask (with First-Utang Story Bridge) OR Flag-Driven Request Pool
 if {Transaction_WantsDebt}:
-	ManangAna:  ...
-	ManangAna: Anak... I... I didn't bring any change today. I'm sorry. 
-	ManangAna: I don't get my pay until Friday. Can I pay you next time for these [color=#0f6e2f]{Transaction_ItemWants}[/color]? I promise I'll put it on my tab.
-	- Of course, Manang.
-		[signal arg="utang_accepted"]
-		ManangAna:  Thank you. Salamat talaga. I won't forget this. 
-	- I'm sorry, I can't do credit.
-		[signal arg="utang_rejected"]
-		ManangAna:  Ah. I understand. Business is business. I'll just see what's left in the garden.
+	if {Flag_AnaUtangAccepted} == false and {Flag_AnaUtangRefused} == false:
+		ManangAna: Wait, anak, let me recount my palm. No, I really came up short, and my eatery pay hasn't cleared yet.
+		ManangAna: Promised myself I'd look after you once your Lola passed, not stand here asking a kid for credit.
+		ManangAna: My rice pot's already warm at home, though. Could you write [color=#0f6e2f]{Transaction_ItemWants}[/color] in your lista just until payday?
+		- Put your coins away. Sure.
+			[signal arg="utang_accepted"]
+			[signal arg="flag:ana_utang_accepted_early=true"]
+			[signal arg="tally:+1"]
+			[signal arg="note:Put her groceries on the lista without hesitation when she first came up short."]
+			ManangAna: Anak. You don't know how heavy my feet felt walking up here to ask.
+			ManangAna: Write every peso down clearly, ha. Grab [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever your hands are free.
+		- Until payday, Manang. Deal.
+			[signal arg="utang_accepted"]
+			[signal arg="flag:ana_utang_accepted_early=true"]
+			[signal arg="note:Allowed her first utang with an agreement to settle once her eatery pay comes in."]
+			ManangAna: Thank you for not making a fuss over it, anak. Soon as my pay lands, I'm coming straight here.
+			ManangAna: Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color] before that rice dries out.
+		- Sorry, cash only right now.
+			[signal arg="utang_rejected"]
+			[signal arg="flag:ana_utang_refused_early=true"]
+			[signal arg="tally:-1"]
+			[signal arg="note:Turned down her first utang request when cash was tight."]
+			ManangAna: No, no, wipe that guilty look off your face, anak. Keeping a young shop alive is hard enough.
+			ManangAna: I'll stretch ginger and salt with our leftover rice at home and come back once my pay clears.
+	else:
+		ManangAna: Hate adding another line to my page, anak, my purse came up a few coins short for the stove again.
+		ManangAna: Could you put [color=#0f6e2f]{Transaction_ItemWants}[/color] on my lista? I'll fold every peso into my next payment.
+		- Sure, adding it to your lista.
+			[signal arg="utang_accepted"]
+			ManangAna: Thank you, anak. Saves me from facing four hungry kids empty-handed.
+		- Sorry, cash only this round.
+			[signal arg="utang_rejected"]
+			ManangAna: No hard feelings at all, anak. Let me check what's left in our pantry first.
+elif {Flag_AnaFlewAgain}:
+	if {Transaction_GreetingVar} < 25:
+		ManangAna: Shoulders feel ten years lighter lately, anak. Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Transaction_GreetingVar} < 50:
+		ManangAna: Quick run, anak. My kids already started the rice at home. Could I get [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 75:
+		ManangAna: Have you eaten yet, anak? Don't work on an empty stomach. Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		ManangAna: Exact coins from the eatery tray, anak. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for our table.
+elif {Flag_AnaUtangAccepted}:
+	if {Transaction_GreetingVar} < 25:
+		ManangAna: Quick breather between prep trays, anak. Could you grab me [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 50:
+		ManangAna: Cash in hand this pass, anak. Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color] before the rice cools off.
+	elif {Transaction_GreetingVar} < 75:
+		ManangAna: Four teenagers empty a pantry faster than a storm, anak. [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+	else:
+		ManangAna: Resting my elbows here for one second, anak. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're ready.
 else:
-	ManangAna: Can you give me [color=#0f6e2f]{Transaction_ItemWants}[/color]? Let's make it quick...
+	if {Transaction_GreetingVar} < 25:
+		ManangAna: Line at the eatery stretched past the corner, anak. Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Transaction_GreetingVar} < 50:
+		ManangAna: Stepping out before my broth boils over, anak. Could I get [color=#0f6e2f]{Transaction_ItemWants}[/color]?
+	elif {Transaction_GreetingVar} < 75:
+		ManangAna: Keeping busy, anak? Make sure you drink water. Let me pick up [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	else:
+		ManangAna: Long hours on my feet, anak. [color=#0f6e2f]{Transaction_ItemWants}[/color], please, whenever your hands are free.
 [end_timeline]
 
 label Talk
-if {Transaction_TalkVar} <= 50:
-	ManangAna: I need [color=#0f6e2f]{Transaction_ItemWants}[/color], anak. The kids are going to start eating the furniture if I don't get home soon.
-else:
-	ManangAna: Just some [color=#0f6e2f]{Transaction_ItemWants}[/color] for me today. Let's make it quick... the laundry isn't going to wash itself.
+ManangAna: No rush, anak. Nice resting my knees for a moment anyway. Still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color].
 - Coming right up, Manang.
-	ManangAna: Sige, bilisan mo lang ha.
 	[end_timeline]
-- Sorry, Manang Ana, we're fresh out of stock.
-	ManangAna: Ay, ganoon ba? Sayang naman. [pause=0.4] Sige, I'll just check if we have any leftovers in the fridge.
-	ManangAna: Mag-iingat ka dito, anak.
+- Sorry, we're out of stock.
+	ManangAna: Fresh out? That's alright, anak, I'll improvise with what's in the kitchen.
 	[signal arg="refuse_service"]
-	[signal arg="story_success"]
 	[end_timeline]
-
 
 label Partial
-ManangAna: Salamat, anak. Pakisama na rin ang [color=#0f6e2f]{Transaction_ItemWants}[/color] ha.
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	ManangAna: Thank you, anak. Still need [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you're ready.
+elif {Variation} == 2.0:
+	ManangAna: Straight into my market bag. Just waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color], no rush.
+else:
+	ManangAna: Got that part. Take your time with [color=#0f6e2f]{Transaction_ItemWants}[/color], anak.
 [end_timeline]
 
 label Satisfy
-if {Transaction_SatisfyVar} <= 50:
-	ManangAna:  Salamat, anak. You're a lifesaver.
+if {Transaction_WantsDebt}:
+	ManangAna: Thank you for putting that in the lista, anak. Take care behind that counter.
 else:
-	ManangAna: Sige, I'll see you tomorrow. Make sure you're eating properly, ha? You look thin.
-if {Global_TipActive}:
-	ManangAna: Aba, that was quite cheap. Keep the change po!
+	if {Global_TipActive}:
+		ManangAna: Keep the extra coins, anak. Get yourself a proper snack.
+	elif {Transaction_SatisfyVar} < 34:
+		ManangAna: Thank you, anak. Don't forget to eat real rice meals, ha.
+	elif {Transaction_SatisfyVar} < 67:
+		ManangAna: Lifesaver, anak. Better get back before those four raid the stove.
+	else:
+		ManangAna: All set. Take care of yourself behind that counter, anak.
+[signal arg="story_success"]
+[end_timeline]
+
+label Repayment
+ManangAna: Before I ask for anything, anak, here's the {Transaction_RepaymentAmount} pesos from my line in your lista.
+ManangAna: Set that aside straight from my eatery pay so we could square up properly.
+- Thanks, crossing your name off.
+	[signal arg="repay_debt"]
+	ManangAna: Good. Nothing lets me breathe easier than a clean page in the ledger, anak.
+- Keep it for the kids, Manang.
+	[signal arg="forgive_debt"]
+	[signal arg="tally:+1"]
+	ManangAna: Wait, anak, you can't just wave that off, you earned every peso behind this counter.
+	ManangAna: Stubborn kid, just like your Lola. Expect hot food at this counter soon, I won't take no for an answer.
+- Pay me later, no rush.
+	[signal arg="defer_repay"]
+	ManangAna: Sure your register isn't stretched thin right now, anak?
+	ManangAna: Thank you for the breathing room. I'll put this toward school fare and square up next pass.
 [end_timeline]
 
 label WrongItem
-if {Transaction_WrongItemVar} <= 50:
-	ManangAna: Um... [pause=0.4] I don't think this is the [color=#0f6e2f]{Transaction_ItemWants}[/color], anak. 
-else:
-	ManangAna: Susmaryosep... [pause=0.4] I think my eyes are as tired as my feet. This isn't the right one.
+ManangAna: Wait, anak, check that label again. I asked for [color=#0f6e2f]{Transaction_ItemWants}[/color].
 [end_timeline]

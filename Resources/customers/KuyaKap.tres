@@ -17,64 +17,55 @@
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The New Face"
+chapter_name = "The Old Suki"
 categories = PackedStringArray("cigarette")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "He Knows Everyone"
+chapter_name = "Tricycle Dust"
 categories = PackedStringArray("cigarette")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Almost"
+chapter_name = "Something for the Throat"
 categories = PackedStringArray("cigarette")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Just a Bit Tired"
-categories = PackedStringArray("cigarette")
+chapter_name = "Cranky Withdrawal"
+categories = PackedStringArray("candy", "bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "For Buboy"
+chapter_name = "Smoke or Shade"
 categories = PackedStringArray("cigarette")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "A Short Pause"
-categories = PackedStringArray("cigarette")
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Taking His Time"
-categories = PackedStringArray("cigarette")
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Not Today"
-categories = PackedStringArray("bottle")
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Candy"
-categories = PackedStringArray("candy")
+chapter_name = "The Acacia Holds"
+categories = PackedStringArray("candy", "bottle")
+substitute_item_ids = null
+substitute_categories = null
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: The Anchor of Routine"
+arc_name = "Arc 1: The Old Suki"
 purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("kuyakap_purchase")])
 visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("kuyakap_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: The Weight of Habits"
-purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("kuyakap_purchase")])
-visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("kuyakap_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: Finding Your Float"
+arc_name = "Arc 2: Smoke or Shade"
 purchase_timelines = Array[ExtResource("timeline_script")]([ExtResource("kuyakap_purchase")])
 visit_timelines = Array[ExtResource("timeline_script")]([ExtResource("kuyakap_visit")])
 
@@ -85,9 +76,12 @@ dialogic_character = ExtResource("dch_kuyakap")
 sprite_texture = ExtResource("6_5suku")
 sprite_scale = 0.53
 dialogue_blip_sound = ExtResource("1_g8i5g")
+requests_utang = true
+utang_chance = 0.15
+repayment_chance = 0.5
 favorite_categories = Array[String](["cigarette", "bottle"])
 story_timeline = ExtResource("story_res")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_kuyakap_stroll")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_kuyakap_cameo")])

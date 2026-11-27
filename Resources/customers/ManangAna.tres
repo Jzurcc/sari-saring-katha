@@ -17,65 +17,43 @@
 
 [sub_resource type="Resource" id="chapter_0"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Introduction"
-categories = PackedStringArray("pack")
+chapter_name = "Lola's Handwriting"
+categories = PackedStringArray("can")
 
 [sub_resource type="Resource" id="chapter_1"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Bottomless Pits"
-categories = PackedStringArray("can")
+chapter_name = "Before Payday"
+categories = PackedStringArray("pack", "can")
 
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Friends with Kap"
-categories = PackedStringArray("bottle")
+chapter_name = "The Roof Breeze"
+categories = PackedStringArray("bottle", "can")
 
 [sub_resource type="Resource" id="chapter_3"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The First Ask"
-categories = PackedStringArray("pack")
+chapter_name = "Broth and Ginger"
+categories = PackedStringArray("can")
 
 [sub_resource type="Resource" id="chapter_4"]
 script = ExtResource("chapterdata_script")
-chapter_name = "Double Shifts and Detergent"
-categories = PackedStringArray("sachet")
+chapter_name = "Locked Out of the Kitchen"
+categories = PackedStringArray("pack", "can")
 
 [sub_resource type="Resource" id="chapter_5"]
 script = ExtResource("chapterdata_script")
-chapter_name = "The Breaking Point"
-categories = PackedStringArray("sachet")
-
-[sub_resource type="Resource" id="chapter_6"]
-script = ExtResource("chapterdata_script")
-chapter_name = "A Deep Breath"
-categories = PackedStringArray("can")
-
-[sub_resource type="Resource" id="chapter_7"]
-script = ExtResource("chapterdata_script")
-chapter_name = "Cleared"
-is_visit_only = true
-categories = null
-
-[sub_resource type="Resource" id="chapter_8"]
-script = ExtResource("chapterdata_script")
-chapter_name = "The Feast"
-categories = PackedStringArray("pack")
+chapter_name = "Extra Rice"
+categories = PackedStringArray("frozen", "can")
 
 [sub_resource type="Resource" id="arc_0"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 1: The Weight of Many Mouths"
+arc_name = "Arc 1: Kitchen & Lista"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
 
 [sub_resource type="Resource" id="arc_1"]
 script = ExtResource("arcdata_script")
-arc_name = "Arc 2: Secrets of the Night Flight"
-purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
-visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
-
-[sub_resource type="Resource" id="arc_2"]
-script = ExtResource("arcdata_script")
-arc_name = "Arc 3: A Balanced Table"
+arc_name = "Arc 2: Open Sky"
 purchase_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_purchase")])
 visit_timelines = Array[ExtResource("3_timeline")]([ExtResource("mana_visit")])
 
@@ -91,7 +69,7 @@ utang_chance = 0.8
 repayment_chance = 0.42
 favorite_categories = Array[String](["can", "frozen"])
 story_timeline = ExtResource("mana_story")
-chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5"), SubResource("chapter_6"), SubResource("chapter_7"), SubResource("chapter_8")])
-character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1"), SubResource("arc_2")])
+chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
+character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_ana_flight")
 ambient_cameo_motions = Array[ExtResource("motion_profile_script")]([ExtResource("motion_ana_cameo_sky")])

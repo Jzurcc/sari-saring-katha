@@ -1,53 +1,93 @@
+# Kuya Kap - Unified Everyday Purchase Timeline (3-Slot Sandwich Pattern)
+# Shifts ONLY on meaningful story flags (Flag_KapQuitSmoking / Flag_KapSubCandy).
+# Voice: Homey Filipino elderly tito. Zero time-of-day markers. Zero em-dashes.
+
 label Greeting
-# [signal arg="refresh_desires"]
-KuyaKap: Magandang gabi, apo. [pause=0.4]
-if {Global_HighPriceActive}:
-	KuyaKap: Hala, apo. Parang medyo masakit ata sa bulsa 'to ngayon ah? [pause=0.3] Tumataas na talaga presyo ng bilihin.
-KuyaKap: Keeping up with the routine. Could you get me [color=#0f6e2f]{Transaction_ItemWants}[/color]?
-- Right away, Kuya.
+# Slot 1: P1-P3 Reactive Opener or High-Price Remark
+if {Transaction_HasReactiveOpener}:
+	KuyaKap: {Transaction_ReactiveOpener}
+elif {Global_HighPriceActive}:
+	KuyaKap: Uy, prices crept up a bit, ha? Times are tight on the road.
+
+# Slot 2: Upfront Utang Ask OR Flag-Driven Request Pool (4 grounded variations per state)
+if {Transaction_WantsDebt}:
+	KuyaKap: O, apo, walked across the road for [color=#0f6e2f]{Transaction_ItemWants}[/color], kaso I left my coin pouch in my other shirt.
+	KuyaKap: Pwede bang ilista muna? I'll bring the coins on my next walk over, promise.
+	- Sure Kuya, I'll put it on the list.
+		[signal arg="utang_accepted"]
+		KuyaKap: Salamat, nak. Grab [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever your hands are free.
+	- Sorry Kuya, cash is tight at the register right now.
+		[signal arg="utang_rejected"]
+		KuyaKap: Ay, oo naman, business first. Let me walk back to my tree and fetch my coins.
+elif {Flag_KapQuitSmoking}:
+	if {Transaction_GreetingVar} < 25:
+		KuyaKap: O, apo. Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color]. Lungs feel lighter lately.
+	elif {Transaction_GreetingVar} < 50:
+		KuyaKap: Just stretching my legs from the acacia. Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color], nak.
+	elif {Transaction_GreetingVar} < 75:
+		KuyaKap: Funny how much clearer the road smells without tobacco. [color=#0f6e2f]{Transaction_ItemWants}[/color] nga, apo.
+	else:
+		KuyaKap: Heto barya, nak. [color=#0f6e2f]{Transaction_ItemWants}[/color] lang for your oldest suki.
+elif {Flag_KapSubCandy}:
+	if {Transaction_GreetingVar} < 25:
+		KuyaKap: Don't look at me like that, I'm behaving. Just [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+	elif {Transaction_GreetingVar} < 50:
+		KuyaKap: My pockets are full of candy wrappers because of you. Pahingi ng [color=#0f6e2f]{Transaction_ItemWants}[/color], nak.
+	elif {Transaction_GreetingVar} < 75:
+		KuyaKap: Taking a short walk to keep my hands busy. Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
+	else:
+		KuyaKap: O, nak, [color=#0f6e2f]{Transaction_ItemWants}[/color] lang. And no lectures from behind the counter, ha.
+else:
+	if {Transaction_GreetingVar} < 25:
+		KuyaKap: O, apo. Quick walk across the road. Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	elif {Transaction_GreetingVar} < 50:
+		KuyaKap: Stepping out of the shade for a minute. Let me get [color=#0f6e2f]{Transaction_ItemWants}[/color], nak.
+	elif {Transaction_GreetingVar} < 75:
+		KuyaKap: Tindahan's looking tidy, apo. [color=#0f6e2f]{Transaction_ItemWants}[/color] nga when your hands are free.
+	else:
+		KuyaKap: Heto barya, nak. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] for me.
 [end_timeline]
 
 label Talk
-KuyaKap: Just my [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're ready, apo. [pause=0.4] No rush.
-- Alright, one moment.
-	KuyaKap: Take your time.
+KuyaKap: No rush, apo. My old knees like the break anyway. Still need [color=#0f6e2f]{Transaction_ItemWants}[/color].
+- Coming right up, Kuya.
 	[end_timeline]
-- Sorry, I can't get that right now.
-	KuyaKap: Ah, is that so? [pause=0.4] That's alright, apo. [pause=0.3] Some things are worth waiting for, I suppose.
+- Sorry Kuya, we're out of stock right now.
+	KuyaKap: Ay, ubos na? Sige, nak, I'll check back after Mario passes through.
 	[signal arg="refuse_service"]
 	[end_timeline]
 
 label Partial
-KuyaKap: Salamat. [pause=0.4] Just waiting on the [color=#0f6e2f]{Transaction_ItemWants}[/color] to complete the set. 
+set {Variation} = range(1,4).pick_random()
+if {Variation} == 1.0:
+	KuyaKap: Salamat, nak. Still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color] whenever you're ready.
+elif {Variation} == 2.0:
+	KuyaKap: Got this one. Just [color=#0f6e2f]{Transaction_ItemWants}[/color] left on my list, apo.
+else:
+	KuyaKap: Ayos, thanks. No rush on [color=#0f6e2f]{Transaction_ItemWants}[/color], my knees like the rest.
 [end_timeline]
 
 label Satisfy
 if {Transaction_WantsDebt}:
-	KuyaKap: Salamat talaga, apo. [pause=0.5]
-	KuyaKap:  ...Ah. [pause=0.4] My pockets feel a bit light today. [pause=0.3] I think I left my coins at home.
-	KuyaKap: Would it be alright if I put this on [color=#0f6e2f]utang[/color] for now? [pause=0.4] I'll settle it with you tomorrow, promise.
-	- Sure, Kuya. Take care.
-		[signal arg="utang_accepted"]
-		KuyaKap: Salamat. [pause=0.4] You're a kind soul, just like your Lola. 
-		KuyaKap: See you tomorrow, apo.
-	- Sorry, I can't do credit right now.
-		[signal arg="utang_rejected"]
-		KuyaKap: Hehe. I understand, apo. [pause=0.4] A business must stay a business after all.
-		KuyaKap: I'll just come back when I have the change. [pause=0.4] Mag-iingat ka!
+	KuyaKap: Salamat ulit, nak. Don't forget to jot that down in your lista, ha.
 else:
-	KuyaKap: Salamat, apo. [pause=0.4] You really have your Lola's touch with keeping this place alive.
 	if {Global_TipActive}:
-		KuyaKap: Aba, that was quite cheap. Keep the change po!
+		KuyaKap: Keep the extra coins, apo. Buy yourself merienda later.
+	elif {Transaction_SatisfyVar} < 34:
+		KuyaKap: Ayos. Salamat, apo. Don't forget to sit down between customers, ha.
+	elif {Transaction_SatisfyVar} < 67:
+		KuyaKap: Salamat, nak. Just wave across the road if anyone gives you a hard time.
+	else:
+		KuyaKap: Sakto 'yan. Back to my shade, apo.
 [signal arg="story_success"]
 [end_timeline]
 
+label Repayment
+KuyaKap: First things first, apo. Here's the {Transaction_RepaymentAmount} pesos I owed from last time.
+[signal arg="repay_debt"]
+KuyaKap: Sakto 'yan. You can cross my name off your lista now, nak.
+[end_timeline]
+
 label WrongItem
-KuyaKap: Hmm. [pause=0.4] I don't think this is my [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
-- Oh, sorry about that! Let me fix it.
-	KuyaKap: Hehe. Don't worry. [pause=0.3] I'm not going anywhere.
-	[end_timeline]
-- Sorry, we're actually all out.
-	KuyaKap: Ah, is that it? [pause=0.4] That's alright, apo. [pause=0.4] We'll just try again tomorrow.
-	[signal arg="refuse_service"]
-	[signal arg="story_success"]
-	[end_timeline]
+KuyaKap: Uy, wrong grab, apo. I asked for [color=#0f6e2f]{Transaction_ItemWants}[/color].
+[end_timeline]
