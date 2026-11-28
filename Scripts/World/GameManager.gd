@@ -248,11 +248,15 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 			_:
 				base_tip_chance = 0.0; base_tip_pct = 0.0; flat_tip = 0.0
 
-	if base_tip_chance <= 0.0:
+	var is_daytime_mayari_buyer := StoryManager.is_ledger_milestone_unlocked("daytime_mayari") and customer_path.to_lower().find("reynamayari") != -1
+	if base_tip_chance <= 0.0 and not is_daytime_mayari_buyer:
 		Dialogic.VAR.set_variable("Global_TipActive", 0.0)
 		return 0.0
-	base_tip_chance = clampf(base_tip_chance + StoryManager.get_storefront_tip_chance(), 0.0, 1.0)
-	if randf() >= base_tip_chance:
+	var evening_bonus := 0.0
+	if StoryManager.is_ledger_milestone_unlocked("reroll_1") and StoryManager.clock and StoryManager.clock.get_effective_display_time() >= 17.0:
+		evening_bonus = 0.10
+	base_tip_chance = clampf(base_tip_chance + StoryManager.get_storefront_tip_chance() + evening_bonus, 0.0, 1.0)
+	if randf() >= base_tip_chance and not is_daytime_mayari_buyer:
 		Dialogic.VAR.set_variable("Global_TipActive", 0.0)
 		return 0.0
 
@@ -276,7 +280,8 @@ func resolve_bulk_order_tip(customer_path: String, completed_full_order: bool) -
 	if is_instance_valid(CharacterProgressionManager):
 		total_tip_pct += CharacterProgressionManager.get_reputation_tip_bonus_pct(customer_path)
 	var pct_tip := StoryManager.calc_scaled_tip(total_base_price, total_tip_pct, 3.0, 90.0)
-	var tip: float = snappedf(pct_tip + flat_tip, 0.5)
+	var royal_tip := 35.0 if is_daytime_mayari_buyer else 0.0
+	var tip: float = snappedf(pct_tip + flat_tip + royal_tip, 0.5)
 	money += tip
 	EventBus.money_changed.emit(money)
 	StoryManager.record_daily_stat_add("tips_earned", tip)
@@ -554,6 +559,8 @@ func _handle_open_tally_offer() -> void:
 	if offer_amount > 0.0:
 		deduct_money(offer_amount, true)
 
+	var prev_min_tally := StoryManager.get_nightly_min_tally()
+	var prev_gen_tally := StoryManager.get_nightly_generous_tally()
 	var prev_paid := StoryManager.tally_total_paid
 	StoryManager.tally_total_paid = minf(StoryManager.TALLY_GOAL, StoryManager.tally_total_paid + offer_amount)
 	_pending_mayari_milestone_queue.clear()
@@ -567,6 +574,10 @@ func _handle_open_tally_offer() -> void:
 			StoryManager.record_daily_list_entry("milestones_unlocked", str(m["title"]), false)
 			EventBus.show_notification.emit("Ledger Milestone: %s!" % str(m["title"]), str(m["desc"]), "purchase")
 			LogManager.info("GameManager", "Unlocked Silver Ledger Milestone: %s (₱%.0f)" % [str(m["title"]), m_amt])
+			if m_id == "smugglers_cut":
+				add_money(100.0)
+				StoryManager.record_daily_stat_add("tips_earned", 100.0)
+				EventBus.request_sfx.emit("money_gain")
 			if m_id != "sealed_ledger":
 				_pending_mayari_milestone_queue.append(m_id)
 
@@ -599,6 +610,27 @@ func _handle_open_tally_offer() -> void:
 
 	EventBus.tally_contribution_made.emit(offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL)
 	EventBus.debt_quota_met.emit(is_sufficient)
+
+	# Grant nightly Reyna Mayari reputation scaled to tribute & Favor tier (clamped per night)
+	# Automatically triggers her floating +Rep popup (Customer.gd) and Rank Up banner (RepRankUpHUD).
+	if is_instance_valid(CharacterProgressionManager):
+		var mayari_path := "res://Resources/customers/ReynaMayari.tres"
+		if not CharacterProgressionManager.has_encountered(mayari_path):
+			CharacterProgressionManager.record_encounter(mayari_path)
+		var mayari_rep := 0
+		if tier == "cleared" and offer_amount <= 0.0:
+			mayari_rep = 8
+		elif offer_amount > 0.0:
+			var ratio := offer_amount / maxf(1.0, prev_gen_tally)
+			if tier == "generous" or tier == "cleared":
+				mayari_rep = clampi(int(roundf(ratio * 24.0)) + 6, 18, 32)
+			elif tier == "balanced":
+				mayari_rep = clampi(int(roundf(ratio * 22.0)), 10, 22)
+			else:
+				var min_ratio := offer_amount / maxf(1.0, prev_min_tally)
+				mayari_rep = clampi(int(roundf(min_ratio * 8.0)), 2, 8)
+		if mayari_rep > 0:
+			CharacterProgressionManager.add_reputation(mayari_path, mayari_rep, "nightly_tally")
 
 	LogManager.info("GameManager", "Tally committed: Offer=₱%.2f, Tier=%s, Total=₱%.2f/₱%.2f, Cards=%s" % [
 		offer_amount, tier, StoryManager.tally_total_paid, StoryManager.TALLY_GOAL, str(selected_cards)

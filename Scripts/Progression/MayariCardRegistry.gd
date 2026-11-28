@@ -1345,7 +1345,7 @@ static func _pop_weighted_card(pool: Array[Dictionary], rarity_boost: float = 0.
 ## - "shortfall": 100% Omen normally; 75% Omen / 25% Favor with 50% Silver Favor milestone
 ## - "balanced": 80% Omen / 20% Favor normally; 50% Omen / 50% Favor with 50% Silver Favor milestone
 ## - rarity_boost (e.g. +0.20 from 66% Gilded Crescent milestone) raises Uncommon & Rare draw weights.
-static func draw_three_cards(tally_tier: String, shifted_odds: bool = false, rarity_boost: float = 0.0) -> Array[Dictionary]:
+static func draw_three_cards(tally_tier: String, shifted_odds: bool = false, rarity_boost: float = 0.0, guarantee_rare: bool = false) -> Array[Dictionary]:
 	var favor_pool := get_cards_by_kind(KIND_FAVOR)
 	var chill_pool := get_cards_by_kind(KIND_CHILL)
 
@@ -1363,7 +1363,19 @@ static func draw_three_cards(tally_tier: String, shifted_odds: bool = false, rar
 			for _i in range(mini(3, chill_pool.size())):
 				picked.append(_pop_weighted_card(chill_pool, rarity_boost))
 		"generous", "cleared":
-			for _i in range(mini(3, favor_pool.size())):
+			if guarantee_rare and not favor_pool.is_empty():
+				var rare_favors: Array[Dictionary] = []
+				for fc in favor_pool:
+					if get_card_rarity(str(fc.get("id", ""))) == "rare":
+						rare_favors.append(fc)
+				if not rare_favors.is_empty():
+					var g_card := _pop_weighted_card(rare_favors, rarity_boost)
+					picked.append(g_card)
+					for idx in range(favor_pool.size() - 1, -1, -1):
+						if str(favor_pool[idx].get("id", "")) == str(g_card.get("id", "")):
+							favor_pool.remove_at(idx)
+							break
+			while picked.size() < 3 and not favor_pool.is_empty():
 				picked.append(_pop_weighted_card(favor_pool, rarity_boost))
 		"shortfall":
 			if shifted_odds:

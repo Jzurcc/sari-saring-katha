@@ -327,7 +327,7 @@ func _populate_summary_meta(master_save: Dictionary, slot_id: int, label: String
 	meta["player_level"] = int(story.get("player_level", StoryManager.player_level if is_instance_valid(StoryManager) else 1))
 	meta["current_tier"] = int(story.get("current_tier", StoryManager.current_tier if is_instance_valid(StoryManager) else 1))
 	meta["tally_paid"] = float(story.get("tally_total_paid", StoryManager.tally_total_paid if is_instance_valid(StoryManager) else 0.0))
-	meta["tally_goal"] = float(StoryManager.TALLY_GOAL if is_instance_valid(StoryManager) else 2000.0)
+	meta["tally_goal"] = float(StoryManager.TALLY_GOAL if is_instance_valid(StoryManager) else 3000.0)
 	meta["money"] = float(mgr.get("money", 0.0))
 
 	var outcomes: Dictionary = cpm.get("character_outcomes", {})
@@ -493,7 +493,7 @@ func get_slot_summary(slot_id: int) -> Dictionary:
 		"player_level": int(meta.get("player_level", story.get("player_level", 1))),
 		"current_tier": int(meta.get("current_tier", story.get("current_tier", 1))),
 		"tally_paid": float(meta.get("tally_paid", story.get("tally_total_paid", 0.0))),
-		"tally_goal": float(meta.get("tally_goal", 2000.0)),
+		"tally_goal": float(StoryManager.TALLY_GOAL if is_instance_valid(StoryManager) else 3000.0),
 		"completed_arcs": int(meta.get("completed_arcs", 0)),
 		"backup_count": list_slot_backups(clamped).size(),
 		"manual_count": list_slot_manual_saves(clamped).size(),
@@ -535,7 +535,7 @@ func _list_snapshots_in_dir(dir_path: String, fallback_label: String) -> Array[D
 					"day": int(meta.get("day", story.get("day", 1))),
 					"money": float(meta.get("money", mgr.get("money", 0.0))),
 					"tally_paid": float(meta.get("tally_paid", story.get("tally_total_paid", 0.0))),
-					"tally_goal": float(meta.get("tally_goal", 2000.0)),
+					"tally_goal": float(StoryManager.TALLY_GOAL if is_instance_valid(StoryManager) else 3000.0),
 					"player_level": int(meta.get("player_level", story.get("player_level", 1))),
 				})
 		fname = dir.get_next()

@@ -80,11 +80,11 @@ class UnifiedLedgerGauge extends Control:
 	const BAR_H := 22.0
 
 	var total_paid: float = 0.0
-	var goal: float = 2000.0
+	var goal: float = 3000.0
 	var current_offer: float = 0.0
 	var max_offer: float = 100.0
-	var min_thresh: float = 40.0
-	var gen_thresh: float = 65.0
+	var min_thresh: float = 55.0
+	var gen_thresh: float = 130.0
 	var fill_color: Color = Color(0.88, 0.79, 0.58, 1.0)
 	var border_color: Color = Color(0.98, 0.92, 0.76, 0.92)
 	var peso_tex: Texture2D = null
@@ -468,9 +468,9 @@ var _bold_font: FontVariation
 
 var _player_money: float = 0.0
 var _total_paid: float = 0.0
-var _goal: float = 2000.0
-var _min_amount: float = 40.0
-var _generous_amount: float = 80.0
+var _goal: float = 3000.0
+var _min_amount: float = 55.0
+var _generous_amount: float = 130.0
 var _max_offer: float = 0.0
 var _current_offer: float = 0.0
 var _last_tier: String = ""
@@ -1218,6 +1218,7 @@ func _play_entrance() -> void:
 	_confirm_btn.modulate.a = 0.0
 
 	var tw := create_tween()
+	tw.set_ignore_time_scale(true)
 	tw.tween_property(_backdrop, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_header_banner, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_header_banner, "offset_top", 0.0, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
@@ -1242,8 +1243,19 @@ func _on_confirm_pressed() -> void:
 	_confirmed_tier = _evaluate_tier(_confirmed_offer)
 	EventBus.request_sfx.emit("money_decrease" if _confirmed_offer > 0.0 else "interact")
 
+	# Tactile button squash-pop before fading out the gauge dock
+	_confirm_btn.pivot_offset = _confirm_btn.size * 0.5
+	var press_tw := create_tween()
+	press_tw.set_ignore_time_scale(true)
+	press_tw.tween_property(_confirm_btn, "scale", Vector2(0.92, 1.08), 0.06).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	press_tw.tween_property(_confirm_btn, "scale", Vector2.ONE, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await press_tw.finished
+	if not is_inside_tree():
+		return
+
 	# Fade out the bottom gauge dock and overlapping CTA while keeping the 3 slots locked in place!
 	var fade_tw := create_tween().set_parallel(true)
+	fade_tw.set_ignore_time_scale(true)
 	fade_tw.tween_property(_gauge_dock, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
 	fade_tw.tween_property(_confirm_btn, "modulate:a", 0.0, 0.20).set_trans(Tween.TRANS_SINE)
 	if is_instance_valid(_scroll_hint_box):
@@ -1275,8 +1287,8 @@ func _launch_hades_card_flip() -> void:
 	_omens_only = false
 	if is_instance_valid(_omens_only_btn):
 		_omens_only_btn.set_pressed_no_signal(false)
-	var rarity_boost: float = 0.20 if _confirmed_rare_odds else 0.0
-	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds, rarity_boost)
+	var rarity_boost: float = 0.25 if _confirmed_rare_odds else 0.0
+	_card_data_list = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds, rarity_boost, _confirmed_rare_odds)
 	_card_rows.clear()
 	_card_picked = false
 	_hovered_idx = -1
@@ -1328,16 +1340,17 @@ func _launch_hades_card_flip() -> void:
 		revealed_row.scale = Vector2(1.0, 0.0)
 
 		var tw := create_tween()
+		tw.set_ignore_time_scale(true)
 		tw.tween_interval(i * 0.11)
-		tw.tween_property(shadow_panel, "scale:y", 0.0, 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_property(shadow_panel, "scale", Vector2(1.03, 0.0), 0.14).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.tween_callback(func():
 			shadow_panel.visible = false
 			revealed_row.visible = true
 			revealed_row.pivot_offset = slot.size * 0.5
-			revealed_row.scale = Vector2(1.0, 0.0)
+			revealed_row.scale = Vector2(1.04, 0.0)
 			EventBus.request_sfx.emit("interact")
 		)
-		tw.tween_property(revealed_row, "scale:y", 1.0, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(revealed_row, "scale", Vector2.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		last_tw = tw
 
 	if last_tw:
@@ -1411,12 +1424,36 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 
 	var title_lbl := Label.new()
 	title_lbl.text = str(c_data.get("title", "Moon Card"))
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
 	title_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(title_lbl)
+
+	var dot_lbl := Label.new()
+	dot_lbl.text = "·"
+	dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	dot_lbl.add_theme_font_size_override("font_size", 16)
+	dot_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+	dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(dot_lbl)
+
+	var rarity_id: String = MayariCardRegistry.get_card_rarity(str(c_data.get("id", "")))
+	var rarity_col: Color = MayariCardRegistry.get_rarity_color(rarity_id)
+	var rp_lbl := Label.new()
+	rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity_id)
+	rp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rp_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+	rp_lbl.add_theme_font_size_override("font_size", 16)
+	rp_lbl.add_theme_color_override("font_color", rarity_col)
+	rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(rp_lbl)
+
+	var top_spacer := Control.new()
+	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(top_spacer)
 
 	var sel_pill := PanelContainer.new()
 	sel_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -1436,31 +1473,11 @@ func _create_hades_boon_row(c_data: Dictionary, index: int) -> PanelContainer:
 	top_line.add_child(sel_pill)
 	card.set_meta("sel_pill", sel_pill)
 
-	var rarity_id: String = MayariCardRegistry.get_card_rarity(str(c_data.get("id", "")))
-	var rarity_col: Color = MayariCardRegistry.get_rarity_color(rarity_id)
-	var rp_lbl := Label.new()
-	rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity_id)
-	rp_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	rp_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	rp_lbl.add_theme_font_size_override("font_size", 16)
-	rp_lbl.add_theme_color_override("font_color", rarity_col)
-	rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top_line.add_child(rp_lbl)
-
-	var dot_lbl := Label.new()
-	dot_lbl.text = "·"
-	dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	dot_lbl.add_theme_font_size_override("font_size", 16)
-	dot_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
-	dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top_line.add_child(dot_lbl)
-
 	var rarity_lbl := Label.new()
 	rarity_lbl.text = "Favor" if is_fav else "Omen"
 	rarity_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	rarity_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	rarity_lbl.add_theme_font_size_override("font_size", 18)
+	rarity_lbl.add_theme_font_size_override("font_size", 22)
 	rarity_lbl.add_theme_color_override("font_color", accent_bright)
 	rarity_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(rarity_lbl)
@@ -1573,8 +1590,12 @@ func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
 		var st: StyleBoxFlat = _shadow_rows[i]["style"]
 		var acc: Color = p.get_meta("shadow_accent", COL_GOLD)
 		var brt: Color = p.get_meta("shadow_bright", COL_GOLD_BRIGHT)
-		p.scale = Vector2.ONE
-		var tw := create_tween()
+		var prev_tw = p.get_meta("_hover_tw", null)
+		if prev_tw is Tween and (prev_tw as Tween).is_valid():
+			(prev_tw as Tween).kill()
+		p.pivot_offset = p.size * 0.5
+		var tw := create_tween().set_parallel(true)
+		tw.set_ignore_time_scale(true)
 		if i == active_idx:
 			st.border_color = brt
 			st.border_width_left = 6
@@ -1582,6 +1603,7 @@ func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
 			st.border_width_right = 2
 			st.border_width_bottom = 2
 			tw.tween_property(p, "modulate", Color(1.05, 1.04, 1.02, 1.0), 0.12)
+			tw.tween_property(p, "scale", Vector2(1.018, 1.018), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		else:
 			st.border_color = Color(acc.r, acc.g, acc.b, 0.56)
 			st.border_width_left = 4
@@ -1590,6 +1612,8 @@ func _on_shadow_row_hovered(index: int, is_hovered: bool) -> void:
 			st.border_width_bottom = 1
 			var dim := Color(0.84, 0.80, 0.76, 0.92) if active_idx != -1 else Color.WHITE
 			tw.tween_property(p, "modulate", dim, 0.14)
+			tw.tween_property(p, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		p.set_meta("_hover_tw", tw)
 
 func _on_row_hovered(index: int, is_hovered: bool) -> void:
 	if _card_picked or not _cards_ready or index < 0 or index >= _card_rows.size():
@@ -1618,8 +1642,12 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			var sp: Control = row.get_meta("sel_pill")
 			if is_instance_valid(sp):
 				sp.visible = is_sel
-		row.scale = Vector2.ONE
-		var tw := create_tween()
+		var prev_tw = row.get_meta("_hover_tw", null)
+		if prev_tw is Tween and (prev_tw as Tween).is_valid():
+			(prev_tw as Tween).kill()
+		row.pivot_offset = row.size * 0.5
+		var tw := create_tween().set_parallel(true)
+		tw.set_ignore_time_scale(true)
 		if _hovered_idx == i or is_sel:
 			style.border_color = COL_CREAM if is_sel else accent_bright
 			style.border_width_top = 3 if is_sel else 2
@@ -1627,6 +1655,7 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			style.border_width_bottom = 3 if is_sel else 2
 			style.border_width_left = 6
 			tw.tween_property(row, "modulate", Color.WHITE, 0.12)
+			tw.tween_property(row, "scale", Vector2(1.022, 1.022), 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		else:
 			style.border_color = Color(accent.r, accent.g, accent.b, 0.55)
 			style.border_width_top = 1
@@ -1636,6 +1665,8 @@ func _on_row_hovered(index: int, is_hovered: bool) -> void:
 			var cap_reached := _selected_indices.size() >= _max_card_picks
 			var dim := Color(0.66, 0.62, 0.58, 0.80) if cap_reached else (Color(0.80, 0.76, 0.72, 0.90) if _hovered_idx != -1 else Color.WHITE)
 			tw.tween_property(row, "modulate", dim, 0.14)
+			tw.tween_property(row, "scale", Vector2.ONE, 0.14).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		row.set_meta("_hover_tw", tw)
 
 func _on_row_gui_input(event: InputEvent, index: int) -> void:
 	if _card_picked or not _cards_ready:
@@ -1857,11 +1888,11 @@ func _on_reroll_pressed() -> void:
 		return
 	_rerolls_left -= 1
 	var fresh_cards: Array[Dictionary]
-	var rarity_boost: float = 0.20 if _confirmed_rare_odds else 0.0
+	var rarity_boost: float = 0.25 if _confirmed_rare_odds else 0.0
 	if _omens_only:
-		fresh_cards = MayariCardRegistry.draw_three_cards("include_omens", false, rarity_boost)
+		fresh_cards = MayariCardRegistry.draw_three_cards("include_omens", false, rarity_boost, false)
 	else:
-		fresh_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds, rarity_boost)
+		fresh_cards = MayariCardRegistry.draw_three_cards(_confirmed_tier, _confirmed_shifted_odds, rarity_boost, _confirmed_rare_odds)
 	_swap_draft_cards(fresh_cards)
 
 
@@ -1968,38 +1999,134 @@ func _finalize_selected_rows(indices: Array[int]) -> void:
 	_header_title_lbl.text = "  ·  ".join(chosen_titles)
 	_header_sub_lbl.text = "Active tomorrow · " + " | ".join(chosen_tags)
 
+	var Juice := load("res://Scripts/UI/Minigames/MinigameJuice.gd")
+	var spotlight_cards: Array[Control] = []
+
 	for i in range(_card_rows.size()):
 		var row := _card_rows[i]
 		if not is_instance_valid(row):
 			continue
-		var tw := create_tween()
-		if i in indices:
-			var style: StyleBoxFlat = row.get_meta("card_style")
-			style.border_color = COL_CREAM
-			style.set_border_width_all(3)
-			row.pivot_offset = row.size * 0.5
-			tw.tween_property(row, "scale", Vector2(1.04, 1.04), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			tw.parallel().tween_property(row, "modulate", Color.WHITE, 0.15)
-		else:
-			tw.tween_property(row, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
+		var prev_tw = row.get_meta("_hover_tw", null)
+		if prev_tw is Tween and (prev_tw as Tween).is_valid():
+			(prev_tw as Tween).kill()
 
-	await get_tree().create_timer(0.68).timeout
+		if i in indices:
+			# Reparent chosen card directly onto _root at its exact screen rect so the rest
+			# of the menu can fade away Hades-style while the chosen card lingers in the spotlight!
+			var rect := row.get_global_rect()
+			if row.get_parent() != _root and is_instance_valid(_root):
+				row.get_parent().remove_child(row)
+				_root.add_child(row)
+				row.set_anchors_preset(Control.PRESET_TOP_LEFT)
+				row.position = rect.position
+				row.size = rect.size
+				row.z_index = 40
+
+			var accent_col: Color = row.get_meta("accent_bright", COL_GOLD_BRIGHT)
+			var style: StyleBoxFlat = row.get_meta("card_style")
+			style.border_color = Color(accent_col.r, accent_col.g, accent_col.b, 0.72)
+			row.pivot_offset = row.size * 0.5
+			var iri_mat := _attach_iridescent_border(row, accent_col)
+
+			# Celebratory area-preserving lock-in squash -> heroic settle + iridescent sweep
+			var tw := create_tween()
+			tw.set_ignore_time_scale(true)
+			tw.tween_property(row, "scale", Vector2(1.07, 0.95), 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.parallel().tween_property(row, "modulate", Color.WHITE, 0.12)
+			tw.tween_property(row, "scale", Vector2(1.04, 1.04), 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+			if iri_mat:
+				var iri_tw := create_tween().set_parallel(true)
+				iri_tw.set_ignore_time_scale(true)
+				iri_tw.tween_method(func(v: float): iri_mat.set_shader_parameter("shimmer_time", v), 0.0, 2.4, 1.05)
+				iri_tw.tween_method(func(v: float): iri_mat.set_shader_parameter("sweep_pos", v), -0.35, 1.45, 0.65).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+			if Juice and is_instance_valid(_root):
+				Juice.spawn_burst(_root, rect.get_center(), accent_col, 16, 130.0)
+			spotlight_cards.append(row)
+		else:
+			var tw := create_tween()
+			tw.set_ignore_time_scale(true)
+			tw.tween_property(row, "modulate:a", 0.0, 0.18).set_trans(Tween.TRANS_SINE)
+
+	# Fade out the entire rest of the menu immediately, leaving only the iridescent chosen card(s)
+	var menu_fade := create_tween().set_parallel(true)
+	menu_fade.set_ignore_time_scale(true)
+	menu_fade.tween_property(_backdrop, "modulate:a", 0.0, 0.26).set_trans(Tween.TRANS_SINE)
+	menu_fade.tween_property(_mayari_portrait, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
+	menu_fade.tween_property(_header_banner, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
+	menu_fade.tween_property(_center_frame, "modulate:a", 0.0, 0.22).set_trans(Tween.TRANS_SINE)
+	if is_instance_valid(_reroll_btn):
+		menu_fade.tween_property(_reroll_btn, "modulate:a", 0.0, 0.18)
+	if is_instance_valid(_omens_only_btn):
+		menu_fade.tween_property(_omens_only_btn, "modulate:a", 0.0, 0.18)
+	if is_instance_valid(_accept_cards_btn):
+		menu_fade.tween_property(_accept_cards_btn, "modulate:a", 0.0, 0.18)
+
+	# Let the chosen card(s) shine in the spotlight before floating away
+	await get_tree().create_timer(0.78, true, false, true).timeout
 	if not is_inside_tree():
 		return
-	await _fade_out_and_finish(chosen_ids)
+	await _fade_out_spotlight_and_finish(spotlight_cards, chosen_ids)
 
-func _fade_out_and_finish(selected_card_ids: Array[String]) -> void:
-	var fade := create_tween()
-	fade.tween_property(_backdrop, "modulate:a", 0.0, 0.24).set_trans(Tween.TRANS_SINE)
-	fade.parallel().tween_property(_mayari_portrait, "modulate:a", 0.0, 0.22)
-	fade.parallel().tween_property(_header_banner, "modulate:a", 0.0, 0.22)
-	fade.parallel().tween_property(_center_frame, "modulate:a", 0.0, 0.22)
-	if is_instance_valid(_reroll_btn):
-		fade.parallel().tween_property(_reroll_btn, "modulate:a", 0.0, 0.18)
-	if is_instance_valid(_omens_only_btn):
-		fade.parallel().tween_property(_omens_only_btn, "modulate:a", 0.0, 0.18)
-	if is_instance_valid(_accept_cards_btn):
-		fade.parallel().tween_property(_accept_cards_btn, "modulate:a", 0.0, 0.18)
-	await fade.finished
+static var _iridescent_shader: Shader = null
+
+func _attach_iridescent_border(card: Control, accent_col: Color) -> ShaderMaterial:
+	if _iridescent_shader == null:
+		_iridescent_shader = Shader.new()
+		_iridescent_shader.code = """
+shader_type canvas_item;
+uniform float shimmer_time = 0.0;
+uniform float sweep_pos = -0.35;
+uniform vec4 accent_tint : source_color = vec4(1.0, 0.875, 0.56, 1.0);
+uniform vec2 card_size = vec2(600.0, 140.0);
+
+vec3 iridescent(float t) {
+	// Pearlescent spectral shift blended with warm antique gold
+	vec3 spectral = 0.58 + 0.42 * cos(6.28318 * (t + vec3(0.0, 0.33, 0.67)));
+	return mix(spectral, accent_tint.rgb, 0.35);
+}
+
+void fragment() {
+	vec2 px = UV * card_size;
+	float edge_dist = min(min(px.x, card_size.x - px.x), min(px.y, card_size.y - px.y));
+	float border_mask = 1.0 - smoothstep(3.0, 6.5, edge_dist);
+	float inner_glow = (1.0 - smoothstep(4.0, 20.0, edge_dist)) * 0.28;
+
+	// Flowing perimeter iridescent wave
+	float angle_t = (UV.x * 1.4 + UV.y * 0.9) - shimmer_time * 0.85;
+	vec3 iri_col = iridescent(angle_t);
+
+	// Diagonal holographic light sweep across card face
+	float diag = UV.x * 0.78 + UV.y * 0.22;
+	float sweep = exp(-pow((diag - sweep_pos) * 7.5, 2.0));
+	vec3 sweep_col = mix(vec3(1.0, 0.98, 0.92), iri_col, 0.45);
+
+	vec3 final_col = iri_col * (border_mask * 1.15 + inner_glow) + sweep_col * sweep * 0.34;
+	float final_a = clamp(border_mask * 0.95 + inner_glow + sweep * 0.30, 0.0, 1.0);
+	COLOR = vec4(final_col, final_a);
+}
+"""
+	var fx := ColorRect.new()
+	fx.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fx.color = Color.WHITE
+	var mat := ShaderMaterial.new()
+	mat.shader = _iridescent_shader
+	mat.set_shader_parameter("accent_tint", accent_col)
+	mat.set_shader_parameter("card_size", card.size)
+	fx.material = mat
+	card.add_child(fx)
+	return mat
+
+func _fade_out_spotlight_and_finish(spotlight_cards: Array[Control], selected_card_ids: Array[String]) -> void:
+	if not spotlight_cards.is_empty():
+		var fade := create_tween().set_parallel(true)
+		fade.set_ignore_time_scale(true)
+		for card in spotlight_cards:
+			if is_instance_valid(card):
+				fade.tween_property(card, "position:y", card.position.y - 22.0, 0.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+				fade.tween_property(card, "modulate:a", 0.0, 0.26).set_trans(Tween.TRANS_SINE)
+		await fade.finished
 	completed.emit(_confirmed_offer, _confirmed_tier, selected_card_ids)
 	queue_free()

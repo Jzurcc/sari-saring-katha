@@ -43,17 +43,19 @@ var is_mayari_met: bool = false
 var last_mayari_collection_successful: bool = true
 
 # --- Reyna Mayari Goal-Based Nightly Tally & Moon Cards ---
-const TALLY_GOAL := 2000.0
-const TALLY_MIN_SCHEDULE: Array[float] = [40.0, 55.0, 70.0, 85.0, 100.0, 115.0, 130.0]
-const TALLY_GEN_SCHEDULE: Array[float] = [95.0, 125.0, 155.0, 190.0, 225.0, 260.0, 295.0]
+const TALLY_GOAL := 3000.0
+const TALLY_MIN_SCHEDULE: Array[float] = [55.0, 75.0, 95.0, 120.0, 145.0, 170.0, 200.0]
+const TALLY_GEN_SCHEDULE: Array[float] = [130.0, 165.0, 200.0, 235.0, 275.0, 315.0, 355.0]
 
 const LEDGER_MILESTONES: Array[Dictionary] = [
-	{"id": "reroll_1", "ratio": 0.15, "amount": 300.0, "title": "Moon's Grace", "desc": "+1 Reroll on Reyna Mayari's nightly card draft."},
-	{"id": "daytime_mayari", "ratio": 0.30, "amount": 600.0, "title": "Daylight Audience", "desc": "Reyna Mayari can now visit and shop during the day like a regular neighbor."},
-	{"id": "shifted_odds_reroll_2", "ratio": 0.50, "amount": 1000.0, "title": "Silver Favor", "desc": "Fair odds shift to 50% Favor / 50% Omen (Meager 25% Favor) + 1 extra Reroll (2 total)."},
-	{"id": "rare_moon_odds", "ratio": 0.66, "amount": 1320.0, "title": "Gilded Crescent", "desc": "+20% Increased Rarity on Reyna Mayari's nightly Moon Card draft."},
-	{"id": "twin_moons", "ratio": 0.75, "amount": 1500.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards per night (choose 1 or 2)."},
-	{"id": "sealed_ledger", "ratio": 1.00, "amount": 2000.0, "title": "Patron of the Moon", "desc": "Permanently seals the Silver Ledger."},
+	{"id": "reroll_1", "ratio": 0.10, "amount": 300.0, "title": "Moon's Grace", "desc": "+1 Moon Card Reroll + +10% evening customer tip chance after 5 PM."},
+	{"id": "smugglers_cut", "ratio": 0.20, "amount": 600.0, "title": "Biringan Smuggler's Cut", "desc": "Permanent -8% wholesale restock cost + a one-time ₱100 Royal Trade Rebate."},
+	{"id": "daytime_mayari", "ratio": 0.30, "amount": 900.0, "title": "Daylight Audience", "desc": "Mayari visits in disguise by day and leaves a +₱35 Royal Tip whenever she shops."},
+	{"id": "lunar_margin", "ratio": 0.45, "amount": 1350.0, "title": "Lunar Patronage", "desc": "Permanent +12% Lunar Sale Bonus on all items sold + +20% Utang repayment chance."},
+	{"id": "shifted_odds_reroll_2", "ratio": 0.60, "amount": 1800.0, "title": "Silver Favor", "desc": "Fair shifts to 50% Favor (Meager 25%), +1 Reroll, and +15% Neighbor Reputation gain."},
+	{"id": "rare_moon_odds", "ratio": 0.72, "amount": 2160.0, "title": "Gilded Crescent", "desc": "+25% Rare Moon Card odds, 1 guaranteed Rare on Lavish tributes, and -10% Store Upgrade costs."},
+	{"id": "twin_moons", "ratio": 0.85, "amount": 2550.0, "title": "Twin Moons", "desc": "Draft up to 2 Moon Cards nightly; pairing a Favor with an Omen pays a +₱150 morning bounty."},
+	{"id": "sealed_ledger", "ratio": 1.00, "amount": 3000.0, "title": "Patron of the Moon", "desc": "Permanently seals Lola's Silver Ledger + grants +1 Price Tolerance and +20% Store XP."},
 ]
 
 var tally_total_paid: float = 0.0
@@ -171,13 +173,13 @@ func get_ledger_tier() -> int:
 	if is_tally_cleared():
 		return 5
 	var ratio: float = tally_total_paid / maxf(1.0, TALLY_GOAL)
-	if ratio >= 0.75:
+	if ratio >= 0.85:
 		return 4
-	if ratio >= 0.50:
+	if ratio >= 0.60:
 		return 3
 	if ratio >= 0.30:
 		return 2
-	if ratio >= 0.15:
+	if ratio >= 0.10:
 		return 1
 	return 0
 
@@ -259,6 +261,8 @@ func get_item_sale_bonus(item: ItemData, base_sale: float, revealed_events_only:
 		bonus += 3.0 * float(feat_boosts)
 		if has_mayari_card(MayariCardRegistry.CARD_CURBSIDE_GLOW):
 			bonus += calc_scaled_tip(base_sale, 0.15, 3.0, 20.0)
+	if is_ledger_milestone_unlocked("lunar_margin"):
+		bonus += calc_scaled_tip(base_sale, 0.12, 2.0, 16.0)
 	return bonus
 
 func get_mayari_card_stack_count(card_id: String) -> int:
@@ -294,10 +298,14 @@ func get_mayari_tolerance_offset() -> int:
 		offset -= 1
 	if has_mayari_card(MayariCardRegistry.CARD_BLOOD_MOON_BARGAIN):
 		offset -= 2
+	if is_tally_cleared():
+		offset += 1
 	return offset
 
 func get_restock_discount_multiplier() -> float:
 	var mult := 1.0
+	if is_ledger_milestone_unlocked("smugglers_cut"):
+		mult *= 0.92
 	if has_mayari_card(MayariCardRegistry.CARD_RELUCTANT_CARE):
 		mult *= 0.85
 	if has_mayari_card(MayariCardRegistry.CARD_CLEAR_ROAD):
@@ -410,6 +418,8 @@ func get_xp_multiplier() -> float:
 		mult *= 0.65
 	if is_instance_valid(StoreEventManager):
 		mult *= StoreEventManager.get_xp_multiplier()
+	if is_tally_cleared():
+		mult *= 1.20
 	return mult
 
 func add_player_xp(base_amount: int, reason: String = "") -> int:
@@ -1625,6 +1635,19 @@ func _on_day_started(new_day: int) -> void:
 			call_deferred("_announce_active_mayari_cards", active_mayari_cards.duplicate())
 	LogManager.info("StoryManager", "Day %d starts." % day)
 	reset_daily_stats()
+	if is_ledger_milestone_unlocked("twin_moons") and active_mayari_cards.size() >= 2:
+		var has_fav := false
+		var has_om := false
+		for cid in active_mayari_cards:
+			if MayariCardRegistry.is_favor(cid):
+				has_fav = true
+			else:
+				has_om = true
+		if has_fav and has_om and is_instance_valid(_game_manager) and _game_manager.has_method("add_money"):
+			_game_manager.add_money(150.0)
+			record_daily_stat_add("tips_earned", 150.0)
+			EventBus.request_sfx.emit("money_gain")
+			EventBus.show_notification.emit("Twin Moons Bounty: +₱150!", "Mayari rewarded you for balancing a Favor with an Omen today.", "purchase")
 	todays_missed_items.clear()
 	_roll_daily_expected_regulars()
 	_roll_daily_sulit_deals()
@@ -2370,7 +2393,7 @@ func _on_customer_dismissed(customer: Customer) -> void:
 		clock.on_customer_dismissed()
 	_set_last_customer_info(customer)
 	Dialogic.VAR.set_variable("Global_LastSatisfaction", "Unhappy")
-	_process_story_cooldown(customer)
+	CharacterProgressionManager.on_customer_dismissed(customer)
 
 func _has_other_counter_customers(leaving_customer: Customer) -> bool:
 	var spawners = get_tree().get_nodes_in_group("customer_spawner")

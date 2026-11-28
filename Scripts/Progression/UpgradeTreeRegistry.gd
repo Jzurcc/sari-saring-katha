@@ -197,7 +197,7 @@ static func get_short_description(node_id: String) -> String:
 		"recycling":
 			return "Separate bottles, tins, and cartons for the local junk shop cart. Even tossed stock finds a second life—and puts a few pesos back in your drawer."
 		"cat_1":
-			return "A sleepy orange tabby has officially claimed the warm spot beside your counter. Neighbors can't resist stopping just to scratch behind Mingming's ears."
+			return "A sleepy orange tabby has officially claimed the warm spot behind your counter. Neighbors can't resist stopping just to scratch behind Mingming's ears."
 		"cat_2":
 			return "Well-fed and glossy-coated, Mingming now greets every passerby like royalty. Half the street lines up just to see the neighborhood's favorite storekeeper."
 		"sto_nino_1":
@@ -340,6 +340,19 @@ static func evaluate_node(node_id: String, available_money: float, pending_level
 
 	var item := get_node_item(node_id, target_lvl)
 	var cost := item.price if item else 0.0
+	if cost > 0.0 and is_instance_valid(StoryManager) and StoryManager.is_ledger_milestone_unlocked("rare_moon_odds"):
+		cost = maxf(5.0, roundf((cost * 0.90) / 5.0) * 5.0)
+	if str(def["kind"]) == "tier_hub" and is_instance_valid(StoryManager) and target_lvl > StoryManager.max_unlocked_tier:
+		return {
+			"state": "locked",
+			"can_buy": false,
+			"reason": "Requires Player Lv. %d" % target_lvl,
+			"cur_level": cur_lvl,
+			"max_level": max_lvl,
+			"target_level": target_lvl,
+			"cost": cost,
+			"item": item,
+		}
 	if not are_prerequisites_met(node_id, pending_levels):
 		var req_t := int(def.get("req_tier", 0))
 		var reason := ("Requires Store Tier %d" % req_t) if req_t > 1 else "Unlock prerequisite first"

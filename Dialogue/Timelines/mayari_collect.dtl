@@ -6,49 +6,49 @@ if {Global_MayariMet} == false:
 	jump DebutIntro
 set {Variation} = range(1,4).pick_random()
 if {Global_LedgerTier} >= 4.0:
-	# Tier 4 (75-99%): Near-sealed, Council watching closely
+	# Tier 4 (75-99%): Near-sealed, openly in the player's corner while acting stern
 	if {Variation} == 1.0:
 		ReynaMayari: Only [color=#2d527c]{Global_TallyRemaining}[/color] pesos left on Lola's Silver Ledger.
-		ReynaMayari: Biringan's Council has stopped betting against you. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
+		ReynaMayari: Biringan's Council has stopped betting against you. Frankly, I am enjoying their silence. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
 	elif {Variation} == 2.0:
-		ReynaMayari: The final quarter of the ledger, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
-		ReynaMayari: Offer at least [color=#2d527c]{Global_TallyMin}[/color] pesos, and let us see what the moon grants.
+		ReynaMayari: The final stretch, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain, and I expect you across the finish line.
+		ReynaMayari: Offer at least [color=#2d527c]{Global_TallyMin}[/color] pesos, and let us draw something generous.
 	else:
-		ReynaMayari: Almost sealed. [color=#2d527c]{Global_TallyRemaining}[/color] pesos stand between you and a closed ledger.
-		ReynaMayari: Set your share on the counter. At least [color=#2d527c]{Global_TallyMin}[/color] pesos.
+		ReynaMayari: Almost sealed. [color=#2d527c]{Global_TallyRemaining}[/color] pesos left, though I will miss having an official excuse to drop by.
+		ReynaMayari: Clear your throat? I said nothing. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
 elif {Global_LedgerTier} >= 3.0:
-	# Tier 3 (50-74%): Halfway, Silver Favor unlocked
+	# Tier 3 (50-74%): Halfway, rigging the deck while acting regal
 	if {Variation} == 1.0:
 		ReynaMayari: Past the halfway mark. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
-		ReynaMayari: The Council noticed I tilted your lunar odds. Make it worth my trouble. Minimum [color=#2d527c]{Global_TallyMin}[/color] pesos.
+		ReynaMayari: The Council asked why your Moon Cards keep rolling gold. I told them to mind their own spires. Minimum [color=#2d527c]{Global_TallyMin}[/color] pesos.
 	elif {Variation} == 2.0:
-		ReynaMayari: Your shelves look busier every shift. [color=#2d527c]{Global_TallyRemaining}[/color] pesos left of [color=#2d527c]{Global_TallyGoal}[/color].
-		ReynaMayari: Place at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the wood.
+		ReynaMayari: Your shelves look fuller every shift. Do not let that praise go to your head.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos left of [color=#2d527c]{Global_TallyGoal}[/color]. Enough waiting. Place at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the wood, lest you'd rather face the Council.
 	else:
-		ReynaMayari: Half the silver already recorded in Biringan. [color=#2d527c]{Global_TallyRemaining}[/color] pesos to go.
-		ReynaMayari: Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos. Decide what you will offer.
+		ReynaMayari: Half the silver recorded in Biringan, and your candy jar is still well-stocked. Good.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos to go. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
 elif {Global_LedgerTier} >= 2.0:
-	# Tier 2 (30-49%): Daylight Audience unlocked (playful denial of daytime visits)
+	# Tier 2 (30-49%): Daylight Audience unlocked (deadpan denial of daytime candy runs)
 	if {Variation} == 1.0:
-		ReynaMayari: Strictly Silver Ledger business. Do not bring up my daytime errands.
+		ReynaMayari: Strictly Silver Ledger business right now. Do not mention the candies I bought earlier.
 		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. I expect at least [color=#2d527c]{Global_TallyMin}[/color] pesos.
 	elif {Variation} == 2.0:
-		ReynaMayari: I see you restocked the candy jar. Irrelevant.
+		ReynaMayari: I noticed you restocked the sweet jar on the top shelf. Completely irrelevant to our audit, of course.
 		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos left on Lola's ledger. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos.
 	else:
-		ReynaMayari: Business first, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] of [color=#2d527c]{Global_TallyGoal}[/color] pesos remain.
-		ReynaMayari: Set at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the counter.
+		ReynaMayari: Wipe that grin off your face, shopkeeper. Any resemblance to "Maria" is pure coincidence.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] of [color=#2d527c]{Global_TallyGoal}[/color] pesos remain. Set at least [color=#2d527c]{Global_TallyMin}[/color] pesos down.
 elif {Global_LedgerTier} >= 1.0:
-	# Tier 1 (15-29%): First seal broken, Reroll unlocked
+	# Tier 1 (15-29%): First seal broken, secretly impressed
 	if {Variation} == 1.0:
-		ReynaMayari: The first seal broke cleanly. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain on the ledger.
-		ReynaMayari: Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos. Generosity still earns kinder Favors.
+		ReynaMayari: The first seal broke cleanly. You are far steadier than my court predicted.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. Minimum is [color=#2d527c]{Global_TallyMin}[/color] pesos, and use your reroll wisely.
 	elif {Variation} == 2.0:
-		ReynaMayari: Word travels fast past the balete tree. You are steadier than Biringan expected.
+		ReynaMayari: Word travels fast past the balete tree. Half of Biringan expected you to fold by now. I knew better.
 		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos left. Set at least [color=#2d527c]{Global_TallyMin}[/color] pesos down.
 	else:
-		ReynaMayari: Time to weigh the counter, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
-		ReynaMayari: At least [color=#2d527c]{Global_TallyMin}[/color] pesos, then draw your Moon Card.
+		ReynaMayari: Still standing behind the wood, shopkeeper. Good. Keep proving my Council wrong.
+		ReynaMayari: [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain. At least [color=#2d527c]{Global_TallyMin}[/color] pesos, then draw your Moon Card.
 else:
 	# Tier 0 (0-14%): Early, brisk and regal
 	if {Variation} == 1.0:
@@ -67,14 +67,14 @@ else:
 label DebutIntro
 ReynaMayari: The candle by the counter is missing. Your Lola never forgot it once.
 - Who are you?
-	ReynaMayari: Reyna Mayari, Sovereign of Biringan. And you hold your grandmother's counter.
+	ReynaMayari: Reyna Mayari, Queen of Biringan. And you hold your grandmother's counter.
 - Are you a late customer?
 	ReynaMayari: Bold guess for a mortal. I am Mayari, Queen of Biringan.
 - You knew my Lola?
 	ReynaMayari: Better than most in Karimlan. I am Mayari of Biringan.
 ReynaMayari: Your Lola signed a Silver Ledger with my city. [color=#2d527c]{Global_TallyGoal}[/color] pesos remain to seal it.
 ReynaMayari: Each shift you pay, the moon answers with Favors for generosity, or Omens if you fall short.
-ReynaMayari: Even a sharp shopkeeper can turn an Omen into profit. Place at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the wood.
+ReynaMayari: Even a sharp shopkeeper can turn an Omen into profit. Enough waiting. Place at least [color=#2d527c]{Global_TallyMin}[/color] pesos on the wood.
 [signal arg="open_tally_offer"]
 [wait time="0.5"]
 [end_timeline]
@@ -96,14 +96,14 @@ else:
 label Generous
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos. More than I asked, and [color=#2d527c]{Global_TallyRemaining}[/color] left on the ledger.
-	ReynaMayari: The Silver Spires remember generosity. Enjoy your Favor.
+	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos. More than I asked, and only [color=#2d527c]{Global_TallyRemaining}[/color] left on the ledger.
+	ReynaMayari: Do not look so smug. I am only smiling because the arithmetic is tidy. Enjoy your Favor.
 elif {Variation} == 2.0:
 	ReynaMayari: Generous coin, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
-	ReynaMayari: Keep that pace up and Biringan's Council will run out of excuses.
+	ReynaMayari: Keep that pace up and I can watch Biringan's stuffiest elders eat their words.
 else:
 	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded in silver. Only [color=#2d527c]{Global_TallyRemaining}[/color] left.
-	ReynaMayari: Your Lola used to slide extra coins over with that exact same grin.
+	ReynaMayari: Your Lola used to slide extra coins over with that exact same grin. Take a good Favor tonight.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
@@ -111,50 +111,78 @@ label Success
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
 	ReynaMayari: [color=#9a630a]{Global_TallyOffer}[/color] pesos recorded cleanly. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain.
+	ReynaMayari: Steady work, shopkeeper. Drink some water before you lock up. That is a royal decree, not concern.
 elif {Variation} == 2.0:
 	ReynaMayari: Fair coin, shopkeeper. [color=#2d527c]{Global_TallyRemaining}[/color] pesos left on Lola's ledger.
+	ReynaMayari: Keep your chin up and your candy jars stocked, and you will clear this pact yet.
 else:
 	ReynaMayari: Exact and orderly. [color=#2d527c]{Global_TallyRemaining}[/color] pesos remain before the pact seals.
+	ReynaMayari: Not bad at all for a mortal counter.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Shortfall
 label Angry
 if {Global_TallyOffer} <= 0:
-	ReynaMayari: Nothing on the wood? [color=#2d527c]{Global_TallyRemaining}[/color] pesos still stand unpaid.
-	ReynaMayari: Brace your shelves for a lunar Omen, shopkeeper.
+	ReynaMayari: Zero pesos on the wood? [color=#2d527c]{Global_TallyRemaining}[/color] pesos still stand unpaid.
+	ReynaMayari: Protocol forces my hand on an Omen, shopkeeper. Stock smart and bounce back next shift, understood?
 else:
 	ReynaMayari: Only [color=#9a630a]{Global_TallyOffer}[/color] pesos. Short of the mark, with [color=#2d527c]{Global_TallyRemaining}[/color] remaining.
-	ReynaMayari: An Omen follows a light ledger. Let us see if you can profit from it anyway.
+	ReynaMayari: An Omen follows a light ledger, though a sharp shopkeeper can still squeeze profit out of bad weather. Do not fold on me now.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label MilestoneAlso
-ReynaMayari: One more thing before I go.
+ReynaMayari: Oh, and do not lock the shutters just yet.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_reroll_1
 ReynaMayari: You broke the first seal, [color=#9a630a]Moon's Grace[/color].
-ReynaMayari: I will bend the court's rules just a little. Take one free [color=#9a630a]reroll[/color] on your Moon Cards from now on.
+ReynaMayari: Strictly under an obscure royal clerical clause, I am granting you one free [color=#9a630a]reroll[/color] every night, and a cool evening breeze over your counter so dusk regulars tip [color=#9a630a]10% more often[/color] after five.
+ReynaMayari: Watching a bad draw ruin a good shopkeeper's shift irritates me. Use it well.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_smugglers_cut
+ReynaMayari: Twenty percent recorded. You have earned [color=#9a630a]Biringan Smuggler's Cut[/color].
+ReynaMayari: My court's river barges share roads with your wholesale suppliers. Your restock orders are permanently [color=#9a630a]8% cheaper[/color], and I slipped a [color=#9a630a]100-peso trade rebate[/color] into your register.
+ReynaMayari: Do not ask which elder's tariff ledger I crossed out to arrange it.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_daytime_mayari
-ReynaMayari: Thirty percent settled. You have earned [color=#9a630a]Daylight Audience[/color].
-ReynaMayari: Expect me at your counter during business hours. Strictly to inspect the shop, of course.
+ReynaMayari: Thirty percent settled. You have unlocked [color=#9a630a]Daylight Audience[/color].
+ReynaMayari: Expect me during business hours in plainclothes, with a [color=#9a630a]35-peso royal tip[/color] whenever your shelves have what I want. Strictly to audit mortal commerce, obviously.
+ReynaMayari: Keep that sweet candy jar full, and if you call me Your Majesty in front of neighbors, I will deny everything.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_lunar_margin
+ReynaMayari: Nearly halfway through Lola's pact. [color=#9a630a]Lunar Patronage[/color] now rests on your wood.
+ReynaMayari: Word of my favor has reached the street. Every item you sell carries a permanent [color=#9a630a]+12% Lunar Sale Bonus[/color], and neighbors settle their [color=#9a630a]lista tabs 20% more reliably[/color].
+ReynaMayari: Turns out mortals pay their debts much faster when a moon goddess shops at the same counter.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_shifted_odds_reroll_2
-ReynaMayari: Half the Silver Ledger paid, [color=#9a630a]Silver Favor[/color] is yours.
-ReynaMayari: I am tilting the lunar deck kindly toward Favors, and slipping you a [color=#9a630a]second reroll[/color]. Do not tell the Council.
+ReynaMayari: Sixty percent of the Silver Ledger paid. [color=#9a630a]Silver Favor[/color] is yours.
+ReynaMayari: Listen closely. I stacked the lunar deck toward Favors, slipped a [color=#9a630a]second reroll[/color] under the table, and your standing with every neighbor now climbs [color=#9a630a]15% faster[/color].
+ReynaMayari: If Biringan's Council asks, the moon tilted on its own. Keep winning, shopkeeper.
+[signal arg="check_mayari_milestones"]
+[end_timeline]
+
+label Milestone_rare_moon_odds
+ReynaMayari: Over seventy percent settled. You have earned the [color=#9a630a]Gilded Crescent[/color].
+ReynaMayari: I unlocked Biringan's upper vault: [color=#9a630a]rarer Moon Cards[/color] appear far more often, Lavish tributes guarantee a [color=#9a630a]Rare Favor[/color], and my artisans cut [color=#9a630a]10% off every Store Upgrade[/color].
+ReynaMayari: Consider it a thank-you for keeping my favorite snacks stocked. Not that a Queen plays favorites.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
 label Milestone_twin_moons
-ReynaMayari: Three-quarters honored. You have unlocked [color=#9a630a]Twin Moons[/color].
-ReynaMayari: Claim up to [color=#9a630a]two Moon Cards[/color] at once from now on. You have earned the double blessing.
+ReynaMayari: Eighty-five percent honored. [color=#9a630a]Twin Moons[/color] is awake.
+ReynaMayari: Take up to [color=#9a630a]two Moon Cards[/color] every night from now on, and whenever you dare pair a Favor with an Omen, my treasury will drop a [color=#9a630a]150-peso bounty[/color] on your counter at dawn.
+ReynaMayari: My Council called it outrageous favoritism. I told them to audit me themselves.
 [signal arg="check_mayari_milestones"]
 [end_timeline]
 
