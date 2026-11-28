@@ -58,6 +58,7 @@ var todays_story_counts: Dictionary = {}
 var todays_focus_character_path: String = ""
 var global_story_cooldown: int = 0
 var last_story_advancer_path: String = ""
+var story_rejection_cooldowns: Dictionary = {} # char_path -> int (remaining customers before story can trigger again)
 
 # ---------------------------------------------------------------------------
 # Ready
@@ -146,6 +147,8 @@ func add_reputation(character_path: String, delta: int, reason: String = "") -> 
 			rep_mult *= 1.30
 		if sm_mod.has_mayari_card(MayariCardRegistry.CARD_SHY_NEIGHBORS):
 			rep_mult *= 0.75
+		if sm_mod.has_method("is_ledger_milestone_unlocked") and sm_mod.is_ledger_milestone_unlocked("shifted_odds_reroll_2"):
+			rep_mult *= 1.15
 		if not is_equal_approx(rep_mult, 1.0):
 			delta = maxi(1, int(roundf(float(delta) * rep_mult)))
 	record_encounter(character_path)
@@ -359,13 +362,62 @@ func save_branch(character_path: String, branch_value: float) -> void:
 # Story Advancement
 # ---------------------------------------------------------------------------
 
-## Processes story cooldown and optionally advances the chapter for a customer.
-## Call after a customer transaction completes.
+const STORY_REJECTION_COOLDOWN_CUSTOMERS := 5
+
+
+func set_story_rejection_cooldown(character_path: String, count: int = STORY_REJECTION_COOLDOWN_CUSTOMERS) -> void:
+	if character_path.is_empty():
+		return
+	story_rejection_cooldowns[character_path] = maxi(int(story_rejection_cooldowns.get(character_path, 0)), count)
+	LogManager.info("CharacterProgressionManager", "Story rejection cooldown set for %s: %d customers." % [character_path.get_file(), story_rejection_cooldowns[character_path]])
+
+
+func get_story_rejection_cooldown(character_path: String) -> int:
+	return int(story_rejection_cooldowns.get(character_path, 0))
+
+
+func _tick_story_rejection_cooldowns(exclude_path: String = "") -> void:
+	if story_rejection_cooldowns.is_empty():
+		return
+	var to_erase: Array[String] = []
+	for k in story_rejection_cooldowns.keys():
+		var path_str := str(k)
+		if path_str == exclude_path:
+			continue
+		var rem := int(story_rejection_cooldowns[k]) - 1
+		if rem <= 0:
+			to_erase.append(path_str)
+		else:
+			story_rejection_cooldowns[k] = rem
+	for p in to_erase:
+		story_rejection_cooldowns.erase(p)
+
+
+## Handles a dismissed/rejected customer without advancing their story chapter.
+func on_customer_dismissed(customer: Node) -> void:
+	if customer == null or not customer.transaction_context:
+		return
+	var transaction = customer.transaction_context
+	var path: String = transaction.customer_data.resource_path if transaction.customer_data else ""
+	var is_tut: bool = bool(transaction.is_guided_tutorial) or path.to_lower().contains("unclemario")
+	if not is_tut and path != "" and not transaction.is_nightly_collection:
+		set_story_rejection_cooldown(path, STORY_REJECTION_COOLDOWN_CUSTOMERS)
+	_tick_story_rejection_cooldowns(path)
+	if global_story_cooldown > 0 and transaction.transaction_type != TransactionContext.Type.STORY and not transaction.is_visit_story:
+		global_story_cooldown -= 1
+	_get_story_manager()._save_progression()
+
+
+## Processes story cooldown and optionally advances the chapter for a satisfied customer.
+## Call after a customer transaction completes successfully.
 func process_story_cooldown(customer: Node, last_mayari_collection_successful: bool = true) -> void:
 	if customer == null or not customer.transaction_context:
 		return
 
 	var transaction = customer.transaction_context
+	if not transaction.is_guided_tutorial and not transaction.is_nightly_collection:
+		_tick_story_rejection_cooldowns("")
+
 	if transaction.story_advanced:
 		return  # Already advanced this visit
 
@@ -376,6 +428,7 @@ func process_story_cooldown(customer: Node, last_mayari_collection_successful: b
 		return
 
 	var path = transaction.customer_data.resource_path
+	story_rejection_cooldowns.erase(path)
 
 	# EXCEPTION: Reyna Mayari only advances if the collection was successful.
 	if path.contains("ReynaMayari"):
@@ -505,8 +558,10 @@ func _pick_by_spawn_weight(pool: Array[CustomerData]) -> CustomerData:
 	return pool[-1]
 
 
-## Returns true if the given chapter's prerequisites are met.
+## Returns true if the given chapter's prerequisites are met and not on rejection cooldown.
 func is_story_chapter_available(customer: CustomerData, chapter: int) -> bool:
+	if customer != null and get_story_rejection_cooldown(customer.resource_path) > 0:
+		return false
 	var prereq := customer.get_chapter_prerequisites(chapter)
 	if prereq == null:
 		return true
@@ -538,6 +593,7 @@ func get_save_data() -> Dictionary:
 		"todays_focus_character_path": todays_focus_character_path,
 		"global_story_cooldown": global_story_cooldown,
 		"last_story_advancer_path": last_story_advancer_path,
+		"story_rejection_cooldowns": story_rejection_cooldowns.duplicate(),
 	}
 
 
@@ -570,6 +626,7 @@ func load_save_data(data: Dictionary) -> void:
 	todays_focus_character_path = data.get("todays_focus_character_path", "")
 	global_story_cooldown = data.get("global_story_cooldown", 0)
 	last_story_advancer_path = data.get("last_story_advancer_path", "")
+	story_rejection_cooldowns = data.get("story_rejection_cooldowns", {})
 
 	LogManager.info("CharacterProgressionManager",
 		"Loaded. Characters progressed: %d, Rep tracked: %d, Flags: %d" % [
@@ -612,6 +669,7 @@ func reset_state() -> void:
 	todays_focus_character_path = ""
 	global_story_cooldown = 0
 	last_story_advancer_path = ""
+	story_rejection_cooldowns.clear()
 	LogManager.info("CharacterProgressionManager", "State reset for New Game.")
 
 func _get_story_manager() -> Node:

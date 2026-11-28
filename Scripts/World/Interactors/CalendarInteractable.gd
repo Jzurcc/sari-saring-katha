@@ -32,6 +32,10 @@ func get_visual_nodes() -> Array[Node3D]:
 	return result
 
 func on_interact() -> void:
-	if Dialogic.current_timeline != null or get_tree().paused:
+	if get_tree().paused:
+		return
+	var gm := get_tree().get_first_node_in_group("game_manager")
+	var allow_during_tut: bool = gm != null and gm.get("tutorial") != null and gm.tutorial.can_interact_with_world()
+	if Dialogic.current_timeline != null and not allow_during_tut:
 		return
 	EventBus.events_overlay_toggled.emit(true)

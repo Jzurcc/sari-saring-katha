@@ -297,13 +297,11 @@ func initiate_call(anchor: Node, bypass_cooldown: bool = false) -> void:
 	var success_expected := true
 	var is_missed_upgrade_followup := false
 	
-	# 1. Busy check: if a dialogue is ACTIVELY running (blocking the phone UI)
-	# If a customer is just waiting silently for an item, we are NOT busy.
+	# 1. Busy check: if a dialogue is ACTIVELY running, ignore the call request
 	if Dialogic.current_timeline != null:
-		label = "Busy"
-		success_expected = false
+		return
 	# 2. Rest check: if Mario is still on cooldown (3 in-game hours, modified by Moon Cards)
-	elif InventoryManager.is_delivery_on_cooldown() and not bypass_cooldown:
+	if InventoryManager.is_delivery_on_cooldown() and not bypass_cooldown:
 		Dialogic.VAR.set_variable("Transaction_MarioRestTime", InventoryManager.format_delivery_cooldown_remaining())
 		label = "CallRest"
 		success_expected = false

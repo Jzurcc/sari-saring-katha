@@ -89,7 +89,7 @@ func _sync_collision_layer() -> void:
 func _get_active_sprite_texture() -> Texture2D:
 	if not customer_data:
 		return null
-	if customer_data.daytime_sprite_texture != null and transaction_context != null and not transaction_context.is_nightly_collection:
+	if customer_data.daytime_sprite_texture != null and (is_ambient_cameo or (transaction_context != null and not transaction_context.is_nightly_collection)):
 		return customer_data.daytime_sprite_texture
 	return customer_data.sprite_texture
 
@@ -192,7 +192,9 @@ func setup_ambient_cameo(
 	cameo_profile: MotionProfileScript,
 	spawn_pos: Vector3,
 	counter_pos: Vector3,
-	exit_pos: Vector3
+	exit_pos: Vector3,
+	mirror_lateral: bool = false,
+	extra_depth_offset: float = 0.0
 ) -> void:
 	_ensure_motion_controller()
 	is_ambient_cameo = true
@@ -204,7 +206,7 @@ func setup_ambient_cameo(
 	_sync_collision_layer()
 	_apply_character_visuals()
 	if body_sprite:
-		body_sprite.sorting_offset = -1.0
+		body_sprite.sorting_offset = clampf(-0.75 + extra_depth_offset * 0.35, -4.5, -0.20)
 	_motion.configure(
 		self,
 		body_sprite,
@@ -213,7 +215,9 @@ func setup_ambient_cameo(
 		spawn_pos,
 		counter_pos,
 		exit_pos,
-		movement_speed
+		movement_speed,
+		mirror_lateral,
+		extra_depth_offset
 	)
 	_motion.start_ambient_cameo()
 
@@ -232,10 +236,33 @@ func _on_motion_enter_finished() -> void:
 		arrived_at_counter()
 
 
+var _pending_rep_delta: int = 0
+var _pending_rep_rank: int = 0
+var _pending_rep_ranked_up: bool = false
+var _rep_flush_queued: bool = false
+
+
 func _on_reputation_changed(char_path: String, _new_rep: int, delta: int, new_rank: int, ranked_up: bool) -> void:
 	if is_ambient_cameo or not is_instance_valid(body_sprite) or customer_data == null:
 		return
 	if char_path != customer_data.resource_path or delta == 0:
+		return
+	_pending_rep_delta += delta
+	_pending_rep_rank = new_rank
+	_pending_rep_ranked_up = _pending_rep_ranked_up or ranked_up
+	if not _rep_flush_queued:
+		_rep_flush_queued = true
+		call_deferred("_flush_pending_rep_popup")
+
+
+func _flush_pending_rep_popup() -> void:
+	_rep_flush_queued = false
+	var delta := _pending_rep_delta
+	var new_rank := _pending_rep_rank
+	var ranked_up := _pending_rep_ranked_up
+	_pending_rep_delta = 0
+	_pending_rep_ranked_up = false
+	if delta == 0 or not is_instance_valid(body_sprite):
 		return
 	_spawn_floating_rep_popup(delta, new_rank, ranked_up)
 
@@ -301,12 +328,14 @@ func _spawn_floating_rep_popup(delta: int, new_rank: int, ranked_up: bool) -> vo
 		lbl.text = "%d" % delta
 	holder.add_child(lbl)
 
+	var fade_delay := 1.85 if delta < 0 else 1.15
+	var rise_dur := 2.80 if delta < 0 else 2.10
 	var tw := holder.create_tween()
 	tw.tween_property(holder, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(holder, "global_position:y", start_pos.y + 0.36, 2.10).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(icon, "modulate:a", 0.0, 0.95).set_delay(1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.95).set_delay(1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-	tw.parallel().tween_property(lbl, "outline_modulate:a", 0.0, 0.95).set_delay(1.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(holder, "global_position:y", start_pos.y + 0.36, rise_dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(icon, "modulate:a", 0.0, 0.95).set_delay(fade_delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.95).set_delay(fade_delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(lbl, "outline_modulate:a", 0.0, 0.95).set_delay(fade_delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	tw.tween_callback(holder.queue_free)
 
 	# Tactile sprite bounce on positive Rep, subtle red pulse on negative Rep
@@ -740,6 +769,8 @@ func reject() -> void:
 ## Called by CustomerSpawner after the player chooses "Refuse service".
 ## Plays a brief leaving animation then notifies the EventBus.
 func dismiss() -> void:
+	if customer_data and is_instance_valid(CharacterProgressionManager) and (transaction_context == null or (not transaction_context.is_guided_tutorial and not transaction_context.is_nightly_collection)):
+		CharacterProgressionManager.set_story_rejection_cooldown(customer_data.resource_path)
 	_leave_store(EventBus.customer_dismissed)
 
 func _update_attention_badge() -> void:

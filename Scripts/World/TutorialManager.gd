@@ -157,7 +157,7 @@ func handle_dialogic_signal(argument: String) -> bool:
 	elif argument == "wait_for_events":
 		_start_overlay_tutorial_task(
 			"wait_for_events",
-			"Press C to open the Calendar & Events board.",
+			"Click the Calendar or press C to open the Calendar & Events board.",
 			EventBus.events_overlay_toggled
 		)
 		return true

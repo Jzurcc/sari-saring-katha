@@ -77,6 +77,11 @@ func unbind_encounter() -> void:
 	_current_timeline_path = ""
 
 func on_customer_arrived(customer: Customer) -> void:
+	# Never overwrite Dialogic's active Transaction_ItemWants while another customer is speaking!
+	if Dialogic.current_timeline != null:
+		return
+	if is_instance_valid(current_customer) and current_customer != customer:
+		return
 	update_item_names(customer)
 	if generic_char_res:
 		generic_char_res.display_name = InventoryManager.current_character_name
@@ -160,6 +165,7 @@ func _trigger_price_refusal(
 	if customer.customer_data and is_instance_valid(CharacterProgressionManager):
 		CharacterProgressionManager.add_reputation(customer.customer_data.resource_path, -12, "price_refusal")
 		CharacterProgressionManager.set_last_visit_outcome(customer.customer_data.get_clean_id(), "price_walkout")
+		CharacterProgressionManager.set_story_rejection_cooldown(customer.customer_data.resource_path)
 
 	# Pick a natural refusal line and play walkout dialogue on the customer
 	var tmpl: String = PRICE_REFUSAL_LINES[randi() % PRICE_REFUSAL_LINES.size()]
@@ -579,15 +585,13 @@ func _show_haggle_reaction_badge(customer: Customer, can_haggle: bool, haggle_ch
 		pill.modulate.a = 0.0
 
 		var tw := pill.create_tween()
-		tw.set_parallel(true)
 		tw.tween_property(pill, "position:y", clamped_y, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(pill, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.tween_property(pill, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
-		tw.chain().tween_interval(3.2)
-		tw.chain().set_parallel(true)
+		tw.parallel().tween_property(pill, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(pill, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE)
+		tw.tween_interval(3.6)
 		tw.tween_property(pill, "position:y", clamped_y - 16.0, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		tw.tween_property(pill, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE)
-		tw.chain().tween_callback(func():
+		tw.parallel().tween_property(pill, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE)
+		tw.tween_callback(func():
 			if is_instance_valid(cl):
 				cl.queue_free()
 		)
@@ -769,29 +773,29 @@ func _build_favorite_discovery_line(c_data: CustomerData, cat_label: String) -> 
 	var cid := c_data.get_clean_id() if c_data else ""
 	match cid:
 		"kuyakap":
-			return "Heh... %s. You've got a good eye, apo — that's always my favorite." % cat_label
+			return "Heh, %s. Good eye, kid. Nothing pairs better with a quiet perch up in the branches." % cat_label
 		"manangana":
-			return "Aba, %s! You really know what I always come here for, anak." % cat_label
+			return "Oh, %s. I actually have a soft spot for these, anak. It is nice having a tindahan that stocks them." % cat_label
 		"buboy":
-			return "YES! %s is my favorite, Kuya! Keep stocking these, ha?" % cat_label
+			return "Whoa, %s! That's my absolute favorite, Kuya! Don't tell Mama I spent my baon here, ha?" % cat_label
 		"rosalyn":
-			return "%s. I always end up reaching for these, po. Thank you for keeping them." % cat_label
+			return "%s... my favorite, po. Thank you." % cat_label
 		"tk":
-			return "Ooh, %s! Instant favorite — I'm definitely coming back for more." % cat_label
+			return "Aw yeah, %s! Top-tier fuel right here, boss! Definitely my favorite on the whole strip!" % cat_label
 		"danilo":
-			return "Hehe, %s! Between us, that's the main reason I stop by your counter." % cat_label
+			return "Hehe, %s. Between us, boss, that's half the reason I keep swinging by your counter, 'no?" % cat_label
 		"brahim":
-			return "Salamat. %s — I always keep a bit of this on hand." % cat_label
+			return "Salamat, friend. %s is my favorite way to unwind between house calls." % cat_label
 		"rodel":
-			return "Ah, %s. Honestly, that's my favorite thing you carry here." % cat_label
+			return "Ah, %s. You have a keen eye, keeper. I am quite partial to these." % cat_label
 		"sarimanok":
-			return "Splendid! %s — truly a favorite worth crossing the street for." % cat_label
+			return "Ba-kawk!! (Fluffs every bright feather at the sight of %s. Does a proud little hop.)" % cat_label
 		"lolopilo":
-			return "Ho-ho! %s! That's my favorite, apo — your lola knew it too." % cat_label
+			return "Aba, %s! You nailed my favorite, apo! Your lola used to keep a stash of these for me back in sixty-eight!" % cat_label
 		"reynamayari":
-			return "%s... How fitting. You have a knack for what I favor." % cat_label
+			return "%s. Keep this between us, shopkeeper, or my Council will start asking why I visit so often." % cat_label
 		_:
-			return "Salamat! I really love %s — I'll be back for more!" % cat_label
+			return "Salamat! I really love %s. I'll be back for more!" % cat_label
 
 
 func on_item_delivered(customer: Customer, is_whole_order_done: bool) -> void:
@@ -937,14 +941,19 @@ func on_dialogic_signal(argument: String) -> void:
 		_refused_with_zero_delivered = not has_del
 		if is_instance_valid(current_customer) and current_customer.customer_data and is_instance_valid(CharacterProgressionManager):
 			var cid: String = current_customer.customer_data.get_clean_id()
-			var is_st: bool = current_customer.transaction_context != null and current_customer.transaction_context.transaction_type == TransactionContext.Type.STORY
-			if has_del:
-				CharacterProgressionManager.set_last_visit_outcome(cid, "partial_order")
-			elif is_st:
-				CharacterProgressionManager.set_last_visit_outcome(cid, "story_out_of_stock")
-			else:
-				CharacterProgressionManager.set_last_visit_outcome(cid, "out_of_stock")
-				CharacterProgressionManager.add_reputation(current_customer.customer_data.resource_path, -3, "out_of_stock")
+			var ctx_ref: TransactionContext = current_customer.transaction_context
+			var is_tut: bool = (ctx_ref != null and ctx_ref.is_guided_tutorial) or cid == "unclemario" or _current_timeline_path.to_lower().contains("unclemario")
+			var is_st: bool = ctx_ref != null and ctx_ref.transaction_type == TransactionContext.Type.STORY
+			if not is_tut:
+				if has_del:
+					CharacterProgressionManager.set_last_visit_outcome(cid, "partial_order")
+				elif is_st:
+					CharacterProgressionManager.set_last_visit_outcome(cid, "story_out_of_stock")
+					CharacterProgressionManager.set_story_rejection_cooldown(current_customer.customer_data.resource_path)
+				else:
+					CharacterProgressionManager.set_last_visit_outcome(cid, "out_of_stock")
+					CharacterProgressionManager.add_reputation(current_customer.customer_data.resource_path, -3, "out_of_stock")
+					CharacterProgressionManager.set_story_rejection_cooldown(current_customer.customer_data.resource_path)
 		if has_del:
 			_is_partial_success = true
 			if StoryManager.is_label_in_timeline(_current_timeline_path, "PartialDismiss"):
@@ -1014,9 +1023,6 @@ func on_dialogic_signal(argument: String) -> void:
 			current_customer.set_meta("_dynamic_sub_cats", cats)
 			current_customer.set_meta("_pivoted_to_sub", true)
 			if current_customer.transaction_context and not cats.is_empty():
-				var cur_spoken := str(Dialogic.VAR.get_variable("Transaction_ItemWants", ""))
-				if cur_spoken != "":
-					current_customer.set_meta("_spoken_item_wants", cur_spoken)
 				var tier_now: int = StoryManager.current_tier if is_instance_valid(StoryManager) else 1
 				var sub_item: ItemData = OrderItemPicker.pick_from_categories_with_stock_bias(cats, tier_now, false, [], 0.95)
 				if sub_item == null:
@@ -1028,6 +1034,9 @@ func on_dialogic_signal(argument: String) -> void:
 					var typed_sub: Array[ItemData] = [sub_item]
 					current_customer.transaction_context.desired_items.assign(typed_sub)
 					current_customer.transaction_context.requested_category = sub_item.category
+					Dialogic.VAR.set_variable("Transaction_ItemWants", sub_item.item_name)
+					if current_customer.has_been_greeted:
+						EventBus.customer_order_updated.emit(current_customer.get_order_hud_key(), current_customer.transaction_context.desired_items, current_customer.transaction_context.is_riddle)
 	elif argument.begins_with("tally:"):
 		# Behavioral tally modifier: "tally:+1", "tally:-1", or "tally:manangana:+1"
 		var tpayload := argument.substr(6).strip_edges()
@@ -1331,9 +1340,7 @@ func update_item_names(customer: Customer) -> void:
 	InventoryManager.current_item_name = DialogicBridge.join_names(item_names)
 	
 	Dialogic.VAR.set_variable("Transaction_CustomerName", InventoryManager.current_character_name)
-	if customer.get_meta("_pivoted_to_sub", false) and str(customer.get_meta("_spoken_item_wants", "")) != "":
-		Dialogic.VAR.set_variable("Transaction_ItemWants", str(customer.get_meta("_spoken_item_wants", "")))
-	elif not item_names.is_empty():
+	if not item_names.is_empty():
 		Dialogic.VAR.set_variable("Transaction_ItemWants", InventoryManager.current_item_name)
 	
 	var total_cnt = ctx.original_count

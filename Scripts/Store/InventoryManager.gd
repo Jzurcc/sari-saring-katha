@@ -450,6 +450,35 @@ func load_save_data(data: Dictionary) -> void:
 		get_tree().call_group("dispenser_containers", "_refresh_alt_badge")
 	LogManager.info("InventoryManager", "State loaded. %d items tracked, %d configured IDs restored." % [_stock.size(), _configured_item_ids.size()])
 
+## Ensures digital `_stock` for physical SHELF/FRIDGE items matches the exact count
+## currently sitting inside unpacked `delivery_bag` plastics (prevents phantom stock).
+func reconcile_shelf_bag_stock() -> void:
+	if not get_tree():
+		return
+	var bag_counts: Dictionary = {}
+	for bag in get_tree().get_nodes_in_group("delivery_bag"):
+		if not is_instance_valid(bag) or not ("items" in bag):
+			continue
+		for b_item in bag.items:
+			if b_item is ItemData:
+				var p: String = b_item.resource_path
+				bag_counts[p] = int(bag_counts.get(p, 0)) + 1
+
+	var fixed := 0
+	for item in _items:
+		if item.type == ItemData.ItemType.SHELF or item.type == ItemData.ItemType.FRIDGE:
+			var p := item.resource_path
+			var cur := int(_stock.get(p, 0))
+			var actual := int(bag_counts.get(p, 0))
+			if cur != actual:
+				_stock[p] = actual
+				stock_changed.emit(item, actual)
+				fixed += 1
+				LogManager.info("InventoryManager", "Reconciled phantom bag stock for %s: %d -> %d" % [item.item_name, cur, actual])
+	if fixed > 0:
+		LogManager.info("InventoryManager", "Reconciled %d physical item(s) against active delivery bags." % fixed)
+
+
 func reset_state() -> void:
 	_stock.clear()
 	_configured_item_ids.clear()

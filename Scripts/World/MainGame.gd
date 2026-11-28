@@ -99,7 +99,17 @@ func _ready() -> void:
 	shortcut_hud.name = "ShortcutDockHUD"
 	add_child(shortcut_hud)
 
+	# Restore any saved delivery bags (plastics) and reconcile phantom shelf/fridge stock
+	call_deferred("_restore_bags_and_reconcile_stock")
+
 	LogManager.debug("MainGame", "_ready() END")
+
+
+func _restore_bags_and_reconcile_stock() -> void:
+	if is_instance_valid(MarioManager) and MarioManager.has_method("_check_and_spawn_bags"):
+		MarioManager._check_and_spawn_bags()
+	if is_instance_valid(InventoryManager) and InventoryManager.has_method("reconcile_shelf_bag_stock"):
+		InventoryManager.reconcile_shelf_bag_stock()
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Escape toggles pause menu (only if no sub-menu/overlay consumed it first)

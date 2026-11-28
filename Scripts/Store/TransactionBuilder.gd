@@ -123,13 +123,20 @@ static func select_character(sm: Node, exclude_paths: Array[String] = [], is_wav
 	if unlocked.is_empty():
 		return {"customer": null, "force_story": false}
 
-	# Wave joiners pick directly from unlocked neighbors for organic side bustle
+	# Wave joiners only pick already-met neighbors (chapter >= 1) so no unmet character
+	# ever debuts as a generic side purchase before their Chapter 1 story encounter!
 	if is_wave_joiner:
-		var joiner_pool := unlocked.filter(func(c: CustomerData) -> bool:
+		var met_pool := unlocked.filter(func(c: CustomerData) -> bool:
+			var c_ch: int = CharacterProgressionManager.get_chapter(c.resource_path)
+			return CharacterProgressionManager.has_encountered(c.resource_path) and c_ch >= 1
+		)
+		if met_pool.is_empty():
+			return {"customer": null, "force_story": false}
+		var joiner_pool := met_pool.filter(func(c: CustomerData) -> bool:
 			return c.resource_path != sm.last_character_path
 		)
 		if joiner_pool.is_empty():
-			joiner_pool = unlocked
+			joiner_pool = met_pool
 		char_data = CharacterProgressionManager.pick_character_weighted(joiner_pool)
 		return {"customer": char_data, "force_story": false}
 
@@ -481,6 +488,8 @@ static func apply_feature_rolls(sm: Node, transaction: TransactionContext) -> vo
 		repay_chance += 0.30
 	if sm.has_mayari_card(MayariCardRegistry.CARD_OVERDUE_LISTA):
 		repay_chance -= 0.25
+	if sm.has_method("is_ledger_milestone_unlocked") and sm.is_ledger_milestone_unlocked("lunar_margin"):
+		repay_chance += 0.20
 	repay_chance = clampf(repay_chance, 0.05, 1.0)
 	if current_debt > 0 and randf() < repay_chance:
 		transaction.is_repaying = true
