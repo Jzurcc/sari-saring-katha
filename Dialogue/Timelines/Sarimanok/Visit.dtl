@@ -5,22 +5,22 @@ label Greeting
 if {Transaction_HasReactiveOpener}:
 	Sarimanok: {Transaction_ReactiveOpener}
 if {Transaction_VisitVar} < 34:
-	Sarimanok: Ba-kawk. (Checks its reflection in the candy jar. Fixes one crooked crest feather.)
-	Sarimanok: Ba-kawk! (Glares a noisy tricycle down the road until it leaves.)
+	Sarimanok: Ba-kawk. [color=#145263](Checks its reflection in the candy jar. Fixes one crooked crest feather.)[/color]
+	Sarimanok: Ba-kawk! [color=#145263](Glares a noisy tricycle down the road until it leaves.)[/color]
 elif {Transaction_VisitVar} < 67:
-	Sarimanok: [shake]Ba-kawk![/shake] (Hops beside the register, ignores every shelf, and claims the shade.)
-	Sarimanok: ba-kawk. (Nudges a slightly crooked jar half an inch straighter.)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Hops beside the register, ignores every shelf, and claims the shade.)[/color]
+	Sarimanok: ba-kawk. [color=#145263](Nudges a slightly crooked jar half an inch straighter.)[/color]
 else:
-	Sarimanok: ba-kawk. (Tucks behind the jars with its bright tail hidden from the street.)
-	Sarimanok: Ba-kawk. (Slow royal blink. Official no-photo zone declared.)
+	Sarimanok: ba-kawk. [color=#145263](Tucks behind the jars with its bright tail hidden from the street.)[/color]
+	Sarimanok: Ba-kawk. [color=#145263](Slow royal blink. Official no-photo zone declared.)[/color]
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
 if {Transaction_VisitVar} < 34:
-	Sarimanok: Ba-kawk. (Shakes out its golden plumage once and launches to the roofs.)
+	Sarimanok: Ba-kawk. [color=#145263](Shakes out its golden plumage once and launches to the roofs.)[/color]
 elif {Transaction_VisitVar} < 67:
-	Sarimanok: [shake]Ba-kawk![/shake] (Leaves a tiny trail of gold dust and glides off.)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Leaves a tiny trail of gold dust and glides off.)[/color]
 else:
-	Sarimanok: ba-kawk. (One brief, dignified crest nod before swooping out.)
+	Sarimanok: ba-kawk. [color=#145263](One brief, dignified crest nod before swooping out.)[/color]
 [end_timeline]

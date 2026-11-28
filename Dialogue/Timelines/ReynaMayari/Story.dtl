@@ -5,14 +5,14 @@ if {Transaction_HasReactiveOpener}:
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1 — "Maria From Two Streets Over" (candy | 0 tallies — Comedy & Disguise)
 	ReynaMayari: Good day, ordinary merchant. I am merely Maria from two streets over.
-	ReynaMayari: Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] from that crystalline sucrose jar. Quickly, please.
+	ReynaMayari: Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] from that shiny candy jar at once. Purely for official neighborhood errands.
 	- Welcome, totally normal neighbor Maria.
 		ReynaMayari: Excellent. My mortal disguise is completely flawless. Not a soul suspects a thing.
 	- Your Majesty, you are literally glowing.
-		ReynaMayari: Lower your voice! I have a Council summons in twenty minutes and my robe is doing its best.
+		ReynaMayari: Hush! I snuck out between two Council hearings just for sweets, and this mortal outfit is trying its best!
 	- Sweet tooth acting up, Queen?
-		ReynaMayari: Nonsense. Biringan simply lacks affordable mortal confectioneries for my royal research.
-	ReynaMayari: Do not mention this visit to your uncle. Just pass over [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		ReynaMayari: Slander. Biringan's silver kitchens simply fail to replicate cheap fruit sugar.
+	ReynaMayari: Do not breathe a word of this to your uncle. Just slide over [color=#0f6e2f]{Transaction_ItemWants}[/color], friend. I meant shopkeeper.
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2 — "Balete Leaves in Sunlight" (frozen / candy | Inflection #1: +1 / +1 / -1 — THE UTANG REVERSAL!)
@@ -149,7 +149,7 @@ ReynaMayari: Fine. Keep quiet and let me unwrap one. You are dangerously percept
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	ReynaMayari: Steep markup for a sovereign in disguise. I will pay it, though I am noting it.
+	ReynaMayari: Bold of a mortal to charge a queen that much for snacks. Consider it noted in my ledger.
 else:
 	if {Global_TipActive} == 1.0:
 		ReynaMayari: Keep the extra coins. A queen appreciates brisk, discreet service.

@@ -3,19 +3,19 @@ if {Transaction_HasReactiveOpener}:
 	ReynaMayari: {Transaction_ReactiveOpener}
 
 if {Transaction_VisitVar} < 34.0:
-	ReynaMayari: Just strolling past as ordinary Maria. Your awning shade is surprisingly pleasant.
+	ReynaMayari: Just strolling past as ordinary Maria. Your dusty little awning is ten times warmer than my palace hall.
 elif {Transaction_VisitVar} < 67.0:
-	ReynaMayari: No ledger business right now. I only wanted to see Karimlan bustling in daylight.
+	ReynaMayari: No ledger business right now. I simply slipped out of Biringan to watch your shop bustle in the sun.
 else:
-	ReynaMayari: Biringan is spotless and terribly quiet. Your street is much better company, shopkeeper.
+	ReynaMayari: Biringan is spotless and terribly quiet. Honestly, your noisy street is much better company, shopkeeper.
 [signal arg="story_success"]
 [end_timeline]
 
 label Smalltalk
 if {Transaction_VisitVar} < 34.0:
-	ReynaMayari: Do not mind me. I am simply admiring how orderly your candy shelf looks.
+	ReynaMayari: Do not mind me. I am merely checking whether that top candy jar is still full. For official reasons.
 elif {Transaction_VisitVar} < 67.0:
-	ReynaMayari: Your neighbors barely blink at a stranger in fine shades. I like this street.
+	ReynaMayari: Your regulars nod to "Maria" like I have lived down the road for years. I rather like that.
 else:
-	ReynaMayari: Keep your ledger sharp and your snacks cold, shopkeeper. That is royal advice.
+	ReynaMayari: Drink water, rest your shoulders, and keep the sweets stocked. That is a sovereign's order, not small talk.
 [end_timeline]

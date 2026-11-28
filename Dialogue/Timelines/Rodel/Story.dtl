@@ -191,8 +191,8 @@ Rodel: Salamat, keeper. Keep the extra coins with my gratitude.
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	Rodel: Steep toll for an inland crossing, keeper.
-	Rodel: I shall pay fairly, though I hope calmer rates return next pass.
+	Rodel: A heavy toll for an inland counter, keeper.
+	Rodel: May calmer waters and kinder rates meet us next pass.
 else:
 	Rodel: Salamat, keeper. May steady currents guide your counter.
 	if {Global_TipActive}:

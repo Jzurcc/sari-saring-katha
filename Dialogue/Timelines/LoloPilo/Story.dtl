@@ -227,8 +227,8 @@ LoloPilo: Keep the extra coins, apo. You saved an old champ from turning boring!
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	LoloPilo: Aba, apo! Even the lucky coins under my punso felt that markup!
-	LoloPilo: Easy on an old neighbor's pouch next pass, ha?
+	LoloPilo: Even the lucky coins under my punso are groaning, apo.
+	LoloPilo: Go easy on an old neighbor's pouch next pass, ha?
 else:
 	LoloPilo: Ho-ho, spot on! May your coin jar stay noisy and full, apo!
 	if {Global_TipActive}:

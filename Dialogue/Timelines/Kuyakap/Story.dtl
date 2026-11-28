@@ -11,53 +11,54 @@ if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "The Old Suki"
 	KuyaKap: Aba. Mario wasn't exaggerating. Somebody really did open the shutters again.
 	KuyaKap: Look at you, apo. Same height as your Lola behind that counter.
-	- Hey, this counter is just built high!
-		KuyaKap: Haha! Tell it to the candy jars, nak, you're barely clearing the lids.
-	- [Stand on your tiptoes behind the register.]
-		KuyaKap: Oy, I saw that! Don't pull a calf muscle on my account, apo.
+	- Hey, I'm not THAT short.
+		KuyaKap: Haha! Fair enough. Half the barangay looks pocket-sized from up here.
 	- Easy for a giant kapre to say, Kuya.
-		KuyaKap: Heh. Fair point. Half the barangay looks pocket-sized from up here.
+		KuyaKap: Haha! Fair enough. Half the barangay looks pocket-sized from up here.
 	KuyaKap: Call me Kuya Kap. I've had that acacia across the road since Mario was in shorts.
 	- Mario didn't mention the shorts part, Kuya.
-		KuyaKap: Heh. Don't tell him I brought it up, baka magtampo na naman 'yon.
-		KuyaKap: Good to hear footsteps inside this tindahan again, nak. The road felt too quiet.
-	- Inspecting the shelves, Kuya, or actually buying?
-		KuyaKap: Aba, matapang! Definitely your Lola's grandchild.
-		KuyaKap: She used to shoo me off the counter with a rag whenever I lingered too long.
+		KuyaKap: Heh. Don't tell him I brought it up.
+		KuyaKap: Anyway, good to hear footsteps inside this tindahan again, apo. This kanto felt too quiet.
+	- I see. Are you gonna buy or just linger like a tambay, Kuya?
+		KuyaKap: Aba, malakas! Definitely your Lola's grandchild.
+		KuyaKap: She also used to shoo me off the counter with a rag whenever I lingered too long.
 	- [Settle back down and wipe the counter quietly.]
 		KuyaKap: All business already, ha? Fair enough, you're still finding where she kept the jars.
 		KuyaKap: Give it a week. Everyone on this road ends up chatting at this counter.
-	KuyaKap: Sige, warming up the register for my favorite tindero.
-	KuyaKap: Pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color], apo. Take your time finding the rack.
+	KuyaKap: Anyway, pahingi nga ng [color=#0f6e2f]{Transaction_ItemWants}[/color], apo. My usual.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: "Tricycle Dust" (Tally Inflection #1: +1 discreet / 0 lecture / -1 ignore)
 	KuyaKap: O, apo. Pahingi ulit ng [color=#0f6e2f]{Transaction_ItemWants}[/color], ha.
-	KuyaKap: Wait, sandali, [shake rate=18 level=7]khhk, khhk![/shake]
-	KuyaKap: Tsk. Excuse me, nak. Those tricycles on the road really need their mufflers checked.
-	KuyaKap: Ay, sandali. Something slipped out with my coins, my bad. Let me get it.
+	KuyaKap: Wait, sandali, [shake rate=18 level=7]Huff...koff.[/shake]
+	KuyaKap: Tsk. Excuse me, apo. Those tricycles on the road really need their mufflers checked.
+	- You sure it's the tricycles, Kuya?
+		KuyaKap: Yep. I was never like this back in the old Balete days, you see. Now, it's all technology and stinking pollution.
+	- Hope it's not Uncle Mario's trike smoking the streets.
+		KuyaKap: Haha! Your uncle's tricycle may be old, but he takes good care of it. It's his only child!
+	KuyaKap: Teka. Something slipped out with my coins, my bad. Let me get it.
 	- [Slide the folded paper back.]
 		[signal arg="flag:kap_clinic_known=true"]
 		[signal arg="tally:+1"]
-		[signal arg="note:Quietly returned the barangay clinic slip he dropped while coughing."]
+		[signal arg="note:Quietly returned the slip he dropped while coughing."]
 		KuyaKap: Salamat, nak. Didn't even peek, ha? Good trait for a storekeeper.
-		KuyaKap: Nothing to fuss about anyway. Young doctor at the barangay clinic gets bored if he doesn't scribble something.
+		KuyaKap: Nothing to fuss about anyway. 
 	- [Glance at the yellow slip.]
 		[signal arg="flag:kap_clinic_known=true"]
 		[signal arg="note:Spotted his barangay clinic slip; he blamed an overeager young doctor."]
-		KuyaKap: Oy, sharp eyes! Susmaryosep, it is just a barangay clinic slip, nak.
+		KuyaKap: Oy, sharp eyes! It's just a barangay clinic slip, 'nak.
 		KuyaKap: One routine checkup and suddenly everyone on the road thinks they have a stethoscope.
 		KuyaKap: Konting ubo lang, apo. Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color] before I get lectured twice.
 	- [Look away toward the shelves.]
-		[signal arg="tally:-1"]
+		[signal arg="tally:+1"]
 		KuyaKap: Ahem. Shirt pocket's getting loose, I swear.
 		KuyaKap: Just [color=#0f6e2f]{Transaction_ItemWants}[/color] when you're ready, apo.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "Something for the Throat" (Trapdoor + Candy Category Pivot -> +1 on SubstituteItem)
-	KuyaKap: Hoo, init sa labas. Even the leaves on my acacia are too lazy to move.
+	KuyaKap: Hoo, init sa labas. It's blazing hot. Even the leaves on my acacia are too lazy to move.
 	KuyaKap: Ahem, khm. Let me get my usual [color=#0f6e2f]{Transaction_ItemWants}[/color], apo.
 	KuyaKap: Huh. Those candy jars on your counter look fuller than last time, nak. Colorful, ha.
 	if {Flag_KapClinicKnown}:
@@ -245,8 +246,8 @@ else:
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	KuyaKap: Uy. Heavy markup for a neighbor across the road, nak.
-	KuyaKap: I'll pay it, pero dahan-dahan sa presyo, ha.
+	KuyaKap: Heh. My pocket's feeling a lot lighter walking back to the acacia, nak.
+	KuyaKap: Dahan-dahan sa presyo next time, ha.
 else:
 	KuyaKap: Ayos. Salamat, apo. Don't forget to sit down between customers, ha.
 	if {Global_TipActive}:

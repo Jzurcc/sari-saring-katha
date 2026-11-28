@@ -26,7 +26,7 @@ if {Transaction_Chapter} == 0.0:
 		ManangAna: Heh. That's the exact line I gave your Lola twenty years back.
 	- Thanks for the tip, Manang.
 		ManangAna: Somebody has to mother you a little behind that counter, anak.
-	ManangAna: Let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] before my broth boils down too far.
+	ManangAna: Anyway, let me grab [color=#0f6e2f]{Transaction_ItemWants}[/color] before my broth boils down too far.
 	[end_timeline]
 
 elif {Transaction_Chapter} == 1.0:
@@ -239,8 +239,8 @@ label Satisfy
 if {Transaction_WantsDebt}:
 	ManangAna: Thank you for trusting me with this, anak. I'll square it up soon.
 elif {Transaction_StoryGouged}:
-	ManangAna: Steep price for a neighbor down the road, anak.
-	ManangAna: I'll pay it since the pot's waiting, though go a little easier on us next time.
+	ManangAna: Good thing the pot's waiting, anak, or I'd have haggled you down to the centavo.
+	ManangAna: Go a little easier on your neighbors next time.
 else:
 	ManangAna: Thank you, anak. Make sure you sit down and eat real food, ha.
 	if {Global_TipActive}:

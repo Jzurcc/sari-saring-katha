@@ -25,11 +25,11 @@ else:
 label VisitorBroadcast
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	PapaUlap: 88.7 Street Watch at {Global_RadioTimeCheck}! Just spotted {Global_RadioVisitorName} heading your way!
+	PapaUlap: 88.7 Street Watch at {Global_RadioTimeCheck}! Just spotted {Global_RadioVisitorName} out and about in Karimlan!
 elif {Variation} == 2.0:
-	PapaUlap: Heads up from the clouds, suki! {Global_RadioVisitorName} is walking down your lane!
+	PapaUlap: Weather and foot traffic from the clouds, ka-barangay! {Global_RadioVisitorName} was just seen cutting down the main road!
 else:
-	PapaUlap: Rooftop radar on 88.7 Radyo Karimlan! Looks like {Global_RadioVisitorName} is stopping by!
+	PapaUlap: Rooftop radar on 88.7 Radyo Karimlan! Looks like {Global_RadioVisitorName} is making rounds through the neighborhood today!
 PapaUlap: {Global_RadioVisitorHint}
 [signal arg="radio_visitor_revealed"]
 [end_timeline]

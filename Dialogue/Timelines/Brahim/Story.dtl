@@ -179,7 +179,7 @@ Brahim: Point taken! I will put the notebook down and take a breather. Salamat, 
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	Brahim: Whoa, steep markup on that one! Paying anyway, though Tatay is going to tease me about my budgeting.
+	Brahim: My wallet's lighter than my herb pouch now. Tatay's definitely going to tease me about this one.
 else:
 	if {Global_TipActive} == 1.0:
 		Brahim: Keep the extra coins, shopkeeper! Good service deserves a tip.

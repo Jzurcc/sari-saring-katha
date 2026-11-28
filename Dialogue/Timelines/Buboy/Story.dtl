@@ -174,7 +174,7 @@ elif {Transaction_ItemWantsID} == "mema":
 	Buboy: Asked Mama to repeat the name and she just yelled to grab the number-one tin, hehe!
 elif {Transaction_ItemWantsID} == "anoba":
 	Buboy: Those thin crunchy crackers stacked up neat like a tiny house roof, po!
-	Buboy: Dropped a pack on the road once and smashed every piece, still ate all the crumbs though, hehe!
+	Buboy: There's a big triangle in font even though the chips are wavy squares! Weird snack!
 elif {Transaction_ItemWantsID} == "patos":
 	Buboy: The bright yellow chip bag that sounds like a duck on the farm, quack quack!
 	Buboy: Turns all ten of your fingers super yellow with cheese dust so you have to lick them clean!
@@ -284,8 +284,8 @@ Buboy: You're the coolest, Kuya! Promise I won't drop a single bag all the way t
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	Buboy: Hala Kuya, that wiped out all my coins, Mama's gonna ask why there's zero change!
-	Buboy: Okay po, I'll just run home extra fast!
+	Buboy: Zero change left in my pocket, Kuya. Mama's gonna wonder where the rest of my coins went.
+	Buboy: Sige po, I'll run home before she checks!
 else:
 	Buboy: Yes, bullseye, Kuya! Fastest team on the road, hehe!
 	if {Global_TipActive}:

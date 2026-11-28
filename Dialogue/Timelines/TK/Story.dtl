@@ -204,7 +204,7 @@ TK: Keep the change, boss. Cold hydration wins every round!
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	TK: Whoa, heavy price tag, boss! Almost felt like hiking uphill with a boulder!
+	TK: My wallet feels like it just hiked uphill with a boulder, boss.
 	TK: Go a little easier on your Home Pin regular next pass, ha?
 else:
 	TK: Solid! Exactly what my legs needed, boss!

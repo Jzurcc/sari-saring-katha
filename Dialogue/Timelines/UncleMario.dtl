@@ -5,27 +5,17 @@
 label Call
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	UncleMario: O, anak! Sidecar's empty and ready. Running low on stock?
+	UncleMario: O, anak! Running low on stock already? Just say the word.
 elif {Variation} == 2.0:
-	UncleMario: Uncle Mario on the line! What are we loading onto the tricycle, anak?
+	UncleMario: Hoho! You called, 'nak?
 else:
-	UncleMario: Just finished strapping the crate rack, anak! Need a restock run?
-- Send a restock order.
+	UncleMario: Hello 'nak! Shelves getting dusty? I can help.
+- Let's restock the shelves!
 	[signal arg="mario_open_restock"]
-	UncleMario: Sige, punch in your list and I'll kick-start the tricycle!
+	UncleMario: Sige, tell me in your list and I'll kick-start the tricycle!
 - Wrong dial, Uncle!
 	[signal arg="mario_cancel_call"]
 	UncleMario: Haha, pocket-dialed your own uncle? Ring back anytime, anak!
-[end_timeline]
-
-label Busy
-set {Variation} = range(1,4).pick_random()
-if {Variation} == 1.0:
-	UncleMario: Oy, take care of the neighbor at your counter first, anak! Ring me right after.
-elif {Variation} == 2.0:
-	UncleMario: Eyes on the counter, kid! Finish up with your customer, I'm not going anywhere.
-else:
-	UncleMario: Serve your suki first before calling your supplier, ha! Talk soon.
 [end_timeline]
 
 label CallRest
@@ -56,7 +46,7 @@ UncleMario: Word's spreading fast down the road that Lola's shop carries the goo
 [end_timeline]
 
 label UpgradeCall
-UncleMario: Uy, anak, glad you picked up! My supplier in town just opened a fresh wholesale tier for us.
+UncleMario: Uy, anak, glad you picked up! My supplier in town just opened a fresh wholesale package for us.
 UncleMario: Look what I can haul for your shelves now: {Global_UpgradeItemsList}
 UncleMario: Want to check out the store upgrades while I'm at the warehouse?
 - Check store upgrades!
@@ -91,7 +81,7 @@ UncleMario: All bolted down and ready to roll, anak! Shop's looking sharper ever
 [end_timeline]
 
 label StoreUpgradeAlso
-UncleMario: Oh, and one more thing off the sidecar, anak!
+UncleMario: Oh, and also...
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
@@ -109,15 +99,15 @@ UncleMario: Your bottles and frozen packs will stay frosty way longer during bus
 [end_timeline]
 
 label FridgeUpgradeDelivery3
-UncleMario: Swapped in the commercial inverter compressor, anak! Listen to how quiet that hum is!
+UncleMario: Swapped in the commercial inverter compressor, anak!
 UncleMario: Your Lola used to whack the side of this fridge with a slipper. Now it cools ice-cold in seconds!
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
 # --- Store Cat Upgrades (Lv. 1-2) ---
 label CatUpgradeDelivery1
-UncleMario: Look who hopped straight into my sidecar at the market, anak! Meet Mingming!
-UncleMario: Neighbors always linger where a fat orange cat naps, so two customers can line up at your counter now.
+UncleMario: Look who hopped straight into my tricycle at the market, anak! Meet Mingming!
+UncleMario: More neighbors always linger where a fat orange cat naps, you'll see!
 [signal arg="mario_delivery_next"]
 [end_timeline]
 
@@ -142,7 +132,7 @@ UncleMario: Anything you toss in there, I'll haul back to town and refund half i
 
 # --- Maneki-Neko Upgrades (Lv. 1-2) ---
 label ManekiUpgradeDelivery1
-UncleMario: Set the little waving porcelain cat right on your counter, anak!
+UncleMario: Set the little waving porcelain cat right behind your counter, anak!
 UncleMario: Keeps folks in a generous mood, expect bigger cash tips clinking into your tray.
 [signal arg="mario_delivery_next"]
 [end_timeline]
@@ -156,7 +146,7 @@ UncleMario: Extra good fortune on every cash sale now. Don't forget your uncle w
 # --- Barangay Radio Upgrades (Lv. 1-3) ---
 label RadioUpgradeDelivery1
 UncleMario: Hooked up a counter transistor radio tuned straight to Papa Ulap's station, anak!
-UncleMario: Tap the dial whenever it's ready to catch market trends and hear who's strolling down the road.
+UncleMario: Tap the dial whenever it's ready to catch hidden market trends and hear who's strolling down the road.
 [signal arg="mario_delivery_next"]
 [end_timeline]
 

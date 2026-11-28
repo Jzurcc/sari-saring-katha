@@ -69,7 +69,7 @@ elif {Transaction_ItemWantsID} == "mema":
 	Buboy: Asked Mama to repeat the name and she just yelled to grab the number-one tin, hehe!
 elif {Transaction_ItemWantsID} == "anoba":
 	Buboy: Those thin crunchy crackers stacked up neat like a tiny house roof, po!
-	Buboy: Dropped a pack on the road once and smashed every piece, still ate all the crumbs though, hehe!
+	Buboy: There's a big triangle in font even though the chips are wavy squares! Weird snack!
 elif {Transaction_ItemWantsID} == "patos":
 	Buboy: The bright yellow chip bag that sounds like a duck on the farm, quack quack!
 	Buboy: Turns all ten of your fingers super yellow with cheese dust so you have to lick them clean!

@@ -145,7 +145,7 @@ Danilo: Alright, you caught me. A Daligmata sees too much, and bright bulbs hit 
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	Danilo: Brave markup, boss! Paying anyway, though I saw that price jump from a block away.
+	Danilo: Saw that price jump from a block away, boss. Still took it, just don't make it a habit.
 else:
 	if {Global_TipActive} == 1.0:
 		Danilo: Keep the extra coins, boss. Worth it for the front-row shade.

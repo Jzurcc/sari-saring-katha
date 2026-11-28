@@ -5,53 +5,53 @@ if {Transaction_HasReactiveOpener}:
 set {Variation} = range(1,5).pick_random()
 if {Flag_MayariQueenAtCounter}:
 	if {Variation} == 1.0:
-		ReynaMayari: Keep the disguise secret, shopkeeper. Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color] before my Council notices I slipped out.
+		ReynaMayari: Keep your voice low, shopkeeper. Slide me [color=#0f6e2f]{Transaction_ItemWants}[/color] before my Council notices the throne is empty.
 	elif {Variation} == 2.0:
-		ReynaMayari: Real mortal pesos ready. Pass me [color=#0f6e2f]{Transaction_ItemWants}[/color], please.
+		ReynaMayari: Real mortal pesos, counted twice. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color], and yes, I am staying to chat for a minute.
 	elif {Variation} == 3.0:
-		ReynaMayari: Biringan's banquets still cannot beat your shelves. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		ReynaMayari: Biringan's silver banquets are spotless and dull. I would much rather have [color=#0f6e2f]{Transaction_ItemWants}[/color] from your counter.
 	else:
-		ReynaMayari: Just Maria from two streets over, looking for [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		ReynaMayari: Just ordinary Maria again, conducting vital research on [color=#0f6e2f]{Transaction_ItemWants}[/color].
 else:
 	if {Variation} == 1.0:
-		ReynaMayari: Strictly a routine daytime inspection. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] while I am here.
+		ReynaMayari: Strictly an unscheduled royal inspection. Also, sell me [color=#0f6e2f]{Transaction_ItemWants}[/color] while nobody is looking.
 	elif {Variation} == 2.0:
-		ReynaMayari: Act natural, shopkeeper. Just pass over [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		ReynaMayari: Act completely normal, shopkeeper. Just pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] for "Maria."
 	elif {Variation} == 3.0:
-		ReynaMayari: I am sampling local inventory for Biringan's records. Hand over [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		ReynaMayari: Biringan requires a sample of mortal provisions. Specifically [color=#0f6e2f]{Transaction_ItemWants}[/color]. Purely official, of course.
 	else:
-		ReynaMayari: Real pesos in hand, zero balete leaves. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color].
+		ReynaMayari: Real pesos in hand, zero balete leaves. Sell me [color=#0f6e2f]{Transaction_ItemWants}[/color], quickly please.
 [end_timeline]
 
 label Talk
 ReynaMayari: I am still waiting on [color=#0f6e2f]{Transaction_ItemWants}[/color], shopkeeper.
 - Out of stock right now.
-	ReynaMayari: A pity. Restock soon, before my sweet tooth files a formal complaint.
+	ReynaMayari: Empty? Truly tragic. Call your uncle soon, before my sweet tooth files a royal grievance.
 	[signal arg="refuse_service"]
 - Grabbing it right away!
-	ReynaMayari: Splendid. I have five minutes before anyone misses me in Biringan.
+	ReynaMayari: Splendid. Take your time, I actually enjoy listening to your street chatter.
 [end_timeline]
 
 label Partial
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	ReynaMayari: Good. I still need [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	ReynaMayari: Good. I still need [color=#0f6e2f]{Transaction_ItemWants}[/color] to complete my research.
 elif {Variation} == 2.0:
-	ReynaMayari: That covers part of it. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] as well.
+	ReynaMayari: Halfway there. Pass over [color=#0f6e2f]{Transaction_ItemWants}[/color] as well, please.
 else:
-	ReynaMayari: Almost done. Just add [color=#0f6e2f]{Transaction_ItemWants}[/color].
+	ReynaMayari: Almost done. Just add [color=#0f6e2f]{Transaction_ItemWants}[/color] before I head back.
 [end_timeline]
 
 label Satisfy
 if {Global_TipActive} == 1.0:
-	ReynaMayari: Keep the extra coins, shopkeeper. Consider it a discreet daytime favor.
+	ReynaMayari: Keep the extra coins, shopkeeper. Consider it royal funding for your snack shelves.
 else:
 	if {Transaction_SatisfyVar} < 34.0:
-		ReynaMayari: Splendid. Remember, you never saw me here.
+		ReynaMayari: Splendid. Remember, you only served "Maria" from two streets over.
 	elif {Transaction_SatisfyVar} < 67.0:
-		ReynaMayari: Exactly what I craved. Keep the jars full, shopkeeper.
+		ReynaMayari: Exactly what I craved. Keep that jar stocked and do not overwork yourself, understood?
 	else:
-		ReynaMayari: Real mortal sweets beat silver banquets every time. Until later.
+		ReynaMayari: Cheap mortal sweets beat silver banquets every single time. See you soon, shopkeeper.
 [signal arg="story_success"]
 [end_timeline]
 

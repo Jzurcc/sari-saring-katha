@@ -15,82 +15,82 @@ if {Transaction_Chapter} == 0.0:
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: "The Royal Inspection" (Tally Inflection #1: +1 respect / 0 dry joke / -1 pluck feather)
-	Sarimanok: [shake]Ba-kawk![/shake] (Spits a shiny coin onto your wood. Polishes it twice with one wing.)
-	Sarimanok: Ba-kawk? (Squints up at your bare awning. Zero royal banners? Bold choice.)
-	Sarimanok: [shake]Ba-kawk![/shake] (Jabs its beak at [color=#0f6e2f]{Transaction_ItemWants}[/color]. Taps one impatient talon.)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Spits a shiny coin onto your wood. Polishes it twice with one wing.)[/color]
+	Sarimanok: Ba-kawk? [color=#145263](Squints up at your bare awning. Zero royal banners? Bold choice.)[/color]
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Jabs its beak at [color=#0f6e2f]{Transaction_ItemWants}[/color]. Taps one impatient talon.)[/color]
 	- Welcome, honored guest. Best stock ready.
 		[signal arg="tally:+1"]
 		[signal arg="note:Greeted Sarimanok with genuine courtesy instead of chasing it for luck or photos."]
-		Sarimanok: Ba-kawk! (Puffs its chest two sizes up. Slides the coin closer.)
+		Sarimanok: Ba-kawk! [color=#145263](Puffs its chest two sizes up. Slides the coin closer.)[/color]
 	- Sorry, fresh out of red carpets.
 		[signal arg="note:Joked dryly about having no royal banners for Sarimanok's counter inspection."]
-		Sarimanok: Ba-kawk. (Slow, judgmental blink. Nudges the coin over anyway.)
+		Sarimanok: Ba-kawk. [color=#145263](Slow, judgmental blink. Nudges the coin over anyway.)[/color]
 	- Can I pluck one lucky feather?
 		[signal arg="tally:-1"]
 		[signal arg="note:Asked Sarimanok for a lucky feather, earning an outraged wing-slap on the counter."]
-		Sarimanok: [shake]BA-KAAWK!![/shake] (Slaps both wings on the wood. Your receipt pad goes flying.)
+		Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Slaps both wings on the wood. Your receipt pad goes flying.)[/color]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 2.0:
 	# Chapter 3: "Heavy Plumes" (Tally Inflection #2: +1 fish can sub OR +1 safe haven / -1 living billboard)
-	Sarimanok: [shake]Ba-kawk![/shake] (Dives behind your candy jars. One bent tail feather still sticks straight up.)
-	Sarimanok: ba-kawk. (Peeks past the lids as folks outside yell Lucky Rooster!)
-	Sarimanok: Ba-kawk. (Drops two dull coins and nudges them toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Dives behind your candy jars. One bent tail feather still sticks straight up.)[/color]
+	Sarimanok: ba-kawk. [color=#145263](Peeks past the lids as folks outside yell Lucky Rooster!)[/color]
+	Sarimanok: Ba-kawk. [color=#145263](Drops two dull coins and nudges them toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	- [Slide a gleaming fish can instead.]
 		[signal arg="allow_sub_cat:can"]
-		Sarimanok: Ba-kawk? (Tracks your hand drifting past the packs toward the shiny tins.)
+		Sarimanok: Ba-kawk? [color=#145263](Tracks your hand drifting past the packs toward the shiny tins.)[/color]
 		[end_timeline]
 	- Stay behind the jars. No photos.
 		[signal arg="tally:+1"]
 		[signal arg="note:Let Sarimanok catch its breath behind the candy jars away from feather-chasing crowds."]
-		Sarimanok: ba-kawk. (Flattens its crooked plume. Leans one wing against the warm glass.)
-		Sarimanok: Ba-kawk. (Taps politely beside [color=#0f6e2f]{Transaction_ItemWants}[/color], finally breathing easy.)
+		Sarimanok: ba-kawk. [color=#145263](Flattens its crooked plume. Leans one wing against the warm glass.)[/color]
+		Sarimanok: Ba-kawk. [color=#145263](Taps politely beside [color=#0f6e2f]{Transaction_ItemWants}[/color], finally breathing easy.)[/color]
 	- Pose by my sign for customers?
 		[signal arg="tally:-1"]
 		[signal arg="note:Asked Sarimanok to pose by the storefront sign like a lucky mascot."]
-		Sarimanok: [shake]BA-KAAWK!![/shake] (Turns its back completely. Back-kicks its coins across the counter.)
+		Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Turns its back completely. Back-kicks its coins across the counter.)[/color]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 3.0:
 	# Chapter 4: "Bamboo in the Crest" (Tally Inflection #3: +2 trapdoor / +1 kind / -1 vain — single Rodel crossover)
-	Sarimanok: [shake]Ba-kawk![/shake] (Two green bamboo leaves stick straight out of its royal crest. Pretends it is high fashion.)
-	Sarimanok: ba-kawk. (Glances toward the creek, then nudges one shiny coin toward the corner where Rodel stood.)
-	Sarimanok: Ba-kawk. (Points one sharp wingtip at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Two green bamboo leaves stick straight out of its royal crest. Pretends it is high fashion.)[/color]
+	Sarimanok: ba-kawk. [color=#145263](Glances toward the creek, then nudges one shiny coin toward the corner where Rodel stood.)[/color]
+	Sarimanok: Ba-kawk. [color=#145263](Points one sharp wingtip at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	if {Flag_RodelShelteredBird} or {Flag_RodelNameRemembered}:
 		- Nobody knows his name. Help them see.
 			[signal arg="flag:smk_honored_rodel=true"]
 			[signal arg="tally:+2"]
 			[signal arg="note:Nudged Sarimanok to use its fame to make sure neighbors learn Rodel's Litao name."]
-			Sarimanok: Ba-kawk! (Tilts its jeweled head, puffs twice its size, and gives one decisive regal nod.)
+			Sarimanok: Ba-kawk! [color=#145263](Tilts its jeweled head, puffs twice its size, and gives one decisive regal nod.)[/color]
 	- Nice having a quiet neighbor, huh?
 		[signal arg="flag:smk_honored_rodel=true"]
 		[signal arg="tally:+1"]
 		[signal arg="note:Noticed Sarimanok appreciating Rodel's quiet bamboo shade without any photo-seekers."]
-		Sarimanok: ba-kawk. (Tucks one bamboo leaf slightly neater behind its ear-plume. Soft wing-pat on the wood.)
+		Sarimanok: ba-kawk. [color=#145263](Tucks one bamboo leaf slightly neater behind its ear-plume. Soft wing-pat on the wood.)[/color]
 	- Brush those cheap leaves off, royalty.
 		[signal arg="tally:-1"]
 		[signal arg="note:Told Sarimanok to shake off the bamboo leaves and keep up its royal appearances."]
-		Sarimanok: [shake]BA-KAAWK!![/shake] (Shakes the leaves off violently, glaring down its beak at the floor.)
+		Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Shakes the leaves off violently, glaring down its beak at the floor.)[/color]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 4.0:
 	# Chapter 5: "Quiet Perch" (0 tallies - Sarimanok's OWN Ten Payoff)
 	if {Flag_SmkHonoredRodel} or {Flag_RodelShelteredBird}:
-		Sarimanok: [shake]Ba-kawk![/shake] (Struts right up in full view. Zero bent feathers. Zero hiding behind jars.)
-		Sarimanok: ba-kawk. (Waves one bright wing at a passing kid. Nobody tries to pluck its tail!)
-		Sarimanok: Ba-kawk. (Drops exact gleaming coins in a neat row for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Struts right up in full view. Zero bent feathers. Zero hiding behind jars.)[/color]
+		Sarimanok: ba-kawk. [color=#145263](Waves one bright wing at a passing kid. Nobody tries to pluck its tail!)[/color]
+		Sarimanok: Ba-kawk. [color=#145263](Drops exact gleaming coins in a neat row for [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 		- Finally stopped hiding behind the jars?
-			Sarimanok: Ba-kawk! (Puffs its chest proudly. Pretends it never hid there once.)
+			Sarimanok: Ba-kawk! [color=#145263](Puffs its chest proudly. Pretends it never hid there once.)[/color]
 		- Fancy bamboo look suits you.
-			Sarimanok: ba-kawk. (Angles its crest toward the candy jar glass to admire the leaf.)
+			Sarimanok: ba-kawk. [color=#145263](Angles its crest toward the candy jar glass to admire the leaf.)[/color]
 		- Glad the street calmed down.
-			Sarimanok: Ba-kawk. (One warm, unhurried blink. Sets a talon beside the coin stack.)
+			Sarimanok: Ba-kawk. [color=#145263](One warm, unhurried blink. Sets a talon beside the coin stack.)[/color]
 	else:
-		Sarimanok: Ba-kawk. (Darts under your awning, checks both corners for fans, and slides coins for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk. [color=#145263](Darts under your awning, checks both corners for fans, and slides coins for [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 		- Coast is clear under my roof.
-			Sarimanok: ba-kawk. (Drops its shoulders half an inch and waits behind the register.)
+			Sarimanok: ba-kawk. [color=#145263](Drops its shoulders half an inch and waits behind the register.)[/color]
 		- Tough life being famous.
-			Sarimanok: [shake]Ba-kawk![/shake] (Aggressive feather-fluff. Clearly agrees.)
+			Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Aggressive feather-fluff. Clearly agrees.)[/color]
 	[end_timeline]
 
 elif {Transaction_Chapter} == 5.0:
@@ -99,70 +99,70 @@ elif {Transaction_Chapter} == 5.0:
 		[signal arg="outcome:living_emblem"]
 		[signal arg="flag:smk_living_emblem=true"]
 		[signal arg="note:Sarimanok laid a golden okir feather by the register and spoke two rare words of blessing before Mayari's Convergence."]
-		Sarimanok: ba-kawk. (Lays one gleaming golden okir feather beside your register. Clears its throat once.)
+		Sarimanok: ba-kawk. [color=#145263](Lays one gleaming golden okir feather beside your register. Clears its throat once.)[/color]
 		Sarimanok: A humble counter needs no banners when it remembers every guest's true name.
 		Sarimanok: When the Pale Moon weighs your ledger, my wings stand beside this house.
-		Sarimanok: [shake]Ba-kawk.[/shake] (Snaps its beak shut. Stares straight ahead, pretending it never spoke a word.)
+		Sarimanok: [shake]Ba-kawk.[/shake] [color=#145263](Snaps its beak shut. Stares straight ahead, pretending it never spoke a word.)[/color]
 		- Wait, did you just talk?!
-			Sarimanok: [shake]BA-KAAWK!![/shake] (Outraged innocence. Jabs aggressively at [color=#0f6e2f]{Transaction_ItemWants}[/color]!)
+			Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Outraged innocence. Jabs aggressively at [color=#0f6e2f]{Transaction_ItemWants}[/color]!)[/color]
 		- [Tuck the golden feather by the ledger.]
-			Sarimanok: ba-kawk. (One tiny, satisfied crest nod toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+			Sarimanok: ba-kawk. [color=#145263](One tiny, satisfied crest nod toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_Tally} >= 1:
 		[signal arg="outcome:proud_patron"]
 		[signal arg="note:Sarimanok left a bright plume and became a delighted, dramatic regular at the counter."]
-		Sarimanok: [shake]Ba-kawk![/shake] (Leaves a bright golden plume beside your coin jar like a five-star rating.)
-		Sarimanok: ba-kawk. (Taps two polished coins neatly on the wood for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Leaves a bright golden plume beside your coin jar like a five-star rating.)[/color]
+		Sarimanok: ba-kawk. [color=#145263](Taps two polished coins neatly on the wood for [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 		- Five-star review from royalty?
-			Sarimanok: Ba-kawk! (Puffs its chest proudly. Expects top-shelf service.)
+			Sarimanok: Ba-kawk! [color=#145263](Puffs its chest proudly. Expects top-shelf service.)[/color]
 		- Coming right up, Your Majesty.
-			Sarimanok: ba-kawk. (Approving crest tilt.)
+			Sarimanok: ba-kawk. [color=#145263](Approving crest tilt.)[/color]
 	else:
 		[signal arg="outcome:passing_spectacle"]
 		[signal arg="note:Sarimanok remained an aloof, dramatic visitor who kept its distance."]
-		Sarimanok: [shake]BA-KAAWK!![/shake] (Drops exact coins from beak height. Zero eye contact.)
-		Sarimanok: Ba-kawk. (Points one talon sharply at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Drops exact coins from beak height. Zero eye contact.)[/color]
+		Sarimanok: Ba-kawk. [color=#145263](Points one talon sharply at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	[end_timeline]
 
 label Talk
-Sarimanok: Ba-kawk. (Paces three steps left, three steps right. Eyes locked on [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+Sarimanok: Ba-kawk. [color=#145263](Paces three steps left, three steps right. Eyes locked on [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 - Grabbing it right now.
-	Sarimanok: Ba-kawk. (Folds both wings behind its back like a tiny king.)
+	Sarimanok: Ba-kawk. [color=#145263](Folds both wings behind its back like a tiny king.)[/color]
 	[end_timeline]
 - Sorry, we're out of stock.
-	Sarimanok: [shake]BA-KAAWK!![/shake] (Flares its collar feathers and launches off in a cloud of gold dust.)
+	Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Flares its collar feathers and launches off in a cloud of gold dust.)[/color]
 	[signal arg="refuse_service"]
 	[end_timeline]
 
 label Partial
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	Sarimanok: Ba-kawk. (Tucks item one under a wing. Taps its beak for the rest.)
+	Sarimanok: Ba-kawk. [color=#145263](Tucks item one under a wing. Taps its beak for the rest.)[/color]
 elif {Variation} == 2.0:
-	Sarimanok: Ba-kawk! (Approves with one sharp nod. Points back at the shelf.)
+	Sarimanok: Ba-kawk! [color=#145263](Approves with one sharp nod. Points back at the shelf.)[/color]
 else:
-	Sarimanok: Ba-kawk, ba-kawk. (Counts on its talons. Clearly not done yet.)
+	Sarimanok: Ba-kawk, ba-kawk. [color=#145263](Counts on its talons. Clearly not done yet.)[/color]
 [end_timeline]
 
 label SubstituteItem
 [signal arg="flag:smk_sub_fish=true"]
 [signal arg="tally:+1"]
 [signal arg="note:Slid a gleaming tin of {Transaction_SubstituteItemName} to Sarimanok, honoring the real Maranao fish emblem."]
-Sarimanok: Ba-kawk?! (Freezes mid-peck. Stares at [color=#0f6e2f]{Transaction_SubstituteItemName}[/color] like buried gold.)
-Sarimanok: ba-kawk. (Taps the silver lid gently, then hoists the tin proudly in its talons.)
-Sarimanok: [shake]Ba-kawk![/shake] (Bows its jeweled crest once. Slides two gleaming bonus coins over.)
+Sarimanok: Ba-kawk?! [color=#145263](Freezes mid-peck. Stares at [color=#0f6e2f]{Transaction_SubstituteItemName}[/color] like buried gold.)[/color]
+Sarimanok: ba-kawk. [color=#145263](Taps the silver lid gently, then hoists the tin proudly in its talons.)[/color]
+Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Bows its jeweled crest once. Slides two gleaming bonus coins over.)[/color]
 [signal arg="story_success"]
 [end_timeline]
 
 label Satisfy
 if {Transaction_StoryGouged}:
-	Sarimanok: [shake]BA-KAAWK!![/shake] (Slams exact coins down one by one. Glare could melt tin.)
+	Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Slams exact coins down one by one. Glare could melt tin.)[/color]
 else:
-	Sarimanok: [shake]Ba-kawk![/shake] (Snatches the goods, flicks its golden tail, and struts off.)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Snatches the goods, flicks its golden tail, and struts off.)[/color]
 	if {Global_TipActive}:
-		Sarimanok: Ba-kawk! (Flicks one extra shiny coin into your jar mid-strut.)
+		Sarimanok: Ba-kawk! [color=#145263](Flicks one extra shiny coin into your jar mid-strut.)[/color]
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Sarimanok: [shake]BA-KAAWK!![/shake] (Shoves it right back across the wood. Wrong order!)
+Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Shoves it right back across the wood. Wrong order!)[/color]
 [end_timeline]

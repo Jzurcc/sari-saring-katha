@@ -7,70 +7,70 @@ label Greeting
 if {Transaction_HasReactiveOpener}:
 	Sarimanok: {Transaction_ReactiveOpener}
 elif {Global_HighPriceActive}:
-	Sarimanok: [shake]BA-KAAWK!![/shake] (Squints at your price card. Drags one coin half an inch back.)
+	Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Squints at your price card. Drags one coin half an inch back.)[/color]
 
 # Slot 2: Flag-Driven Request Pool (4 grounded variations per state)
 if {Flag_SmkLivingEmblem}:
 	if {Transaction_GreetingVar} < 25:
-		Sarimanok: Ba-kawk! (Stacks exact gleaming coins neatly. Nods toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk! [color=#145263](Stacks exact gleaming coins neatly. Nods toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_GreetingVar} < 50:
-		Sarimanok: Ba-kawk. (Hops up calmly, ignoring the street, and gestures at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk. [color=#145263](Hops up calmly, ignoring the street, and gestures at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_GreetingVar} < 75:
-		Sarimanok: ba-kawk. (Preens one golden wingtip. Taps beside [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: ba-kawk. [color=#145263](Preens one golden wingtip. Taps beside [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	else:
-		Sarimanok: [shake]Ba-kawk![/shake] (Gives one regal crest bow before pointing at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Gives one regal crest bow before pointing at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 elif {Flag_SmkSubFish}:
 	if {Transaction_GreetingVar} < 25:
-		Sarimanok: Ba-kawk! (Checks your fish tins first. Points sharply at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk! [color=#145263](Checks your fish tins first. Points sharply at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_GreetingVar} < 50:
-		Sarimanok: [shake]Ba-kawk![/shake] (Buffs a coin on its feathers. Slides it over for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Buffs a coin on its feathers. Slides it over for [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_GreetingVar} < 75:
-		Sarimanok: ba-kawk. (Checks both shoulders for fans. Taps the wood for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: ba-kawk. [color=#145263](Checks both shoulders for fans. Taps the wood for [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	else:
-		Sarimanok: Ba-kawk. (Fluffs its okir collar neat and waits by [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk. [color=#145263](Fluffs its okir collar neat and waits by [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 else:
 	if {Transaction_GreetingVar} < 25:
-		Sarimanok: [shake]Ba-kawk![/shake] (Spits a damp coin on your wood. Jabs at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Spits a damp coin on your wood. Jabs at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_GreetingVar} < 50:
-		Sarimanok: Ba-kawk? (Checks your counter for dust. Points at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk? [color=#145263](Checks your counter for dust. Points at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	elif {Transaction_GreetingVar} < 75:
-		Sarimanok: [shake]Ba-kawk![/shake] (Flaps once, scattering receipts, and demands [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Flaps once, scattering receipts, and demands [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 	else:
-		Sarimanok: Ba-kawk, ba-kawk. (Taps one golden talon until you grab [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+		Sarimanok: Ba-kawk, ba-kawk. [color=#145263](Taps one golden talon until you grab [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 [end_timeline]
 
 label Talk
-Sarimanok: Ba-kawk. (Drums one talon on the wood. Eyes glued to [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+Sarimanok: Ba-kawk. [color=#145263](Drums one talon on the wood. Eyes glued to [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 - Coming right up!
-	Sarimanok: Ba-kawk. (Narrows its eyes. Times you silently.)
+	Sarimanok: Ba-kawk. [color=#145263](Narrows its eyes. Times you silently.)[/color]
 	[end_timeline]
 - Sorry, we're out of stock.
-	Sarimanok: [shake]BA-KAAWK!![/shake] (Kicks a stray wrapper off the wood and swoops out.)
+	Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Kicks a stray wrapper off the wood and swoops out.)[/color]
 	[signal arg="refuse_service"]
 	[end_timeline]
 
 label Partial
 set {Variation} = range(1,4).pick_random()
 if {Variation} == 1.0:
-	Sarimanok: Ba-kawk. (Grips item one. Jabs its beak toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	Sarimanok: Ba-kawk. [color=#145263](Grips item one. Jabs its beak toward [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 elif {Variation} == 2.0:
-	Sarimanok: Ba-kawk! (One sharp nod. Points straight at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	Sarimanok: Ba-kawk! [color=#145263](One sharp nod. Points straight at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 else:
-	Sarimanok: Ba-kawk, ba-kawk. (Taps the empty spot meant for [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+	Sarimanok: Ba-kawk, ba-kawk. [color=#145263](Taps the empty spot meant for [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 [end_timeline]
 
 label Satisfy
 if {Global_TipActive}:
-	Sarimanok: Ba-kawk! (Flicks a dazzling bonus coin in. Chest twice its size.)
+	Sarimanok: Ba-kawk! [color=#145263](Flicks a dazzling bonus coin in. Chest twice its size.)[/color]
 elif {Transaction_SatisfyVar} < 34:
-	Sarimanok: [shake]Ba-kawk![/shake] (Hoists the goods in one talon and swoops off.)
+	Sarimanok: [shake]Ba-kawk![/shake] [color=#145263](Hoists the goods in one talon and swoops off.)[/color]
 elif {Transaction_SatisfyVar} < 67:
-	Sarimanok: Ba-kawk. (One approving tilt of the jeweled crest. Glides out.)
+	Sarimanok: Ba-kawk. [color=#145263](One approving tilt of the jeweled crest. Glides out.)[/color]
 else:
-	Sarimanok: ba-kawk. (Smooths a tail plume. Departs like a one-bird parade.)
+	Sarimanok: ba-kawk. [color=#145263](Smooths a tail plume. Departs like a one-bird parade.)[/color]
 [signal arg="story_success"]
 [end_timeline]
 
 label WrongItem
-Sarimanok: [shake]BA-KAAWK!![/shake] (Shoves it back. Glares hard at [color=#0f6e2f]{Transaction_ItemWants}[/color].)
+Sarimanok: [shake]BA-KAAWK!![/shake] [color=#145263](Shoves it back. Glares hard at [color=#0f6e2f]{Transaction_ItemWants}[/color].)[/color]
 [end_timeline]

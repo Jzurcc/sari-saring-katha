@@ -2,39 +2,51 @@
 # On-screen HelperPrompt shows exact keybinds while Uncle Mario speaks in warm, brisk Tito voice.
 # Covers: Pricing (Alt/L), First Sale (Anoba), Fridge, Nokia Call, Store Upgrades (U), Events & Calendar (C).
 
-UncleMario: Settled in behind the counter already, anak?
-UncleMario: Your Lola would grin ear to ear seeing these shelves open again.
-UncleMario: Ready for a quick test run before neighbors walk up?
+UncleMario: Hoho! Good morning, 'nak! Ready to start your first day as a [i]tindero[/i]?
+- Still don't know if this is the right decision, Uncle.
+	UncleMario: Ha! Is that so? Don't worry, people here in Karimlan are a friendly bunch!
+	UncleMario: They may look different than the city folks you're used to, but I'm sure they'll be your friends in no time.
+- I'm just worried the neighbors wouldn't like me.
+	UncleMario: Ha! Is that so? Don't worry, people here in Karimlan are a friendly bunch!
+	UncleMario: They may look different than the city folks you're used to, but I'm sure they'll be your friends in no time.
+UncleMario: Anyway, want me to walk you through a few things around here? I'll teach you how to be as fast as your Lola once was!
 - Show me the ropes, Uncle.
-	UncleMario: Sige, hands-on is fastest!
+	UncleMario: Hoho! Sige, hands-on is fastest!
 - I've got this, Uncle!
-	UncleMario: Nice try, anak! Your Lola made me swear on her good frying pan I'd test you first.
+	UncleMario: Hoho! Nice try, anak! But your Lola wouldn't approve of a lazy, mediocre tindero!
 	UncleMario: Relax, it'll take less than a minute!
 
-UncleMario: Check the shelf on your left first. Try tweaking the price on [color=#0f6e2f]Anoba[/color].
+UncleMario: First, check the shelf on your left first. It's where your items live. 
+UncleMario: See all those items? Let's edit all their prices!
+UncleMario: How about you try with the [color=#0f6e2f]Anoba[/color]?
 [signal arg="wait_for_price_change"]
-UncleMario: Sharp! Fair prices earn extra tips, greedy markups earn complaints.
-UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], sell me a pack! Skipped breakfast hauling your crates.
+UncleMario: Sharp! Remember, lower prices earn extra tips and reputation, while greedy markups earn complaints and lose reputation.
+UncleMario: Price too high and they might just leave! Though... sometimes you can haggle with them! 
+UncleMario: Try to find balance and switch things up from time to time, eh?
+UncleMario: Speaking of [color=#0f6e2f]Anoba[/color], I'm hungry! Sell one to me.
 [signal arg="wait_for_sale"]
-UncleMario: Ahh, still crispy! First honest peso in your drawer, anak.
+UncleMario: Hoho! This here's my favorite snack!
+UncleMario: Watch how your customers behave and jot it down in your journal, okay? 
 UncleMario: Next, check Lola's refrigerator on your right. Pull the handle.
 [signal arg="wait_for_fridge"]
-UncleMario: Keep that door shut between grabs so the cold doesn't leak out.
-UncleMario: Now ring me on the Nokia behind you! That's how you order restocks.
+UncleMario: [shake]Now quick! Shut the door![/shake]
+UncleMario: Don't want the cold air escaping, 'nak! If you do, frozen items will get warm and have their prices reduced!
+UncleMario: Now let's talk about restocking, hoho! Just call me when you need a haul, ah?
 [signal arg="wait_for_tutorial_call"]
-UncleMario: Haha! Standing two feet away and my pocket still buzzed!
-UncleMario: Lola's utang notebook sits right beside that phone too, in case neighbors ask for credit.
+UncleMario: Hoho! Now we know the number's correct. Just be sure I'm not resting when you call, ha.
+UncleMario: Also, Lola's utang notebook sits right beside that phone too, in case neighbors ask for credit.
 UncleMario: Quick peek at your Store Upgrades board too, anak. That's where you grow Lola's shop.
 [signal arg="wait_for_upgrades"]
-UncleMario: Nice, right? New stock tiers, fridge parts, Mingming, I haul all of it on my tricycle.
-UncleMario: One last board! Pull up the Calendar and Events menu so market rushes never blindside you.
+UncleMario: Nice, right? New stock tiers, fridge parts, even signage posters! I haul all of it on my tricycle.
+UncleMario: One last board! Check the Calendar to your right or press C so you never miss any events going on!
+UncleMario: Some events are hidden, and you have to unlock certain upgrades to reveal them!
 [signal arg="wait_for_events"]
 UncleMario: Good eye! Active events, moon cards, and your day tracker all live right there.
 jump SuccessOutro
 
 label Satisfy
 label SuccessOutro
-UncleMario: That's the whole counter, anak! You're ready for real customers.
+UncleMario: That's the whole counter, anak! You're ready for real customers. 
 jump Outro
 
 label Outro

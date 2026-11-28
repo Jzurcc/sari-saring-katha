@@ -10,13 +10,11 @@ if {Transaction_HasReactiveOpener}:
 if {Transaction_Chapter} == 0.0:
 	# Chapter 1: "Under the Bulb" (is_visit_only | 0 tallies - Pure silent first contact)
 	Rosalyn: ...
+	Rosalyn: ......
 	- Hi there. Need something?
 	- Take your time, miss.
 	- [Wait quietly and nod.]
-	Rosalyn: ...
-	- Looking for something cold?
-	- Warm light's free. No rush.
-	Rosalyn: ...
+	Rosalyn: .........
 	[signal arg="flag:rosalyn_seen=true"]
 	[signal arg="note:A pale floating girl in a tattered white dress with messy long hair stood silently in the light, staring at my face before slipping away."]
 	[signal arg="story_success"]
@@ -24,17 +22,17 @@ if {Transaction_Chapter} == 0.0:
 
 elif {Transaction_Chapter} == 1.0:
 	# Chapter 2: "Under the Floorboards" (is_visit_only | Player nudges & deduces why she can't pay | +1 / 0 / -1)
-	Rosalyn: ...
+	Rosalyn: ......
 	- You came back.
 	- Take your time, miss.
 	Rosalyn: Hello, po.
 	- Looking to buy something?
 	- Just visiting the light?
-	Rosalyn: Brought coins.
+	Rosalyn: I... brought coins.
 	Rosalyn: Oh.
 	Rosalyn: ...
 	- Did you forget your purse?
-		Rosalyn: Held them tight, po.
+		Rosalyn: Held them tight...
 		Rosalyn: Under your floorboards now.
 	- Did they drop on the floor?
 		Rosalyn: Not on it, po.
@@ -102,7 +100,7 @@ elif {Transaction_Chapter} == 2.0:
 		[signal arg="tally:+1"]
 		[signal arg="note:Rosalyn recognized Lola's eyes in mine and feared the albularyo's smoke might banish her before she remembers."]
 		if {Flag_DaniloSawRosalyn}:
-			Rosalyn: Sunglasses man didn't shoo me either.
+			Rosalyn: Eyes man didn't shoo me either.
 		Rosalyn: Salamat po.
 	- He only treats sick neighbors.
 		Rosalyn: Hope so, po.
@@ -184,7 +182,7 @@ elif {Transaction_Chapter} == 4.0:
 		- Sorry. Still walked through?
 			Rosalyn: Needed to know about Lia, po.
 	if {Flag_DaniloTracedTether}:
-		Rosalyn: Sunglasses man passed the shed.
+		Rosalyn: Eyes man passed the shed.
 		Rosalyn: Looked straight at me, po.
 		- He traced Lia past the bridge.
 			Rosalyn: ...
