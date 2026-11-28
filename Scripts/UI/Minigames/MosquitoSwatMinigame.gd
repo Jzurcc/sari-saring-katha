@@ -311,6 +311,18 @@ func _process(delta: float) -> void:
 		b["age"] = float(b["age"]) + delta
 		var pos: Vector2 = b["pos"]
 		var vel: Vector2 = b["vel"]
+
+		# Organic mid-flight course changes (veers into vertical climbs/dives or sharp zig-zags)
+		var steer_t := float(b.get("steer_timer", 1.2)) - delta
+		if steer_t <= 0.0:
+			var max_turn := 0.78 if bool(b["is_firefly"]) else 0.62
+			vel = vel.rotated(randf_range(-max_turn, max_turn))
+			var spd_jitter := randf_range(0.90, 1.12)
+			var base_spd := float(b.get("base_spd", vel.length()))
+			vel = vel.normalized() * clampf(vel.length() * spd_jitter, base_spd * 0.80, base_spd * 1.22)
+			steer_t = randf_range(0.55, 1.35) if bool(b["is_firefly"]) else randf_range(0.75, 1.85)
+		b["steer_timer"] = steer_t
+
 		var wobble := sin(float(b["age"]) * float(b["freq"]) + float(b["phase"])) * float(b["amp"])
 		var perp := Vector2(-vel.y, vel.x).normalized()
 		pos += (vel + perp * wobble) * delta
@@ -341,9 +353,13 @@ func _process(delta: float) -> void:
 		var sz := node.size
 		node.position = pos - sz * 0.5
 		if node is TextureRect:
-			(node as TextureRect).flip_h = vel.x > 0.0
+			if absf(vel.x) > 14.0:
+				(node as TextureRect).flip_h = vel.x > 0.0
+			var pitch_sign := 1.0 if (node as TextureRect).flip_h else -1.0
+			var vert_ratio := clampf(vel.y / maxf(1.0, vel.length()), -1.0, 1.0)
+			node.rotation = lerpf(node.rotation, vert_ratio * 0.42 * pitch_sign, clampf(delta * 8.0, 0.0, 1.0))
 		if bool(b["is_firefly"]):
-			var glow := 0.80 + 0.20 * sin(float(b["age"]) * 5.2 + float(b["phase"]))
+			var glow := 0.82 + 0.18 * sin(float(b["age"]) * 6.8 + float(b["phase"]))
 			node.modulate = Color(1.0, 0.98, 0.80, glow)
 
 
@@ -359,32 +375,58 @@ func _spawn_bug(is_firefly: bool) -> void:
 	tr.pivot_offset = sz * 0.5
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# Fly in from left or right sides of the screen!
-	var from_left := randf() < 0.5
-	var pos := Vector2(
-		-72.0 if from_left else bounds.x + 72.0,
-		randf_range(160.0, bounds.y - 90.0)
-	)
-	var target := Vector2(
-		randf_range(bounds.x * 0.25, bounds.x * 0.75),
-		randf_range(175.0, bounds.y - 120.0)
-	)
-	var diff_t := _get_diff_t()
-	var roll := randf()
-	var base_speed: float
-	if roll < 0.30:
-		base_speed = randf_range(190.0, 290.0) # Slow drifter
-	elif roll < 0.75:
-		base_speed = randf_range(350.0, 490.0) # Normal buzz
+	# Spawn from all 4 edges (~42% vertical top/bottom flyers, ~58% left/right & steep diagonal flyers)
+	var edge_roll := randf()
+	var pos: Vector2
+	var target: Vector2
+	if edge_roll < 0.21:
+		# Top-down vertical / steep dive
+		pos = Vector2(randf_range(110.0, bounds.x - 110.0), -72.0)
+		target = Vector2(
+			clampf(pos.x + randf_range(-220.0, 220.0), 110.0, bounds.x - 110.0),
+			randf_range(bounds.y * 0.55, bounds.y - 100.0)
+		)
+	elif edge_roll < 0.42:
+		# Bottom-up vertical climb
+		pos = Vector2(randf_range(110.0, bounds.x - 110.0), bounds.y + 72.0)
+		target = Vector2(
+			clampf(pos.x + randf_range(-220.0, 220.0), 110.0, bounds.x - 110.0),
+			randf_range(165.0, bounds.y * 0.48)
+		)
 	else:
-		base_speed = randf_range(530.0, 690.0) # Fast dart!
-	var speed: float = base_speed * lerpf(0.56, 1.12, diff_t)
+		# Left or right edge (with much wider vertical target spread for diagonal climbs/dives)
+		var from_left := edge_roll < 0.71
+		pos = Vector2(
+			-72.0 if from_left else bounds.x + 72.0,
+			randf_range(155.0, bounds.y - 85.0)
+		)
+		target = Vector2(
+			randf_range(bounds.x * 0.20, bounds.x * 0.80),
+			randf_range(160.0, bounds.y - 95.0)
+		)
+
+	var diff_t := _get_diff_t()
+	var base_speed: float
+	if is_firefly:
+		# Fireflies zip noticeably faster than mosquitoes across the lamp light
+		base_speed = randf_range(680.0, 960.0)
+	else:
+		var roll := randf()
+		if roll < 0.28:
+			base_speed = randf_range(200.0, 300.0) # Slow drifter
+		elif roll < 0.72:
+			base_speed = randf_range(350.0, 485.0) # Normal buzz
+		else:
+			base_speed = randf_range(510.0, 650.0) # Fast mosquito dart
+	var speed_scale := lerpf(0.74, 1.16, diff_t) if is_firefly else lerpf(0.58, 1.12, diff_t)
+	var speed: float = base_speed * speed_scale
 	var vel := (target - pos).normalized() * speed
 
 	tr.position = pos - sz * 0.5
+	tr.flip_h = vel.x > 0.0
 	_arena.add_child(tr)
 
-	var amp_mult := lerpf(0.60, 1.08, diff_t)
+	var amp_mult := lerpf(0.65, 1.12, diff_t)
 	var bug_dict := {
 		"node": tr,
 		"is_firefly": is_firefly,
@@ -392,9 +434,11 @@ func _spawn_bug(is_firefly: bool) -> void:
 		"entered": false,
 		"pos": pos,
 		"vel": vel,
+		"base_spd": speed,
+		"steer_timer": randf_range(0.55, 1.50),
 		"age": 0.0,
-		"freq": randf_range(2.2, 4.2) if is_firefly else randf_range(4.4, 8.2),
-		"amp": randf_range(20.0, 44.0) if is_firefly else randf_range(38.0, 82.0) * amp_mult,
+		"freq": randf_range(4.8, 7.8) if is_firefly else randf_range(4.2, 8.8),
+		"amp": randf_range(46.0, 88.0) if is_firefly else randf_range(38.0, 94.0) * amp_mult,
 		"phase": randf() * TAU,
 	}
 	_bugs.append(bug_dict)

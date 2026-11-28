@@ -9,6 +9,7 @@ extends CanvasLayer
 signal minigame_finished(won: bool, result: Dictionary)
 
 const Juice := preload("res://Scripts/UI/Minigames/MinigameJuice.gd")
+const AccessibilityPaletteScript := preload("res://Scripts/UI/AccessibilityPalette.gd")
 
 const TALISMAN_TEX_PATH := "res://Assets/ui/talisman.png"
 const BRAHIM_PORTRAIT_PATH := "res://Assets/characters/portraits/Brahim Face.png"
@@ -726,15 +727,28 @@ func _rebuild_guide_mask(grace_px: float) -> void:
 			_guide_core_pixels += 1
 
 
+func _get_active_swatches() -> Array[Dictionary]:
+	return AccessibilityPaletteScript.get_talisman_swatches()
+
+
 func _select_ink_color(idx: int) -> void:
-	idx = clampi(idx, 0, INK_SWATCHES.size() - 1)
+	var swatches := _get_active_swatches()
+	idx = clampi(idx, 0, swatches.size() - 1)
 	_current_ink_index = idx
-	_canvas.brush_color = INK_SWATCHES[idx]["color"]
+	_canvas.brush_color = swatches[idx]["color"]
 	if _canvas.active_tool == CanvasDrawSurface.Tool.ERASER:
 		_select_tool(CanvasDrawSurface.Tool.BRUSH)
+	var cb_active: bool = AccessibilityPaletteScript.is_active()
 	for i in range(_swatch_buttons.size()):
 		var btn := _swatch_buttons[i]
-		var col: Color = INK_SWATCHES[i]["color"]
+		var sw: Dictionary = swatches[i]
+		var col: Color = sw["color"]
+		btn.tooltip_text = "%s [%d]" % [str(sw["name"]), i + 1]
+		btn.text = str(sw.get("symbol", "")) if cb_active else ""
+		if cb_active:
+			var luma := col.r * 0.299 + col.g * 0.587 + col.b * 0.114
+			btn.add_theme_color_override("font_color", Color(0.06, 0.05, 0.04, 1.0) if luma > 0.55 else Color(1.0, 0.98, 0.94, 1.0))
+			btn.add_theme_font_size_override("font_size", 15)
 		var st := StyleBoxFlat.new()
 		st.bg_color = col
 		st.set_corner_radius_all(18)
@@ -789,7 +803,8 @@ func _draw_talisman_guide(surface: CanvasDrawSurface, canvas_rect: Rect2) -> voi
 			continue
 		var s_idx := _get_stroke_size_index(stroke_entry)
 		var c_idx := _get_stroke_color_index(stroke_entry)
-		var guide_col: Color = INK_SWATCHES[c_idx]["guide"]
+		var swatches := _get_active_swatches()
+		var guide_col: Color = swatches[c_idx]["guide"]
 		var brush_r := CanvasDrawSurface.BRUSH_SIZES[s_idx] * screen_scale
 		var outer_w := clampf(brush_r * 1.92, 6.0, 34.0)
 		var inner_w := maxf(2.0, outer_w - 4.2)
@@ -894,8 +909,9 @@ func _on_inscribe_pressed() -> void:
 func _nearest_swatch_index(r: float, g: float, b: float) -> int:
 	var best_idx := 0
 	var best_d := 999.0
-	for i in range(INK_SWATCHES.size()):
-		var c: Color = INK_SWATCHES[i]["color"]
+	var swatches := _get_active_swatches()
+	for i in range(swatches.size()):
+		var c: Color = swatches[i]["color"]
 		var dr := r - c.r
 		var dg := g - c.g
 		var db := b - c.b

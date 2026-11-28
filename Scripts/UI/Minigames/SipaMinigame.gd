@@ -54,6 +54,12 @@ var _sipa_vel: Vector2 = Vector2.ZERO
 var _sipa_rot: float = 0.0
 var _sipa_ang_vel: float = 0.0
 var _sipa_tex: Texture2D
+var _perfect_streak: int = 0
+var _wind_ax: float = 0.0
+var _arc_style: String = "standard" # standard, high_lob, low_hop, curve
+var _trail_pts: Array[Vector2] = []
+var _trail_color: Color = Color(1.0, 0.86, 0.42, 1.0)
+var _kick_rings: Array[Dictionary] = [] # {pos, r, max_r, alpha, col}
 
 var _root: Control
 var _field_draw: Control
@@ -213,6 +219,12 @@ func _start_countdown() -> void:
 	_sipa_vel = Vector2.ZERO
 	_sipa_rot = 0.0
 	_sipa_ang_vel = 0.0
+	_perfect_streak = 0
+	_wind_ax = 0.0
+	_arc_style = "standard"
+	_trail_pts.clear()
+	_trail_color = Color(1.0, 0.86, 0.42, 1.0)
+	_kick_rings.clear()
 	_sync_sipa_visual()
 	_countdown_lbl.visible = true
 	_countdown_lbl.text = "3"
@@ -262,20 +274,70 @@ func _attempt_kick() -> void:
 		var is_perfect := absf(_sipa_pos.y - zone_center) <= zone_half * 0.45
 		if is_perfect:
 			_perfects += 1
+			_perfect_streak += 1
+		else:
+			_perfect_streak = 0
 
 		var prev_score := _score
-		var pts := 20 if is_perfect else 10
+		var streak_bonus := 5 if _perfect_streak >= 3 else 0
+		var pts := (20 if is_perfect else 10) + streak_bonus
 		_score += pts
 
 		var vp_scale := _get_vp_size().y / 720.0
 		var diff_t := _get_diff_t()
-		var bounce_vy := -randf_range(580.0, 650.0) * vp_scale * lerpf(0.92, 1.36, diff_t)
-		var drift_range := lerpf(85.0, 290.0, diff_t) * vp_scale
+
+		# Dynamic arc variability after Kick 2: Standard / High Lob / Quick Low Hop / Breeze Curve
+		_arc_style = "standard"
+		_wind_ax = 0.0
+		if _kicks >= 3:
+			var roll := randf()
+			var special_chance := lerpf(0.32, 0.62, diff_t)
+			if roll < special_chance:
+				var pick := randf()
+				if pick < 0.36:
+					_arc_style = "high_lob"
+				elif pick < 0.70:
+					_arc_style = "low_hop"
+				else:
+					_arc_style = "curve"
+
+		var height_mult := 1.0
+		match _arc_style:
+			"high_lob":
+				height_mult = randf_range(1.16, 1.26)
+			"low_hop":
+				height_mult = randf_range(0.76, 0.85)
+			"curve":
+				height_mult = randf_range(0.95, 1.08)
+				_wind_ax = (1.0 if randf() < 0.5 else -1.0) * randf_range(130.0, 240.0) * vp_scale
+
+		var bounce_vy := -randf_range(575.0, 645.0) * height_mult * vp_scale * lerpf(0.92, 1.34, diff_t)
+		var drift_range := lerpf(95.0, 310.0, diff_t) * vp_scale
 		var bounce_vx := randf_range(-drift_range, drift_range)
-		if absf(bounce_vx) < 42.0:
-			bounce_vx = (42.0 if randf() < 0.5 else -42.0)
+		if absf(bounce_vx) < 48.0:
+			bounce_vx = (48.0 if randf() < 0.5 else -48.0)
 		_sipa_vel = Vector2(bounce_vx, bounce_vy)
-		_sipa_ang_vel = randf_range(-8.0, 8.0)
+		_sipa_ang_vel = randf_range(-10.0, 10.0)
+
+		# Trail & shockwave ring color reflects Perfect / Arc Style
+		if is_perfect:
+			_trail_color = Color(1.0, 0.90, 0.36, 1.0)
+		elif _arc_style == "high_lob":
+			_trail_color = Color(0.54, 0.90, 1.0, 1.0)
+		elif _arc_style == "low_hop":
+			_trail_color = Color(1.0, 0.62, 0.32, 1.0)
+		elif _arc_style == "curve":
+			_trail_color = Color(0.68, 0.96, 0.66, 1.0)
+		else:
+			_trail_color = Color(0.96, 0.82, 0.48, 1.0)
+
+		_kick_rings.append({
+			"pos": _sipa_pos,
+			"r": 18.0,
+			"max_r": 92.0 if is_perfect else 68.0,
+			"alpha": 0.92,
+			"col": _trail_color,
+		})
 
 		# Escalating combo pitch + tactile plastic kick thwack
 		var combo_pitch := minf(1.85, 0.92 + float(_kicks) * 0.032)
@@ -288,14 +350,17 @@ func _attempt_kick() -> void:
 		if is_instance_valid(_sipa_sprite):
 			_sipa_sprite.scale = Vector2(1.42, 0.62)
 			var sq := _sipa_sprite.create_tween()
+			sq.set_ignore_time_scale(true)
 			sq.tween_property(_sipa_sprite, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 		Juice.shake_control(_root, 7.5 if is_perfect else 4.5, 0.16)
-		Juice.spawn_burst(_root, _sipa_pos, Color(1.0, 0.88, 0.36) if is_perfect else Juice.COL_SUCCESS, 14 if is_perfect else 9, 130.0)
+		Juice.spawn_burst(_root, _sipa_pos, _trail_color, 15 if is_perfect else 9, 135.0)
 		Juice.pop_control(_score_val_lbl, 1.24, 0.18)
 
 		_refresh_hud_counters()
-		_set_status("Perfect! +%d" % pts if is_perfect else "Swak! +%d" % pts, Juice.COL_GOLD_BRIGHT if is_perfect else Juice.COL_SUCCESS)
-		_spawn_feedback("PERFECT! +%d" % pts if is_perfect else "Swak! +%d" % pts, Color(1.0, 0.90, 0.38) if is_perfect else Juice.COL_SUCCESS, 0.0)
+		var arc_tag := " · High Lob" if _arc_style == "high_lob" else (" · Quick Hop" if _arc_style == "low_hop" else (" · Breeze Curve" if _arc_style == "curve" else ""))
+		var fb_txt := ("PERFECT x%d! +%d" % [_perfect_streak, pts]) if (is_perfect and _perfect_streak >= 3) else ("PERFECT! +%d" % pts if is_perfect else "Swak! +%d" % pts)
+		_set_status(fb_txt + arc_tag, _trail_color if is_perfect else Juice.COL_SUCCESS)
+		_spawn_feedback(fb_txt, _trail_color if is_perfect else Juice.COL_SUCCESS, 0.0)
 		_refresh_leaderboard()
 
 		for entry in NEIGHBOR_SCORES:
@@ -376,10 +441,26 @@ func _process(delta: float) -> void:
 		var vp_scale := _get_vp_size().y / 720.0
 		var diff_t := _get_diff_t()
 		var endless_extra := minf(0.35, maxf(0.0, float(_kicks - XP_CAP_KICKS)) * 0.015)
-		var gravity := lerpf(580.0, 1120.0, diff_t) * (1.0 + endless_extra) * vp_scale
+		var grav_mult := 0.88 if _arc_style == "high_lob" else (1.08 if _arc_style == "low_hop" else 1.0)
+		var gravity := lerpf(580.0, 1120.0, diff_t) * (1.0 + endless_extra) * grav_mult * vp_scale
+		_sipa_vel.x += _wind_ax * delta
 		_sipa_vel.y += gravity * delta
 		_sipa_pos += _sipa_vel * delta
 		_sipa_rot += _sipa_ang_vel * delta
+
+		# Record smooth ribbon trail points
+		if _trail_pts.is_empty() or _trail_pts[_trail_pts.size() - 1].distance_squared_to(_sipa_pos) > 9.0:
+			_trail_pts.append(_sipa_pos)
+			if _trail_pts.size() > 18:
+				_trail_pts.pop_front()
+
+		# Animate expanding kick shockwave rings
+		for ri in range(_kick_rings.size() - 1, -1, -1):
+			var ring: Dictionary = _kick_rings[ri]
+			ring["r"] = lerpf(float(ring["r"]), float(ring["max_r"]), clampf(delta * 11.0, 0.0, 1.0))
+			ring["alpha"] = float(ring["alpha"]) - delta * 3.4
+			if float(ring["alpha"]) <= 0.02:
+				_kick_rings.remove_at(ri)
 
 		var pad_x := SIPA_SIZE.x * 0.5 + 8.0
 		if _sipa_pos.x < float(b["left"]) + pad_x:
@@ -895,3 +976,31 @@ func _draw_field() -> void:
 	_field_draw.draw_line(Vector2(left, floor_y), Vector2(right, floor_y), Color(0.92, 0.38, 0.34, 0.58), 2.5, true)
 	var height_ratio := clampf(1.0 - (floor_y - _sipa_pos.y) / floor_y, 0.15, 1.0)
 	_field_draw.draw_circle(Vector2(_sipa_pos.x, floor_y + 4.0), 22.0 * height_ratio, Color(0.0, 0.0, 0.0, 0.38 * height_ratio))
+
+	# Subtle drifting wind streaks during Breeze Curve arcs
+	if _phase == "playing" and absf(_wind_ax) > 10.0:
+		var dir_sign := 1.0 if _wind_ax > 0.0 else -1.0
+		var w_col := Color(0.74, 0.96, 0.72, 0.22)
+		for wi in range(4):
+			var wy := lerpf(190.0, zone_top - 40.0, float(wi) / 3.0)
+			var wx := left + fposmod(_elapsed * 220.0 * dir_sign + float(wi) * 145.0, maxf(60.0, right - left - 60.0))
+			_field_draw.draw_line(Vector2(wx, wy), Vector2(wx + 46.0 * dir_sign, wy), w_col, 2.0, true)
+
+	# Glowing tapered ribbon trail behind the sipa
+	if _phase == "playing" and _trail_pts.size() >= 2:
+		var n := _trail_pts.size()
+		for i in range(n - 1):
+			var t := float(i + 1) / float(n)
+			var w := lerpf(2.5, 19.0, t * t)
+			var a := t * t * 0.52
+			var seg_col := Color(_trail_color.r, _trail_color.g, _trail_color.b, a)
+			_field_draw.draw_line(_trail_pts[i], _trail_pts[i + 1], seg_col, w, true)
+			# Crisp bright inner core on the newest half of the trail
+			if t > 0.45:
+				var core_col := Color(1.0, 0.98, 0.90, (t - 0.45) * 0.65)
+				_field_draw.draw_line(_trail_pts[i], _trail_pts[i + 1], core_col, w * 0.36, true)
+
+	# Expanding kick shockwave rings
+	for ring in _kick_rings:
+		var rc: Color = ring["col"]
+		_field_draw.draw_arc(ring["pos"], float(ring["r"]), 0.0, TAU, 36, Color(rc.r, rc.g, rc.b, float(ring["alpha"])), 3.0, true)
