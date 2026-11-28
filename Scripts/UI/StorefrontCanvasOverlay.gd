@@ -985,7 +985,9 @@ func _finalize_save(chosen_featured_cat: String) -> void:
 	img.save_png(paint_path)
 	img.save_png(final_path)
 
-	var stamps_to_save: Array[Dictionary] = _surface.get_serialized_stamps() if _slot_name == "poster" else []
+	var stamps_to_save: Array[Dictionary] = []
+	if _slot_name == "poster":
+		stamps_to_save.assign(_surface.get_serialized_stamps())
 	StoryManager.save_storefront_artwork(
 		_slot_name,
 		stamps_to_save,

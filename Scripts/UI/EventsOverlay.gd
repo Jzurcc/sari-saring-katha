@@ -400,7 +400,10 @@ func _set_calendar_expanded(expanded: bool) -> void:
 	var target_rot := 0.0 if expanded else CALENDAR_TILT_DEG
 	var target_tab_a := 0.12 if expanded else 1.0
 	_cal_tween = create_tween().set_parallel(true)
+	_cal_tween.set_ignore_time_scale(true)
 	if expanded:
+		if is_instance_valid(AudioManager):
+			AudioManager.play_sfx("tab_switch")
 		_cal_tween.tween_property(_cal_holder, "position:x", target_x, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		_cal_tween.tween_property(_cal_holder, "rotation_degrees", target_rot, 0.24).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	else:
@@ -436,11 +439,13 @@ func _process(delta: float) -> void:
 	var hit_rect := _cal_holder.get_global_rect()
 	if is_instance_valid(_cal_tab):
 		hit_rect = hit_rect.merge(_cal_tab.get_global_rect())
-	# Small hysteresis margin when already expanded so sliding/edges never jitter
+	# Small hysteresis margin when already expanded, and ALWAYS extend to the left screen edge (x = 0)
+	# so moving into the gap left of the expanded calendar never causes hover-bounce oscillation.
 	if _cal_expanded:
 		hit_rect = hit_rect.grow(16.0)
-	else:
-		hit_rect = hit_rect.grow_side(SIDE_LEFT, 24.0)
+	if hit_rect.position.x > 0.0:
+		hit_rect.size.x += hit_rect.position.x
+		hit_rect.position.x = 0.0
 	var hovering := hit_rect.has_point(mp)
 	if hovering != _cal_expanded:
 		_set_calendar_expanded(hovering)
@@ -470,7 +475,8 @@ func _refresh_calendar_display() -> void:
 	var year_num := CALENDAR_START_YEAR + (CALENDAR_START_MONTH_IDX + months_elapsed) / 12
 
 	if is_instance_valid(_radio_badge):
-		var can_tune := is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast()
+		var has_radio := is_instance_valid(StoryManager) and StoryManager.radio_upgrade_level > 0
+		var can_tune := has_radio and is_instance_valid(StoreEventManager) and StoreEventManager.can_reveal_next_broadcast()
 		_radio_badge.visible = can_tune
 
 	var year_str := str(year_num)
@@ -528,15 +534,34 @@ func open_overlay() -> void:
 	_backdrop.modulate.a = 0.0
 	_top_bar.modulate.a = 0.0
 	_frame.modulate.a = 0.0
+	_frame.pivot_offset = _frame.size * 0.5
+	_frame.scale = Vector2(0.96, 0.96)
 	_cal_holder.modulate.a = 0.0
 	var start_cal_x := _cal_tucked_x - 42.0
 	_cal_holder.position.x = start_cal_x
 	var tw := create_tween()
+	tw.set_ignore_time_scale(true)
 	tw.tween_property(_backdrop, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_top_bar, "modulate:a", 1.0, 0.22).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_frame, "modulate:a", 1.0, 0.24).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_frame, "scale", Vector2.ONE, 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(_cal_holder, "modulate:a", 1.0, 0.26).set_trans(Tween.TRANS_SINE)
 	tw.parallel().tween_property(_cal_holder, "position:x", _cal_tucked_x, 0.30).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+	# Staggered subtle entrance on event cards
+	var card_idx := 0
+	for child in _cards_vbox.get_children():
+		if child is Control:
+			var c := child as Control
+			c.modulate.a = 0.0
+			c.pivot_offset = c.size * 0.5
+			c.scale = Vector2(0.95, 0.95)
+			var ctw := create_tween()
+			ctw.set_ignore_time_scale(true)
+			ctw.tween_interval(0.04 + card_idx * 0.045)
+			ctw.tween_property(c, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
+			ctw.parallel().tween_property(c, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			card_idx += 1
 
 func close_overlay() -> void:
 	if not is_open:
@@ -775,7 +800,6 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 
 	var title_lbl := Label.new()
 	title_lbl.text = title
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
@@ -783,6 +807,15 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 	top_line.add_child(title_lbl)
 
 	if not rarity.is_empty():
+		var dot_lbl := Label.new()
+		dot_lbl.text = "·"
+		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		dot_lbl.add_theme_font_size_override("font_size", 16)
+		dot_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
+		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(dot_lbl)
+
 		var r_col: Color = MayariCardRegistry.get_rarity_color(rarity)
 		var rp_lbl := Label.new()
 		rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity)
@@ -793,20 +826,16 @@ func _build_hades_card(title: String, sigil: String, desc_rich: String, stats: A
 		rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		top_line.add_child(rp_lbl)
 
-		var dot_lbl := Label.new()
-		dot_lbl.text = "·"
-		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-		dot_lbl.add_theme_font_size_override("font_size", 16)
-		dot_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
-		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		top_line.add_child(dot_lbl)
+	var top_spacer := Control.new()
+	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(top_spacer)
 
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	tag_lbl.add_theme_font_size_override("font_size", 18)
+	tag_lbl.add_theme_font_size_override("font_size", 22)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_lbl)

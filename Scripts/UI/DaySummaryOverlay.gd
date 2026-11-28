@@ -271,32 +271,32 @@ func _compute_grade_and_highlights() -> void:
 			_quip = "You saw %s's story through to a turning point. Karimlan remembers such patience." % first_char
 	elif not milestones.is_empty():
 		var m_quips: Array[String] = [
-			"Another seal breaks on the Silver Ledger. Biringan's Council is watching your numbers closely now.",
-			"A new seal opens on Lola's pact. You have more nerve behind that counter than I expected.",
+			"Another seal broken. If Biringan's Council asks why your draws look luckier, tell them nothing.",
+			"A new seal opens on Lola's pact. I knew betting on your counter would pay off, shopkeeper.",
 		]
 		_quip = m_quips[randi() % m_quips.size()]
 	elif had_active_omen and (_grade == "S" or _grade == "A"):
 		var omen_quips: Array[String] = [
-			"You turned a lunar Omen into a gleaming ledger. Your Lola used to grin the exact same way.",
-			"An Omen hung over Karimlan and you still cleared the shelves. Impressive, shopkeeper.",
+			"You turned a lunar Omen into pure profit. Do not look at me like that, I am only mildly proud.",
+			"An Omen hung over Karimlan and you still cleared the shelves. Your Lola used to pull that exact stunt.",
 		]
 		_quip = omen_quips[randi() % omen_quips.size()]
 	elif upgrades_bought >= 1:
 		var upg_quips: Array[String] = [
-			"New fixtures behind the counter. Keep polishing this little tindahan and Biringan might get jealous.",
-			"Fresh upgrades for Lola's shop. Careful, or your regulars will never leave the awning.",
+			"New fixtures behind the counter. Good, I prefer my secret snack stop looking sharp.",
+			"Fresh upgrades for Lola's shop. Keep expanding that candy shelf while you are at it, shopkeeper.",
 		]
 		_quip = upg_quips[randi() % upg_quips.size()]
 	elif _grade == "S":
 		var s_quips: Array[String] = [
-			"A gleaming ledger, shopkeeper. Even the Silver Spires would call that a royal haul.",
-			"Paldo, as your neighbors say. Rest your hands, you earned every peso on that wood.",
+			"A gleaming ledger. I am not smiling, shopkeeper. The moonlight just caught my face weirdly.",
+			"Paldo, as your neighbors say. Lock up and get some real sleep, that is a royal order.",
 		]
 		_quip = s_quips[randi() % s_quips.size()]
 	elif _grade == "A":
 		var a_quips: Array[String] = [
-			"Steady hands and brisk trade. Keep your candy jar stocked and we will get along fine.",
-			"Clean numbers and happy regulars. Your Lola's counter is in capable hands.",
+			"Steady hands and brisk trade. Keep the sweet jar full for 'Maria' and we will get along splendidly.",
+			"Clean numbers and happy regulars. I knew Lola left this counter to the right person.",
 		]
 		_quip = a_quips[randi() % a_quips.size()]
 	elif missed_total >= 3:
@@ -1091,7 +1091,6 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 
 	var title_lbl := Label.new()
 	title_lbl.text = str(info.get("title", "Condition"))
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
@@ -1100,6 +1099,15 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 
 	var rarity: String = str(info.get("rarity", ""))
 	if not rarity.is_empty():
+		var dot_lbl := Label.new()
+		dot_lbl.text = "·"
+		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		dot_lbl.add_theme_font_size_override("font_size", 16)
+		dot_lbl.add_theme_color_override("font_color", COL_GOLD_ZERO)
+		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(dot_lbl)
+
 		var r_col: Color = MayariCardRegistry.get_rarity_color(rarity)
 		var rp_lbl := Label.new()
 		rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity)
@@ -1110,20 +1118,16 @@ func _build_hover_event_card(info: Dictionary) -> PanelContainer:
 		rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		top_line.add_child(rp_lbl)
 
-		var dot_lbl := Label.new()
-		dot_lbl.text = "·"
-		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-		dot_lbl.add_theme_font_size_override("font_size", 16)
-		dot_lbl.add_theme_color_override("font_color", COL_GOLD_ZERO)
-		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		top_line.add_child(dot_lbl)
+	var top_spacer := Control.new()
+	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(top_spacer)
 
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag.capitalize()
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	tag_lbl.add_theme_font_size_override("font_size", 18)
+	tag_lbl.add_theme_font_size_override("font_size", 22)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_lbl)

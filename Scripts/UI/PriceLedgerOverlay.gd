@@ -866,8 +866,8 @@ func refresh_catalog() -> void:
 
 	# Sort: in-stock hot items first, then in-stock, then out-of-stock, then by tier/name
 	_visible_items.sort_custom(func(a: ItemData, b: ItemData) -> bool:
-		var a_stk := InventoryManager.get_stock(a) > 0
-		var b_stk := InventoryManager.get_stock(b) > 0
+		var a_stk := InventoryManager.get_total_item_stock(a) > 0
+		var b_stk := InventoryManager.get_total_item_stock(b) > 0
 		if a_stk != b_stk:
 			return a_stk
 		var a_hot := _is_item_hot(a)
@@ -886,7 +886,7 @@ func refresh_catalog() -> void:
 
 
 func _create_product_row(item: ItemData) -> PanelContainer:
-	var stock := InventoryManager.get_stock(item)
+	var stock := InventoryManager.get_total_item_stock(item)
 	var row := PanelContainer.new()
 	row.custom_minimum_size = Vector2(0, 74)
 	row.mouse_filter = Control.MOUSE_FILTER_STOP

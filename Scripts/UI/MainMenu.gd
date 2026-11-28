@@ -9,23 +9,10 @@ extends Control
 const MENU_FONT_PATH := "res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf"
 const BODY_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-Regular.ttf")
 const LIGHT_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-Light.ttf")
-const SEMIBOLD_FONT := preload("res://Assets/Fonts/Fredoka/Fredoka-SemiBold.ttf")
 
-const GAME_VERSION := "v0.4.2 · Early Build"
-const DEVLOG_TITLE := "Dev News"
-const DEVLOG_SUBTITLE := "Latest Storefront Update"
-const DEVLOG_ENTRIES: Array[String] = [
-	"Modernized Price Ledger with interactive step gauges & active effect cards",
-	"Cozy skribbl-style Storefront Drawing Studio with Stamp Mode & custom uploads",
-	"Papa Ulap's Radio now broadcasts Daily Visitor sightings alongside Market Events",
-	"Added Wholesale Pass II & Recycling Program upgrades to the Store Upgrade Tree",
-]
+const GAME_VERSION := "v1.0.0"
 
-const COL_ESPRESSO := Color(0.068, 0.056, 0.046, 0.88)
-const COL_GOLD := Color(0.86, 0.67, 0.32, 0.85)
 const COL_GOLD_BRIGHT := Color(1.0, 0.89, 0.58, 1.0)
-const COL_CREAM := Color(1.0, 0.94, 0.84, 1.0)
-const COL_CREAM_MUTED := Color(0.86, 0.79, 0.69, 0.88)
 
 var target_scene = "res://Scenes/IntroCutscene.tscn"
 var original_styles = {}
@@ -41,12 +28,8 @@ var current_offset_y: float = 0.0
 const LoadSlotsOverlayScript = preload("res://Scripts/UI/LoadSlotsOverlay.gd")
 
 var _menu_font: Font
-var _bold_body: FontVariation
 var _gradient_vignette: TextureRect
 var _hover_diamond: Label
-var _devlog_panel: PanelContainer
-var _devlog_body: VBoxContainer
-var _devlog_toggle_btn: Button
 var _version_lbl: Label
 var _load_slots_overlay: Control
 var _btn_tweens: Dictionary = {}
@@ -65,8 +48,6 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 	_menu_font = load(MENU_FONT_PATH) if ResourceLoader.exists(MENU_FONT_PATH) else BODY_FONT
-	_bold_body = FontVariation.new()
-	_bold_body.base_font = SEMIBOLD_FONT
 
 	_ui_player = AudioStreamPlayer.new()
 	_ui_player.bus = "SFX"
@@ -84,7 +65,7 @@ func _ready() -> void:
 
 	_build_directional_vignette()
 	_build_hover_glow()
-	_build_devlog_and_version()
+	_build_version_label()
 	_build_load_slots_overlay()
 
 	# Hook up button hover glow + slide + click sound
@@ -145,86 +126,7 @@ func _build_hover_glow() -> void:
 	add_child(_hover_diamond)
 
 
-func _build_devlog_and_version() -> void:
-	# Calm top-right Dev News card tucked cleanly away from the storefront
-	_devlog_panel = PanelContainer.new()
-	_devlog_panel.anchor_left = 1.0
-	_devlog_panel.anchor_right = 1.0
-	_devlog_panel.anchor_top = 0.0
-	_devlog_panel.anchor_bottom = 0.0
-	_devlog_panel.offset_left = -384.0
-	_devlog_panel.offset_right = -32.0
-	_devlog_panel.offset_top = 28.0
-	_devlog_panel.grow_vertical = Control.GROW_DIRECTION_END
-	var st := UIStyle.create_flat_stylebox(COL_ESPRESSO, 12, 18, 14)
-	st.border_color = COL_GOLD
-	st.set_border_width_all(1)
-	st.shadow_color = Color(0.0, 0.0, 0.0, 0.45)
-	st.shadow_size = 12
-	_devlog_panel.add_theme_stylebox_override("panel", st)
-	add_child(_devlog_panel)
-	move_child(_devlog_panel, options_overlay.get_index())
-
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
-	_devlog_panel.add_child(vb)
-
-	var hdr := HBoxContainer.new()
-	hdr.add_theme_constant_override("separation", 8)
-	vb.add_child(hdr)
-
-	var title_col := VBoxContainer.new()
-	title_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_col.add_theme_constant_override("separation", 2)
-	hdr.add_child(title_col)
-
-	var title_lbl := Label.new()
-	title_lbl.text = DEVLOG_TITLE
-	title_lbl.add_theme_font_override("font", _bold_body)
-	title_lbl.add_theme_font_size_override("font_size", 20)
-	title_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	title_col.add_child(title_lbl)
-
-	var sub_lbl := Label.new()
-	sub_lbl.text = DEVLOG_SUBTITLE
-	sub_lbl.add_theme_font_override("font", LIGHT_FONT)
-	sub_lbl.add_theme_font_size_override("font_size", 13)
-	sub_lbl.add_theme_color_override("font_color", COL_CREAM_MUTED)
-	title_col.add_child(sub_lbl)
-
-	_devlog_toggle_btn = Button.new()
-	_devlog_toggle_btn.text = "▾"
-	_devlog_toggle_btn.custom_minimum_size = Vector2(30, 30)
-	_devlog_toggle_btn.focus_mode = Control.FOCUS_NONE
-	_devlog_toggle_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	_devlog_toggle_btn.tooltip_text = "Collapse / Expand Dev News"
-	UIStyle.style_button(_devlog_toggle_btn, Color(0.14, 0.11, 0.09, 0.85), COL_CREAM_MUTED, 15.0, 6)
-	_devlog_toggle_btn.pressed.connect(func():
-		_play_click()
-		_devlog_body.visible = not _devlog_body.visible
-		_devlog_toggle_btn.text = "▴" if _devlog_body.visible else "▾"
-	)
-	hdr.add_child(_devlog_toggle_btn)
-
-	_devlog_body = VBoxContainer.new()
-	_devlog_body.visible = false
-	_devlog_body.add_theme_constant_override("separation", 7)
-	vb.add_child(_devlog_body)
-
-	var sep := ColorRect.new()
-	sep.custom_minimum_size = Vector2(0, 1)
-	sep.color = Color(COL_GOLD.r, COL_GOLD.g, COL_GOLD.b, 0.32)
-	_devlog_body.add_child(sep)
-
-	for entry in DEVLOG_ENTRIES:
-		var lbl := Label.new()
-		lbl.text = "▸ " + entry
-		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl.add_theme_font_override("font", BODY_FONT)
-		lbl.add_theme_font_size_override("font_size", 15)
-		lbl.add_theme_color_override("font_color", COL_CREAM)
-		_devlog_body.add_child(lbl)
-
+func _build_version_label() -> void:
 	# Subtle Version Tag tucked in bottom-right corner
 	var proj_ver: String = str(ProjectSettings.get_setting("application/config/version", ""))
 	_version_lbl = Label.new()
@@ -257,11 +159,6 @@ func _play_entrance_animation() -> void:
 			tw.tween_interval(0.08 + idx * 0.06)
 			tw.tween_property(child, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 			idx += 1
-	if is_instance_valid(_devlog_panel):
-		_devlog_panel.modulate.a = 0.0
-		var dtw := create_tween()
-		dtw.tween_interval(0.22)
-		dtw.tween_property(_devlog_panel, "modulate:a", 1.0, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 # ─── UI Sound helpers ─────────────────────────────────────────────────────────
@@ -452,8 +349,6 @@ func _transition_to_game(scene_path: String) -> void:
 	buttons.hide()
 	if is_instance_valid(_hover_diamond):
 		_hover_diamond.hide()
-	if is_instance_valid(_devlog_panel):
-		_devlog_panel.hide()
 	if is_instance_valid(_version_lbl):
 		_version_lbl.hide()
 	if is_instance_valid(_gradient_vignette):
@@ -476,5 +371,3 @@ func _update_menu_interaction(enabled: bool) -> void:
 	for child in buttons.get_children():
 		if child is Control:
 			child.mouse_filter = mode
-	if is_instance_valid(_devlog_panel):
-		_devlog_panel.mouse_filter = mode

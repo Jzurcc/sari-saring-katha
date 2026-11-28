@@ -1,25 +1,16 @@
 extends Control
 
 ## Modernized Persona-inspired kinetic Pause Menu.
-## Sweeps in an angled Dark Warm Espresso sash with an Antique Gold slash on the left,
-## staggered Fredoka menu items with a gliding ◆ diamond & playful hover tilt,
-## and a live "Store Snapshot" + Controls card on the right.
+## Sweeps in an angled Dark Warm Espresso sash with an Antique Gold slash on the left
+## and staggered Fredoka menu items with a gliding ◆ diamond & playful hover tilt.
 
 @onready var buttons = $Buttons
 @onready var options_overlay : Control = $OptionsOverlay
 
-const PESO_ICON: Texture2D = preload("res://Assets/ui/peso_icon.png")
-
-const COL_ESPRESSO := Color(0.055, 0.045, 0.038, 0.94)
-const COL_SURFACE := Color(0.105, 0.088, 0.075, 0.96)
-const COL_CARD := Color(0.135, 0.114, 0.096, 0.94)
 const COL_GOLD := Color(0.86, 0.67, 0.32, 1.0)
 const COL_GOLD_BRIGHT := Color(1.0, 0.89, 0.58, 1.0)
-const COL_CREAM := Color(1.0, 0.95, 0.86, 1.0)
 const COL_CREAM_MUTED := Color(0.82, 0.76, 0.67, 0.88)
-const COL_BORDER_SUBTLE := Color(0.42, 0.31, 0.18, 0.55)
 const COL_POSITIVE := Color(0.56, 0.90, 0.56, 1.0)
-const COL_CORAL := Color(0.94, 0.48, 0.44, 1.0)
 
 var _sfx_click   : AudioStream = preload("res://Audio/SFX/ui_sfx_4.mp3")
 var _sfx_confirm : AudioStream = preload("res://Audio/SFX/ui_sfx_9.mp3")
@@ -39,14 +30,6 @@ var _dim_bg: ColorRect
 var _sash: _DiagonalSash
 var _pause_hdr: VBoxContainer
 var _hover_diamond: Label
-var _snapshot_panel: PanelContainer
-var _snap_day_lbl: Label
-var _snap_meta_lbl: Label
-var _snap_money_lbl: Label
-var _stat_sales_val: Label
-var _stat_served_val: Label
-var _stat_ledger_val: Label
-var _stat_fridge_val: Label
 
 var _btn_tweens: Dictionary = {}
 var _diamond_tween: Tween = null
@@ -162,186 +145,6 @@ func _build_modern_chrome() -> void:
 	add_child(_hover_diamond)
 	move_child(_hover_diamond, options_overlay.get_index())
 
-	# Right-Side "Store Snapshot" + Controls Card
-	_snapshot_panel = PanelContainer.new()
-	_snapshot_panel.anchor_left = 1.0
-	_snapshot_panel.anchor_right = 1.0
-	_snapshot_panel.anchor_top = 0.5
-	_snapshot_panel.anchor_bottom = 0.5
-	_snapshot_panel.offset_left = -456.0
-	_snapshot_panel.offset_right = -56.0
-	_snapshot_panel.offset_top = -230.0
-	_snapshot_panel.offset_bottom = 230.0
-	var st := UIStyle.create_flat_stylebox(COL_ESPRESSO, 14, 22, 18)
-	st.border_color = COL_GOLD
-	st.set_border_width_all(2)
-	st.shadow_color = Color(0.0, 0.0, 0.0, 0.55)
-	st.shadow_size = 16
-	_snapshot_panel.add_theme_stylebox_override("panel", st)
-	add_child(_snapshot_panel)
-	move_child(_snapshot_panel, options_overlay.get_index())
-
-	var sv := VBoxContainer.new()
-	sv.add_theme_constant_override("separation", 14)
-	_snapshot_panel.add_child(sv)
-
-	# Snapshot Header: Day/Time + Wallet
-	var hdr_row := HBoxContainer.new()
-	hdr_row.add_theme_constant_override("separation", 10)
-	sv.add_child(hdr_row)
-
-	var day_col := VBoxContainer.new()
-	day_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	day_col.add_theme_constant_override("separation", 2)
-	hdr_row.add_child(day_col)
-
-	_snap_day_lbl = Label.new()
-	_snap_day_lbl.text = "Day 1 · 6:00 AM"
-	_snap_day_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	_snap_day_lbl.add_theme_font_size_override("font_size", 22)
-	_snap_day_lbl.add_theme_color_override("font_color", COL_CREAM)
-	day_col.add_child(_snap_day_lbl)
-
-	_snap_meta_lbl = Label.new()
-	_snap_meta_lbl.text = "Store Tier 1 · Player Lv. 1"
-	_snap_meta_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_LIGHT)
-	_snap_meta_lbl.add_theme_font_size_override("font_size", 14)
-	_snap_meta_lbl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	day_col.add_child(_snap_meta_lbl)
-
-	var money_pill := PanelContainer.new()
-	money_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var mp_st := UIStyle.create_flat_stylebox(COL_CARD, 8, 10, 6)
-	mp_st.border_color = COL_BORDER_SUBTLE
-	mp_st.set_border_width_all(1)
-	money_pill.add_theme_stylebox_override("panel", mp_st)
-	hdr_row.add_child(money_pill)
-
-	var mp_row := HBoxContainer.new()
-	mp_row.add_theme_constant_override("separation", 6)
-	money_pill.add_child(mp_row)
-
-	var p_ic := TextureRect.new()
-	p_ic.texture = PESO_ICON
-	p_ic.custom_minimum_size = Vector2(22, 22)
-	p_ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	p_ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	p_ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	mp_row.add_child(p_ic)
-
-	_snap_money_lbl = Label.new()
-	_snap_money_lbl.text = "0.00"
-	_snap_money_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	_snap_money_lbl.add_theme_font_size_override("font_size", 18)
-	_snap_money_lbl.add_theme_color_override("font_color", COL_CREAM)
-	mp_row.add_child(_snap_money_lbl)
-
-	# 2x2 Today's Stats Grid
-	var stats_grid := GridContainer.new()
-	stats_grid.columns = 2
-	stats_grid.add_theme_constant_override("h_separation", 10)
-	stats_grid.add_theme_constant_override("v_separation", 10)
-	sv.add_child(stats_grid)
-
-	_stat_sales_val = _make_stat_tile(stats_grid, "Sales Today", "₱0.00", COL_POSITIVE)
-	_stat_served_val = _make_stat_tile(stats_grid, "Served Today", "0", COL_CREAM)
-	_stat_ledger_val = _make_stat_tile(stats_grid, "Silver Ledger", "₱0 / ₱2000", COL_GOLD_BRIGHT)
-	_stat_fridge_val = _make_stat_tile(stats_grid, "Fridge Status", "Chilled", COL_POSITIVE)
-
-	# Divider
-	var sep := ColorRect.new()
-	sep.custom_minimum_size = Vector2(0, 1)
-	sep.color = COL_BORDER_SUBTLE
-	sv.add_child(sep)
-
-	# Compact Controls Quick-Reference
-	var ctrl_hdr := Label.new()
-	ctrl_hdr.text = "Store Shortcuts"
-	ctrl_hdr.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
-	ctrl_hdr.add_theme_font_size_override("font_size", 15)
-	ctrl_hdr.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	sv.add_child(ctrl_hdr)
-
-	var keys_grid := GridContainer.new()
-	keys_grid.columns = 2
-	keys_grid.add_theme_constant_override("h_separation", 12)
-	keys_grid.add_theme_constant_override("v_separation", 8)
-	sv.add_child(keys_grid)
-
-	var shortcuts: Array[Array] = [
-		["Alt", "Price Lens"],
-		["L", "Price Ledger"],
-		["U", "Store Upgrades"],
-		["C", "Calendar & Events"],
-		["J", "Folklore Journal"],
-		["N", "Utang Notebook"],
-		["Tab", "Nokia Phone"],
-		["Esc", "Resume"],
-	]
-	for sc in shortcuts:
-		keys_grid.add_child(_make_key_row(str(sc[0]), str(sc[1])))
-
-
-func _make_stat_tile(parent: GridContainer, label_txt: String, val_txt: String, val_col: Color) -> Label:
-	var card := PanelContainer.new()
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var cst := UIStyle.create_flat_stylebox(COL_CARD, 8, 12, 8)
-	cst.border_color = COL_BORDER_SUBTLE
-	cst.set_border_width_all(1)
-	card.add_theme_stylebox_override("panel", cst)
-	parent.add_child(card)
-
-	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 2)
-	card.add_child(vb)
-
-	var l := Label.new()
-	l.text = label_txt
-	l.add_theme_font_override("font", UIStyle.FONT_FREDOKA_LIGHT)
-	l.add_theme_font_size_override("font_size", 12)
-	l.add_theme_color_override("font_color", COL_CREAM_MUTED)
-	vb.add_child(l)
-
-	var v := Label.new()
-	v.text = val_txt
-	v.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	v.add_theme_font_size_override("font_size", 17)
-	v.add_theme_color_override("font_color", val_col)
-	vb.add_child(v)
-	return v
-
-
-func _make_key_row(key_txt: String, desc_txt: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 8)
-
-	var cap := PanelContainer.new()
-	cap.custom_minimum_size = Vector2(44, 24)
-	var kst := UIStyle.create_flat_stylebox(COL_SURFACE, 5, 6, 2)
-	kst.border_color = COL_GOLD
-	kst.set_border_width_all(1)
-	cap.add_theme_stylebox_override("panel", kst)
-	row.add_child(cap)
-
-	var kl := Label.new()
-	kl.text = key_txt
-	kl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	kl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	kl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_MED)
-	kl.add_theme_font_size_override("font_size", 12)
-	kl.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-	cap.add_child(kl)
-
-	var dl := Label.new()
-	dl.text = desc_txt
-	dl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	dl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_REG)
-	dl.add_theme_font_size_override("font_size", 13)
-	dl.add_theme_color_override("font_color", COL_CREAM)
-	row.add_child(dl)
-	return row
-
 
 func _restyle_buttons() -> void:
 	# Anchor buttons cleanly on the left inside the diagonal sash
@@ -421,40 +224,6 @@ func _move_diamond_to(btn: Button) -> void:
 	_diamond_tween.tween_property(_hover_diamond, "modulate:a", 1.0, 0.12)
 
 
-func _refresh_snapshot() -> void:
-	var time_str := ""
-	if is_instance_valid(StoryManager) and StoryManager.clock and StoryManager.clock.has_method("get_formatted_time"):
-		time_str = StoryManager.clock.get_formatted_time()
-	var day_num := StoryManager.day if is_instance_valid(StoryManager) else 1
-	_snap_day_lbl.text = ("Day %d · %s" % [day_num, time_str]) if time_str != "" else ("Day %d" % day_num)
-	if is_instance_valid(StoryManager):
-		_snap_meta_lbl.text = "Store Tier %d · Player Lv. %d" % [StoryManager.current_tier, StoryManager.player_level]
-
-		var ds := StoryManager.ensure_daily_stats()
-		var sales := float(ds.get("cash_sales", 0.0)) + float(ds.get("tips_earned", 0.0))
-		var served := int(ds.get("buyers_served", 0))
-		_stat_sales_val.text = "₱%.2f" % sales
-		_stat_served_val.text = "%d" % served
-
-		if StoryManager.is_tally_cleared():
-			_stat_ledger_val.text = "Sealed ✓"
-			_stat_ledger_val.add_theme_color_override("font_color", COL_POSITIVE)
-		else:
-			_stat_ledger_val.text = "₱%.0f / ₱%.0f" % [StoryManager.tally_total_paid, StoryManager.TALLY_GOAL]
-			_stat_ledger_val.add_theme_color_override("font_color", COL_GOLD_BRIGHT)
-
-		if StoryManager.is_fridge_warm:
-			_stat_fridge_val.text = "Warm (-20%)"
-			_stat_fridge_val.add_theme_color_override("font_color", COL_CORAL)
-		else:
-			_stat_fridge_val.text = "Chilled"
-			_stat_fridge_val.add_theme_color_override("font_color", COL_POSITIVE)
-
-	var gm_nodes := get_tree().get_nodes_in_group("game_manager")
-	var money_val := float(gm_nodes[0].money) if not gm_nodes.is_empty() else 0.0
-	_snap_money_lbl.text = "%.2f" % money_val
-
-
 func _play_pause_entrance() -> void:
 	if _entrance_tween and _entrance_tween.is_valid():
 		_entrance_tween.kill()
@@ -463,19 +232,12 @@ func _play_pause_entrance() -> void:
 	_sash.position.x = -520.0
 	_pause_hdr.modulate.a = 0.0
 	_pause_hdr.position.x = 44.0
-	_snapshot_panel.modulate.a = 0.0
-	var snap_rest_x := _snapshot_panel.offset_left
-	_snapshot_panel.offset_left = snap_rest_x + 60.0
-	_snapshot_panel.offset_right = -56.0 + 60.0
 
 	_entrance_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
 	_entrance_tween.tween_property(_dim_bg, "modulate:a", 1.0, 0.18).set_trans(Tween.TRANS_SINE)
 	_entrance_tween.tween_property(_sash, "position:x", 0.0, 0.24).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	_entrance_tween.tween_property(_pause_hdr, "modulate:a", 1.0, 0.20).set_delay(0.05)
 	_entrance_tween.tween_property(_pause_hdr, "position:x", 84.0, 0.24).set_delay(0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_entrance_tween.tween_property(_snapshot_panel, "modulate:a", 1.0, 0.22).set_delay(0.06)
-	_entrance_tween.tween_property(_snapshot_panel, "offset_left", snap_rest_x, 0.26).set_delay(0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_entrance_tween.tween_property(_snapshot_panel, "offset_right", -56.0, 0.26).set_delay(0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 	var idx := 0
 	for child in buttons.get_children():
@@ -490,7 +252,6 @@ func _play_pause_entrance() -> void:
 
 
 func pause() -> void:
-	_refresh_snapshot()
 	show()
 	get_tree().paused = true
 	_previous_mouse_mode = Input.mouse_mode

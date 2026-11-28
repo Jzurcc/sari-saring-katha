@@ -12,6 +12,7 @@ signal closed
 @export var default_voices_volume : float = 0.9
 
 const SETTINGS_PATH := "user://settings.cfg"
+const AccessibilityPaletteScript = preload("res://Scripts/UI/AccessibilityPalette.gd")
 
 # Shared Sari-Saring Katha dark & warm gold palette
 const COL_ESPRESSO_DEEP := Color(0.055, 0.048, 0.042, 0.96)
@@ -68,12 +69,15 @@ var _fs_btn: Button
 var _win_btn: Button
 var _vsync_btn: Button
 var _minigame_tut_btn: Button
+var _colorblind_btn: Button
+var _cb_preview_dots: Array[Panel] = []
 var _binding_buttons: Dictionary = {} # action -> Button
 
 var _is_fullscreen: bool = true
 var _mute_in_bg: bool = false
 var _vsync_enabled: bool = true
 var _minigame_tutorials_enabled: bool = true
+var _colorblind_mode: String = "off"
 
 var _is_remapping: bool = false
 var _remapping_action: String = ""
@@ -536,7 +540,70 @@ func _build_display_page() -> VBoxContainer:
 		_save_settings()
 	)
 	mt_row.add_child(_minigame_tut_btn)
+
+	var cb_sp := Control.new()
+	cb_sp.custom_minimum_size = Vector2(0, 6)
+	vb.add_child(cb_sp)
+
+	vb.add_child(_make_section_header("Accessibility", "Adapt Talisman inks, Price Lens gauges, and HUD indicators for color vision."))
+
+	var cb_row := HBoxContainer.new()
+	cb_row.custom_minimum_size = Vector2(0, 48)
+	cb_row.add_theme_constant_override("separation", 12)
+	vb.add_child(cb_row)
+
+	var cb_lbl := Label.new()
+	cb_lbl.text = "Colorblind Mode"
+	cb_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cb_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cb_lbl.add_theme_font_override("font", UIStyle.FONT_INDER)
+	cb_lbl.add_theme_font_size_override("font_size", 18)
+	cb_lbl.add_theme_color_override("font_color", COL_GOLD_LABEL)
+	cb_row.add_child(cb_lbl)
+
+	var cb_preview := HBoxContainer.new()
+	cb_preview.alignment = BoxContainer.ALIGNMENT_CENTER
+	cb_preview.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cb_preview.add_theme_constant_override("separation", 5)
+	cb_row.add_child(cb_preview)
+	_cb_preview_dots.clear()
+	for _i in range(4):
+		var dot := Panel.new()
+		dot.custom_minimum_size = Vector2(14, 14)
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var dst := StyleBoxFlat.new()
+		dst.set_corner_radius_all(99)
+		dst.border_color = Color(0.95, 0.90, 0.80, 0.55)
+		dst.set_border_width_all(1)
+		dot.add_theme_stylebox_override("panel", dst)
+		cb_preview.add_child(dot)
+		_cb_preview_dots.append(dot)
+
+	_colorblind_btn = _make_toggle_pill_btn("Off", 148)
+	_colorblind_btn.pressed.connect(func():
+		_play_click()
+		_colorblind_mode = AccessibilityPaletteScript.next_mode(_colorblind_mode)
+		AccessibilityPaletteScript.set_mode(_colorblind_mode)
+		_sync_colorblind_ui()
+		_save_settings()
+	)
+	cb_row.add_child(_colorblind_btn)
+	_sync_colorblind_ui()
 	return vb
+
+
+func _sync_colorblind_ui() -> void:
+	if is_instance_valid(_colorblind_btn):
+		var is_on := _colorblind_mode != "off"
+		var lbl := AccessibilityPaletteScript.get_mode_label(_colorblind_mode)
+		_sync_toggle_pill(_colorblind_btn, is_on, lbl, lbl)
+	var swatches := AccessibilityPaletteScript.get_talisman_swatches()
+	for i in range(mini(_cb_preview_dots.size(), swatches.size())):
+		var dot := _cb_preview_dots[i]
+		if is_instance_valid(dot):
+			var st := dot.get_theme_stylebox("panel") as StyleBoxFlat
+			if st:
+				st.bg_color = swatches[i]["color"]
 
 
 func _build_controls_page() -> VBoxContainer:
@@ -912,6 +979,7 @@ func _save_settings() -> void:
 	if is_instance_valid(_slider_voices):
 		cfg.set_value("audio", "voices", _slider_voices.value)
 	cfg.set_value("accessibility", "mute_in_background", _mute_in_bg)
+	cfg.set_value("accessibility", "colorblind_mode", _colorblind_mode)
 	cfg.set_value("display", "fullscreen", _is_fullscreen)
 	cfg.set_value("display", "vsync", _vsync_enabled)
 	cfg.set_value("gameplay", "minigame_tutorials", _minigame_tutorials_enabled)
@@ -973,6 +1041,9 @@ func _load_settings() -> void:
 	_on_voices_changed(voices_val)
 
 	_mute_in_bg = bool(cfg.get_value("accessibility", "mute_in_background", false))
+	_colorblind_mode = str(cfg.get_value("accessibility", "colorblind_mode", "off"))
+	AccessibilityPaletteScript.set_mode(_colorblind_mode)
+	_sync_colorblind_ui()
 	if has_node("/root/AudioManager"):
 		AudioManager.update_mute_in_background(_mute_in_bg)
 	_is_fullscreen = bool(cfg.get_value("display", "fullscreen", true))

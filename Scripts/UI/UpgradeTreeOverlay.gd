@@ -133,6 +133,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			for j_ov in get_tree().get_nodes_in_group("folklore_journal_overlay"):
 				if j_ov.get("is_open"):
 					return
+			for pl_ov in get_tree().get_nodes_in_group("price_ledger_overlay"):
+				if pl_ov.get("is_open"):
+					return
 			get_viewport().set_input_as_handled()
 			open_tree()
 
@@ -359,7 +362,7 @@ func _style_node_button(btn: Button, _def: Dictionary, ev: Dictionary, hovered: 
 		var plbl := prow.get_node_or_null("Lbl") as Label if prow else null
 		var kind := str(_def.get("kind", ""))
 		var sf_lvl := int(_def.get("storefront_level", 0))
-		var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl
+		var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and state == "maxed"
 		var cost := float(ev.get("cost", 0.0))
 		if can_paint:
 			pill.visible = true
@@ -458,7 +461,7 @@ func _show_tooltip_for(node_id: String) -> void:
 
 	var kind := str(def["kind"])
 	var sf_lvl := int(def.get("storefront_level", 0))
-	var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl
+	var can_paint := kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and state == "maxed"
 
 	var show_price := (state == "available" or state == "available_poor" or state == "locked") and cost > 0.0
 	_tip_price_row.visible = show_price
@@ -521,9 +524,11 @@ func _on_node_pressed(node_id: String) -> void:
 	if def.is_empty():
 		return
 
+	var money := _get_money()
+	var ev := Registry.evaluate_node(node_id, money, _pending_levels)
 	var kind := str(def["kind"])
 	var sf_lvl := int(def.get("storefront_level", 0))
-	if kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and is_instance_valid(StoryManager) and StoryManager.storefront_upgrade_level >= sf_lvl:
+	if kind == "storefront_step" and (sf_lvl == 1 or sf_lvl == 2) and str(ev.get("state", "")) == "maxed":
 		var slot := "signage" if sf_lvl == 1 else "poster"
 		if not StoryManager.can_edit_storefront_slot(slot):
 			AudioManager.play_sfx("error")
@@ -539,8 +544,6 @@ func _on_node_pressed(node_id: String) -> void:
 		ov.open_editor(slot)
 		return
 
-	var money := _get_money()
-	var ev := Registry.evaluate_node(node_id, money, _pending_levels)
 	if not bool(ev["can_buy"]):
 		AudioManager.play_sfx("error")
 		_shake_node(node_id)

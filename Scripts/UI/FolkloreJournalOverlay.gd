@@ -174,6 +174,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		for u_ov in get_tree().get_nodes_in_group("upgrade_tree_overlay"):
 			if u_ov.get("is_open"):
 				return
+		for pl_ov in get_tree().get_nodes_in_group("price_ledger_overlay"):
+			if pl_ov.get("is_open"):
+				return
 		get_viewport().set_input_as_handled()
 		open_journal()
 
@@ -1007,17 +1010,17 @@ func _rebuild_hero_banner() -> void:
 	vsep.add_theme_stylebox_override("separator", vs_st)
 	_hero_box.add_child(vsep)
 
-	# 2) Right Combined Progression Area (62%): Story Progression + Reputation Perks side-by-side
+	# 2) Right Combined Progression Area (62%): Story Progression (48%) + Counter Notes (52%)
 	var prog_split := HBoxContainer.new()
 	prog_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	prog_split.size_flags_stretch_ratio = 0.62
 	prog_split.add_theme_constant_override("separation", 14)
 	_hero_box.add_child(prog_split)
 
-	# 2a) Story Arcs & Chapters (62% of right area, compact 142px height)
+	# 2a) Story Arcs & Chapters (48% of right area, compact 146px height)
 	var story_col := VBoxContainer.new()
 	story_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	story_col.size_flags_stretch_ratio = 0.62
+	story_col.size_flags_stretch_ratio = 0.48
 	story_col.add_theme_constant_override("separation", 5)
 	prog_split.add_child(story_col)
 
@@ -1045,7 +1048,7 @@ func _rebuild_hero_banner() -> void:
 	story_scroll.add_child(_wrap_scroll_content(arcs_vbox, 14))
 
 	# Smart arc grouping: keep 1-arc stories (including 5-chapter pairs) continuous under one heading
-	var num_arcs := maxi(1, c.arc_names.size()) if c.arc_names.size() > 0 else 1
+	var num_arcs := maxi(1, c.character_arcs.size())
 	var ch_per_arc := maxi(1, ceili(float(total_ch) / float(num_arcs)))
 	for arc_i in range(num_arcs):
 		var ch_start := arc_i * ch_per_arc
@@ -1103,42 +1106,50 @@ func _rebuild_hero_banner() -> void:
 				ch_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 				row.add_child(ch_lbl)
 
-	# Quiet Delayed-Consequence Memory Notes (logged subtly when pivotal choices are made)
-	var mem_notes: Array = CharacterProgressionManager.get_journal_notes(c.get_clean_id()) if is_instance_valid(CharacterProgressionManager) else []
-	if not mem_notes.is_empty():
-		var note_hdr := _make_label("COUNTER NOTES", 13, COL_GOLD, true)
-		arcs_vbox.add_child(note_hdr)
-		for nt in mem_notes:
-			var nl := _make_label("•  %s" % str(nt), 14, COL_MUTED, false)
-			nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			arcs_vbox.add_child(nl)
-
-	# Divider between Story & Perks
+	# Divider between Story Progression & Counter Notes
 	var vsep2 := VSeparator.new()
 	vsep2.add_theme_stylebox_override("separator", vs_st)
 	prog_split.add_child(vsep2)
 
-	# 2b) Reputation Perks (38% of right area, 1 perk per row)
-	var perks_col := VBoxContainer.new()
-	perks_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	perks_col.size_flags_stretch_ratio = 0.38
-	perks_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	perks_col.add_theme_constant_override("separation", 8)
-	prog_split.add_child(perks_col)
+	# 2b) Counter Notes (52% of right area; Reputation Perks now live inside their respective Rank tabs)
+	var notes_col := VBoxContainer.new()
+	notes_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notes_col.size_flags_stretch_ratio = 0.52
+	notes_col.add_theme_constant_override("separation", 5)
+	prog_split.add_child(notes_col)
 
-	perks_col.add_child(_make_label("REPUTATION PERKS", 14, COL_GOLD, true))
-	var perk_defs: Array[Dictionary] = [
-		{"req": 3, "label": "+1 Fav Price Tolerance"},
-		{"req": 5, "label": "+10% Cash Tip Bonus"},
-		{"req": 6, "label": "+1 Global Price Tolerance"},
-	]
-	for p in perk_defs:
-		var req := int(p["req"])
-		var unlocked_p := rank >= req
-		var p_txt := ("✓ R%d: %s" % [req, str(p["label"])]) if unlocked_p else ("🔒 R%d: %s" % [req, str(p["label"])])
-		var p_lbl := _make_label(p_txt, 14, COL_POSITIVE if unlocked_p else COL_LOCKED, unlocked_p)
-		p_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		perks_col.add_child(p_lbl)
+	var mem_notes: Array = CharacterProgressionManager.get_journal_notes(c.get_clean_id()) if is_instance_valid(CharacterProgressionManager) else []
+	var notes_hdr := HBoxContainer.new()
+	notes_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notes_col.add_child(notes_hdr)
+
+	var nh_lbl := _make_label("COUNTER NOTES", 17, COL_GOLD, true)
+	nh_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notes_hdr.add_child(nh_lbl)
+	if not mem_notes.is_empty():
+		notes_hdr.add_child(_make_label("%d" % mem_notes.size(), 15, COL_MUTED, false))
+
+	var notes_scroll := ScrollContainer.new()
+	notes_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notes_scroll.custom_minimum_size = Vector2(0, 146)
+	notes_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_style_scrollbar(notes_scroll)
+	notes_col.add_child(notes_scroll)
+
+	var notes_vbox := VBoxContainer.new()
+	notes_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	notes_vbox.add_theme_constant_override("separation", 6)
+	notes_scroll.add_child(_wrap_scroll_content(notes_vbox, 14))
+
+	if mem_notes.is_empty():
+		var empty_lbl := _make_label("No counter notes recorded yet.", 14, COL_LOCKED, false)
+		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		notes_vbox.add_child(empty_lbl)
+	else:
+		for nt in mem_notes:
+			var nl := _make_label("•  %s" % str(nt), 14, COL_CREAM, false)
+			nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			notes_vbox.add_child(nl)
 
 
 func _rebuild_rank_track() -> void:
@@ -1680,7 +1691,9 @@ func _get_unmet_prereq_hint(c: CustomerData, ch_idx: int) -> String:
 			var vname := vp.variable_name.to_lower()
 			if "day" in vname:
 				parts.append("Day %s" % vp.required_value)
-			elif "tier" in vname or "level" in vname:
+			elif "tier" in vname:
+				parts.append("Store Tier %s" % vp.required_value)
+			elif "level" in vname:
 				parts.append("Store Level %s" % vp.required_value)
 			else:
 				parts.append("further neighborhood progress")

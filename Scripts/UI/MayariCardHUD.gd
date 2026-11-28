@@ -496,7 +496,6 @@ func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, 
 
 	var title_lbl := Label.new()
 	title_lbl.text = title
-	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
 	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", accent_bright)
@@ -504,6 +503,15 @@ func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, 
 	top_line.add_child(title_lbl)
 
 	if not rarity.is_empty():
+		var dot_lbl := Label.new()
+		dot_lbl.text = "·"
+		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
+		dot_lbl.add_theme_font_size_override("font_size", 16)
+		dot_lbl.add_theme_color_override("font_color", Color(0.84, 0.78, 0.69, 0.75))
+		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		top_line.add_child(dot_lbl)
+
 		var r_col: Color = MayariCardRegistry.get_rarity_color(rarity)
 		var rp_lbl := Label.new()
 		rp_lbl.text = MayariCardRegistry.get_rarity_label(rarity)
@@ -514,20 +522,16 @@ func _build_unified_card_toast(title: String, sigil: String, desc_rich: String, 
 		rp_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		top_line.add_child(rp_lbl)
 
-		var dot_lbl := Label.new()
-		dot_lbl.text = "·"
-		dot_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		dot_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-		dot_lbl.add_theme_font_size_override("font_size", 16)
-		dot_lbl.add_theme_color_override("font_color", Color(0.84, 0.78, 0.69, 0.75))
-		dot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		top_line.add_child(dot_lbl)
+	var top_spacer := Control.new()
+	top_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_line.add_child(top_spacer)
 
 	var tag_lbl := Label.new()
 	tag_lbl.text = tag
 	tag_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag_lbl.add_theme_font_override("font", UIStyle.FONT_FREDOKA_SEMIBOLD)
-	tag_lbl.add_theme_font_size_override("font_size", 18)
+	tag_lbl.add_theme_font_size_override("font_size", 22)
 	tag_lbl.add_theme_color_override("font_color", accent_bright)
 	tag_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_line.add_child(tag_lbl)

@@ -42,8 +42,48 @@ static func get_tier_color(tier: int) -> Color:
 	return TIER_COLORS[idx]
 
 ## Unified per-step color ramp for Price Lens & Price Ledger (-5 to +5, tolerance-aware).
-## Every discount step (-1..-5) has a distinct green progression, and +4 vs +5 are clearly distinct reds.
+## Automatically adapts to the active Colorblind Mode in AccessibilityPalette.
 static func get_price_step_color(step: int, eff_tol: int = 0) -> Color:
+	var cb_mode: String = preload("res://Scripts/UI/AccessibilityPalette.gd").get_mode()
+	if cb_mode == "deuteranopia":
+		if step < 0:
+			match step:
+				-1: return Color("#88CCEE")
+				-2: return Color("#56B4E9")
+				-3: return Color("#3399DD")
+				-4: return Color("#1A78C2")
+				_:  return Color("#005CA8")
+		var eff_d: int = step - eff_tol
+		if step == 0 and eff_d <= 2: return Color("#FFF6E5")
+		if eff_d <= 1: return Color("#F4E98A")
+		if eff_d == 2: return Color("#E6C84C")
+		if eff_d == 3: return Color("#E69F00")
+		if eff_d == 4: return Color("#D55E00")
+		return Color("#CC3388")
+	elif cb_mode == "tritanopia":
+		if step < 0:
+			match step:
+				-1: return Color("#7CE0D8")
+				-2: return Color("#45CEC2")
+				-3: return Color("#22B8AC")
+				-4: return Color("#0E9A90")
+				_:  return Color("#007F78")
+		var eff_t: int = step - eff_tol
+		if step == 0 and eff_t <= 2: return Color("#F8F6F2")
+		if eff_t <= 1: return Color("#E6E2DC")
+		if eff_t == 2: return Color("#FFC2D1")
+		if eff_t == 3: return Color("#FF7597")
+		if eff_t == 4: return Color("#E63946")
+		return Color("#B81428")
+	elif cb_mode == "high_contrast":
+		if step < 0:
+			return Color("#38E8FF") if step >= -2 else Color("#00B8FF")
+		var eff_h: int = step - eff_tol
+		if step == 0 and eff_h <= 2: return Color("#FFFFFF")
+		if eff_h <= 2: return Color("#FFF05A")
+		if eff_h == 3: return Color("#FF9E2C")
+		return Color("#FF3B9A")
+
 	if step < 0:
 		match step:
 			-1: return Color(0.68, 0.90, 0.68, 1.0) # Soft Sage

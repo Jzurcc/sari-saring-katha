@@ -146,7 +146,8 @@ func _spawn_delta_popup(diff: float) -> void:
 	_active_popups = still_valid
 
 	var is_gain := diff > 0.0
-	var fg_color := COLOR_GAIN if is_gain else COLOR_SPEND
+	var cb_pal := preload("res://Scripts/UI/AccessibilityPalette.gd")
+	var fg_color := (cb_pal.get_semantic_color("positive") if is_gain else cb_pal.get_semantic_color("danger")) if cb_pal.is_active() else (COLOR_GAIN if is_gain else COLOR_SPEND)
 	var outline_color := Color(0.04, 0.07, 0.04, 0.95) if is_gain else Color(0.14, 0.04, 0.04, 0.95)
 	var font_res := get_theme_font("font")
 	if not font_res:
