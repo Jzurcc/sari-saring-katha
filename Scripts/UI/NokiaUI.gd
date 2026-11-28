@@ -49,6 +49,7 @@ var button_audio_player: AudioStreamPlayer
 func _ready() -> void:
 	add_to_group("nokia_ui_active")
 	button_audio_player = AudioStreamPlayer.new()
+	button_audio_player.bus = "SFX"
 	add_child(button_audio_player)
 	
 	# Recursively find the Label and buttons anywhere in the scene!

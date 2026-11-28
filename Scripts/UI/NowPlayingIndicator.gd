@@ -7,24 +7,36 @@ var _pill: PanelContainer = null
 var _pill_lbl: Label = null
 
 func _ready() -> void:
+	add_to_group("now_playing_indicator")
 	modulate.a = 0.0
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if is_instance_valid(label):
 		label.visible = false
+	var cur_scene := get_tree().current_scene if get_tree() else null
+	if (cur_scene and cur_scene.name in ["MainMenu", "IntroCutscene"]) or (owner and owner.name in ["MainMenu", "IntroCutscene"]):
+		visible = false
+		return
 	_build_pill()
 	EventBus.music_title_changed.connect(_on_music_title_changed)
+
+func hide_immediately() -> void:
+	if current_tween and current_tween.is_valid():
+		current_tween.kill()
+	modulate.a = 0.0
 
 func _build_pill() -> void:
 	_pill = PanelContainer.new()
 	_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pill.anchor_left = 0.72
-	_pill.anchor_right = 0.72
-	_pill.anchor_top = 0.0
-	_pill.anchor_bottom = 0.0
-	_pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_pill.grow_vertical = Control.GROW_DIRECTION_END
-	_pill.offset_top = 24.0
+	_pill.anchor_left = 0.0
+	_pill.anchor_right = 0.0
+	_pill.anchor_top = 1.0
+	_pill.anchor_bottom = 1.0
+	_pill.grow_horizontal = Control.GROW_DIRECTION_END
+	_pill.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_pill.offset_left = 286.0
+	_pill.offset_top = -57.0
+	_pill.offset_bottom = -57.0
 	var st := UIStyle.create_flat_stylebox(Color(0.064, 0.054, 0.046, 0.90), 9, 14, 7)
 	st.border_color = Color(0.835, 0.624, 0.278, 0.55)
 	st.set_border_width_all(1)
@@ -54,6 +66,10 @@ func _build_pill() -> void:
 	row.add_child(_pill_lbl)
 
 func _on_music_title_changed(title: String) -> void:
+	var cur_scene := get_tree().current_scene if get_tree() else null
+	if cur_scene and cur_scene.name in ["MainMenu", "IntroCutscene"]:
+		hide_immediately()
+		return
 	var txt := "Now Playing · %s" % title
 	if is_instance_valid(_pill_lbl):
 		_pill_lbl.text = txt
@@ -63,7 +79,12 @@ func _on_music_title_changed(title: String) -> void:
 	if current_tween and current_tween.is_valid():
 		current_tween.kill()
 
+	if is_instance_valid(_pill):
+		_pill.offset_left = 268.0
 	current_tween = create_tween()
-	current_tween.tween_property(self, "modulate:a", 1.0, 0.30).set_trans(Tween.TRANS_CUBIC)
+	current_tween.set_ignore_time_scale(true)
+	current_tween.tween_property(self, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
+	if is_instance_valid(_pill):
+		current_tween.parallel().tween_property(_pill, "offset_left", 286.0, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	current_tween.tween_interval(3.0)
 	current_tween.tween_property(self, "modulate:a", 0.0, 0.75).set_trans(Tween.TRANS_CUBIC)

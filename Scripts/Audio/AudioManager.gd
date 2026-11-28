@@ -122,12 +122,12 @@ func _ready() -> void:
 
 	ambience_base = AudioStreamPlayer.new()
 	ambience_base.bus = "Master"
-	ambience_base.volume_db = 2.0
+	ambience_base.volume_db = -5.0
 	add_child(ambience_base)
 
 	ambience_night = AudioStreamPlayer.new()
 	ambience_night.bus = "Master"
-	ambience_night.volume_db = -13.1
+	ambience_night.volume_db = -17.0
 	add_child(ambience_night)
 
 	fridge_hum_player = AudioStreamPlayer.new()
@@ -148,7 +148,12 @@ func _ready() -> void:
 	add_child(sfx_pool)
 
 	# 3. Connect event bus signals
-	EventBus.day_started.connect(func(_d): _update_audio_for_time(5.0))
+	EventBus.day_ended.connect(func(_d): _is_day_transitioning = true)
+	EventBus.day_started.connect(func(_d):
+		_is_day_transitioning = false
+		_is_mayari_present = false
+		_update_audio_for_time(5.0)
+	)
 
 	# 4. Start base morning ambience
 	ambience_base.stream = audio_calming_morning
@@ -177,6 +182,7 @@ func _bind_initial_scene() -> void:
 func _on_node_added(node: Node) -> void:
 	var cur_scene := get_tree().current_scene
 	if node.name in ["MainMenu", "IntroCutscene"]:
+		_is_day_transitioning = false
 		_unbind_time_of_day()
 		_change_bgm_phase(BGMPhase.NONE)
 	elif (node is TimeOfDay or node.name == "TimeOfDay") and (cur_scene == null or not (cur_scene.name in ["MainMenu", "IntroCutscene"])):
@@ -208,8 +214,11 @@ func _process(delta: float) -> void:
 	if cur_scene == null:
 		return
 	if cur_scene.name in ["MainMenu", "IntroCutscene"]:
+		_is_day_transitioning = false
 		if current_bgm_phase != BGMPhase.NONE:
 			_change_bgm_phase(BGMPhase.NONE)
+		return
+	if _is_day_transitioning:
 		return
 	# In gameplay: drive BGM phase directly from StoryManager's clock so it never gets stuck in BGMPhase.NONE
 	if is_instance_valid(StoryManager) and StoryManager.clock:
@@ -219,15 +228,24 @@ func _on_tod_time_changed(time: Variant) -> void:
 	_update_audio_for_time(float(time))
 
 var _is_mayari_present: bool = false
+var _is_day_transitioning: bool = false
 
 func set_mayari_present(present: bool) -> void:
 	if _is_mayari_present == present:
 		return
 	_is_mayari_present = present
+	if present and get_tree():
+		get_tree().call_group("now_playing_indicator", "hide_immediately")
+	# When Mayari leaves after closing time, hold Closing BGM / silence until the new day starts
+	# instead of abruptly starting a fresh Dusk track for a few seconds before morning.
+	if not present and (_is_day_transitioning or (is_instance_valid(StoryManager) and StoryManager.is_past_closing_time())):
+		return
 	if is_instance_valid(StoryManager) and StoryManager.clock:
 		_update_audio_for_time(StoryManager.clock.get_effective_display_time())
 
 func _update_audio_for_time(time: float) -> void:
+	if _is_day_transitioning:
+		return
 	var new_phase = BGMPhase.NONE
 	var is_night = false
 
@@ -378,7 +396,7 @@ func _on_override_finished() -> void:
 
 ## Smoothly crossfades the current BGM silently into the background (continuing to play at 0 gain)
 ## while an override track takes over using linear-amplitude fading.
-func play_bgm_override(stream: AudioStream) -> void:
+func play_bgm_override(stream: AudioStream, announce_track: bool = true) -> void:
 	if not stream:
 		return
 	if crossfade_tween and crossfade_tween.is_valid():
@@ -393,10 +411,13 @@ func play_bgm_override(stream: AudioStream) -> void:
 	crossfade_tween.tween_method(_apply_bgm_gain, _bgm_gain, 0.0, OVERRIDE_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	crossfade_tween.tween_method(_apply_override_gain, _override_gain, 1.0, OVERRIDE_FADE_DURATION).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
-	_emit_music_change(override_player.stream)
+	if announce_track:
+		_emit_music_change(override_player.stream)
 
 func play_restock_bgm() -> void:
-	play_bgm_override(audio_modern_times)
+	if get_tree():
+		get_tree().call_group("now_playing_indicator", "hide_immediately")
+	play_bgm_override(audio_modern_times, false)
 
 func play_minigame_bgm(minigame_id: String) -> void:
 	if minigame_id == "talisman":
@@ -427,6 +448,11 @@ func _on_ambience_night_finished() -> void:
 
 func _emit_music_change(stream: AudioStream) -> void:
 	if not stream:
+		return
+	var cur_scene := get_tree().current_scene if get_tree() else null
+	if cur_scene and cur_scene.name in ["MainMenu", "IntroCutscene"]:
+		return
+	if current_bgm_phase == BGMPhase.NONE or current_bgm_phase == BGMPhase.CLOSING or _is_mayari_present:
 		return
 
 	var title = "Unknown Track"
@@ -465,8 +491,8 @@ func fade_out_everything(duration: float = FADE_DURATION) -> void:
 
 	bgm_player.volume_db = base_volume_db
 	override_player.volume_db = -80.0
-	ambience_base.volume_db = 2.0
-	ambience_night.volume_db = -13.1
+	ambience_base.volume_db = -5.0
+	ambience_night.volume_db = -17.0
 
 
 # ── Public Delegation API (Backwards Compatibility) ──────────────────────

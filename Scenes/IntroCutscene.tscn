@@ -151,7 +151,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.011, -1.137)
 
 [node name="Sequence_Road" type="Node" parent="Sequences" unique_id=317748420]
 script = ExtResource("2_seq")
-subtitle_text = "The deafening roar of the city finally gives way to the whispering winds of Karimlan. You left the corporate grind behind, trading the concrete maze for the fading warmth of a sunset from your province."
+subtitle_text = "The roar of the city finally fades into the quiet winds of Karimlan. You left the corporate grind behind, trading concrete for the fading warmth of a province sunset."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Road" unique_id=603153416]
 script = ExtResource("3_pan")
@@ -161,7 +161,7 @@ duration = 7.0
 
 [node name="Sequence_Court" type="Node" parent="Sequences" unique_id=1097537286]
 script = ExtResource("2_seq")
-subtitle_text = "It is a quiet town. The kind of place where time slows down, and the neighbors share old stories over a cold bottle of cola as the day ends."
+subtitle_text = "It's a quiet town, where time slows down and neighbors trade old stories over a cold bottle of cola as the day winds down."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Court" unique_id=1954687376]
 script = ExtResource("3_pan")
@@ -177,7 +177,7 @@ duration = 6.5
 
 [node name="Sequence_Forest" type="Node" parent="Sequences" unique_id=13669309]
 script = ExtResource("2_seq")
-subtitle_text = "But as the sun dips below the trees, Karimlan reveals its true nature. Here, the myths don't hide in the dark. They walk the streets right beside us."
+subtitle_text = "But once the sun dips below the trees, Karimlan shows its true face. Here, the myths don't hide in the dark. They walk the same streets as everyone else."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Forest" unique_id=337249966]
 script = ExtResource("3_pan")
@@ -187,7 +187,7 @@ duration = 7.5
 
 [node name="Sequence_Exterior" type="Node" parent="Sequences" unique_id=2035882777]
 script = ExtResource("2_seq")
-subtitle_text = "This dusty storefront is all Lola left you. A sanctuary of simple goods, sitting quietly on the boundary between the mortal and the magical."
+subtitle_text = "This dusty storefront is all Lola left behind—a small sanctuary of everyday goods, resting right on the edge between the mortal and the magical."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Exterior" unique_id=513251987]
 script = ExtResource("3_pan")
@@ -203,7 +203,7 @@ duration = 7.0
 
 [node name="Sequence_Interior" type="Node" parent="Sequences" unique_id=1774819398]
 script = ExtResource("2_seq")
-subtitle_text = "But she also left behind a heavy burden. A massive debt owed not to a bank... but to the Pale Queen of Biringan herself."
+subtitle_text = "Along with it came a heavy burden: a steep debt owed not to a bank, but to the Pale Queen of Biringan herself."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Interior" unique_id=1948986959]
 script = ExtResource("3_pan")
@@ -213,7 +213,7 @@ duration = 7.5
 
 [node name="Sequence_Countertop" type="Node" parent="Sequences" unique_id=505617252]
 script = ExtResource("2_seq")
-subtitle_text = "Sweep the floors. Stock the shelves. It's time to open shop... the first customer is already on their way."
+subtitle_text = "Sweep the floors. Stock the shelves. Time to open shop, your first customer is already on the way."
 
 [node name="Pan1" type="Node" parent="Sequences/Sequence_Countertop" unique_id=1636429518]
 script = ExtResource("3_pan")
