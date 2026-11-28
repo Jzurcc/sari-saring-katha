@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1vj0f17qleg1"
 path.s3tc="res://.godot/imported/floating_shelf_metal.jpg-b04e65d56681bd498f37033c23bde976.s3tc.ctex"
+path.etc2="res://.godot/imported/floating_shelf_metal.jpg-b04e65d56681bd498f37033c23bde976.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/3D/final store/textures/floating_shelf_metal.jpg"
-dest_files=["res://.godot/imported/floating_shelf_metal.jpg-b04e65d56681bd498f37033c23bde976.s3tc.ctex"]
+dest_files=["res://.godot/imported/floating_shelf_metal.jpg-b04e65d56681bd498f37033c23bde976.s3tc.ctex", "res://.godot/imported/floating_shelf_metal.jpg-b04e65d56681bd498f37033c23bde976.etc2.ctex"]
 
 [params]
 

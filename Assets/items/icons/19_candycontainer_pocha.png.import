@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://6r48mooprrjc"
 path.s3tc="res://.godot/imported/19_candycontainer_pocha.png-1e840fac360e6e2f40fa41632c9b2a82.s3tc.ctex"
+path.etc2="res://.godot/imported/19_candycontainer_pocha.png-1e840fac360e6e2f40fa41632c9b2a82.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/items/icons/19_candycontainer_pocha.png"
-dest_files=["res://.godot/imported/19_candycontainer_pocha.png-1e840fac360e6e2f40fa41632c9b2a82.s3tc.ctex"]
+dest_files=["res://.godot/imported/19_candycontainer_pocha.png-1e840fac360e6e2f40fa41632c9b2a82.s3tc.ctex", "res://.godot/imported/19_candycontainer_pocha.png-1e840fac360e6e2f40fa41632c9b2a82.etc2.ctex"]
 
 [params]
 

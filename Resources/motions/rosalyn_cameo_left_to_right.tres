@@ -32,6 +32,6 @@ idle_height_offset = 0.22
 play_landing_thud = false
 override_start_anchor = true
 start_anchor = 5
-start_offset = Vector3(0, 0.3, -4.0)
+start_offset = Vector3(0, 0.3, -4)
 enter_steps = Array[ExtResource("2_step")]([SubResource("step_1"), SubResource("step_2")])
 bypass_default_exit_stepback = true

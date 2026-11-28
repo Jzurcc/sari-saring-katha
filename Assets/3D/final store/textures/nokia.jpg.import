@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b1mp2267ni25u"
 path.s3tc="res://.godot/imported/nokia.jpg-d18e3e094f7fbe06a1e902e2df4d3483.s3tc.ctex"
+path.etc2="res://.godot/imported/nokia.jpg-d18e3e094f7fbe06a1e902e2df4d3483.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/3D/final store/textures/nokia.jpg"
-dest_files=["res://.godot/imported/nokia.jpg-d18e3e094f7fbe06a1e902e2df4d3483.s3tc.ctex"]
+dest_files=["res://.godot/imported/nokia.jpg-d18e3e094f7fbe06a1e902e2df4d3483.s3tc.ctex", "res://.godot/imported/nokia.jpg-d18e3e094f7fbe06a1e902e2df4d3483.etc2.ctex"]
 
 [params]
 

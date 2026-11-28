@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://wcnibayq5f8k"
 path.s3tc="res://.godot/imported/Sarimanok.png-afc8d6cd77f5db864c73dabd62663812.s3tc.ctex"
+path.etc2="res://.godot/imported/Sarimanok.png-afc8d6cd77f5db864c73dabd62663812.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/characters/sprites/Sarimanok.png"
-dest_files=["res://.godot/imported/Sarimanok.png-afc8d6cd77f5db864c73dabd62663812.s3tc.ctex"]
+dest_files=["res://.godot/imported/Sarimanok.png-afc8d6cd77f5db864c73dabd62663812.s3tc.ctex", "res://.godot/imported/Sarimanok.png-afc8d6cd77f5db864c73dabd62663812.etc2.ctex"]
 
 [params]
 

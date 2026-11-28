@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dybrsbpwlbj60"
 path.s3tc="res://.godot/imported/chainlink_fencing_fence_supports_Normal.png-c3f894287825c115e5bf2f755ec9634e.s3tc.ctex"
+path.etc2="res://.godot/imported/chainlink_fencing_fence_supports_Normal.png-c3f894287825c115e5bf2f755ec9634e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/3D/final store/textures/chainlink_fencing_fence_supports_Normal.png"
-dest_files=["res://.godot/imported/chainlink_fencing_fence_supports_Normal.png-c3f894287825c115e5bf2f755ec9634e.s3tc.ctex"]
+dest_files=["res://.godot/imported/chainlink_fencing_fence_supports_Normal.png-c3f894287825c115e5bf2f755ec9634e.s3tc.ctex", "res://.godot/imported/chainlink_fencing_fence_supports_Normal.png-c3f894287825c115e5bf2f755ec9634e.etc2.ctex"]
 
 [params]
 

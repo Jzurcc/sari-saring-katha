@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvurmuhxdmobc"
 path.s3tc="res://.godot/imported/iron_table_bcolor.png-d84e67afe7ddce6d6adfa36d0a479c0d.s3tc.ctex"
+path.etc2="res://.godot/imported/iron_table_bcolor.png-d84e67afe7ddce6d6adfa36d0a479c0d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/3D/final store/textures/iron_table_bcolor.png"
-dest_files=["res://.godot/imported/iron_table_bcolor.png-d84e67afe7ddce6d6adfa36d0a479c0d.s3tc.ctex"]
+dest_files=["res://.godot/imported/iron_table_bcolor.png-d84e67afe7ddce6d6adfa36d0a479c0d.s3tc.ctex", "res://.godot/imported/iron_table_bcolor.png-d84e67afe7ddce6d6adfa36d0a479c0d.etc2.ctex"]
 
 [params]
 

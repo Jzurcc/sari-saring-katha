@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://0xq4murrv6sb"
 path.s3tc="res://.godot/imported/ReynaMayari.png-1ea1307db4d228e16321a8763585ceec.s3tc.ctex"
+path.etc2="res://.godot/imported/ReynaMayari.png-1ea1307db4d228e16321a8763585ceec.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/characters/sprites/ReynaMayari.png"
-dest_files=["res://.godot/imported/ReynaMayari.png-1ea1307db4d228e16321a8763585ceec.s3tc.ctex"]
+dest_files=["res://.godot/imported/ReynaMayari.png-1ea1307db4d228e16321a8763585ceec.s3tc.ctex", "res://.godot/imported/ReynaMayari.png-1ea1307db4d228e16321a8763585ceec.etc2.ctex"]
 
 [params]
 

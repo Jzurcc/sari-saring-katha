@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5ueujvfsrr8s"
 path.s3tc="res://.godot/imported/vote_poster.png-2d2d640ca53af15f41da912f56491d16.s3tc.ctex"
+path.etc2="res://.godot/imported/vote_poster.png-2d2d640ca53af15f41da912f56491d16.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/3D/final store/textures/vote_poster.png"
-dest_files=["res://.godot/imported/vote_poster.png-2d2d640ca53af15f41da912f56491d16.s3tc.ctex"]
+dest_files=["res://.godot/imported/vote_poster.png-2d2d640ca53af15f41da912f56491d16.s3tc.ctex", "res://.godot/imported/vote_poster.png-2d2d640ca53af15f41da912f56491d16.etc2.ctex"]
 
 [params]
 

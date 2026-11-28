@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ctmovoe2o0jbq"
 path.s3tc="res://.godot/imported/picture_frame_stand.png-a47699171d71a79a91b9c23d9770805a.s3tc.ctex"
+path.etc2="res://.godot/imported/picture_frame_stand.png-a47699171d71a79a91b9c23d9770805a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/ui/picture_frame_stand.png"
-dest_files=["res://.godot/imported/picture_frame_stand.png-a47699171d71a79a91b9c23d9770805a.s3tc.ctex"]
+dest_files=["res://.godot/imported/picture_frame_stand.png-a47699171d71a79a91b9c23d9770805a.s3tc.ctex", "res://.godot/imported/picture_frame_stand.png-a47699171d71a79a91b9c23d9770805a.etc2.ctex"]
 
 [params]
 

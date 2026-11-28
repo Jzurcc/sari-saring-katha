@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bf27xwxax7q4s"
 path.s3tc="res://.godot/imported/18_candycontainer_mentor.png-c7a0e8b12513bd3e8fbffaf314273448.s3tc.ctex"
+path.etc2="res://.godot/imported/18_candycontainer_mentor.png-c7a0e8b12513bd3e8fbffaf314273448.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/items/icons/18_candycontainer_mentor.png"
-dest_files=["res://.godot/imported/18_candycontainer_mentor.png-c7a0e8b12513bd3e8fbffaf314273448.s3tc.ctex"]
+dest_files=["res://.godot/imported/18_candycontainer_mentor.png-c7a0e8b12513bd3e8fbffaf314273448.s3tc.ctex", "res://.godot/imported/18_candycontainer_mentor.png-c7a0e8b12513bd3e8fbffaf314273448.etc2.ctex"]
 
 [params]
 

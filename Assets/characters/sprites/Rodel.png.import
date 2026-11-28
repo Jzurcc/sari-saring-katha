@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqhf8bb28mylt"
 path.s3tc="res://.godot/imported/Rodel.png-425d31790dfadc7478a0e21af0e5eb81.s3tc.ctex"
+path.etc2="res://.godot/imported/Rodel.png-425d31790dfadc7478a0e21af0e5eb81.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/characters/sprites/Rodel.png"
-dest_files=["res://.godot/imported/Rodel.png-425d31790dfadc7478a0e21af0e5eb81.s3tc.ctex"]
+dest_files=["res://.godot/imported/Rodel.png-425d31790dfadc7478a0e21af0e5eb81.s3tc.ctex", "res://.godot/imported/Rodel.png-425d31790dfadc7478a0e21af0e5eb81.etc2.ctex"]
 
 [params]
 

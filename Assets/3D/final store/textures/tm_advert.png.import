@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://jawc0mp2sfbt"
 path.s3tc="res://.godot/imported/tm_advert.png-2da97e0feb4dc977fc1c4ee1c751d7f4.s3tc.ctex"
+path.etc2="res://.godot/imported/tm_advert.png-2da97e0feb4dc977fc1c4ee1c751d7f4.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/3D/final store/textures/tm_advert.png"
-dest_files=["res://.godot/imported/tm_advert.png-2da97e0feb4dc977fc1c4ee1c751d7f4.s3tc.ctex"]
+dest_files=["res://.godot/imported/tm_advert.png-2da97e0feb4dc977fc1c4ee1c751d7f4.s3tc.ctex", "res://.godot/imported/tm_advert.png-2da97e0feb4dc977fc1c4ee1c751d7f4.etc2.ctex"]
 
 [params]
 

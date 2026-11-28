@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://es0alcyyfhpy"
 path.s3tc="res://.godot/imported/5_snack_patos.png-d879399811c3e764a7413ffe697d0f7a.s3tc.ctex"
+path.etc2="res://.godot/imported/5_snack_patos.png-d879399811c3e764a7413ffe697d0f7a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/items/icons/5_snack_patos.png"
-dest_files=["res://.godot/imported/5_snack_patos.png-d879399811c3e764a7413ffe697d0f7a.s3tc.ctex"]
+dest_files=["res://.godot/imported/5_snack_patos.png-d879399811c3e764a7413ffe697d0f7a.s3tc.ctex", "res://.godot/imported/5_snack_patos.png-d879399811c3e764a7413ffe697d0f7a.etc2.ctex"]
 
 [params]
 

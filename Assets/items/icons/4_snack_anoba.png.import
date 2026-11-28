@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://477m82fgpway"
 path.s3tc="res://.godot/imported/4_snack_anoba.png-d7f6f0f60f567adf3e1c76e0e1b55a0b.s3tc.ctex"
+path.etc2="res://.godot/imported/4_snack_anoba.png-d7f6f0f60f567adf3e1c76e0e1b55a0b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/items/icons/4_snack_anoba.png"
-dest_files=["res://.godot/imported/4_snack_anoba.png-d7f6f0f60f567adf3e1c76e0e1b55a0b.s3tc.ctex"]
+dest_files=["res://.godot/imported/4_snack_anoba.png-d7f6f0f60f567adf3e1c76e0e1b55a0b.s3tc.ctex", "res://.godot/imported/4_snack_anoba.png-d7f6f0f60f567adf3e1c76e0e1b55a0b.etc2.ctex"]
 
 [params]
 

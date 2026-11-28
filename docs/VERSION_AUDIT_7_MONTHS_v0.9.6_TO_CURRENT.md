@@ -1,8 +1,8 @@
-# Sari-Saring Katha — 7-Month Version Audit (`v0.9.6-beta` → Current `v0.11.0+`)
+# Sari-Saring Katha — 7-Month Version Audit (`v0.9.6-beta` → `v1.0.0`)
 
 **Baseline Version:** `v0.9.6-beta` (`78ff1a9`, April 24, 2026 — `config/version="0.9"`)  
-**Audited Target:** `HEAD` on `feat/store-customization-upgrades` (`31b490c`, November 28, 2026 — `config/version="0.11.0"`)  
-**Total Delta:** **612 commits** · **1,250 files changed** · **`+73,119` insertions / `-41,773` deletions**
+**Audited Target:** `HEAD` on `feat/store-customization-upgrades` (`622db19`, November 28, 2026 — `config/version="1.0.0"`)  
+**Total Delta:** **613 commits** · **1,250 files changed** · **`+73,138` insertions / `-41,789` deletions**
 
 ---
 
@@ -10,7 +10,7 @@
 
 What began in April 2026 (`v0.9.6-beta`) as a single-slot, linear point-and-click store prototype with a fixed daily quota has evolved into a full-fledged **roguelite-infused Filipino neighborhood shopkeeping & folklore RPG**.
 
-| Pillar | 7 Months Ago (`v0.9.6-beta` · Apr 2026) | Current Build (`v0.11.0+` · Nov 2026) |
+| Pillar | 7 Months Ago (`v0.9.6-beta` · Apr 2026) | `v1.0.0` Full Release (Nov 2026) |
 | :--- | :--- | :--- |
 | **Codebase Architecture** | Flat `Scripts/` + `Scripts/Managers/` monoliths (`StoryManager` handled clock, orders, dialogue, and saves) | Domain-driven bounded contexts (`Core`, `Data`, `Progression`, `Store`, `World`, `Audio`, `Cutscene`, `UI`, `Tools`) |
 | **Cast Size & Stories** | 10 neighbors with linear, isolated early story timelines | **11 neighbors** (added **Lolo Pilo**) + **Papa Ulap** radio DJ; interconnected **Triangles A/B & Pairs 1/2** with `ChapterPrerequisite` ping-pong, fail-forward arcs, reactive hooks, and **New Vegas-style Epilogues** |

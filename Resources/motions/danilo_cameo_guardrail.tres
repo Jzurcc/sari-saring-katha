@@ -16,7 +16,7 @@ pause_random_extra = 0.35
 [sub_resource type="Resource" id="step_2"]
 script = ExtResource("2_step")
 anchor = 5
-local_offset = Vector3(0, 0, -6.0)
+local_offset = Vector3(0, 0, -6)
 duration = 5.8
 transition = 0
 target_opacity = 0.0

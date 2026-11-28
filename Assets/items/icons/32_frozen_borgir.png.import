@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bau8sy6ych0oa"
 path.s3tc="res://.godot/imported/32_frozen_borgir.png-43eee3c967e6fca36fd51e095b6305ab.s3tc.ctex"
+path.etc2="res://.godot/imported/32_frozen_borgir.png-43eee3c967e6fca36fd51e095b6305ab.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/items/icons/32_frozen_borgir.png"
-dest_files=["res://.godot/imported/32_frozen_borgir.png-43eee3c967e6fca36fd51e095b6305ab.s3tc.ctex"]
+dest_files=["res://.godot/imported/32_frozen_borgir.png-43eee3c967e6fca36fd51e095b6305ab.s3tc.ctex", "res://.godot/imported/32_frozen_borgir.png-43eee3c967e6fca36fd51e095b6305ab.etc2.ctex"]
 
 [params]
 

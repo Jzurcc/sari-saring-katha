@@ -209,39 +209,6 @@ func _on_dialogic_signal(arg: String) -> void:
 		launch_minigame(raw.substr("start_minigame:".length()))
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if is_any_open():
-		return
-	if not get_tree().get_nodes_in_group("storefront_canvas_active").is_empty():
-		return
-	if event is InputEventKey and event.pressed and not event.is_echo():
-		match event.keycode:
-			KEY_1:
-				get_viewport().set_input_as_handled()
-				launch_minigame("teks")
-			KEY_2:
-				get_viewport().set_input_as_handled()
-				launch_minigame("mosquito")
-			KEY_3:
-				get_viewport().set_input_as_handled()
-				launch_minigame("sipa")
-			KEY_4:
-				get_viewport().set_input_as_handled()
-				launch_minigame("talisman")
-			KEY_F6:
-				get_viewport().set_input_as_handled()
-				launch_minigame("mosquito")
-			KEY_F7:
-				get_viewport().set_input_as_handled()
-				launch_minigame("sipa")
-			KEY_F8:
-				get_viewport().set_input_as_handled()
-				launch_minigame("teks")
-			KEY_F9:
-				get_viewport().set_input_as_handled()
-				launch_minigame("talisman")
-
-
 func _on_minigame_finished(won: bool, result: Dictionary, minigame_id: String) -> void:
 	_active_id = ""
 	# Sync minigame result into Dialogic BEFORE restoring dialogue so Story Fail-Forward branches work cleanly
