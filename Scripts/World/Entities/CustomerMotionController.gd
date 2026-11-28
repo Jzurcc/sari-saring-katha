@@ -68,6 +68,8 @@ var _idle_timer: float = 0.0
 var _idle_opacity_timer: float = 0.0
 var _last_pos: Vector3 = Vector3.ZERO
 var _fallback_speed: float = 2.0
+var _mirror_lateral: bool = false
+var _extra_depth_offset: float = 0.0
 
 
 func configure(
@@ -78,7 +80,9 @@ func configure(
 	spawn_pos: Vector3,
 	counter_slot_pos: Vector3,
 	exit_pos: Vector3,
-	fallback_speed: float = 2.0
+	fallback_speed: float = 2.0,
+	mirror_lateral: bool = false,
+	extra_depth_offset: float = 0.0
 ) -> void:
 	_owner_node = owner_node
 	_body_sprite = body_sprite
@@ -88,6 +92,8 @@ func configure(
 	_counter_slot_pos = counter_slot_pos
 	_exit_pos = exit_pos if exit_pos != Vector3.ZERO else spawn_pos
 	_fallback_speed = fallback_speed
+	_mirror_lateral = mirror_lateral
+	_extra_depth_offset = extra_depth_offset
 
 	var flat_approach := Vector3(_counter_slot_pos.x - _spawn_pos.x, 0.0, _counter_slot_pos.z - _spawn_pos.z)
 	if flat_approach.length_squared() > 0.001:
@@ -127,8 +133,19 @@ func should_play_landing_thud() -> bool:
 
 
 func resolve_anchor(anchor: int, local_offset: Vector3 = Vector3.ZERO) -> Vector3:
+	var eff_anchor := anchor
+	if _mirror_lateral:
+		match anchor:
+			MotionStepScript.Anchor.SPAWN:
+				eff_anchor = MotionStepScript.Anchor.EXIT
+			MotionStepScript.Anchor.EXIT:
+				eff_anchor = MotionStepScript.Anchor.SPAWN
+			MotionStepScript.Anchor.STREET_LEFT:
+				eff_anchor = MotionStepScript.Anchor.STREET_RIGHT
+			MotionStepScript.Anchor.STREET_RIGHT:
+				eff_anchor = MotionStepScript.Anchor.STREET_LEFT
 	var base := _counter_slot_pos
-	match anchor:
+	match eff_anchor:
 		MotionStepScript.Anchor.SPAWN:
 			base = _spawn_pos
 		MotionStepScript.Anchor.APPROACH_MIDPOINT:
@@ -146,7 +163,9 @@ func resolve_anchor(anchor: int, local_offset: Vector3 = Vector3.ZERO) -> Vector
 		MotionStepScript.Anchor.CURRENT:
 			base = _owner_node.global_position if is_instance_valid(_owner_node) else _counter_slot_pos
 
-	return base + (_side_offset * local_offset.x) + (Vector3.UP * local_offset.y) + (_approach_dir * local_offset.z)
+	var eff_x := -local_offset.x if _mirror_lateral else local_offset.x
+	var eff_z := local_offset.z + _extra_depth_offset
+	return base + (_side_offset * eff_x) + (Vector3.UP * local_offset.y) + (_approach_dir * eff_z)
 
 
 func start_delayed() -> void:
@@ -329,7 +348,8 @@ func _process(delta: float) -> void:
 			if absf(step.height_arc) > 0.001:
 				pos.y += sin(raw_t * PI) * step.height_arc
 			if absf(step.side_arc) > 0.001:
-				pos += _side_offset * (sin(raw_t * PI) * step.side_arc)
+				var eff_side_arc := -step.side_arc if _mirror_lateral else step.side_arc
+				pos += _side_offset * (sin(raw_t * PI) * eff_side_arc)
 			_owner_node.global_position = pos
 
 			if step.target_opacity >= 0.0:

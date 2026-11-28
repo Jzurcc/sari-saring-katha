@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://do6hebnyxxoyi" path="res://Scripts/Data/CustomerMotionProfile.gd" id="motion_profile_script"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
 [ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
+[ext_resource type="Script" uid="uid://dm0te1hgd3748" path="res://Scripts/Data/Prerequisites/VariablePrerequisite.gd" id="var_prereq_script"]
 [ext_resource type="Resource" uid="uid://b5ajudb37ubvf" path="res://Dialogue/Timelines/Kuyakap/Story.dtl" id="story_res"]
 [ext_resource type="Script" uid="uid://cm0lw40qto3sd" path="res://addons/dialogic/Resources/timeline.gd" id="timeline_script"]
 
@@ -32,10 +33,21 @@ categories = PackedStringArray("cigarette")
 substitute_item_ids = null
 substitute_categories = null
 
+[sub_resource type="Resource" id="prereq_ch2_tier2"]
+script = ExtResource("var_prereq_script")
+variable_name = "Global_CurrentTier"
+required_value = "2"
+operator = ">="
+
+[sub_resource type="Resource" id="prereq_group_ch2"]
+script = ExtResource("prereq_group_script")
+prerequisites = Array[ExtResource("prereq_script")]([SubResource("prereq_ch2_tier2")])
+
 [sub_resource type="Resource" id="chapter_2"]
 script = ExtResource("chapterdata_script")
 chapter_name = "Something for the Throat"
 categories = PackedStringArray("cigarette")
+prerequisites = SubResource("prereq_group_ch2")
 substitute_item_ids = null
 substitute_categories = null
 

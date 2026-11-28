@@ -10,8 +10,8 @@ const MAX_COUNTER_SLOTS := 3
 const SMALLTALK_RETURN_CHANCE := 0.75
 const LINGERING_RETURN_BUY_CHANCE := 0.35
 const LINGERING_PASSIVE_XP_INTERVAL := 2.0
-const AMBIENT_CAMEO_MIN_INTERVAL := 26.0
-const AMBIENT_CAMEO_MAX_INTERVAL := 50.0
+const AMBIENT_CAMEO_MIN_INTERVAL := 20.0
+const AMBIENT_CAMEO_MAX_INTERVAL := 42.0
 const AMBIENT_CAMEO_TRIGGER_CHANCE := 0.72
 const MAX_ACTIVE_AMBIENT_CAMEOS := 3
 
@@ -689,6 +689,19 @@ func _dismiss_all_lingering_visitors() -> void:
 
 # ── Ambient Pass-By / Fly-By Cameos ──────────────────────────────────────────
 
+const CAMEO_STORY_PARTNERS: Dictionary = {
+	"lolopilo": ["tk"],
+	"tk": ["lolopilo"],
+	"kuyakap": ["buboy", "manangana"],
+	"buboy": ["kuyakap", "manangana"],
+	"manangana": ["kuyakap", "buboy"],
+	"brahim": ["danilo", "rosalyn"],
+	"danilo": ["brahim", "rosalyn"],
+	"rosalyn": ["danilo", "brahim"],
+	"rodel": ["sarimanok"],
+	"sarimanok": ["rodel"],
+}
+
 func _schedule_next_ambient_cameo() -> void:
 	_ambient_cameo_session_id += 1
 	var my_session := _ambient_cameo_session_id
@@ -696,65 +709,190 @@ func _schedule_next_ambient_cameo() -> void:
 
 func _run_ambient_cameo_loop(my_session: int) -> void:
 	while is_inside_tree() and my_session == _ambient_cameo_session_id:
-		var wait_s := randf_range(AMBIENT_CAMEO_MIN_INTERVAL, AMBIENT_CAMEO_MAX_INTERVAL)
+		var traffic_scale: float = StoryManager.get_foot_traffic_time_scale() if is_instance_valid(StoryManager) else 1.0
+		var wait_s := randf_range(AMBIENT_CAMEO_MIN_INTERVAL, AMBIENT_CAMEO_MAX_INTERVAL) * clampf(traffic_scale, 0.60, 1.45)
 		await get_tree().create_timer(wait_s).timeout
 		if not is_inside_tree() or my_session != _ambient_cameo_session_id:
 			return
-		# Leave natural quiet stretches so the street never feels overly busy
-		if randf() > AMBIENT_CAMEO_TRIGGER_CHANCE:
+		# Scale trigger chance & burst size dynamically with active Foot Traffic / Events
+		var eff_trigger := clampf(AMBIENT_CAMEO_TRIGGER_CHANCE / maxf(0.55, traffic_scale), 0.35, 0.92)
+		if randf() > eff_trigger:
 			continue
-		# Weighted burst: 78% single, 18% pair, 4% rare triple ("busy barangay" moment)
+		var busy_bonus := clampf((1.0 - traffic_scale) * 0.35, -0.07, 0.12)
+		var pair_thresh := clampf(0.66 - busy_bonus, 0.54, 0.73)
+		var triple_thresh := clampf(0.91 - busy_bonus * 0.5, 0.84, 0.95)
 		var roll := randf()
 		var burst_count := 1
-		if roll >= 0.96:
+		if roll >= triple_thresh:
 			burst_count = 3
-		elif roll >= 0.78:
+		elif roll >= pair_thresh:
 			burst_count = 2
 		_spawn_ambient_cameo_burst(my_session, burst_count)
 
 func _spawn_ambient_cameo_burst(my_session: int, count: int) -> void:
-	for i in range(count):
-		if i > 0:
-			await get_tree().create_timer(randf_range(1.4, 2.8)).timeout
-			if not is_inside_tree() or my_session != _ambient_cameo_session_id:
-				return
-		_try_spawn_ambient_cameo()
+	var shared_ltr: bool = randf() < 0.5
+	# Distinct street depth lanes (-further into street, +closer to curb) so cameos never stack on one Z rail
+	var depth_lanes: Array[float] = [-2.4, -0.9, 0.55]
+	depth_lanes.shuffle()
+	var lead_depth: float = depth_lanes[0] + randf_range(-0.35, 0.35)
+	var lead_data: CustomerData = _try_spawn_ambient_cameo(null, true, shared_ltr, lead_depth)
+	if lead_data == null:
+		return
 
-func _try_spawn_ambient_cameo() -> void:
-	# Prune freed cameos
+	# Keep solo rolls genuinely solo (~88% of triggers); on multi-person bursts, mix independent
+	# passersby with occasional story-connected buddy strolls, staggered 1-2s per character.
+	var forced_partner: CustomerData = _pick_connected_cameo_partner(lead_data) if (count >= 2 and randf() < 0.38) else null
+
+	for i in range(1, count):
+		var partner_for_slot: CustomerData = forced_partner if i == 1 else null
+		var delay_s := randf_range(0.95, 1.85) if partner_for_slot != null else randf_range(1.10, 2.35)
+		await get_tree().create_timer(delay_s).timeout
+		if not is_inside_tree() or my_session != _ambient_cameo_session_id:
+			return
+		var use_same_dir := true if partner_for_slot != null else (randf() < 0.5)
+		var slot_ltr := shared_ltr if use_same_dir else (not shared_ltr)
+		var depth_nudge: float
+		if partner_for_slot != null:
+			# Connected buddies walk slightly staggered alongside each other (0.85m..1.35m deeper)
+			depth_nudge = lead_depth - randf_range(0.85, 1.35)
+		else:
+			var lane_base: float = depth_lanes[i % depth_lanes.size()]
+			depth_nudge = lane_base + randf_range(-0.40, 0.40)
+		_try_spawn_ambient_cameo(partner_for_slot, true, slot_ltr, depth_nudge)
+
+func _get_eligible_cameo_candidates() -> Array[CustomerData]:
 	_ambient_cameos = _ambient_cameos.filter(func(c): return is_instance_valid(c))
-	if _ambient_cameos.size() >= MAX_ACTIVE_AMBIENT_CAMEOS:
-		return
-	if is_paused or _is_exclusive_wave or StoryManager.is_past_closing_time():
-		return
-	var pos_data := _calculate_positions(false, 0)
-	if pos_data.is_empty():
-		return
+	var blocked_paths := get_present_character_paths()
+	for cam in _ambient_cameos:
+		if cam.customer_data and not (cam.customer_data.resource_path in blocked_paths):
+			blocked_paths.append(cam.customer_data.resource_path)
 
-	var present_paths := get_present_character_paths()
 	var candidates: Array[CustomerData] = []
 	for char_data in StoryManager.available_characters:
 		if char_data == null or char_data.ambient_cameo_motions.is_empty():
 			continue
-		if char_data.unlock_tier > StoryManager.current_tier:
+		if char_data.is_collector():
+			if not StoryManager.is_daytime_mayari_unlocked():
+				continue
+		elif char_data.unlock_tier > StoryManager.current_tier:
 			continue
-		if char_data.resource_path in present_paths:
+		if char_data.resource_path in blocked_paths:
 			continue
 		candidates.append(char_data)
+	return candidates
 
+func _pick_connected_cameo_partner(lead: CustomerData) -> CustomerData:
+	if lead == null or not is_instance_valid(CharacterProgressionManager):
+		return null
+	var lead_id := lead.get_clean_id()
+	if not CAMEO_STORY_PARTNERS.has(lead_id):
+		return null
+	# Require at least one of the pair to have started their story so relationship cameos feel earned
+	var lead_ch := CharacterProgressionManager.get_chapter(lead.resource_path)
+	var partner_ids: Array = CAMEO_STORY_PARTNERS[lead_id]
+	var candidates := _get_eligible_cameo_candidates()
+	var valid_partners: Array[CustomerData] = []
+	for cand in candidates:
+		if cand.get_clean_id() in partner_ids:
+			var cand_ch := CharacterProgressionManager.get_chapter(cand.resource_path)
+			if lead_ch >= 1 or cand_ch >= 1:
+				valid_partners.append(cand)
+	if valid_partners.is_empty():
+		return null
+	return valid_partners.pick_random()
+
+func _pick_weighted_cameo_candidate(candidates: Array[CustomerData]) -> CustomerData:
 	if candidates.is_empty():
-		return
+		return null
+	var eerie_active := false
+	if is_instance_valid(StoreEventManager):
+		for ev in StoreEventManager.get_all_active_events():
+			if ev and (ev.event_id in ["aswang_curfew_rumor", "kapre_cigar_fog", "biringan_silver_mist", "duwende_penny_trail"]):
+				eerie_active = true
+				break
 
-	var chosen: CustomerData = candidates.pick_random()
+	var weights: Array[float] = []
+	var total_w: float = 0.0
+	for c in candidates:
+		var w: float = maxf(0.2, c.spawn_weight)
+		# #2 Diegetic Gameplay Tell: Today's Expected Visitors appear 3.0x more often on the street!
+		if is_instance_valid(StoryManager) and (c.resource_path in StoryManager.todays_expected_regulars):
+			w *= 3.0
+		if eerie_active and (c.get_clean_id() in ["rosalyn", "manangana", "reynamayari", "lolopilo", "brahim"]):
+			w *= 2.2
+		weights.append(w)
+		total_w += w
+
+	var r := randf() * total_w
+	var acc := 0.0
+	for i in range(candidates.size()):
+		acc += weights[i]
+		if r <= acc:
+			return candidates[i]
+	return candidates.back()
+
+func _profile_naturally_left_to_right(cameo_profile: Resource) -> bool:
+	if cameo_profile == null:
+		return true
+	if bool(cameo_profile.get("override_start_anchor")):
+		var sa := int(cameo_profile.get("start_anchor"))
+		# Anchor 5 = STREET_LEFT (travels Left -> Right), Anchor 6 = STREET_RIGHT (travels Right -> Left)
+		if sa == 6:
+			return false
+		if sa == 5:
+			return true
+	return true
+
+func _try_spawn_ambient_cameo(
+	forced_char: CustomerData = null,
+	use_explicit_dir: bool = false,
+	want_left_to_right: bool = true,
+	extra_depth_offset: float = 0.0
+) -> CustomerData:
+	_ambient_cameos = _ambient_cameos.filter(func(c): return is_instance_valid(c))
+	if _ambient_cameos.size() >= MAX_ACTIVE_AMBIENT_CAMEOS:
+		return null
+	if is_paused or _is_exclusive_wave or StoryManager.is_past_closing_time():
+		return null
+	var pos_data := _calculate_positions(false, 0)
+	if pos_data.is_empty():
+		return null
+
+	var candidates := _get_eligible_cameo_candidates()
+	if candidates.is_empty():
+		return null
+
+	var chosen: CustomerData = null
+	if forced_char != null and (forced_char in candidates):
+		chosen = forced_char
+	else:
+		chosen = _pick_weighted_cameo_candidate(candidates)
+	if chosen == null:
+		return null
+
 	var cameo_profile := chosen.pick_ambient_cameo_motion()
 	if cameo_profile == null:
-		return
+		return null
 
+	var target_ltr := want_left_to_right if use_explicit_dir else (randf() < 0.5)
+	var natural_ltr := _profile_naturally_left_to_right(cameo_profile)
+	var mirror_lateral := (natural_ltr != target_ltr)
+
+	var eff_depth := 0.0 if cameo_profile.resource_path.contains("pass_through") else extra_depth_offset
 	var cameo: Customer = customer_scene.instantiate()
 	get_parent().add_child(cameo)
 	cameo.global_position = pos_data.spawn_pos
-	cameo.setup_ambient_cameo(chosen, cameo_profile, pos_data.spawn_pos, pos_data.target_pos, pos_data.exit_pos)
+	cameo.setup_ambient_cameo(
+		chosen,
+		cameo_profile,
+		pos_data.spawn_pos,
+		pos_data.target_pos,
+		pos_data.exit_pos,
+		mirror_lateral,
+		eff_depth
+	)
 	_ambient_cameos.append(cameo)
+	return chosen
 
 func _clear_ambient_cameos() -> void:
 	_ambient_cameo_session_id += 1

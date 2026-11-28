@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://dlhqupecg422f" path="res://Assets/characters/sprites/ReynaMayariDisguised.png" id="6_disguised"]
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
+[ext_resource type="Resource" uid="uid://uillqiq3sfh1" path="res://Resources/motions/reynamayari_cameo_stroll.tres" id="motion_mayari_cameo"]
 [ext_resource type="Resource" uid="uid://dr2hqiaw704jy" path="res://Resources/motions/reynamayari_moonlight_glide.tres" id="motion_mayari_glide"]
 [ext_resource type="Resource" uid="uid://ckwsx1odxr3mx" path="res://Dialogue/Timelines/ReynaMayari/Purchase.dtl" id="purchase_dtl"]
 [ext_resource type="Resource" uid="uid://chi8ndhwuhd3c" path="res://Dialogue/Timelines/ReynaMayari/Story.dtl" id="story_dtl"]
@@ -85,3 +86,4 @@ story_timeline = ExtResource("story_dtl")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_mayari_glide")
+ambient_cameo_motions = Array[ExtResource("1_4x3uy")]([ExtResource("motion_mayari_cameo")])

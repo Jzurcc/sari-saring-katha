@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
 [ext_resource type="Resource" uid="uid://dvps8884o1s8l" path="res://Dialogue/Timelines/Danilo/Purchase.dtl" id="danilo_purchase"]
 [ext_resource type="Resource" uid="uid://csh0cxkt44aci" path="res://Dialogue/Timelines/Danilo/Visit.dtl" id="danilo_visit"]
+[ext_resource type="Resource" uid="uid://c8y3qj67kjsfy" path="res://Resources/motions/danilo_cameo_guardrail.tres" id="motion_danilo_cameo"]
 [ext_resource type="Resource" uid="uid://jt6xop1ylgt7" path="res://Resources/motions/danilo_hesitant_linger.tres" id="motion_danilo_linger"]
 [ext_resource type="Script" uid="uid://bke5kdwugdqgp" path="res://Scripts/Data/Prerequisites/StoryPrerequisiteGroup.gd" id="prereq_group_script"]
 [ext_resource type="Script" uid="uid://b4i62onbvwrmi" path="res://Scripts/Data/Prerequisites/StoryPrerequisite.gd" id="prereq_script"]
@@ -108,3 +109,4 @@ story_timeline = ExtResource("story_res")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
 character_arcs = Array[ExtResource("arc_script")]([SubResource("arc_0"), SubResource("arc_1")])
 default_motion = ExtResource("motion_danilo_linger")
+ambient_cameo_motions = Array[ExtResource("1_l4yic")]([ExtResource("motion_danilo_cameo")])

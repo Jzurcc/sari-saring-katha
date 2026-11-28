@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://7ydt3eudwtio" path="res://Scripts/Data/ArcData.gd" id="arcdata_script"]
 [ext_resource type="Script" uid="uid://dgp4l7au3shlx" path="res://Scripts/Data/ChapterData.gd" id="chapterdata_script"]
 [ext_resource type="Script" uid="uid://jfroxjr7nx7r" path="res://Scripts/Data/Prerequisites/ChapterPrerequisite.gd" id="chap_prereq_script"]
+[ext_resource type="Resource" uid="uid://b2ffpxy3a7fev" path="res://Resources/motions/lolopilo_cameo_trot.tres" id="motion_pilo_cameo"]
 [ext_resource type="Resource" uid="uid://3l0feupwhfmd" path="res://Dialogue/Timelines/LoloPilo/Purchase.dtl" id="pilo_purchase"]
 [ext_resource type="Resource" uid="uid://cdoooy3atel0" path="res://Dialogue/Timelines/LoloPilo/Story.dtl" id="pilo_story"]
 [ext_resource type="Resource" uid="uid://dh3a7yqbvkby1" path="res://Dialogue/Timelines/LoloPilo/Visit.dtl" id="pilo_visit"]
@@ -136,4 +137,5 @@ favorite_categories = Array[String](["candy", "snack", "sachet"])
 story_timeline = ExtResource("pilo_story")
 chapters = Array[ExtResource("chapterdata_script")]([SubResource("chapter_0"), SubResource("chapter_1"), SubResource("chapter_2"), SubResource("chapter_3"), SubResource("chapter_4"), SubResource("chapter_5")])
 character_arcs = Array[ExtResource("arcdata_script")]([SubResource("arc_0"), SubResource("arc_1")])
+ambient_cameo_motions = Array[ExtResource("1_5ihul")]([ExtResource("motion_pilo_cameo")])
 metadata/_custom_type_script = "res://Scripts/Data/CustomerData.gd"
