@@ -1,8 +1,8 @@
 # Sari-Saring Katha — 7-Month Version Audit (`v0.9.6-beta` → Current `v0.11.0+`)
 
 **Baseline Version:** `v0.9.6-beta` (`78ff1a9`, April 24, 2026 — `config/version="0.9"`)  
-**Audited Target:** `HEAD` on `feat/store-customization-upgrades` (`5be54cb`, November 28, 2026 — `config/version="0.11.0"`)  
-**Total Delta:** **607 commits** · **1,233 files changed** · **`+71,013` insertions / `-41,257` deletions**
+**Audited Target:** `HEAD` on `feat/store-customization-upgrades` (`31b490c`, November 28, 2026 — `config/version="0.11.0"`)  
+**Total Delta:** **612 commits** · **1,250 files changed** · **`+73,119` insertions / `-41,773` deletions**
 
 ---
 
@@ -14,14 +14,14 @@ What began in April 2026 (`v0.9.6-beta`) as a single-slot, linear point-and-clic
 | :--- | :--- | :--- |
 | **Codebase Architecture** | Flat `Scripts/` + `Scripts/Managers/` monoliths (`StoryManager` handled clock, orders, dialogue, and saves) | Domain-driven bounded contexts (`Core`, `Data`, `Progression`, `Store`, `World`, `Audio`, `Cutscene`, `UI`, `Tools`) |
 | **Cast Size & Stories** | 10 neighbors with linear, isolated early story timelines | **11 neighbors** (added **Lolo Pilo**) + **Papa Ulap** radio DJ; interconnected **Triangles A/B & Pairs 1/2** with `ChapterPrerequisite` ping-pong, fail-forward arcs, reactive hooks, and **New Vegas-style Epilogues** |
-| **Reyna Mayari Nightly Loop** | Flat auto-deducted daily quota (`₱25 + ₱15 × (quota_day - 1)`); pass/fail binary | **`₱2,000` Silver Ledger** with player-chosen **Meager / Fair / Lavish** tribute gauge, **6 permanent Ledger Milestones**, and **62 Moon Cards** (32 Favors / 30 Omens) across 3 color-coded rarities |
+| **Reyna Mayari Nightly Loop** | Flat auto-deducted daily quota (`₱25 + ₱15 × (quota_day - 1)`); pass/fail binary | **`₱3,000` Silver Ledger** with player-chosen **Meager / Fair / Lavish** tribute gauge (`₱55–₱200` Fair / `₱130–₱355` Lavish), **8 permanent Ledger Milestones** (nightly + daytime perks), and **62 Moon Cards** (32 Favors / 30 Omens) across 3 color-coded rarities |
 | **Daily World Events** | Simple 45% Danilo-only verbal rumor roll | **Papa Ulap Counter Radio** + **33 Neighborhood Events** (Common / Uncommon / Rare, including pure-downside hardships) + **Today's Visitors** (`+120%` spawn boost) |
 | **Pricing & Haggling** | Continuous scroll price margin; static complaint lines | Discrete **`-5..+5` Price Steps**, `[L]` **Price Ledger**, on-the-go **Alt Pricing Lens** with live modifier cards, unified **Price Tolerance** refusal math, and **Tawaran Card Duel** haggle minigame |
-| **Customer Flow** | Strictly 1 customer at the counter at a time; linear slide-in/out | **Up to 3 simultaneous counter slots**, staggered waves, **Tambayan lingering & returning buyers**, **19 custom motion profiles**, and ambient background street cameos |
+| **Customer Flow** | Strictly 1 customer at the counter at a time; linear slide-in/out | **Up to 3 simultaneous counter slots**, staggered waves, **Tambayan lingering & returning buyers**, **22 custom motion profiles**, full-cast bidirectional & paired-relationship street cameos, and a **5-customer story rejection cooldown** |
 | **Store Upgrades** | Simple tier unlock counter (`purchase_counter`) ordered by phone | Full-screen cubic-Bezier **Upgrade Skill Tree (`[U]`)** culminating in **Open the Door**: Tiers `1–10`, Fridge (`Lv.1–3`), Mingming Cat, Tambayan Bench, Business Permit, Sto. Niño Altar, Maneki-Neko, Wholesale Pass + Sulit Deals, Trash/Recycling, and **Storefront Drawing Studio** |
 | **Progression & Lore** | Basic Story Progress & Collection overlays | **Indefinite Player XP/Leveling** + **6-Rank Neighbor Reputation (`I–VI`)** with perks + **Folklore Journal Archive (`[J]`)** featuring 11 illustrated folklore entries, zoom lightbox, Counter Notes, and prerequisite hints |
 | **Minigames** | None | **5 full minigames**: *Tawaran Card Duel*, *Dusk Lamp Mosquito Swat*, *Endless Sipa*, *Teks Memory*, and *Anting-Anting Talisman Tracing* |
-| **Save System** | Single flat save file | **3-Slot Save Browser (`LoadSlotsOverlay`)** with rolling checkpoint backups, rollback support, and Main Menu 3D store mirroring |
+| **Save System** | Single flat save file | **Centered 3-Slot Portrait Save Browser (`LoadSlotsOverlay`)** with Lucide icons, rolling checkpoint backups, rollback support, bag/stock reconciliation on load, and Main Menu 3D store mirroring |
 
 ---
 
@@ -47,14 +47,16 @@ Before building the November feature wave, the flat `v0.9.6-beta` script layout 
 ## 3. New Major Gameplay Systems & Features
 
 ### 3.1 Reyna Mayari's Silver Ledger & Moon Card Roguelike Draft
-- **Goal-Based Tribute Ritual (`MayariTallyOverlay.gd`):** Replaced the old auto-deducted daily quota with a **`₱2,000` Silver Ledger** pact. Every night at closing, players slide a tribute gauge across **Meager**, **Fair**, and **Lavish** thresholds with subtle camera FOV zoom and Reyna Mayari dialogue reactions.
-- **6 Permanent Silver Ledger Milestones (`StoryManager.LEDGER_MILESTONES`):**
-  1. **15% (`₱300`) — Moon's Grace:** `+1` nightly Moon Card reroll.
-  2. **30% (`₱600`) — Daylight Audience:** Unlocks Reyna Mayari as a daytime shopper & her 6-chapter story arc.
-  3. **50% (`₱1,000`) — Silver Favor:** Shifts Fair draft odds from `80/20` Omen/Favor to `50/50` (Meager `25%` Favor) + `+1` extra reroll (`2` total).
-  4. **66% (`₱1,320`) — Gilded Crescent:** `+20%` Increased Rarity weight on Uncommon & Rare Moon Cards.
-  5. **75% (`₱1,500`) — Twin Moons:** Draft `1` or `2` Moon Cards every night.
-  6. **100% (`₱2,000`) — Patron of the Moon:** Permanently seals the Silver Ledger (unlocking free nightly Favor drafts, an optional *Include Omens* toggle, post-ledger closing dialogues, and the Karimlan Epilogue Chronicle).
+- **Goal-Based Tribute Ritual (`MayariTallyOverlay.gd`):** Replaced the old auto-deducted daily quota with a **`₱3,000` Silver Ledger** pact. Every night at closing, players slide a tribute gauge across **Meager**, **Fair** (`₱55–₱200`), and **Lavish** (`₱130–₱355`) thresholds with subtle camera FOV zoom and Reyna Mayari dialogue reactions.
+- **8 Permanent Silver Ledger Milestones (`StoryManager.LEDGER_MILESTONES`):**
+  1. **10% (`₱300`) — Moon's Grace:** `+1` nightly Moon Card reroll + `+10%` evening customer tip chance after 5:00 PM.
+  2. **20% (`₱600`) — Biringan Smuggler's Cut:** Permanent `-8%` wholesale restock cost + one-time `₱100` Royal Trade Rebate.
+  3. **30% (`₱900`) — Daylight Audience:** Unlocks Reyna Mayari ("Maria") as a daytime shopper & her 6-chapter story arc, with a guaranteed `+₱35` Royal Tip whenever she shops.
+  4. **45% (`₱1,350`) — Lunar Patronage:** Permanent `+12%` Lunar Sale Bonus on all items sold + `+20%` Utang repayment chance.
+  5. **60% (`₱1,800`) — Silver Favor:** Shifts Fair draft odds from `80/20` Omen/Favor to `50/50` (Meager `25%` Favor), `+1` extra reroll (`2` total), and `+15%` Neighbor Reputation gain.
+  6. **72% (`₱2,160`) — Gilded Crescent:** `+25%` Rare Moon Card odds, 1 guaranteed Rare Favor on Lavish/Sealed tributes, and `-10%` Store Upgrade Tree costs.
+  7. **85% (`₱2,550`) — Twin Moons:** Draft `1` or `2` Moon Cards every night; pairing a Favor with an Omen pays a `+₱150` morning Lunar Omen Bounty.
+  8. **100% (`₱3,000`) — Patron of the Moon:** Permanently seals the Silver Ledger (free nightly Favor drafts, *Include Omens* toggle, Karimlan Epilogue Chronicle) + permanent `+1` universal Price Tolerance and `+20%` Store XP.
 - **62 Moon Cards (`MayariCardRegistry.gd`):**
   - **32 Favors** (10 Common / 12 Uncommon / 10 Rare) and **30 Double-Edged Omens** (10 Common / 10 Uncommon / 10 Rare), all using single-number stats, 27 Hades-style hover **Keywords**, and borderless rarity color labels (**Common** Warm Stone, **Uncommon** Emerald Jade, **Rare** Celestial Amethyst).
   - Includes unique mechanical quirks such as **Disembodied Wind** (`25%/hr` chance to blow the fridge door open, max once per half-skip), **Slamming Draft** (`20%/hr` fridge gust), **Bargain Chorus** (`+₱15` flat Haggle win payout), **Silver Bell Counter** (`+20%` multi-item bundle bonus), **Blessing of the Full Moon** (9:00 PM close), **Borrowed Hour** (7:00 PM close + `+30%` traffic), and **Blood Moon Bargain** (`-2` Price Tolerance for `+25%` on all cash sales).
@@ -91,13 +93,13 @@ Before building the November feature wave, the flat `v0.9.6-beta` script layout 
 - **Indefinite Player XP & Leveling (`PlayerXPHUD.gd`):** Auto-hiding striped XP bar earned from sales, multi-item baskets, visits, stories, tambayan, and minigames. Every level-up awards a scaling cash bonus (`₱60+`) via `TierAdvanceOverlay` with bobbing item previews.
 - **6-Rank Neighbor Reputation (`CharacterProgressionManager.gd` & `RepRankUpHUD.gd`):** Per-neighbor Reputation (`Ranks I–VI`, ~20 visits to max) unlocking price tolerance bonuses, tip bonuses, favorite category discovery dialogues (`favorite_discovered.dtl`), and 6 tiers of folklore documentation.
 - **Folklore Journal Archive (`FolkloreJournalOverlay.gd`):** Replaced the old `StoryProgressOverlay` / `CollectionOverlay` / raw spiral-notebook prototype with a full-screen editorial archive:
-  - Left neighbor roster with star rank & pulsing unread indicators.
+  - Left neighbor roster with star rank, pulsing unread indicators, and folk creature type masked as `???` until **Rank 2**.
   - Real-world researched **Philippine Folklore Entries** (`FolkloreCatalog.gd`) across all 11 neighbors, paired with **11 credited portrait illustrations**, click-to-zoom **Lightbox**, and external artist URL confirmation modal.
   - **Integrated Story Progression & Counter Notes:** Smart single/multi-arc chapter list showing `✓` completed chapters, `◆ Ready` available chapters, `◇ Waiting` prerequisite-locked chapters with human-readable sub-hints (`↳ Waiting on Lolo Pilo (Ch. 2)`), and delayed-consequence `COUNTER NOTES`.
 
 ### 3.6 5 Filipino Street & Folklore Minigames (`Scripts/UI/Minigames/`)
 1. **Tawaran Card Duel (`HaggleOverlay.gd`)** — Tactical timed verbal haggling card game.
-2. **Dusk Lamp Mosquito Swat (`MosquitoSwatMinigame.gd`)** — 4:00 PM+ daily encounter (`65%` roll via `MosquitoSwarm.dtl`); swat mosquitoes around the store lamp while sparing golden barrio fireflies.
+2. **Dusk Lamp Mosquito Swat (`MosquitoSwatMinigame.gd`)** — 4:00 PM+ daily encounter (`65%` roll via `MosquitoSwarm.dtl`); swat mosquitoes flying in from all 4 edges (horizontal, diagonal, and vertical climbs/dives with mid-flight veering) while sparing much faster golden barrio fireflies.
 3. **Endless Sipa (`SipaMinigame.gd`)** — Physics kick-keep-up challenge with day-scaled speed ramp, personal bests, and neighbor Barangay Records leaderboards.
 4. **Teks Card Memory (`TeksMemoryMinigame.gd`)** — Classic street *teks* card-flipping duel with stacked Power ratings (integrated with Buboy & regulars).
 5. **Anting-Anting Talisman Tracing (`TalismanTraceMinigame.gd`)** — Pixel-exact raster-mask sigil tracing with mixed per-stroke brush widths, F1 coverage/stray-ink accuracy scoring, and deep integration into Brahim's albularyo story & visits.
@@ -117,7 +119,8 @@ Before building the November feature wave, the flat `v0.9.6-beta` script layout 
 - **30-Effect Diamond Emblem System (`DiamondFXLibrary.gd` & `HadesDiamondEmblem.gd`):** Shared across HUD mini-diamonds, Tally drafts, Events, Morning Toasts, and Day Summary — featuring 30 procedural + 18-icon Lucide particle, chromatic/gilded/filigree/frost/barbed border, aurora/eclipse inner wash, and clarity-safe center glyph micro-motions.
 - **Nightly Day Summary (`DaySummaryOverlay.gd`):** Animated end-of-day ledger grading gross revenue, net profit, buyers served, reputation gains, active condition hover diamonds, rank stamps, and a post-summary Reyna Mayari quip.
 - **HUD Modernization:** Permanent bottom-left double-ring **Shortcut Dock (`[J] / [L] / [U]`)** synced with custom keybinds, FIFO `TopBannerQueue`, rolling `MoneyLabelUI` with elastic squash-and-stretch delta popups, diegetic cross-off **Utang Notebook** pagination + `PendingDebtHUD`, and universal **Fredoka** typography.
-- **Dynamic Audio Director (`AudioManager.gd`):** Clock-driven time-of-day BGM phases using persistent non-repeating shuffle-bags, smooth `1.25s` linear-amplitude crossfades, dedicated Restock/Minigame BGM overrides, and looping *The Sneaky Plan* during closing hours.
+- **Dynamic Audio Director (`AudioManager.gd`):** Clock-driven time-of-day BGM phases using persistent non-repeating shuffle-bags, smooth `1.25s` linear-amplitude crossfades, dedicated Restock/Minigame BGM overrides, looping *The Sneaky Plan* during closing hours, end-of-day transition guard preventing brief dusk BGM flashes, and context-aware `NowPlayingIndicator` suppression (hidden in Main Menu, Restock Menu, and Mayari's arrival).
+- **Late-Wave Polish & Balance (`55b0ee0..31b490c`):** Rebalanced all non-product Store Upgrade prices by `~1.75×`, added 5-customer per-character story rejection cooldowns, fixed mid-day delivery bag spawning & phantom shelf/fridge stock reconciliation on load, fixed substitution dialogue & locked-item preview shading, coalesced same-frame `+Rep` popups, fixed the `"Too Rushed to Haggle!"` tween hold, allowed clicking the 3D Wall Calendar during the tutorial, and simplified the Pause Menu & Main Menu.
 - **3-Slot Save & Checkpoint Browser (`SaveManager.gd` & `LoadSlotsOverlay.gd`):** 3 independent save slots with metadata summaries, overwrite/delete confirmations, and rolling checkpoint backups for instant rollback.
 - **Developer Tooling:** Interactive browser-based **Dialogue Simulator** (`Tools/build_dialogue_simulator.py` + `Tools/dialogue_simulator.html`) and Lucide SVG-to-PNG asset pipeline.
 
